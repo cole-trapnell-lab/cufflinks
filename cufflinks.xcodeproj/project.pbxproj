@@ -1,0 +1,913 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
+		ED5D1EEA114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
+		EDA5155210C729A9000A4F41 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
+		EDA5155310C729A9000A4F41 /* assemble.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151F10C72963000A4F41 /* assemble.cpp */; };
+		EDA5155410C729A9000A4F41 /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
+		EDA5155510C729A9000A4F41 /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
+		EDA5155610C729A9000A4F41 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152210C72963000A4F41 /* common.cpp */; };
+		EDA5155910C729A9000A4F41 /* cufflinks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */; };
+		EDA5155A10C729A9000A4F41 /* filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152610C72963000A4F41 /* filters.cpp */; };
+		EDA5155B10C729A9000A4F41 /* GArgs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152710C72963000A4F41 /* GArgs.cpp */; };
+		EDA5155C10C729A9000A4F41 /* GBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152810C72963000A4F41 /* GBase.cpp */; };
+		EDA5155D10C729A9000A4F41 /* gdna.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152910C72963000A4F41 /* gdna.cpp */; };
+		EDA5155E10C729A9000A4F41 /* genes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152A10C72963000A4F41 /* genes.cpp */; };
+		EDA5155F10C729A9000A4F41 /* GFaSeqGet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */; };
+		EDA5156010C729A9000A4F41 /* gff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152C10C72963000A4F41 /* gff.cpp */; };
+		EDA5156110C729A9000A4F41 /* GStr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152D10C72963000A4F41 /* GStr.cpp */; };
+		EDA5156310C729A9000A4F41 /* gtf_tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */; };
+		EDA5156410C729A9000A4F41 /* hits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153010C72963000A4F41 /* hits.cpp */; };
+		EDA5156510C729A9000A4F41 /* scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */; };
+		EDA5156610C729A9000A4F41 /* tokenize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153210C72963000A4F41 /* tokenize.cpp */; };
+		EDACE432114EFF5C009024DB /* differential.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE431114EFF5C009024DB /* differential.cpp */; };
+		EDACE43A114F031B009024DB /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
+		EDACE43B114F031B009024DB /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
+		EDD0CE0A10C72F7D00AF308F /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
+		EDD0CE0C10C72F7D00AF308F /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
+		EDD0CE0D10C72F7D00AF308F /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
+		EDD0CE0E10C72F7D00AF308F /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152210C72963000A4F41 /* common.cpp */; };
+		EDD0CE1010C72F7D00AF308F /* filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152610C72963000A4F41 /* filters.cpp */; };
+		EDD0CE1110C72F7D00AF308F /* GArgs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152710C72963000A4F41 /* GArgs.cpp */; };
+		EDD0CE1210C72F7D00AF308F /* GBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152810C72963000A4F41 /* GBase.cpp */; };
+		EDD0CE1310C72F7D00AF308F /* gdna.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152910C72963000A4F41 /* gdna.cpp */; };
+		EDD0CE1410C72F7D00AF308F /* genes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152A10C72963000A4F41 /* genes.cpp */; };
+		EDD0CE1510C72F7D00AF308F /* GFaSeqGet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */; };
+		EDD0CE1610C72F7D00AF308F /* gff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152C10C72963000A4F41 /* gff.cpp */; };
+		EDD0CE1710C72F7D00AF308F /* GStr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152D10C72963000A4F41 /* GStr.cpp */; };
+		EDD0CE1810C72F7D00AF308F /* gtf_tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */; };
+		EDD0CE1910C72F7D00AF308F /* hits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153010C72963000A4F41 /* hits.cpp */; };
+		EDD0CE1A10C72F7D00AF308F /* scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */; };
+		EDD0CE1B10C72F7D00AF308F /* tokenize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153210C72963000A4F41 /* tokenize.cpp */; };
+		EDD0CE2410C72F9300AF308F /* cuffdiff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */; };
+		EDD6A9BF11598AB900D3F668 /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
+		EDD6A9C311598AB900D3F668 /* GArgs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152710C72963000A4F41 /* GArgs.cpp */; };
+		EDD6A9C411598AB900D3F668 /* GBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152810C72963000A4F41 /* GBase.cpp */; };
+		EDD6A9C511598AB900D3F668 /* gdna.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152910C72963000A4F41 /* gdna.cpp */; };
+		EDD6A9C611598AB900D3F668 /* genes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152A10C72963000A4F41 /* genes.cpp */; };
+		EDD6A9C711598AB900D3F668 /* GFaSeqGet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */; };
+		EDD6A9C811598AB900D3F668 /* gff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152C10C72963000A4F41 /* gff.cpp */; };
+		EDD6A9C911598AB900D3F668 /* GStr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152D10C72963000A4F41 /* GStr.cpp */; };
+		EDD6A9CA11598AB900D3F668 /* gtf_tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */; };
+		EDD6A9DE11598CFC00D3F668 /* cuffcompare.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152310C72963000A4F41 /* cuffcompare.cpp */; };
+		EDD6AA481159BE6500D3F668 /* test_abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA461159BE6500D3F668 /* test_abundances.cpp */; };
+		EDD6AA6C1159C05600D3F668 /* test_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA471159BE6500D3F668 /* test_main.cpp */; };
+		EDD6AA8E1159C5CD00D3F668 /* libcppunit-1.12.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8DD76F690486A84900D96B5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		EDD0CE1E10C72F7D00AF308F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		EDD6A9D111598AB900D3F668 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_thread-xgcc40-mt-1_41.a"; path = "/usr/local/lib/libboost_thread-xgcc40-mt-1_41.a"; sourceTree = "<absolute>"; };
+		EDA5150910C72963000A4F41 /* abundances.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = abundances.h; path = src/abundances.h; sourceTree = "<group>"; };
+		EDA5150A10C72963000A4F41 /* assemble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = assemble.h; path = src/assemble.h; sourceTree = "<group>"; };
+		EDA5150B10C72963000A4F41 /* bundles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bundles.h; path = src/bundles.h; sourceTree = "<group>"; };
+		EDA5150C10C72963000A4F41 /* codons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = codons.h; path = src/codons.h; sourceTree = "<group>"; };
+		EDA5150D10C72963000A4F41 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = src/common.h; sourceTree = "<group>"; };
+		EDA5150E10C72963000A4F41 /* filters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filters.h; path = src/filters.h; sourceTree = "<group>"; };
+		EDA5150F10C72963000A4F41 /* GArgs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GArgs.h; path = src/GArgs.h; sourceTree = "<group>"; };
+		EDA5151010C72963000A4F41 /* GBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GBase.h; path = src/GBase.h; sourceTree = "<group>"; };
+		EDA5151110C72963000A4F41 /* gdna.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gdna.h; path = src/gdna.h; sourceTree = "<group>"; };
+		EDA5151210C72963000A4F41 /* genes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = genes.h; path = src/genes.h; sourceTree = "<group>"; };
+		EDA5151310C72963000A4F41 /* GFaSeqGet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFaSeqGet.h; path = src/GFaSeqGet.h; sourceTree = "<group>"; };
+		EDA5151410C72963000A4F41 /* GFastaFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaFile.h; path = src/GFastaFile.h; sourceTree = "<group>"; };
+		EDA5151510C72963000A4F41 /* gff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gff.h; path = src/gff.h; sourceTree = "<group>"; };
+		EDA5151610C72963000A4F41 /* GStr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GStr.h; path = src/GStr.h; sourceTree = "<group>"; };
+		EDA5151710C72963000A4F41 /* gtf_tracking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gtf_tracking.h; path = src/gtf_tracking.h; sourceTree = "<group>"; };
+		EDA5151810C72963000A4F41 /* hits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hits.h; path = src/hits.h; sourceTree = "<group>"; };
+		EDA5151910C72963000A4F41 /* scaffolds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scaffolds.h; path = src/scaffolds.h; sourceTree = "<group>"; };
+		EDA5151A10C72963000A4F41 /* tokenize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tokenize.h; path = src/tokenize.h; sourceTree = "<group>"; };
+		EDA5151B10C72963000A4F41 /* transitive_closure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transitive_closure.h; path = src/transitive_closure.h; sourceTree = "<group>"; };
+		EDA5151C10C72963000A4F41 /* GHash.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GHash.hh; path = src/GHash.hh; sourceTree = "<group>"; };
+		EDA5151D10C72963000A4F41 /* GList.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GList.hh; path = src/GList.hh; sourceTree = "<group>"; };
+		EDA5151E10C72963000A4F41 /* abundances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = abundances.cpp; path = src/abundances.cpp; sourceTree = "<group>"; };
+		EDA5151F10C72963000A4F41 /* assemble.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = assemble.cpp; path = src/assemble.cpp; sourceTree = "<group>"; };
+		EDA5152010C72963000A4F41 /* bundles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bundles.cpp; path = src/bundles.cpp; sourceTree = "<group>"; };
+		EDA5152110C72963000A4F41 /* codons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = codons.cpp; path = src/codons.cpp; sourceTree = "<group>"; };
+		EDA5152210C72963000A4F41 /* common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = common.cpp; path = src/common.cpp; sourceTree = "<group>"; };
+		EDA5152310C72963000A4F41 /* cuffcompare.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cuffcompare.cpp; path = src/cuffcompare.cpp; sourceTree = "<group>"; };
+		EDA5152410C72963000A4F41 /* cuffdiff.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cuffdiff.cpp; path = src/cuffdiff.cpp; sourceTree = "<group>"; };
+		EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cufflinks.cpp; path = src/cufflinks.cpp; sourceTree = "<group>"; };
+		EDA5152610C72963000A4F41 /* filters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = filters.cpp; path = src/filters.cpp; sourceTree = "<group>"; };
+		EDA5152710C72963000A4F41 /* GArgs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GArgs.cpp; path = src/GArgs.cpp; sourceTree = "<group>"; };
+		EDA5152810C72963000A4F41 /* GBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GBase.cpp; path = src/GBase.cpp; sourceTree = "<group>"; };
+		EDA5152910C72963000A4F41 /* gdna.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gdna.cpp; path = src/gdna.cpp; sourceTree = "<group>"; };
+		EDA5152A10C72963000A4F41 /* genes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = genes.cpp; path = src/genes.cpp; sourceTree = "<group>"; };
+		EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFaSeqGet.cpp; path = src/GFaSeqGet.cpp; sourceTree = "<group>"; };
+		EDA5152C10C72963000A4F41 /* gff.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gff.cpp; path = src/gff.cpp; sourceTree = "<group>"; };
+		EDA5152D10C72963000A4F41 /* GStr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GStr.cpp; path = src/GStr.cpp; sourceTree = "<group>"; };
+		EDA5152E10C72963000A4F41 /* gtf_reads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_reads.cpp; path = src/gtf_reads.cpp; sourceTree = "<group>"; };
+		EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_tracking.cpp; path = src/gtf_tracking.cpp; sourceTree = "<group>"; };
+		EDA5153010C72963000A4F41 /* hits.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hits.cpp; path = src/hits.cpp; sourceTree = "<group>"; };
+		EDA5153110C72963000A4F41 /* scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = scaffolds.cpp; path = src/scaffolds.cpp; sourceTree = "<group>"; };
+		EDA5153210C72963000A4F41 /* tokenize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tokenize.cpp; path = src/tokenize.cpp; sourceTree = "<group>"; };
+		EDACE430114EFF5C009024DB /* differential.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = differential.h; path = src/differential.h; sourceTree = "<group>"; };
+		EDACE431114EFF5C009024DB /* differential.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = differential.cpp; path = src/differential.cpp; sourceTree = "<group>"; };
+		EDACE438114F031B009024DB /* clustering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = clustering.h; path = src/clustering.h; sourceTree = "<group>"; };
+		EDACE439114F031B009024DB /* clustering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = clustering.cpp; path = src/clustering.cpp; sourceTree = "<group>"; };
+		EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transitive_reduction.h; path = src/transitive_reduction.h; sourceTree = "<group>"; };
+		EDD0CD9C10C72AC200AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD0CDB510C72CC400AF308F /* bfs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bfs.h; sourceTree = "<group>"; };
+		EDD0CDB610C72CC400AF308F /* bin_heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bin_heap.h; sourceTree = "<group>"; };
+		EDD0CDB710C72CC400AF308F /* bipartite_matching.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bipartite_matching.h; sourceTree = "<group>"; };
+		EDD0CDB910C72CC400AF308F /* alteration_notifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alteration_notifier.h; sourceTree = "<group>"; };
+		EDD0CDBA10C72CC400AF308F /* array_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = array_map.h; sourceTree = "<group>"; };
+		EDD0CDBB10C72CC400AF308F /* base_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base_extender.h; sourceTree = "<group>"; };
+		EDD0CDBC10C72CC400AF308F /* debug_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = debug_map.h; sourceTree = "<group>"; };
+		EDD0CDBD10C72CC400AF308F /* default_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = default_map.h; sourceTree = "<group>"; };
+		EDD0CDBE10C72CC400AF308F /* graph_adaptor_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_adaptor_extender.h; sourceTree = "<group>"; };
+		EDD0CDBF10C72CC400AF308F /* graph_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_extender.h; sourceTree = "<group>"; };
+		EDD0CDC010C72CC400AF308F /* invalid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = invalid.h; sourceTree = "<group>"; };
+		EDD0CDC110C72CC400AF308F /* map_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = map_extender.h; sourceTree = "<group>"; };
+		EDD0CDC210C72CC400AF308F /* path_dump.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path_dump.h; sourceTree = "<group>"; };
+		EDD0CDC310C72CC400AF308F /* traits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = traits.h; sourceTree = "<group>"; };
+		EDD0CDC410C72CC400AF308F /* utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utility.h; sourceTree = "<group>"; };
+		EDD0CDC510C72CC400AF308F /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
+		EDD0CDC610C72CC400AF308F /* vector_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vector_map.h; sourceTree = "<group>"; };
+		EDD0CDC710C72CC400AF308F /* bucket_heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bucket_heap.h; sourceTree = "<group>"; };
+		EDD0CDC810C72CC400AF308F /* concept_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = concept_check.h; sourceTree = "<group>"; };
+		EDD0CDCA10C72CC400AF308F /* bpugraph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bpugraph.h; sourceTree = "<group>"; };
+		EDD0CDCB10C72CC400AF308F /* graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph.h; sourceTree = "<group>"; };
+		EDD0CDCC10C72CC400AF308F /* graph_components.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_components.h; sourceTree = "<group>"; };
+		EDD0CDCD10C72CC400AF308F /* heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = heap.h; sourceTree = "<group>"; };
+		EDD0CDCE10C72CC400AF308F /* maps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maps.h; sourceTree = "<group>"; };
+		EDD0CDCF10C72CC400AF308F /* matrix_maps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = matrix_maps.h; sourceTree = "<group>"; };
+		EDD0CDD010C72CC400AF308F /* path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path.h; sourceTree = "<group>"; };
+		EDD0CDD110C72CC400AF308F /* ugraph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ugraph.h; sourceTree = "<group>"; };
+		EDD0CDD210C72CC400AF308F /* dfs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dfs.h; sourceTree = "<group>"; };
+		EDD0CDD310C72CC400AF308F /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		EDD0CDD410C72CC400AF308F /* fib_heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fib_heap.h; sourceTree = "<group>"; };
+		EDD0CDD510C72CC400AF308F /* graph_adaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_adaptor.h; sourceTree = "<group>"; };
+		EDD0CDD610C72CC400AF308F /* graph_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_utils.h; sourceTree = "<group>"; };
+		EDD0CDD710C72CC400AF308F /* list_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = list_graph.h; sourceTree = "<group>"; };
+		EDD0CDD810C72CC400AF308F /* maps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maps.h; sourceTree = "<group>"; };
+		EDD0CDD910C72CC400AF308F /* math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = math.h; sourceTree = "<group>"; };
+		EDD0CDDA10C72CC400AF308F /* smart_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = smart_graph.h; sourceTree = "<group>"; };
+		EDD0CDDB10C72CC400AF308F /* tolerance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tolerance.h; sourceTree = "<group>"; };
+		EDD0CDDC10C72CC400AF308F /* topology.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = topology.h; sourceTree = "<group>"; };
+		EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD6A7A0115562EE00D3F668 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Makefile.am; path = src/Makefile.am; sourceTree = "<group>"; };
+		EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD6AA231159BA2E00D3F668 /* Boost Tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Boost Tests"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD6AA461159BE6500D3F668 /* test_abundances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_abundances.cpp; sourceTree = "<group>"; };
+		EDD6AA471159BE6500D3F668 /* test_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_main.cpp; sourceTree = "<group>"; };
+		EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.12.1.dylib"; path = "/usr/local/lib/libcppunit-1.12.1.dylib"; sourceTree = "<absolute>"; };
+		EDEBCDF8112DFD7600E2479E /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
+		EDEBCEBB112E316400E2479E /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8DD76F660486A84900D96B5E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDD0CE1C10C72F7D00AF308F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED5D1EEA114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDD6A9CF11598AB900D3F668 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDD6AA211159BA2E00D3F668 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDD6AA8E1159C5CD00D3F668 /* libcppunit-1.12.1.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* cufflinks_xcode */ = {
+			isa = PBXGroup;
+			children = (
+				EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */,
+				ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */,
+				EDD6AA441159BE6500D3F668 /* tests */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6859E8C029090F304C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+				EDEBCEBB112E316400E2479E /* Accelerate.framework */,
+			);
+			name = cufflinks_xcode;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				EDD6A7A0115562EE00D3F668 /* Makefile.am */,
+				EDEBCDF8112DFD7600E2479E /* configure.ac */,
+				EDD0CDB410C72CC400AF308F /* lemon */,
+				EDA5150910C72963000A4F41 /* abundances.h */,
+				EDA5150A10C72963000A4F41 /* assemble.h */,
+				EDA5150B10C72963000A4F41 /* bundles.h */,
+				EDACE438114F031B009024DB /* clustering.h */,
+				EDA5150C10C72963000A4F41 /* codons.h */,
+				EDA5150D10C72963000A4F41 /* common.h */,
+				EDACE430114EFF5C009024DB /* differential.h */,
+				EDA5150E10C72963000A4F41 /* filters.h */,
+				EDA5150F10C72963000A4F41 /* GArgs.h */,
+				EDA5151010C72963000A4F41 /* GBase.h */,
+				EDA5151110C72963000A4F41 /* gdna.h */,
+				EDA5151210C72963000A4F41 /* genes.h */,
+				EDA5151310C72963000A4F41 /* GFaSeqGet.h */,
+				EDA5151410C72963000A4F41 /* GFastaFile.h */,
+				EDA5151510C72963000A4F41 /* gff.h */,
+				EDA5151610C72963000A4F41 /* GStr.h */,
+				EDA5151710C72963000A4F41 /* gtf_tracking.h */,
+				EDA5151810C72963000A4F41 /* hits.h */,
+				EDA5151910C72963000A4F41 /* scaffolds.h */,
+				EDA5151A10C72963000A4F41 /* tokenize.h */,
+				EDA5151B10C72963000A4F41 /* transitive_closure.h */,
+				EDA5151C10C72963000A4F41 /* GHash.hh */,
+				EDA5151D10C72963000A4F41 /* GList.hh */,
+				EDA5151E10C72963000A4F41 /* abundances.cpp */,
+				EDA5151F10C72963000A4F41 /* assemble.cpp */,
+				EDA5152010C72963000A4F41 /* bundles.cpp */,
+				EDACE439114F031B009024DB /* clustering.cpp */,
+				EDA5152110C72963000A4F41 /* codons.cpp */,
+				EDA5152210C72963000A4F41 /* common.cpp */,
+				EDA5152310C72963000A4F41 /* cuffcompare.cpp */,
+				EDA5152410C72963000A4F41 /* cuffdiff.cpp */,
+				EDA5152510C72963000A4F41 /* cufflinks.cpp */,
+				EDACE431114EFF5C009024DB /* differential.cpp */,
+				EDA5152610C72963000A4F41 /* filters.cpp */,
+				EDA5152710C72963000A4F41 /* GArgs.cpp */,
+				EDA5152810C72963000A4F41 /* GBase.cpp */,
+				EDA5152910C72963000A4F41 /* gdna.cpp */,
+				EDA5152A10C72963000A4F41 /* genes.cpp */,
+				EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */,
+				EDA5152C10C72963000A4F41 /* gff.cpp */,
+				EDA5152D10C72963000A4F41 /* GStr.cpp */,
+				EDA5152E10C72963000A4F41 /* gtf_reads.cpp */,
+				EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */,
+				EDA5153010C72963000A4F41 /* hits.cpp */,
+				EDA5153110C72963000A4F41 /* scaffolds.cpp */,
+				EDA5153210C72963000A4F41 /* tokenize.cpp */,
+				EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EDD0CD9C10C72AC200AF308F /* cufflinks_xcode */,
+				EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */,
+				EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */,
+				EDD6AA231159BA2E00D3F668 /* Boost Tests */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6859E8C029090F304C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+		EDD0CDB410C72CC400AF308F /* lemon */ = {
+			isa = PBXGroup;
+			children = (
+				EDD0CDB510C72CC400AF308F /* bfs.h */,
+				EDD0CDB610C72CC400AF308F /* bin_heap.h */,
+				EDD0CDB710C72CC400AF308F /* bipartite_matching.h */,
+				EDD0CDB810C72CC400AF308F /* bits */,
+				EDD0CDC710C72CC400AF308F /* bucket_heap.h */,
+				EDD0CDC810C72CC400AF308F /* concept_check.h */,
+				EDD0CDC910C72CC400AF308F /* concepts */,
+				EDD0CDD210C72CC400AF308F /* dfs.h */,
+				EDD0CDD310C72CC400AF308F /* error.h */,
+				EDD0CDD410C72CC400AF308F /* fib_heap.h */,
+				EDD0CDD510C72CC400AF308F /* graph_adaptor.h */,
+				EDD0CDD610C72CC400AF308F /* graph_utils.h */,
+				EDD0CDD710C72CC400AF308F /* list_graph.h */,
+				EDD0CDD810C72CC400AF308F /* maps.h */,
+				EDD0CDD910C72CC400AF308F /* math.h */,
+				EDD0CDDA10C72CC400AF308F /* smart_graph.h */,
+				EDD0CDDB10C72CC400AF308F /* tolerance.h */,
+				EDD0CDDC10C72CC400AF308F /* topology.h */,
+			);
+			name = lemon;
+			path = src/lemon;
+			sourceTree = "<group>";
+		};
+		EDD0CDB810C72CC400AF308F /* bits */ = {
+			isa = PBXGroup;
+			children = (
+				EDD0CDB910C72CC400AF308F /* alteration_notifier.h */,
+				EDD0CDBA10C72CC400AF308F /* array_map.h */,
+				EDD0CDBB10C72CC400AF308F /* base_extender.h */,
+				EDD0CDBC10C72CC400AF308F /* debug_map.h */,
+				EDD0CDBD10C72CC400AF308F /* default_map.h */,
+				EDD0CDBE10C72CC400AF308F /* graph_adaptor_extender.h */,
+				EDD0CDBF10C72CC400AF308F /* graph_extender.h */,
+				EDD0CDC010C72CC400AF308F /* invalid.h */,
+				EDD0CDC110C72CC400AF308F /* map_extender.h */,
+				EDD0CDC210C72CC400AF308F /* path_dump.h */,
+				EDD0CDC310C72CC400AF308F /* traits.h */,
+				EDD0CDC410C72CC400AF308F /* utility.h */,
+				EDD0CDC510C72CC400AF308F /* variant.h */,
+				EDD0CDC610C72CC400AF308F /* vector_map.h */,
+			);
+			path = bits;
+			sourceTree = "<group>";
+		};
+		EDD0CDC910C72CC400AF308F /* concepts */ = {
+			isa = PBXGroup;
+			children = (
+				EDD0CDCA10C72CC400AF308F /* bpugraph.h */,
+				EDD0CDCB10C72CC400AF308F /* graph.h */,
+				EDD0CDCC10C72CC400AF308F /* graph_components.h */,
+				EDD0CDCD10C72CC400AF308F /* heap.h */,
+				EDD0CDCE10C72CC400AF308F /* maps.h */,
+				EDD0CDCF10C72CC400AF308F /* matrix_maps.h */,
+				EDD0CDD010C72CC400AF308F /* path.h */,
+				EDD0CDD110C72CC400AF308F /* ugraph.h */,
+			);
+			path = concepts;
+			sourceTree = "<group>";
+		};
+		EDD6AA441159BE6500D3F668 /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				EDD6AA451159BE6500D3F668 /* unit_tests */,
+			);
+			path = tests;
+			sourceTree = "<group>";
+		};
+		EDD6AA451159BE6500D3F668 /* unit_tests */ = {
+			isa = PBXGroup;
+			children = (
+				EDD6AA461159BE6500D3F668 /* test_abundances.cpp */,
+				EDD6AA471159BE6500D3F668 /* test_main.cpp */,
+			);
+			path = unit_tests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8DD76F620486A84900D96B5E /* cufflinks */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "cufflinks" */;
+			buildPhases = (
+				8DD76F640486A84900D96B5E /* Sources */,
+				8DD76F660486A84900D96B5E /* Frameworks */,
+				8DD76F690486A84900D96B5E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cufflinks;
+			productInstallPath = "$(HOME)/bin";
+			productName = cufflinks_xcode;
+			productReference = EDD0CD9C10C72AC200AF308F /* cufflinks_xcode */;
+			productType = "com.apple.product-type.tool";
+		};
+		EDD0CE0810C72F7D00AF308F /* cuffdiff */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDD0CE1F10C72F7D00AF308F /* Build configuration list for PBXNativeTarget "cuffdiff" */;
+			buildPhases = (
+				EDD0CE0910C72F7D00AF308F /* Sources */,
+				EDD0CE1C10C72F7D00AF308F /* Frameworks */,
+				EDD0CE1E10C72F7D00AF308F /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cuffdiff;
+			productInstallPath = "$(HOME)/bin";
+			productName = cufflinks_xcode;
+			productReference = EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */;
+			productType = "com.apple.product-type.tool";
+		};
+		EDD6A9BA11598AB900D3F668 /* cuffcompare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDD6A9D211598AB900D3F668 /* Build configuration list for PBXNativeTarget "cuffcompare" */;
+			buildPhases = (
+				EDD6A9BB11598AB900D3F668 /* Sources */,
+				EDD6A9CF11598AB900D3F668 /* Frameworks */,
+				EDD6A9D111598AB900D3F668 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cuffcompare;
+			productInstallPath = "$(HOME)/bin";
+			productName = cufflinks_xcode;
+			productReference = EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */;
+			productType = "com.apple.product-type.tool";
+		};
+		EDD6AA221159BA2E00D3F668 /* Unit Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDD6AA2C1159BA3200D3F668 /* Build configuration list for PBXNativeTarget "Unit Tests" */;
+			buildPhases = (
+				EDD6AA201159BA2E00D3F668 /* Sources */,
+				EDD6AA211159BA2E00D3F668 /* Frameworks */,
+				EDD6AA5B1159BFBB00D3F668 /* Run Tests */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Unit Tests";
+			productName = "Boost Tests";
+			productReference = EDD6AA231159BA2E00D3F668 /* Boost Tests */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+			};
+			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "cufflinks" */;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* cufflinks_xcode */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8DD76F620486A84900D96B5E /* cufflinks */,
+				EDD0CE0810C72F7D00AF308F /* cuffdiff */,
+				EDD6A9BA11598AB900D3F668 /* cuffcompare */,
+				EDD6AA221159BA2E00D3F668 /* Unit Tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		EDD6AA5B1159BFBB00D3F668 /* Run Tests */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Tests";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${TARGET_BUILD_DIR}/${EXECUTABLE_NAME}\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DD76F640486A84900D96B5E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDA5155210C729A9000A4F41 /* abundances.cpp in Sources */,
+				EDA5155310C729A9000A4F41 /* assemble.cpp in Sources */,
+				EDA5155410C729A9000A4F41 /* bundles.cpp in Sources */,
+				EDA5155510C729A9000A4F41 /* codons.cpp in Sources */,
+				EDA5155610C729A9000A4F41 /* common.cpp in Sources */,
+				EDA5155910C729A9000A4F41 /* cufflinks.cpp in Sources */,
+				EDA5155A10C729A9000A4F41 /* filters.cpp in Sources */,
+				EDA5155B10C729A9000A4F41 /* GArgs.cpp in Sources */,
+				EDA5155C10C729A9000A4F41 /* GBase.cpp in Sources */,
+				EDA5155D10C729A9000A4F41 /* gdna.cpp in Sources */,
+				EDA5155E10C729A9000A4F41 /* genes.cpp in Sources */,
+				EDA5155F10C729A9000A4F41 /* GFaSeqGet.cpp in Sources */,
+				EDA5156010C729A9000A4F41 /* gff.cpp in Sources */,
+				EDA5156110C729A9000A4F41 /* GStr.cpp in Sources */,
+				EDA5156310C729A9000A4F41 /* gtf_tracking.cpp in Sources */,
+				EDA5156410C729A9000A4F41 /* hits.cpp in Sources */,
+				EDA5156510C729A9000A4F41 /* scaffolds.cpp in Sources */,
+				EDA5156610C729A9000A4F41 /* tokenize.cpp in Sources */,
+				EDACE43B114F031B009024DB /* clustering.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDD0CE0910C72F7D00AF308F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDD0CE2410C72F9300AF308F /* cuffdiff.cpp in Sources */,
+				EDD0CE0A10C72F7D00AF308F /* abundances.cpp in Sources */,
+				EDD0CE0C10C72F7D00AF308F /* bundles.cpp in Sources */,
+				EDD0CE0D10C72F7D00AF308F /* codons.cpp in Sources */,
+				EDD0CE0E10C72F7D00AF308F /* common.cpp in Sources */,
+				EDD0CE1010C72F7D00AF308F /* filters.cpp in Sources */,
+				EDD0CE1110C72F7D00AF308F /* GArgs.cpp in Sources */,
+				EDD0CE1210C72F7D00AF308F /* GBase.cpp in Sources */,
+				EDD0CE1310C72F7D00AF308F /* gdna.cpp in Sources */,
+				EDD0CE1410C72F7D00AF308F /* genes.cpp in Sources */,
+				EDD0CE1510C72F7D00AF308F /* GFaSeqGet.cpp in Sources */,
+				EDD0CE1610C72F7D00AF308F /* gff.cpp in Sources */,
+				EDD0CE1710C72F7D00AF308F /* GStr.cpp in Sources */,
+				EDD0CE1810C72F7D00AF308F /* gtf_tracking.cpp in Sources */,
+				EDD0CE1910C72F7D00AF308F /* hits.cpp in Sources */,
+				EDD0CE1A10C72F7D00AF308F /* scaffolds.cpp in Sources */,
+				EDD0CE1B10C72F7D00AF308F /* tokenize.cpp in Sources */,
+				EDACE432114EFF5C009024DB /* differential.cpp in Sources */,
+				EDACE43A114F031B009024DB /* clustering.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDD6A9BB11598AB900D3F668 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDD6A9DE11598CFC00D3F668 /* cuffcompare.cpp in Sources */,
+				EDD6A9BF11598AB900D3F668 /* codons.cpp in Sources */,
+				EDD6A9C311598AB900D3F668 /* GArgs.cpp in Sources */,
+				EDD6A9C411598AB900D3F668 /* GBase.cpp in Sources */,
+				EDD6A9C511598AB900D3F668 /* gdna.cpp in Sources */,
+				EDD6A9C611598AB900D3F668 /* genes.cpp in Sources */,
+				EDD6A9C711598AB900D3F668 /* GFaSeqGet.cpp in Sources */,
+				EDD6A9C811598AB900D3F668 /* gff.cpp in Sources */,
+				EDD6A9C911598AB900D3F668 /* GStr.cpp in Sources */,
+				EDD6A9CA11598AB900D3F668 /* gtf_tracking.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDD6AA201159BA2E00D3F668 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDD6AA6C1159C05600D3F668 /* test_main.cpp in Sources */,
+				EDD6AA481159BE6500D3F668 /* test_abundances.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB923208733DC60010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_AUTO_VECTORIZATION = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_SSE3_EXTENSIONS = NO;
+				GCC_ENABLE_SSE41_EXTENSIONS = NO;
+				GCC_ENABLE_SSE42_EXTENSIONS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
+				GCC_WARN_SHADOW = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = YES;
+				GENERATE_PROFILING_CODE = NO;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\"$(SRCROOT)\"",
+				);
+				PRODUCT_NAME = cufflinks_xcode;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
+			};
+			name = Debug;
+		};
+		1DEB923308733DC60010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_DEBUGGING_SYMBOLS = used;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_ENABLE_SSE41_EXTENSIONS = YES;
+				GCC_ENABLE_SSE42_EXTENSIONS = YES;
+				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_UNROLL_LOOPS = YES;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\"$(SRCROOT)\"",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = cufflinks;
+			};
+			name = Release;
+		};
+		1DEB923608733DC60010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		1DEB923708733DC60010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_ENABLE_SSE41_EXTENSIONS = YES;
+				GCC_ENABLE_SSE42_EXTENSIONS = YES;
+				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+		EDD0CE2010C72F7D00AF308F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\"$(SRCROOT)\"",
+				);
+				PRODUCT_NAME = cufflinks_xcode;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
+			};
+			name = Debug;
+		};
+		EDD0CE2110C72F7D00AF308F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_AUTO_VECTORIZATION = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = HAVE_VECLIB;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_UNROLL_LOOPS = YES;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\"$(SRCROOT)\"",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = cuffdiff;
+			};
+			name = Release;
+		};
+		EDD6A9D311598AB900D3F668 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_AUTO_VECTORIZATION = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_SSE3_EXTENSIONS = NO;
+				GCC_ENABLE_SSE41_EXTENSIONS = NO;
+				GCC_ENABLE_SSE42_EXTENSIONS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
+				GCC_WARN_SHADOW = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = YES;
+				GENERATE_PROFILING_CODE = NO;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\\\"$(SRCROOT)\\\"",
+				);
+				PRODUCT_NAME = cufflinks_xcode;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
+			};
+			name = Debug;
+		};
+		EDD6A9D411598AB900D3F668 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_DEBUGGING_SYMBOLS = used;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_ENABLE_SSE41_EXTENSIONS = YES;
+				GCC_ENABLE_SSE42_EXTENSIONS = YES;
+				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_UNROLL_LOOPS = YES;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\\\"$(SRCROOT)\\\"",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = cufflinks;
+			};
+			name = Release;
+		};
+		EDD6AA251159BA2F00D3F668 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				PREBINDING = NO;
+				PRODUCT_NAME = "Boost Tests";
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		EDD6AA261159BA2F00D3F668 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = "Boost Tests";
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "cufflinks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB923208733DC60010E9CD /* Debug */,
+				1DEB923308733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "cufflinks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB923608733DC60010E9CD /* Debug */,
+				1DEB923708733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EDD0CE1F10C72F7D00AF308F /* Build configuration list for PBXNativeTarget "cuffdiff" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EDD0CE2010C72F7D00AF308F /* Debug */,
+				EDD0CE2110C72F7D00AF308F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EDD6A9D211598AB900D3F668 /* Build configuration list for PBXNativeTarget "cuffcompare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EDD6A9D311598AB900D3F668 /* Debug */,
+				EDD6A9D411598AB900D3F668 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EDD6AA2C1159BA3200D3F668 /* Build configuration list for PBXNativeTarget "Unit Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EDD6AA251159BA2F00D3F668 /* Debug */,
+				EDD6AA261159BA2F00D3F668 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
