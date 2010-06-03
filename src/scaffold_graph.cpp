@@ -11,6 +11,9 @@
 #include "scaffold_graph.h"
 #include "scaffolds.h"
 
+#include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/visitors.hpp>
+
 #ifndef NDEBUG
 #include "transitive_reduction.h"
 #endif
