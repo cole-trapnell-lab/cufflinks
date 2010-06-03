@@ -11,7 +11,9 @@
 #include "scaffold_graph.h"
 #include "scaffolds.h"
 
+#ifndef NDEBUG
 #include "transitive_reduction.h"
+#endif
 
 using namespace std;
 using namespace boost;
@@ -222,7 +224,7 @@ bool create_overlap_dag(vector<Scaffold>& hits,
 		}
 	}
     
-#if DEBUG
+#ifndef NDEBUG
     DAG tr;
     boost::vector_property_map<DAGNode> G_to_TR;
     property_map<DAG, vertex_index_t>::type w = get(vertex_index, bundle_dag);
