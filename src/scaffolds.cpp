@@ -300,14 +300,7 @@ void Scaffold::fill_interstices(vector<AugmentedCuffOp>& to_fill,
 									   gap.second - op.g_left());
 				assert (gap_op.genomic_length > 0);
 				filled.push_back(gap_op);
-				
-                //fprintf (stderr, "CASE 6: adding op %d:%d-%d advancing gap from %d-%d\n", gap_op.opcode, gap_op.g_left(), gap_op.g_right(), gap.first, gap.second );
-				//  advance the gap index
-                if (gap.first == 0 && gap.second == 35903322)
-                {
-                    int a =43;
-                }
-                    
+				                    
 				break;
 			}
 			else if (op.g_left() <= gap.first && op.g_right() >= gap.first)

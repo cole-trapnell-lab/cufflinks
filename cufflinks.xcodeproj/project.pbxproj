@@ -60,6 +60,9 @@
 		EDD6AA481159BE6500D3F668 /* test_abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA461159BE6500D3F668 /* test_abundances.cpp */; };
 		EDD6AA6C1159C05600D3F668 /* test_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA471159BE6500D3F668 /* test_main.cpp */; };
 		EDD6AA8E1159C5CD00D3F668 /* libcppunit-1.12.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */; };
+		EDE78A2D11B5F4F0000F8846 /* graph_optimize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */; };
+		EDE78A7A11B6E912000F8846 /* scaffold_graph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A7911B6E912000F8846 /* scaffold_graph.cpp */; };
+		EDE78BC611B716C3000F8846 /* matching_merge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78BC411B716C3000F8846 /* matching_merge.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -142,44 +145,6 @@
 		EDACE439114F031B009024DB /* clustering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = clustering.cpp; path = src/clustering.cpp; sourceTree = "<group>"; };
 		EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transitive_reduction.h; path = src/transitive_reduction.h; sourceTree = "<group>"; };
 		EDD0CD9C10C72AC200AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
-		EDD0CDB510C72CC400AF308F /* bfs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bfs.h; sourceTree = "<group>"; };
-		EDD0CDB610C72CC400AF308F /* bin_heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bin_heap.h; sourceTree = "<group>"; };
-		EDD0CDB710C72CC400AF308F /* bipartite_matching.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bipartite_matching.h; sourceTree = "<group>"; };
-		EDD0CDB910C72CC400AF308F /* alteration_notifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alteration_notifier.h; sourceTree = "<group>"; };
-		EDD0CDBA10C72CC400AF308F /* array_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = array_map.h; sourceTree = "<group>"; };
-		EDD0CDBB10C72CC400AF308F /* base_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base_extender.h; sourceTree = "<group>"; };
-		EDD0CDBC10C72CC400AF308F /* debug_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = debug_map.h; sourceTree = "<group>"; };
-		EDD0CDBD10C72CC400AF308F /* default_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = default_map.h; sourceTree = "<group>"; };
-		EDD0CDBE10C72CC400AF308F /* graph_adaptor_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_adaptor_extender.h; sourceTree = "<group>"; };
-		EDD0CDBF10C72CC400AF308F /* graph_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_extender.h; sourceTree = "<group>"; };
-		EDD0CDC010C72CC400AF308F /* invalid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = invalid.h; sourceTree = "<group>"; };
-		EDD0CDC110C72CC400AF308F /* map_extender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = map_extender.h; sourceTree = "<group>"; };
-		EDD0CDC210C72CC400AF308F /* path_dump.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path_dump.h; sourceTree = "<group>"; };
-		EDD0CDC310C72CC400AF308F /* traits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = traits.h; sourceTree = "<group>"; };
-		EDD0CDC410C72CC400AF308F /* utility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utility.h; sourceTree = "<group>"; };
-		EDD0CDC510C72CC400AF308F /* variant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = variant.h; sourceTree = "<group>"; };
-		EDD0CDC610C72CC400AF308F /* vector_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vector_map.h; sourceTree = "<group>"; };
-		EDD0CDC710C72CC400AF308F /* bucket_heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bucket_heap.h; sourceTree = "<group>"; };
-		EDD0CDC810C72CC400AF308F /* concept_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = concept_check.h; sourceTree = "<group>"; };
-		EDD0CDCA10C72CC400AF308F /* bpugraph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bpugraph.h; sourceTree = "<group>"; };
-		EDD0CDCB10C72CC400AF308F /* graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph.h; sourceTree = "<group>"; };
-		EDD0CDCC10C72CC400AF308F /* graph_components.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_components.h; sourceTree = "<group>"; };
-		EDD0CDCD10C72CC400AF308F /* heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = heap.h; sourceTree = "<group>"; };
-		EDD0CDCE10C72CC400AF308F /* maps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maps.h; sourceTree = "<group>"; };
-		EDD0CDCF10C72CC400AF308F /* matrix_maps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = matrix_maps.h; sourceTree = "<group>"; };
-		EDD0CDD010C72CC400AF308F /* path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path.h; sourceTree = "<group>"; };
-		EDD0CDD110C72CC400AF308F /* ugraph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ugraph.h; sourceTree = "<group>"; };
-		EDD0CDD210C72CC400AF308F /* dfs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dfs.h; sourceTree = "<group>"; };
-		EDD0CDD310C72CC400AF308F /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
-		EDD0CDD410C72CC400AF308F /* fib_heap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fib_heap.h; sourceTree = "<group>"; };
-		EDD0CDD510C72CC400AF308F /* graph_adaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_adaptor.h; sourceTree = "<group>"; };
-		EDD0CDD610C72CC400AF308F /* graph_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph_utils.h; sourceTree = "<group>"; };
-		EDD0CDD710C72CC400AF308F /* list_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = list_graph.h; sourceTree = "<group>"; };
-		EDD0CDD810C72CC400AF308F /* maps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maps.h; sourceTree = "<group>"; };
-		EDD0CDD910C72CC400AF308F /* math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = math.h; sourceTree = "<group>"; };
-		EDD0CDDA10C72CC400AF308F /* smart_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = smart_graph.h; sourceTree = "<group>"; };
-		EDD0CDDB10C72CC400AF308F /* tolerance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tolerance.h; sourceTree = "<group>"; };
-		EDD0CDDC10C72CC400AF308F /* topology.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = topology.h; sourceTree = "<group>"; };
 		EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6A7A0115562EE00D3F668 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Makefile.am; path = src/Makefile.am; sourceTree = "<group>"; };
 		EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -187,6 +152,12 @@
 		EDD6AA461159BE6500D3F668 /* test_abundances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_abundances.cpp; sourceTree = "<group>"; };
 		EDD6AA471159BE6500D3F668 /* test_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_main.cpp; sourceTree = "<group>"; };
 		EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.12.1.dylib"; path = "/usr/local/lib/libcppunit-1.12.1.dylib"; sourceTree = "<absolute>"; };
+		EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graph_optimize.h; path = src/graph_optimize.h; sourceTree = "<group>"; };
+		EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graph_optimize.cpp; path = src/graph_optimize.cpp; sourceTree = "<group>"; };
+		EDE78A7811B6E912000F8846 /* scaffold_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scaffold_graph.h; path = src/scaffold_graph.h; sourceTree = "<group>"; };
+		EDE78A7911B6E912000F8846 /* scaffold_graph.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = scaffold_graph.cpp; path = src/scaffold_graph.cpp; sourceTree = "<group>"; };
+		EDE78BC411B716C3000F8846 /* matching_merge.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = matching_merge.cpp; path = src/matching_merge.cpp; sourceTree = "<group>"; };
+		EDE78BC511B716C3000F8846 /* matching_merge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = matching_merge.h; path = src/matching_merge.h; sourceTree = "<group>"; };
 		EDEBCDF8112DFD7600E2479E /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
 		EDEBCEBB112E316400E2479E /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -245,7 +216,6 @@
 			children = (
 				EDD6A7A0115562EE00D3F668 /* Makefile.am */,
 				EDEBCDF8112DFD7600E2479E /* configure.ac */,
-				EDD0CDB410C72CC400AF308F /* lemon */,
 				EDA5150910C72963000A4F41 /* abundances.h */,
 				EDA5150A10C72963000A4F41 /* assemble.h */,
 				EDA5150B10C72963000A4F41 /* bundles.h */,
@@ -261,14 +231,18 @@
 				EDA5151310C72963000A4F41 /* GFaSeqGet.h */,
 				EDA5151410C72963000A4F41 /* GFastaFile.h */,
 				EDA5151510C72963000A4F41 /* gff.h */,
-				EDA5151610C72963000A4F41 /* GStr.h */,
-				EDA5151710C72963000A4F41 /* gtf_tracking.h */,
-				EDA5151810C72963000A4F41 /* hits.h */,
-				EDA5151910C72963000A4F41 /* scaffolds.h */,
-				EDA5151A10C72963000A4F41 /* tokenize.h */,
-				EDA5151B10C72963000A4F41 /* transitive_closure.h */,
 				EDA5151C10C72963000A4F41 /* GHash.hh */,
 				EDA5151D10C72963000A4F41 /* GList.hh */,
+				EDA5151610C72963000A4F41 /* GStr.h */,
+				EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */,
+				EDA5151710C72963000A4F41 /* gtf_tracking.h */,
+				EDA5151810C72963000A4F41 /* hits.h */,
+				EDE78BC511B716C3000F8846 /* matching_merge.h */,
+				EDA5151910C72963000A4F41 /* scaffolds.h */,
+				EDE78A7811B6E912000F8846 /* scaffold_graph.h */,
+				EDA5151A10C72963000A4F41 /* tokenize.h */,
+				EDA5151B10C72963000A4F41 /* transitive_closure.h */,
+				EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */,
 				EDA5151E10C72963000A4F41 /* abundances.cpp */,
 				EDA5151F10C72963000A4F41 /* assemble.cpp */,
 				EDA5152010C72963000A4F41 /* bundles.cpp */,
@@ -286,13 +260,15 @@
 				EDA5152A10C72963000A4F41 /* genes.cpp */,
 				EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */,
 				EDA5152C10C72963000A4F41 /* gff.cpp */,
+				EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */,
 				EDA5152D10C72963000A4F41 /* GStr.cpp */,
 				EDA5152E10C72963000A4F41 /* gtf_reads.cpp */,
 				EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */,
 				EDA5153010C72963000A4F41 /* hits.cpp */,
+				EDE78BC411B716C3000F8846 /* matching_merge.cpp */,
 				EDA5153110C72963000A4F41 /* scaffolds.cpp */,
+				EDE78A7911B6E912000F8846 /* scaffold_graph.cpp */,
 				EDA5153210C72963000A4F41 /* tokenize.cpp */,
-				EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -313,68 +289,6 @@
 			children = (
 			);
 			name = Documentation;
-			sourceTree = "<group>";
-		};
-		EDD0CDB410C72CC400AF308F /* lemon */ = {
-			isa = PBXGroup;
-			children = (
-				EDD0CDB510C72CC400AF308F /* bfs.h */,
-				EDD0CDB610C72CC400AF308F /* bin_heap.h */,
-				EDD0CDB710C72CC400AF308F /* bipartite_matching.h */,
-				EDD0CDB810C72CC400AF308F /* bits */,
-				EDD0CDC710C72CC400AF308F /* bucket_heap.h */,
-				EDD0CDC810C72CC400AF308F /* concept_check.h */,
-				EDD0CDC910C72CC400AF308F /* concepts */,
-				EDD0CDD210C72CC400AF308F /* dfs.h */,
-				EDD0CDD310C72CC400AF308F /* error.h */,
-				EDD0CDD410C72CC400AF308F /* fib_heap.h */,
-				EDD0CDD510C72CC400AF308F /* graph_adaptor.h */,
-				EDD0CDD610C72CC400AF308F /* graph_utils.h */,
-				EDD0CDD710C72CC400AF308F /* list_graph.h */,
-				EDD0CDD810C72CC400AF308F /* maps.h */,
-				EDD0CDD910C72CC400AF308F /* math.h */,
-				EDD0CDDA10C72CC400AF308F /* smart_graph.h */,
-				EDD0CDDB10C72CC400AF308F /* tolerance.h */,
-				EDD0CDDC10C72CC400AF308F /* topology.h */,
-			);
-			name = lemon;
-			path = src/lemon;
-			sourceTree = "<group>";
-		};
-		EDD0CDB810C72CC400AF308F /* bits */ = {
-			isa = PBXGroup;
-			children = (
-				EDD0CDB910C72CC400AF308F /* alteration_notifier.h */,
-				EDD0CDBA10C72CC400AF308F /* array_map.h */,
-				EDD0CDBB10C72CC400AF308F /* base_extender.h */,
-				EDD0CDBC10C72CC400AF308F /* debug_map.h */,
-				EDD0CDBD10C72CC400AF308F /* default_map.h */,
-				EDD0CDBE10C72CC400AF308F /* graph_adaptor_extender.h */,
-				EDD0CDBF10C72CC400AF308F /* graph_extender.h */,
-				EDD0CDC010C72CC400AF308F /* invalid.h */,
-				EDD0CDC110C72CC400AF308F /* map_extender.h */,
-				EDD0CDC210C72CC400AF308F /* path_dump.h */,
-				EDD0CDC310C72CC400AF308F /* traits.h */,
-				EDD0CDC410C72CC400AF308F /* utility.h */,
-				EDD0CDC510C72CC400AF308F /* variant.h */,
-				EDD0CDC610C72CC400AF308F /* vector_map.h */,
-			);
-			path = bits;
-			sourceTree = "<group>";
-		};
-		EDD0CDC910C72CC400AF308F /* concepts */ = {
-			isa = PBXGroup;
-			children = (
-				EDD0CDCA10C72CC400AF308F /* bpugraph.h */,
-				EDD0CDCB10C72CC400AF308F /* graph.h */,
-				EDD0CDCC10C72CC400AF308F /* graph_components.h */,
-				EDD0CDCD10C72CC400AF308F /* heap.h */,
-				EDD0CDCE10C72CC400AF308F /* maps.h */,
-				EDD0CDCF10C72CC400AF308F /* matrix_maps.h */,
-				EDD0CDD010C72CC400AF308F /* path.h */,
-				EDD0CDD110C72CC400AF308F /* ugraph.h */,
-			);
-			path = concepts;
 			sourceTree = "<group>";
 		};
 		EDD6AA441159BE6500D3F668 /* tests */ = {
@@ -532,6 +446,9 @@
 				EDA5156510C729A9000A4F41 /* scaffolds.cpp in Sources */,
 				EDA5156610C729A9000A4F41 /* tokenize.cpp in Sources */,
 				EDACE43B114F031B009024DB /* clustering.cpp in Sources */,
+				EDE78A2D11B5F4F0000F8846 /* graph_optimize.cpp in Sources */,
+				EDE78A7A11B6E912000F8846 /* scaffold_graph.cpp in Sources */,
+				EDE78BC611B716C3000F8846 /* matching_merge.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

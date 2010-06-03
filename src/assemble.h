@@ -18,7 +18,7 @@
 #include <map>
 
 //#include <lemon/list_graph.h>
-#include <lemon/smart_graph.h>
+
 //#include <lemon/concepts/bpugraph.h>
 #include <boost/graph/adjacency_list.hpp>
 
@@ -38,13 +38,6 @@ int  match_length(const MateHit& m, int left, int right);
 bool distance_compatible(const MateHit& lhs, 
 						 const MateHit& rhs, 
 						 int max_inner_dist);
-
-typedef boost::adjacency_list<boost::vecS, 
-							  boost::vecS, 
-							  boost::bidirectionalS, 
-							  boost::property<boost::vertex_name_t, Scaffold*> > DAG;
-
-typedef boost::graph_traits<DAG>::vertex_descriptor DAGNode;
 
 bool make_scaffolds(int bundle_left,
 					int bundle_length,

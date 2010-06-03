@@ -489,4 +489,5 @@ struct StructurallyEqualScaffolds
 	}
 };
 
+
 #endif

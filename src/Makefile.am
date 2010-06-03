@@ -34,6 +34,9 @@ noinst_HEADERS = \
 	transitive_closure.h \
 	gtf_tracking.h \
 	bundles.h \
+    scaffold_graph.h \
+    matching_merge.h \
+    graph_optimize.h \
 	lemon/maps.h \
 	lemon/bin_heap.h \
 	lemon/fib_heap.h \
@@ -87,7 +90,10 @@ libcufflinks_a_SOURCES = \
 	hits.cpp \
 	genes.cpp \
 	bundles.cpp \
-	filters.cpp
+	filters.cpp \
+    scaffold_graph.cpp \
+    matching_merge.cpp \
+    graph_optimize.cpp 
 	
 libgc_a_SOURCES = \
 	codons.cpp \
