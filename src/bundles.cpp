@@ -433,6 +433,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			while (next_ref_scaff != ref_mRNAs.end() && 
 				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
 				   next_ref_scaff->ref_id() == bh->ref_id() &&
+                   right_bundle_boundary > next_ref_scaff->left() && 
 				   next_ref_scaff->left() <= bh->left() &&
 				   next_ref_scaff->right() >= bh->right())
 			{
