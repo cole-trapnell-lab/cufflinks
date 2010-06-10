@@ -255,7 +255,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 					
 					if (strand_agree && 
 						orientation_agree && (!Scaffold::overlap_in_genome(L, R, olap_radius) ||
-											  Scaffold::compatible(L,R, false)))
+											  Scaffold::compatible(L,R)))
 					{					
 						pm.right_alignment(bh);
 						add_hit(pm);
@@ -339,7 +339,7 @@ void HitBundle::finalize()
 		{
 			// add hit only adds if the hit is structurally compatible
 			if (_ref_scaffs[j].Scaffold::contains(hs) &&
-				Scaffold::compatible(_ref_scaffs[j], hs, true))
+				Scaffold::compatible(_ref_scaffs[j], hs))
 			{
 				_ref_scaffs[j].add_hit(hit);
 			}

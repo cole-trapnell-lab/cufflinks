@@ -216,7 +216,7 @@ void add_weights_to_reachability_bp_graph(ReachGraph& bp,
 		{
 			if (scaffolds[i].contains(hits[j]))
 			{
-				if (Scaffold::compatible(scaffolds[i],hits[j],true))
+				if (Scaffold::compatible(scaffolds[i],hits[j]))
 				{
 					spliced_in[i]++;
 				}
@@ -239,7 +239,7 @@ void add_weights_to_reachability_bp_graph(ReachGraph& bp,
 			{
 				total_density += density[j];
 				num_overlaps++;
-				if (Scaffold::compatible(scaffolds[i], scaffolds[j], true))
+				if (Scaffold::compatible(scaffolds[i], scaffolds[j]))
 				{
 					compatible_density += density[j];
 				}

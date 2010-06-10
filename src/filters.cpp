@@ -9,8 +9,6 @@
 
 #include "filters.h"
 
-//#define ASM_VERBOSE 0
-
 void filter_introns(int bundle_length,
 					int bundle_left,
 					vector<Scaffold>& hits, 

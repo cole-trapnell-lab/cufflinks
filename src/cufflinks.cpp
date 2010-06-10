@@ -38,8 +38,6 @@ const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:";
 const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:";
 #endif
 
-#define ASM_VERBOSE 1
-
 static struct option long_options[] = {
 {"inner-dist-mean",			required_argument,       0,          'm'},
 {"inner-dist-stddev",		required_argument,       0,          's'},
@@ -194,7 +192,7 @@ void add_non_shadow_scaffs(const vector<Scaffold>& lhs,
 					rhs[j].strand() != CUFF_STRAND_UNKNOWN)
 				{
 					if (Scaffold::overlap_in_genome(lhs[i], rhs[j], 0) &&
-						Scaffold::compatible(lhs[i], rhs[j], true))
+						Scaffold::compatible(lhs[i], rhs[j]))
 					{
 						add_to_asm = false;
 						break;

@@ -253,7 +253,7 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
 				{
 					
 					if (Scaffold::overlap_in_genome(*ri, hits[i], 0) &&
-						Scaffold::compatible(*ri,hits[i], true))
+						Scaffold::compatible(*ri,hits[i]))
 					{
 						compatible = true;
 						break;
@@ -309,7 +309,7 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
 			{
 				
 				if (Scaffold::overlap_in_genome(*ri, hits[i], 0) &&
-					Scaffold::compatible(*ri,hits[i], true))
+					Scaffold::compatible(*ri, hits[i]))
 				{
 					compatible = true;
 					break;

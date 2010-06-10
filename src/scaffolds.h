@@ -95,8 +95,7 @@ struct AugmentedCuffOp
 	}
 	
 	static bool compatible(const AugmentedCuffOp& lhs,
-						   const AugmentedCuffOp& rhs,
-						   bool allow_intron_unknowns);
+						   const AugmentedCuffOp& rhs);
 	
 	bool operator==(const AugmentedCuffOp& rhs) const
 	{
@@ -295,8 +294,7 @@ public:
 	
 	// Could we merge lhs and rhs together?
 	static bool compatible(const Scaffold& lhs, 
-						   const Scaffold& rhs, 
-						   bool allow_intron_unknowns);
+						   const Scaffold& rhs);
 	
 	static bool strand_agree(const Scaffold& lhs, 
 							 const Scaffold& rhs);
@@ -432,17 +430,14 @@ private:
 							const vector<pair<int, int> >& inners);
 	
 	static bool distance_compatible_contigs(const Scaffold& lhs, 
-											const Scaffold& rhs,
-											bool allow_intron_unknowns);
+											const Scaffold& rhs);
 	
 	static bool compatible_contigs(const Scaffold& lhs, 
-								   const Scaffold& rhs,
-								   bool allow_intron_unknowns)
+								   const Scaffold& rhs)
 	{
 		
 		bool dist = distance_compatible_contigs(lhs,
-												rhs,
-												allow_intron_unknowns);
+												rhs);
 		return (dist);
 	}
 	

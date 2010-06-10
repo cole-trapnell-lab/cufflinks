@@ -38,7 +38,8 @@ void fill_gaps(vector<Scaffold>& scaffolds, int fill_size)
 enum ConflictState { UNKNOWN_CONFLICTS = 0, SAME_CONFLICTS, DIFF_CONFLICTS };
 
 void same_conflicts(const vector<Scaffold>& scaffolds,
-                    ublas::mapped_matrix<ConflictState>& conflict_states)
+                    ublas::mapped_matrix<ConflictState>& conflict_states,
+                    vector<vector<size_t> >* conf_out)
 {       
     vector<vector<size_t> > conflicts(scaffolds.size());
     
@@ -48,16 +49,22 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
 		{
 			if (i == j)
 				continue;
-			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], olap_radius))
+			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
 			{
-				if (!Scaffold::compatible(scaffolds[i], scaffolds[j], true))
+				if (!Scaffold::compatible(scaffolds[i], scaffolds[j]))
                 {
                     conflicts[i].push_back(j);
                     conflicts[j].push_back(i);
                 }
 			}
 		}
+        
 	}
+    
+    for (size_t i = 0; i < scaffolds.size(); ++i)
+	{   
+        sort(conflicts[i].begin(), conflicts[i].end());
+    }
     
     for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
@@ -65,7 +72,7 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
 		{
 			if (i == j)
 				continue;
-			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], olap_radius))
+			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
 			{
 				vector<size_t> diff;
                 set_symmetric_difference(conflicts[i].begin(), 
@@ -86,6 +93,11 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
 			}
 		}
 	}
+    
+    if (conf_out)
+    {
+        *conf_out = conflicts;
+    }
 }
 
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
@@ -97,7 +109,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
         for (size_t j = 0; j < scaffolds.size(); ++j)
         {
             if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0) &&
-                !Scaffold::compatible(scaffolds[i], scaffolds[j], true))
+                !Scaffold::compatible(scaffolds[i], scaffolds[j]))
             {
                 scaffold_mask[i] = true;
             }
@@ -126,7 +138,9 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
         conflict_states = ublas::mapped_matrix<ConflictState>(scaffolds.size(), 
                                                               scaffolds.size(), 
                                                               scaffolds.size() * scaffolds.size());
-        same_conflicts(scaffolds, conflict_states);
+        
+        vector<vector<size_t> > conf_out;
+        same_conflicts(scaffolds, conflict_states, &conf_out);
 		
 		ContainmentGraph containment;
 		
@@ -154,9 +168,14 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 					continue;
                 
 				if (scaffolds[i].contains(scaffolds[j]) &&
-					Scaffold::compatible(scaffolds[i], scaffolds[j], true) &&
-                    conflict_states(i,j) == SAME_CONFLICTS)
+					Scaffold::compatible(scaffolds[i], scaffolds[j]))
 				{
+                    bool same = (conflict_states(i,j) == SAME_CONFLICTS);
+                    if (!same)
+                    {
+                        //bool X = Scaffold::compatible(scaffolds[0], scaffolds[4]);
+                        continue;
+                    }   
 					// To gaurd against the identity collapse, which won't 
 					// necessary reduce the total number of scaffolds.
 					if (scaffolds[j].contains(scaffolds[i]) && i < j)

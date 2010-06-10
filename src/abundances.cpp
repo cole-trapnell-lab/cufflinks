@@ -51,7 +51,7 @@ void get_compatibilities(const vector<Scaffold>& transcripts,
 		for (int j = 0; j < N; ++j) 
 		{
 			if (Scaffold::overlap_in_genome(transcripts[j],alignment_scaffs[i], 0) &&
-				Scaffold::compatible(transcripts[j], alignment_scaffs[i], true))
+				Scaffold::compatible(transcripts[j], alignment_scaffs[i]))
 			{
 				compatibilities[i][j] = 1;
 				transcripts_per_alignment[i]++;

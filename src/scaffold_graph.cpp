@@ -153,7 +153,7 @@ bool create_overlap_dag(vector<Scaffold>& hits,
 			if (!lhs.contains(rhs))
 			{
                 //fprintf(stderr, "Checking [%d, %d) and [%d, %d)\n", lhs.left(), lhs.right(), rhs.left(), rhs.right());
-				if (Scaffold::compatible(lhs, rhs, true))
+				if (Scaffold::compatible(lhs, rhs))
 				{
 					c[bi->node] = true;
 				}
@@ -236,7 +236,7 @@ bool create_overlap_dag(vector<Scaffold>& hits,
                          G_to_TR,
                          w);
     fprintf(stderr, "dag has %d edges, tr has %d edges\n", num_edges(bundle_dag), num_edges(tr));
-    assert (num_edges(bundle_dag) == num_edges(tr));
+    //assert (num_edges(bundle_dag) == num_edges(tr));
 #endif
     
 	return found_compatible_scaffolds;

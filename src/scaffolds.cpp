@@ -15,8 +15,7 @@
 using namespace std;
 
 bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
-								 const AugmentedCuffOp& rhs,
-								 bool allow_intron_unknowns)
+								 const AugmentedCuffOp& rhs)
 {
 	int l_match = match_length(lhs, rhs.g_left(), rhs.g_right());
 	if (rhs.opcode == CUFF_INTRON)
@@ -29,17 +28,10 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 		}
 		else if (lhs.opcode == CUFF_UNKNOWN)
 		{
-			if (allow_intron_unknowns)
-			{
-				int left_diff = abs(lhs.g_left() - rhs.g_left());
-				int right_diff = abs(lhs.g_right() - rhs.g_right());
-				if (left_diff + right_diff > max_inner_dist)
-					return false;
-			}
-			else
-			{
-				return false;
-			}
+            int left_diff = abs(lhs.g_left() - rhs.g_left());
+            int right_diff = abs(lhs.g_right() - rhs.g_right());
+            if (left_diff + right_diff > max_inner_dist)
+                return false;
 		}
 		else if (l_match > bowtie_overhang_tolerance)
 		{
@@ -63,17 +55,10 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 		}
 		else if (lhs.opcode == CUFF_UNKNOWN)
 		{
-			if (allow_intron_unknowns)
-			{
-				int left_diff = abs(lhs.g_left() - rhs.g_left());
-				int right_diff = abs(lhs.g_right() - rhs.g_right());
-				if (left_diff + right_diff > max_inner_dist)
-					return false;
-			}
-			else
-			{
-				return false;
-			}
+            int left_diff = abs(lhs.g_left() - rhs.g_left());
+            int right_diff = abs(lhs.g_right() - rhs.g_right());
+            if (left_diff + right_diff > max_inner_dist)
+                return false;
 		}
 		else if (r_match > bowtie_overhang_tolerance)
 		{
@@ -792,8 +777,7 @@ bool Scaffold::strand_agree(const Scaffold& lhs,
 
 
 bool Scaffold::compatible(const Scaffold& lhs, 
-						  const Scaffold& rhs,
-						  bool allow_intron_unknowns)
+						  const Scaffold& rhs)
 {	
 	if (!strand_agree(lhs, rhs))
 		return false;
@@ -803,7 +787,7 @@ bool Scaffold::compatible(const Scaffold& lhs,
 		if (overlap_in_genome(lhs, rhs, olap_radius))
 		{
 			// check compatibility
-			if (!compatible_contigs(lhs, rhs, allow_intron_unknowns))
+			if (!compatible_contigs(lhs, rhs))
 				return false;
 		}
 	}
@@ -812,7 +796,7 @@ bool Scaffold::compatible(const Scaffold& lhs,
 		if (overlap_in_genome(rhs, lhs, olap_radius))
 		{
 			// check compatibility
-			if (!compatible_contigs(rhs, lhs, allow_intron_unknowns))
+			if (!compatible_contigs(rhs, lhs))
 				return false;
 		}
 	}
@@ -822,8 +806,7 @@ bool Scaffold::compatible(const Scaffold& lhs,
 }
 
 bool Scaffold::distance_compatible_contigs(const Scaffold& lhs, 
-										   const Scaffold& rhs,
-										   bool allow_intron_unknowns)
+										   const Scaffold& rhs)
 {
 	const vector<AugmentedCuffOp>& l_aug = lhs._augmented_ops;
 	const vector<AugmentedCuffOp>& r_aug = rhs._augmented_ops;
@@ -842,15 +825,15 @@ bool Scaffold::distance_compatible_contigs(const Scaffold& lhs,
 			if (AugmentedCuffOp::overlap_in_genome(l_op, r_op))
 			{
 				// check compatibility
-				if (!AugmentedCuffOp::compatible(l_op, r_op, allow_intron_unknowns))
+				if (!AugmentedCuffOp::compatible(l_op, r_op))
 					return false;
-				if (l_op.opcode == CUFF_UNKNOWN && 
-					r_op.opcode == CUFF_MATCH)
-				{
-					//int m_len = AugmentedCuffOp::match_length(r_op, l_op.g_left(), l_op.g_right());
-					if (l_op.properly_contains(r_op))
-						return false;
-				}
+//				if (l_op.opcode == CUFF_UNKNOWN && 
+//					r_op.opcode == CUFF_MATCH)
+//				{
+//					//int m_len = AugmentedCuffOp::match_length(r_op, l_op.g_left(), l_op.g_right());
+//					if (l_op.properly_contains(r_op))
+//						return false;
+//				}
 			}
 			if (l_op.g_right() < r_op.g_right())
 				++curr_l_op;
@@ -867,15 +850,15 @@ bool Scaffold::distance_compatible_contigs(const Scaffold& lhs,
 			if (AugmentedCuffOp::overlap_in_genome(r_op, l_op))
 			{
 				// check compatibility
-				if (!AugmentedCuffOp::compatible(r_op, l_op, allow_intron_unknowns))
+				if (!AugmentedCuffOp::compatible(r_op, l_op))
 					return false;
-				if (r_op.opcode == CUFF_UNKNOWN && 
-					l_op.opcode == CUFF_MATCH)
-				{
-					//int m_len = AugmentedCuffOp::match_length(l_op, r_op.g_left(), r_op.g_right());
-					if (r_op.properly_contains(l_op))
-						return false;
-				}
+//				if (r_op.opcode == CUFF_UNKNOWN && 
+//					l_op.opcode == CUFF_MATCH)
+//				{
+//					//int m_len = AugmentedCuffOp::match_length(l_op, r_op.g_left(), r_op.g_right());
+//					if (r_op.properly_contains(l_op))
+//						return false;
+//				}
 			}
 			if (r_op.g_right() < l_op.g_right())
 				++curr_r_op;
@@ -1231,7 +1214,7 @@ bool Scaffold::add_hit(const MateHit* hit)
 {
 	Scaffold hs(*hit);
 	if (Scaffold::overlap_in_genome(*this, hs, olap_radius) &&
-		Scaffold::compatible(*this, hs, true))
+		Scaffold::compatible(*this, hs))
 	{
 		if (!binary_search(_mates_in_scaff.begin(),
 						  _mates_in_scaff.end(),
