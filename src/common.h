@@ -61,7 +61,7 @@ extern int max_mle_iterations;
 extern int num_importance_samples;
 
 #define ENABLE_THREADS 1
-#define ASM_VERBOSE 1
+#define ASM_VERBOSE 0
 
 bool gaurd_assembly();
 

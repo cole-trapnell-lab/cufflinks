@@ -38,7 +38,7 @@ public:
     template < typename Vertex, typename Graph >
     void discover_vertex(Vertex u, const Graph & g)
     {
-        fprintf(stderr, "node %d has indegree %d, outdegree %d\n",u,in_degree(u, g),out_degree(u, g)); 
+        //fprintf(stderr, "node %d has indegree %d, outdegree %d\n",u,in_degree(u, g),out_degree(u, g)); 
         if (in_degree(u, g) == 1)
         {
             
