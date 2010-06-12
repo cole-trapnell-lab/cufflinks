@@ -16,9 +16,9 @@
 			ED9729BC11BC431700B5E1BB /* bundles.cpp:487 */,
 			ED9729C611BC43E500B5E1BB /* bundles.cpp:446 */,
 			ED9729C811BC43ED00B5E1BB /* bundles.cpp:479 */,
-			EDEA773711BD77E2001FCFD7 /* graph_optimize.cpp:178 */,
+			EDEA773711BD77E2001FCFD7 /* graph_optimize.cpp:184 */,
 			EDEA773B11BD7842001FCFD7 /* graph_optimize.cpp:83 */,
-			EDEA775411BD7AC3001FCFD7 /* graph_optimize.cpp:148 */,
+			EDEA775411BD7AC3001FCFD7 /* graph_optimize.cpp:154 */,
 			EDEA77AD11BD955E001FCFD7 /* scaffolds.cpp:739 */,
 			EDEA77B911BD95CA001FCFD7 /* scaffolds.cpp:727 */,
 		);
@@ -165,6 +165,7 @@
 			ED4CAB5211C3D8270007F355 /* PBXTextBookmark */ = ED4CAB5211C3D8270007F355 /* PBXTextBookmark */;
 			ED4CAB5911C3F1DB0007F355 /* PBXTextBookmark */ = ED4CAB5911C3F1DB0007F355 /* PBXTextBookmark */;
 			ED4CAB5A11C3F1DB0007F355 /* PBXTextBookmark */ = ED4CAB5A11C3F1DB0007F355 /* PBXTextBookmark */;
+			ED4CAB6411C3F4A20007F355 /* PBXTextBookmark */ = ED4CAB6411C3F4A20007F355 /* PBXTextBookmark */;
 			ED5D1F28114C2C9400A2AF02 = ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */;
 			ED5D1FAF114C465200A2AF02 = ED5D1FAF114C465200A2AF02 /* PBXTextBookmark */;
 			ED6D6736118CAA0400A682F4 = ED6D6736118CAA0400A682F4 /* PBXTextBookmark */;
@@ -340,7 +341,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 1;
-		rLoc = 278;
+		rLoc = 284;
 		rType = 1;
 	};
 	ED4CAB4011C3D4310007F355 /* PBXTextBookmark */ = {
@@ -348,7 +349,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 255";
 		rLen = 0;
-		rLoc = 7871;
+		rLoc = 8015;
 		rType = 0;
 		vrLen = 1526;
 		vrLoc = 6046;
@@ -358,7 +359,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 256";
 		rLen = 0;
-		rLoc = 7774;
+		rLoc = 7918;
 		rType = 0;
 		vrLen = 1785;
 		vrLoc = 6715;
@@ -437,7 +438,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 227";
 		rLen = 37;
-		rLoc = 6814;
+		rLoc = 6958;
 		rType = 0;
 		vrLen = 1674;
 		vrLoc = 5833;
@@ -447,7 +448,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 234";
 		rLen = 0;
-		rLoc = 6925;
+		rLoc = 7069;
 		rType = 0;
 		vrLen = 1556;
 		vrLoc = 6183;
@@ -464,10 +465,20 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 118";
 		rLen = 0;
-		rLoc = 3269;
+		rLoc = 3307;
 		rType = 0;
 		vrLen = 1787;
 		vrLoc = 1859;
+	};
+	ED4CAB6411C3F4A20007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 111";
+		rLen = 0;
+		rLoc = 2941;
+		rType = 0;
+		vrLen = 1782;
+		vrLoc = 2765;
 	};
 	ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -2005,9 +2016,9 @@
 	};
 	EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {903, 4537}}";
-			sepNavSelRange = "{3269, 0}";
-			sepNavVisRange = "{1859, 1787}";
+			sepNavIntBoundsRect = "{{0, 0}, {903, 4550}}";
+			sepNavSelRange = "{2941, 0}";
+			sepNavVisRange = "{2765, 1782}";
 			sepNavWindowFrame = "{{58, 0}, {1222, 778}}";
 		};
 	};
@@ -2159,7 +2170,7 @@
 		vrLen = 511;
 		vrLoc = 0;
 	};
-	EDEA773711BD77E2001FCFD7 /* graph_optimize.cpp:178 */ = {
+	EDEA773711BD77E2001FCFD7 /* graph_optimize.cpp:184 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -2171,7 +2182,7 @@
 		functionName = "collapse_contained_transfrags(vector<Scaffold>& scaffolds, uint32_t max_rounds)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 178;
+		lineNumber = 184;
 		location = cufflinks_xcode;
 		modificationTime = 297898558.066345;
 		originalNumberOfMultipleMatches = 1;
@@ -2205,7 +2216,7 @@
 		vrLen = 846;
 		vrLoc = 1739;
 	};
-	EDEA775411BD7AC3001FCFD7 /* graph_optimize.cpp:148 */ = {
+	EDEA775411BD7AC3001FCFD7 /* graph_optimize.cpp:154 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -2217,7 +2228,7 @@
 		functionName = "collapse_contained_transfrags(vector<Scaffold>& scaffolds, uint32_t max_rounds)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 148;
+		lineNumber = 154;
 		location = cufflinks_xcode;
 		modificationTime = 297898558.067006;
 		originalNumberOfMultipleMatches = 1;
