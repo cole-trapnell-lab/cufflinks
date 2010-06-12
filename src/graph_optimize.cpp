@@ -331,7 +331,8 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
                 for (size_t j = i+1; j < scaffolds.size(); ++j)
                 {
                     
-                    if (Scaffold::overlap_in_genome(scaffolds[lhs], scaffolds[j], 0))
+                    if (Scaffold::overlap_in_genome(scaffolds[lhs], scaffolds[j], 0) &&
+                        scaffolds[lhs].contains(scaffolds[j]))
                     {
                         // conflicts needs to be invariant over this whole loop
                         if (conflicts[lhs] == conflicts[j])
