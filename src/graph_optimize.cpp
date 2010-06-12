@@ -353,7 +353,17 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 			return performed_collapse;
 		
 
+        vector<Scaffold> replaced;
+        for (size_t i = 0; i < scaffolds.size(); ++i)
+        {
+            if (replacements[i] == i)
+            {
+                replaced.push_back(scaffolds[i]);
+            }
+        }
         
+        scaffolds = replaced;
+        sort(scaffolds.begin(), scaffolds.end(), scaff_lt);
 		performed_collapse = true;
 	}
 	return performed_collapse;
