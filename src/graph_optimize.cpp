@@ -322,30 +322,32 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
         {
             size_t lhs = replacements[i];
             
-            
+            if (lhs == i)
+            {
 #if ASM_VERBOSE
-            fprintf (stderr, "Processing %lu (via %lu)\n", i, lhs);
+                fprintf (stderr, "Processing %lu (via %lu)\n", i, lhs);
 #endif
             
-            for (size_t j = i+1; j < scaffolds.size(); ++j)
-            {
-                
-                if (Scaffold::overlap_in_genome(scaffolds[lhs], scaffolds[j], 0))
+                for (size_t j = i+1; j < scaffolds.size(); ++j)
                 {
-                    // conflicts needs to be invariant over this whole loop
-                    if (conflicts[lhs] == conflicts[j])
+                    
+                    if (Scaffold::overlap_in_genome(scaffolds[lhs], scaffolds[j], 0))
                     {
-                        vector<Scaffold> s;
-                        s.push_back(scaffolds[lhs]);
-                        s.push_back(scaffolds[j]);
-                        scaffolds[lhs] = Scaffold(s);
-                        replacements[j] = lhs;
-                        will_perform_collapse = true;
+                        // conflicts needs to be invariant over this whole loop
+                        if (conflicts[lhs] == conflicts[j])
+                        {
+                            vector<Scaffold> s;
+                            s.push_back(scaffolds[lhs]);
+                            s.push_back(scaffolds[j]);
+                            scaffolds[lhs] = Scaffold(s);
+                            replacements[j] = lhs;
+                            will_perform_collapse = true;
+                        }
                     }
-                }
-                else
-                {
-                    break;
+                    else
+                    {
+                        break;
+                    }
                 }
             }
         }
