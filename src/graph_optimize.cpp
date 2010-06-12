@@ -90,13 +90,14 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
 				continue;
 			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
 			{
-				vector<size_t> diff;
-                set_symmetric_difference(conflicts[i].begin(), 
-                                         conflicts[i].end(),
-                                         conflicts[j].begin(), 
-                                         conflicts[j].end(),
-                                         back_inserter(diff));
-                if (!diff.empty())
+//				vector<size_t> diff;
+//                set_symmetric_difference(conflicts[i].begin(), 
+//                                         conflicts[i].end(),
+//                                         conflicts[j].begin(), 
+//                                         conflicts[j].end(),
+//                                         back_inserter(diff));
+//                if (!diff.empty())
+                if (conflicts[i] != conflicts[j])
                 {
                     conflict_states(i,j) = DIFF_CONFLICTS;
                     conflict_states(j,i) = DIFF_CONFLICTS;
