@@ -40,7 +40,11 @@ enum ConflictState { UNKNOWN_CONFLICTS = 0, SAME_CONFLICTS, DIFF_CONFLICTS };
 void same_conflicts(const vector<Scaffold>& scaffolds,
                     ublas::mapped_matrix<ConflictState>& conflict_states,
                     vector<vector<size_t> >* conf_out)
-{       
+{    
+#if ASM_VERBOSE
+    fprintf(stderr, "Finding fragment-level conflicts...");
+#endif
+    
     vector<vector<size_t> > conflicts(scaffolds.size());
     
 	for (size_t i = 0; i < scaffolds.size(); ++i)
@@ -65,10 +69,18 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
         
 	}
     
+#if ASM_VERBOSE
+    fprintf(stderr, "done\n");
+#endif
+    
     for (size_t i = 0; i < scaffolds.size(); ++i)
 	{   
         sort(conflicts[i].begin(), conflicts[i].end());
     }
+    
+#if ASM_VERBOSE
+    fprintf(stderr, "Assessing overlapping fragments for identical conflict sets...");
+#endif
     
     for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
@@ -101,6 +113,10 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
             }
 		}
 	}
+    
+#if ASM_VERBOSE
+    fprintf(stderr, "done\n");
+#endif
     
     if (conf_out)
     {
@@ -242,14 +258,14 @@ void compress_consitutive(vector<Scaffold>& hits)
 {
     vector<bool> scaffold_mask;
     
-#ifdef ASM_VERBOSE
+#if ASM_VERBOSE
     fprintf(stderr, "Building constitutivity mask..."); 
 #endif
     
     scaffold_mask = vector<bool>(hits.size(), false);
     add_non_constitutive_to_scaffold_mask(hits, scaffold_mask);
     
-#ifdef ASM_VERBOSE
+#if ASM_VERBOSE
     fprintf(stderr, "done\n"); 
 #endif
     
@@ -264,7 +280,7 @@ void compress_consitutive(vector<Scaffold>& hits)
             non_constitutive.push_back(hits[i]);
     }
     
-#ifdef ASM_VERBOSE
+#if ASM_VERBOSE
     size_t pre_compress = hits.size();
 #endif
     hits.clear();
@@ -278,7 +294,7 @@ void compress_consitutive(vector<Scaffold>& hits)
     
     hits.insert(hits.end(), non_constitutive.begin(), non_constitutive.end());
     sort(hits.begin(), hits.end(), scaff_lt);
-#ifdef ASM_VERBOSE
+#if ASM_VERBOSE
     size_t post_compress = hits.size();
     size_t delta = pre_compress - post_compress;
     double collapse_ratio = delta / (double) pre_compress; 
