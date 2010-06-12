@@ -309,7 +309,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
         }
         
 #if ASM_VERBOSE
-        fprintf(stderr, "Assessing overlapping fragments for identical conflict sets...");
+        fprintf(stderr, "Assessing overlaps between %lu fragments for identical conflict sets...", scaffolds.size());
 #endif
         
         vector<size_t> replacements;
@@ -325,7 +325,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
             if (lhs == i)
             {
 #if ASM_VERBOSE
-                fprintf (stderr, "Processing %lu (via %lu)\n", i, lhs);
+                //fprintf (stderr, "Processing %lu (via %lu)\n", i, lhs);
 #endif
             
                 for (size_t j = i+1; j < scaffolds.size(); ++j)
