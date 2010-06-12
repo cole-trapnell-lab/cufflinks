@@ -223,8 +223,16 @@ void compress_consitutive(vector<Scaffold>& hits)
 {
     vector<bool> scaffold_mask;
     
+#ifdef ASM_VERBOSE
+    fprintf(stderr, "Building constitutivity mask..."); 
+#endif
+    
     scaffold_mask = vector<bool>(hits.size(), false);
     add_non_constitutive_to_scaffold_mask(hits, scaffold_mask);
+    
+#ifdef ASM_VERBOSE
+    fprintf(stderr, "done\n"); 
+#endif
     
     vector<Scaffold> constitutive;
     vector<Scaffold> non_constitutive;
