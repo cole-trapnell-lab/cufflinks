@@ -322,6 +322,11 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
         {
             size_t lhs = replacements[i];
             
+            
+#if ASM_VERBOSE
+            fprintf (stderr, "Processing %lu (via %lu)\n", i, lhs);
+#endif
+            
             for (size_t j = i+1; j < scaffolds.size(); ++j)
             {
                 
