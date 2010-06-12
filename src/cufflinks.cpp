@@ -832,7 +832,7 @@ int main(int argc, char** argv)
 	
     if (output_dir != "")
     {
-        int retcode = mkdir(output_dir.c_str(), 0777);
+        int retcode = mkpath(output_dir.c_str(), 0777);
         if (retcode == -1)
         {
             if (errno != EEXIST)

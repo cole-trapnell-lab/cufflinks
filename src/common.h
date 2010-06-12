@@ -74,6 +74,8 @@ float parseFloat(float lower,
 				 const char *errmsg, 
 				 void (*print_usage)());
 
+int mkpath(const char *s, mode_t mode);
+
 template<typename InputIterator,
 		 typename OutputIterator,
 		 typename Predicate>

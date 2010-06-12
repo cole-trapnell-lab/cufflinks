@@ -62,6 +62,7 @@ static struct option long_options[] = {
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"GTF",					    required_argument,		 0,			 'G'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
+{"output-dir",			    required_argument,		 0,			 'o'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif

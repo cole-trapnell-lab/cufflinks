@@ -236,6 +236,10 @@ void compress_consitutive(vector<Scaffold>& hits)
         else
             non_constitutive.push_back(hits[i]);
     }
+    
+#ifdef ASM_VERBOSE
+    size_t pre_compress = hits.size();
+#endif
     hits.clear();
     if (!constitutive.empty())
     {
@@ -247,6 +251,16 @@ void compress_consitutive(vector<Scaffold>& hits)
     
     hits.insert(hits.end(), non_constitutive.begin(), non_constitutive.end());
     sort(hits.begin(), hits.end(), scaff_lt);
+#ifdef ASM_VERBOSE
+    size_t post_compress = hits.size();
+    size_t delta = pre_compress - post_compress;
+    double collapse_ratio = delta / (double) pre_compress; 
+    fprintf(stderr, 
+            "Compressed %lu of %lu constitutive fragments (%lf percent)\n", 
+            delta, 
+            pre_compress, 
+            collapse_ratio);
+#endif
 }
 
 void compress_fragments(vector<Scaffold>& fragments)
