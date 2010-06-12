@@ -57,6 +57,10 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
                     conflicts[j].push_back(i);
                 }
 			}
+            else
+            {
+                break;
+            }
 		}
         
 	}
@@ -91,6 +95,10 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
                     conflict_states(j,i) = SAME_CONFLICTS;
                 }
 			}
+            else
+            {
+                break;
+            }
 		}
 	}
     
