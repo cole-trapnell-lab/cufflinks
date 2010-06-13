@@ -265,7 +265,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 	normal norm(0, 0.1);
 	bool performed_collapse = false;
     
-	while (max_rounds--)
+	//while (max_rounds--)
 	{
 		
 #if ASM_VERBOSE
@@ -337,6 +337,9 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
                         // conflicts needs to be invariant over this whole loop
                         if (conflicts[lhs] == conflicts[j])
                         {
+                            
+                            assert (Scaffold::compatible(scaffolds[lhs], scaffolds[j]));
+                            
                             vector<Scaffold> s;
                             s.push_back(scaffolds[lhs]);
                             s.push_back(scaffolds[j]);
