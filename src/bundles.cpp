@@ -366,6 +366,7 @@ void print_sort_error(const char* last_chr_name,
             bh_pos,
             last_chr_name,
             last_chr_pos);
+    fprintf(stderr, "You may be able to fix this by running:\n\t$ LC_ALL=\"C\" sort -k 3,3 -k 4,4n input.sam > fixed.sam\n");
 }
 
 bool BundleFactory::next_bundle(HitBundle& bundle_out)
@@ -421,16 +422,11 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 				if (_ref_scaff_offsets[i].first == bh->ref_id())
 				{
 					next_ref_scaff = _ref_scaff_offsets[i].second;
-                    if (next_ref_scaff->annotated_gene_id() == "CG34352")
-                    {
-                        int a = 42;
-                    }
 				}
 			}
             // Hit incident on chromosome not in the annotation
             if (next_ref_scaff == curr_ref_scaff)
             {
-                int a = 5;
                 continue;
             }
 		}
@@ -447,11 +443,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 				   next_ref_scaff->ref_id() == bh->ref_id() &&
 				   next_ref_scaff->right() <= bh->left())
 			{
-                if (next_ref_scaff->annotated_gene_id() == "CG34352")
-                {
-                    int a = 42;
-                }
-                
 				if (next_ref_scaff->left() >= bh->left())
 				{
 					break;
@@ -459,11 +450,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 
 				next_ref_scaff++;
 			}
-			
-            if (next_ref_scaff == ref_mRNAs.end())
-            {
-                int a = 4;
-            }
             
 			while (next_ref_scaff != ref_mRNAs.end() && 
 				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
@@ -474,20 +460,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			{
 				hit_within_boundary = true;
 				right_bundle_boundary = max(right_bundle_boundary, next_ref_scaff->right());
-				
-                
-                if (next_ref_scaff->annotated_gene_id() == "CG34352")
-                {
-                    int a = 42;
-                }
                 
                 next_ref_scaff++;
 			}
             
-            if (next_ref_scaff == ref_mRNAs.end())
-            {
-                int a = 4;
-            }
 		}
 		
 		if (last_ref_id_seen == 0)
@@ -586,10 +562,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 									  bundle.left(), 
 									  bundle.right()))
 					{	
-                        if (itr->annotated_gene_id() == "CG34352")
-                        {
-                            int a = 34;
-                        }
 						bundle.add_ref_scaffold(*itr);
 					}
 					else if (itr->right() < bundle.left())

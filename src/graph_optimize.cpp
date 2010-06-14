@@ -265,7 +265,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 	normal norm(0, 0.1);
 	bool performed_collapse = false;
     
-	//while (max_rounds--)
+	while (max_rounds--)
 	{
 		
 #if ASM_VERBOSE
@@ -440,9 +440,12 @@ void compress_fragments(vector<Scaffold>& fragments)
     fprintf(stderr,"\tPerforming preliminary containment collapse on %lu fragments\n", fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
 #endif
-    if (perform_full_collapse)
+    while (fragments.size() > collapse_thresh)
     {
-        collapse_contained_transfrags(fragments);
+        if (!collapse_contained_transfrags(fragments, 1))
+        {
+            break;
+        }
     }
     
 #if ASM_VERBOSE
