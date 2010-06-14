@@ -153,110 +153,110 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 	}
 }
 
-//bool collapse_contained_transfrags(vector<Scaffold>& scaffolds, 
-//                                   uint32_t max_rounds)
-//{
-//	// The containment graph is a bipartite graph with an edge (u,v) when
-//	// u is (not necessarily properly) contained in v and is the two are
-//	// compatible.
-//	typedef lemon::SmartBpUGraph ContainmentGraph;
-//	normal norm(0, 0.1);
-//	bool performed_collapse = false;
-//    
-//	while (max_rounds--)
-//	{
-//		
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\tStarting new collapse round\n");
-//#endif
-//        
-//        ublas::mapped_matrix<ConflictState> conflict_states;
-//        conflict_states = ublas::mapped_matrix<ConflictState>(scaffolds.size(), 
-//                                                              scaffolds.size(), 
-//                                                              scaffolds.size() * scaffolds.size());
-//        
-//        vector<vector<size_t> > conf_out;
-//        same_conflicts(scaffolds, conflict_states, &conf_out);
-//		
-//		ContainmentGraph containment;
-//		
-//		
-//		typedef pair<ContainmentGraph::ANode, ContainmentGraph::BNode> NodePair;
-//		vector<NodePair> node_ids;
-//		vector<size_t> A_to_scaff(scaffolds.size());
-//		vector<size_t> B_to_scaff(scaffolds.size());
-//		
-//		for (size_t n = 0; n < scaffolds.size(); ++n)
-//		{
-//			NodePair p = make_pair(containment.addANode(),
-//								   containment.addBNode());
-//			node_ids.push_back(p);
-//			A_to_scaff[containment.aNodeId(p.first)] = n;
-//			B_to_scaff[containment.bNodeId(p.second)] = n;
-//		}
-//		
-//		bool will_perform_collapse = false;
-//		for (size_t i = 0; i < scaffolds.size(); ++i)
-//		{
-//			for (size_t j = 0; j < scaffolds.size(); ++j)
-//			{
-//				if (i == j)
-//					continue;
-//                
-//				if (scaffolds[i].contains(scaffolds[j]) &&
-//					Scaffold::compatible(scaffolds[i], scaffolds[j]))
-//				{
-//                    bool same = (conflict_states(i,j) == SAME_CONFLICTS);
-//                    if (!same)
-//                    {
-//                        //bool X = Scaffold::compatible(scaffolds[0], scaffolds[4]);
-//                        continue;
-//                    }   
-//					// To gaurd against the identity collapse, which won't 
-//					// necessary reduce the total number of scaffolds.
-//					if (scaffolds[j].contains(scaffolds[i]) && i < j)
-//						continue;
-//					const NodePair& nj = node_ids[j];
-//					const NodePair& ni = node_ids[i];
-//					assert (nj.first != ni.second);
-//                    
-//					will_perform_collapse = true;
-//					ContainmentGraph::UEdge e = containment.addEdge(nj.first,
-//																	ni.second);						
-//                    
-//				}
-//			}
-//		}
-//		
-//		if (will_perform_collapse == false)
-//			return performed_collapse;
-//		
-//		lemon::MaxBipartiteMatching<ContainmentGraph>  matcher(containment);
-//        
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\tContainment graph has %d nodes, %d edges\n", containment.aNodeNum(), containment.uEdgeNum());
-//		fprintf(stderr, "\tFinding a maximum matching to collapse scaffolds\n");
-//#endif
-//        
-//		matcher.run();
-//        
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\t\tWill collapse %d scaffolds\n", matcher.matchingSize());
-//#endif
-//		
-//		ContainmentGraph::UEdgeMap<bool> matched_edges(containment);
-//		
-//		matcher.matching(matched_edges);
-//		
-//        merge_from_matching(containment, matcher, scaffolds);
-//        
-//		performed_collapse = true;
-//	}
-//	return performed_collapse;
-//}
-
 bool collapse_contained_transfrags(vector<Scaffold>& scaffolds, 
                                    uint32_t max_rounds)
+{
+	// The containment graph is a bipartite graph with an edge (u,v) when
+	// u is (not necessarily properly) contained in v and is the two are
+	// compatible.
+	typedef lemon::SmartBpUGraph ContainmentGraph;
+	normal norm(0, 0.1);
+	bool performed_collapse = false;
+    
+	while (max_rounds--)
+	{
+		
+#if ASM_VERBOSE
+		fprintf(stderr, "\tStarting new collapse round\n");
+#endif
+        
+        ublas::mapped_matrix<ConflictState> conflict_states;
+        conflict_states = ublas::mapped_matrix<ConflictState>(scaffolds.size(), 
+                                                              scaffolds.size(), 
+                                                              scaffolds.size() * scaffolds.size());
+        
+        vector<vector<size_t> > conf_out;
+        same_conflicts(scaffolds, conflict_states, &conf_out);
+		
+		ContainmentGraph containment;
+		
+		
+		typedef pair<ContainmentGraph::ANode, ContainmentGraph::BNode> NodePair;
+		vector<NodePair> node_ids;
+		vector<size_t> A_to_scaff(scaffolds.size());
+		vector<size_t> B_to_scaff(scaffolds.size());
+		
+		for (size_t n = 0; n < scaffolds.size(); ++n)
+		{
+			NodePair p = make_pair(containment.addANode(),
+								   containment.addBNode());
+			node_ids.push_back(p);
+			A_to_scaff[containment.aNodeId(p.first)] = n;
+			B_to_scaff[containment.bNodeId(p.second)] = n;
+		}
+		
+		bool will_perform_collapse = false;
+		for (size_t i = 0; i < scaffolds.size(); ++i)
+		{
+			for (size_t j = 0; j < scaffolds.size(); ++j)
+			{
+				if (i == j)
+					continue;
+                
+				if (scaffolds[i].contains(scaffolds[j]) &&
+					Scaffold::compatible(scaffolds[i], scaffolds[j]))
+				{
+                    bool same = (conflict_states(i,j) == SAME_CONFLICTS);
+                    if (!same)
+                    {
+                        //bool X = Scaffold::compatible(scaffolds[0], scaffolds[4]);
+                        continue;
+                    }   
+					// To gaurd against the identity collapse, which won't 
+					// necessary reduce the total number of scaffolds.
+					if (scaffolds[j].contains(scaffolds[i]) && i < j)
+						continue;
+					const NodePair& nj = node_ids[j];
+					const NodePair& ni = node_ids[i];
+					assert (nj.first != ni.second);
+                    
+					will_perform_collapse = true;
+					ContainmentGraph::UEdge e = containment.addEdge(nj.first,
+																	ni.second);						
+                    
+				}
+			}
+		}
+		
+		if (will_perform_collapse == false)
+			return performed_collapse;
+		
+		lemon::MaxBipartiteMatching<ContainmentGraph>  matcher(containment);
+        
+#if ASM_VERBOSE
+		fprintf(stderr, "\tContainment graph has %d nodes, %d edges\n", containment.aNodeNum(), containment.uEdgeNum());
+		fprintf(stderr, "\tFinding a maximum matching to collapse scaffolds\n");
+#endif
+        
+		matcher.run();
+        
+#if ASM_VERBOSE
+		fprintf(stderr, "\t\tWill collapse %d scaffolds\n", matcher.matchingSize());
+#endif
+		
+		ContainmentGraph::UEdgeMap<bool> matched_edges(containment);
+		
+		matcher.matching(matched_edges);
+		
+        merge_from_matching(containment, matcher, scaffolds);
+        
+		performed_collapse = true;
+	}
+	return performed_collapse;
+}
+
+bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds, 
+                                    uint32_t max_rounds)
 {
 	// The containment graph is a bipartite graph with an edge (u,v) when
 	// u is (not necessarily properly) contained in v and is the two are
@@ -442,7 +442,7 @@ void compress_fragments(vector<Scaffold>& fragments)
 #endif
     while (fragments.size() > collapse_thresh)
     {
-        if (!collapse_contained_transfrags(fragments, 1))
+        if (!collapse_equivalent_transfrags(fragments, 1))
         {
             break;
         }

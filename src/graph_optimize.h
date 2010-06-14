@@ -81,6 +81,9 @@ void fill_gaps(vector<Scaffold>& scaffolds, int fill_size);
 
 void compress_fragments(vector<Scaffold>& hits);
 
+bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds, 
+                                   uint32_t max_rounds = 0xFFFFFFFF);
+
 bool collapse_contained_transfrags(vector<Scaffold>& scaffolds, 
                                    uint32_t max_rounds = 0xFFFFFFFF);
 
