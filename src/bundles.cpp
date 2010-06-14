@@ -355,6 +355,19 @@ void HitBundle::finalize()
 	}
 }
 
+void print_sort_error(const char* last_chr_name, 
+                      int last_chr_pos, 
+                      const char* bh_name, 
+                      int bh_pos)
+{
+    fprintf(stderr, "Error: this SAM file doesn't appear to be correctly sorted!\n");
+    fprintf(stderr, "\tcurrent hit is at %s:%d, last one was at %s:%d\n", 
+            bh_name,
+            bh_pos,
+            last_chr_name,
+            last_chr_pos);
+}
+
 bool BundleFactory::next_bundle(HitBundle& bundle_out)
 {
 	HitBundle bundle;
@@ -402,13 +415,24 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			next_ref_scaff != ref_mRNAs.end() &&
 			next_ref_scaff->ref_id() != bh->ref_id())
 		{
+            vector<Scaffold>::iterator curr_ref_scaff = next_ref_scaff;
 			for (size_t i = 0; i < _ref_scaff_offsets.size(); ++i)
 			{
 				if (_ref_scaff_offsets[i].first == bh->ref_id())
 				{
 					next_ref_scaff = _ref_scaff_offsets[i].second;
+                    if (next_ref_scaff->annotated_gene_id() == "CG34352")
+                    {
+                        int a = 42;
+                    }
 				}
 			}
+            // Hit incident on chromosome not in the annotation
+            if (next_ref_scaff == curr_ref_scaff)
+            {
+                int a = 5;
+                continue;
+            }
 		}
 		
 		// break the bundle if there's a coverage gap or if alignments for a 
@@ -423,13 +447,24 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 				   next_ref_scaff->ref_id() == bh->ref_id() &&
 				   next_ref_scaff->right() <= bh->left())
 			{
+                if (next_ref_scaff->annotated_gene_id() == "CG34352")
+                {
+                    int a = 42;
+                }
+                
 				if (next_ref_scaff->left() >= bh->left())
 				{
 					break;
 				}
+
 				next_ref_scaff++;
 			}
 			
+            if (next_ref_scaff == ref_mRNAs.end())
+            {
+                int a = 4;
+            }
+            
 			while (next_ref_scaff != ref_mRNAs.end() && 
 				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
 				   next_ref_scaff->ref_id() == bh->ref_id() &&
@@ -439,26 +474,54 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			{
 				hit_within_boundary = true;
 				right_bundle_boundary = max(right_bundle_boundary, next_ref_scaff->right());
-				next_ref_scaff++;
+				
+                
+                if (next_ref_scaff->annotated_gene_id() == "CG34352")
+                {
+                    int a = 42;
+                }
+                
+                next_ref_scaff++;
 			}
+            
+            if (next_ref_scaff == ref_mRNAs.end())
+            {
+                int a = 4;
+            }
 		}
 		
 		if (last_ref_id_seen == 0)
 			hit_within_boundary = true;
-		else if (bh->ref_id() == last_ref_id_seen && bh->left() <= right_bundle_boundary)
-			hit_within_boundary = true;
+		else if (bh->ref_id() == last_ref_id_seen)
+        {
+            if (bh->left() <= right_bundle_boundary)
+                hit_within_boundary = true;
+        }
+        else
+        {
+            const char* bh_chr_name = sam_hit_fac.ref_table().get_name(bh->ref_id());
+            const char* last_chr_name = sam_hit_fac.ref_table().get_name(last_ref_id_seen);
+            
+            if (strcmp(last_chr_name, bh_chr_name) >= 0)
+            { 
+                print_sort_error(last_chr_name, 
+                                 last_pos_seen, 
+                                 bh_chr_name, 
+                                 last_pos_seen);
+                exit(1);
+            }
+        }
 
 		if (hit_within_boundary)
 		{
 			if (bh->left() < last_pos_seen)
 			{
-				fprintf(stderr, "Error: this SAM file doesn't appear to be correctly sorted!\n");
-				fprintf(stderr, "\tcurrent hit is at %s:%d, last one was at %s:%d\n", 
-						sam_hit_fac.ref_table().get_name(bh->ref_id()),
-						bh->left(),
-						sam_hit_fac.ref_table().get_name(last_ref_id_seen),
-						last_pos_seen);
-						
+                const char* bh_chr_name = sam_hit_fac.ref_table().get_name(bh->ref_id());
+                const char* last_chr_name = sam_hit_fac.ref_table().get_name(last_ref_id_seen);
+				print_sort_error(last_chr_name, 
+                                 last_pos_seen, 
+                                 bh_chr_name, 
+                                 last_pos_seen);
 				exit(1);
 			}
 			
@@ -523,6 +586,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 									  bundle.left(), 
 									  bundle.right()))
 					{	
+                        if (itr->annotated_gene_id() == "CG34352")
+                        {
+                            int a = 34;
+                        }
 						bundle.add_ref_scaffold(*itr);
 					}
 					else if (itr->right() < bundle.left())
