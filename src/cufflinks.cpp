@@ -163,7 +163,7 @@ int parse_options(int argc, char** argv)
         }
     } while(next_option != -1);
 	
-	max_inner_dist = inner_dist_mean + 3 * inner_dist_std_dev;
+	max_inner_dist = inner_dist_mean + 7 * inner_dist_std_dev;
 	inner_dist_norm = normal(inner_dist_mean, inner_dist_std_dev);
 	min_intron_fraction = min_isoform_fraction;
     

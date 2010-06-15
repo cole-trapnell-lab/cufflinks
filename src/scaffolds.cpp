@@ -877,66 +877,6 @@ bool Scaffold::distance_compatible_contigs(const Scaffold& lhs,
 	
 }
 
-bool Scaffold::strictly_contains(const Scaffold& other) const
-{
-	if (!contains(other))
-		return false;
-	
-	if (!strand_agree(*this, other))
-		return false;
-	
-	const vector<AugmentedCuffOp>& l_aug = _augmented_ops;
-	const vector<AugmentedCuffOp>& r_aug = other._augmented_ops;
-	
-	size_t curr_l_op = 0;
-	size_t curr_r_op = 0;
-	
-	if (l_aug.size() != r_aug.size())
-		return false;
-	
-	while (curr_l_op != l_aug.size() &&
-		   curr_r_op != r_aug.size())
-	{
-		const AugmentedCuffOp& l_op = l_aug[curr_l_op];
-		const AugmentedCuffOp& r_op = r_aug[curr_r_op];
-		
-		if (l_op.g_left() <= r_op.g_left())
-		{
-			if (l_op.contains(r_op))
-			{
-				if (l_op.opcode != r_op.opcode)
-					return false;
-				if (l_op.opcode == CUFF_INTRON && l_op != r_op)
-					return false;
-				if (l_op.opcode == CUFF_UNKNOWN)
-					return false;
-				//if (abs(l_op.genomic_length - r_op.genomic_length) > 60)
-				if (abs(l_op.genomic_length - r_op.genomic_length) > 3 * inner_dist_std_dev)
-					return false;
-			}
-			else
-			{
-				return false;
-			}
-			if (l_op.g_right() < r_op.g_right())
-				return false;
-			else if (r_op.g_right() < l_op.g_right())
-				++curr_r_op;
-			else // Indentical boundaries, advance both
-			{
-				++curr_l_op;
-				++curr_r_op;
-			}
-		}
-		else
-		{
-			return false;
-		}	
-	}
-	
-	return true;
-}
-
 bool overlap_in_genome(int ll, int lr, int rl, int rr)
 {
 	if (ll >= rl && ll < rr)

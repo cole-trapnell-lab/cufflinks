@@ -329,6 +329,19 @@
 			ED4CAD0011C705A50007F355 /* PBXTextBookmark */ = ED4CAD0011C705A50007F355 /* PBXTextBookmark */;
 			ED4CAD0111C705A50007F355 /* PBXTextBookmark */ = ED4CAD0111C705A50007F355 /* PBXTextBookmark */;
 			ED4CAD0211C7B7B90007F355 /* PBXTextBookmark */ = ED4CAD0211C7B7B90007F355 /* PBXTextBookmark */;
+			ED4CAD0511C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0511C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0611C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0611C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0711C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0711C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0811C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0811C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0911C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0911C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0A11C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0A11C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0B11C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0B11C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0C11C7CFB60007F355 /* PBXTextBookmark */ = ED4CAD0C11C7CFB60007F355 /* PBXTextBookmark */;
+			ED4CAD0D11C7D0F20007F355 /* PBXTextBookmark */ = ED4CAD0D11C7D0F20007F355 /* PBXTextBookmark */;
+			ED4CAD0E11C7D0F20007F355 /* PBXTextBookmark */ = ED4CAD0E11C7D0F20007F355 /* PBXTextBookmark */;
+			ED4CAD0F11C7D0F20007F355 /* PBXTextBookmark */ = ED4CAD0F11C7D0F20007F355 /* PBXTextBookmark */;
+			ED4CAD1011C7D0F20007F355 /* PBXTextBookmark */ = ED4CAD1011C7D0F20007F355 /* PBXTextBookmark */;
+			ED4CAD1111C7D0F20007F355 /* PBXTextBookmark */ = ED4CAD1111C7D0F20007F355 /* PBXTextBookmark */;
 			ED5D1F28114C2C9400A2AF02 = ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */;
 			ED5D1FAF114C465200A2AF02 = ED5D1FAF114C465200A2AF02 /* PBXTextBookmark */;
 			ED6D6736118CAA0400A682F4 = ED6D6736118CAA0400A682F4 /* PBXTextBookmark */;
@@ -435,7 +448,7 @@
 		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
 		name = "scaffolds.h: 386";
 		rLen = 9;
-		rLoc = 9876;
+		rLoc = 9821;
 		rType = 0;
 		vrLen = 1209;
 		vrLoc = 9347;
@@ -445,7 +458,7 @@
 		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
 		name = "scaffolds.h: 386";
 		rLen = 9;
-		rLoc = 9876;
+		rLoc = 9821;
 		rType = 0;
 		vrLen = 1284;
 		vrLoc = 9056;
@@ -2307,6 +2320,133 @@
 		vrLen = 1027;
 		vrLoc = 11285;
 	};
+	ED4CAD0511C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 564";
+		rLen = 0;
+		rLoc = 14702;
+		rType = 0;
+		vrLen = 1022;
+		vrLoc = 14253;
+	};
+	ED4CAD0611C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78BC411B716C3000F8846 /* matching_merge.cpp */;
+		name = "matching_merge.cpp: 51";
+		rLen = 0;
+		rLoc = 975;
+		rType = 0;
+		vrLen = 956;
+		vrLoc = 963;
+	};
+	ED4CAD0711C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 423";
+		rLen = 0;
+		rLoc = 11856;
+		rType = 0;
+		vrLen = 1058;
+		vrLoc = 11794;
+	};
+	ED4CAD0811C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 581";
+		rLen = 0;
+		rLoc = 16413;
+		rType = 0;
+		vrLen = 616;
+		vrLoc = 15985;
+	};
+	ED4CAD0911C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 471";
+		rLen = 0;
+		rLoc = 11869;
+		rType = 0;
+		vrLen = 1027;
+		vrLoc = 11285;
+	};
+	ED4CAD0A11C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
+		name = "common.cpp: 42";
+		rLen = 0;
+		rLoc = 780;
+		rType = 0;
+		vrLen = 744;
+		vrLoc = 521;
+	};
+	ED4CAD0B11C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
+		rLen = 22;
+		rLoc = 5347;
+		rType = 0;
+	};
+	ED4CAD0C11C7CFB60007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
+		name = "cuffdiff.cpp: 157";
+		rLen = 0;
+		rLoc = 5348;
+		rType = 0;
+		vrLen = 679;
+		vrLoc = 4802;
+	};
+	ED4CAD0D11C7D0F20007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
+		name = "cuffdiff.cpp: 157";
+		rLen = 0;
+		rLoc = 5348;
+		rType = 0;
+		vrLen = 708;
+		vrLoc = 4923;
+	};
+	ED4CAD0E11C7D0F20007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 166";
+		rLen = 0;
+		rLoc = 6184;
+		rType = 0;
+		vrLen = 572;
+		vrLoc = 5781;
+	};
+	ED4CAD0F11C7D0F20007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */;
+		name = "scaffolds.cpp: 878";
+		rLen = 0;
+		rLoc = 22210;
+		rType = 0;
+		vrLen = 598;
+		vrLoc = 22011;
+	};
+	ED4CAD1011C7D0F20007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
+		name = "scaffolds.h: 313";
+		rLen = 0;
+		rLoc = 8133;
+		rType = 0;
+		vrLen = 931;
+		vrLoc = 7638;
+	};
+	ED4CAD1111C7D0F20007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
+		name = "scaffolds.h: 318";
+		rLen = 0;
+		rLoc = 8248;
+		rType = 0;
+		vrLen = 931;
+		vrLoc = 7638;
+	};
 	ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = ED5D1F29114C2C9400A2AF02 /* storage.hpp */;
@@ -2758,9 +2898,9 @@
 	};
 	EDA5151910C72963000A4F41 /* scaffolds.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {903, 6617}}";
-			sepNavSelRange = "{3220, 14}";
-			sepNavVisRange = "{4628, 1508}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 6019}}";
+			sepNavSelRange = "{8248, 0}";
+			sepNavVisRange = "{7638, 931}";
 		};
 	};
 	EDA5151A10C72963000A4F41 /* tokenize.h */ = {
@@ -2793,7 +2933,7 @@
 	};
 	EDA5151F10C72963000A4F41 /* assemble.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {912, 7358}}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 7384}}";
 			sepNavSelRange = "{11869, 0}";
 			sepNavVisRange = "{11285, 1027}";
 			sepNavWindowFrame = "{{56, 0}, {1224, 778}}";
@@ -2809,8 +2949,8 @@
 	EDA5152210C72963000A4F41 /* common.cpp */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {912, 2340}}";
-			sepNavSelRange = "{1234, 0}";
-			sepNavVisRange = "{866, 624}";
+			sepNavSelRange = "{780, 0}";
+			sepNavVisRange = "{521, 744}";
 		};
 	};
 	EDA5152310C72963000A4F41 /* cuffcompare.cpp */ = {
@@ -2822,16 +2962,16 @@
 	};
 	EDA5152410C72963000A4F41 /* cuffdiff.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {936, 13299}}";
-			sepNavSelRange = "{1771, 0}";
-			sepNavVisRange = "{1397, 2738}";
+			sepNavIntBoundsRect = "{{0, 0}, {936, 13351}}";
+			sepNavSelRange = "{5348, 0}";
+			sepNavVisRange = "{4923, 708}";
 		};
 	};
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1210, 11349}}";
-			sepNavSelRange = "{16413, 0}";
-			sepNavVisRange = "{16162, 383}";
+			sepNavIntBoundsRect = "{{0, 0}, {999, 10868}}";
+			sepNavSelRange = "{6184, 0}";
+			sepNavVisRange = "{5781, 572}";
 		};
 	};
 	EDA5152610C72963000A4F41 /* filters.cpp */ = {
@@ -2906,9 +3046,9 @@
 	};
 	EDA5153110C72963000A4F41 /* scaffolds.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1083, 16432}}";
-			sepNavSelRange = "{18561, 9}";
-			sepNavVisRange = "{18268, 1287}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 16042}}";
+			sepNavSelRange = "{22210, 0}";
+			sepNavVisRange = "{22011, 598}";
 		};
 	};
 	EDACE311114EBE02009024DB /* PBXTextBookmark */ = {
@@ -3328,7 +3468,7 @@
 		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
 		name = "scaffolds.h: 386";
 		rLen = 9;
-		rLoc = 9876;
+		rLoc = 9821;
 		rType = 0;
 		vrLen = 1216;
 		vrLoc = 9347;
@@ -3855,7 +3995,7 @@
 	};
 	EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {912, 6253}}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 6344}}";
 			sepNavSelRange = "{11856, 0}";
 			sepNavVisRange = "{11794, 1058}";
 			sepNavWindowFrame = "{{58, 0}, {1222, 778}}";
@@ -3967,9 +4107,9 @@
 	};
 	EDE78BC411B716C3000F8846 /* matching_merge.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {903, 1352}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{963, 1475}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 1352}}";
+			sepNavSelRange = "{975, 0}";
+			sepNavVisRange = "{963, 956}";
 		};
 	};
 	EDE78BC511B716C3000F8846 /* matching_merge.h */ = {
@@ -4163,7 +4303,7 @@
 		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
 		name = "scaffolds.h: 386";
 		rLen = 9;
-		rLoc = 9876;
+		rLoc = 9821;
 		rType = 0;
 		vrLen = 462;
 		vrLoc = 9626;

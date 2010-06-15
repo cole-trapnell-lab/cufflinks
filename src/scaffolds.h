@@ -311,8 +311,6 @@ public:
 
 	const vector<const MateHit*>& mate_hits() const { return _mates_in_scaff; }
 	RefID ref_id() const { return _ref_id; }
-
-	bool strictly_contains(const Scaffold& other) const;
 	
 	bool contains(const Scaffold& other) const
 	{
