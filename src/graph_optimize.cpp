@@ -170,14 +170,6 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 		fprintf(stderr, "\tStarting new collapse round\n");
 #endif
         
-        ublas::mapped_matrix<ConflictState> conflict_states;
-        conflict_states = ublas::mapped_matrix<ConflictState>(scaffolds.size(), 
-                                                              scaffolds.size(), 
-                                                              scaffolds.size() * scaffolds.size());
-        
-        vector<vector<size_t> > conf_out;
-        same_conflicts(scaffolds, conflict_states, &conf_out);
-		
 		ContainmentGraph containment;
 		
 		
@@ -206,13 +198,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 				if (scaffolds[i].contains(scaffolds[j]) &&
 					Scaffold::compatible(scaffolds[i], scaffolds[j]))
 				{
-                    bool same = (conflict_states(i,j) == SAME_CONFLICTS);
-                    if (!same)
-                    {
-                        //bool X = Scaffold::compatible(scaffolds[0], scaffolds[4]);
-                        continue;
-                    }   
-					// To gaurd against the identity collapse, which won't 
+                    // To gaurd against the identity collapse, which won't 
 					// necessary reduce the total number of scaffolds.
 					if (scaffolds[j].contains(scaffolds[i]) && i < j)
 						continue;
