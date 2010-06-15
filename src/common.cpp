@@ -60,7 +60,7 @@ std::string user_label = "CUFF";
 std::string ref_gtf_filename = "";
 std::string output_dir = "./";
 
-int collapse_thresh = 10000;
+int collapse_thresh = 4000;
 
 int microexon_length = 25;
 

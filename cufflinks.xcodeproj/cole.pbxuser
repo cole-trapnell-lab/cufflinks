@@ -350,6 +350,9 @@
 			ED4CAD1711C7D6A90007F355 /* PBXTextBookmark */ = ED4CAD1711C7D6A90007F355 /* PBXTextBookmark */;
 			ED4CAD1811C7D6A90007F355 /* PBXTextBookmark */ = ED4CAD1811C7D6A90007F355 /* PBXTextBookmark */;
 			ED4CAD1911C7D6A90007F355 /* PBXTextBookmark */ = ED4CAD1911C7D6A90007F355 /* PBXTextBookmark */;
+			ED4CAD1A11C800580007F355 /* PBXTextBookmark */ = ED4CAD1A11C800580007F355 /* PBXTextBookmark */;
+			ED4CAD1B11C800580007F355 /* PBXTextBookmark */ = ED4CAD1B11C800580007F355 /* PBXTextBookmark */;
+			ED4CAD1C11C800580007F355 /* PBXTextBookmark */ = ED4CAD1C11C800580007F355 /* PBXTextBookmark */;
 			ED5D1F28114C2C9400A2AF02 = ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */;
 			ED5D1FAF114C465200A2AF02 = ED5D1FAF114C465200A2AF02 /* PBXTextBookmark */;
 			ED6D6736118CAA0400A682F4 = ED6D6736118CAA0400A682F4 /* PBXTextBookmark */;
@@ -476,7 +479,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 132";
 		rLen = 38;
-		rLoc = 2843;
+		rLoc = 2842;
 		rType = 0;
 		vrLen = 1056;
 		vrLoc = 2378;
@@ -562,7 +565,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 156";
 		rLen = 0;
-		rLoc = 3345;
+		rLoc = 3344;
 		rType = 0;
 		vrLen = 1131;
 		vrLoc = 0;
@@ -572,7 +575,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 156";
 		rLen = 0;
-		rLoc = 3345;
+		rLoc = 3344;
 		rType = 0;
 		vrLen = 1131;
 		vrLoc = 0;
@@ -2076,7 +2079,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 63";
 		rLen = 0;
-		rLoc = 1234;
+		rLoc = 1233;
 		rType = 0;
 		vrLen = 623;
 		vrLoc = 866;
@@ -2086,7 +2089,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 63";
 		rLen = 0;
-		rLoc = 1234;
+		rLoc = 1233;
 		rType = 0;
 		vrLen = 623;
 		vrLoc = 866;
@@ -2096,7 +2099,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 63";
 		rLen = 0;
-		rLoc = 1234;
+		rLoc = 1233;
 		rType = 0;
 		vrLen = 624;
 		vrLoc = 866;
@@ -2116,7 +2119,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 63";
 		rLen = 0;
-		rLoc = 1234;
+		rLoc = 1233;
 		rType = 0;
 		vrLen = 340;
 		vrLoc = 1027;
@@ -2143,7 +2146,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 63";
 		rLen = 0;
-		rLoc = 1234;
+		rLoc = 1233;
 		rType = 0;
 		vrLen = 624;
 		vrLoc = 866;
@@ -2531,6 +2534,33 @@
 		rType = 0;
 		vrLen = 891;
 		vrLoc = 10180;
+	};
+	ED4CAD1A11C800580007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 417";
+		rLen = 0;
+		rLoc = 10429;
+		rType = 0;
+		vrLen = 891;
+		vrLoc = 10180;
+	};
+	ED4CAD1B11C800580007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
+		rLen = 15;
+		rLoc = 1211;
+		rType = 0;
+	};
+	ED4CAD1C11C800580007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
+		name = "common.cpp: 63";
+		rLen = 0;
+		rLoc = 1230;
+		rType = 0;
+		vrLen = 745;
+		vrLoc = 1106;
 	};
 	ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -3033,9 +3063,9 @@
 	};
 	EDA5152210C72963000A4F41 /* common.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {912, 2353}}";
-			sepNavSelRange = "{780, 0}";
-			sepNavVisRange = "{521, 744}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 2288}}";
+			sepNavSelRange = "{1230, 0}";
+			sepNavVisRange = "{1106, 745}";
 		};
 	};
 	EDA5152310C72963000A4F41 /* cuffcompare.cpp */ = {
