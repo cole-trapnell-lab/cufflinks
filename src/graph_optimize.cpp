@@ -420,7 +420,7 @@ void compress_consitutive(vector<Scaffold>& hits)
 
 void compress_fragments(vector<Scaffold>& fragments)
 {
-    compress_consitutive(fragments);
+    //compress_consitutive(fragments);
     
 #if ASM_VERBOSE
     fprintf(stderr,"\tPerforming preliminary containment collapse on %lu fragments\n", fragments.size());
