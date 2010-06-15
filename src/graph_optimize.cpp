@@ -22,6 +22,7 @@
 
 #include "scaffold_graph.h"
 #include "scaffolds.h"
+#include "filters.h"
 #include "matching_merge.h"
 
 using namespace std;
@@ -426,13 +427,70 @@ void compress_fragments(vector<Scaffold>& fragments)
     fprintf(stderr,"\tPerforming preliminary containment collapse on %lu fragments\n", fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
 #endif
-    while (fragments.size() > collapse_thresh)
+    
+    double last_size = -1;
+    long leftmost = 9999999999;
+    long rightmost = -1;
+    
+    for (size_t i = 0; i < fragments.size(); ++i)
     {
-        if (!collapse_equivalent_transfrags(fragments, 1))
+        leftmost = std::min((long)fragments[i].left(), leftmost);
+        rightmost = std::max((long)fragments[i].right(), rightmost);
+    }
+    
+    long bundle_length = rightmost - leftmost;
+    
+    while (true)
+    {
+    
+        vector<int>  depth_of_coverage(bundle_length,0);
+        map<pair<int,int>, int> intron_depth_of_coverage;
+        compute_doc(leftmost,
+                    fragments,
+                    depth_of_coverage,
+                    intron_depth_of_coverage,
+                    false,
+                    true);
+        
+        vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+        depth_of_coverage.erase(new_end, depth_of_coverage.end());
+        sort(depth_of_coverage.begin(), depth_of_coverage.end());
+        
+        size_t median = floor(depth_of_coverage.size() / 2);
+        
+    //#if ASM_VERBOSE
+        fprintf(stderr, "Median depth of coverage is %d\n", depth_of_coverage[median]);
+    //#endif
+
+        if (depth_of_coverage[median] > 30 &&
+            (last_size == -1 || 0.9 * last_size > fragments.size()))
+        {
+            //                    size_t pre_collapse = hits.size();
+            //                    strict_containment_collapse(hits);
+            //                    size_t post_collapse = hits.size();
+            //                    if (pre_collapse == post_collapse)
+            //                        break;
+            //                    if (!collapse_contained_scaffolds(hits, 1))
+            //                        break;
+            last_size = fragments.size();
+            if (!collapse_equivalent_transfrags(fragments, 1))
+            {
+                break;
+            }
+        }
+        else
         {
             break;
         }
     }
+//    
+//    while (fragments.size() > collapse_thresh)
+//    {
+//        if (!collapse_equivalent_transfrags(fragments, 1))
+//        {
+//            break;
+//        }
+//    }
     
 #if ASM_VERBOSE
     size_t post_hit_collapse_size = fragments.size();
