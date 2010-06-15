@@ -276,7 +276,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>39</integer>
+									<integer>35</integer>
 									<integer>4</integer>
 									<integer>0</integer>
 								</array>
@@ -317,7 +317,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>filters.cpp</string>
+								<string>assemble.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -325,11 +325,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>filters.cpp</string>
+										<string>assemble.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED4CAD1611C7D4890007F355</string>
+										<string>ED4CAD1911C7D6A90007F355</string>
 										<key>history</key>
 										<array>
 											<string>EDEBCF4C112F69E500E2479E</string>
@@ -406,14 +406,14 @@
 											<string>ED4CAD0511C7CFB60007F355</string>
 											<string>ED4CAD0611C7CFB60007F355</string>
 											<string>ED4CAD0711C7CFB60007F355</string>
-											<string>ED4CAD0911C7CFB60007F355</string>
 											<string>ED4CAD0D11C7D0F20007F355</string>
 											<string>ED4CAD0E11C7D0F20007F355</string>
 											<string>ED4CAD0F11C7D0F20007F355</string>
 											<string>ED4CAD1211C7D4890007F355</string>
 											<string>ED4CAD1311C7D4890007F355</string>
 											<string>ED4CAD1411C7D4890007F355</string>
-											<string>ED4CAD1511C7D4890007F355</string>
+											<string>ED4CAD1711C7D6A90007F355</string>
+											<string>ED4CAD1811C7D6A90007F355</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>

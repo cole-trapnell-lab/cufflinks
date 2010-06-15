@@ -347,6 +347,9 @@
 			ED4CAD1411C7D4890007F355 /* PBXTextBookmark */ = ED4CAD1411C7D4890007F355 /* PBXTextBookmark */;
 			ED4CAD1511C7D4890007F355 /* PBXTextBookmark */ = ED4CAD1511C7D4890007F355 /* PBXTextBookmark */;
 			ED4CAD1611C7D4890007F355 /* PBXTextBookmark */ = ED4CAD1611C7D4890007F355 /* PBXTextBookmark */;
+			ED4CAD1711C7D6A90007F355 /* PBXTextBookmark */ = ED4CAD1711C7D6A90007F355 /* PBXTextBookmark */;
+			ED4CAD1811C7D6A90007F355 /* PBXTextBookmark */ = ED4CAD1811C7D6A90007F355 /* PBXTextBookmark */;
+			ED4CAD1911C7D6A90007F355 /* PBXTextBookmark */ = ED4CAD1911C7D6A90007F355 /* PBXTextBookmark */;
 			ED5D1F28114C2C9400A2AF02 = ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */;
 			ED5D1FAF114C465200A2AF02 = ED5D1FAF114C465200A2AF02 /* PBXTextBookmark */;
 			ED6D6736118CAA0400A682F4 = ED6D6736118CAA0400A682F4 /* PBXTextBookmark */;
@@ -1952,7 +1955,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 547";
 		rLen = 29;
-		rLoc = 14483;
+		rLoc = 14504;
 		rType = 0;
 		vrLen = 1323;
 		vrLoc = 14054;
@@ -2180,7 +2183,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 547";
 		rLen = 29;
-		rLoc = 14483;
+		rLoc = 14504;
 		rType = 0;
 		vrLen = 1304;
 		vrLoc = 13933;
@@ -2240,7 +2243,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 547";
 		rLen = 29;
-		rLoc = 14483;
+		rLoc = 14504;
 		rType = 0;
 		vrLen = 1304;
 		vrLoc = 13933;
@@ -2300,7 +2303,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 547";
 		rLen = 29;
-		rLoc = 14483;
+		rLoc = 14504;
 		rType = 0;
 		vrLen = 1304;
 		vrLoc = 13933;
@@ -2310,7 +2313,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 471";
 		rLen = 0;
-		rLoc = 11867;
+		rLoc = 11888;
 		rType = 0;
 		vrLen = 1025;
 		vrLoc = 11285;
@@ -2320,7 +2323,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 471";
 		rLen = 0;
-		rLoc = 11869;
+		rLoc = 11890;
 		rType = 0;
 		vrLen = 1027;
 		vrLoc = 11285;
@@ -2370,7 +2373,7 @@
 		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
 		name = "assemble.cpp: 471";
 		rLen = 0;
-		rLoc = 11869;
+		rLoc = 11890;
 		rType = 0;
 		vrLen = 1027;
 		vrLoc = 11285;
@@ -2498,6 +2501,36 @@
 		rType = 0;
 		vrLen = 842;
 		vrLoc = 3;
+	};
+	ED4CAD1711C7D6A90007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 10";
+		rLen = 0;
+		rLoc = 161;
+		rType = 0;
+		vrLen = 842;
+		vrLoc = 3;
+	};
+	ED4CAD1811C7D6A90007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 471";
+		rLen = 0;
+		rLoc = 11890;
+		rType = 0;
+		vrLen = 1027;
+		vrLoc = 11285;
+	};
+	ED4CAD1911C7D6A90007F355 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 417";
+		rLen = 0;
+		rLoc = 10429;
+		rType = 0;
+		vrLen = 891;
+		vrLoc = 10180;
 	};
 	ED5D1F28114C2C9400A2AF02 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -2985,9 +3018,9 @@
 	};
 	EDA5151F10C72963000A4F41 /* assemble.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {912, 7384}}";
-			sepNavSelRange = "{11869, 0}";
-			sepNavVisRange = "{11285, 1027}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 7605}}";
+			sepNavSelRange = "{10429, 0}";
+			sepNavVisRange = "{10180, 891}";
 			sepNavWindowFrame = "{{56, 0}, {1224, 778}}";
 		};
 	};

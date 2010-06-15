@@ -413,9 +413,11 @@ bool make_scaffolds(int bundle_left,
         hits.insert(hits.end(), split_hazards.begin(), split_hazards.end());
 
         compress_fragments(hits);
-        
+
+#if ASM_VERBOSE
         fprintf(stderr, "Assembling bundle with %lu hits\n", hits.size());
-		
+#endif
+        
 		vector<int> depth_of_coverage(bundle_length,0);
 		map<pair<int,int>, int> intron_depth_of_coverage;
 		compute_doc(bundle_left, 
