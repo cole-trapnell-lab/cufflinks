@@ -468,7 +468,7 @@ bool make_scaffolds(int bundle_left,
             
             HitsForNodeMap hits_for_node = get(vertex_name, bundle_dag);
 
-            compress_overlap_dag_paths(bundle_dag, hits);
+            //compress_overlap_dag_paths(bundle_dag, hits);
             
             pair<DAGNode, DAGNode> terminal = add_terminal_nodes(bundle_dag);
             DAGNode source = terminal.first;
