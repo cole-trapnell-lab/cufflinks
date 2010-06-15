@@ -462,7 +462,8 @@ void compress_fragments(vector<Scaffold>& fragments)
         fprintf(stderr, "Median depth of coverage is %d\n", depth_of_coverage[median]);
     //#endif
 
-        if (depth_of_coverage[median] > 30 &&
+        if (!depth_of_coverage.empty() && 
+            depth_of_coverage[median] > collapse_thresh &&
             (last_size == -1 || 0.9 * last_size > fragments.size()))
         {
             //                    size_t pre_collapse = hits.size();
