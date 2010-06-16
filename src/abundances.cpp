@@ -583,7 +583,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
 	collapse_hits(hits_in_cluster, non_redundant_hits_in_gene, collapse_counts);
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "Calculating intial MLE\n");
+	fprintf(stderr, "%s\tCalculating initial MLE\n", bundle_label->c_str());
 #endif	
 	
 	gamma_mle(transfrags,
@@ -592,14 +592,14 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
 			  gammas);
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "Tossing likely garbage isoforms\n");
+	fprintf(stderr, "%s\tTossing likely garbage isoforms\n", bundle_label->c_str());
 #endif
 	
 	for (size_t i = 0; i < gammas.size(); ++i)
 	{
 		if (isnan(gammas[i]))
 		{
-			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
+			fprintf(stderr, "%s\tWarning: isoform abundance is NaN!\n", bundle_label->c_str());
 		}
 	}
 	
@@ -623,7 +623,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
 	filtered_gammas.clear();
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "Revising MLE\n");
+	fprintf(stderr, "%s\tRevising MLE\n");
 #endif
 	
 	gamma_mle(filtered_scaffolds,
@@ -635,12 +635,12 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
 	{
 		if (isnan(filtered_gammas[i]))
 		{
-			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
+			fprintf(stderr, "%s\tWarning: isoform abundance is NaN!\n", bundle_label->c_str());
 		}
 	}
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "Importance sampling posterior distribution\n");
+	fprintf(stderr, "%s\tImportance sampling posterior distribution\n", bundle_label->c_str());
 #endif
 	
 	bool success = gamma_map(filtered_scaffolds,
@@ -653,7 +653,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
 	{
 		if (isnan(gammas[i]))
 		{
-			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
+			fprintf(stderr, "%s\tWarning: isoform abundance is NaN!\n", bundle_label->c_str());
 			success = false;
 		}
 	}
@@ -970,7 +970,7 @@ double EM (int N, int M, vector<double> & newP,
 	}
 	
 	if (iter == max_mle_iterations)
-		fprintf(stderr, "Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
+		fprintf(stderr, "%s\tWARNING: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n", bundle_label->c_str());
 	
 	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
 	return newEll;
@@ -1448,7 +1448,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	double ch = cholesky_factorize(fisher_chol);
 	if (ch != 0.0)
 	{
-		fprintf(stderr, "Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		fprintf(stderr, "%s\tWarning: Fisher matrix is not positive definite (bad element: %lg)\n", bundle_label->c_str(), ch);
 		return false;
 	}
 	
@@ -1472,7 +1472,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	ch = cholesky_factorize(test_fisher);
 	if (ch != 0.0 || !invertible)
 	{
-		fprintf(stderr, "Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		fprintf(stderr, "%s\tWarning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", bundle_label->c_str(), ch);
 		return false;
 	}
 	
@@ -1497,7 +1497,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (ch != 0.0)
 	{
-		fprintf(stderr, "Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
+		fprintf(stderr, "%s\tWarning: Covariance matrix is not positive definite (bad element: %lg)\n", bundle_label->c_str(), ch);
 		return false;
 	}
 	
@@ -1551,7 +1551,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (samples.size() < 100)
 	{
-		fprintf(stderr, "Warning: not-enough samples for MAP re-estimation\n");
+		fprintf(stderr, "%s\tWarning: not-enough samples for MAP re-estimation\n", bundle_label->c_str());
 		return false;
 	}
 	
@@ -1564,7 +1564,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	//assert (det);
 	if (s == 0.0)
 	{
-		fprintf(stderr, "Error: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
+		fprintf(stderr, "%s\tError: sqrt(det(cov)) == 0, %lf after rounding. \n", bundle_label->c_str(), det);
 		//cerr << covariance << endl;
 		return false;
 	}
@@ -1575,7 +1575,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (!invertible)
 	{
-		fprintf(stderr, "Warning: covariance matrix is not invertible, probability interval is not available\n");
+		fprintf(stderr, "%s\tWarning: covariance matrix is not invertible, probability interval is not available\n", bundle_label->c_str());
 		return false;
 	}
 	
@@ -1601,7 +1601,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (log_total_weight == 0 || sample_weights.size() < 100)
 	{
-		fprintf(stderr, "Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
+		fprintf(stderr, "%s\tWarning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n", bundle_label->c_str());
 		return false;
 	}
 	
@@ -1616,7 +1616,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	{
 		if (isinf(expectation(e)) || isnan(expectation(e)))
 		{
-			fprintf(stderr, "Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
+			fprintf(stderr, "%s\tWarning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.", bundle_label->c_str());
 			return false;
 		}
 	}
@@ -1636,7 +1636,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (m == 0 || isinf(m) || isnan(m))
 	{
-		fprintf(stderr, "Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
+		fprintf(stderr, "%s\tWarning: restimation failed, could not renormalize MAP estimate\n", bundle_label->c_str());
 		return false;
 	}
 	
@@ -1991,18 +1991,18 @@ double get_intron_doc(const Scaffold& s,
 			pair<int,int> op_intron(op.g_left(), op.g_right());
 			map<pair<int, int>, int >::const_iterator itr = intron_depth_of_coverage.find(op_intron);
 			//			assert (itr != intron_depth_of_coverage.end());
-#if ASM_VERBOSE
-			if (itr == intron_depth_of_coverage.end())
-			{
-				map<pair<int, int>, int >::const_iterator zi;
-				for (zi = intron_depth_of_coverage.begin();
-					 zi != intron_depth_of_coverage.end();
-					 ++zi)
-				{
-					fprintf(stderr, "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
-				}
-			}
-#endif
+//#if ASM_VERBOSE
+//			if (itr == intron_depth_of_coverage.end())
+//			{
+//				map<pair<int, int>, int >::const_iterator zi;
+//				for (zi = intron_depth_of_coverage.begin();
+//					 zi != intron_depth_of_coverage.end();
+//					 ++zi)
+//				{
+//					fprintf(stderr, "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
+//				}
+//			}
+//#endif
 			doc += itr->second;
 		}
 	}	

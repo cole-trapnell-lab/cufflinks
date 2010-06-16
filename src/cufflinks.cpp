@@ -554,6 +554,14 @@ void assemble_bundle(const RefSequenceTable& rt,
 	
 	HitBundle& bundle = *bundle_ptr;
     
+    char bundle_label_buf[2048];
+    sprintf(bundle_label_buf, 
+            "%s:%d-%d", 
+            rt.get_name(bundle.ref_id()),
+            bundle.left(),
+            bundle.right());
+    *bundle_label = bundle_label_buf;
+    
 #if ENABLE_THREADS	
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
@@ -574,14 +582,6 @@ void assemble_bundle(const RefSequenceTable& rt,
 		}
 	}
 	
-    for (size_t i = 0; i < scaffolds.size(); i++)
-    {
-        if (scaffolds[i].annotated_gene_id() == "CG34352")
-        {
-            int a = 34;
-        }
-    }
-    
 	vector<Gene> genes;
 	quantitate_transcript_clusters(scaffolds, 
 								   map_mass, 

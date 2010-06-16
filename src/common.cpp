@@ -71,6 +71,10 @@ bool allow_junk_filtering = true;
 int max_mle_iterations = 5000;
 int num_importance_samples = 1000;
 
+#if ENABLE_THREADS
+boost::thread_specific_ptr<std::string> bundle_label;
+#endif
+
 extern void print_usage();
 
 bool gaurd_assembly()

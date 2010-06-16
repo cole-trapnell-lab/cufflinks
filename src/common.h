@@ -24,6 +24,7 @@ using boost::math::normal;
 #define foreach         BOOST_FOREACH
 #define reverse_foreach BOOST_REVERSE_FOREACH
 
+#include <boost/thread.hpp>
 
 extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;
@@ -61,7 +62,12 @@ extern int max_mle_iterations;
 extern int num_importance_samples;
 
 #define ENABLE_THREADS 1
-#define ASM_VERBOSE 0
+
+#if ENABLE_THREADS
+extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
+#endif
+
+#define ASM_VERBOSE 1
 
 bool gaurd_assembly();
 
