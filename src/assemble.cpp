@@ -434,14 +434,6 @@ bool make_scaffolds(int bundle_left,
 			static size_t MAX_BUNDLE_ALIGNMENTS = 0xFFFF;
 			
 			sort(hits.begin(), hits.end(), scaff_lt);
-			
-			if (hits.size() >= MAX_BUNDLE_ALIGNMENTS)
-			{
-#if ASM_VERBOSE
-				fprintf(stderr, "%s\tWarning: bundle too large, skipping assembly\n", bundle_label->c_str());
-#endif
-				return false;
-			}
            
             //fprintf(stderr, "\tCurrent bundle has %d non-constitutive fragments\n", hits.size());            
 			
@@ -471,6 +463,14 @@ bool make_scaffolds(int bundle_left,
             HitsForNodeMap hits_for_node = get(vertex_name, bundle_dag);
 
             compress_overlap_dag_paths(bundle_dag, hits);
+            
+            if (hits.size() >= MAX_BUNDLE_ALIGNMENTS)
+			{
+#if ASM_VERBOSE
+				fprintf(stderr, "%s\tWarning: bundle too large, skipping assembly\n", bundle_label->c_str());
+#endif
+				return false;
+			}
             
             pair<DAGNode, DAGNode> terminal = add_terminal_nodes(bundle_dag);
             DAGNode source = terminal.first;

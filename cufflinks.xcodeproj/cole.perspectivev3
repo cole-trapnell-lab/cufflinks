@@ -276,7 +276,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>35</integer>
+									<integer>51</integer>
 									<integer>4</integer>
 									<integer>0</integer>
 								</array>
@@ -317,7 +317,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>assemble.cpp</string>
+								<string>graph_optimize.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -325,11 +325,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>assemble.cpp</string>
+										<string>graph_optimize.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED4CAED611C9656D0007F355</string>
+										<string>ED4CAEE411C968F20007F355</string>
 										<key>history</key>
 										<array>
 											<string>EDEBCF4C112F69E500E2479E</string>
@@ -412,8 +412,8 @@
 											<string>ED4CAE4211C9370D0007F355</string>
 											<string>ED4CAE4311C9370D0007F355</string>
 											<string>ED4CAEAF11C962340007F355</string>
-											<string>ED4CAEC811C963B40007F355</string>
-											<string>ED4CAED511C9656D0007F355</string>
+											<string>ED4CAEE211C968F20007F355</string>
+											<string>ED4CAEE311C968F20007F355</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -751,7 +751,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>ED4CAED711C9656D0007F355</string>
 		<string>ED4CAB9D11C439060007F355</string>
 		<string>ED4CAB9E11C439060007F355</string>
 		<string>/Users/cole/Data/Documents/CBCB/sr_mapping/RNA-seq/cufflinks/cufflinks.xcodeproj</string>
