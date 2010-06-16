@@ -560,7 +560,7 @@ void assemble_bundle(const RefSequenceTable& rt,
             rt.get_name(bundle.ref_id()),
             bundle.left(),
             bundle.right());
-    *bundle_label = bundle_label_buf;
+    bundle_label.reset(new string(bundle_label_buf));
     
 #if ENABLE_THREADS	
 	boost::this_thread::at_thread_exit(decr_pool_count);

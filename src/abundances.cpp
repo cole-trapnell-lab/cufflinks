@@ -623,7 +623,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
 	filtered_gammas.clear();
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "%s\tRevising MLE\n");
+	fprintf(stderr, "%s\tRevising MLE\n", bundle_label->c_str());
 #endif
 	
 	gamma_mle(filtered_scaffolds,
