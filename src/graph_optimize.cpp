@@ -139,7 +139,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
                     {
                         scaffold_mask[i] = true;
                         scaffold_mask[j] = true;
-                        break;
+                        //break;
                     }
                 }
                 else
