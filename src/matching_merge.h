@@ -95,9 +95,6 @@ void merge_from_matching(const ReachGraph& bp_graph,
         merged_scaffolds.push_back(Scaffold(chain));
     }
     
-#if ASM_VERBOSE
-    fprintf (stderr, "\t\tpre = %d, post = %d\n", (int)scaffolds.size(), (int)merged_scaffolds.size());
-#endif
     sort (merged_scaffolds.begin(), merged_scaffolds.end(), scaff_lt);
     
     scaffolds = merged_scaffolds;   

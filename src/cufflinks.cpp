@@ -316,11 +316,11 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	
 	{
 #if ASM_VERBOSE
-		fprintf (stderr, "Filtering forward strand\n");
+		fprintf (stderr, "%s\tFiltering forward strand\n", bundle_label->c_str());
 #endif
 		filter_hits(bundle.length(), bundle.left(), fwd_hits);
 #if ASM_VERBOSE
-		fprintf (stderr, "Filtering reverse strand\n");
+		fprintf (stderr, "%s\tFiltering reverse strand\n", bundle_label->c_str());
 #endif
 		filter_hits(bundle.length(), bundle.left(), rev_hits);
 	}
@@ -332,15 +332,8 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	
 	if (saw_fwd && saw_rev)
 	{
-#if ASM_VERBOSE
-		fprintf (stderr, "Saw both strands, assembling both halves\n");
-		fprintf (stderr, "Forward strand:\n");
-#endif
 		assembled_successfully |= make_scaffolds(bundle.left(), bundle.length(), fwd_hits, fwd_scaffolds);
         
-#if ASM_VERBOSE
-		fprintf (stderr, "reverse strand:\n");
-#endif
 		assembled_successfully |= make_scaffolds(bundle.left(), bundle.length(), rev_hits, rev_scaffolds);
 		
 		add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, scaffolds, true);
@@ -350,9 +343,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		if (saw_fwd || (!saw_fwd && !saw_rev))
 		{
-#if ASM_VERBOSE
-			fprintf (stderr, "Saw forward strand only\n");
-#endif
 			assembled_successfully |= make_scaffolds(bundle.left(),
 													 bundle.length(),
 													 fwd_hits,
@@ -361,9 +351,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		}
 		else
 		{
-#if ASM_VERBOSE
-			fprintf (stderr, "Saw reverse strand only\n");
-#endif
 			assembled_successfully |= make_scaffolds(bundle.left(), 
 													 bundle.length(), 
 													 rev_hits, 
@@ -720,7 +707,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		
 		if (bundle.right() - bundle.left() > 3000000)
 		{
-			fprintf(stderr, "Warning: large bundle encountered...\n");
+			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label->c_str());
 		}
 		if (bundle.hits().size())
 		{
@@ -742,7 +729,8 @@ bool assemble_hits(BundleFactory& bundle_factory)
 				
 			}
 #endif
-			fprintf(stderr, "Processing bundle [ %s:%d-%d ] with %d alignments\n", 
+			fprintf(stderr, "%s:%d-%d\tProcessing new bundle with %d alignments\n", 
+                    bundle_label->c_str(),
 					rt.get_name(bundle.ref_id()),
 					bundle.left(),
 					bundle.right(),
