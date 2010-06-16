@@ -38,6 +38,16 @@ void fill_gaps(vector<Scaffold>& scaffolds, int fill_size)
 
 enum ConflictState { UNKNOWN_CONFLICTS = 0, SAME_CONFLICTS, DIFF_CONFLICTS };
 
+bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
+{
+    if (lhs.left() != rhs.left())
+        return lhs.left() < rhs.left();
+    return lhs.right() < rhs.right();
+}
+
+
+// WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
+// to work correctly.
 void same_conflicts(const vector<Scaffold>& scaffolds,
                     ublas::mapped_matrix<ConflictState>& conflict_states,
                     vector<vector<size_t> >* conf_out)
@@ -111,34 +121,8 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
     }
 }
 
-//void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
-//										   vector<bool>& scaffold_mask)
-//{	
-//	//scaffold_mask = vector<bool>(scaffolds.size(), 0);
-//	for (size_t i = 0; i < scaffolds.size(); ++i)
-//	{
-//        if (!scaffold_mask[i])
-//        {
-//            for (size_t j = i+1; j < scaffolds.size(); ++j)
-//            {
-//                if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
-//                {
-//                    if (!Scaffold::compatible(scaffolds[i], scaffolds[j]))
-//                    {
-//                        scaffold_mask[i] = true;
-//                        scaffold_mask[j] = true;
-//                        break;
-//                    }
-//                }
-//                else
-//                {
-//                    break;
-//                }
-//            }
-//        }
-//	}
-//}
-
+// WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
+// to work correctly.
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 										   vector<bool>& scaffold_mask)
 {	
@@ -158,10 +142,18 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
                         break;
                     }
                 }
+                else
+                {
+                    break;
+                }
             }
         }
 	}
 }
+
+
+
+
 
 bool collapse_contained_transfrags(vector<Scaffold>& scaffolds, 
                                    uint32_t max_rounds)
@@ -364,7 +356,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds,
         }
         
         scaffolds = replaced;
-        sort(scaffolds.begin(), scaffolds.end(), scaff_lt);
+        sort(scaffolds.begin(), scaffolds.end(), scaff_lt_rt);
 		performed_collapse = true;
 	}
 	return performed_collapse;
@@ -427,6 +419,8 @@ void compress_fragments(vector<Scaffold>& fragments)
     fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
 #endif
+    
+    sort(fragments.begin(), fragments.end(), scaff_lt_rt);
     
     double last_size = -1;
     long leftmost = 9999999999;

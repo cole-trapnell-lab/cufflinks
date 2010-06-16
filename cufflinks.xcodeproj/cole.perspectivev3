@@ -329,7 +329,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED4CAE3511C933590007F355</string>
+										<string>ED4CAE4511C9370D0007F355</string>
 										<key>history</key>
 										<array>
 											<string>EDEBCF4C112F69E500E2479E</string>
@@ -395,25 +395,25 @@
 											<string>EDEA779211BD8FCF001FCFD7</string>
 											<string>EDC8A39E11C2CD0B00C8950E</string>
 											<string>ED4CAB9011C438DA0007F355</string>
-											<string>ED4CABAA11C43FCD0007F355</string>
 											<string>ED4CAC8711C5E2620007F355</string>
 											<string>ED4CACB311C6B9990007F355</string>
 											<string>ED4CACF111C6D5E40007F355</string>
-											<string>ED4CAD0611C7CFB60007F355</string>
 											<string>ED4CAD0D11C7D0F20007F355</string>
-											<string>ED4CAD5A11C83FF70007F355</string>
 											<string>ED4CAD7511C860E90007F355</string>
-											<string>ED4CAD7611C860E90007F355</string>
 											<string>ED4CADC611C86AF00007F355</string>
 											<string>ED4CADDC11C9114B0007F355</string>
 											<string>ED4CADF311C926BE0007F355</string>
 											<string>ED4CADF411C926BE0007F355</string>
 											<string>ED4CADF511C926BE0007F355</string>
 											<string>ED4CAE0F11C927CC0007F355</string>
-											<string>ED4CAE1011C927CC0007F355</string>
-											<string>ED4CAE2511C929EF0007F355</string>
 											<string>ED4CAE3311C933590007F355</string>
-											<string>ED4CAE3411C933590007F355</string>
+											<string>ED4CAE3E11C9370D0007F355</string>
+											<string>ED4CAE3F11C9370D0007F355</string>
+											<string>ED4CAE4011C9370D0007F355</string>
+											<string>ED4CAE4111C9370D0007F355</string>
+											<string>ED4CAE4211C9370D0007F355</string>
+											<string>ED4CAE4311C9370D0007F355</string>
+											<string>ED4CAE4411C9370D0007F355</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -453,8 +453,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {834, 226}}</string>
-										<key>RubberWindowFrame</key>
-										<string>84 55 1132 723 0 0 1280 778 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -471,6 +469,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {834, 226}}</string>
+										<key>RubberWindowFrame</key>
+										<string>84 55 1132 723 0 0 1280 778 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
