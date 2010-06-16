@@ -1,0 +1,1225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Cufflinks :: Center for Bioinformatics and Computational Biology</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+</head>
+<body>
+<div id="wrap">
+  <div id="top">
+    <div class="lefts">
+    <table width="100%" cellpadding="2">
+      <tr><td>
+        <a href="./index.html"><h1>Cufflinks</h1></a>
+        <h2>Transcript assembly, differential expression, and differential regulation for RNA-Seq</h2>
+      </td><td align="right" valign="middle">
+        <h1><a href="http://www.cbcb.umd.edu/"><img border=0 src="images/cbcblogo.gif"></img></a>&nbsp;&nbsp;</h1>
+      </td></tr>
+    </table>
+    </div>
+  </div>
+  <div id="subheader">
+  <table width="100%"><tr>
+  <td>
+  		<strong>Please Note</strong> If you have questions 
+		  about how to use Cufflinks or would like more information about 
+		  the software, please email <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>, 
+		  though we ask you to have a look at the <a href="http://dx.doi.org/10.1038/nbt.1621">paper</a> 
+		  and the  <a href="http://www.nature.com/nbt/journal/vaop/ncurrent/extref/nbt.1621-S1.pdf">
+		  supplemental methods</a> first, as your question be answered there.
+	</td><td align=right valign=middle>
+  </td></tr>
+  </table>
+  </div>
+  <div id="main">
+    <div id="rightside">
+		<h2>Site Map</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="index.html">Home</a></li>
+		      <li><a href="tutorial.html">Getting started</a></li>
+		      <li><a href="manual.html">Manual</a></li>
+			  <li><a href="howitworks.html">How Cufflinks works</a></li>
+		    </ul>
+		  </div>
+		
+		  <h2><u>News and updates</u></h2>
+		  <div class="box">
+		    <ul>
+		      <table width="100%">
+				<tr><td>New releases and related tools will be announced through the <a href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing list</b></a></td></tr>
+			  </table>
+		    </ul>
+		  </div>
+		
+		  <a href="./downloads"><h2><u>Releases</u></h2></a>
+		  <div class="box">
+		    <ul>
+		      <table width="100%">
+				<tr><td>version 0.8.2 (BETA)</td> <td align="right">3/26/2010</td></tr>
+				<tr>
+		      		<td><a href="./downloads/cufflinks-0.8.2.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+		      	</tr>
+				<tr>
+					<td><a href="./downloads/cufflinks-0.8.2.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+				</tr>
+				<tr>
+					<td><a href="./downloads/cufflinks-0.8.2.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+				</tr>
+			  </table>
+		    </ul>
+		  </div>
+		
+		  <h2>Related Tools</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>: Alignment of short RNA-Seq reads</li>
+		      <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>: Ultrafast short read alignment</li>
+		    </ul>
+		  </div>
+		  <h2>Publications</h2>
+		  <div class="box">
+		    <ul>
+			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a href="http://dx.doi.org/10.1038/nbt.1621">Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation</b></a> <br/><i><a href="http://www.nature.com/nbt">Nature Biotechnology</a></i> doi:10.1038/nbt.1621</p><br/></li>
+			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Pachter L, Salzberg SL. <a href="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btp120"><b>TopHat: discovering splice junctions with RNA-Seq</b></a>. <i><a href="http://bioinformatics.oxfordjournals.org">Bioinformatics</a></i>  doi:10.1093/bioinformatics/btp120</p><br/></li>
+		      <li style="font-size: x-small; line-height: 130%"><p>Langmead B, Trapnell C, Pop M, Salzberg SL. <a href="http://genomebiology.com/2009/10/3/R25"><b>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome</b></a>. <br/><i><a href="http://genomebiology.com">Genome Biology</a></i> <b>10</b>:R25.</li>
+		    </ul>
+		  </div>
+
+		  <h2>Contributors</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://www.cs.umd.edu/~cole/">Cole Trapnell</a></li>
+			  <li>Geo Pertea</li>
+			  <li>Brian Williams</li>
+			  <li><a href="http://wormlab.caltech.edu/members/">Ali Mortazavi</a></li>
+			  <li>Gordon Kwan</a></li>
+			  <li>Jeltje van Baren</a></li>
+		      <li><a href="http://www.cbcb.umd.edu/~salzberg/">Steven Salzberg</a></li>
+		      <li><a href="http://biology.caltech.edu/Members/Wold">Barbara Wold</a></li>
+			  <li><a href="http://www.math.berkeley.edu/~lpachter/">Lior Pachter</a></li>
+		    </ul>
+		  </div>
+
+		  <h2>Links</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
+		      <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
+			  <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
+		    </ul>
+		  </div>          
+          
+    </div> <!-- End of "rightside" -->
+    <div id="leftside">
+  	  <table><tr><td cellpadding=7>
+  	  <h1>Manual</h1><br/>
+      <div id="toc">
+  	    <ul>
+  	    <li><a href="#prer">Prerequisites</a></li>
+  	    <li><a href="#cufflinks">Running Cufflinks</a></li>
+		<ul>
+  	      <li><a href="#cufflinks_input">Input Files</a></li>
+  	  	  <li><a href="#cufflinks_output">Output Files</a></li>
+			<ul>
+				<li><a href="#gtfout">Transfrags in GTF</a></li>
+				<li><a href="#transexpr">Transcript-level expression</a></li>
+				<li><a href="#geneexpr">Gene-level expression</a></li>
+			</ul>
+ 	    </ul>
+  	    <li><a href="#cuffcompare">Running Cuffcompare</a></li>
+		<ul>
+  	      <li><a href="#cuffcomp_input">Input Files</a></li>
+  	  	  <li><a href="#cuffcomp_output">Output Files</a></li>
+			<ul>
+				<li><a href="#refmap">Transfrags for each reference transcript</a></li>
+				<li><a href="#tmap">Classification for transfrag</a></li>
+				<li><a href="#ichain">Tracking transfrags through multiple samples</a></li>
+			</ul>
+			<li><a href="#class_codes">Transfrag class codes</a></li>
+ 	    </ul>
+  	    <li><a href="#cuffdiff">Running Cuffdiff</a></li>
+		<ul>
+  	      <li><a href="#cuffdiff_input">Input Files</a></li>
+  	  	  <li><a href="#cuffdiff_output">Output Files</a></li>
+			<ul>
+				<li><a href="#fpkm_track">FPKM tracking</a></li>
+				<li><a href="#gene_exp_diff">Differential expression</a></li>
+				<li><a href="#splicing_diff">Differential splicing</a></li>
+				<li><a href="#cds_diff">Differential coding sequence output</a></li>
+			</ul>
+ 	    </ul>
+
+  	    </ul><br/>
+  	  </div>
+  	  
+	  <h2 id="prer">Prerequisites</h2><br/>
+	  <p>
+	  Cufflinks runs on intel-based computers running Linux or Mac OS X and 
+	  that have GCC 4.0 or greater installed.  You can install pre-compiled 
+	  binaries or build Cufflinks from the source code.
+	  If you wish to build Cufflinks yourself, you will need to install the
+	  <a href="http://www.boost.org">Boost C++ libraries</a>.  See <a href="tutorial.html#boost">
+	  Installing Boost</a>, on the getting started page. 
+  	  </p>
+ 	  <br/>
+  	  <h2 id="cufflinks">Running Cufflinks</h2><br/>
+		Run <tt>cufflinks</tt> from the command line as follows:
+	  <blockquote>
+ 	   Usage: cufflinks [options]* &lt;aligned_reads.sam&gt;
+	  </blockquote>
+	  <p>
+	  The following is a detailed description of the options used to control
+	  Cufflinks:
+	  </p><br/>
+
+	  <table CELLSPACING=15>
+	  <tr><td VALIGN=top>
+	  <b>Arguments:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>&lt;aligned_reads.sam&gt;</tt>
+	  </td><td VALIGN=top>
+	  A file of RNA-Seq read alignments in the <a href="http://samtools.sourceforge.net">
+	  SAM format</a>.  SAM is a standard short read alignment, that allows aligners to 
+	  attach custom tags to individual alignments, and Cufflinks requires that
+	  the alignments you supply have some of these tags.  Please see <a href="#input">
+	  Input formats</a> for more details.
+	  </td></tr>
+	  <tr><td VALIGN=top>
+	  <b>Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-h/--help</tt>
+	  </td><td VALIGN=top>
+	  Prints the help message and exits   
+	  </td></tr> 
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  This is the expected (mean) inner distance between mate pairs.  For, 
+	  example, for paired end runs with fragments selected at 300bp, where each
+	  end is 50bp, you should set -r to be 200.  The default is 45bp.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The standard deviation for the distribution on inner distances between
+	  mate pairs.  The default is 20bp.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-I/--max-intron-length &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The maximum intron length.  Cufflinks will not report transcripts with 
+	  introns longer than this, and will ignore SAM alignments with REF_SKIP 
+	  CIGAR operations longer than this.  The default is 300,000.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-F/--min-isoform-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  After calculating isoform abundance for a gene, Cufflinks filters out 
+	  transcripts that it believes are very low abundance, because isoforms 
+	  expressed at extremely low levels often cannot reliably be assembled, 
+	  and may even be artifacts of incompletely spliced precursors of processed
+	  transcripts. This parameter is also used to filter out introns
+	  that have far fewer spliced alignments supporting them. The default is 
+	  0.05, or 5% of the most abundant isoform (the major isoform) of the gene.  
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-j/--pre-mrna-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  Some RNA-Seq protocols produce a significant amount of reads that originate
+	  from incompletely spliced transcripts, and these reads can confound the 
+	  assembly of fully spliced mRNAs.  Cufflinks uses this parameter to filter 
+	  out alignments that lie within the intronic intervals implied by the 
+	  spliced alignments.  The minimum depth of coverage in the intronic region covered 
+	  by the alignment is divided by the number of spliced reads, and if the 
+	  result is lower than this parameter value, the intronic alignments are 
+	  ignored. The default is 5%.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-p/--num-threads &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Use this many threads to align reads. The default is 1.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-Q/--min-mapqual &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Instructs Cufflinks to ignore alignments with a SAM mapping quality lower
+	  than this number.  The default is 0.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-L/--label</tt>
+	  </td><td VALIGN=top>
+	  Cufflinks will report transfrags in GTF format, with a prefix given by 
+	  this option.  The default prefix is "CUFF".
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-G/--GTF</tt>
+	  </td><td VALIGN=top>
+	  Tells Cufflinks to use the supplied reference annotation to estimate 
+	  isoform expression.  It will not assemble novel transcripts, and the program
+	  will ignore alignments not structurally compatible with any reference transcript.  
+	  </td></tr>
+	  <tr><td VALIGN=top>
+	  <b>Advanced Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--num-importance-samples &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
+	  </td></tr> 
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--max-mle-iterations &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
+	  </td></tr>
+	  </table><br/>
+	
+	  <h2 id="cufflinks_input">Cufflinks Input</h2><br/>
+	  <p>
+	  	Cufflinks takes a text file of SAM alignments as input.  For more details
+	  	on the SAM format, see the <a href="http://samtools.sourceforge.net/SAM1.pdf">
+	  	specification</a>.  The RNA-Seq read mapper <a href="http://tophat.cbcb.umd.edu">TopHat</a>
+	  	produces output in this format, and is
+		recommended for use with Cufflinks. However Cufflinks will accept SAM
+		alignments generated by any read mapper.  Here's an example of an alignment Cufflinks will accept:
+  	  </p>
+	  <br/>
+	<pre>
+s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
+   CAAGATGCTAGGCAAGTCTTGGAAG IIIIIIIIIIIIIIIIIIIIIIIII NM:i:0 XS:A:-
+	</pre>
+	
+	  Note the use of the custom tag <tt>XS</tt>.  This attribute, which must 
+	  have a value of "+" or "-", indicates which strand the RNA that produced
+	  this read came from.  While this tag can be applied to any alignment, 
+	  including unspliced ones, it <strong>must</strong> be present for all
+	  spliced alignment records (those with a 'N' operation in the CIGAR string).
+	  </p>
+	  <p>
+	  The SAM file supplied to Cufflinks <strong>must</strong> be sorted by 
+	  reference position.  If you aligned your reads with TopHat, your 
+	  alignments will be properly sorted already.  If you used another tool, you may
+	  want to make sure they are properly sorted as follows:
+	  </p>
+	<br/>
+	<blockquote>sort -k 3,3 -k 4,4n hits.sam > hits.sam.sorted</blockquote>
+  	 <p> 
+	<strong>NOTE:</strong> Cufflinks currently only supports SAM alignments with
+	the CIGAR match ('M') and reference skip ('N') operations.  Support for the
+	other operations, such as insertions, deletions, and clipping, will be added 
+	in the future.
+	</p>
+      <br/>
+  <h2 id="cufflinks_output">Cufflinks Output</h2><br/>
+	<p>
+      Cufflinks produces three output files:
+	</p>
+	<br/>
+	<ol>
+	<h2 id="gtfout">1) transcripts.gtf</h2>
+	<p>
+	This <a href="http://mblab.wustl.edu/GTF22.html">GTF</a> file contains Cufflinks'
+	assembled isoforms.  The first 7 columns are standard GTF, and the last column
+	contains attributes, some of which are also standardized ("gene_id", and "transcript_id").
+	There one GTF record per row, and each record represents either a transcript
+	or an exon within a transcript.  The columns are defined as follows:
+	<table CELLSPACING=15>
+	  <tr>
+		<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>1</td><td VALIGN=top>seqname</td><td VALIGN=top><tt>chrX</tt></td><td VALIGN=top>Chromosome or contig name</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>2</td><td VALIGN=top>source</td><td VALIGN=top><tt>Cufflinks</tt></td><td VALIGN=top>The name of the program that generated this file (always 'Cufflinks')</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>3</td><td VALIGN=top>feature</td><td VALIGN=top><tt>exon</tt></td><td VALIGN=top>The type of record (always either "transcript" or "exon".</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>4</td><td VALIGN=top>start</td><td VALIGN=top><tt>77696957</tt></td><td VALIGN=top>The leftmost coordinate of this record (where 0 is the leftmost possible coordinate)</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>5</td><td VALIGN=top>end</td><td VALIGN=top><tt>77712009</tt></td><td VALIGN=top>The rightmost coordinate of this record, inclusive.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>6</td><td VALIGN=top>score</td><td VALIGN=top><tt>77712009</tt></td><td VALIGN=top>The most abundant isoform for each gene is assigned a score of 1000.  Minor isoforms are scored by the ratio (minor FPKM/major FPKM)</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>7</td><td VALIGN=top>strand</td><td VALIGN=top><tt>+</tt></td><td VALIGN=top>Cufflinks' guess for which strand the isoform came from.  Always one of "+", "-", "."</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>7</td><td VALIGN=top>frame</td><td VALIGN=top><tt>.</tt></td><td VALIGN=top>Cufflinks does not predict where the start and stop codons (if any) are located within each transcript, so this field is not used.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>8</td><td VALIGN=top>attributes</td><td VALIGN=top><tt>...</tt></td><td VALIGN=top>See below.</td>
+	  </tr>
+	  </table>
+	
+	Each GTF record is decorated with the following attributes:
+	<table CELLSPACING=15>
+	  <tr>
+		<td VALIGN=top><strong>Attribute</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>gene_id</td><td VALIGN=top><tt>CUFF.1</tt></td><td VALIGN=top>Cufflinks gene id</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>transcript_id</td><td VALIGN=top><tt>CUFF.1.1</tt></td><td VALIGN=top>Cufflinks transcript id</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>FPKM</td><td VALIGN=top><tt>101.267</tt></td><td VALIGN=top>Isoform-level relative abundance in <strong>F</strong>ragments <strong>P</strong>er <strong>K</strong>ilobase of exon model per <strong>M</strong>illion mapped fragments</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>frac</td><td VALIGN=top><tt>0.7647</tt></td><td VALIGN=top>Reserved. Please ignore, as this attribute may be deprecated in the future</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>conf_lo</td><td VALIGN=top><tt>0.07</tt></td><td VALIGN=top>Lower bound of the 95% confidence interval of the abundance of this isoform, as a fraction of the isoform abundance.  That is, lower bound = FPKM * (1.0 - conf_lo)</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>conf_hi</td><td VALIGN=top><tt>0.1102</tt></td><td VALIGN=top>Upper bound of the 95% confidence interval of the abundance of this isoform, as a fraction of the isoform abundance. That is, upper bound = FPKM * (1.0 + conf_lo)</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>cov</td><td VALIGN=top><tt>100.765</tt></td><td VALIGN=top>Estimate for the absolute depth of read coverage across the whole transcript</td>
+	  </tr>
+	  </table>
+	  <br/>
+	<h2 id="transexpr">2) transcripts.expr</h2>
+	<p>
+	This file is simply a tab delimited file containing one row per transcript
+	and with columns containing the attributes above.  There are a few 
+	additional attributes not in the table above, but these are reserved for 
+	debugging, and may change or disappear in the future.
+	</p>
+	<br/>
+	<h2 id="geneexpr">3) genes.expr</h2>
+	<p>
+	This file contains gene-level coordinates and expression values.
+	</p>
+	<br/>
+	</ol>
+	<h2 id="cuffcompare">Running Cuffcompare</h2><br/>
+	<p>
+	Cufflinks includes a program that you can use to help analyze the transfrags
+	you assemble.  The program <tt>cuffcompare</tt> helps you:
+	<ul>
+		<li>Compare your assembled transcripts to a reference annotation</li>
+		<li>Track Cufflinks transcripts across multiple experiments (e.g. across a time course)</li>
+	</ul>
+	From the command line, run <tt>cuffcompare</tt> as follows:
+	<p>
+	  <blockquote>
+	   cuffcompare [options]* &lt;cuff1.gtf&gt; [cuff2.gtf] ... [cuffN.gtf]
+	  </blockquote>
+	
+	<br/>
+	<h2 id="cuffcomp_input">Cuffcompare Input</h2><br/>
+	Cuffcompare takes Cufflinks' GTF output as input, and optionally can take 
+	a "reference" annotation (such as from <a href="ftp://ftp.ensembl.org/pub/current_gtf/">Ensembl</a>)
+	<br/>
+	
+	  <table CELLSPACING=15>
+	  <tr><td VALIGN=top>
+	  <b>Arguments:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>&lt;cuff1.gtf&gt;</tt>
+	  </td><td VALIGN=top>
+	  A GTF file produced by cufflinks.
+	  </td></tr>
+	  <tr><td VALIGN=top>
+	  <b>Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-h/--help</tt>
+	  </td><td VALIGN=top>
+	  Prints the help message and exits   
+	  </td></tr> 
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-o &lt;outprefix&gt;</tt>
+	  </td><td VALIGN=top>
+	  Write the summary stats into the text output file &lt;outprefix&gt;(instead of stdout)
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-r</tt>
+	  </td><td VALIGN=top>
+	  An optional "reference" annotation GTF.  Each sample is matched against
+	  this file, and sample isoforms are tagged as overlapping, matching, or 
+	  novel where appropriate.  See the <a href="#refmap">refmap</a> and 
+	  <a href="#tmap">tmap</a> output file descriptions below.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-R</tt>
+	  </td><td VALIGN=top>
+	  If <tt>-r</tt> was specified, this option causes <tt>cuffcompare</tt> to 
+	  ignore reference transcripts that are not overlapped by any transcript in
+	  one of <tt>cuff1.gtf</tt>,...,<tt>cuffN.gtf</tt>.  Useful for ignoring
+	  annotated transcripts that are not present in your RNA-Seq samples and thus
+	  adjusting the "sensitivity" calculation in the accuracy report
+	  written in the &lt;outprefix&gt; file
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-s &lt;seq_dir&gt;</tt>
+	  </td><td VALIGN=top>
+	  Causes <tt>cuffcompare</tt> to look into <seq_dir> for fasta files with the 
+	  underlying genomic sequences (one file per contig) against which your 
+	  reads were aligned for some optional classification functions.  For example,
+	  Cufflinks transcripts consisting mostly of lower-case bases are classified
+	  as repeats.  Note that &lt;seq_dir&gt; <strong>must</strong> contain one
+	  fasta file per reference chromosome, and each file must be named after
+	  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-V</tt>
+	  </td><td VALIGN=top>
+	  (Mildly) more verbose processing mode  
+	  </td></tr>
+	  </table><br/>
+  <h2 id="cuffcomp_output">Cuffcompare Output</h2><br/>
+	<p>
+      Cuffcompare produces the following output files:
+	</p>
+	<br/>
+	<ol>
+	<h2 id="stats">1) &lt;outprefix&gt;</h2>
+	<p>
+	Cuffcompare reports various statistics related to the "accuracy" of the transcripts 
+	in each sample when compared to the reference annotation data. The typical gene finding measures of "sensitivity"
+	and "specificity" (as defined in Burset, M., Guig&oacute;, R. : <b>Evaluation of gene structure prediction programs</b> (1996) <i>Genomics</i>, 34 (3), pp. 353-367. 
+        <a href="http://dx.doi.org/10.1006/geno.1996.0298">doi: 10.1006/geno.1996.0298</a>) 
+        are calculated at various levels (nucleotide, exon, intron, transcript, gene) for each input file and reported in this file.
+        The <b>Sn</b> and <b>Sp</b> columns show specificity and sensitivity values at each level, while the <i>fSn</i> and <i>fSp</i> columns 
+        are "fuzzy" variants of these same accuracy calculations, allowing for a very small variation in exon boundaries to still be counted as a "match".
+        (If the -o option was not given, these stats will be shown at the standard output and the &lt;outprefix&gt; used for the other output file names below will 
+        become "stdout")
+	<br/>
+	<br/>
+	<h2 id="combin">2) &lt;outprefix&gt;.combined.gtf</h2>
+	<p>
+	Cuffcompare reports a GTF file containing the "union" of all transfrags in 
+	each sample.  If a transfrag is present in both samples, it is thus reported 
+	once in the combined gtf.
+        <br/>
+	<br/>
+	<h2 id="track">3) &lt;outprefix&gt;.tracking</h2>
+		<p>
+		This file matches transcripts up between samples.  Each row contains 
+		a transcript structure that is present in one or more input GTF files. 
+		Because the transcripts will generally have different IDs (unless you 
+		assembled your RNA-Seq reads against a reference transcriptome), 
+		<tt>cuffcompare</tt> examines the structure of each the transcripts, 
+		matching transcripts that agree on the coordinates and order of all of
+		their introns, as well as strand.  Matching transcripts are allowed to 
+		differ on the length of the first and last exons, since these lengths
+		will naturally vary from sample to sample due to the random nature of 
+		sequencing. 
+		</p>
+		
+		<p>
+		If you ran <tt>cuffcompare</tt> with the -r option, the first and second
+		columns contain the closest matching reference transcript to the one
+		described by each row.  
+		</p>
+		<br/>
+		Here's an example of a line from the tracking file:<br/><br/>
+		<pre>
+TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
+     q1:exp.115|exp.115.0|100|3.061355|0.350242|0.350207 \
+     q2:60hr.292|60hr.292.0|100|4.094084|0.000000|0.000000
+		</pre>
+		
+		In this example, a transcript present in the two input files, called 
+		<tt>exp.115.0</tt> in the first and <tt>60hr.292.0</tt> in the second, 
+		doesn't match any reference transcript exactly, but shares exons with
+		<tt>uc007afj.1</tt>, an isoform of the gene Tcea, as indicated by the 
+		<a href="#class_codes">class code</a> <tt>j</tt>.
+		
+		The first three columns are as follows:<br/>
+		
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td>
+			<td VALIGN=top><strong>Column name</strong></td>
+			<td VALIGN=top><strong>Example</strong></td>
+			<td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td>
+			<td VALIGN=top>Cufflinks transfrag id</td>
+			<td VALIGN=top><tt>TCONS_00000045</tt></td>
+			<td VALIGN=top>A unique internal id for the transfrag</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td>
+			<td VALIGN=top>Cufflinks locus id</td>
+			<td VALIGN=top><tt>XLOC_000023</tt></td>
+			<td VALIGN=top>A unique internal id for the locus</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td>
+			<td VALIGN=top>Reference gene id</td>
+			<td VALIGN=top><tt>Tcea</tt></td>
+			<td VALIGN=top>The gene_name attribute of the reference GTF record 
+				for this transcript, or '-' if no reference transcript overlaps 
+				this Cufflinks transcript</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td>
+			<td VALIGN=top>Reference transcript id</td>
+			<td VALIGN=top><tt>uc007afj.1</tt></td>
+			<td VALIGN=top>The transcript_id attribute of the reference GTF 
+				record for this transcript, or '-' if no reference transcript 
+				overlaps this Cufflinks transcript</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td>
+			<td VALIGN=top>Class code</td>
+			<td VALIGN=top><tt>c</tt></td>
+			<td VALIGN=top>The type of match between the Cufflinks transcripts
+				 in column  6 and the reference transcript. See <a href="#class_codes">class codes</a></td>
+		  </tr>
+		  </table>
+		
+		Each of the columns after the fifth have the following format:
+		
+		<blockquote>qJ:&lt;gene_id&gt;|&lt;transcript_id&gt;|&lt;FMI&gt;|&lt;FPKM&gt;|&lt;conf_lo&gt;|&lt;conf_hi&gt;</blockquote><br/>
+		
+		A transcript need not be present in all samples to be reported in the tracking 
+		file. A sample not containing a transcript will have a "-" in its entry
+		in the row for that transcript.
+	<br/>
+	<br/>(The following output files are created for each of the &lt;cuff_in&gt; file given)
+	<br/>
+	<br/>
+	<h2 id="refmap">4) &lt;cuff_in&gt;.refmap</h2>
+	<p>
+	This tab delimited file lists, for each reference transcript, which cufflinks
+	transcripts either fully or partially match it.  There is one row per
+	reference transcript, and the columns are as follows:
+	<table CELLSPACING=15>
+	  <tr>
+		<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>1</td><td VALIGN=top>Reference gene name</td><td VALIGN=top><tt>Myog</tt></td><td VALIGN=top>The gene_name attribute of the reference GTF record for this transcript, if present. Otherwise gene_id is used.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>2</td><td VALIGN=top>Reference transcript id</td><td VALIGN=top><tt>uc007crl.1</tt></td><td VALIGN=top>The transcript_id attribute of the reference GTF record for this transcript</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>3</td><td VALIGN=top>Class code</td><td VALIGN=top><tt>c</tt></td><td VALIGN=top>The type of match between the Cufflinks transcripts in column  4 and the reference transcript.  One of either 'c' for partial match, or '=' for full match.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>4</td><td VALIGN=top>Cufflinks matches</td><td VALIGN=top><tt>CUFF.23567.0,CUFF.24689.0</tt></td><td VALIGN=top>A comma separated list of Cufflinks transcript ids matching the reference transcript</td>
+	  </tr>
+	  </table>
+	<h2 id="tmap">5) &lt;cuff_in&gt;.tmap</h2>
+	<p>
+	This tab delimited file lists the most closely matching reference 
+	transcript for each Cufflinks transcript.  There is one row per Cufflinks transcript, 
+	and the columns are as follows:
+	<table CELLSPACING=15>
+	  <tr>
+		<td VALIGN=top><strong>Column number</strong></td>
+		<td VALIGN=top><strong>Column name</strong></td>
+		<td VALIGN=top><strong>Example</strong></td>
+		<td VALIGN=top><strong>Description</strong></td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>1</td>
+		<td VALIGN=top>Reference gene name</td>
+		<td VALIGN=top><tt>Myog</tt></td>
+		<td VALIGN=top>The gene_name attribute of the reference GTF record for this transcript, if present. Otherwise gene_id is used.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>2</td>
+		<td VALIGN=top>Reference transcript id</td>
+		<td VALIGN=top><tt>uc007crl.1</tt></td>
+		<td VALIGN=top>The transcript_id attribute of the reference GTF record for this transcript</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>3</td>
+		<td VALIGN=top>Class code</td>
+		<td VALIGN=top><tt>c</tt></td>
+		<td VALIGN=top>The type of match between the Cufflinks transcripts in column  4 and the reference transcript.  One of either 'c' for partial match, or '=' for full match.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>4</td>
+		<td VALIGN=top>Cufflinks gene id</td>
+		<td VALIGN=top><tt>CUFF.23567</tt></td>
+		<td VALIGN=top>The Cufflinks internal gene id</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>5</td>
+		<td VALIGN=top>Cufflinks transcript id</td>
+		<td VALIGN=top><tt>CUFF.23567.0</tt></td>
+		<td VALIGN=top>The Cufflinks internal transcript id</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>6</td>
+		<td VALIGN=top>Fraction of major isoform (FMI)</td>
+		<td VALIGN=top><tt>100</tt></td>
+		<td VALIGN=top>The expression of this transcript expressed as a fraction of the major isoform for the gene.  Ranges from 1 to 100.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>7</td>
+		<td VALIGN=top>FPKM</td>
+		<td VALIGN=top><tt>1.4567</tt></td>
+		<td VALIGN=top>The expression of this transcript expressed in FPKM</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>8</td>
+		<td VALIGN=top>FPKM_conf_lo</td>
+		<td VALIGN=top><tt>0.7778</tt></td>
+		<td VALIGN=top>The upper limit of the 95% FPKM confidence interval</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>9</td>
+		<td VALIGN=top>FPKM_conf_hi</td>
+		<td VALIGN=top><tt>1.9776</tt></td>
+		<td VALIGN=top>The lower limit of the 95% FPKM confidence interval</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>10</td>
+		<td VALIGN=top>Coverage</td>
+		<td VALIGN=top><tt>3.2687</tt></td>
+		<td VALIGN=top>The estimated average depth of read coverage across the transcript.</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>11</td>
+		<td VALIGN=top>Length</td>
+		<td VALIGN=top><tt>1426</tt></td>
+		<td VALIGN=top>The length of the transcript</td>
+	  </tr>
+	  <tr>
+		<td VALIGN=top>12</td>
+		<td VALIGN=top>Major isoform ID</td>
+		<td VALIGN=top><tt>CUFF.23567.0</tt></td>
+		<td VALIGN=top>The Cufflinks ID of the gene's major isoform</td>
+	  </tr>
+	  </table>
+		
+		<br/><br/><strong id="class_codes">Class Codes</strong><br/><br/>
+		If you ran <tt>cuffcompare</tt> with the <tt>-r</tt> option, tracking rows will
+		contain the following values.  If you did not use <tt>-r</tt>, the rows will
+		all contain "-" in their class code column.
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Priority</strong></td>
+			<td VALIGN=top><strong>Code</strong></td>
+			<td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td>
+			<td VALIGN=top><tt>=</tt></td>
+			<td VALIGN=top>Match</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td>
+			<td VALIGN=top><tt>c</tt></td>
+			<td VALIGN=top>Contained</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td>
+			<td VALIGN=top><tt>j</tt></td>
+			<td VALIGN=top>New isoform</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td>
+			<td VALIGN=top><tt>e</tt></td>
+			<td VALIGN=top>A single exon transcript overlapping a reference 
+				exon and at least 10 bp of a reference intron, indicating a 
+				possible pre-mRNA fragment.</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td>
+			<td VALIGN=top><tt>i</tt></td>
+			<td VALIGN=top>A single exon transcript falling entirely with a 
+				reference intron</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td>
+			<td VALIGN=top><tt>r</tt></td>
+			<td VALIGN=top>Repeat. Currently determined by looking at the reference
+				sequence and applied to transcripts where at least 50% of the 
+				bases are lower case</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td>
+			<td VALIGN=top><tt>p</tt></td>
+			<td VALIGN=top>Possible polymerase run-on fragment</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td>
+			<td VALIGN=top><tt>u</tt></td>
+			<td VALIGN=top>Unknown, intergenic transcript</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td>
+			<td VALIGN=top><tt>o</tt></td>
+			<td VALIGN=top>Unknown, generic overlap with reference</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td>
+			<td VALIGN=top><tt>.</tt></td>
+			<td VALIGN=top>(.tracking file only, indicates multiple classifications)</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  </table>
+		
+		<br/>
+		<h2 id="cuffdiff">Running Cuffdiff</h2><br/>
+		<p>
+		Cufflinks includes a program, "Cuffdiff", that you can use to find significant changes 
+		in transcript expression, splicing, and promoter use.  From the command line, run <tt>cuffdiff</tt> as follows:
+		<p>
+		<blockquote>
+		cuffdiff [options]* &lt;transcripts.gtf&gt; &lt;sample1.sam&gt; &lt;sample2.sam&gt;... [sampleN.sam]
+		</blockquote>
+		
+		<br/>
+		<h2 id="cuffdiff_input">Cuffdiff Input</h2><br/>
+		Cuffdiff takes a GTF file of transcripts as input, along with two or more 
+		SAM files containing the fragment alignments for two or more samples. 
+		It produces a number of output files that contain test results for 
+		changes in expression at the level of transcripts, primary transcripts, 
+		and genes. It also tracks changes in the relative abundance of transcripts sharing a common
+		transcription start site, and in the relative abundances of the primary 
+		transcripts of each gene.  Tracking the former allows one to see changes in 
+		splicing, and the latter lets one see changes in relative promoter use 
+		within a gene.
+		
+		Cuffdiff requires that transcripts in the input GTF be annotated with 
+		certain attributes in order to look for changes in primary transcript
+		expression, splicing, coding output, and promoter use.  These attributes 
+		are:
+		
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Attribute</strong></td>
+			<td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>tss_id</td>
+			<td VALIGN=top>The ID of this transcript's inferred start site.  
+				Determines which primary transcript this processed transcript 
+				is believed to come from.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>p_id</td>
+			<td VALIGN=top>The ID of the coding sequence this transcript contains. This is 
+				attribute is attached to Cuffcompare output by Cuffcompare only 
+				when it is run with a reference annotation that include CDS 
+				records.  Further, differential CDS analysis is <b>only</b> 
+				performed when all isoforms of a gene have <tt>p_id</tt> 
+				attributes, because neither Cufflinks nor Cuffcompare attempt to
+				assign an open reading frame to transcripts.</td>
+		  </tr>
+		  </table>
+		<p>
+			
+		  <table CELLSPACING=15>
+		  <tr><td VALIGN=top>
+		  <b>Arguments:</b>
+		  </td><td VALIGN=top>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>&lt;transcripts.gtf&gt;</tt>
+		  </td><td VALIGN=top>
+		  A transcript TF file produced by cufflinks, cuffcompare, or other source.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>&lt;sample1.sam&gt;</tt>
+		  </td><td VALIGN=top>
+		  A SAM file of aligned RNA-Seq reads. If more than two are provided,
+		  <b>they are analyzed as a timeseries</b>.  That is, sample 1 is 
+		  compared to sample 2, sample 2 is compared to sample 3, etc.  Cuffdiff
+		  currently does not perform an all-pairs comparison. 
+		  </td></tr>
+		  <tr><td VALIGN=top>
+		  <b>Options:</b>
+		  </td><td VALIGN=top>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-h/--help</tt>
+		  </td><td VALIGN=top>
+		  Prints the help message and exits   
+		  </td></tr> 
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  This is the expected (mean) inner distance between mate pairs.  For, 
+		  example, for paired end runs with fragments selected at 300bp, where each
+		  end is 50bp, you should set -r to be 200.  The default is 45bp.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  The standard deviation for the distribution on inner distances between
+		  mate pairs.  The default is 20bp.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-p/--num-threads &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  Use this many threads to align reads. The default is 1.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-Q/--min-mapqual &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  Instructs Cufflinks to ignore alignments with a SAM mapping quality lower
+		  than this number.  The default is 0.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-c/--min-alignment-count &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  The minimum number of alignments in a locus for needed to conduct
+		  significance testing on changes in that locus observed between samples.  
+		  If no testing is performed, changes in the locus are deemed not signficant, 
+		  and the locus' observed changes don't contribute to correction for 
+		  multiple testing. The default is 1,000 fragment alignments (up to 2,000 paired reads). 
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>--FDR &lt;float&gt;</tt>
+		  </td><td VALIGN=top>
+		  The allowed false discovery rate.  The default is 0.05. 
+		  </td></tr>
+		  <tr><td VALIGN=top>
+		  <b>Advanced Options:</b>
+		  </td><td VALIGN=top>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>--num-importance-samples &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
+		  </td></tr> 
+		  <tr><td VALIGN=top nowrap>
+		  <tt>--max-mle-iterations &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
+		  </td></tr>
+		  </table><br/>
+	  <h2 id="cuffdiff_output">Cuffdiff Output</h2><br/>
+		<p>
+	      Cuffdiff produces many several output files for each pair of samples
+		  provided by the user.  File names are prefixed with "&lt;x&gt;_&lt;y&gt;_",
+		  where <tt>x</tt> and <tt>y</tt> are numbers starting at zero.  Thus, if 
+		  you gave Cuffdiff two input files, it would produce a set of files 
+		  with names that start "0_1_".  Many of these have essentially the same
+		  format.
+		</p>
+		<br/>
+		<ol>
+		<h2 id="fpkm_track">1) FPKM tracking files</h2>
+		<p>
+		Cuffdiff calculates the FPKM of each transcript, primary transcript, 
+		and gene in each sample.  Primary transcript and gene FPKMs are computed
+		by summing the FPKMs of transcripts in each primary transcript group 
+		or gene group.  
+		
+		Each FPKM tracking file has the following format:
+		
+		<!-- ref_trans_id	class_code	gene_short_name	tss_id	locus	q0_FPKM	q0_conf_lo	q0_conf_hi	q1_FPKM	q1_conf_lo	q1_conf_hi	q2_FPKM	q2_conf_loq2_conf_hi	q3_FPKM	q3_conf_lo	q3_conf_hi -->
+		
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>Tracking id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript) being tested</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>class_code</td><td VALIGN=top><tt>=</tt></td><td VALIGN=top>The <tt>class_code</tt> attribute for the transcript being tested, or "-" if not a transcript, or if <tt>class_code</tt> isn't present</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>nearest_ref_id</td><td VALIGN=top><tt>NM_008866</tt></td><td VALIGN=top>The reference transcript to which the class code refers, if any</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>Gene name</td><td VALIGN=top><tt>Lypla1</tt></td><td VALIGN=top>The <tt>gene_name</tt>(s) or <tt>gene_id</tt>(s) being tested</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>TSS ID</td><td VALIGN=top><tt>TSS1</tt></td><td VALIGN=top>The <tt>tss_id</tt> attribute for the transcript/primary transcript being tested, or "-" if not a transcript/primary transcript, or if <tt>tss_id</tt> isn't present</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:4797771-4835363</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>q0_FPKM</td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the object in sample 0</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td><td VALIGN=top>q0_FPKM_lo</td><td VALIGN=top><tt>7.03583</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td><td VALIGN=top>q0_FPKM_hi</td><td VALIGN=top><tt>8.98595</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>11</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>12<td VALIGN=top>q1_FPKM_hi</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 7</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 8</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 9</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  </table>
+		
+		There are <strong>four</strong> FPKM tracking files:
+		
+		<table CELLSPACING=15>
+		  
+		  <tr>
+			<td VALIGN=top><tt>isoforms.fpkm_tracking</tt></td><td VALIGN=top>Transcript FPKMs</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>genes.fpkm_tracking</tt></td><td VALIGN=top>Gene FPKMs.  Tracks the summed FPKM of transcripts sharing each <tt>gene_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>cds.fpkm_tracking</tt></td><td VALIGN=top>Primary transcript FPKMs. Tracks the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>tss_groups.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence FPKMs. Tracks the summed FPKM of transcripts sharing each <tt>p_id</tt>, independent of <tt>tss_id</tt></td>
+		  </tr>
+		  </table>
+		
+		<br/>
+		<br/>
+		<h2 id="gene_exp_diff">2) Differential expression tests</h2>
+		<p>
+		This tab delimited file lists the results of differential
+		expression testing between sample numbers x and y for spliced transcripts, 
+		primary transcripts, genes, and coding sequences.
+		
+		For each pair of samples <em>x</em> and <em>y</em>, four files are created
+		<table>
+		  <tr>
+			<td VALIGN=top><tt>x_y_isoform_exp.diff</tt></td><td VALIGN=top>Transcript differential FPKM. </td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>x_y_gene_exp.diff</tt></td><td VALIGN=top>Gene differential FPKM.  Tests difference sin the summed FPKM of transcripts sharing each <tt>gene_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>x_y_tss_group_exp.diff</tt></td><td VALIGN=top>Primary transcript differential FPKM.  Tests differences in the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>x_y_cds_exp.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence differential FPKM. Tests differences in the summed FPKM of transcripts sharing each <tt>p_id</tt> independent of <tt>tss_id</tt></td>
+		  </tr>
+		</table>
+		
+		Each of the above files has the following format:
+		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>Tested id</td><td VALIGN=top><tt>XLOC_000001</tt></td><td VALIGN=top>A unique identifier describing the transcipt, gene, primary transcript, or CDS being tested</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>gene</td><td VALIGN=top><tt>Lypla1</tt></td><td VALIGN=top>The <tt>gene_name</tt>(s) or <tt>gene_id</tt>(s) being tested</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:4797771-4835363</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>NOTEST</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>FPKM<sub><em>x</em></sub></td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the gene in sample <em>x</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>FPKM<sub><em>y</em></sub></td><td VALIGN=top><tt>8.551545</tt></td><td VALIGN=top>FPKM of the gene in sample <em>y</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>ln(FPKM<sub><em>y</em></sub>/FPKM<sub><em>x</em></sub>)</td><td VALIGN=top><tt>0.06531</tt></td><td VALIGN=top>The natural log of the fold change <em>y</em>/<em>x</em><td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.860902</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed change in FPKM</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.389292</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+		  </tr>
+		  </table>
+		
+		<h2 id="splicing_diff">3) Differential splicing tests (&lt;x&gt;_&lt;y&gt;_splicing.diff)</h2>
+		<p>
+		This tab delimited file lists, for each primary transcript, the amount of overloading
+		detected among its isoforms, i.e. how much differential splicing exists between
+		isoforms processed from a single primary transcript.  Only primary 
+		transcripts from which two or more isoforms are spliced are listed in this file.
+		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>Tested id</td><td VALIGN=top><tt>TSS10015</tt></td><td VALIGN=top>A unique identifier describing the primary transcript being tested.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>gene name</td><td VALIGN=top><tt>Rtkn</tt></td><td VALIGN=top>The <tt>gene_name</tt> or <tt>gene_id</tt> that the primary transcript being tested belongs to</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr6:83087311-83102572</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.22115</tt></td><td VALIGN=top>The splice overloading of the primary transcript, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the splice variants<td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.22115</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.000174982</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+		  </tr>
+		  </table>
+		
+		<h2 id="cds_diff">4) (&lt;x&gt;_&lt;y&gt;_cds.diff)</h2>
+		<p>
+		This tab delimited file lists, for each gene, the amount of overloading
+		detected among its primary transcripts, i.e. how much differential 
+		promoter use exists between samples.  Only genes producing two or more
+		distinct primary transcripts (i.e. multi-promoter genes) are listed here.
+		
+		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>Tested id</td><td VALIGN=top><tt>XLOC_000002-[chr1:5073200-5152501]</tt></td><td VALIGN=top>A unique identifier describing the gene being tested.  </td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>gene name</td><td VALIGN=top><tt>Atp6v1h</tt></td><td VALIGN=top>The <tt>gene_name</tt> or <tt>gene_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:5073200-5152501</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.0686517</tt></td><td VALIGN=top>The CDS overloading of the gene, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the coding sequences<td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.0686517</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.00546783</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+		  </tr>
+		  </table>
+		
+		<h2 id="promoter_diff">5) (&lt;x&gt;_&lt;y&gt;_promoters.diff)</h2>
+		<p>
+		This tab delimited file lists, for each gene, the amount of overloading
+		detected among its coding sequences, i.e. how much differential 
+		CDS output exists between samples.  Only genes producing two or more
+		distinct CDS (i.e. multi-protein genes) are listed here.
+
+		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>Tested id</td><td VALIGN=top><tt>XLOC_000019</tt></td><td VALIGN=top>A unique identifier describing the gene being tested.  </td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>gene name</td><td VALIGN=top><tt>Tmem70</tt></td><td VALIGN=top>The <tt>gene_name</tt> or <tt>gene_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:16651657-16668357</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.0124768</tt></td><td VALIGN=top>The promoter overloading of the gene, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the primary transcripts<td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.0124768</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.394327</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+		  </tr>
+		  </table>
+		
+	</div>
+  </div>
+  <div id="footer">
+  	<table width="100%" cellspacing=15><tr><td>
+    This research was supported in part by NIH grants R01-LM06845 and R01-GM083873, NSF grant CCF-0347992 and the Miller Institute for Basic
+		Research in Science at UC Berkeley.
+    </td><td align=right>
+    Administrator: <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>. Design by <a href="http://www.free-css-templates.com" title="Design by David Herreman">David Herreman</a>
+    </td></tr></table>
+  </div>
+</div>
+
+<!-- Google analytics code -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-6101038-2");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<!-- End Google analytics code -->
+</body>
+</html>

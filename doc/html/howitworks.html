@@ -1,0 +1,366 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Cufflinks :: Center for Bioinformatics and Computational Biology</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+</head>
+<body>
+<div id="wrap">
+  <div id="top">
+    <div class="lefts">
+    <table width="100%" cellpadding="2">
+      <tr><td>
+        <a href="./index.html"><h1>Cufflinks</h1></a>
+        <h2>Transcript assembly, differential expression, and differential regulation for RNA-Seq</h2>
+      </td><td align="right" valign="middle">
+        <h1><a href="http://www.cbcb.umd.edu/"><img border=0 src="images/cbcblogo.gif"></img></a>&nbsp;&nbsp;</h1>
+      </td></tr>
+    </table>
+    </div>
+  </div>
+  <div id="subheader">
+  <table width="100%"><tr>
+  <td>
+  		<strong>Please Note</strong> If you have questions 
+		  about how to use Cufflinks or would like more information about 
+		  the software, please email <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>, 
+		  though we ask you to have a look at the <a href="http://dx.doi.org/10.1038/nbt.1621">paper</a> 
+		  and the  <a href="http://www.nature.com/nbt/journal/vaop/ncurrent/extref/nbt.1621-S1.pdf">
+		  supplemental methods</a> first, as your question be answered there.
+	</td><td align=right valign=middle>
+  </td></tr>
+  </table>
+  </div>
+  <div id="main">
+    <div id="rightside">
+		<h2>Site Map</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="index.html">Home</a></li>
+		      <li><a href="tutorial.html">Getting started</a></li>
+		      <li><a href="manual.html">Manual</a></li>
+			  <li><a href="howitworks.html">How Cufflinks works</a></li>
+		    </ul>
+		  </div>
+		
+		  <h2><u>News and updates</u></h2>
+		  <div class="box">
+		    <ul>
+		      <table width="100%">
+				<tr><td>New releases and related tools will be announced through the <a href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing list</b></a></td></tr>
+			  </table>
+		    </ul>
+		  </div>
+		
+		  <a href="./downloads"><h2><u>Releases</u></h2></a>
+		  <div class="box">
+		    <ul>
+		      <table width="100%">
+				<tr><td>version 0.8.2 (BETA)</td> <td align="right">3/26/2010</td></tr>
+				<tr>
+		      		<td><a href="./downloads/cufflinks-0.8.2.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+		      	</tr>
+				<tr>
+					<td><a href="./downloads/cufflinks-0.8.2.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+				</tr>
+				<tr>
+					<td><a href="./downloads/cufflinks-0.8.2.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+				</tr>
+			  </table>
+		    </ul>
+		  </div>
+		
+		  <h2>Related Tools</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>: Alignment of short RNA-Seq reads</li>
+		      <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>: Ultrafast short read alignment</li>
+		    </ul>
+		  </div>
+		  <h2>Publications</h2>
+		  <div class="box">
+		    <ul>
+			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a href="http://dx.doi.org/10.1038/nbt.1621">Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation</b></a> <br/><i><a href="http://www.nature.com/nbt">Nature Biotechnology</a></i> doi:10.1038/nbt.1621</p><br/></li>
+			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Pachter L, Salzberg SL. <a href="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btp120"><b>TopHat: discovering splice junctions with RNA-Seq</b></a>. <i><a href="http://bioinformatics.oxfordjournals.org">Bioinformatics</a></i>  doi:10.1093/bioinformatics/btp120</p><br/></li>
+		      <li style="font-size: x-small; line-height: 130%"><p>Langmead B, Trapnell C, Pop M, Salzberg SL. <a href="http://genomebiology.com/2009/10/3/R25"><b>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome</b></a>. <br/><i><a href="http://genomebiology.com">Genome Biology</a></i> <b>10</b>:R25.</li>
+		    </ul>
+		  </div>
+
+		  <h2>Contributors</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://www.cs.umd.edu/~cole/">Cole Trapnell</a></li>
+			  <li>Geo Pertea</li>
+			  <li>Brian Williams</li>
+			  <li><a href="http://wormlab.caltech.edu/members/">Ali Mortazavi</a></li>
+			  <li>Gordon Kwan</a></li>
+			  <li>Jeltje van Baren</a></li>
+		      <li><a href="http://www.cbcb.umd.edu/~salzberg/">Steven Salzberg</a></li>
+		      <li><a href="http://biology.caltech.edu/Members/Wold">Barbara Wold</a></li>
+			  <li><a href="http://www.math.berkeley.edu/~lpachter/">Lior Pachter</a></li>
+		    </ul>
+		  </div>
+
+		  <h2>Links</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
+		      <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
+			  <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
+		    </ul>
+		  </div>          
+          
+    </div> <!-- End of "rightside" -->
+    <div id="leftside">
+  	  <table><tr><td cellpadding=7>
+  	  <h1>How Cufflinks works</h1><br/>
+      <div id="toc">
+  	    <ul>
+  	    <li><a href="#whis">What is Cufflinks?</a></li>
+		<ul>
+  	      <li><a href="#hass">How does Cufflinks assemble transcripts?</a></li>
+  	  	  <li><a href="#hqua">How does Cufflinks calculate transcript abundances?</a></li>
+  	  	  <li><a href="#hqua">How does Cuffdiff test for differential expression and differential regulation?</a></li>
+ 	    </ul>
+
+  	    </ul><br/>
+  	  </div>
+  	  <h2 id="whis">What is Cufflinks?</h2><br/>
+  	  <p> Cufflinks is a program that assembles aligned RNA-Seq reads into 
+		transcripts, estimates their abundances, and tests for 
+		differential expression and regulation transcriptome-wide.
+	  	Cufflinks runs on <strong>Linux</strong> and <strong>OS X</strong>.
+	 <p>
+        Cufflinks is described in our recent <b><a href="http://dx.doi.org/10.1038/nbt.1621">paper</a></b>, 
+        and much of the algorithmic and mathematical material is presented in the 	
+        <a href="http://www.nature.com/nbt/journal/vaop/ncurrent/extref/nbt.1621-S1.pdf">
+		supplemental methods</a>
+	  </p> 
+  	  <br/>
+	  <h2 id="hass">How does Cufflinks assemble transcripts?</h2><br/>
+	  <p>Cufflinks constructs a parsimonious set of transcripts that "explain" the 
+	  reads observed in an RNA-Seq experiment.  It does so by reducing the 
+	  comparative assembly problem to a problem in maximum matching in bipartite
+	  graphs.  In essence, Cufflinks implements a constructive proof of 
+	  <a href="http://en.wikipedia.org/wiki/Dilworth%27s_theorem">Dilworth's Theorem</a> 
+	  by constructing a covering relation on the read alignments, and finding a 
+	  minimum path cover on the directed acyclic graph for the relation.</p>
+	
+	  <p>While Cufflinks works well with unpaired RNA-Seq reads, it is designed 
+		with paired reads in mind. The assembly algorithm explicitly handles paired end reads by treating
+		the alignment for a given pair as a single object in the covering relation. 
+		The proof of Dilworth's theorem finds a maximum cardinality matching on the 
+		bipartite graph of the transitive closure of the DAG.  However, there is not 
+		necessarily a unique maximum cardinality matching, reflecting the fact 
+		that due to the limited size of RNA-Seq cDNA fragments, we may not know
+		with certainty which outcomes of alternative splicing events go together
+		in the same transcripts.  Cufflinks tries to find the correct parsimonious
+		set of transcripts by performing a <strong>minimum cost</strong> maximum 
+		matching. The cost of associating splicing events is based on the "percent-spliced-in" 
+		score introduced in
+		<p>
+		<ul>
+		<li>Eric T. Wang, Rickard Sandberg, Shujun Luo, Irina Khrebtukova, Lu Zhang, Christine Mayr, Stephen F. Kingsmore, Gary P. Schroth, and Christopher B. Burge,
+			<a href="http://www.nature.com/nature/journal/v456/n7221/abs/nature07509.html">Alternative isoform regulation in human tissue transcriptomes</a>
+			Nature, volume 456, 470 - 476 (2008)
+	   </ul>
+		
+		<p>
+	    This matching is then extended to a minimum cost path cover of the DAG,
+	    with each path representing a different transcript.</p> <br/>
+		
+		The algorithm builds on ideas behind the  
+		<a href="http://www.bsse.ethz.ch/cbg/software/shorah">ShoRAH</a> algorithm 
+		for haplotype abundance estimation in viral populations, described in:
+		<p>
+		<ul>
+			<li>Nicholas Eriksson, Lior Pachter, Yumi Mitsuya, Soo-Yon Rhee, Chunlin Wang, Baback Gharizadeh, Mostafa Ronaghi, Robert W. Shafer, Niko Beerenwinkel
+		<a href="http://www.ploscompbiol.org/doi/pcbi.1000074">Viral population estimation using pyrosequencing</a>,
+		PLoS Computational Biology, 4(5):e1000074
+		</ul>
+		The assembler also borrows some ideas introduced with the <a href="http://pasa.sourceforge.net/">PASA</a> algorithm for annotating genomes from EST and full length mRNA evidence, described in:
+		<ul>
+			<li>Haas, B.J., Delcher, A.L., Mount, S.M., Wortman, J.R., Smith Jr, R.K., Jr., Hannick, L.I., Maiti, R., Ronning, C.M., Rusch, D.B., Town, C.D. et al. (2003) Improving the Arabidopsis genome annotation using maximal transcript alignment assemblies. <a href="http://nar.oxfordjournals.org/cgi/content/full/31/19/5654">Nucleic Acids Res, 31, 5654-5666</a>. 
+		</ul>
+		<br/>
+		Cufflinks is implemented in C++ and makes substantial use of the 
+		<a href="http://www.boost.org">Boost Libraries</a> as well as the <a href="https://lemon.cs.elte.hu/trac/lemon">LEMON</a>
+		Graph Library, which was launched by the Egerváry Research Group on Combinatorial Optimization (EGRES).
+		
+	  <br/>
+	  <br/>
+  	  <h2 id="hqua">How does Cufflinks calculate transcript abundances?</h2><br/>
+	  <p>
+	  In RNA-Seq experiments, cDNA fragments are sequenced and mapped back to 
+	  genes and ideally, individual transcripts. Properly normalized, the RNA-Seq fragment counts
+	  can be used as a measure of relative abundance of transcripts, 
+	  and Cufflinks measures transcript abundances in <b>F</b>ragments <b>P</b>er 
+	  <b>K</b>ilobase of exon per <b>M</b>illion fragments mapped (<b>FPKM</b>), which is 
+	  analagous to single-read "RPKM", originally proposed in:
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>Ali Mortazavi, Brian A Williams, Kenneth McCue, Lorian Schaeffer and Barbara Wold
+			<a href="http://www.nature.com/nmeth/journal/v5/n7/abs/nmeth.1226.html">Mapping and quantifying mammalian transcriptomes by RNA-Seq</a>
+			Nature Methods, volume 5, 621 - 628 (2008)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  	In paired-end RNA-Seq experiments, fragments are sequenced from both ends, 
+		providing two reads for each fragment.  To estimate isoform-level abundances, 
+		one must assign fragments to individual transcripts, which may be 
+		difficult because a read may align to multiple
+	  	isoforms of the same gene.  Cufflinks uses a statistical model of 
+	  	paired-end sequencing experiments to derive a likelihood for the abundances of a set of
+		transcripts given a set of fragments. This likelihood function can be
+		shown to have a unique maximum, which Cufflinks finds using a
+		numerical optimization algorithm.  The program then multiplies these probabilities 
+	  	to compute the overall likelihood that one would observe the fragments in the experiment, 
+	  	given the proposed abundances on the transcripts.  Because Cufflinks' statistical
+	  	model is linear, the likelihood function has a unique maximum value, and
+	  	Cufflinks finds it with a numerical optimization algorithm.</p>
+  
+	  <p>When some isoforms have much lower abundance than another from the same
+	  gene, or when the number of reads for the locus is very small, this 
+	  numerical procedure is less accurate.  To place confidences on the reported
+	  abundances, we have adapted the Bayesian inference procedure
+		proposed by Hui Jiang and Wing Wong for single read RNA-seq in</p>
+	  <br/>
+	
+	  <ul>
+	  	<li>Hui Jiang and Wing Hung Wong, <a href="http://bioinformatics.oxfordjournals.org/cgi/content/full/25/8/1026"> Statistical Inferences for isoform expression</a>, Bioinformatics, 2009 25(8):1026-1032
+	  </ul>
+	  <br/>
+	  <p>Using these statistical methods, Cufflinks can estimate the abundances of the isoforms present in the sample,
+	  either using a known "reference" annotation, 	or after an ab-initio 
+		assembly of the transcripts using only the reference genome.
+      </p>
+	  <br/>
+	
+	<h2 id="hass">How does Cuffdiff test for differential expression and regulation?</h2><br/>
+		Cuffdiff takes a GTF file of transcripts as input, along with two or more 
+		SAM files containing the fragment alignments for two or more samples. 
+		It produces a number of output files that contain test results for 
+		changes in expression at the level of transcripts, primary transcripts, 
+		and genes. It also tracks changes in the relative abundance of transcripts sharing a common
+		transcription start site, and in the relative abundances of the primary 
+		transcripts of each gene.  Tracking the former allows one to see changes in 
+		splicing, and the latter lets one see changes in relative promoter use 
+		within a gene.
+		
+		Cuffdiff requires that transcripts in the input GTF be annotated with 
+		certain attributes in order to look for changes in primary transcript
+		expression, splicing, coding output, and promoter use.  These attributes 
+		are:
+		
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Attribute</strong></td>
+			<td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>tss_id</td>
+			<td VALIGN=top>The ID of this transcript's inferred start site.  
+				Determines which primary transcript this processed transcript 
+				is believed to come from.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>p_id</td>
+			<td VALIGN=top>The ID of the coding sequence this transcript contains. This is 
+				attribute is attached to Cuffcompare output by Cuffcompare only 
+				when it is run with a reference annotation that include CDS 
+				records.  Further, differential CDS analysis is <b>only</b> 
+				performed when all isoforms of a gene have <tt>p_id</tt> 
+				attributes, because neither Cufflinks nor Cuffcompare attempt to
+				assign an open reading frame to transcripts.</td>
+		  </tr>
+		  </table>
+		<p>
+		The above attributes, along with the <tt>gene_id</tt> required by the 
+		GTF specification, make each transcript a member of a "gene group", 
+		"primary transcript group", and "CDS group".  Transcripts with the same
+		<tt>gene_id</tt> are part of the same gene group, and similarly, those
+		with the same <tt>tss_id</tt> and <tt>p_id</tt> are part of the same 
+		primary transcript group and CDS group.  Cuffdiff tracks changes not
+		only in absolute transcript, primary transcript, CDS, and gene FPKMs, but
+		also in the <em>relative</em> expression changes within these groups.  
+		
+		<p>
+		One simple type of relative change in isoform abundance is the "switching"
+		of major isoforms.  In one condition, some alternative splice variant <em>X</em>
+		of a gene is produced at low abundance relative to others of that gene.
+		In another condition, <em>X</em> is the most abundant isoform.  However,
+		when more than two isoforms are present in both conditions, it's 
+		possible to see far more complex and subtle patterns of changes in the
+		relative abundances of isoforms. We refer to these complex changes as 
+		"overloaded expression" a term meant to generalize the concept of major-minor 
+		switches in relative expression. By grouping the transcripts in biologically-meaningful 
+		ways and measuring the amount of overloading within these groups, we
+		can make a hypothesis about what regulatory mechanism is producing these
+		changes.
+		
+		<p>
+		Changes in relative output of one splice-variant over another from the 
+		same primary transcript group suggest that the splicing machinery is 
+		producing one variant more (or less) often in one sample than in another.  Similarly,
+		a change in the relative amounts of two primary transcripts from 
+		the same gene implies that the transcriptional regulation of the gene
+		has changed.  Examining mRNA output changes according to this grouping 
+		effectively allows you to discriminate between transcriptional and
+		splicing regulation in your samples.  It may help you focus further
+		investigation into specific genes that may be relevant for your system 
+		of interest.  Further, observed overloading is tested for 
+		statistical significance, which is possible because of the way Cuffdiff
+		measures it. They are quantified by the square 
+		root of the <em>Jensen-Shannon divergence</em>, which was recently proved to 
+		be a metric, and has some key properties needed here.  
+		
+		For a group of transcripts, we can write their relative abundances 
+		<em>p<sub>1</sub></em>,<em>p<sub>2</sub></em>,...,<em>p<sub><em>n</em></sub></em> 
+		such that they sum to 1.  The <em>entropy</em> of this discrete distribution
+		<em>p</em> is defined as:
+		<p style="text-align: center;"> 
+		<img border=0 src="images/entropy.png"></img>
+		</p>
+		
+		<p>
+		The Jensen-Shannon divergence between a set of <em>m</em> distributions <em>p<sup>1</sup></em>,<em>p<sup>2</sup></em>...,<em>p<sup><em>m</em></em></sup>
+		is defined as 
+		<p style="text-align: center;"> 
+		<img border=0 src="images/JS.png"></img>
+		</p>
+		That is, the JS diverence is the entropy of the average distribution 
+		minus the average of the individual entropies.  Cuffdiff uses the square root of this divergence
+		to measure the "distance" between the relative abundances of a group of 
+		transcripts in two difference conditions. Cuffdiff assigns <em>p</em>-values to the observed changes based on the JS divergence.  
+
+
+		
+	</div>
+  </div>
+  <div id="footer">
+  	<table width="100%" cellspacing=15><tr><td>
+    This research was supported in part by NIH grants R01-LM06845 and R01-GM083873, NSF grant CCF-0347992 and the Miller Institute for Basic
+		Research in Science at UC Berkeley.
+    </td><td align=right>
+    Administrator: <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>. Design by <a href="http://www.free-css-templates.com" title="Design by David Herreman">David Herreman</a>
+    </td></tr></table>
+  </div>
+</div>
+
+<!-- Google analytics code -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-6101038-2");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<!-- End Google analytics code -->
+</body>
+</html>
