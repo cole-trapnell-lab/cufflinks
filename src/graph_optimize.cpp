@@ -16,10 +16,6 @@
 #include <lemon/smart_graph.h>
 #include <lemon/bipartite_matching.h>
 
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-#include <boost/numeric/ublas/matrix_sparse.hpp>
-
 #include "scaffold_graph.h"
 #include "scaffolds.h"
 #include "filters.h"
@@ -45,82 +41,6 @@ bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
     return lhs.right() < rhs.right();
 }
 
-
-// WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
-// to work correctly.
-void same_conflicts(const vector<Scaffold>& scaffolds,
-                    ublas::mapped_matrix<ConflictState>& conflict_states,
-                    vector<vector<size_t> >* conf_out)
-{    
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
-#endif
-    
-    vector<vector<size_t> > conflicts(scaffolds.size());
-    
-	for (size_t i = 0; i < scaffolds.size(); ++i)
-	{
-		for (size_t j = i; j < scaffolds.size(); ++j)
-		{
-			if (i == j)
-				continue;
-			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
-			{
-				if (!Scaffold::compatible(scaffolds[i], scaffolds[j]))
-                {
-                    conflicts[i].push_back(j);
-                    conflicts[j].push_back(i);
-                }
-			}
-            else
-            {
-                break;
-            }
-		}
-        
-	}
-
-    for (size_t i = 0; i < scaffolds.size(); ++i)
-	{   
-        sort(conflicts[i].begin(), conflicts[i].end());
-    }
-    
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tAssessing overlapping fragments for identical conflict sets\n", bundle_label->c_str());
-#endif
-    
-    for (size_t i = 0; i < scaffolds.size(); ++i)
-	{
-		for (size_t j = i; j < scaffolds.size(); ++j)
-		{
-			if (i == j)
-				continue;
-			if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
-			{
-                if (conflicts[i] != conflicts[j])
-                {
-                    conflict_states(i,j) = DIFF_CONFLICTS;
-                    conflict_states(j,i) = DIFF_CONFLICTS;
-                }
-                else
-                {
-                    conflict_states(i,j) = SAME_CONFLICTS;
-                    conflict_states(j,i) = SAME_CONFLICTS;
-                }
-			}
-            else
-            {
-                break;
-            }
-		}
-	}
-    
-    if (conf_out)
-    {
-        *conf_out = conflicts;
-    }
-}
-
 // WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
 // to work correctly.
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
@@ -129,7 +49,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 	//scaffold_mask = vector<bool>(scaffolds.size(), 0);
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
-        if (!scaffold_mask[i])
+        //if (!scaffold_mask[i])
         {
             for (size_t j = i+1; j < scaffolds.size(); ++j)
             {
@@ -422,74 +342,84 @@ void compress_fragments(vector<Scaffold>& fragments)
     
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
     
-    double last_size = -1;
-    long leftmost = 9999999999;
-    long rightmost = -1;
-    
-    for (size_t i = 0; i < fragments.size(); ++i)
-    {
-        leftmost = std::min((long)fragments[i].left(), leftmost);
-        rightmost = std::max((long)fragments[i].right(), rightmost);
-    }
-    
-    long bundle_length = rightmost - leftmost;
-    
-    while (true)
-    {
-    
-        vector<int>  depth_of_coverage(bundle_length,0);
-        map<pair<int,int>, int> intron_depth_of_coverage;
-        compute_doc(leftmost,
-                    fragments,
-                    depth_of_coverage,
-                    intron_depth_of_coverage,
-                    false,
-                    true);
-        
-        vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-        depth_of_coverage.erase(new_end, depth_of_coverage.end());
-        sort(depth_of_coverage.begin(), depth_of_coverage.end());
-        
-        size_t median = floor(depth_of_coverage.size() / 2);
-        
-    //#if ASM_VERBOSE
-        fprintf(stderr, "%s\tMedian depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-    //#endif
-
-        if (!depth_of_coverage.empty() && 
-            depth_of_coverage[median] > collapse_thresh &&
-            (last_size == -1 || 0.9 * last_size > fragments.size()))
-        {
-            //                    size_t pre_collapse = hits.size();
-            //                    strict_containment_collapse(hits);
-            //                    size_t post_collapse = hits.size();
-            //                    if (pre_collapse == post_collapse)
-            //                        break;
-            //                    if (!collapse_contained_scaffolds(hits, 1))
-            //                        break;
-            last_size = fragments.size();
-            if (!collapse_equivalent_transfrags(fragments, 1))
-            {
-                break;
-            }
-        }
-        else
-        {
-            fprintf(stderr, "%s\tFinal median depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-            break;
-        }
-    }
-    
-    compress_consitutive(fragments);
-    
+//    double last_size = -1;
+//    long leftmost = 9999999999;
+//    long rightmost = -1;
 //    
-//    while (fragments.size() > collapse_thresh)
+//    for (size_t i = 0; i < fragments.size(); ++i)
 //    {
-//        if (!collapse_equivalent_transfrags(fragments, 1))
+//        leftmost = std::min((long)fragments[i].left(), leftmost);
+//        rightmost = std::max((long)fragments[i].right(), rightmost);
+//    }
+//    
+//    long bundle_length = rightmost - leftmost;
+//    
+//    while (true)
+//    {
+//    
+//        vector<int>  depth_of_coverage(bundle_length,0);
+//        map<pair<int,int>, int> intron_depth_of_coverage;
+//        compute_doc(leftmost,
+//                    fragments,
+//                    depth_of_coverage,
+//                    intron_depth_of_coverage,
+//                    false,
+//                    true);
+//        
+//        vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+//        depth_of_coverage.erase(new_end, depth_of_coverage.end());
+//        sort(depth_of_coverage.begin(), depth_of_coverage.end());
+//        
+//        size_t median = floor(depth_of_coverage.size() / 2);
+//        
+//    //#if ASM_VERBOSE
+//        fprintf(stderr, "%s\tMedian depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
+//    //#endif
+//
+//        if (!depth_of_coverage.empty() && 
+//            depth_of_coverage[median] > collapse_thresh &&
+//            (last_size == -1 || 0.9 * last_size > fragments.size()))
+//        {
+//            //                    size_t pre_collapse = hits.size();
+//            //                    strict_containment_collapse(hits);
+//            //                    size_t post_collapse = hits.size();
+//            //                    if (pre_collapse == post_collapse)
+//            //                        break;
+//            //                    if (!collapse_contained_scaffolds(hits, 1))
+//            //                        break;
+//            last_size = fragments.size();
+//            if (!collapse_equivalent_transfrags(fragments, 1))
+//            {
+//                break;
+//            }
+//        }
+//        else
 //        {
 //            break;
 //        }
 //    }
+//   
+//#if ASM_VERBOSE
+//    vector<int>  depth_of_coverage(bundle_length,0);
+//    map<pair<int,int>, int> intron_depth_of_coverage;
+//    compute_doc(leftmost,
+//                fragments,
+//                depth_of_coverage,
+//                intron_depth_of_coverage,
+//                false,
+//                true);
+//    
+//    vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+//    depth_of_coverage.erase(new_end, depth_of_coverage.end());
+//    sort(depth_of_coverage.begin(), depth_of_coverage.end());
+//    
+//    size_t median = floor(depth_of_coverage.size() / 2);
+//    
+//    //#if ASM_VERBOSE
+//    fprintf(stderr, "%s\tFinal median depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
+//    
+//#endif
+    compress_consitutive(fragments);
     
 #if ASM_VERBOSE
     size_t post_hit_collapse_size = fragments.size();
