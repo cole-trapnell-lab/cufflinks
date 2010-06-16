@@ -111,6 +111,34 @@ void same_conflicts(const vector<Scaffold>& scaffolds,
     }
 }
 
+//void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
+//										   vector<bool>& scaffold_mask)
+//{	
+//	//scaffold_mask = vector<bool>(scaffolds.size(), 0);
+//	for (size_t i = 0; i < scaffolds.size(); ++i)
+//	{
+//        if (!scaffold_mask[i])
+//        {
+//            for (size_t j = i+1; j < scaffolds.size(); ++j)
+//            {
+//                if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
+//                {
+//                    if (!Scaffold::compatible(scaffolds[i], scaffolds[j]))
+//                    {
+//                        scaffold_mask[i] = true;
+//                        scaffold_mask[j] = true;
+//                        break;
+//                    }
+//                }
+//                else
+//                {
+//                    break;
+//                }
+//            }
+//        }
+//	}
+//}
+
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 										   vector<bool>& scaffold_mask)
 {	
@@ -129,10 +157,6 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
                         scaffold_mask[j] = true;
                         break;
                     }
-                }
-                else
-                {
-                    break;
                 }
             }
         }
