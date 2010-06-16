@@ -276,13 +276,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>34</integer>
+									<integer>42</integer>
 									<integer>4</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 159}, {276, 881}}</string>
+							<string>{{0, 313}, {276, 881}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -313,7 +313,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>abundances.cpp</string>
+								<string>cufflinks.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -321,11 +321,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>abundances.cpp</string>
+										<string>cufflinks.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED4CADB111C8670A0007F355</string>
+										<string>ED4CADD611C86C470007F355</string>
 										<key>history</key>
 										<array>
 											<string>EDEBCF4C112F69E500E2479E</string>
@@ -397,7 +397,6 @@
 											<string>ED4CAC8711C5E2620007F355</string>
 											<string>ED4CACB311C6B9990007F355</string>
 											<string>ED4CACF111C6D5E40007F355</string>
-											<string>ED4CAD0511C7CFB60007F355</string>
 											<string>ED4CAD0611C7CFB60007F355</string>
 											<string>ED4CAD0D11C7D0F20007F355</string>
 											<string>ED4CAD5A11C83FF70007F355</string>
@@ -408,8 +407,9 @@
 											<string>ED4CAD7811C860E90007F355</string>
 											<string>ED4CAD8011C863430007F355</string>
 											<string>ED4CAD9811C865E20007F355</string>
-											<string>ED4CADAC11C866B30007F355</string>
-											<string>ED4CADAD11C866B30007F355</string>
+											<string>ED4CADC511C86AF00007F355</string>
+											<string>ED4CADC611C86AF00007F355</string>
+											<string>ED4CADC711C86AF00007F355</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>

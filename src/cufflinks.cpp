@@ -542,6 +542,9 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 	{
 		quantitate_transcript_cluster(cluster, map_mass, genes);
 	}
+#if ASM_VERBOSE
+    fprintf(stderr, "%s\tBundle quantitation complete\n", bundle_label->c_str());
+#endif
 }
 
 void assemble_bundle(const RefSequenceTable& rt,
@@ -586,6 +589,10 @@ void assemble_bundle(const RefSequenceTable& rt,
 	quantitate_transcript_clusters(scaffolds, 
 								   map_mass, 
 								   genes);
+    
+#if ASM_VERBOSE
+    fprintf(stderr, "%s\tFiltering bundle assembly\n", bundle_label->c_str());
+#endif
     
 	filter_junk_genes(genes);
     
@@ -656,6 +663,10 @@ void assemble_bundle(const RefSequenceTable& rt,
 		exit(1);
 	}
 	
+#if ASM_VERBOSE
+    fprintf(stderr, "%s\tBundle complete\n", bundle_label->c_str());
+#endif
+    
 #if ENABLE_THREADS
 	out_file_lock.unlock();
 #endif
