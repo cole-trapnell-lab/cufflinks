@@ -461,6 +461,9 @@ void compress_fragments(vector<Scaffold>& fragments)
             break;
         }
     }
+    
+    compress_consitutive(fragments);
+    
 //    
 //    while (fragments.size() > collapse_thresh)
 //    {

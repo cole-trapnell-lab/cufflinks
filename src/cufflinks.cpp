@@ -552,6 +552,10 @@ void assemble_bundle(const RefSequenceTable& rt,
             bundle.right());
     bundle_label.reset(new string(bundle_label_buf));
     
+    fprintf(stderr, "%s\tProcessing new bundle with %d alignments\n", 
+            bundle_label->c_str(),
+            (int)bundle.hits().size());
+    
 #if ENABLE_THREADS	
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
@@ -729,12 +733,6 @@ bool assemble_hits(BundleFactory& bundle_factory)
 				
 			}
 #endif
-			fprintf(stderr, "%s:%d-%d\tProcessing new bundle with %d alignments\n", 
-                    bundle_label->c_str(),
-					rt.get_name(bundle.ref_id()),
-					bundle.left(),
-					bundle.right(),
-					(int)bundle.hits().size());
             
 #if ENABLE_THREADS			
 			thread_pool_lock.lock();
