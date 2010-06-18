@@ -118,7 +118,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 					continue;
                 
 				if (scaffolds[i].contains(scaffolds[j]) &&
-					Scaffold::compatible(scaffolds[i], scaffolds[j]))
+                    Scaffold::compatible(scaffolds[i], scaffolds[j]))
 				{
                     // To gaurd against the identity collapse, which won't 
 					// necessary reduce the total number of scaffolds.
@@ -132,7 +132,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 					ContainmentGraph::UEdge e = containment.addEdge(nj.first,
 																	ni.second);						
                     
-				}
+                }
 			}
 		}
 		
@@ -342,83 +342,83 @@ void compress_fragments(vector<Scaffold>& fragments)
     
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
     
-//    double last_size = -1;
-//    long leftmost = 9999999999;
-//    long rightmost = -1;
-//    
-//    for (size_t i = 0; i < fragments.size(); ++i)
-//    {
-//        leftmost = std::min((long)fragments[i].left(), leftmost);
-//        rightmost = std::max((long)fragments[i].right(), rightmost);
-//    }
-//    
-//    long bundle_length = rightmost - leftmost;
-//    
-//    while (true)
-//    {
-//    
-//        vector<int>  depth_of_coverage(bundle_length,0);
-//        map<pair<int,int>, int> intron_depth_of_coverage;
-//        compute_doc(leftmost,
-//                    fragments,
-//                    depth_of_coverage,
-//                    intron_depth_of_coverage,
-//                    false,
-//                    true);
-//        
-//        vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-//        depth_of_coverage.erase(new_end, depth_of_coverage.end());
-//        sort(depth_of_coverage.begin(), depth_of_coverage.end());
-//        
-//        size_t median = floor(depth_of_coverage.size() / 2);
-//        
-//    //#if ASM_VERBOSE
-//        fprintf(stderr, "%s\tMedian depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-//    //#endif
-//
-//        if (!depth_of_coverage.empty() && 
-//            depth_of_coverage[median] > collapse_thresh &&
-//            (last_size == -1 || 0.9 * last_size > fragments.size()))
-//        {
-//            //                    size_t pre_collapse = hits.size();
-//            //                    strict_containment_collapse(hits);
-//            //                    size_t post_collapse = hits.size();
-//            //                    if (pre_collapse == post_collapse)
-//            //                        break;
-//            //                    if (!collapse_contained_scaffolds(hits, 1))
-//            //                        break;
-//            last_size = fragments.size();
-//            if (!collapse_equivalent_transfrags(fragments, 1))
-//            {
-//                break;
-//            }
-//        }
-//        else
-//        {
-//            break;
-//        }
-//    }
-//   
-//#if ASM_VERBOSE
-//    vector<int>  depth_of_coverage(bundle_length,0);
-//    map<pair<int,int>, int> intron_depth_of_coverage;
-//    compute_doc(leftmost,
-//                fragments,
-//                depth_of_coverage,
-//                intron_depth_of_coverage,
-//                false,
-//                true);
-//    
-//    vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-//    depth_of_coverage.erase(new_end, depth_of_coverage.end());
-//    sort(depth_of_coverage.begin(), depth_of_coverage.end());
-//    
-//    size_t median = floor(depth_of_coverage.size() / 2);
-//    
-//    //#if ASM_VERBOSE
-//    fprintf(stderr, "%s\tFinal median depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-//    
-//#endif
+    double last_size = -1;
+    long leftmost = 9999999999;
+    long rightmost = -1;
+    
+    for (size_t i = 0; i < fragments.size(); ++i)
+    {
+        leftmost = std::min((long)fragments[i].left(), leftmost);
+        rightmost = std::max((long)fragments[i].right(), rightmost);
+    }
+    
+    long bundle_length = rightmost - leftmost;
+    
+    while (true)
+    {
+    
+        vector<int>  depth_of_coverage(bundle_length,0);
+        map<pair<int,int>, int> intron_depth_of_coverage;
+        compute_doc(leftmost,
+                    fragments,
+                    depth_of_coverage,
+                    intron_depth_of_coverage,
+                    false,
+                    true);
+        
+        vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+        depth_of_coverage.erase(new_end, depth_of_coverage.end());
+        sort(depth_of_coverage.begin(), depth_of_coverage.end());
+        
+        size_t median = floor(depth_of_coverage.size() / 2);
+        
+    //#if ASM_VERBOSE
+        fprintf(stderr, "%s\tMedian depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
+    //#endif
+
+        if (!depth_of_coverage.empty() && 
+            depth_of_coverage[median] > collapse_thresh &&
+            (last_size == -1 || 0.9 * last_size > fragments.size()))
+        {
+            //                    size_t pre_collapse = hits.size();
+            //                    strict_containment_collapse(hits);
+            //                    size_t post_collapse = hits.size();
+            //                    if (pre_collapse == post_collapse)
+            //                        break;
+            //                    if (!collapse_contained_scaffolds(hits, 1))
+            //                        break;
+            last_size = fragments.size();
+            if (!collapse_equivalent_transfrags(fragments, 1))
+            {
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+   
+#if ASM_VERBOSE
+    vector<int>  depth_of_coverage(bundle_length,0);
+    map<pair<int,int>, int> intron_depth_of_coverage;
+    compute_doc(leftmost,
+                fragments,
+                depth_of_coverage,
+                intron_depth_of_coverage,
+                false,
+                true);
+    
+    vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+    depth_of_coverage.erase(new_end, depth_of_coverage.end());
+    sort(depth_of_coverage.begin(), depth_of_coverage.end());
+    
+    size_t median = floor(depth_of_coverage.size() / 2);
+    
+    //#if ASM_VERBOSE
+    fprintf(stderr, "%s\tFinal median depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
+    
+#endif
     compress_consitutive(fragments);
     
 #if ASM_VERBOSE

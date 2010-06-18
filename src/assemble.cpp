@@ -547,7 +547,7 @@ bool make_scaffolds(int bundle_left,
         new_scaffs = completes;
         sort(new_scaffs.begin(), new_scaffs.end(), scaff_lt);
         
-		//collapse_contained_transfrags(new_scaffs);
+		collapse_contained_transfrags(new_scaffs);
 		sort(new_scaffs.begin(), new_scaffs.end(), scaff_lt);
 		scaffolds = new_scaffs;
 	}
