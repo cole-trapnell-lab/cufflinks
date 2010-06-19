@@ -365,8 +365,6 @@ void compress_consitutive(vector<Scaffold>& hits)
 
 void compress_redundant(vector<Scaffold>& fragments)
 {
-    sort(fragments.begin(), fragments.end(), scaff_lt_rt);
-    
     double last_size = -1;
     long leftmost = 9999999999;
     long rightmost = -1;
@@ -445,7 +443,8 @@ void compress_fragments(vector<Scaffold>& fragments)
     fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
 #endif
-    
+    sort(fragments.begin(), fragments.end(), scaff_lt_rt);
+	
 	compress_consitutive(fragments);
 	
 	compress_redundant(fragments);
