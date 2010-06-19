@@ -446,6 +446,7 @@ void compress_fragments(vector<Scaffold>& fragments)
     size_t pre_hit_collapse_size = fragments.size();
 #endif
     
+	compress_redundant(fragments);
 
     compress_consitutive(fragments);
     
