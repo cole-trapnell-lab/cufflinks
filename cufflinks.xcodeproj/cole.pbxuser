@@ -610,6 +610,9 @@
 			EDB09C5811CD4CA200DB9D11 /* PBXTextBookmark */ = EDB09C5811CD4CA200DB9D11 /* PBXTextBookmark */;
 			EDB09C5911CD4CA200DB9D11 /* PBXTextBookmark */ = EDB09C5911CD4CA200DB9D11 /* PBXTextBookmark */;
 			EDB09C5A11CD4CA200DB9D11 /* PBXTextBookmark */ = EDB09C5A11CD4CA200DB9D11 /* PBXTextBookmark */;
+			EDB09C5B11CD4E0200DB9D11 /* PBXTextBookmark */ = EDB09C5B11CD4E0200DB9D11 /* PBXTextBookmark */;
+			EDB09C5C11CD4E0200DB9D11 /* PBXTextBookmark */ = EDB09C5C11CD4E0200DB9D11 /* PBXTextBookmark */;
+			EDB09C5D11CD4E0200DB9D11 /* PBXTextBookmark */ = EDB09C5D11CD4E0200DB9D11 /* PBXTextBookmark */;
 			EDBBE74511A8723C006AC14A = EDBBE74511A8723C006AC14A /* PBXTextBookmark */;
 			EDBBE86B11A8D04C006AC14A = EDBBE86B11A8D04C006AC14A /* PBXTextBookmark */;
 			EDBBE89711A8D390006AC14A = EDBBE89711A8D390006AC14A /* PBXTextBookmark */;
@@ -5852,6 +5855,36 @@
 		vrLen = 2987;
 		vrLoc = 9197;
 	};
+	EDB09C5B11CD4E0200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 404";
+		rLen = 0;
+		rLoc = 12007;
+		rType = 0;
+		vrLen = 2987;
+		vrLoc = 9197;
+	};
+	EDB09C5C11CD4E0200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDEBCDF8112DFD7600E2479E /* configure.ac */;
+		name = "configure.ac: 54";
+		rLen = 0;
+		rLoc = 1187;
+		rType = 0;
+		vrLen = 1873;
+		vrLoc = 953;
+	};
+	EDB09C5D11CD4E0200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDEBCDF8112DFD7600E2479E /* configure.ac */;
+		name = "configure.ac: 106";
+		rLen = 0;
+		rLoc = 3237;
+		rType = 0;
+		vrLen = 1708;
+		vrLoc = 2048;
+	};
 	EDBBE74511A8723C006AC14A /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = EDA5151510C72963000A4F41 /* gff.h */;
@@ -7060,9 +7093,9 @@
 	};
 	EDEBCDF8112DFD7600E2479E /* configure.ac */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {850, 1794}}";
-			sepNavSelRange = "{1187, 0}";
-			sepNavVisRange = "{1079, 1564}";
+			sepNavIntBoundsRect = "{{0, 0}, {879, 1755}}";
+			sepNavSelRange = "{3237, 0}";
+			sepNavVisRange = "{2048, 1708}";
 		};
 	};
 	EDEBCF4C112F69E500E2479E /* PBXTextBookmark */ = {
