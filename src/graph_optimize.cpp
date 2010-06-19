@@ -163,7 +163,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 	return performed_collapse;
 }
 
-bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds, 
+bool collapse_equivalent_transfrags(vector<Scaffold>& fragments, 
                                     uint32_t max_rounds)
 {
 	// The containment graph is a bipartite graph with an edge (u,v) when
@@ -172,6 +172,18 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds,
 	typedef lemon::SmartBpUGraph ContainmentGraph;
 	normal norm(0, 0.1);
 	bool performed_collapse = false;
+	
+	double last_size = -1;
+    long leftmost = 9999999999;
+    long rightmost = -1;
+    
+    for (size_t i = 0; i < fragments.size(); ++i)
+    {
+        leftmost = std::min((long)fragments[i].left(), leftmost);
+        rightmost = std::max((long)fragments[i].right(), rightmost);
+    }
+    
+    long bundle_length = rightmost - leftmost;
     
 	while (max_rounds--)
 	{
@@ -183,17 +195,17 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds,
         fprintf(stderr, "%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
 #endif
         bool will_perform_collapse = false;
-        vector<vector<size_t> > conflicts(scaffolds.size());
+        vector<vector<size_t> > conflicts(fragments.size());
         
-        for (size_t i = 0; i < scaffolds.size(); ++i)
+        for (size_t i = 0; i < fragments.size(); ++i)
         {
-            for (size_t j = i; j < scaffolds.size(); ++j)
+            for (size_t j = i; j < fragments.size(); ++j)
             {
                 if (i == j)
                     continue;
-                if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
+                if (Scaffold::overlap_in_genome(fragments[i], fragments[j], 0))
                 {
-                    if (!Scaffold::compatible(scaffolds[i], scaffolds[j]))
+                    if (!Scaffold::compatible(fragments[i], fragments[j]))
                     {
                         conflicts[i].push_back(j);
                         conflicts[j].push_back(i);
@@ -207,24 +219,41 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds,
             
         }
         
-        for (size_t i = 0; i < scaffolds.size(); ++i)
+        for (size_t i = 0; i < fragments.size(); ++i)
         {   
             sort(conflicts[i].begin(), conflicts[i].end());
         }
-        
+		
+		vector<int>  depth_of_coverage(bundle_length,0);
+        map<pair<int,int>, int> intron_depth_of_coverage;
+        compute_doc(leftmost,
+                    fragments,
+                    depth_of_coverage,
+                    intron_depth_of_coverage,
+                    false,
+                    true);
+		
+		vector<double> scaff_doc;
+		
+		record_doc_for_scaffolds(leftmost, 
+								 fragments, 
+								 depth_of_coverage, 
+								 intron_depth_of_coverage,
+								 scaff_doc);
+		
 #if ASM_VERBOSE
         fprintf(stderr, "%s\tAssessing overlaps between %lu fragments for identical conflict sets\n", 
                 bundle_label->c_str(), 
-                scaffolds.size());
+                fragments.size());
 #endif
         
         vector<size_t> replacements;
-        for (size_t i = 0; i < scaffolds.size(); ++i)
+        for (size_t i = 0; i < fragments.size(); ++i)
         {
             replacements.push_back(i);
         }
         
-        for (size_t i = 0; i < scaffolds.size(); ++i)
+        for (size_t i = 0; i < fragments.size(); ++i)
         {
             size_t lhs = replacements[i];
             
@@ -234,22 +263,24 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds,
                 //fprintf (stderr, "Processing %lu (via %lu)\n", i, lhs);
 #endif
             
-                for (size_t j = i+1; j < scaffolds.size(); ++j)
+                for (size_t j = i+1; j < fragments.size(); ++j)
                 {
                     
-                    if (Scaffold::overlap_in_genome(scaffolds[lhs], scaffolds[j], 0) &&
-                        scaffolds[lhs].contains(scaffolds[j]))
+                    if (Scaffold::overlap_in_genome(fragments[lhs], fragments[j], 0) &&
+                        fragments[lhs].contains(fragments[j]) && 
+						scaff_doc[i] > collapse_thresh &&
+						scaff_doc[j] > collapse_thresh)
                     {
                         // conflicts needs to be invariant over this whole loop
                         if (conflicts[lhs] == conflicts[j])
                         {
                             
-                            assert (Scaffold::compatible(scaffolds[lhs], scaffolds[j]));
+                            assert (Scaffold::compatible(fragments[lhs], fragments[j]));
                             
                             vector<Scaffold> s;
-                            s.push_back(scaffolds[lhs]);
-                            s.push_back(scaffolds[j]);
-                            scaffolds[lhs] = Scaffold(s);
+                            s.push_back(fragments[lhs]);
+                            s.push_back(fragments[j]);
+                            fragments[lhs] = Scaffold(s);
                             replacements[j] = lhs;
                             will_perform_collapse = true;
                         }
@@ -267,16 +298,16 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds,
 		
 
         vector<Scaffold> replaced;
-        for (size_t i = 0; i < scaffolds.size(); ++i)
+        for (size_t i = 0; i < fragments.size(); ++i)
         {
             if (replacements[i] == i)
             {
-                replaced.push_back(scaffolds[i]);
+                replaced.push_back(fragments[i]);
             }
         }
         
-        scaffolds = replaced;
-        sort(scaffolds.begin(), scaffolds.end(), scaff_lt_rt);
+        fragments = replaced;
+        sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 		performed_collapse = true;
 	}
 	return performed_collapse;
@@ -331,15 +362,9 @@ void compress_consitutive(vector<Scaffold>& hits)
 #endif
 }
 
-void compress_fragments(vector<Scaffold>& fragments)
+
+void compress_redundant(vector<Scaffold>& fragments)
 {
-    //compress_consitutive(fragments);
-    
-#if ASM_VERBOSE
-    fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
-    size_t pre_hit_collapse_size = fragments.size();
-#endif
-    
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
     
     double last_size = -1;
@@ -356,7 +381,7 @@ void compress_fragments(vector<Scaffold>& fragments)
     
     while (true)
     {
-    
+#if ASM_VERBOSE
         vector<int>  depth_of_coverage(bundle_length,0);
         map<pair<int,int>, int> intron_depth_of_coverage;
         compute_doc(leftmost,
@@ -372,21 +397,12 @@ void compress_fragments(vector<Scaffold>& fragments)
         
         size_t median = floor(depth_of_coverage.size() / 2);
         
-    //#if ASM_VERBOSE
+		
         fprintf(stderr, "%s\tMedian depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-    //#endif
-
-        if (!depth_of_coverage.empty() && 
-            depth_of_coverage[median] > collapse_thresh &&
-            (last_size == -1 || 0.9 * last_size > fragments.size()))
+#endif
+		
+        if (last_size == -1 || 0.9 * last_size > fragments.size())
         {
-            //                    size_t pre_collapse = hits.size();
-            //                    strict_containment_collapse(hits);
-            //                    size_t post_collapse = hits.size();
-            //                    if (pre_collapse == post_collapse)
-            //                        break;
-            //                    if (!collapse_contained_scaffolds(hits, 1))
-            //                        break;
             last_size = fragments.size();
             if (!collapse_equivalent_transfrags(fragments, 1))
             {
@@ -398,7 +414,7 @@ void compress_fragments(vector<Scaffold>& fragments)
             break;
         }
     }
-   
+	
 #if ASM_VERBOSE
     vector<int>  depth_of_coverage(bundle_length,0);
     map<pair<int,int>, int> intron_depth_of_coverage;
@@ -418,7 +434,19 @@ void compress_fragments(vector<Scaffold>& fragments)
     //#if ASM_VERBOSE
     fprintf(stderr, "%s\tFinal median depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
     
+#endif	
+}
+
+void compress_fragments(vector<Scaffold>& fragments)
+{
+    //compress_consitutive(fragments);
+    
+#if ASM_VERBOSE
+    fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
+    size_t pre_hit_collapse_size = fragments.size();
 #endif
+    
+
     compress_consitutive(fragments);
     
 #if ASM_VERBOSE
