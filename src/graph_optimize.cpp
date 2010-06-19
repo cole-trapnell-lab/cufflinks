@@ -446,9 +446,9 @@ void compress_fragments(vector<Scaffold>& fragments)
     size_t pre_hit_collapse_size = fragments.size();
 #endif
     
+	compress_consitutive(fragments);
+	
 	compress_redundant(fragments);
-
-    compress_consitutive(fragments);
     
 #if ASM_VERBOSE
     size_t post_hit_collapse_size = fragments.size();
