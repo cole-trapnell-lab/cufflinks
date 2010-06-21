@@ -9,12 +9,14 @@
 
 #include <list>
 #include <map>
+#include <boost/math/distributions/binomial.hpp>
 
 #include "common.h"
 #include "bundles.h"
 #include "scaffolds.h"
 
 using namespace std;
+using boost::math::binomial;
 
 struct ScaffoldSorter
 {
@@ -409,6 +411,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		if (bh->ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
 			continue;
 		
+		if (spans_bad_intron(*bh))
+			continue;
+		
 		if (left_boundary == -1)
 			left_boundary = bh->left();
 		
@@ -595,3 +600,263 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	bundle_out.remove_hitless_scaffolds();
 	return true;
 }
+
+struct IntronSpanCounter
+{
+	IntronSpanCounter() : left_reads(0), little_reads(0), total_reads(0) {}
+	size_t left_reads;
+	size_t little_reads; // small span overhang
+	size_t total_reads;
+};
+
+typedef map<AugmentedCuffOp, IntronSpanCounter> IntronCountTable;
+
+void count_introns_in_read(const ReadHit& read,
+						   IntronCountTable& intron_counts)
+{
+	const vector<CigarOp>& cig = read.cigar();
+	
+	int read_len = read.read_len();
+	int midpoint = ceil(read_len / 2.0);
+	size_t r_left = 0;
+	size_t g_left = read.left();
+	
+	for (size_t i = 0; i < cig.size(); ++i)
+	{
+		assert(cig[i].length >= 0);
+		switch(cig[i].opcode)
+		{
+			case MATCH:
+				//ops.push_back(AugmentedCuffOp(CUFF_MATCH, g_left, cig[i].length));
+				g_left += cig[i].length;
+				r_left += cig[i].length;
+				break;
+				
+			case REF_SKIP:
+			{	
+				AugmentedCuffOp intron(CUFF_INTRON, g_left, cig[i].length);
+				pair<IntronCountTable::iterator, bool> ins_itr;
+				ins_itr = intron_counts.insert(make_pair(intron, IntronSpanCounter()));
+				IntronCountTable::iterator itr = ins_itr.first;
+				itr->second.total_reads++;
+				if (r_left < midpoint)
+				{
+					itr->second.left_reads++;
+				}
+				if ( r_left <= 9 || (read_len - r_left) < 9)
+				{
+					itr->second.little_reads++;
+				}
+				
+				//ops.push_back(AugmentedCuffOp(CUFF_INTRON, g_left, cig[i].length));
+				g_left += cig[i].length;
+				break;
+			}
+				
+			case SOFT_CLIP:
+				g_left += cig[i].length;
+				break;
+			default:
+				assert(false);
+				break;
+		}
+	}
+}
+
+void identify_bad_splices(const HitBundle& bundle, 
+						  BadIntronTable& bad_splice_ops)
+{
+	// Tracks, for each intron, how many reads
+	IntronCountTable intron_counts;
+	
+	RefID ref_id = bundle.ref_id();
+	
+	pair<BadIntronTable::iterator, bool> ins_itr;
+	ins_itr = bad_splice_ops.insert(make_pair(ref_id, vector<AugmentedCuffOp>()));
+	vector<AugmentedCuffOp>& bad_introns = ins_itr.first->second;
+	
+	foreach (const MateHit& hit, bundle.hits())
+	{
+		if (hit.left_alignment())
+		{
+			count_introns_in_read(*hit.left_alignment(), intron_counts);
+		}
+		if (hit.right_alignment())
+		{
+			count_introns_in_read(*hit.right_alignment(), intron_counts);
+		}
+	}
+	
+	for (IntronCountTable::iterator itr = intron_counts.begin();
+		 itr != intron_counts.end();
+		 ++itr)
+	{
+		pair<AugmentedCuffOp, IntronSpanCounter> cnt_pair = *itr;
+		try
+		{
+			const double success_fraction = 0.5; 
+			const IntronSpanCounter spans = cnt_pair.second;
+			
+			//			binomial read_half_dist(spans.total_reads, success_fraction);
+			//			double left_side_p = cdf(read_half_dist, spans.total_reads - spans.left_reads);
+			//			double right_side_p = cdf(complement(read_half_dist, spans.left_reads));
+			
+			
+			double success = 9/75.0;
+			
+			binomial read_half_dist(spans.total_reads, success);
+			double right_side_p;
+			if (spans.little_reads > 0)
+			{
+				right_side_p = 1.0 - cdf(read_half_dist, spans.little_reads - 1);
+			}
+			else 
+			{
+				right_side_p = pdf(read_half_dist, 0);
+			}
+			
+			double left_side_p = 0;
+			
+			double expected = success * spans.total_reads;
+			double excess = spans.little_reads - expected;
+			double eq_effect = expected - excess;
+			
+			if (spans.little_reads > 0)
+			{
+				left_side_p = cdf(read_half_dist, spans.little_reads);
+			}
+			else 
+			{
+				left_side_p = cdf(read_half_dist, 0);
+			}
+			
+			double alpha = 0.05;
+			//double right_side_p = 0;
+			if (left_side_p < alpha / 2.0 || right_side_p < alpha / 2.0)
+			{
+				fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+						itr->first.g_left(), 
+						itr->first.g_right(), 
+						itr->second.total_reads, 
+						itr->second.little_reads, 
+						expected,
+						left_side_p,
+						right_side_p);
+				
+				bool exists = binary_search(bad_introns.begin(), 
+											bad_introns.end(), 
+											itr->first);
+				if (!exists)
+				{
+					bad_introns.push_back(itr->first);
+					sort(bad_introns.begin(), bad_introns.end());
+				}
+			}
+			else 
+			{
+				fprintf(stderr, "Accepting intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+						itr->first.g_left(), 
+						itr->first.g_right(), 
+						itr->second.total_reads, 
+						itr->second.little_reads, 
+						expected,
+						left_side_p,
+						right_side_p);
+				
+			}
+			
+		}
+		
+		catch(const std::exception& e)
+		{
+			//
+			/*`
+			 [#coinflip_eg_catch]
+			 It is always essential to include try & catch blocks because
+			 default policies are to throw exceptions on arguments that
+			 are out of domain or cause errors like numeric-overflow.
+			 
+			 Lacking try & catch blocks, the program will abort, whereas the
+			 message below from the thrown exception will give some helpful
+			 clues as to the cause of the problem.
+			 */
+			std::cout <<
+			"\n""Message from thrown exception was:\n   " << e.what() << std::endl;
+		}
+		
+	}
+}
+
+bool BundleFactory::spans_bad_intron(const ReadHit& read)
+{
+
+	const vector<CigarOp>& cig = read.cigar();
+	
+	int read_len = read.read_len();
+	int midpoint = ceil(read_len / 2.0);
+	size_t r_left = 0;
+	size_t g_left = read.left();
+	BadIntronTable::const_iterator itr = _bad_introns.find(read.ref_id());
+	if (itr == _bad_introns.end())
+		return false;
+	
+	const vector<AugmentedCuffOp>& bi = itr->second; 
+	for (size_t i = 0; i < cig.size(); ++i)
+	{
+		assert(cig[i].length >= 0);
+		switch(cig[i].opcode)
+		{
+			case MATCH:
+				//ops.push_back(AugmentedCuffOp(CUFF_MATCH, g_left, cig[i].length));
+				g_left += cig[i].length;
+				break;
+				
+			case REF_SKIP:
+			{	
+				AugmentedCuffOp intron(CUFF_INTRON, g_left, cig[i].length);
+				if (binary_search(bi.begin(), bi.end(), intron))
+				{
+					return true;
+				}
+				
+				//ops.push_back(AugmentedCuffOp(CUFF_INTRON, g_left, cig[i].length));
+				g_left += cig[i].length;
+				break;
+			}
+				
+			case SOFT_CLIP:
+				g_left += cig[i].length;
+				break;
+			default:
+				assert(false);
+				break;
+		}
+	}
+	
+	return false;
+}
+
+void inspect_map(BundleFactory& bundle_factory,
+						long double& map_mass, 
+						BadIntronTable& bad_introns)
+{
+	HitBundle bundle;	
+	while(bundle_factory.next_bundle(bundle))
+	{
+		const vector<MateHit>& hits = bundle.hits();
+		
+		identify_bad_splices(bundle, bad_introns);
+		
+		for (size_t i = 0; i < bundle.hits().size(); ++i)
+		{
+			double mate_len = 0;
+			if (hits[i].left_alignment() || hits[i].right_alignment())
+				mate_len = 1.0;
+			map_mass += mate_len * (1.0 - hits[i].error_prob()); 
+		}
+	}
+	
+	bundle_factory.reset();
+	return;
+}
+

@@ -2054,24 +2054,3 @@ double get_scaffold_min_doc(int bundle_origin,
 	
 	return min_doc;
 }
-
-long double get_map_mass(BundleFactory& bundle_factory)
-{
-	HitBundle bundle;
-	long double map_mass = 0;
-	
-	while(bundle_factory.next_bundle(bundle))
-	{
-		const vector<MateHit>& hits = bundle.hits();
-		for (size_t i = 0; i < bundle.hits().size(); ++i)
-		{
-			double mate_len = 0;
-			if (hits[i].left_alignment() || hits[i].right_alignment())
-				mate_len = 1.0;
-			map_mass += mate_len * (1.0 - hits[i].error_prob()); 
-		}
-	}
-	
-	bundle_factory.reset();
-	return map_mass;
-}

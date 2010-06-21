@@ -388,6 +388,4 @@ double get_scaffold_min_doc(int bundle_origin,
 							const Scaffold& s,
 							const vector<int>& depth_of_coverage);
 
-long double get_map_mass(BundleFactory& bundle_factory);
-
 #endif

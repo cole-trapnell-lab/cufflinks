@@ -668,9 +668,15 @@ void assemble_bundle(const RefSequenceTable& rt,
 bool assemble_hits(BundleFactory& bundle_factory)
 {
 	fprintf(stderr, "Counting hits in map\n");
-	long double map_mass = get_map_mass(bundle_factory);
+	long double map_mass;
+	
+	BadIntronTable bad_introns;
+	
+	inspect_map(bundle_factory, map_mass, bad_introns);
 	
 	bundle_factory.load_ref_rnas();
+	
+	bundle_factory.bad_intron_table(bad_introns);
 	
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 	

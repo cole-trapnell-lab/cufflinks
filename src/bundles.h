@@ -34,6 +34,8 @@ struct BundleStats
 	int matched_edges;
 };
 
+typedef map<RefID, vector<AugmentedCuffOp> > BadIntronTable;
+
 /*******************************************************************************
  HitBundle is a set of MateHit objects that, were you to look at the interval
  graph of their spanning intervals in genomic coordinates, you'd see a single
@@ -104,6 +106,7 @@ private:
 	static int _next_id;
 	
 	typedef map<int, list<MateHit> > OpenMates;
+	
 	OpenMates _open_mates;
 };
 
@@ -144,6 +147,14 @@ public:
 		next_ref_scaff = ref_mRNAs.begin();
 	}
 	
+	void bad_intron_table(const BadIntronTable& bad_introns) 
+	{ 
+		_bad_introns = bad_introns;
+	}
+	
+	
+	bool spans_bad_intron(const ReadHit& read);
+	
 private:
 	SAMHitFactory sam_hit_fac;
 	FILE* hit_file;
@@ -152,6 +163,12 @@ private:
 	vector<pair<RefID, vector<Scaffold>::iterator> > _ref_scaff_offsets;
 	vector<Scaffold>::iterator next_ref_scaff;
 	int _next_line_num;
+	
+	BadIntronTable _bad_introns;
 };
+
+void inspect_map(BundleFactory& bundle_factory, 
+				 long double& map_mass, 
+				 BadIntronTable& bad_introns);
 
 #endif

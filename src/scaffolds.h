@@ -104,6 +104,23 @@ struct AugmentedCuffOp
 				genomic_length == rhs.genomic_length);
 	}
 	
+	bool operator<(const AugmentedCuffOp& rhs) const
+	{
+		if (opcode != rhs.opcode)
+		{
+			return opcode < rhs.opcode;
+		}
+		if (genomic_offset != rhs.genomic_offset)
+		{
+			return genomic_offset < rhs.genomic_offset;
+		}
+		if (genomic_length != rhs.genomic_length)
+		{
+			return genomic_length < rhs.genomic_length;
+		}
+		return false;
+	}
+	
 	bool operator!=(const AugmentedCuffOp& rhs) const
 	{
 		return !(*this == rhs);
