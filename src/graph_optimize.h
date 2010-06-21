@@ -72,9 +72,9 @@ public:
     size_t last_path_id() const { return curr_path_id; }
     
     PredecessorMap predecessor;
-    PathIDMap path_map;
     
     size_t curr_path_id;
+	PathIDMap path_map;
 };
 
 void fill_gaps(vector<Scaffold>& scaffolds, int fill_size);

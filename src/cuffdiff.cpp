@@ -556,7 +556,12 @@ void driver(FILE* ref_gtf, vector<FILE*>& sam_hit_files, Outfiles& outfiles)
 		BundleFactory standard_factory(hs, sam_hit_files[i], NULL);
 		
 		fprintf(stderr, "Counting hits in sample %lu\n", i);
-		long double map_mass = inspect_map(standard_factory);
+		long double map_mass = 0;
+		BadIntronTable bad_introns;
+		inspect_map(standard_factory, map_mass, bad_introns);
+		
+		// don't actually need to set bad_introns in the factories when using a 
+		// reference GTF
 		map_masses.push_back(map_mass);
 	}
 	
