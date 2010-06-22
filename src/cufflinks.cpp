@@ -687,7 +687,10 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	
 	bundle_factory.load_ref_rnas();
 	
-	bundle_factory.bad_intron_table(bad_introns);
+	if (ref_gtf_filename == "")
+	{
+		bundle_factory.bad_intron_table(bad_introns);
+	}
 	
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 	
