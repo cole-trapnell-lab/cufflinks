@@ -46,16 +46,64 @@ bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 										   vector<bool>& scaffold_mask)
 {	
-	//scaffold_mask = vector<bool>(scaffolds.size(), 0);
+	
+	// First, we filter out all fragments that are entirely contained in a 
+	// constitutive exon of the "gene".  If such fragments were non-constitutive,
+	// neither would that exon.  Also, we can examine all fragments at most
+	// once here, because if we don't look at them here, we'll look hard in the
+	// next loop
+	Scaffold smashed_gene;
+	
+	// setting introns_overwrite_matches in a gene smash takes only it's
+	// constitutive regions
+	Scaffold::merge(scaffolds, smashed_gene, true); 
+	
+	vector<bool> smash_filter(scaffolds.size(), false);
+	
+	const vector<AugmentedCuffOp>& cig = smashed_gene.augmented_ops();
+	size_t next_frag = 0; 
+	
+	size_t num_filtered = 0;
+	for (size_t j = 0; j < cig.size(); ++j)
+	{
+		if (cig[j].opcode == CUFF_MATCH)
+		{
+			for (;next_frag < scaffolds.size(); ++next_frag)
+			{
+				const Scaffold& frag = scaffolds[next_frag];
+				
+				if (frag.left() >= cig[j].g_left() && 
+					frag.right() <= cig[j].g_right())
+				{
+					smash_filter[next_frag] = true;
+					num_filtered++;
+				}
+				if (frag.left() >= cig[j].g_right())
+				{
+					break;
+				}
+			}
+		}
+	}
+	
+	fprintf(stderr, "%lu of %lu smash-filtered\n", num_filtered, smash_filter.size());
+	
+	// Now look hard (i.e. pairwise at fragments) to determine if any are
+	// non-constitutive.
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
-        //if (!scaffold_mask[i])
+		// if smash_mask[i], then no frag j will be marked as non-constitutive
+		// on account of frag i
+        if (!smash_filter[i])
         {
             for (size_t j = i+1; j < scaffolds.size(); ++j)
             {
+				if (smash_filter[j])
+					continue;
                 if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
                 {
-                    if (!Scaffold::compatible(scaffolds[i], scaffolds[j]))
+                    if ((!scaffold_mask[i] || !scaffold_mask[j]) &&
+						!Scaffold::compatible(scaffolds[i], scaffolds[j]))
                     {
                         scaffold_mask[i] = true;
                         scaffold_mask[j] = true;
