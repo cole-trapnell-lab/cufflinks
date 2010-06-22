@@ -102,11 +102,12 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
         {
             for (size_t j = i+1; j < scaffolds.size(); ++j)
             {
-				if (smash_filter[j])
-					continue;
+				
                 if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
                 {
-                    if ((!scaffold_mask[i] || !scaffold_mask[j]) &&
+                    if (smash_filter[j])
+						continue;
+					if ((!scaffold_mask[i] || !scaffold_mask[j]) &&
 						!Scaffold::compatible(scaffolds[i], scaffolds[j]))
                     {
                         scaffold_mask[i] = true;

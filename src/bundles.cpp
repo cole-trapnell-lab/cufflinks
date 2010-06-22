@@ -728,11 +728,15 @@ void identify_bad_splices(const HitBundle& bundle,
 			
 			//double alpha = 0.05;
 			//double right_side_p = 0;
-			if (left_side_p < (binomial_junc_filter_alpha / 2.0) || 
-				right_side_p < (binomial_junc_filter_alpha / 2.0))
+			
+			// Two-tailed binomial test:
+//			if (left_side_p < (binomial_junc_filter_alpha / 2.0) || 
+//				right_side_p < (binomial_junc_filter_alpha / 2.0))
+			// One-tailed binomial test
+			if (right_side_p < (binomial_junc_filter_alpha))
 			{
 				double overhang_ratio = itr->second.little_reads / (double) itr->second.total_reads;
-				if (itr->second.total_reads < 500 || overhang_ratio >= 0.50)
+				if (itr->second.total_reads < 100 || overhang_ratio >= 0.50)
 				{
 #if ASM_VERBOSE
 					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 

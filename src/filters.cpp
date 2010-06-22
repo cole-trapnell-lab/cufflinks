@@ -34,15 +34,15 @@ void filter_introns(int bundle_length,
 	{
 		bundle_avg_doc = major_isoform_intron_doc(intron_doc);
 		bundle_avg_thresh = fraction * bundle_avg_doc;
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\tFiltering bundle introns, avg (intron) doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
-//#endif
+#if ASM_VERBOSE
+		fprintf(stderr, "\tFiltering bundle introns, avg (intron) doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
+#endif
 	}
 	else
 	{
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
-//#endif	
+#if ASM_VERBOSE
+		fprintf(stderr, "\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
+#endif	
 	}
 	
 	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
@@ -65,9 +65,9 @@ void filter_introns(int bundle_length,
 					if (doc < bundle_avg_thresh)
 					{
 						toss[j] = true;
-//#if ASM_VERBOSE
-//						fprintf(stderr, "\t Filtering intron: %f thresh %f\n", doc, bundle_avg_thresh);
-//#endif	
+#if ASM_VERBOSE
+						fprintf(stderr, "\t Filtering intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+#endif	
 						continue; 
 					}
 					
@@ -88,6 +88,9 @@ void filter_introns(int bundle_length,
 						double thresh = itr2->second * fraction;
 						if (doc < thresh)
 						{
+#if ASM_VERBOSE
+							fprintf(stderr, "\t Filtering intron (due to overlap) %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+#endif	
 							toss[j] = true;
 						}
 					}
@@ -178,7 +181,8 @@ void filter_hits(int bundle_length,
 			{
 				int i_left = itr->first.first;
 				int i_right = itr->first.second;
-				if (hits[j].match_length(i_left, i_right) > 0)
+				int j_match_len = hits[j].match_length(i_left, i_right); 
+				if (j_match_len > 0)
 				{
 					double idoc = itr->second;
 					double doc = scaff_doc[j];
@@ -243,7 +247,14 @@ void filter_hits(int bundle_length,
 						}
 						double thresh = fraction * (intron_avg_doc * intron_multiplier);
 						if (doc < thresh)
-							toss[j] = true;   
+						{
+							toss[j] = true; 
+//							if (hits[j].has_intron())
+//							{
+//								fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//								int a = 4;
+//							}
+						}
 					}
 				}
 			}
@@ -265,13 +276,13 @@ void filter_hits(int bundle_length,
 		}
 		else
 		{
-//#if ASM_VERBOSE
+#if ASM_VERBOSE
 //			if (hits[j].has_intron())
 //			{
 //				
 //				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
 //			}
-//#endif	
+#endif	
 		}
 	}
 	
@@ -328,15 +339,15 @@ void filter_hits(int bundle_length,
 					   min_intron_fraction, 
 					   true,
 					   true);
-		if (bundle_avg_doc > 250)
-		{
-			filter_introns(bundle_length, 
-						   bundle_left, 
-						   hits, 
-						   min_intron_fraction, 
-						   true,
-						   false);
-		}
+//		if (bundle_avg_doc > 250)
+//		{
+//			filter_introns(bundle_length, 
+//						   bundle_left, 
+//						   hits, 
+//						   min_intron_fraction, 
+//						   true,
+//						   false);
+//		}
 	}
 	
 	for (size_t j = 0; j < hits.size(); ++j)

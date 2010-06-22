@@ -72,7 +72,7 @@ int max_mle_iterations = 5000;
 int num_importance_samples = 1000;
 
 double small_anchor_fraction = 9 / 75.0;
-double binomial_junc_filter_alpha = 0.01;
+double binomial_junc_filter_alpha = 0.001;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
