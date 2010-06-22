@@ -92,6 +92,10 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 	// non-constitutive.
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
+		if (!(i % 1000))
+		{
+			fprintf (stderr, "Fragment # %lu\n", i);
+		}
 		// if smash_mask[i], then no frag j will be marked as non-constitutive
 		// on account of frag i
         if (!smash_filter[i])
