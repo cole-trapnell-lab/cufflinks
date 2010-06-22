@@ -61,6 +61,10 @@ extern bool allow_junk_filtering;
 extern int max_mle_iterations;
 extern int num_importance_samples;
 
+extern double small_anchor_fraction;
+
+extern double binomial_junc_filter_alpha;
+
 #define ENABLE_THREADS 1
 
 #if ENABLE_THREADS

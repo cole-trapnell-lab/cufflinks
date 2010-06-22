@@ -45,6 +45,8 @@ static struct option long_options[] = {
 {"min-isoform-fraction",    required_argument,       0,          'F'},
 {"min-intron-fraction",     required_argument,       0,          'f'},
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
+{"junc-alpha",				required_argument,		 0,			 'a'},	
+{"small-anchor-fraction",	required_argument,		 0,			 'A'},
 {"max-intron-length",		required_argument,		 0,			 'I'},
 {"min-map-qual",			required_argument,		 0,			 'Q'},
 {"label",					required_argument,		 0,			 'L'},
@@ -70,7 +72,9 @@ void print_usage()
 	fprintf(stderr, "-s/--inner-dist-std-dev      the inner distance standard deviation                 [ default:     20 ]\n");
 	fprintf(stderr, "-c/--collapse-thresh         Median depth of cov needed for preassembly collapse   [ default:  10000 ]\n");
 	fprintf(stderr, "-F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
-	fprintf(stderr, "-f/--min-intron-fraction     Filter spliced alignments below this level            [ default:   0.05 ]\n");
+	fprintf(stderr, "-f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
+	fprintf(stderr, "-a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
+	fprintf(stderr, "-A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
 	fprintf(stderr, "-j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
 	fprintf(stderr, "-I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
@@ -120,6 +124,13 @@ int parse_options(int argc, char** argv)
 				break;
 			case 'j':
 				pre_mrna_fraction = parseFloat(0, 1.0, "-I/--pre-mrna-fraction must be at least 0", print_usage);
+				break;
+				
+			case 'a':
+				binomial_junc_filter_alpha = parseFloat(0, 1.0, "-a/--junc-alpha must be  between 0 and 1.0", print_usage);
+				break;
+			case 'A':
+				small_anchor_fraction = parseFloat(0, 1.0, "-A/--small-anchor-fraction must be  between 0 and 1.0", print_usage);
 				break;
 			case OPT_NUM_IMP_SAMPLES:
 				num_importance_samples = parseInt(1, "--num-importance-samples must be at least 1", print_usage);

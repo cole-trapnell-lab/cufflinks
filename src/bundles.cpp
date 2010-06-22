@@ -617,7 +617,8 @@ void count_introns_in_read(const ReadHit& read,
 	const vector<CigarOp>& cig = read.cigar();
 	
 	int read_len = read.read_len();
-	int midpoint = ceil(read_len / 2.0);
+	int small_anchor = floor(read_len * small_anchor_fraction);
+	
 	size_t r_left = 0;
 	size_t g_left = read.left();
 	
@@ -639,11 +640,8 @@ void count_introns_in_read(const ReadHit& read,
 				ins_itr = intron_counts.insert(make_pair(intron, IntronSpanCounter()));
 				IntronCountTable::iterator itr = ins_itr.first;
 				itr->second.total_reads++;
-				if (r_left < midpoint)
-				{
-					itr->second.left_reads++;
-				}
-				if ( r_left <= 9 || (read_len - r_left) < 9)
+				
+				if ( r_left <= small_anchor || (read_len - r_left) < small_anchor)
 				{
 					itr->second.little_reads++;
 				}
@@ -694,7 +692,6 @@ void identify_bad_splices(const HitBundle& bundle,
 		pair<AugmentedCuffOp, IntronSpanCounter> cnt_pair = *itr;
 		try
 		{
-			const double success_fraction = 0.5; 
 			const IntronSpanCounter spans = cnt_pair.second;
 			
 			//			binomial read_half_dist(spans.total_reads, success_fraction);
@@ -702,7 +699,7 @@ void identify_bad_splices(const HitBundle& bundle,
 			//			double right_side_p = cdf(complement(read_half_dist, spans.left_reads));
 			
 			
-			double success = 9/75.0;
+			double success = small_anchor_fraction;
 			
 			binomial read_half_dist(spans.total_reads, success);
 			double right_side_p;
@@ -719,7 +716,6 @@ void identify_bad_splices(const HitBundle& bundle,
 			
 			double expected = success * spans.total_reads;
 			double excess = spans.little_reads - expected;
-			double eq_effect = expected - excess;
 			
 			if (spans.little_reads > 0)
 			{
@@ -730,13 +726,15 @@ void identify_bad_splices(const HitBundle& bundle,
 				left_side_p = cdf(read_half_dist, 0);
 			}
 			
-			double alpha = 0.05;
+			//double alpha = 0.05;
 			//double right_side_p = 0;
-			if (left_side_p < alpha / 2.0 || right_side_p < alpha / 2.0)
+			if (left_side_p < (binomial_junc_filter_alpha / 2.0) || 
+				right_side_p < (binomial_junc_filter_alpha / 2.0))
 			{
 				double overhang_ratio = itr->second.little_reads / (double) itr->second.total_reads;
 				if (itr->second.total_reads < 500 || overhang_ratio >= 0.50)
 				{
+#if ASM_VERBOSE
 					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
@@ -746,6 +744,7 @@ void identify_bad_splices(const HitBundle& bundle,
 							left_side_p,
 							right_side_p);
 					
+#endif
 					bool exists = binary_search(bad_introns.begin(), 
 												bad_introns.end(), 
 												itr->first);
@@ -758,6 +757,7 @@ void identify_bad_splices(const HitBundle& bundle,
 			}
 			else 
 			{
+#if ASM_VERBOSE
 				fprintf(stderr, "Accepting intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 						itr->first.g_left(), 
 						itr->first.g_right(), 
@@ -766,6 +766,7 @@ void identify_bad_splices(const HitBundle& bundle,
 						expected,
 						left_side_p,
 						right_side_p);
+#endif
 				
 			}
 			
