@@ -734,22 +734,26 @@ void identify_bad_splices(const HitBundle& bundle,
 			//double right_side_p = 0;
 			if (left_side_p < alpha / 2.0 || right_side_p < alpha / 2.0)
 			{
-				fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
-						itr->first.g_left(), 
-						itr->first.g_right(), 
-						itr->second.total_reads, 
-						itr->second.little_reads, 
-						expected,
-						left_side_p,
-						right_side_p);
-				
-				bool exists = binary_search(bad_introns.begin(), 
-											bad_introns.end(), 
-											itr->first);
-				if (!exists)
+				double overhang_ratio = itr->second.little_reads / (double) itr->second.total_reads;
+				if (itr->second.total_reads < 500 || overhang_ratio >= 0.50)
 				{
-					bad_introns.push_back(itr->first);
-					sort(bad_introns.begin(), bad_introns.end());
+					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+							itr->first.g_left(), 
+							itr->first.g_right(), 
+							itr->second.total_reads, 
+							itr->second.little_reads, 
+							expected,
+							left_side_p,
+							right_side_p);
+					
+					bool exists = binary_search(bad_introns.begin(), 
+												bad_introns.end(), 
+												itr->first);
+					if (!exists)
+					{
+						bad_introns.push_back(itr->first);
+						sort(bad_introns.begin(), bad_introns.end());
+					}
 				}
 			}
 			else 
