@@ -104,12 +104,12 @@ void filter_introns(int bundle_length,
 		if (!toss[j])
 		{
 			filtered_hits.push_back(hits[j]);
-//#if ASM_VERBOSE
-//			if (hits[j].has_intron())
-//			{
-//				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//			}
-//#endif
+#if ASM_VERBOSE
+			if (hits[j].has_intron())
+			{
+				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			}
+#endif
 		}
 		else
 		{
@@ -339,7 +339,7 @@ void filter_hits(int bundle_length,
 					   min_intron_fraction, 
 					   true,
 					   true);
-//		if (bundle_avg_doc > 250)
+//		if (bundle_avg_doc > 3000)
 //		{
 //			filter_introns(bundle_length, 
 //						   bundle_left, 
