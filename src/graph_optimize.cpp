@@ -339,8 +339,9 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				//bool advanced_curr = false;
 				for (int c = curr_frag + 1; c < fragments.size(); ++c)
 				{
-					if (fragments[c].contains(fragments[curr_frag]) &&
-						Scaffold::compatible(fragments[curr_frag], fragments[c]))
+					size_t lhs = replacements[curr_frag];
+					if (fragments[c].contains(fragments[lhs]) &&
+						Scaffold::compatible(fragments[lhs], fragments[c]))
 					{
 						vector<int> c_conflicts;
 						// Find c's conflicts
@@ -392,14 +393,14 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							
 							vector<Scaffold> s;
 							s.push_back(fragments[c]);
-							s.push_back(fragments[curr_frag]);
+							s.push_back(fragments[lhs]);
 							fragments[c] = Scaffold(s);
-							replacements[curr_frag] = c;
-							curr_conflicts = c_conflicts;
-							curr_frag = c;
+							replacements[lhs] = c;
+							//curr_conflicts = c_conflicts;
+							lhs = c;
 							//advanced_curr = true;
 							will_perform_collapse = true;
-							break;
+							//break;
 						}
 					}
 					else 
@@ -608,7 +609,7 @@ void compress_fragments(vector<Scaffold>& fragments)
 #endif
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 	
-	compress_consitutive(fragments);
+	//compress_consitutive(fragments);
 	
 	compress_redundant(fragments);
     

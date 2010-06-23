@@ -21,7 +21,7 @@
 			EDEA775411BD7AC3001FCFD7 /* graph_optimize.cpp:147 */,
 			EDEA77AD11BD955E001FCFD7 /* scaffolds.cpp:739 */,
 			EDEA77B911BD95CA001FCFD7 /* scaffolds.cpp:727 */,
-			ED4CAB8D11C438730007F355 /* graph_optimize.cpp:419 */,
+			ED4CAB8D11C438730007F355 /* graph_optimize.cpp:420 */,
 			ED4CABFE11C5709B0007F355 /* cufflinks.cpp:589 */,
 			ED4CAC2011C5824E0007F355 /* bundles.cpp:569 */,
 			ED4CAC4311C59E530007F355 /* bundles.cpp:455 */,
@@ -30,11 +30,11 @@
 			ED4CAC6A11C5C93E0007F355 /* bundles.cpp:450 */,
 			ED4CAC7011C5CFC60007F355 /* bundles.cpp:435 */,
 			ED4CAC7411C5CFEB0007F355 /* bundles.cpp:434 */,
-			ED4CAD5311C82B030007F355 /* graph_optimize.cpp:613 */,
+			ED4CAD5311C82B030007F355 /* graph_optimize.cpp:614 */,
 			ED4CADA811C8669B0007F355 /* abundances.cpp:643 */,
 			ED4CAE1411C927E20007F355 /* cufflinks.cpp:559 */,
-			ED4CAE7F11C95C730007F355 /* graph_optimize.cpp:613 */,
-			ED4CAE9611C95E560007F355 /* graph_optimize.cpp:614 */,
+			ED4CAE7F11C95C730007F355 /* graph_optimize.cpp:614 */,
+			ED4CAE9611C95E560007F355 /* graph_optimize.cpp:615 */,
 			EDB09CA511CEFF8700DB9D11 /* abundances.cpp:2057 */,
 			EDB09CCD11CF015A00DB9D11 /* abundances.cpp:2057 */,
 			EDB09CD111CF03BA00DB9D11 /* abundances.cpp:2057 */,
@@ -51,10 +51,12 @@
 			EDB09EE411D12EAB00DB9D11 /* filters.cpp:255 */,
 			EDB09EF011D133E300DB9D11 /* abundances.cpp:1916 */,
 			EDB09F5011D159BE00DB9D11 /* filters.cpp:342 */,
-			EDB09FA511D1A91F00DB9D11 /* graph_optimize.cpp:343 */,
-			EDB09FBE11D1C19900DB9D11 /* graph_optimize.cpp:360 */,
-			EDB09FD811D1C6DE00DB9D11 /* graph_optimize.cpp:347 */,
+			EDB09FA511D1A91F00DB9D11 /* graph_optimize.cpp:344 */,
+			EDB09FBE11D1C19900DB9D11 /* graph_optimize.cpp:361 */,
+			EDB09FD811D1C6DE00DB9D11 /* graph_optimize.cpp:348 */,
 			EDB09FF811D2485A00DB9D11 /* bundles.cpp:786 */,
+			EDB0A07811D2A59E00DB9D11 /* graph_optimize.cpp:461 */,
+			EDB0A07C11D2A5AB00DB9D11 /* graph_optimize.cpp:477 */,
 		);
 		codeSenseManager = EDA5150110C72929000A4F41 /* Code sense */;
 		executables = (
@@ -1010,6 +1012,58 @@
 			EDB0A02C11D2601100DB9D11 /* PBXTextBookmark */ = EDB0A02C11D2601100DB9D11 /* PBXTextBookmark */;
 			EDB0A02D11D2601100DB9D11 /* PBXTextBookmark */ = EDB0A02D11D2601100DB9D11 /* PBXTextBookmark */;
 			EDB0A02E11D2601100DB9D11 /* PBXTextBookmark */ = EDB0A02E11D2601100DB9D11 /* PBXTextBookmark */;
+			EDB0A03211D262A200DB9D11 /* PBXTextBookmark */ = EDB0A03211D262A200DB9D11 /* PBXTextBookmark */;
+			EDB0A03311D262A600DB9D11 /* PBXTextBookmark */ = EDB0A03311D262A600DB9D11 /* PBXTextBookmark */;
+			EDB0A03511D2633C00DB9D11 /* PBXTextBookmark */ = EDB0A03511D2633C00DB9D11 /* PBXTextBookmark */;
+			EDB0A03811D2635A00DB9D11 /* PBXTextBookmark */ = EDB0A03811D2635A00DB9D11 /* PBXTextBookmark */;
+			EDB0A03911D2635A00DB9D11 /* PBXTextBookmark */ = EDB0A03911D2635A00DB9D11 /* PBXTextBookmark */;
+			EDB0A03A11D2635A00DB9D11 /* PBXTextBookmark */ = EDB0A03A11D2635A00DB9D11 /* PBXTextBookmark */;
+			EDB0A03D11D2637400DB9D11 /* PBXTextBookmark */ = EDB0A03D11D2637400DB9D11 /* PBXTextBookmark */;
+			EDB0A03E11D2637400DB9D11 /* PBXTextBookmark */ = EDB0A03E11D2637400DB9D11 /* PBXTextBookmark */;
+			EDB0A03F11D2637400DB9D11 /* PBXTextBookmark */ = EDB0A03F11D2637400DB9D11 /* PBXTextBookmark */;
+			EDB0A04111D263E600DB9D11 /* PBXTextBookmark */ = EDB0A04111D263E600DB9D11 /* PBXTextBookmark */;
+			EDB0A04311D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04311D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04411D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04411D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04611D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04611D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04811D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04811D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04911D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04911D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04A11D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04A11D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04B11D2648400DB9D11 /* PBXTextBookmark */ = EDB0A04B11D2648400DB9D11 /* PBXTextBookmark */;
+			EDB0A04C11D2667600DB9D11 /* PBXTextBookmark */ = EDB0A04C11D2667600DB9D11 /* PBXTextBookmark */;
+			EDB0A04D11D2667600DB9D11 /* PBXTextBookmark */ = EDB0A04D11D2667600DB9D11 /* PBXTextBookmark */;
+			EDB0A04E11D2667600DB9D11 /* PBXTextBookmark */ = EDB0A04E11D2667600DB9D11 /* PBXTextBookmark */;
+			EDB0A04F11D2667600DB9D11 /* PBXTextBookmark */ = EDB0A04F11D2667600DB9D11 /* PBXTextBookmark */;
+			EDB0A05011D2667C00DB9D11 /* PBXTextBookmark */ = EDB0A05011D2667C00DB9D11 /* PBXTextBookmark */;
+			EDB0A05511D267C300DB9D11 /* PBXTextBookmark */ = EDB0A05511D267C300DB9D11 /* PBXTextBookmark */;
+			EDB0A05711D2A17700DB9D11 /* PBXTextBookmark */ = EDB0A05711D2A17700DB9D11 /* PBXTextBookmark */;
+			EDB0A05811D2A17700DB9D11 /* PBXTextBookmark */ = EDB0A05811D2A17700DB9D11 /* PBXTextBookmark */;
+			EDB0A05911D2A17800DB9D11 /* PBXTextBookmark */ = EDB0A05911D2A17800DB9D11 /* PBXTextBookmark */;
+			EDB0A05A11D2A19F00DB9D11 /* PBXTextBookmark */ = EDB0A05A11D2A19F00DB9D11 /* PBXTextBookmark */;
+			EDB0A05B11D2A1D500DB9D11 /* PBXTextBookmark */ = EDB0A05B11D2A1D500DB9D11 /* PBXTextBookmark */;
+			EDB0A05E11D2A1E000DB9D11 /* PBXTextBookmark */ = EDB0A05E11D2A1E000DB9D11 /* PBXTextBookmark */;
+			EDB0A06011D2A26600DB9D11 /* PBXTextBookmark */ = EDB0A06011D2A26600DB9D11 /* PBXTextBookmark */;
+			EDB0A06111D2A27500DB9D11 /* PBXTextBookmark */ = EDB0A06111D2A27500DB9D11 /* PBXTextBookmark */;
+			EDB0A06611D2A2A800DB9D11 /* PBXTextBookmark */ = EDB0A06611D2A2A800DB9D11 /* PBXTextBookmark */;
+			EDB0A06711D2A2A800DB9D11 /* PBXTextBookmark */ = EDB0A06711D2A2A800DB9D11 /* PBXTextBookmark */;
+			EDB0A06911D2A36D00DB9D11 /* PBXTextBookmark */ = EDB0A06911D2A36D00DB9D11 /* PBXTextBookmark */;
+			EDB0A06A11D2A36D00DB9D11 /* PBXTextBookmark */ = EDB0A06A11D2A36D00DB9D11 /* PBXTextBookmark */;
+			EDB0A06B11D2A36D00DB9D11 /* PBXTextBookmark */ = EDB0A06B11D2A36D00DB9D11 /* PBXTextBookmark */;
+			EDB0A06C11D2A36D00DB9D11 /* PBXTextBookmark */ = EDB0A06C11D2A36D00DB9D11 /* PBXTextBookmark */;
+			EDB0A06D11D2A36D00DB9D11 /* PBXTextBookmark */ = EDB0A06D11D2A36D00DB9D11 /* PBXTextBookmark */;
+			EDB0A07211D2A53300DB9D11 /* PBXTextBookmark */ = EDB0A07211D2A53300DB9D11 /* PBXTextBookmark */;
+			EDB0A07311D2A53300DB9D11 /* PBXTextBookmark */ = EDB0A07311D2A53300DB9D11 /* PBXTextBookmark */;
+			EDB0A07411D2A53300DB9D11 /* PBXTextBookmark */ = EDB0A07411D2A53300DB9D11 /* PBXTextBookmark */;
+			EDB0A07511D2A54400DB9D11 /* PBXTextBookmark */ = EDB0A07511D2A54400DB9D11 /* PBXTextBookmark */;
+			EDB0A07611D2A54400DB9D11 /* PBXTextBookmark */ = EDB0A07611D2A54400DB9D11 /* PBXTextBookmark */;
+			EDB0A07711D2A54800DB9D11 /* PBXTextBookmark */ = EDB0A07711D2A54800DB9D11 /* PBXTextBookmark */;
+			EDB0A08011D2A5DA00DB9D11 /* PBXTextBookmark */ = EDB0A08011D2A5DA00DB9D11 /* PBXTextBookmark */;
+			EDB0A08111D2A5DA00DB9D11 /* PBXTextBookmark */ = EDB0A08111D2A5DA00DB9D11 /* PBXTextBookmark */;
+			EDB0A08211D2A5DA00DB9D11 /* PBXTextBookmark */ = EDB0A08211D2A5DA00DB9D11 /* PBXTextBookmark */;
+			EDB0A08F11D2A68200DB9D11 /* PBXTextBookmark */ = EDB0A08F11D2A68200DB9D11 /* PBXTextBookmark */;
+			EDB0A09011D2A68200DB9D11 /* PBXTextBookmark */ = EDB0A09011D2A68200DB9D11 /* PBXTextBookmark */;
+			EDB0A09111D2A68200DB9D11 /* PBXTextBookmark */ = EDB0A09111D2A68200DB9D11 /* PBXTextBookmark */;
+			EDB0A09811D2A7BC00DB9D11 /* PBXTextBookmark */ = EDB0A09811D2A7BC00DB9D11 /* PBXTextBookmark */;
+			EDB0A09911D2A7BC00DB9D11 /* PBXTextBookmark */ = EDB0A09911D2A7BC00DB9D11 /* PBXTextBookmark */;
 			EDBBE74511A8723C006AC14A = EDBBE74511A8723C006AC14A /* PBXTextBookmark */;
 			EDBBE86B11A8D04C006AC14A = EDBBE86B11A8D04C006AC14A /* PBXTextBookmark */;
 			EDBBE89711A8D390006AC14A = EDBBE89711A8D390006AC14A /* PBXTextBookmark */;
@@ -1162,7 +1216,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 1;
-		rLoc = 600;
+		rLoc = 601;
 		rType = 1;
 	};
 	ED4CAB4011C3D4310007F355 /* PBXTextBookmark */ = {
@@ -1170,7 +1224,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 255";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1526;
 		vrLoc = 6046;
@@ -1180,7 +1234,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 256";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1785;
 		vrLoc = 6715;
@@ -1258,7 +1312,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 227";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1674;
 		vrLoc = 5833;
@@ -1268,7 +1322,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 234";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1556;
 		vrLoc = 6183;
@@ -1321,7 +1375,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 	};
 	ED4CAB6E11C3FE920007F355 /* PBXTextBookmark */ = {
@@ -1359,7 +1413,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 341";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1817;
 		vrLoc = 8815;
@@ -1369,7 +1423,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 329";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1556;
 		vrLoc = 8866;
@@ -1379,7 +1433,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 366";
 		rLen = 0;
-		rLoc = 13189;
+		rLoc = 13206;
 		rType = 0;
 		vrLen = 1515;
 		vrLoc = 9275;
@@ -1399,7 +1453,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 424";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1719;
 		vrLoc = 11809;
@@ -1409,7 +1463,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 325";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1540;
 		vrLoc = 8669;
@@ -1419,7 +1473,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 325";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1098;
 		vrLoc = 9003;
@@ -1455,7 +1509,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 145";
 		rLen = 0;
-		rLoc = 3815;
+		rLoc = 3851;
 		rType = 0;
 		vrLen = 756;
 		vrLoc = 3193;
@@ -1477,7 +1531,7 @@
 		vrLen = 576;
 		vrLoc = 15777;
 	};
-	ED4CAB8D11C438730007F355 /* graph_optimize.cpp:419 */ = {
+	ED4CAB8D11C438730007F355 /* graph_optimize.cpp:420 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1489,9 +1543,9 @@
 		functionName = "collapse_contained_transfrags(vector<Scaffold>& scaffolds, uint32_t max_rounds)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 419;
+		lineNumber = 420;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.463444;
+		modificationTime = 299018121.032126;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1519,7 +1573,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 418;
+		rLoc = 419;
 		rType = 1;
 	};
 	ED4CAB9211C438DA0007F355 /* PBXTextBookmark */ = {
@@ -1671,7 +1725,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 329";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1624;
 		vrLoc = 8933;
@@ -1681,7 +1735,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 335";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1728;
 		vrLoc = 8933;
@@ -1691,7 +1745,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 328";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1663;
 		vrLoc = 9253;
@@ -1701,7 +1755,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 328";
 		rLen = 0;
-		rLoc = 11284;
+		rLoc = 11301;
 		rType = 0;
 		vrLen = 1705;
 		vrLoc = 9199;
@@ -1781,7 +1835,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 368";
 		rLen = 9;
-		rLoc = 12932;
+		rLoc = 12949;
 		rType = 0;
 		vrLen = 1719;
 		vrLoc = 9592;
@@ -1791,7 +1845,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 368";
 		rLen = 9;
-		rLoc = 12932;
+		rLoc = 12949;
 		rType = 0;
 		vrLen = 1550;
 		vrLoc = 7827;
@@ -1810,7 +1864,7 @@
 		ignoreCount = 0;
 		lineNumber = 589;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.46361;
+		modificationTime = 299018121.032326;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1819,7 +1873,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 368";
 		rLen = 9;
-		rLoc = 12932;
+		rLoc = 12949;
 		rType = 0;
 		vrLen = 1550;
 		vrLoc = 7827;
@@ -1998,7 +2052,7 @@
 		ignoreCount = 0;
 		lineNumber = 569;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.463758;
+		modificationTime = 299018121.032497;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2190,7 +2244,7 @@
 		ignoreCount = 0;
 		lineNumber = 455;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.463982;
+		modificationTime = 299018121.032641;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2208,7 +2262,7 @@
 		ignoreCount = 0;
 		lineNumber = 467;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.464207;
+		modificationTime = 299018121.032781;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2226,7 +2280,7 @@
 		ignoreCount = 0;
 		lineNumber = 429;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.464377;
+		modificationTime = 299018121.032919;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2328,7 +2382,7 @@
 		ignoreCount = 0;
 		lineNumber = 450;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.464546;
+		modificationTime = 299018121.033059;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2345,7 +2399,7 @@
 		hitCount = 0;
 		ignoreCount = 0;
 		lineNumber = 435;
-		modificationTime = 298998489.464706;
+		modificationTime = 299018121.033197;
 		originalNumberOfMultipleMatches = 0;
 		state = 2;
 	};
@@ -2363,7 +2417,7 @@
 		ignoreCount = 0;
 		lineNumber = 434;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.464867;
+		modificationTime = 299018121.03333;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2696,7 +2750,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 443";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 1097;
 		vrLoc = 11981;
@@ -2800,7 +2854,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 443";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 1150;
 		vrLoc = 11981;
@@ -2810,7 +2864,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 447";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 1038;
 		vrLoc = 12398;
@@ -2870,7 +2924,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 445";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 1016;
 		vrLoc = 12452;
@@ -2890,7 +2944,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 446";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 1098;
 		vrLoc = 11665;
@@ -2920,7 +2974,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17048;
+		rLoc = 17065;
 		rType = 0;
 		vrLen = 1058;
 		vrLoc = 11794;
@@ -2930,7 +2984,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17048;
+		rLoc = 17065;
 		rType = 0;
 		vrLen = 1058;
 		vrLoc = 11794;
@@ -2990,7 +3044,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17048;
+		rLoc = 17065;
 		rType = 0;
 		vrLen = 1058;
 		vrLoc = 11794;
@@ -3221,7 +3275,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17048;
+		rLoc = 17065;
 		rType = 0;
 		vrLen = 1058;
 		vrLoc = 11794;
@@ -3231,7 +3285,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17048;
+		rLoc = 17065;
 		rType = 0;
 		vrLen = 770;
 		vrLoc = 10266;
@@ -3241,7 +3295,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 454";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1352;
 		vrLoc = 12463;
@@ -3261,7 +3315,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 448";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1206;
 		vrLoc = 12191;
@@ -3271,7 +3325,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 432";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 955;
 		vrLoc = 11806;
@@ -3281,7 +3335,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 479";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1351;
 		vrLoc = 12761;
@@ -3291,7 +3345,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 479";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1339;
 		vrLoc = 12761;
@@ -3301,7 +3355,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 479";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 986;
 		vrLoc = 12644;
@@ -3340,7 +3394,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 612;
+		rLoc = 613;
 		rType = 1;
 	};
 	ED4CAD5111C81CF40007F355 /* PBXTextBookmark */ = {
@@ -3348,7 +3402,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 483";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 439;
 		vrLoc = 13762;
@@ -3358,12 +3412,12 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 483";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1326;
 		vrLoc = 12313;
 	};
-	ED4CAD5311C82B030007F355 /* graph_optimize.cpp:613 */ = {
+	ED4CAD5311C82B030007F355 /* graph_optimize.cpp:614 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -3375,9 +3429,9 @@
 		functionName = "compress_fragments(vector<Scaffold>& fragments)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 613;
+		lineNumber = 614;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.465046;
+		modificationTime = 299018121.033483;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3386,7 +3440,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 394";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1277;
 		vrLoc = 12761;
@@ -3396,7 +3450,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 394";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1277;
 		vrLoc = 12761;
@@ -3406,7 +3460,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 465";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1231;
 		vrLoc = 12968;
@@ -3436,7 +3490,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 466";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1633;
 		vrLoc = 13043;
@@ -3586,7 +3640,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 319";
 		rLen = 0;
-		rLoc = 8551;
+		rLoc = 8587;
 		rType = 0;
 		vrLen = 1078;
 		vrLoc = 7284;
@@ -3725,7 +3779,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 612;
+		rLoc = 613;
 		rType = 1;
 	};
 	ED4CAD9711C865C90007F355 /* PBXTextBookmark */ = {
@@ -3733,7 +3787,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 476";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 742;
 		vrLoc = 13339;
@@ -3743,7 +3797,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 476";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1541;
 		vrLoc = 13135;
@@ -3783,7 +3837,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 476";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 742;
 		vrLoc = 13339;
@@ -3859,7 +3913,7 @@
 		ignoreCount = 0;
 		lineNumber = 643;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.465192;
+		modificationTime = 299018121.033741;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4155,7 +4209,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 448";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1135;
 		vrLoc = 12102;
@@ -4165,7 +4219,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 488";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 1025;
 		vrLoc = 13487;
@@ -4175,7 +4229,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 466";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1403;
 		vrLoc = 12649;
@@ -4185,7 +4239,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 496";
 		rLen = 0;
-		rLoc = 17580;
+		rLoc = 17599;
 		rType = 0;
 		vrLen = 771;
 		vrLoc = 13905;
@@ -4195,7 +4249,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 375";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1048;
 		vrLoc = 9963;
@@ -4205,7 +4259,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 514";
 		rLen = 0;
-		rLoc = 19044;
+		rLoc = 19063;
 		rType = 0;
 		vrLen = 1573;
 		vrLoc = 13093;
@@ -4215,7 +4269,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 416";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1493;
 		vrLoc = 11738;
@@ -4225,7 +4279,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 416";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1727;
 		vrLoc = 12297;
@@ -4368,7 +4422,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 319";
 		rLen = 0;
-		rLoc = 8551;
+		rLoc = 8587;
 		rType = 0;
 		vrLen = 608;
 		vrLoc = 7635;
@@ -4378,7 +4432,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 520";
 		rLen = 77;
-		rLoc = 13988;
+		rLoc = 14024;
 		rType = 0;
 		vrLen = 618;
 		vrLoc = 13077;
@@ -4388,7 +4442,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 520";
 		rLen = 77;
-		rLoc = 13988;
+		rLoc = 14024;
 		rType = 0;
 		vrLen = 618;
 		vrLoc = 13077;
@@ -4408,7 +4462,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 520";
 		rLen = 77;
-		rLoc = 13988;
+		rLoc = 14024;
 		rType = 0;
 		vrLen = 226;
 		vrLoc = 13444;
@@ -4418,7 +4472,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 520";
 		rLen = 77;
-		rLoc = 13988;
+		rLoc = 14024;
 		rType = 0;
 		vrLen = 618;
 		vrLoc = 13077;
@@ -4477,7 +4531,7 @@
 		ignoreCount = 0;
 		lineNumber = 559;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.465314;
+		modificationTime = 299018121.033907;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4486,7 +4540,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 520";
 		rLen = 77;
-		rLoc = 13988;
+		rLoc = 14024;
 		rType = 0;
 		vrLen = 226;
 		vrLoc = 13444;
@@ -4526,7 +4580,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 416";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1397;
 		vrLoc = 12297;
@@ -4536,7 +4590,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 462";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1053;
 		vrLoc = 12030;
@@ -4546,7 +4600,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 462";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1053;
 		vrLoc = 12030;
@@ -4566,7 +4620,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 436";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 747;
 		vrLoc = 12336;
@@ -4593,7 +4647,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 462";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1132;
 		vrLoc = 12030;
@@ -4623,7 +4677,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 453";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1180;
 		vrLoc = 12761;
@@ -4713,7 +4767,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1027;
 		vrLoc = 11314;
@@ -4733,7 +4787,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 407";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1271;
 		vrLoc = 13070;
@@ -4783,7 +4837,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 407";
 		rLen = 0;
-		rLoc = 13283;
+		rLoc = 13300;
 		rType = 0;
 		vrLen = 1496;
 		vrLoc = 12899;
@@ -4881,7 +4935,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 403";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 944;
 		vrLoc = 12059;
@@ -4891,7 +4945,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 403";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 799;
 		vrLoc = 12008;
@@ -4901,7 +4955,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 403";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 799;
 		vrLoc = 12008;
@@ -4911,7 +4965,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 868;
 		vrLoc = 11532;
@@ -4921,12 +4975,12 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 423";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 839;
 		vrLoc = 12008;
 	};
-	ED4CAE7F11C95C730007F355 /* graph_optimize.cpp:613 */ = {
+	ED4CAE7F11C95C730007F355 /* graph_optimize.cpp:614 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4938,9 +4992,9 @@
 		functionName = "compress_fragments(vector<Scaffold>& fragments)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 613;
+		lineNumber = 614;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.465426;
+		modificationTime = 299018121.034074;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4949,7 +5003,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17575;
+		rLoc = 17594;
 		rType = 0;
 		vrLen = 856;
 		vrLoc = 12111;
@@ -4978,7 +5032,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 612;
+		rLoc = 613;
 		rType = 1;
 	};
 	ED4CAE8C11C95E270007F355 /* PBXTextBookmark */ = {
@@ -4986,7 +5040,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17539;
+		rLoc = 17558;
 		rType = 0;
 		vrLen = 595;
 		vrLoc = 12722;
@@ -4996,7 +5050,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17539;
+		rLoc = 17558;
 		rType = 0;
 		vrLen = 824;
 		vrLoc = 11903;
@@ -5021,7 +5075,7 @@
 		vrLen = 696;
 		vrLoc = 13643;
 	};
-	ED4CAE9611C95E560007F355 /* graph_optimize.cpp:614 */ = {
+	ED4CAE9611C95E560007F355 /* graph_optimize.cpp:615 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5033,9 +5087,9 @@
 		functionName = "compress_fragments(vector<Scaffold>& fragments)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 614;
+		lineNumber = 615;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.46557;
+		modificationTime = 299018121.034294;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5064,7 +5118,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17539;
+		rLoc = 17558;
 		rType = 0;
 		vrLen = 595;
 		vrLoc = 12722;
@@ -5074,7 +5128,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17539;
+		rLoc = 17558;
 		rType = 0;
 		vrLen = 595;
 		vrLoc = 12722;
@@ -5094,7 +5148,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17539;
+		rLoc = 17558;
 		rType = 0;
 		vrLen = 1019;
 		vrLoc = 12535;
@@ -5104,7 +5158,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 410";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 851;
 		vrLoc = 12069;
@@ -5134,7 +5188,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 0;
-		rLoc = 17539;
+		rLoc = 17558;
 		rType = 0;
 		vrLen = 595;
 		vrLoc = 12722;
@@ -5174,7 +5228,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 422";
 		rLen = 32;
-		rLoc = 17543;
+		rLoc = 17562;
 		rType = 0;
 		vrLen = 1086;
 		vrLoc = 12430;
@@ -5184,7 +5238,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 412";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1043;
 		vrLoc = 12537;
@@ -5204,7 +5258,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 412";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 729;
 		vrLoc = 12569;
@@ -5214,7 +5268,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 412";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1098;
 		vrLoc = 12537;
@@ -5254,7 +5308,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 412";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 729;
 		vrLoc = 12569;
@@ -5394,7 +5448,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 345";
 		rLen = 90;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 867;
 		vrLoc = 9797;
@@ -5404,7 +5458,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 345";
 		rLen = 90;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 867;
 		vrLoc = 9797;
@@ -5444,7 +5498,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 345";
 		rLen = 90;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 867;
 		vrLoc = 9797;
@@ -5454,7 +5508,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 344";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 905;
 		vrLoc = 9797;
@@ -5587,7 +5641,7 @@
 		ignoreCount = 0;
 		lineNumber = 734;
 		location = cufflinks_xcode;
-		modificationTime = 298998490.181116;
+		modificationTime = 299018121.576164;
 		originalNumberOfMultipleMatches = 1;
 		state = 1;
 	};
@@ -5605,7 +5659,7 @@
 		ignoreCount = 0;
 		lineNumber = 720;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.461228;
+		modificationTime = 299018121.028465;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5623,7 +5677,7 @@
 		ignoreCount = 0;
 		lineNumber = 376;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.461393;
+		modificationTime = 299018121.028822;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5651,7 +5705,7 @@
 		ignoreCount = 0;
 		lineNumber = 724;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.461686;
+		modificationTime = 299018121.029177;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5669,7 +5723,7 @@
 		ignoreCount = 0;
 		lineNumber = 531;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.461841;
+		modificationTime = 299018121.029584;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5687,7 +5741,7 @@
 		ignoreCount = 0;
 		lineNumber = 474;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.462062;
+		modificationTime = 299018121.02981;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5705,7 +5759,7 @@
 		ignoreCount = 0;
 		lineNumber = 523;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.4623;
+		modificationTime = 299018121.030026;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5910,9 +5964,9 @@
 	};
 	EDA5151910C72963000A4F41 /* scaffolds.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1237, 6643}}";
-			sepNavSelRange = "{1688, 0}";
-			sepNavVisRange = "{1397, 557}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 6669}}";
+			sepNavSelRange = "{4832, 0}";
+			sepNavVisRange = "{4538, 505}";
 		};
 	};
 	EDA5151A10C72963000A4F41 /* tokenize.h */ = {
@@ -5938,16 +5992,16 @@
 	};
 	EDA5151E10C72963000A4F41 /* abundances.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1062, 26624}}";
-			sepNavSelRange = "{47654, 0}";
-			sepNavVisRange = "{47031, 832}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 26702}}";
+			sepNavSelRange = "{45034, 0}";
+			sepNavVisRange = "{44790, 611}";
 		};
 	};
 	EDA5151F10C72963000A4F41 /* assemble.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {939, 7657}}";
-			sepNavSelRange = "{12909, 36}";
-			sepNavVisRange = "{9646, 1210}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 7787}}";
+			sepNavSelRange = "{3920, 0}";
+			sepNavVisRange = "{3716, 383}";
 			sepNavWindowFrame = "{{56, 0}, {1224, 778}}";
 		};
 	};
@@ -5988,9 +6042,9 @@
 	};
 	EDA5152610C72963000A4F41 /* filters.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {939, 7488}}";
-			sepNavSelRange = "{8719, 172}";
-			sepNavVisRange = "{8401, 759}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 7098}}";
+			sepNavSelRange = "{656, 0}";
+			sepNavVisRange = "{348, 698}";
 		};
 	};
 	EDA5152710C72963000A4F41 /* GArgs.cpp */ = {
@@ -6016,9 +6070,9 @@
 	};
 	EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {861, 3835}}";
+			sepNavIntBoundsRect = "{{0, 0}, {939, 3848}}";
 			sepNavSelRange = "{948, 12}";
-			sepNavVisRange = "{2003, 963}";
+			sepNavVisRange = "{1858, 1226}";
 		};
 	};
 	EDA5152C10C72963000A4F41 /* gff.cpp */ = {
@@ -6058,9 +6112,9 @@
 	};
 	EDA5153110C72963000A4F41 /* scaffolds.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1237, 16016}}";
-			sepNavSelRange = "{1068, 0}";
-			sepNavVisRange = "{21408, 558}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 16068}}";
+			sepNavSelRange = "{19249, 0}";
+			sepNavVisRange = "{19001, 529}";
 		};
 	};
 	EDACE311114EBE02009024DB /* PBXTextBookmark */ = {
@@ -6177,7 +6231,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 135";
 		rLen = 25;
-		rLoc = 3483;
+		rLoc = 3519;
 		rType = 0;
 		vrLen = 1614;
 		vrLoc = 3120;
@@ -6247,7 +6301,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 404";
 		rLen = 0;
-		rLoc = 16026;
+		rLoc = 16043;
 		rType = 0;
 		vrLen = 2987;
 		vrLoc = 9197;
@@ -6257,7 +6311,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 404";
 		rLen = 0;
-		rLoc = 16026;
+		rLoc = 16043;
 		rType = 0;
 		vrLen = 2987;
 		vrLoc = 9197;
@@ -6297,7 +6351,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 404";
 		rLen = 0;
-		rLoc = 16026;
+		rLoc = 16043;
 		rType = 0;
 		vrLen = 2987;
 		vrLoc = 9197;
@@ -6307,7 +6361,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 449";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1733;
 		vrLoc = 12497;
@@ -6337,7 +6391,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 451";
 		rLen = 0;
-		rLoc = 17448;
+		rLoc = 17467;
 		rType = 0;
 		vrLen = 1632;
 		vrLoc = 12197;
@@ -6347,7 +6401,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 446";
 		rLen = 0;
-		rLoc = 17324;
+		rLoc = 17341;
 		rType = 0;
 		vrLen = 1600;
 		vrLoc = 11996;
@@ -6357,7 +6411,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 446";
 		rLen = 0;
-		rLoc = 17324;
+		rLoc = 17341;
 		rType = 0;
 		vrLen = 1600;
 		vrLoc = 11996;
@@ -6546,7 +6600,7 @@
 		ignoreCount = 0;
 		lineNumber = 2057;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.465706;
+		modificationTime = 299018121.034497;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -6674,7 +6728,7 @@
 		ignoreCount = 0;
 		lineNumber = 2057;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.465819;
+		modificationTime = 299018121.034668;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -6692,7 +6746,7 @@
 		ignoreCount = 0;
 		lineNumber = 2057;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.46593;
+		modificationTime = 299018121.034844;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -6850,7 +6904,7 @@
 		ignoreCount = 0;
 		lineNumber = 2057;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.466059;
+		modificationTime = 299018121.035018;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -6888,7 +6942,7 @@
 		ignoreCount = 0;
 		lineNumber = 2057;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.466176;
+		modificationTime = 299018121.035189;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7076,7 +7130,7 @@
 		ignoreCount = 0;
 		lineNumber = 2057;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.466291;
+		modificationTime = 299018121.035363;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7847,7 +7901,7 @@
 		ignoreCount = 0;
 		lineNumber = 67;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.46641;
+		modificationTime = 299018121.035534;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7865,7 +7919,7 @@
 		ignoreCount = 0;
 		lineNumber = 93;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.46654;
+		modificationTime = 299018121.035745;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7883,7 +7937,7 @@
 		ignoreCount = 0;
 		lineNumber = 92;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.466736;
+		modificationTime = 299018121.03598;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7901,7 +7955,7 @@
 		ignoreCount = 0;
 		lineNumber = 101;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.466941;
+		modificationTime = 299018121.036234;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7939,7 +7993,7 @@
 		ignoreCount = 0;
 		lineNumber = 106;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.467171;
+		modificationTime = 299018121.036483;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -7957,7 +8011,7 @@
 		ignoreCount = 0;
 		lineNumber = 110;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.467383;
+		modificationTime = 299018121.036743;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -8609,7 +8663,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 135";
 		rLen = 25;
-		rLoc = 3483;
+		rLoc = 3519;
 		rType = 0;
 		vrLen = 1007;
 		vrLoc = 3120;
@@ -8619,7 +8673,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 238";
 		rLen = 0;
-		rLoc = 6669;
+		rLoc = 6705;
 		rType = 0;
 		vrLen = 1050;
 		vrLoc = 5755;
@@ -8639,7 +8693,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 238";
 		rLen = 0;
-		rLoc = 6669;
+		rLoc = 6705;
 		rType = 0;
 		vrLen = 448;
 		vrLoc = 6286;
@@ -8658,7 +8712,7 @@
 		ignoreCount = 0;
 		lineNumber = 256;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.467585;
+		modificationTime = 299018121.036986;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -8667,7 +8721,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 248";
 		rLen = 0;
-		rLoc = 7129;
+		rLoc = 7165;
 		rType = 0;
 		vrLen = 1031;
 		vrLoc = 5794;
@@ -8677,7 +8731,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 248";
 		rLen = 0;
-		rLoc = 7129;
+		rLoc = 7165;
 		rType = 0;
 		vrLen = 849;
 		vrLoc = 6076;
@@ -8687,7 +8741,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 274";
 		rLen = 0;
-		rLoc = 7445;
+		rLoc = 7481;
 		rType = 0;
 		vrLen = 780;
 		vrLoc = 6510;
@@ -8697,7 +8751,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 249";
 		rLen = 0;
-		rLoc = 7121;
+		rLoc = 7157;
 		rType = 0;
 		vrLen = 631;
 		vrLoc = 4226;
@@ -8707,7 +8761,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 268";
 		rLen = 0;
-		rLoc = 7440;
+		rLoc = 7476;
 		rType = 0;
 		vrLen = 755;
 		vrLoc = 6754;
@@ -8717,7 +8771,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 268";
 		rLen = 0;
-		rLoc = 7440;
+		rLoc = 7476;
 		rType = 0;
 		vrLen = 755;
 		vrLoc = 6754;
@@ -8727,7 +8781,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 268";
 		rLen = 0;
-		rLoc = 7440;
+		rLoc = 7476;
 		rType = 0;
 		vrLen = 348;
 		vrLoc = 6754;
@@ -8737,7 +8791,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 327";
 		rLen = 14;
-		rLoc = 8592;
+		rLoc = 8628;
 		rType = 0;
 		vrLen = 816;
 		vrLoc = 7663;
@@ -8747,7 +8801,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 325";
 		rLen = 333;
-		rLoc = 8561;
+		rLoc = 8597;
 		rType = 0;
 		vrLen = 869;
 		vrLoc = 7346;
@@ -8757,7 +8811,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 325";
 		rLen = 333;
-		rLoc = 8561;
+		rLoc = 8597;
 		rType = 0;
 		vrLen = 869;
 		vrLoc = 7346;
@@ -8767,7 +8821,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 325";
 		rLen = 333;
-		rLoc = 8561;
+		rLoc = 8597;
 		rType = 0;
 		vrLen = 453;
 		vrLoc = 7346;
@@ -8777,7 +8831,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 325";
 		rLen = 333;
-		rLoc = 8561;
+		rLoc = 8597;
 		rType = 0;
 		vrLen = 772;
 		vrLoc = 6529;
@@ -8787,7 +8841,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 325";
 		rLen = 333;
-		rLoc = 8561;
+		rLoc = 8597;
 		rType = 0;
 		vrLen = 772;
 		vrLoc = 6529;
@@ -8806,7 +8860,7 @@
 		ignoreCount = 0;
 		lineNumber = 255;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.467789;
+		modificationTime = 299018121.037209;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -8815,7 +8869,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 330";
 		rLen = 333;
-		rLoc = 8561;
+		rLoc = 8597;
 		rType = 0;
 		vrLen = 705;
 		vrLoc = 6666;
@@ -8825,7 +8879,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 250";
 		rLen = 0;
-		rLoc = 6946;
+		rLoc = 6982;
 		rType = 0;
 		vrLen = 545;
 		vrLoc = 6332;
@@ -8835,7 +8889,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 238";
 		rLen = 18;
-		rLoc = 6706;
+		rLoc = 6742;
 		rType = 0;
 		vrLen = 558;
 		vrLoc = 6338;
@@ -8854,7 +8908,7 @@
 		ignoreCount = 0;
 		lineNumber = 1916;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.467977;
+		modificationTime = 299018121.037449;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -8880,7 +8934,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 182";
 		rLen = 0;
-		rLoc = 4837;
+		rLoc = 4873;
 		rType = 0;
 		vrLen = 796;
 		vrLoc = 6329;
@@ -8890,7 +8944,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 182";
 		rLen = 0;
-		rLoc = 4837;
+		rLoc = 4873;
 		rType = 0;
 		vrLen = 796;
 		vrLoc = 6329;
@@ -8900,7 +8954,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 182";
 		rLen = 0;
-		rLoc = 4837;
+		rLoc = 4873;
 		rType = 0;
 		vrLen = 796;
 		vrLoc = 6329;
@@ -8910,7 +8964,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 245";
 		rLen = 14;
-		rLoc = 6853;
+		rLoc = 6889;
 		rType = 0;
 		vrLen = 455;
 		vrLoc = 6546;
@@ -8920,7 +8974,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 245";
 		rLen = 14;
-		rLoc = 6853;
+		rLoc = 6889;
 		rType = 0;
 		vrLen = 455;
 		vrLoc = 6546;
@@ -8930,7 +8984,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 245";
 		rLen = 14;
-		rLoc = 6853;
+		rLoc = 6889;
 		rType = 0;
 		vrLen = 893;
 		vrLoc = 6329;
@@ -8940,7 +8994,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 245";
 		rLen = 14;
-		rLoc = 6853;
+		rLoc = 6889;
 		rType = 0;
 		vrLen = 893;
 		vrLoc = 6329;
@@ -8950,7 +9004,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 245";
 		rLen = 14;
-		rLoc = 6853;
+		rLoc = 6889;
 		rType = 0;
 		vrLen = 893;
 		vrLoc = 6329;
@@ -8960,7 +9014,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 245";
 		rLen = 14;
-		rLoc = 6853;
+		rLoc = 6889;
 		rType = 0;
 		vrLen = 455;
 		vrLoc = 6546;
@@ -8989,8 +9043,8 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 68";
-		rLen = 154;
-		rLoc = 1897;
+		rLen = 160;
+		rLoc = 1909;
 		rType = 0;
 		vrLen = 966;
 		vrLoc = 2621;
@@ -8999,8 +9053,8 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 68";
-		rLen = 154;
-		rLoc = 1897;
+		rLen = 160;
+		rLoc = 1909;
 		rType = 0;
 		vrLen = 919;
 		vrLoc = 2621;
@@ -9009,8 +9063,8 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 68";
-		rLen = 154;
-		rLoc = 1897;
+		rLen = 160;
+		rLoc = 1909;
 		rType = 0;
 		vrLen = 773;
 		vrLoc = 6520;
@@ -9019,8 +9073,8 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 68";
-		rLen = 154;
-		rLoc = 1897;
+		rLen = 160;
+		rLoc = 1909;
 		rType = 0;
 		vrLen = 465;
 		vrLoc = 6528;
@@ -9057,7 +9111,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 69";
 		rLen = 0;
-		rLoc = 1963;
+		rLoc = 1909;
 		rType = 0;
 		vrLen = 592;
 		vrLoc = 1628;
@@ -9067,7 +9121,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 69";
 		rLen = 0;
-		rLoc = 2019;
+		rLoc = 1909;
 		rType = 0;
 		vrLen = 1312;
 		vrLoc = 1202;
@@ -9077,7 +9131,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 92";
 		rLen = 0;
-		rLoc = 2607;
+		rLoc = 2564;
 		rType = 0;
 		vrLen = 1188;
 		vrLoc = 1580;
@@ -9087,7 +9141,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 92";
 		rLen = 0;
-		rLoc = 2607;
+		rLoc = 2564;
 		rType = 0;
 		vrLen = 1188;
 		vrLoc = 1580;
@@ -9097,7 +9151,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 92";
 		rLen = 0;
-		rLoc = 2607;
+		rLoc = 2564;
 		rType = 0;
 		vrLen = 1188;
 		vrLoc = 1580;
@@ -9107,7 +9161,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 65";
 		rLen = 0;
-		rLoc = 1851;
+		rLoc = 1863;
 		rType = 0;
 		vrLen = 637;
 		vrLoc = 1580;
@@ -9116,7 +9170,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		rLen = 14;
-		rLoc = 8592;
+		rLoc = 8628;
 		rType = 0;
 	};
 	EDB09F2A11D14D4F00DB9D11 /* PBXTextBookmark */ = {
@@ -9124,7 +9178,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 340";
 		rLen = 0;
-		rLoc = 8703;
+		rLoc = 8739;
 		rType = 0;
 		vrLen = 790;
 		vrLoc = 8134;
@@ -9134,7 +9188,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 340";
 		rLen = 0;
-		rLoc = 8703;
+		rLoc = 8739;
 		rType = 0;
 		vrLen = 834;
 		vrLoc = 8134;
@@ -9144,7 +9198,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 340";
 		rLen = 0;
-		rLoc = 8703;
+		rLoc = 8739;
 		rType = 0;
 		vrLen = 437;
 		vrLoc = 8134;
@@ -9154,7 +9208,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 340";
 		rLen = 0;
-		rLoc = 8703;
+		rLoc = 8739;
 		rType = 0;
 		vrLen = 848;
 		vrLoc = 7913;
@@ -9224,7 +9278,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 340";
 		rLen = 0;
-		rLoc = 8703;
+		rLoc = 8739;
 		rType = 0;
 		vrLen = 437;
 		vrLoc = 8134;
@@ -9411,7 +9465,7 @@
 		ignoreCount = 0;
 		lineNumber = 342;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.468122;
+		modificationTime = 299018121.037667;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -9430,7 +9484,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 700;
 		vrLoc = 8360;
@@ -9440,7 +9494,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 700;
 		vrLoc = 8360;
@@ -9450,7 +9504,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 700;
 		vrLoc = 8360;
@@ -9460,7 +9514,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 701;
 		vrLoc = 8360;
@@ -9470,7 +9524,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 701;
 		vrLoc = 8360;
@@ -9480,7 +9534,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 1066;
 		vrLoc = 8840;
@@ -9490,7 +9544,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 711;
 		vrLoc = 8404;
@@ -9500,7 +9554,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 350";
 		rLen = 0;
-		rLoc = 8891;
+		rLoc = 8927;
 		rType = 0;
 		vrLen = 1066;
 		vrLoc = 8840;
@@ -9520,7 +9574,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 346";
 		rLen = 0;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 400;
 		vrLoc = 8561;
@@ -9530,7 +9584,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 341";
 		rLen = 0;
-		rLoc = 8718;
+		rLoc = 8754;
 		rType = 0;
 		vrLen = 400;
 		vrLoc = 8561;
@@ -9550,7 +9604,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 341";
 		rLen = 0;
-		rLoc = 8718;
+		rLoc = 8754;
 		rType = 0;
 		vrLen = 787;
 		vrLoc = 8404;
@@ -9560,7 +9614,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 357";
 		rLen = 0;
-		rLoc = 8999;
+		rLoc = 9035;
 		rType = 0;
 		vrLen = 823;
 		vrLoc = 8348;
@@ -9570,7 +9624,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 357";
 		rLen = 0;
-		rLoc = 8999;
+		rLoc = 9035;
 		rType = 0;
 		vrLen = 823;
 		vrLoc = 8348;
@@ -9647,7 +9701,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 353";
 		rLen = 0;
-		rLoc = 8897;
+		rLoc = 8933;
 		rType = 0;
 		vrLen = 770;
 		vrLoc = 8401;
@@ -9657,7 +9711,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 353";
 		rLen = 0;
-		rLoc = 8897;
+		rLoc = 8933;
 		rType = 0;
 		vrLen = 400;
 		vrLoc = 8561;
@@ -9686,7 +9740,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 385;
+		rLoc = 386;
 		rType = 1;
 	};
 	EDB09F9A11D1A7C500DB9D11 /* PBXTextBookmark */ = {
@@ -9694,7 +9748,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 396";
 		rLen = 0;
-		rLoc = 11274;
+		rLoc = 11291;
 		rType = 0;
 		vrLen = 367;
 		vrLoc = 9630;
@@ -9704,7 +9758,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 353";
 		rLen = 0;
-		rLoc = 8897;
+		rLoc = 8933;
 		rType = 0;
 		vrLen = 786;
 		vrLoc = 8401;
@@ -9714,12 +9768,12 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 604";
 		rLen = 0;
-		rLoc = 17855;
+		rLoc = 17874;
 		rType = 0;
 		vrLen = 1304;
 		vrLoc = 16191;
 	};
-	EDB09FA511D1A91F00DB9D11 /* graph_optimize.cpp:343 */ = {
+	EDB09FA511D1A91F00DB9D11 /* graph_optimize.cpp:344 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -9731,9 +9785,9 @@
 		functionName = "collapse_equivalent_transfrags(vector<Scaffold>& fragments, uint32_t max_rounds)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 343;
+		lineNumber = 344;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.468262;
+		modificationTime = 299018121.037894;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -9742,7 +9796,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 606";
 		rLen = 0;
-		rLoc = 17855;
+		rLoc = 17874;
 		rType = 0;
 		vrLen = 1298;
 		vrLoc = 16191;
@@ -9752,7 +9806,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 606";
 		rLen = 0;
-		rLoc = 17855;
+		rLoc = 17874;
 		rType = 0;
 		vrLen = 1298;
 		vrLoc = 16191;
@@ -9762,7 +9816,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 606";
 		rLen = 0;
-		rLoc = 17855;
+		rLoc = 17874;
 		rType = 0;
 		vrLen = 1298;
 		vrLoc = 16191;
@@ -9791,7 +9845,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		rLen = 0;
-		rLoc = 342;
+		rLoc = 343;
 		rType = 1;
 	};
 	EDB09FB411D1AC6D00DB9D11 /* PBXTextBookmark */ = {
@@ -9844,7 +9898,7 @@
 		vrLen = 966;
 		vrLoc = 9127;
 	};
-	EDB09FBE11D1C19900DB9D11 /* graph_optimize.cpp:360 */ = {
+	EDB09FBE11D1C19900DB9D11 /* graph_optimize.cpp:361 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -9856,9 +9910,9 @@
 		functionName = "collapse_equivalent_transfrags(vector<Scaffold>& fragments, uint32_t max_rounds)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 360;
+		lineNumber = 361;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.468408;
+		modificationTime = 299018121.0383;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -9887,7 +9941,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 373";
 		rLen = 0;
-		rLoc = 10551;
+		rLoc = 10582;
 		rType = 0;
 		vrLen = 603;
 		vrLoc = 8446;
@@ -9897,7 +9951,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 373";
 		rLen = 0;
-		rLoc = 10551;
+		rLoc = 10582;
 		rType = 0;
 		vrLen = 865;
 		vrLoc = 8265;
@@ -9907,7 +9961,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 337";
 		rLen = 0;
-		rLoc = 9653;
+		rLoc = 9684;
 		rType = 0;
 		vrLen = 859;
 		vrLoc = 10348;
@@ -9917,12 +9971,12 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 337";
 		rLen = 0;
-		rLoc = 9653;
+		rLoc = 9684;
 		rType = 0;
 		vrLen = 859;
 		vrLoc = 10348;
 	};
-	EDB09FD811D1C6DE00DB9D11 /* graph_optimize.cpp:347 */ = {
+	EDB09FD811D1C6DE00DB9D11 /* graph_optimize.cpp:348 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -9934,9 +9988,9 @@
 		functionName = "collapse_equivalent_transfrags(vector<Scaffold>& fragments, uint32_t max_rounds)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 347;
+		lineNumber = 348;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.468543;
+		modificationTime = 299018121.038593;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -9945,7 +9999,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 337";
 		rLen = 0;
-		rLoc = 9653;
+		rLoc = 9684;
 		rType = 0;
 		vrLen = 836;
 		vrLoc = 10403;
@@ -9955,7 +10009,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 337";
 		rLen = 0;
-		rLoc = 9653;
+		rLoc = 9684;
 		rType = 0;
 		vrLen = 673;
 		vrLoc = 9184;
@@ -9965,7 +10019,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 376";
 		rLen = 0;
-		rLoc = 10598;
+		rLoc = 10629;
 		rType = 0;
 		vrLen = 634;
 		vrLoc = 9280;
@@ -10035,7 +10089,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 353";
 		rLen = 0;
-		rLoc = 8897;
+		rLoc = 8933;
 		rType = 0;
 		vrLen = 786;
 		vrLoc = 8401;
@@ -10084,7 +10138,7 @@
 		ignoreCount = 0;
 		lineNumber = 786;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.468697;
+		modificationTime = 299018121.038797;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -10093,7 +10147,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 559";
 		rLen = 6;
-		rLoc = 15777;
+		rLoc = 15794;
 		rType = 0;
 		vrLen = 1347;
 		vrLoc = 15192;
@@ -10163,7 +10217,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 353";
 		rLen = 0;
-		rLoc = 8897;
+		rLoc = 8933;
 		rType = 0;
 		vrLen = 786;
 		vrLoc = 8401;
@@ -10173,7 +10227,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 172;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 759;
 		vrLoc = 8401;
@@ -10183,7 +10237,7 @@
 		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
 		name = "filters.cpp: 342";
 		rLen = 172;
-		rLoc = 8719;
+		rLoc = 8755;
 		rType = 0;
 		vrLen = 759;
 		vrLoc = 8401;
@@ -10230,7 +10284,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 559";
 		rLen = 6;
-		rLoc = 15777;
+		rLoc = 15794;
 		rType = 0;
 		vrLen = 1347;
 		vrLoc = 15192;
@@ -10240,7 +10294,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1360;
 		vrLoc = 16797;
@@ -10250,7 +10304,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1359;
 		vrLoc = 16797;
@@ -10260,7 +10314,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1359;
 		vrLoc = 16797;
@@ -10280,7 +10334,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 717;
 		vrLoc = 17069;
@@ -10290,7 +10344,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1359;
 		vrLoc = 16797;
@@ -10300,7 +10354,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1359;
 		vrLoc = 16797;
@@ -10310,7 +10364,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 717;
 		vrLoc = 17069;
@@ -10320,7 +10374,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1359;
 		vrLoc = 16797;
@@ -10330,7 +10384,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1359;
 		vrLoc = 16797;
@@ -10380,7 +10434,7 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 611";
 		rLen = 0;
-		rLoc = 17382;
+		rLoc = 17401;
 		rType = 0;
 		vrLen = 1296;
 		vrLoc = 16797;
@@ -10390,10 +10444,565 @@
 		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
 		name = "graph_optimize.cpp: 383";
 		rLen = 0;
-		rLoc = 10606;
+		rLoc = 10637;
 		rType = 0;
 		vrLen = 917;
 		vrLoc = 10056;
+	};
+	EDB0A03211D262A200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 917;
+		vrLoc = 10056;
+	};
+	EDB0A03311D262A600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 917;
+		vrLoc = 10056;
+	};
+	EDB0A03511D2633C00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 494;
+		vrLoc = 10479;
+	};
+	EDB0A03811D2635A00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 990;
+		vrLoc = 10056;
+	};
+	EDB0A03911D2635A00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		rLen = 0;
+		rLoc = 2904;
+		rType = 0;
+	};
+	EDB0A03A11D2635A00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 37";
+		rLen = 151;
+		rLoc = 894;
+		rType = 0;
+		vrLen = 1102;
+		vrLoc = 3868;
+	};
+	EDB0A03D11D2637400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 37";
+		rLen = 151;
+		rLoc = 894;
+		rType = 0;
+		vrLen = 1102;
+		vrLoc = 3868;
+	};
+	EDB0A03E11D2637400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 953;
+		vrLoc = 10056;
+	};
+	EDB0A03F11D2637400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 882;
+		vrLoc = 10056;
+	};
+	EDB0A04111D263E600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 882;
+		vrLoc = 10056;
+	};
+	EDB0A04311D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 471;
+		vrLoc = 10467;
+	};
+	EDB0A04411D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDB0A04511D2648400DB9D11 /* asm __semwait_signal  0x00007fff862ae30c */;
+		name = "asm __semwait_signal  0x00007fff862ae30c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 379;
+		vrLoc = 0;
+	};
+	EDB0A04511D2648400DB9D11 /* asm __semwait_signal  0x00007fff862ae30c */ = {
+		isa = PBXFileReference;
+		path = "asm __semwait_signal  0x00007fff862ae30c";
+		sourceTree = "<group>";
+	};
+	EDB0A04611D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDB0A04711D2648400DB9D11 /* new */;
+		name = "new: 105";
+		rLen = 0;
+		rLoc = 3667;
+		rType = 0;
+		vrLen = 750;
+		vrLoc = 3291;
+	};
+	EDB0A04711D2648400DB9D11 /* new */ = {
+		isa = PBXFileReference;
+		name = new;
+		path = "/Developer/SDKs/MacOSX10.6.sdk/usr/include/c++/4.2.1/new";
+		sourceTree = "<absolute>";
+	};
+	EDB0A04811D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
+		name = "scaffolds.h: 223";
+		rLen = 0;
+		rLoc = 4832;
+		rType = 0;
+		vrLen = 505;
+		vrLoc = 4538;
+	};
+	EDB0A04911D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151E10C72963000A4F41 /* abundances.cpp */;
+		name = "abundances.cpp: 1807";
+		rLen = 0;
+		rLoc = 45034;
+		rType = 0;
+		vrLen = 611;
+		vrLoc = 44790;
+	};
+	EDB0A04A11D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		rLen = 0;
+		rLoc = 28;
+		rType = 1;
+	};
+	EDB0A04B11D2648400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 29";
+		rLen = 0;
+		rLoc = 656;
+		rType = 0;
+		vrLen = 698;
+		vrLoc = 348;
+	};
+	EDB0A04C11D2667600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 29";
+		rLen = 0;
+		rLoc = 656;
+		rType = 0;
+		vrLen = 1056;
+		vrLoc = 3615;
+	};
+	EDB0A04D11D2667600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */;
+		name = "GFaSeqGet.cpp: 43";
+		rLen = 12;
+		rLoc = 948;
+		rType = 0;
+		vrLen = 1226;
+		vrLoc = 1858;
+	};
+	EDB0A04E11D2667600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 383";
+		rLen = 0;
+		rLoc = 10637;
+		rType = 0;
+		vrLen = 882;
+		vrLoc = 10056;
+	};
+	EDB0A04F11D2667600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 398";
+		rLen = 0;
+		rLoc = 11037;
+		rType = 0;
+		vrLen = 792;
+		vrLoc = 10458;
+	};
+	EDB0A05011D2667C00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 398";
+		rLen = 0;
+		rLoc = 11037;
+		rType = 0;
+		vrLen = 792;
+		vrLoc = 10458;
+	};
+	EDB0A05511D267C300DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 399";
+		rLen = 0;
+		rLoc = 11037;
+		rType = 0;
+		vrLen = 1020;
+		vrLoc = 9594;
+	};
+	EDB0A05711D2A17700DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 29";
+		rLen = 0;
+		rLoc = 656;
+		rType = 0;
+		vrLen = 698;
+		vrLoc = 348;
+	};
+	EDB0A05811D2A17700DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 344";
+		rLen = 0;
+		rLoc = 9684;
+		rType = 0;
+		vrLen = 679;
+		vrLoc = 9398;
+	};
+	EDB0A05911D2A17800DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 344";
+		rLen = 0;
+		rLoc = 9684;
+		rType = 0;
+		vrLen = 943;
+		vrLoc = 9266;
+	};
+	EDB0A05A11D2A19F00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 344";
+		rLen = 0;
+		rLoc = 9684;
+		rType = 0;
+		vrLen = 943;
+		vrLoc = 9266;
+	};
+	EDB0A05B11D2A1D500DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 400";
+		rLen = 0;
+		rLoc = 11074;
+		rType = 0;
+		vrLen = 558;
+		vrLoc = 10655;
+	};
+	EDB0A05E11D2A1E000DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 400";
+		rLen = 0;
+		rLoc = 11074;
+		rType = 0;
+		vrLen = 783;
+		vrLoc = 10498;
+	};
+	EDB0A06011D2A26600DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 400";
+		rLen = 0;
+		rLoc = 11074;
+		rType = 0;
+		vrLen = 805;
+		vrLoc = 10498;
+	};
+	EDB0A06111D2A27500DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 400";
+		rLen = 0;
+		rLoc = 11074;
+		rType = 0;
+		vrLen = 558;
+		vrLoc = 10655;
+	};
+	EDB0A06611D2A2A800DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 400";
+		rLen = 0;
+		rLoc = 11074;
+		rType = 0;
+		vrLen = 805;
+		vrLoc = 10498;
+	};
+	EDB0A06711D2A2A800DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 612";
+		rLen = 0;
+		rLoc = 17401;
+		rType = 0;
+		vrLen = 1347;
+		vrLoc = 16476;
+	};
+	EDB0A06911D2A36D00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */;
+		name = "scaffolds.cpp: 747";
+		rLen = 0;
+		rLoc = 19249;
+		rType = 0;
+		vrLen = 529;
+		vrLoc = 19001;
+	};
+	EDB0A06A11D2A36D00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 387";
+		rLen = 0;
+		rLoc = 10662;
+		rType = 0;
+		vrLen = 490;
+		vrLoc = 12827;
+	};
+	EDB0A06B11D2A36D00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDBBEBAE11AAB1DE006AC14A /* stl_function.h */;
+		name = "stl_function.h: 550";
+		rLen = 0;
+		rLoc = 19455;
+		rType = 0;
+		vrLen = 531;
+		vrLoc = 19125;
+	};
+	EDB0A06C11D2A36D00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		rLen = 0;
+		rLoc = 154;
+		rType = 1;
+	};
+	EDB0A06D11D2A36D00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 383;
+		vrLoc = 3716;
+	};
+	EDB0A07211D2A53300DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 772;
+		vrLoc = 3428;
+	};
+	EDB0A07311D2A53300DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		rLen = 1;
+		rLoc = 529;
+		rType = 1;
+	};
+	EDB0A07411D2A53300DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 403";
+		rLen = 0;
+		rLoc = 11160;
+		rType = 0;
+		vrLen = 812;
+		vrLoc = 10632;
+	};
+	EDB0A07511D2A54400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 383;
+		vrLoc = 3716;
+	};
+	EDB0A07611D2A54400DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 403";
+		rLen = 0;
+		rLoc = 11160;
+		rType = 0;
+		vrLen = 438;
+		vrLoc = 10491;
+	};
+	EDB0A07711D2A54800DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 403";
+		rLen = 0;
+		rLoc = 11160;
+		rType = 0;
+		vrLen = 787;
+		vrLoc = 10512;
+	};
+	EDB0A07811D2A59E00DB9D11 /* graph_optimize.cpp:461 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		functionName = "collapse_equivalent_transfrags(vector<Scaffold>& fragments, uint32_t max_rounds)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 461;
+		location = cufflinks_xcode;
+		modificationTime = 299018121.038954;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	EDB0A07C11D2A5AB00DB9D11 /* graph_optimize.cpp:477 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		functionName = "collapse_equivalent_transfrags(vector<Scaffold>& fragments, uint32_t max_rounds)";
+		hitCount = 1;
+		ignoreCount = 0;
+		lineNumber = 477;
+		location = cufflinks_xcode;
+		modificationTime = 299018134.745955;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	EDB0A08011D2A5DA00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 403";
+		rLen = 0;
+		rLoc = 11160;
+		rType = 0;
+		vrLen = 790;
+		vrLoc = 15203;
+	};
+	EDB0A08111D2A5DA00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 383;
+		vrLoc = 3716;
+	};
+	EDB0A08211D2A5DA00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 383;
+		vrLoc = 3716;
+	};
+	EDB0A08F11D2A68200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 764;
+		vrLoc = 3432;
+	};
+	EDB0A09011D2A68200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 403";
+		rLen = 0;
+		rLoc = 11160;
+		rType = 0;
+		vrLen = 778;
+		vrLoc = 10521;
+	};
+	EDB0A09111D2A68200DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 337";
+		rLen = 0;
+		rLoc = 9405;
+		rType = 0;
+		vrLen = 967;
+		vrLoc = 12726;
+	};
+	EDB0A09811D2A7BC00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151F10C72963000A4F41 /* assemble.cpp */;
+		name = "assemble.cpp: 155";
+		rLen = 0;
+		rLoc = 3920;
+		rType = 0;
+		vrLen = 383;
+		vrLoc = 3716;
+	};
+	EDB0A09911D2A7BC00DB9D11 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */;
+		name = "graph_optimize.cpp: 403";
+		rLen = 0;
+		rLoc = 11160;
+		rType = 0;
+		vrLen = 491;
+		vrLoc = 13009;
 	};
 	EDBBE74511A8723C006AC14A /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -10602,9 +11211,9 @@
 		path = "/Developer/SDKs/MacOSX10.6.sdk/usr/include/c++/4.2.1/bits/stl_function.h";
 		sourceTree = "<absolute>";
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {914, 9724}}";
-			sepNavSelRange = "{8207, 0}";
-			sepNavVisRange = "{7359, 1434}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 9984}}";
+			sepNavSelRange = "{19455, 0}";
+			sepNavVisRange = "{19125, 531}";
 		};
 	};
 	EDBBEBB911AAB333006AC14A /* PBXTextBookmark */ = {
@@ -10765,8 +11374,8 @@
 			NO,
 			NO,
 			NO,
-			NO,
 			YES,
+			NO,
 			NO,
 		);
 		argumentStrings = (
@@ -11260,9 +11869,9 @@
 	};
 	EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {939, 8931}}";
-			sepNavSelRange = "{10606, 0}";
-			sepNavVisRange = "{10056, 917}";
+			sepNavIntBoundsRect = "{{0, 0}, {1237, 8827}}";
+			sepNavSelRange = "{11160, 0}";
+			sepNavVisRange = "{13009, 491}";
 			sepNavWindowFrame = "{{58, 0}, {1222, 778}}";
 		};
 	};
@@ -11428,7 +12037,7 @@
 		ignoreCount = 0;
 		lineNumber = 176;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.462583;
+		modificationTime = 299018121.030417;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -11446,7 +12055,7 @@
 		ignoreCount = 0;
 		lineNumber = 43;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.462768;
+		modificationTime = 299018121.030956;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -11474,7 +12083,7 @@
 		ignoreCount = 0;
 		lineNumber = 147;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.462942;
+		modificationTime = 299018121.031523;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -11549,7 +12158,7 @@
 		ignoreCount = 0;
 		lineNumber = 739;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.46312;
+		modificationTime = 299018121.031835;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -11607,7 +12216,7 @@
 		ignoreCount = 0;
 		lineNumber = 727;
 		location = cufflinks_xcode;
-		modificationTime = 298998489.463285;
+		modificationTime = 299018121.031981;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};

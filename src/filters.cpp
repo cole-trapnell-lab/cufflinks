@@ -34,15 +34,15 @@ void filter_introns(int bundle_length,
 	{
 		bundle_avg_doc = major_isoform_intron_doc(intron_doc);
 		bundle_avg_thresh = fraction * bundle_avg_doc;
-#if ASM_VERBOSE
-		fprintf(stderr, "\tFiltering bundle introns, avg (intron) doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
-#endif
+//#if ASM_VERBOSE
+//		fprintf(stderr, "\tFiltering bundle introns, avg (intron) doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
+//#endif
 	}
 	else
 	{
-#if ASM_VERBOSE
-		fprintf(stderr, "\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
-#endif	
+//#if ASM_VERBOSE
+//		fprintf(stderr, "\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
+//#endif	
 	}
 	
 	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
@@ -65,9 +65,9 @@ void filter_introns(int bundle_length,
 					if (doc < bundle_avg_thresh)
 					{
 						toss[j] = true;
-#if ASM_VERBOSE
-						fprintf(stderr, "\t Filtering intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
-#endif	
+//#if ASM_VERBOSE
+//						fprintf(stderr, "\t Filtering intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+//#endif	
 						continue; 
 					}
 					
@@ -88,9 +88,9 @@ void filter_introns(int bundle_length,
 						double thresh = itr2->second * fraction;
 						if (doc < thresh)
 						{
-#if ASM_VERBOSE
-							fprintf(stderr, "\t Filtering intron (due to overlap) %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
-#endif	
+//#if ASM_VERBOSE
+//							fprintf(stderr, "\t Filtering intron (due to overlap) %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+//#endif	
 							toss[j] = true;
 						}
 					}
@@ -104,12 +104,12 @@ void filter_introns(int bundle_length,
 		if (!toss[j])
 		{
 			filtered_hits.push_back(hits[j]);
-#if ASM_VERBOSE
-			if (hits[j].has_intron())
-			{
-				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-			}
-#endif
+//#if ASM_VERBOSE
+//			if (hits[j].has_intron())
+//			{
+//				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//			}
+//#endif
 		}
 		else
 		{
