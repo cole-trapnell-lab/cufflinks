@@ -852,8 +852,7 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 	const vector<CigarOp>& cig = read.cigar();
 	
 	int read_len = read.read_len();
-	int midpoint = ceil(read_len / 2.0);
-	size_t r_left = 0;
+	
 	size_t g_left = read.left();
 	BadIntronTable::const_iterator itr = _bad_introns.find(read.ref_id());
 	if (itr == _bad_introns.end())

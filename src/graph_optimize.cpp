@@ -379,8 +379,8 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						}
 						if (c_conflicts.size() != curr_conflicts.size())
 						{
-							break;
-							//continue;
+							//break;
+							continue;
 						}
 						
 						sort(c_conflicts.begin(), c_conflicts.end());
