@@ -609,7 +609,7 @@ void compress_fragments(vector<Scaffold>& fragments)
 #endif
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 	
-	//compress_consitutive(fragments);
+	compress_consitutive(fragments);
 	
 	compress_redundant(fragments);
     
