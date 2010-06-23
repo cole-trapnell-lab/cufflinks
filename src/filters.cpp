@@ -339,15 +339,15 @@ void filter_hits(int bundle_length,
 					   min_intron_fraction, 
 					   true,
 					   true);
-//		if (bundle_avg_doc > 3000)
-//		{
-//			filter_introns(bundle_length, 
-//						   bundle_left, 
-//						   hits, 
-//						   min_intron_fraction, 
-//						   true,
-//						   false);
-//		}
+		if (bundle_avg_doc > 3000)
+		{
+			filter_introns(bundle_length, 
+						   bundle_left, 
+						   hits, 
+						   min_intron_fraction, 
+						   true,
+						   false);
+		}
 	}
 	
 	for (size_t j = 0; j < hits.size(); ++j)

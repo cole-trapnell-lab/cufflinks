@@ -299,6 +299,12 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
                 bundle_label->c_str(), 
                 fragments.size());
 #endif
+		
+#if ASM_VERBOSE
+        fprintf(stderr, "%s\tBundle has %d introns\n", 
+                bundle_label->c_str(), 
+                intron_depth_of_coverage.size());
+#endif
         
         vector<size_t> replacements;
         for (size_t i = 0; i < fragments.size(); ++i)
@@ -602,7 +608,7 @@ void compress_fragments(vector<Scaffold>& fragments)
 #endif
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 	
-	//compress_consitutive(fragments);
+	compress_consitutive(fragments);
 	
 	compress_redundant(fragments);
     

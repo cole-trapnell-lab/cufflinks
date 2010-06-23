@@ -607,6 +607,7 @@ struct IntronSpanCounter
 	size_t left_reads;
 	size_t little_reads; // small span overhang
 	size_t total_reads;
+	vector<size_t> hist;
 };
 
 typedef map<AugmentedCuffOp, IntronSpanCounter> IntronCountTable;
@@ -646,6 +647,18 @@ void count_introns_in_read(const ReadHit& read,
 					itr->second.little_reads++;
 				}
 				
+				vector<size_t>& hist = itr->second.hist;
+				if (hist.size() < read_len)
+				{
+					size_t num_new_bins = read_len - hist.size();
+					size_t new_left_bins = floor(num_new_bins / 2.0);
+					size_t new_right_bins = ceil(num_new_bins / 2.0);
+					hist.insert(hist.begin(), new_left_bins, 0);
+					hist.insert(hist.end(), new_right_bins, 0);
+				}
+				
+				assert (r_left < hist.size());
+				hist[r_left]++;
 				//ops.push_back(AugmentedCuffOp(CUFF_INTRON, g_left, cig[i].length));
 				g_left += cig[i].length;
 				break;
@@ -733,6 +746,9 @@ void identify_bad_splices(const HitBundle& bundle,
 //			if (left_side_p < (binomial_junc_filter_alpha / 2.0) || 
 //				right_side_p < (binomial_junc_filter_alpha / 2.0))
 			// One-tailed binomial test
+			
+			bool filtered = false;
+			
 			if (right_side_p < (binomial_junc_filter_alpha))
 			{
 				double overhang_ratio = itr->second.little_reads / (double) itr->second.total_reads;
@@ -749,6 +765,8 @@ void identify_bad_splices(const HitBundle& bundle,
 							right_side_p);
 					
 #endif
+					filtered = true;
+					
 					bool exists = binary_search(bad_introns.begin(), 
 												bad_introns.end(), 
 												itr->first);
@@ -759,7 +777,39 @@ void identify_bad_splices(const HitBundle& bundle,
 					}
 				}
 			}
-			else 
+			
+			vector<size_t> hist = itr->second.hist;
+			if (itr->second.total_reads > 1000)
+			{
+				sort(hist.begin(), hist.end());
+				size_t median = floor(hist.size() / 2);
+				if (median <= hist.size() && hist[median] == 0)
+				{
+#if ASM_VERBOSE
+					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+							itr->first.g_left(), 
+							itr->first.g_right(), 
+							itr->second.total_reads, 
+							itr->second.little_reads, 
+							expected,
+							left_side_p,
+							right_side_p);
+					
+#endif
+					filtered = true;
+					
+					bool exists = binary_search(bad_introns.begin(), 
+												bad_introns.end(), 
+												itr->first);
+					if (!exists)
+					{
+						bad_introns.push_back(itr->first);
+						sort(bad_introns.begin(), bad_introns.end());
+					}
+				}
+			}
+			
+			if (!filtered)
 			{
 #if ASM_VERBOSE
 				fprintf(stderr, "Accepting intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
