@@ -41,6 +41,13 @@ bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
     return lhs.right() < rhs.right();
 }
 
+bool scaff_left_lt_right_gt(const Scaffold& lhs, const Scaffold& rhs)
+{
+    if (lhs.left() != rhs.left())
+        return lhs.left() < rhs.left();
+    return lhs.right() > rhs.right();
+}
+
 // WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
 // to work correctly.
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
@@ -76,6 +83,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 					frag.right() <= cig[j].g_right())
 				{
 					smash_filter[next_frag] = true;
+					//scaffold_mask[next_frag] = true;
 					num_filtered++;
 				}
 				if (frag.left() >= cig[j].g_right())
@@ -86,42 +94,99 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 		}
 	}
 	
-	fprintf(stderr, "%lu of %lu smash-filtered\n", num_filtered, smash_filter.size());
+	fprintf(stderr, "%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
+	
+	vector<AugmentedCuffOp> ops;
+	for (size_t i = 0; i < scaffolds.size(); ++i)
+	{
+		ops.insert(ops.end(), 
+				   scaffolds[i].augmented_ops().begin(), 
+				   scaffolds[i].augmented_ops().end());
+	}
+	
+	sort(ops.begin(), ops.end());
+	vector<AugmentedCuffOp>::iterator new_end = unique(ops.begin(), ops.end());
+	ops.erase(new_end, ops.end());
+	
+	vector<AugmentedCuffOp> conflict_ops;
+	
+	for (size_t i = 0; i < ops.size(); ++i)
+	{
+		for (size_t j = i+1; j < ops.size(); ++j)
+		{
+			if (AugmentedCuffOp::overlap_in_genome(ops[i], ops[j]))
+			{
+				if (!AugmentedCuffOp::compatible(ops[i], ops[j]))
+				{
+					if (!binary_search(conflict_ops.begin(), conflict_ops.end(), ops[i]))
+					{
+						conflict_ops.push_back(ops[i]);
+						sort(conflict_ops.begin(), conflict_ops.end());
+					}
+					
+					if (!binary_search(conflict_ops.begin(), conflict_ops.end(), ops[j]))
+					{
+						conflict_ops.push_back(ops[j]);
+						sort(conflict_ops.begin(), conflict_ops.end());
+					}
+				}
+			}
+			else 
+			{
+				break;
+			}
+
+		}
+	}
+	
+	for (size_t i = 0; i < scaffolds.size(); ++i)
+	{
+		if (smash_filter[i])
+			continue;
+		const vector<AugmentedCuffOp>& s_ops = scaffolds[i].augmented_ops();
+		for (size_t j = 0; j < s_ops.size(); ++j)
+		{
+			if (binary_search(conflict_ops.begin(), conflict_ops.end(), s_ops[j]))
+			{
+				scaffold_mask[i] = true;
+			}
+		}
+	}
 	
 	// Now look hard (i.e. pairwise at fragments) to determine if any are
 	// non-constitutive.
-	for (size_t i = 0; i < scaffolds.size(); ++i)
-	{
-		if (!(i % 1000))
-		{
-			fprintf (stderr, "Fragment # %lu\n", i);
-		}
-		// if smash_mask[i], then no frag j will be marked as non-constitutive
-		// on account of frag i
-        if (!smash_filter[i])
-        {
-            for (size_t j = i+1; j < scaffolds.size(); ++j)
-            {
-				
-                if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
-                {
-                    if (smash_filter[j])
-						continue;
-					if ((!scaffold_mask[i] || !scaffold_mask[j]) &&
-						!Scaffold::compatible(scaffolds[i], scaffolds[j]))
-                    {
-                        scaffold_mask[i] = true;
-                        scaffold_mask[j] = true;
-                        //break;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-	}
+//	for (size_t i = 0; i < scaffolds.size(); ++i)
+//	{
+//		if (!(i % 1000))
+//		{
+//			fprintf (stderr, "Fragment # %lu\n", i);
+//		}
+//		// if smash_mask[i], then no frag j will be marked as non-constitutive
+//		// on account of frag i
+//        if (!smash_filter[i])
+//        {
+//            for (size_t j = i+1; j < scaffolds.size(); ++j)
+//            {
+//				
+//                if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
+//                {
+//                    if (smash_filter[j])
+//						continue;
+//					if ((!scaffold_mask[i] || !scaffold_mask[j]) &&
+//						!Scaffold::compatible(scaffolds[i], scaffolds[j]))
+//                    {
+//                        scaffold_mask[i] = true;
+//                        scaffold_mask[j] = true;
+//                        //break;
+//                    }
+//                }
+//                else
+//                {
+//                    break;
+//                }
+//            }
+//        }
+//	}
 }
 
 
@@ -241,6 +306,8 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 	while (max_rounds--)
 	{
 		
+		sort (fragments.begin(), fragments.end(), scaff_lt_rt);
+		
 #if ASM_VERBOSE
 		fprintf(stderr, "%s\tStarting new collapse round\n", bundle_label->c_str());
 #endif
@@ -330,19 +397,51 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 			}
 		}
 		
-		sort(curr_conflicts.begin(), curr_conflicts.end());
-		
 		while (curr_frag < fragments.size())
 		{
 			if (replacements[curr_frag] == curr_frag)
 			{
+				curr_conflicts.clear();
+				
+				for (int i = curr_frag - 1; i >= 0; --i)
+				{
+					if (Scaffold::overlap_in_genome(fragments[i], fragments[curr_frag], 0))
+					{
+						if (!Scaffold::compatible(fragments[i], fragments[curr_frag]))
+						{
+							curr_conflicts.push_back(i);
+						}
+					}
+					else
+					{
+						break;
+					}
+				}
+				
+				for (int i = curr_frag + 1; i < fragments.size(); ++i)
+				{
+					if (Scaffold::overlap_in_genome(fragments[i], fragments[curr_frag], 0))
+					{
+						if (!Scaffold::compatible(fragments[i], fragments[curr_frag]))
+						{
+							curr_conflicts.push_back(i);
+						}
+					}
+					else
+					{
+						break;
+					}
+				}
+				
+				sort(curr_conflicts.begin(), curr_conflicts.end());
+				
 				//bool advanced_curr = false;
 				for (int c = curr_frag + 1; c < fragments.size(); ++c)
 				{
-					size_t lhs = replacements[curr_frag];
-					if (fragments[c].contains(fragments[lhs]) &&
-						Scaffold::compatible(fragments[lhs], fragments[c]))
+					if (fragments[c].contains(fragments[curr_frag]))
 					{
+						if (!Scaffold::compatible(fragments[curr_frag], fragments[c]))
+							continue;
 						vector<int> c_conflicts;
 						// Find c's conflicts
 						for (int i = c - 1; i >= 0; --i)
@@ -393,11 +492,11 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							
 							vector<Scaffold> s;
 							s.push_back(fragments[c]);
-							s.push_back(fragments[lhs]);
+							s.push_back(fragments[curr_frag]);
 							fragments[c] = Scaffold(s);
-							replacements[lhs] = c;
+							replacements[curr_frag] = c;
 							//curr_conflicts = c_conflicts;
-							lhs = c;
+							curr_frag = c;
 							//advanced_curr = true;
 							will_perform_collapse = true;
 							//break;
