@@ -235,8 +235,11 @@ bool create_overlap_dag(vector<Scaffold>& hits,
                          tr, 
                          G_to_TR,
                          w);
+#if ASM_VERBOSE
     fprintf(stderr, "dag has %d edges, tr has %d edges\n", num_edges(bundle_dag), num_edges(tr));
-    //assert (num_edges(bundle_dag) == num_edges(tr));
+#endif
+    
+	//assert (num_edges(bundle_dag) == num_edges(tr));
 #endif
     
 	return found_compatible_scaffolds;

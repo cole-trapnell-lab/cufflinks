@@ -94,7 +94,9 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 		}
 	}
 	
+#if ASM_VERBOSE
 	fprintf(stderr, "%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
+#endif
 	
 	vector<AugmentedCuffOp> ops;
 	for (size_t i = 0; i < scaffolds.size(); ++i)
@@ -752,11 +754,14 @@ void compress_overlap_dag_paths(DAG& bundle_dag,
         }
     }
     //hits = new_scaffs;
+	
+#if ASM_VERBOSE
     fprintf(stderr, "%s\tCompressed overlap graph from %d to %d fragments (%f percent)\n",
             bundle_label->c_str(), 
             hits.size(), 
             new_scaffs.size(), 
             (hits.size() - new_scaffs.size())/(double)hits.size());
+#endif
     hits = new_scaffs;
     sort(hits.begin(), hits.end(), scaff_lt);
     create_overlap_dag(hits, bundle_dag);
