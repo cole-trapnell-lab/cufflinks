@@ -48,6 +48,19 @@ bool scaff_left_lt_right_gt(const Scaffold& lhs, const Scaffold& rhs)
     return lhs.right() > rhs.right();
 }
 
+bool op_left_lt_right_lt(const AugmentedCuffOp& lhs, const AugmentedCuffOp& rhs)
+{
+	if (lhs.genomic_offset != rhs.genomic_offset)
+	{
+		return lhs.genomic_offset < rhs.genomic_offset;
+	}
+	if (lhs.genomic_length != rhs.genomic_length)
+	{
+		return lhs.genomic_length < rhs.genomic_length;
+	}
+	return false;
+}
+
 // WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
 // to work correctly.
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
@@ -110,6 +123,8 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 	vector<AugmentedCuffOp>::iterator new_end = unique(ops.begin(), ops.end());
 	ops.erase(new_end, ops.end());
 	
+	sort (ops.begin(), ops.end(), op_left_lt_right_lt);
+	
 	vector<AugmentedCuffOp> conflict_ops;
 	
 	for (size_t i = 0; i < ops.size(); ++i)
@@ -133,7 +148,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 					}
 				}
 			}
-			else 
+			else
 			{
 				break;
 			}
