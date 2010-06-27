@@ -166,44 +166,10 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 			if (binary_search(conflict_ops.begin(), conflict_ops.end(), s_ops[j]))
 			{
 				scaffold_mask[i] = true;
+				break;
 			}
 		}
 	}
-	
-	// Now look hard (i.e. pairwise at fragments) to determine if any are
-	// non-constitutive.
-//	for (size_t i = 0; i < scaffolds.size(); ++i)
-//	{
-//		if (!(i % 1000))
-//		{
-//			fprintf (stderr, "Fragment # %lu\n", i);
-//		}
-//		// if smash_mask[i], then no frag j will be marked as non-constitutive
-//		// on account of frag i
-//        if (!smash_filter[i])
-//        {
-//            for (size_t j = i+1; j < scaffolds.size(); ++j)
-//            {
-//				
-//                if (Scaffold::overlap_in_genome(scaffolds[i], scaffolds[j], 0))
-//                {
-//                    if (smash_filter[j])
-//						continue;
-//					if ((!scaffold_mask[i] || !scaffold_mask[j]) &&
-//						!Scaffold::compatible(scaffolds[i], scaffolds[j]))
-//                    {
-//                        scaffold_mask[i] = true;
-//                        scaffold_mask[j] = true;
-//                        //break;
-//                    }
-//                }
-//                else
-//                {
-//                    break;
-//                }
-//            }
-//        }
-//	}
 }
 
 
