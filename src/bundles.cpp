@@ -712,24 +712,31 @@ void identify_bad_splices(const HitBundle& bundle,
 			//			double right_side_p = cdf(complement(read_half_dist, spans.left_reads));
 			
 			
-			double success = small_anchor_fraction;
+			double success = 2 * small_anchor_fraction;
 			
 			binomial read_half_dist(spans.total_reads, success);
 			double right_side_p;
+			
+			// right_side_p describes the chance that we'd observe at least 
+			// this many small overhang reads by chance with an unbiased 
+			// distribution over a normal (e.g. non-artifact) junction
 			if (spans.little_reads > 0)
 			{
 				right_side_p = 1.0 - cdf(read_half_dist, spans.little_reads - 1);
 			}
 			else 
 			{
-				right_side_p = pdf(read_half_dist, 0);
+				right_side_p = 1.0;
 			}
 			
 			double left_side_p = 0;
 			
 			double expected = success * spans.total_reads;
-			double excess = spans.little_reads - expected;
+			//double excess = spans.little_reads - expected;
 			
+			// left_side_p describes the chance that we'd observe this few or
+			// fewer small overhang reads by chance with an unbiased 
+			// distribution over a normal (e.g. non-artifact) junction
 			if (spans.little_reads > 0)
 			{
 				left_side_p = cdf(read_half_dist, spans.little_reads);
@@ -749,10 +756,12 @@ void identify_bad_splices(const HitBundle& bundle,
 			
 			bool filtered = false;
 			
+			const IntronSpanCounter& counter = itr->second;
+			
 			if (right_side_p < (binomial_junc_filter_alpha))
 			{
-				double overhang_ratio = itr->second.little_reads / (double) itr->second.total_reads;
-				if (itr->second.total_reads < 100 || overhang_ratio >= 0.50)
+				double overhang_ratio = counter.little_reads / (double) counter.total_reads;
+				if (counter.total_reads < 100 || overhang_ratio >= 0.50)
 				{
 #if ASM_VERBOSE
 					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 

@@ -679,7 +679,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 bool assemble_hits(BundleFactory& bundle_factory)
 {
 	fprintf(stderr, "Counting hits in map\n");
-	long double map_mass;
+	long double map_mass = 0.0;
 	
 	BadIntronTable bad_introns;
 	
