@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		ED1C0D7611D7F88B00CFD663 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
+		ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
 		ED5D1EEA114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
 		EDA5155210C729A9000A4F41 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
@@ -96,6 +98,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
+		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
+		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };
+		ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_check_zlib.m4; sourceTree = "<group>"; };
+		ED1C0D7511D7F88B00CFD663 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = /usr/local/libIntel64/libbam.a; sourceTree = "<absolute>"; };
+		ED1C0D7911D7F94900CFD663 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_thread-xgcc40-mt-1_41.a"; path = "/usr/local/lib/libboost_thread-xgcc40-mt-1_41.a"; sourceTree = "<absolute>"; };
 		EDA5150910C72963000A4F41 /* abundances.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = abundances.h; path = src/abundances.h; sourceTree = "<group>"; };
 		EDA5150A10C72963000A4F41 /* assemble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = assemble.h; path = src/assemble.h; sourceTree = "<group>"; };
@@ -168,6 +176,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */,
+				ED1C0D7611D7F88B00CFD663 /* libbam.a in Frameworks */,
+				ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,6 +210,7 @@
 		08FB7794FE84155DC02AAC07 /* cufflinks_xcode */ = {
 			isa = PBXGroup;
 			children = (
+				ED1C0D7511D7F88B00CFD663 /* libbam.a */,
 				EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */,
 				ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */,
 				EDD6AA441159BE6500D3F668 /* tests */,
@@ -207,6 +218,7 @@
 				C6859E8C029090F304C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 				EDEBCEBB112E316400E2479E /* Accelerate.framework */,
+				ED1C0D7911D7F94900CFD663 /* libz.dylib */,
 			);
 			name = cufflinks_xcode;
 			sourceTree = "<group>";
@@ -214,8 +226,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				EDD6A7A0115562EE00D3F668 /* Makefile.am */,
-				EDEBCDF8112DFD7600E2479E /* configure.ac */,
+				ED1C0C6D11D7D9C000CFD663 /* Autotools */,
 				EDA5150910C72963000A4F41 /* abundances.h */,
 				EDA5150A10C72963000A4F41 /* assemble.h */,
 				EDA5150B10C72963000A4F41 /* bundles.h */,
@@ -289,6 +300,19 @@
 			children = (
 			);
 			name = Documentation;
+			sourceTree = "<group>";
+		};
+		ED1C0C6D11D7D9C000CFD663 /* Autotools */ = {
+			isa = PBXGroup;
+			children = (
+				ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */,
+				ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */,
+				ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */,
+				EDEBCDF8112DFD7600E2479E /* configure.ac */,
+				EDD6A7A0115562EE00D3F668 /* Makefile.am */,
+				ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */,
+			);
+			name = Autotools;
 			sourceTree = "<group>";
 		};
 		EDD6AA441159BE6500D3F668 /* tests */ = {
@@ -528,12 +552,13 @@
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
 				GCC_WARN_SHADOW = NO;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
 					./src,
 					"/usr/local/include/boost-1_41",
 				);
@@ -542,6 +567,7 @@
 					"$(inherited)",
 					/usr/local/lib,
 					"\"$(SRCROOT)\"",
+					/usr/local/libIntel64,
 				);
 				PRODUCT_NAME = cufflinks_xcode;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
@@ -574,6 +600,7 @@
 					"$(inherited)",
 					/usr/local/lib,
 					"\"$(SRCROOT)\"",
+					/usr/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = cufflinks;

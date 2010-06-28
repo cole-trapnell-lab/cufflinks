@@ -66,7 +66,7 @@ class FilteringBundleFactory
 	{
 	public:
 		FilteringBundleFactory(SAMHitFactory& fac, FILE* hfile)
-		: sam_hit_fac(fac), hit_file(hfile), _next_line_num(0) {}
+		: sam_hit_fac(fac), hit_file(hfile), _next_hit_num(0) {}
 		
 		bool next_bundle(HitBundle& bundle_out, 
 						 RefID ref_id, 
@@ -75,12 +75,12 @@ class FilteringBundleFactory
 		
 		SAMHitFactory& hit_factory() { return sam_hit_fac; } 
 		
-		void reset() { rewind(hit_file); _next_line_num = 0; }
+		void reset() { rewind(hit_file); _next_hit_num = 0; }
 		
 	private:
 		SAMHitFactory sam_hit_fac;
 		FILE* hit_file;
-		int _next_line_num;
+		int _next_hit_num;
 	};
 
 bool FilteringBundleFactory::next_bundle(HitBundle& bundle_out, 
@@ -108,11 +108,11 @@ bool FilteringBundleFactory::next_bundle(HitBundle& bundle_out,
 		char* nl = strrchr(bwt_buf, '\n');
 		if (nl) *nl = 0;
 		
-		_next_line_num++;
+		_next_hit_num++;
 		
 		shared_ptr<ReadHit> bh(new ReadHit());
 		
-		if (!sam_hit_fac.get_hit_from_buf(_next_line_num, bwt_buf, *bh, false))
+		if (!sam_hit_fac.get_hit_from_buf(_next_hit_num, bwt_buf, *bh, false))
 		{
 			continue;
 		}

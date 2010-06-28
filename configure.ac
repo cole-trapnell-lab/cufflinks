@@ -1,5 +1,7 @@
 m4_include([ax_boost_base.m4])
 m4_include([ax_boost_thread.m4])
+m4_include([ax_bam.m4])
+m4_include([ax_check_zlib.m4])
 
 define([svnversion], esyscmd([sh -c "svnversion|tr -d '\n'"]))dnl
 AC_INIT([cufflinks], [0.8.3-svnversion], [cole@cs.umd.edu])
@@ -28,7 +30,9 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AX_BOOST_BASE([1.38.0])
+AX_BAM
 AX_BOOST_THREAD
+AX_CHECK_ZLIB()
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
@@ -95,7 +99,7 @@ AC_ARG_ENABLE(profiling,      [  --enable-profiling        enable profiling with
 	  
 CFLAGS="${generic_CFLAGS} ${ext_CFLAGS} ${user_CFLAGS} ${debug_CFLAGS} ${OPENMP_CFLAGS}"
 CXXFLAGS="$CFLAGS"
-CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
+CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS $BAM_CPPFLAGS"
 LDFLAGS="$ext_LDFLAGS"
 # Checks for structures/functions that can be used to determine system memory
 AC_CHECK_MEMBERS([struct sysinfo.totalram], [], [], [#include <sys/sysinfo.h>])
@@ -111,8 +115,7 @@ AC_OUTPUT
 echo \
 "
 -- ${PACKAGE_STRING} Configuration Results --
-  C compiler:          ${CC} ${CFLAGS}
-  C++ compiler:        ${CXX} ${CXXFLAGS}"
+  C++ compiler:        ${CXX} ${CXXFLAGS} ${LDFLAGS}"
 
 if test x"${GCC}" = x"yes" ; then
    gcc_version=`${CC} --version | head -n 1`

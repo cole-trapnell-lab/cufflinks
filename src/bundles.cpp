@@ -375,7 +375,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 {
 	HitBundle bundle;
 	
-	if (feof(hit_file))
+	if (_hit_fac.records_remain())
 	{
 		return false;
 	}
@@ -386,21 +386,23 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	
 	int last_pos_seen = 0;
 
-	off_t curr_pos = ftello(hit_file);
+	//off_t curr_pos = ftello(hit_file);
 	
 	int right_bundle_boundary = 0;
 	
 	int left_boundary = -1;
-	while (fgets(bwt_buf, 2048, hit_file))
+	
+	const char* hit_buf;
+	size_t hit_buf_size = 0;
+	//while (fgets(bwt_buf, 2048, hit_file))
+	while(_hit_fac.next_record(hit_buf, hit_buf_size))
 	{
-		_next_line_num++;
+		//_next_hit_num++;
 		// Chomp the newline
-		char* nl = strrchr(bwt_buf, '\n');
-		if (nl) *nl = 0;
 		
 		shared_ptr<ReadHit> bh(new ReadHit());
 		
-		if (!sam_hit_fac.get_hit_from_buf(_next_line_num, bwt_buf, *bh, false))
+		if (!_hit_fac.get_hit_from_buf(hit_buf, *bh, false))
 		{
 			continue;
 		}
@@ -480,8 +482,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         }
         else
         {
-            const char* bh_chr_name = sam_hit_fac.ref_table().get_name(bh->ref_id());
-            const char* last_chr_name = sam_hit_fac.ref_table().get_name(last_ref_id_seen);
+            const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
+            const char* last_chr_name = _hit_fac.ref_table().get_name(last_ref_id_seen);
             
             if (strcmp(last_chr_name, bh_chr_name) >= 0)
             { 
@@ -497,8 +499,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		{
 			if (bh->left() < last_pos_seen)
 			{
-                const char* bh_chr_name = sam_hit_fac.ref_table().get_name(bh->ref_id());
-                const char* last_chr_name = sam_hit_fac.ref_table().get_name(last_ref_id_seen);
+                const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
+                const char* last_chr_name = _hit_fac.ref_table().get_name(last_ref_id_seen);
 				print_sort_error(last_chr_name, 
                                  last_pos_seen, 
                                  bh_chr_name, 
@@ -524,7 +526,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		}
 		else
 		{
-			fseeko(hit_file, curr_pos, SEEK_SET);
+			_hit_fac.undo_hit();
 			break;
 		}
 		
@@ -536,7 +538,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		last_ref_id_seen = bh->ref_id();
 		last_pos_seen = bh->left();
 		
-		curr_pos = ftello(hit_file);
+		//curr_pos = ftello(hit_file);
 	}
 	
 	bundle.finalize_open_mates();

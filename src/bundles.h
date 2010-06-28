@@ -117,23 +117,25 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 class BundleFactory
 {
 public:
-	BundleFactory(SAMHitFactory& fac, FILE* hfile, FILE* ref_rna_file)
-	: sam_hit_fac(fac), hit_file(hfile), ref_mRNA_file(ref_rna_file), _next_line_num(0) {}
+	BundleFactory(HitFactory& fac, FILE* ref_rna_file)
+	: _hit_fac(fac), ref_mRNA_file(ref_rna_file), _next_hit_num(0) {}
 
 	bool next_bundle(HitBundle& bundle_out);
 	
-	SAMHitFactory& hit_factory() { return sam_hit_fac; } 
+	HitFactory& hit_factory() { return _hit_fac; } 
 	
 	void reset() 
 	{ 
-		rewind(hit_file); 
-		_next_line_num = 0;
+		//rewind(hit_file); 
+		_hit_fac.reset();
+		
+		_next_hit_num = 0;
 		next_ref_scaff = ref_mRNAs.begin(); 
 	}
 	
 	void load_ref_rnas() 
 	{
-		::load_ref_rnas(ref_mRNA_file, sam_hit_fac.ref_table(), ref_mRNAs);
+		::load_ref_rnas(ref_mRNA_file, _hit_fac.ref_table(), ref_mRNAs);
 		RefID last_id = 0;
 		for (vector<Scaffold>::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
 		{
@@ -156,13 +158,13 @@ public:
 	bool spans_bad_intron(const ReadHit& read);
 	
 private:
-	SAMHitFactory sam_hit_fac;
-	FILE* hit_file;
+	HitFactory& _hit_fac;
+
 	vector<Scaffold> ref_mRNAs;
 	FILE* ref_mRNA_file;
 	vector<pair<RefID, vector<Scaffold>::iterator> > _ref_scaff_offsets;
 	vector<Scaffold>::iterator next_ref_scaff;
-	int _next_line_num;
+	int _next_hit_num;
 	
 	BadIntronTable _bad_introns;
 };

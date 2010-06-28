@@ -804,9 +804,9 @@ void driver(FILE* sam_hit_file, FILE* ref_gtf)
 	ReadTable it;
 	RefSequenceTable rt(true, false);
 	
-	SAMHitFactory hit_factory(it, rt);
+	SAMHitFactory hit_factory(sam_hit_file, it, rt);
 	
-	BundleFactory bundle_factory(hit_factory, sam_hit_file, ref_gtf);
+	BundleFactory bundle_factory(hit_factory, ref_gtf);
 	
 #if ENABLE_THREDS
 	boost::thread asm_thread(assemble_hits,

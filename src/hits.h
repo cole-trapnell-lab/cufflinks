@@ -16,6 +16,10 @@
 
 #include <boost/shared_ptr.hpp>
 
+#if HAVE_BAM
+#include <bam/bam.h>
+#endif
+
 using namespace std;
 using boost::shared_ptr;
 
@@ -404,13 +408,18 @@ bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);
 class HitFactory
 {
 public:
-	HitFactory(ReadTable& insert_table, 
+	HitFactory(FILE* hit_file, 
+			   ReadTable& insert_table, 
 			   RefSequenceTable& reference_table) : 
-	_insert_table(insert_table), _ref_table(reference_table) {}
+		_hit_file(hit_file),
+		_insert_table(insert_table), 
+		_ref_table(reference_table) {}
+	
 	HitFactory& operator=(const HitFactory& rhs) 
 	{
 		if (this != &rhs)
 		{
+			_hit_file = rhs._hit_file;
 			_insert_table = rhs._insert_table;
 			_ref_table = rhs._ref_table;
 		}
@@ -440,8 +449,18 @@ public:
 					   double error_prob,
 					   unsigned int  edit_dist);
 	
-	virtual bool get_hit_from_buf(int line_num, 
-								  const char* bwt_buf, 
+	virtual void reset() { rewind(_hit_file); }
+	
+	virtual void undo_hit() { fseeko(_hit_file, _curr_pos, SEEK_SET); }
+	virtual void mark_curr_pos() { _curr_pos = ftell(_hit_file); }
+	
+	// next_record() should always set _curr_pos before reading the
+	// next_record so undo_hit() will work properly.
+	virtual bool next_record(const char*& buf, size_t& buf_size) = 0;
+	
+	virtual bool records_remain() const { return feof(_hit_file); }
+	
+	virtual bool get_hit_from_buf(const char* bwt_buf, 
 								  ReadHit& bh,
 								  bool strip_slash,
 								  char* name_out = NULL,
@@ -449,7 +468,11 @@ public:
 	
 	RefSequenceTable& ref_table() { return _ref_table; }
 	
+	FILE* hit_file() { return _hit_file; }
+	
 private:
+	FILE* _hit_file;
+	off_t _curr_pos;
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
 };
@@ -460,17 +483,52 @@ private:
 class SAMHitFactory : public HitFactory
 {
 public:
-	SAMHitFactory(ReadTable& insert_table, 
+	SAMHitFactory(FILE* hit_file, 
+				  ReadTable& insert_table, 
 				  RefSequenceTable& reference_table) : 
-	HitFactory(insert_table, reference_table) {}
+	HitFactory(hit_file, insert_table, reference_table), _line_num(0) {}
 	
-	bool get_hit_from_buf(int line_num, 
-						  const char* bwt_buf, 
+	virtual void undo_hit() 
+	{ 
+		HitFactory::undo_hit(); 
+		--_line_num;
+	}
+	bool next_record(const char*& buf, size_t& buf_size);
+	
+	bool get_hit_from_buf(const char* bwt_buf, 
+						  ReadHit& bh,
+						  bool strip_slash,
+						  char* name_out = NULL,
+						  char* name_tags = NULL);
+private:
+	static const size_t _hit_buf_max_sz = 10 * 1024;
+	char _hit_buf[_hit_buf_max_sz];
+	int _line_num;
+};
+
+#if HAVE_BAM
+
+/******************************************************************************
+ BAMHitFactory turns SAM alignments into ReadHits
+ *******************************************************************************/
+class BAMHitFactory : public HitFactory
+{
+public:
+	BAMHitFactory(FILE* hit_file, 
+				  ReadTable& insert_table, 
+				  RefSequenceTable& reference_table) : 
+	HitFactory(hit_file, insert_table, reference_table) {}
+	
+	bool next_record(const char*& buf, size_t& buf_size);
+	
+	bool get_hit_from_buf(const char* bwt_buf, 
 						  ReadHit& bh,
 						  bool strip_slash,
 						  char* name_out = NULL,
 						  char* name_tags = NULL);
 };
+
+#endif
 
 /*******************************************************************************
  MateHit is a class that encapsulates a paired-end alignment as a single object.

@@ -107,16 +107,16 @@ libgc_a_SOURCES = \
 	gtf_tracking.cpp 
 
 cufflinks_SOURCES = cufflinks.cpp  
-cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB)
-cufflinks_LDFLAGS =  $(BOOST_LDFLAGS) 
+cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 
+cufflinks_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS)
 
 cuffcompare_SOURCES = cuffcompare.cpp
 cuffcompare_LDADD = libgc.a
 
 cuffdiff_SOURCES = cuffdiff.cpp
-cuffdiff_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB)
-cuffdiff_LDFLAGS =  $(BOOST_LDFLAGS)
+cuffdiff_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
+cuffdiff_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) $(ZLIB_LDFLAGS)
 
 gtf_reads_SOURCES = gtf_reads.cpp
-gtf_reads_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB)
-gtf_reads_LDFLAGS =  $(BOOST_LDFLAGS)
+gtf_reads_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 
+gtf_reads_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS)
