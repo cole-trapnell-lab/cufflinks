@@ -8,7 +8,7 @@ bin_PROGRAMS = \
 	cufflinks \
 	cuffcompare \
 	cuffdiff 
-	#	gtf_reads
+#	gtf_reads
 
 noinst_HEADERS = \
 	codons.h \
