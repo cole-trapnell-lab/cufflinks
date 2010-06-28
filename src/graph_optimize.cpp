@@ -391,7 +391,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				const Scaffold& lhs_scaff = fragments[lhs_native_idx];
 				curr_conflicts.clear();
 				
-				size_t lhs_len = lhs_scaff.right() - lhs_scaff.left();
+				double lhs_len = lhs_scaff.right() - lhs_scaff.left();
 				
 				for (int i = 0; i < smaller_idx_array.size(); ++i)
 				{
@@ -415,42 +415,48 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						lhs_scaff.contains(c_scaff))
 					{
 						double c_len = c_scaff.right() - c_scaff.left();
-						if (c_len / lhs_len < 0.95)
+//						if (c_len / lhs_len < 0.95)
+//							break;
+						if (lhs_len - c_len > 30)
 							break;
 						
-						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
-						{
-#if ASM_VERBOSE
-							if (num_merges % 100 == 0)
-							{
-								fprintf(stderr, "%s\tCollapsing frag # %d\n", 
-										bundle_label->c_str(), 
-										num_merges);
-							}
-#endif
-							vector<Scaffold> s;
-							s.push_back(c_scaff);
-							s.push_back(lhs_scaff);
-							fragments[lhs_native_idx] = Scaffold(s);
-							replacements[c_native_idx] = lhs_native_idx;
-							fragments[c_native_idx] = Scaffold();
-							//curr_conflicts = c_conflicts;
-							///lhs = c;
-							//advanced_curr = true;
-							will_perform_collapse = true;
-							num_merges++;
-							continue;
-						}
+//						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
+//						{
+//#if ASM_VERBOSE
+//							if (num_merges % 100 == 0)
+//							{
+//								fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+//										bundle_label->c_str(), 
+//										num_merges);
+//							}
+//#endif
+//							vector<Scaffold> s;
+//							s.push_back(c_scaff);
+//							s.push_back(lhs_scaff);
+//							fragments[lhs_native_idx] = Scaffold(s);
+//							replacements[c_native_idx] = lhs_native_idx;
+//							//fragments[c_native_idx] = Scaffold();
+//							//curr_conflicts = c_conflicts;
+//							fragments[c_native_idx].clear_hits();
+//							///lhs = c;
+//							//advanced_curr = true;
+//							will_perform_collapse = true;
+//							num_merges++;
+//							continue;
+//						}
 
 						if (!Scaffold::compatible(lhs_scaff, c_scaff))
 							continue;
 						vector<int> c_conflicts;
 						// Find c's conflicts
 						
+						// If c fails to overlap lhs's conflicts, or if it's
+						// compatible with any of them, they aren't equivalent
 						bool not_equivalent = false;
 						for (size_t j = 0; j < curr_conflicts.size(); ++j)
 						{
-							if (Scaffold::compatible(fragments[curr_conflicts[j]], c_scaff))
+							if (!Scaffold::overlap_in_genome(fragments[curr_conflicts[j]], c_scaff, 0) ||
+								 Scaffold::compatible(fragments[curr_conflicts[j]], c_scaff))
 							{
 								not_equivalent = true;
 								break;
@@ -462,31 +468,15 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						
 						// If we get here, then c disagrees with at least all 
 						// the guys lhs does.
-						
-//						for (int i = 0; i < fragments.size(); ++i)
-//						{
-//							if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0))
-//							{
-//								if (!Scaffold::compatible(fragments[i], c_scaff))
-//								{
-//									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
-//									{
-//										not_equivalent = true;
-//										break;
-//									}
-//								}
-//							}
-//						}
-						
-						if (not_equivalent)
-							continue;
-						
-												
+					
+						// Now check that c doesn't have any additional conflicts
+						// of it's own
 						for (int i = lhs_native_idx + 1; i < fragments.size(); ++i)
 						{
 							if (Scaffold::overlap_in_genome(fragments[i], lhs_scaff, 0))
 							{
-								if (!Scaffold::compatible(fragments[i], c_scaff))
+								if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0) &&
+									!Scaffold::compatible(fragments[i], c_scaff))
 								{
 									//c_conflicts.push_back(i);
 									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
@@ -502,24 +492,6 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							}
 						}
 						
-//						for (int i = c_native_idx - 1; i >= 0; --i)
-//						{
-//							if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0))
-//							{
-//								if (!Scaffold::compatible(fragments[i], c_scaff))
-//								{
-//									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
-//									{
-//										not_equivalent = true;
-//										break;
-//									}
-//								}
-//							}
-////							else
-////							{
-////								break;
-////							}
-//						}
 						
 						if (not_equivalent)
 							continue;
@@ -539,7 +511,8 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						s.push_back(lhs_scaff);
 						fragments[lhs_native_idx] = Scaffold(s);
 						replacements[c_native_idx] = lhs_native_idx;
-						fragments[c_native_idx] = Scaffold();
+						//fragments[c_native_idx] = Scaffold();
+						fragments[c_native_idx].clear_hits();
 						//curr_conflicts = c_conflicts;
 						//advanced_curr = true;
 						will_perform_collapse = true;

@@ -16,7 +16,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#if HAVE_BAM
+#ifdef HAVE_BAM
 #include <bam/bam.h>
 #endif
 

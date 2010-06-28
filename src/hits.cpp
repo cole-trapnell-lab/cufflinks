@@ -196,7 +196,7 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   edit_dist);	
 }
 
-#if HAVE_BAM
+#ifdef HAVE_BAM
 
 bool BAMHitFactory::get_hit_from_buf(int line_num, 
 									 const char* orig_bwt_buf, 
