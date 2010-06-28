@@ -167,22 +167,22 @@ int parse_options(int argc, char** argv)
 class LocusBundleFactory
 {
 public:
-	LocusBundleFactory(SAMHitFactory& fac, FILE* hfile)
-		: sam_hit_fac(fac), hit_file(hfile), _next_hit_num(0) {}
+	LocusBundleFactory(shared_ptr<HitFactory> fac)
+		: _hit_fac(fac) {}
+	
 	
 	bool next_bundle(HitBundle& bundle_out, 
 					 RefID ref_id, 
 					 int left_boundary, 
 					 int right_boundary);
 	
-	SAMHitFactory& hit_factory() { return sam_hit_fac; } 
+	shared_ptr<HitFactory> hit_factory() { return _hit_fac; } 
 	
-	void reset() { rewind(hit_file); _next_hit_num = 0; }
+	void reset() { _hit_fac->reset(); }
 	
 private:
-	SAMHitFactory sam_hit_fac;
+	shared_ptr<HitFactory>_hit_fac;
 	FILE* hit_file;
-	int _next_hit_num;
 };
 
 bool LocusBundleFactory::next_bundle(HitBundle& bundle_out, 
@@ -196,25 +196,19 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 	{
 		return false;
 	}
-	char bwt_buf[2048];
+	//char bwt_buf[2048];
 	
 	RefID last_ref_id_seen = 0;
 	int last_pos_seen = 0;
 	
-	off_t curr_pos = ftello(hit_file);
-	
-	
-	while (fgets(bwt_buf, 2048, hit_file))
+	const char* hit_buf;
+	size_t hit_buf_size = 0;
+	//while (fgets(bwt_buf, 2048, hit_file))
+	while(_hit_fac->next_record(hit_buf, hit_buf_size))
 	{
-		// Chomp the newline
-		char* nl = strrchr(bwt_buf, '\n');
-		if (nl) *nl = 0;
-		
-		_next_hit_num++;
-		
 		shared_ptr<ReadHit> bh(new ReadHit());
 		
-		if (!sam_hit_fac.get_hit_from_buf(_next_hit_num, bwt_buf, *bh, false))
+		if (!_hit_fac->get_hit_from_buf(hit_buf, *bh, false))
 		{
 			continue;
 		}
@@ -226,7 +220,7 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 		
 		if (bh->ref_id() != ref_id)
 		{
-			RefSequenceTable& rt = sam_hit_fac.ref_table();
+			RefSequenceTable& rt = _hit_fac->ref_table();
 			const char* gtf_name = rt.get_name(ref_id);
 			const char* sam_name = rt.get_name(bh->ref_id());
 			if (!gtf_name)
@@ -276,9 +270,9 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 			{
 				fprintf(stderr, "Error: this SAM file doesn't appear to be correctly sorted!\n");
 				fprintf(stderr, "\tcurrent hit is at %s:%d, last one was at %s:%d\n", 
-						sam_hit_fac.ref_table().get_name(bh->ref_id()),
+						_hit_fac->ref_table().get_name(bh->ref_id()),
 						bh->left(),
-						sam_hit_fac.ref_table().get_name(last_ref_id_seen),
+						_hit_fac->ref_table().get_name(last_ref_id_seen),
 						last_pos_seen);
 				
 				exit(1);
@@ -288,14 +282,12 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 		}
 		else
 		{
-			fseeko(hit_file, curr_pos, SEEK_SET);
+			_hit_fac->undo_hit();
 			break;
 		}
 		
 		last_ref_id_seen = bh->ref_id();
 		last_pos_seen = bh->left();
-		
-		curr_pos = ftello(hit_file);
 	}
 	
 	bundle.finalize_open_mates();
@@ -550,10 +542,10 @@ void driver(FILE* ref_gtf, vector<FILE*>& sam_hit_files, Outfiles& outfiles)
 	vector<long double> map_masses;
 	for (size_t i = 0; i < sam_hit_files.size(); ++i)
 	{
-		SAMHitFactory hs(it, rt);
-		LocusBundleFactory lf(hs, sam_hit_files[i]);
+		shared_ptr<SAMHitFactory> hs(new SAMHitFactory(sam_hit_files[i], it, rt));
+		LocusBundleFactory lf(hs);
 		bundle_factories.push_back(lf);
-		BundleFactory standard_factory(hs, sam_hit_files[i], NULL);
+		BundleFactory standard_factory(*hs, NULL);
 		
 		fprintf(stderr, "Counting hits in sample %lu\n", i);
 		long double map_mass = 0;

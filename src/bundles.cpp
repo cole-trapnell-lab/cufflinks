@@ -379,7 +379,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	{
 		return false;
 	}
-	char bwt_buf[2048];
+	//char bwt_buf[2048];
 	
 	RefID last_ref_id_seen = 0;
 	RefID first_ref_id_seen = 0;

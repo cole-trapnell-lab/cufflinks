@@ -118,7 +118,7 @@ class BundleFactory
 {
 public:
 	BundleFactory(HitFactory& fac, FILE* ref_rna_file)
-	: _hit_fac(fac), ref_mRNA_file(ref_rna_file), _next_hit_num(0) {}
+	: _hit_fac(fac), ref_mRNA_file(ref_rna_file){}
 
 	bool next_bundle(HitBundle& bundle_out);
 	
@@ -128,8 +128,6 @@ public:
 	{ 
 		//rewind(hit_file); 
 		_hit_fac.reset();
-		
-		_next_hit_num = 0;
 		next_ref_scaff = ref_mRNAs.begin(); 
 	}
 	
@@ -164,7 +162,6 @@ private:
 	FILE* ref_mRNA_file;
 	vector<pair<RefID, vector<Scaffold>::iterator> > _ref_scaff_offsets;
 	vector<Scaffold>::iterator next_ref_scaff;
-	int _next_hit_num;
 	
 	BadIntronTable _bad_introns;
 };
