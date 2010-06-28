@@ -280,6 +280,32 @@ bool scaff_smaller_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
 	return false;
 }
 
+struct FragIndexSortSmallerLR
+{
+	FragIndexSortSmallerLR(const vector<Scaffold>& frags) : fragments(frags) {}
+	
+	const vector<Scaffold>& fragments;
+	
+	bool operator()(size_t lhs_frag_idx, size_t rhs_frag_idx)
+	{
+		const Scaffold& lhs = fragments[lhs_frag_idx];
+		const Scaffold& rhs = fragments[rhs_frag_idx];
+		
+		size_t lhs_len = lhs.right() - lhs.left();
+		size_t rhs_len = rhs.right() - rhs.left();
+		
+		if (lhs_len != rhs_len)
+		{
+			return lhs_len < rhs_len;
+		}
+		else 
+		{
+			return scaff_lt_rt(lhs, rhs);
+		}
+		return false;
+	}
+};
+
 bool collapse_equivalent_transfrags(vector<Scaffold>& fragments, 
                                     uint32_t max_rounds)
 {
@@ -300,12 +326,23 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
         rightmost = std::max((long)fragments[i].right(), rightmost);
     }
     
-    long bundle_length = rightmost - leftmost;
+    //long bundle_length = rightmost - leftmost;
     
 	while (max_rounds--)
 	{
 		
-		sort (fragments.begin(), fragments.end(), scaff_smaller_lt_rt);
+		sort (fragments.begin(), fragments.end(), scaff_lt_rt);
+		
+		
+		vector<size_t> smaller_idx_array;
+		for (size_t i = 0; i < fragments.size(); ++i)
+        {
+            smaller_idx_array.push_back(i);
+        }
+		
+		sort(smaller_idx_array.begin(), 
+			 smaller_idx_array.end(), 
+			 FragIndexSortSmallerLR(fragments));
 		
 #if ASM_VERBOSE
 		fprintf(stderr, "%s\tStarting new collapse round\n", bundle_label->c_str());
@@ -342,37 +379,46 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 		
 		int num_merges = 0;
 		
-		while (curr_frag < fragments.size())
+		while (curr_frag < smaller_idx_array.size())
 		{	
-			if (replacements[curr_frag] == curr_frag)
+			size_t curr_frag_native_idx = smaller_idx_array[curr_frag];
+			if (replacements[curr_frag_native_idx] == curr_frag_native_idx)
 			{
 				size_t lhs = curr_frag;
 				
+				size_t lhs_native_idx = smaller_idx_array[lhs];
+				
+				const Scaffold& lhs_scaff = fragments[lhs_native_idx];
+				
 				curr_conflicts.clear();
 				
-				for (int i = 0; i < fragments.size(); ++i)
+				for (int i = 0; i < smaller_idx_array.size(); ++i)
 				{
-					if (Scaffold::overlap_in_genome(fragments[lhs], fragments[i], 0))
+					size_t j_scaff_idx = smaller_idx_array[i];
+					if (Scaffold::overlap_in_genome(lhs_scaff, fragments[j_scaff_idx], 0))
 					{
-						if (!Scaffold::compatible(fragments[lhs], fragments[i]))
+						if (!Scaffold::compatible(lhs_scaff, fragments[j_scaff_idx]))
 						{
-							curr_conflicts.push_back(i);
+							curr_conflicts.push_back(j_scaff_idx);
 						}
 					}
 				}
 				
 				sort(curr_conflicts.begin(), curr_conflicts.end());
-				size_t lhs_len = fragments[lhs].right() - fragments[lhs].left();
+				size_t lhs_len = lhs_scaff.right() - lhs_scaff.left();
 				//bool advanced_curr = false;
-				for (int c = lhs + 1; c < fragments.size(); ++c)
+				for (int c = lhs + 1; c < smaller_idx_array.size(); ++c)
 				{
-					if (replacements[c] == c &&
-						fragments[c].contains(fragments[lhs]))
+					size_t c_native_idx = smaller_idx_array[c];
+					const Scaffold& c_scaff = fragments[c_native_idx];
+					if (replacements[c_native_idx] == c_native_idx &&
+						c_scaff.contains(lhs_scaff))
 					{
-						double c_len = fragments[c].right() - fragments[c].left();
+						
+						double c_len = c_scaff.right() - c_scaff.left();
 						if (lhs_len / c_len < 0.95)
 							break;
-						if (!Scaffold::compatible(fragments[lhs], fragments[c]))
+						if (!Scaffold::compatible(lhs_scaff, c_scaff))
 							continue;
 						vector<int> c_conflicts;
 						// Find c's conflicts
@@ -380,7 +426,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						bool not_equivalent = false;
 						for (size_t j = 0; j < curr_conflicts.size(); ++j)
 						{
-							if (Scaffold::compatible(fragments[curr_conflicts[j]], fragments[c]))
+							if (Scaffold::compatible(fragments[curr_conflicts[j]], c_scaff))
 							{
 								not_equivalent = true;
 								break;
@@ -393,11 +439,26 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						// If we get here, then c disagrees with at least all 
 						// the guys lhs does.
 						
-						for (int i = 0; i < fragments.size(); ++i)
+//						for (int i = 0; i < fragments.size(); ++i)
+//						{
+//							if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0))
+//							{
+//								if (!Scaffold::compatible(fragments[i], c_scaff))
+//								{
+//									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
+//									{
+//										not_equivalent = true;
+//										break;
+//									}
+//								}
+//							}
+//						}
+						
+						for (int i = c_native_idx - 1; i >= 0; --i)
 						{
-							if (Scaffold::overlap_in_genome(fragments[i], fragments[c], 0))
+							if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0))
 							{
-								if (!Scaffold::compatible(fragments[i], fragments[c]))
+								if (!Scaffold::compatible(fragments[i], c_scaff))
 								{
 									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
 									{
@@ -406,7 +467,35 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 									}
 								}
 							}
+							else
+							{
+								break;
+							}
 						}
+						
+						if (not_equivalent)
+							continue;
+						
+						for (int i = c_native_idx + 1; i < fragments.size(); ++i)
+						{
+							if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0))
+							{
+								if (!Scaffold::compatible(fragments[i], c_scaff))
+								{
+									//c_conflicts.push_back(i);
+									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
+									{
+										not_equivalent = true;
+										break;
+									}
+								}
+							}
+							else
+							{
+								break;
+							}
+						}
+						
 						
 						if (not_equivalent)
 							continue;
@@ -422,11 +511,11 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 #endif
 						
 						vector<Scaffold> s;
-						s.push_back(fragments[c]);
-						s.push_back(fragments[lhs]);
-						fragments[c] = Scaffold(s);
-						replacements[lhs] = c;
-						fragments[lhs] = Scaffold();
+						s.push_back(c_scaff);
+						s.push_back(lhs_scaff);
+						fragments[c_native_idx] = Scaffold(s);
+						replacements[lhs_native_idx] = c_native_idx;
+						fragments[lhs_native_idx] = Scaffold();
 						//curr_conflicts = c_conflicts;
 						lhs = c;
 						//advanced_curr = true;
