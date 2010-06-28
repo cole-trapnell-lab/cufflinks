@@ -329,16 +329,18 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 		int curr_frag = 0;
 		vector<int> curr_conflicts;
 		
-		for (int i = 1; i < fragments.size(); ++i)
-		{
-			if (Scaffold::overlap_in_genome(fragments[0], fragments[i], 0))
-			{
-				if (!Scaffold::compatible(fragments[0], fragments[i]))
-				{
-					curr_conflicts.push_back(i);
-				}
-			}
-		}
+//		for (int i = 0; i < fragments.size(); ++i)
+//		{
+//			if (Scaffold::overlap_in_genome(fragments[0], fragments[i], 0))
+//			{
+//				if (!Scaffold::compatible(fragments[0], fragments[i]))
+//				{
+//					curr_conflicts.push_back(i);
+//				}
+//			}
+//		}
+		
+		int num_merges = 0;
 		
 		while (curr_frag < fragments.size())
 		{	
@@ -348,22 +350,11 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				
 				curr_conflicts.clear();
 				
-				for (int i = lhs - 1; i >= 0; --i)
+				for (int i = 0; i < fragments.size(); ++i)
 				{
-					if (Scaffold::overlap_in_genome(fragments[i], fragments[lhs], 0))
+					if (Scaffold::overlap_in_genome(fragments[lhs], fragments[i], 0))
 					{
-						if (!Scaffold::compatible(fragments[i], fragments[lhs]))
-						{
-							curr_conflicts.push_back(i);
-						}
-					}
-				}
-				
-				for (int i = lhs + 1; i < fragments.size(); ++i)
-				{
-					if (Scaffold::overlap_in_genome(fragments[i], fragments[lhs], 0))
-					{
-						if (!Scaffold::compatible(fragments[i], fragments[lhs]))
+						if (!Scaffold::compatible(fragments[lhs], fragments[i]))
 						{
 							curr_conflicts.push_back(i);
 						}
@@ -371,75 +362,77 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				}
 				
 				sort(curr_conflicts.begin(), curr_conflicts.end());
-				
+				size_t lhs_len = fragments[lhs].right() - fragments[lhs].left();
 				//bool advanced_curr = false;
 				for (int c = lhs + 1; c < fragments.size(); ++c)
 				{
 					if (replacements[c] == c &&
 						fragments[c].contains(fragments[lhs]))
 					{
+						double c_len = fragments[c].right() - fragments[c].left();
+						if (lhs_len / c_len < 0.95)
+							break;
 						if (!Scaffold::compatible(fragments[lhs], fragments[c]))
 							continue;
 						vector<int> c_conflicts;
 						// Find c's conflicts
-						for (int i = c - 1; i >= 0; --i)
+						
+						bool not_equivalent = false;
+						for (size_t j = 0; j < curr_conflicts.size(); ++j)
 						{
-							if (Scaffold::overlap_in_genome(fragments[i], fragments[c], 0))
+							if (Scaffold::compatible(fragments[curr_conflicts[j]], fragments[c]))
 							{
-								if (!Scaffold::compatible(fragments[i], fragments[c]))
-								{
-									c_conflicts.push_back(i);
-									if (c_conflicts.size() > curr_conflicts.size())
-										break;
-								}
+								not_equivalent = true;
+								break;
 							}
 						}
 						
-						for (int i = c + 1; i < fragments.size(); ++i)
-						{
-							if (Scaffold::overlap_in_genome(fragments[i], fragments[c], 0))
-							{
-								if (!Scaffold::compatible(fragments[i], fragments[c]))
-								{
-									c_conflicts.push_back(i);
-									if (c_conflicts.size() > curr_conflicts.size())
-										break;
-								}
-							}
-						}
-						if (c_conflicts.size() != curr_conflicts.size())
-						{
-							//break;
+						if (not_equivalent)
 							continue;
-						}
 						
-						sort(c_conflicts.begin(), c_conflicts.end());
+						// If we get here, then c disagrees with at least all 
+						// the guys lhs does.
 						
-						if (c_conflicts == curr_conflicts)
+						for (int i = 0; i < fragments.size(); ++i)
 						{
-							// merge and set curr_conflicts = c_conflicts
-							// advance curr_frag to = c
-							
-#if ASM_VERBOSE
-							if (lhs % 100 == 0)
+							if (Scaffold::overlap_in_genome(fragments[i], fragments[c], 0))
 							{
-								fprintf(stderr, "%s\tCollapsing frag # %d\n", 
-										bundle_label->c_str(), 
-										curr_frag);
+								if (!Scaffold::compatible(fragments[i], fragments[c]))
+								{
+									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
+									{
+										not_equivalent = true;
+										break;
+									}
+								}
 							}
-#endif
-							
-							vector<Scaffold> s;
-							s.push_back(fragments[c]);
-							s.push_back(fragments[lhs]);
-							fragments[c] = Scaffold(s);
-							replacements[lhs] = c;
-							//curr_conflicts = c_conflicts;
-							lhs = c;
-							//advanced_curr = true;
-							will_perform_collapse = true;
-							//break;
 						}
+						
+						if (not_equivalent)
+							continue;
+					
+						// merge
+#if ASM_VERBOSE
+						if (num_merges % 100 == 0)
+						{
+							fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+									bundle_label->c_str(), 
+									num_merges);
+						}
+#endif
+						
+						vector<Scaffold> s;
+						s.push_back(fragments[c]);
+						s.push_back(fragments[lhs]);
+						fragments[c] = Scaffold(s);
+						replacements[lhs] = c;
+						fragments[lhs] = Scaffold();
+						//curr_conflicts = c_conflicts;
+						lhs = c;
+						//advanced_curr = true;
+						will_perform_collapse = true;
+						num_merges++;
+						//break;
 					}
 					else 
 					{

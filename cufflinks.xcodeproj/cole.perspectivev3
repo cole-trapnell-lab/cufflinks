@@ -327,7 +327,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED1C0E3C11D836D000CFD663</string>
+										<string>ED1C0E6F11D83F4000CFD663</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0D8411D800BC00CFD663</string>
@@ -343,7 +343,7 @@
 											<string>ED1C0E2511D834B500CFD663</string>
 											<string>ED1C0E2611D834B500CFD663</string>
 											<string>ED1C0E2711D834B500CFD663</string>
-											<string>ED1C0E3011D835D900CFD663</string>
+											<string>ED1C0E4511D8381000CFD663</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -662,6 +662,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>ED1C0E7011D83F4000CFD663</string>
 		<string>ED1C0DE311D8156100CFD663</string>
 		<string>ED1C0DE411D8156100CFD663</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
