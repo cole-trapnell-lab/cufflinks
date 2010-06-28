@@ -393,7 +393,19 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				
 				size_t lhs_len = lhs_scaff.right() - lhs_scaff.left();
 				
-				bool lhs_conflicts_searched = false;
+				for (int i = 0; i < smaller_idx_array.size(); ++i)
+				{
+					size_t j_scaff_idx = smaller_idx_array[i];
+					if (Scaffold::overlap_in_genome(lhs_scaff, fragments[j_scaff_idx], 0))
+					{
+						if (!Scaffold::compatible(lhs_scaff, fragments[j_scaff_idx]))
+						{
+							curr_conflicts.push_back(j_scaff_idx);
+						}
+					}
+				}
+				sort(curr_conflicts.begin(), curr_conflicts.end());
+				
 				//bool advanced_curr = false;
 				for (int c = lhs + 1; c < smaller_idx_array.size(); ++c)
 				{
@@ -405,23 +417,6 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						double c_len = c_scaff.right() - c_scaff.left();
 						if (c_len / lhs_len < 0.95)
 							break;
-						
-						if (!lhs_conflicts_searched)
-						{
-							for (int i = 0; i < smaller_idx_array.size(); ++i)
-							{
-								size_t j_scaff_idx = smaller_idx_array[i];
-								if (Scaffold::overlap_in_genome(lhs_scaff, fragments[j_scaff_idx], 0))
-								{
-									if (!Scaffold::compatible(lhs_scaff, fragments[j_scaff_idx]))
-									{
-										curr_conflicts.push_back(j_scaff_idx);
-									}
-								}
-							}
-							sort(curr_conflicts.begin(), curr_conflicts.end());
-							lhs_conflicts_searched = true;
-						}
 						
 						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
 						{
@@ -487,7 +482,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							continue;
 						
 												
-						for (int i = lhs_native_idx + 1; i < lhs_native_idx; ++i)
+						for (int i = lhs_native_idx + 1; i < fragments.size(); ++i)
 						{
 							if (Scaffold::overlap_in_genome(fragments[i], lhs_scaff, 0))
 							{
