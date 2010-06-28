@@ -1,7 +1,7 @@
 m4_include([ax_boost_base.m4])
 m4_include([ax_boost_thread.m4])
-m4_include([ax_bam.m4])
-m4_include([ax_check_zlib.m4])
+#m4_include([ax_bam.m4])
+#m4_include([ax_check_zlib.m4])
 
 define([svnversion], esyscmd([sh -c "svnversion|tr -d '\n'"]))dnl
 AC_INIT([cufflinks], [0.8.3-svnversion], [cole@cs.umd.edu])
