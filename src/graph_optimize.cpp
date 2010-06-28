@@ -436,11 +436,11 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							vector<Scaffold> s;
 							s.push_back(c_scaff);
 							s.push_back(lhs_scaff);
-							fragments[c_native_idx] = Scaffold(s);
-							replacements[lhs_native_idx] = c_native_idx;
-							fragments[lhs_native_idx] = Scaffold();
+							fragments[lhs_native_idx] = Scaffold(s);
+							replacements[c_native_idx] = lhs_native_idx;
+							fragments[c_native_idx] = Scaffold();
 							//curr_conflicts = c_conflicts;
-							lhs = c;
+							///lhs = c;
 							//advanced_curr = true;
 							will_perform_collapse = true;
 							num_merges++;
