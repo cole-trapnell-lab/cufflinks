@@ -30,9 +30,9 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AX_BOOST_BASE([1.38.0])
-AX_BAM
+#AX_BAM
 AX_BOOST_THREAD
-AX_CHECK_ZLIB()
+#AX_CHECK_ZLIB()
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])

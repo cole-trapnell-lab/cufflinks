@@ -289,6 +289,7 @@
 			ED1C0DF311D82FF800CFD663 /* PBXTextBookmark */ = ED1C0DF311D82FF800CFD663 /* PBXTextBookmark */;
 			ED1C0DF411D82FF800CFD663 /* PBXTextBookmark */ = ED1C0DF411D82FF800CFD663 /* PBXTextBookmark */;
 			ED1C0DF511D82FF800CFD663 /* PBXTextBookmark */ = ED1C0DF511D82FF800CFD663 /* PBXTextBookmark */;
+			ED1C0DF611D8301E00CFD663 /* PBXTextBookmark */ = ED1C0DF611D8301E00CFD663 /* PBXTextBookmark */;
 		};
 		sourceControlManager = EDA5150010C72929000A4F41 /* Source Control */;
 		userBuildSettings = {
@@ -591,7 +592,7 @@
 		fRef = EDEBCDF8112DFD7600E2479E /* configure.ac */;
 		name = "configure.ac: 116";
 		rLen = 0;
-		rLoc = 3465;
+		rLoc = 3467;
 		rType = 0;
 		vrLen = 1677;
 		vrLoc = 2273;
@@ -1396,6 +1397,16 @@
 		rLoc = 90;
 		rType = 0;
 		vrLen = 1371;
+		vrLoc = 0;
+	};
+	ED1C0DF611D8301E00CFD663 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDEBCDF8112DFD7600E2479E /* configure.ac */;
+		name = "configure.ac: 33";
+		rLen = 0;
+		rLoc = 739;
+		rType = 0;
+		vrLen = 1373;
 		vrLoc = 0;
 	};
 	ED203C4F1133422800AC7D2D /* stl_vector.h */ = {
@@ -3028,8 +3039,8 @@
 	EDEBCDF8112DFD7600E2479E /* configure.ac */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {698, 1911}}";
-			sepNavSelRange = "{90, 0}";
-			sepNavVisRange = "{0, 1371}";
+			sepNavSelRange = "{739, 0}";
+			sepNavVisRange = "{0, 1373}";
 		};
 	};
 }
