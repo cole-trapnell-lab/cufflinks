@@ -341,15 +341,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 		}
 		
 		while (curr_frag < fragments.size())
-		{
-#if ASM_VERBOSE
-			if (curr_frag % 100 == 0)
-			{
-				fprintf(stderr, "%s\tCollapsing frag # %d\n", 
-						bundle_label->c_str(), 
-						curr_frag);
-			}
-#endif	
+		{	
 			if (replacements[curr_frag] == curr_frag)
 			{
 				size_t lhs = curr_frag;
@@ -427,6 +419,15 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						{
 							// merge and set curr_conflicts = c_conflicts
 							// advance curr_frag to = c
+							
+#if ASM_VERBOSE
+							if (lhs % 100 == 0)
+							{
+								fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+										bundle_label->c_str(), 
+										curr_frag);
+							}
+#endif
 							
 							vector<Scaffold> s;
 							s.push_back(fragments[c]);
