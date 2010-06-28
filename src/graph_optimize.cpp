@@ -414,7 +414,29 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 					if (replacements[c_native_idx] == c_native_idx &&
 						c_scaff.contains(lhs_scaff))
 					{
-						
+						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
+						{
+#if ASM_VERBOSE
+							if (num_merges % 100 == 0)
+							{
+								fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+										bundle_label->c_str(), 
+										num_merges);
+							}
+#endif
+							vector<Scaffold> s;
+							s.push_back(c_scaff);
+							s.push_back(lhs_scaff);
+							fragments[c_native_idx] = Scaffold(s);
+							replacements[lhs_native_idx] = c_native_idx;
+							fragments[lhs_native_idx] = Scaffold();
+							//curr_conflicts = c_conflicts;
+							lhs = c;
+							//advanced_curr = true;
+							will_perform_collapse = true;
+							num_merges++;
+							continue;
+						}
 						double c_len = c_scaff.right() - c_scaff.left();
 						if (lhs_len / c_len < 0.95)
 							break;
@@ -467,10 +489,10 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 									}
 								}
 							}
-							else
-							{
-								break;
-							}
+//							else
+//							{
+//								break;
+//							}
 						}
 						
 						if (not_equivalent)
