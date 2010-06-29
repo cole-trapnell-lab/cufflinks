@@ -234,6 +234,13 @@ void filter_hits(int bundle_length,
 						intron_pokin_read = true;
 					}
 					
+					// intron          =========================
+					// hit                 ******************
+					if (last.g_left() < i_right && last.g_right() > i_right  && last.g_left() > i_left)
+					{
+						intron_pokin_read = true;
+					}
+					
 					if (intron_pokin_read)
 					{
 						double fraction;

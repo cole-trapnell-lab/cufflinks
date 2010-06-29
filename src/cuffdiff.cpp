@@ -353,6 +353,15 @@ void quantitation_worker(const RefSequenceTable& rt,
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
 
+	char bundle_label_buf[2048];
+    sprintf(bundle_label_buf, 
+            "%s:%d-%d", 
+            rt.get_name(sample_bundles->front()->ref_id()),
+            sample_bundles->front()->left(),
+            sample_bundles->front()->right());
+    bundle_label.reset(new string(bundle_label_buf));
+	
+	
 	test_differential(rt, *sample_bundles, sample_masses, tests, tracking);
 	
 	for (size_t i = 0; i < sample_bundles->size(); ++i)
@@ -688,6 +697,15 @@ void driver(FILE* ref_gtf, vector<FILE*>& sam_hit_files, Outfiles& outfiles)
 			assert (bundle_chr_id != 0);
 			const char* chr_name = rt.get_name(bundle_chr_id);
 			assert (chr_name);
+			
+			char bundle_label_buf[2048];
+			sprintf(bundle_label_buf, 
+					"%s:%d-%d", 
+					rt.get_name(sample_bundles.front()->ref_id()),
+					sample_bundles.front()->left(),
+					sample_bundles.front()->right());
+			bundle_label.reset(new string(bundle_label_buf));
+			
 			fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
 					chr_name,
 					sample_bundles.front()->left(),
