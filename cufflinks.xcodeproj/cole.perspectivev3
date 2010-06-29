@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ActivePerspectiveName</key>
-	<string>Debug</string>
+	<string>Project</string>
 	<key>AllowedModules</key>
 	<array>
 		<dict>
@@ -233,6 +233,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -280,13 +282,11 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>47</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>75</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 499}, {276, 840}}</string>
+							<string>{{0, 549}, {276, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -302,6 +302,8 @@
 							<string>MainColumn</string>
 							<real>276</real>
 						</array>
+						<key>RubberWindowFrame</key>
+						<string>48 279 1376 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -317,7 +319,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cuffdiff.cpp</string>
+								<string>assemble.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -325,11 +327,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cuffdiff.cpp</string>
+										<string>assemble.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDBBA07611D9A79A0015175B</string>
+										<string>EDBBA0DC11DA34600015175B</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0D8411D800BC00CFD663</string>
@@ -344,14 +346,15 @@
 											<string>ED1C0F8111D8C43C00CFD663</string>
 											<string>ED1C0F8611D8C8D100CFD663</string>
 											<string>ED1C0F8C11D8CEC700CFD663</string>
-											<string>EDBBA04711D9A4F30015175B</string>
-											<string>EDBBA04811D9A4F30015175B</string>
-											<string>EDBBA04911D9A4F30015175B</string>
 											<string>EDBBA05B11D9A5CF0015175B</string>
-											<string>EDBBA06911D9A7200015175B</string>
-											<string>EDBBA06A11D9A7200015175B</string>
-											<string>EDBBA06B11D9A7200015175B</string>
-											<string>EDBBA06C11D9A7200015175B</string>
+											<string>EDBBA08711DA264E0015175B</string>
+											<string>EDBBA09411DA26750015175B</string>
+											<string>EDBBA0B111DA31BE0015175B</string>
+											<string>EDBBA0B211DA31BE0015175B</string>
+											<string>EDBBA0C311DA33760015175B</string>
+											<string>EDBBA0D411DA34380015175B</string>
+											<string>EDBBA0D511DA34380015175B</string>
+											<string>EDBBA0D611DA34380015175B</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -366,6 +369,8 @@
 							<dict>
 								<key>Frame</key>
 								<string>{{0, 0}, {1078, 597}}</string>
+								<key>RubberWindowFrame</key>
+								<string>48 279 1376 899 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -389,6 +394,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {1078, 229}}</string>
+										<key>RubberWindowFrame</key>
+										<string>48 279 1376 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -526,8 +533,6 @@
 					<dict>
 						<key>Frame</key>
 						<string>{{0, 0}, {1376, 170}}</string>
-						<key>RubberWindowFrame</key>
-						<string>48 279 1376 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugCLIModule</string>
@@ -602,11 +607,7 @@
 							</array>
 							<key>Frame</key>
 							<string>{{660, 0}, {716, 223}}</string>
-							<key>RubberWindowFrame</key>
-							<string>48 279 1376 899 0 0 1920 1178 </string>
 						</dict>
-						<key>RubberWindowFrame</key>
-						<string>48 279 1376 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugSessionModule</string>

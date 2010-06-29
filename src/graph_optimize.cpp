@@ -417,7 +417,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						double c_len = c_scaff.right() - c_scaff.left();
 //						if (c_len / lhs_len < 0.95)
 //							break;
-						if (lhs_len - c_len > 2 * inner_dist_std_dev)
+						if (lhs_len - c_len > inner_dist_std_dev)
 							break;
 						
 						
