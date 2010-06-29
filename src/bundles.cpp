@@ -14,6 +14,7 @@
 #include "common.h"
 #include "bundles.h"
 #include "scaffolds.h"
+#include "abundances.h"
 
 using namespace std;
 using boost::math::binomial;
@@ -676,6 +677,64 @@ void count_introns_in_read(const ReadHit& read,
 	}
 }
 
+void minor_introns(int bundle_length,
+				   int bundle_left,
+				   const IntronCountTable& intron_counts,
+				   vector<AugmentedCuffOp>& bad_introns,
+				   double fraction)
+
+{
+	for(IntronCountTable::const_iterator itr = intron_counts.begin();
+		itr != intron_counts.end(); 
+		++itr)
+	{
+		pair<AugmentedCuffOp, IntronSpanCounter> itr_cnt_pair = *itr;
+		const IntronSpanCounter itr_spans = itr_cnt_pair.second;
+		
+		double doc = itr_spans.total_reads;
+		
+		for (IntronCountTable::const_iterator itr2 = intron_counts.begin();
+			 itr2 != intron_counts.end(); 
+			 ++itr2)
+		{	
+			if (itr == itr2 ||
+				!AugmentedCuffOp::overlap_in_genome(itr->first, itr2->first))
+			{
+				continue;
+			}
+			
+			pair<AugmentedCuffOp, IntronSpanCounter> itr2_cnt_pair = *itr2;
+			const IntronSpanCounter itr2_spans = itr2_cnt_pair.second;
+			
+			double thresh = itr2_spans.total_reads * fraction;
+			if (doc < thresh)
+			{
+				//#if ASM_VERBOSE
+				//							fprintf(stderr, "\t Filtering intron (due to overlap) %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+				//#endif	
+				bool exists = binary_search(bad_introns.begin(), 
+											bad_introns.end(), 
+											itr->first);
+				if (!exists)
+				{
+#if ASM_VERBOSE
+					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads based on overlap with much more abundant intron: %lu-%lu spanned by %d reads\n", 
+							itr->first.g_left(), 
+							itr->first.g_right(), 
+							itr->second.total_reads,
+							itr2->first.g_left(), 
+							itr2->first.g_right(), 
+							itr2->second.total_reads);
+					
+#endif
+					bad_introns.push_back(itr->first);
+					sort(bad_introns.begin(), bad_introns.end());
+				}
+			}
+		}
+	}
+}
+
 void identify_bad_splices(const HitBundle& bundle, 
 						  BadIntronTable& bad_splice_ops)
 {
@@ -700,10 +759,18 @@ void identify_bad_splices(const HitBundle& bundle,
 		}
 	}
 	
+	minor_introns(bundle.length(), bundle.left(), intron_counts, bad_introns, min_intron_fraction);
+	
 	for (IntronCountTable::iterator itr = intron_counts.begin();
 		 itr != intron_counts.end();
 		 ++itr)
 	{
+		if (binary_search(bad_introns.begin(), 
+						  bad_introns.end(), 
+						  itr->first))
+		{
+			continue;
+		}
 		pair<AugmentedCuffOp, IntronSpanCounter> cnt_pair = *itr;
 		try
 		{
@@ -834,8 +901,8 @@ void identify_bad_splices(const HitBundle& bundle,
 #endif
 				
 			}
-			
 		}
+		
 		
 		catch(const std::exception& e)
 		{

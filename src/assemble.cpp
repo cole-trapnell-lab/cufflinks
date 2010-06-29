@@ -454,32 +454,8 @@ bool make_scaffolds(int bundle_left,
 			fprintf(stderr, "%s\tCreating compatibility graph\n", bundle_label->c_str());
 #endif
 			if (!create_overlap_dag(hits, bundle_dag))
-			{
-				//scaffolds = hits;
-				//create_overlap_dag(hits, bundle_dag, first_round ? -2 : -999999);
-				
-//				// Cleave the partials at their unknowns to minimize FPKM dilation on  
-//				// the low end of the expression profile. 
-//				vector<Scaffold> completes; 
-//				for (size_t i = 0; i < hits.size(); ++i) 
-//				{ 
-//					vector<Scaffold> c; 
-//					hits[i].get_complete_subscaffolds(c); 
-//					completes.insert(completes.end(), c.begin(), c.end()); 
-//				} 
-//				
-//				// If we've already done this, or if there are no unknowns,
-//				// time to just bail.
-//				if (completes.size() == hits.size())
-//					break;
-//				
-//				hits = completes;
-//				sort(hits.begin(), hits.end(), scaff_lt);
-//				
-//				collapse_contained_transfrags(hits);
-//				sort(hits.begin(), hits.end(), scaff_lt);
-//				if (!create_overlap_dag(hits, bundle_dag))
-					break;
+			{			
+				break;
 			}
             
             HitsForNodeMap hits_for_node = get(vertex_name, bundle_dag);

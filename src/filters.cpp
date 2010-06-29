@@ -130,10 +130,146 @@ void filter_introns(int bundle_length,
 	hits = filtered_hits;
 }
 
+void pre_mrna_filter(int bundle_length,
+					 int bundle_left,
+					 vector<Scaffold>& hits)
+{
+	vector<int> depth_of_coverage(bundle_length,0);
+	vector<double> scaff_doc;
+	map<pair<int,int>, int> intron_doc;
+	vector<Scaffold> filtered_hits;
+	vector<bool> toss(hits.size(), false);
+	
+	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
+	double bundle_avg_doc = compute_doc(bundle_left, 
+										hits, 
+										depth_of_coverage, 
+										intron_doc,
+										true);
+	
+	// recompute the real DoCs
+	compute_doc(bundle_left, 
+				hits, 
+				depth_of_coverage, 
+				intron_doc,
+				false);
+	
+	record_doc_for_scaffolds(bundle_left, 
+							 hits, 
+							 depth_of_coverage, 
+							 intron_doc,
+							 scaff_doc);
+	
+//	vector<int>::iterator new_end = remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+//	depth_of_coverage.erase(new_end, depth_of_coverage.end());
+//	sort(depth_of_coverage.begin(), depth_of_coverage.end());
+//	
+//	size_t median = floor(depth_of_coverage.size() / 2);
+	
+	
+	Scaffold smashed_gene;
+	
+	// setting introns_overwrite_matches in a gene smash takes only it's
+	// constitutive regions
+	Scaffold::merge(hits, smashed_gene, false);
+	vector<bool> constitutive_introns(intron_doc.size(), true);
+	
+	size_t intron_idx = 0;
+	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
+		itr != intron_doc.end(); 
+		++itr)
+	{
+		int i_left = itr->first.first;
+		int i_right = itr->first.second;
+		
+		for (map<pair<int,int>, int>::const_iterator itr2 = intron_doc.begin();
+			 itr2 != intron_doc.end();
+			 ++itr2)
+		{
+			if (itr == itr2)
+				continue;
+			if (::overlap_in_genome(itr->first.first,
+									itr->first.second,
+									itr2->first.first,
+									itr2->first.second))
+			{
+				constitutive_introns[intron_idx] = false;
+			}
+		}
+		
+		int inner_dist = smashed_gene.match_length(i_left, i_right);
+		
+		// Intron retained in some isoforms?
+		int intron_len = itr->first.second - itr->first.first;
+		if (inner_dist == intron_len)
+		{
+			constitutive_introns[intron_idx] = false;
+		}
+		
+		for (size_t j = i_left; j < i_right; ++j)
+		{
+			double i_doc = itr->second;
+			double thresh = 3 * pre_mrna_fraction * i_doc;
+			if (depth_of_coverage[j - bundle_left] >= thresh)
+			{
+				constitutive_introns[intron_idx] = false;
+				break;
+			}
+		}
+		
+		if (constitutive_introns[intron_idx])
+		{
+			for (size_t j = 0; j < hits.size(); ++j)
+			{
+				if (hits[j].left() >= i_left && hits[j].right() < i_right)
+				{
+					toss[j] = true;
+				}
+			}
+		}
+		
+		intron_idx++;
+	}
+	
+	for (size_t j = 0; j < hits.size(); ++j)
+	{	
+		if (!toss[j])
+		{
+			filtered_hits.push_back(hits[j]);
+			//#if ASM_VERBOSE
+			//			if (hits[j].has_intron())
+			//			{
+			//				
+			//				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			//			}
+			//#endif	
+		}
+		else
+		{
+#if ASM_VERBOSE
+			//			if (hits[j].has_intron())
+			//			{
+			//				
+			//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			//			}
+#endif	
+		}
+	}
+	
+	//#if ASM_VERBOSE
+	//	fprintf(stderr, "\tInitial filter pass complete\n");
+	//#endif
+	
+	hits = filtered_hits;
+}
+
 void filter_hits(int bundle_length,
 				 int bundle_left,
 				 vector<Scaffold>& hits)
 {
+	
+	pre_mrna_filter(bundle_length, bundle_left, hits);
+	
 	vector<int> depth_of_coverage(bundle_length,0);
 	vector<double> scaff_doc;
 	map<pair<int,int>, int> intron_doc;
