@@ -280,8 +280,9 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>76</integer>
-									<integer>75</integer>
+									<integer>57</integer>
+									<integer>5</integer>
+									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -316,7 +317,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>bundles.cpp</string>
+								<string>graph_optimize.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -324,11 +325,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>bundles.cpp</string>
+										<string>graph_optimize.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDBBA1DB11DA90F40015175B</string>
+										<string>EDBBA1E511DA94A00015175B</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0D8411D800BC00CFD663</string>
@@ -349,12 +350,12 @@
 											<string>EDBBA0F911DA3E0C0015175B</string>
 											<string>EDBBA10111DA433F0015175B</string>
 											<string>EDBBA10211DA433F0015175B</string>
-											<string>EDBBA10411DA433F0015175B</string>
 											<string>EDBBA16911DA734C0015175B</string>
 											<string>EDBBA16A11DA734C0015175B</string>
 											<string>EDBBA16B11DA734C0015175B</string>
 											<string>EDBBA16C11DA734C0015175B</string>
-											<string>EDBBA1D011DA90740015175B</string>
+											<string>EDBBA1DE11DA948D0015175B</string>
+											<string>EDBBA1DF11DA948D0015175B</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -675,7 +676,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>EDBBA1D611DA90BD0015175B</string>
 		<string>EDBBA02711D9399A0015175B</string>
 		<string>EDBBA02811D9399A0015175B</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
