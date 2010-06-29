@@ -606,10 +606,11 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 
 struct IntronSpanCounter
 {
-	IntronSpanCounter() : left_reads(0), little_reads(0), total_reads(0) {}
+	IntronSpanCounter() : left_reads(0), little_reads(0), total_reads(0), multimap_reads(0) {}
 	size_t left_reads;
 	size_t little_reads; // small span overhang
 	size_t total_reads;
+	size_t multimap_reads;
 	vector<size_t> hist;
 };
 
@@ -644,6 +645,11 @@ void count_introns_in_read(const ReadHit& read,
 				ins_itr = intron_counts.insert(make_pair(intron, IntronSpanCounter()));
 				IntronCountTable::iterator itr = ins_itr.first;
 				itr->second.total_reads++;
+				
+				if (read.error_prob() > 0.9)
+				{
+					itr->second.multimap_reads++;
+				}
 				
 				if ( r_left <= small_anchor || (read_len - r_left) < small_anchor)
 				{
@@ -735,6 +741,48 @@ void minor_introns(int bundle_length,
 	}
 }
 
+void multimapping_introns(int bundle_length,
+						  int bundle_left,
+						  const IntronCountTable& intron_counts,
+						  vector<AugmentedCuffOp>& bad_introns,
+						  double fraction)
+
+{
+	for(IntronCountTable::const_iterator itr = intron_counts.begin();
+		itr != intron_counts.end(); 
+		++itr)
+	{
+		pair<AugmentedCuffOp, IntronSpanCounter> itr_cnt_pair = *itr;
+		const IntronSpanCounter itr_spans = itr_cnt_pair.second;
+		
+		double doc = itr_spans.total_reads;
+		double multi = itr_spans.multimap_reads;
+		
+		double multi_fraction = multi / doc;
+		
+		if (multi_fraction > fraction)
+		{
+			bool exists = binary_search(bad_introns.begin(), 
+										bad_introns.end(), 
+										itr->first);
+			if (!exists)
+			{
+	#if ASM_VERBOSE
+				fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads because %lg percent are multireads.\n", 
+						itr->first.g_left(), 
+						itr->first.g_right(), 
+						itr->second.total_reads,
+						multi_fraction * 100);
+				
+	#endif
+				bad_introns.push_back(itr->first);
+				sort(bad_introns.begin(), bad_introns.end());
+			}
+		}
+	}
+}
+
+
 void identify_bad_splices(const HitBundle& bundle, 
 						  BadIntronTable& bad_splice_ops)
 {
@@ -760,7 +808,7 @@ void identify_bad_splices(const HitBundle& bundle,
 	}
 	
 	minor_introns(bundle.length(), bundle.left(), intron_counts, bad_introns, min_intron_fraction);
-	
+	multimapping_introns(bundle.length(), bundle.left(), intron_counts, bad_introns, 0.5);
 	for (IntronCountTable::iterator itr = intron_counts.begin();
 		 itr != intron_counts.end();
 		 ++itr)
