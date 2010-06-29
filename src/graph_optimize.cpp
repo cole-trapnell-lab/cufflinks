@@ -501,14 +501,14 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							continue;
 					
 						// merge
-//#if ASM_VERBOSE
-//						if (num_merges % 100 == 0)
-//						{
-//							fprintf(stderr, "%s\tCollapsing frag # %d\n", 
-//									bundle_label->c_str(), 
-//									num_merges);
-//						}
-//#endif
+#if ASM_VERBOSE
+						if (num_merges % 100 == 0)
+						{
+							fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+									bundle_label->c_str(), 
+									num_merges);
+						}
+#endif
 						
 						vector<Scaffold> s;
 						s.push_back(c_scaff);
