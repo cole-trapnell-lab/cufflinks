@@ -13,7 +13,7 @@ cp src/cuffcompare $1
 cp src/cuffdiff $1
 
 cp README $1
-cp COPYING $1
+cp LICENSE $1
 cp AUTHORS $1
 
 tar cvfz $1.tar.gz $1

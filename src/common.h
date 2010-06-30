@@ -71,7 +71,7 @@ extern double binomial_junc_filter_alpha;
 extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
 #endif
 
-#define ASM_VERBOSE 1
+#define ASM_VERBOSE 0
 
 bool gaurd_assembly();
 
