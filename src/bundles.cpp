@@ -376,7 +376,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 {
 	HitBundle bundle;
 	
-	if (_hit_fac.records_remain())
+	if (!_hit_fac.records_remain())
 	{
 		return false;
 	}

@@ -519,7 +519,7 @@ public:
 	void reset() { rewind(_hit_file); }
 	
 	void mark_curr_pos() { _curr_pos = ftell(_hit_file); }
-	bool records_remain() const { return feof(_hit_file); }
+	bool records_remain() const { return !feof(_hit_file); }
 	
 	bool next_record(const char*& buf, size_t& buf_size);
 	
@@ -537,7 +537,7 @@ private:
 	off_t _curr_pos;
 };
 
-#if HAVE_BAM
+#ifdef HAVE_BAM
 
 /******************************************************************************
  BAMHitFactory turns SAM alignments into ReadHits
@@ -551,12 +551,13 @@ public:
 		HitFactory(insert_table, reference_table) 
 	{
 		_hit_file = samopen(hit_file_name.c_str(), "rb", 0);
-		if (_hit_file) 
+		if (_hit_file == NULL) 
 		{
 			throw std::runtime_error("Fail to open BAM file");
 		}
 		
 		_beginning = bgzf_tell(_hit_file->x.bam);
+        _eof_encountered = false;
 	}	
 	
 	~BAMHitFactory() 
@@ -578,12 +579,18 @@ public:
 		bgzf_seek(_hit_file->x.bam, _curr_pos, SEEK_SET);
 		//--_line_num;
 	}
+    
+    bool records_remain() const 
+    { 
+        return !_eof_encountered;
+    }
 	
 	void reset() 
 	{ 
 		if (_hit_file && _hit_file->x.bam)
 		{
 			bgzf_seek(_hit_file->x.bam, _beginning, SEEK_SET);
+            _eof_encountered = false;
 		}
 	}
 	
@@ -602,6 +609,7 @@ private:
 	int64_t _beginning;
 	
 	bam1_t _next_hit; 
+    bool _eof_encountered;
 };
 
 #endif

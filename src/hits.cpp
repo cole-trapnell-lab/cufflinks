@@ -202,10 +202,15 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 // populate a bam_t This will 
 bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 {
+    if (records_remain() == false)
+        return false;
 	mark_curr_pos();
 	int bytes_read = samread(_hit_file, &_next_hit);
-	if (bytes_read == 0)
+	if (bytes_read < 0)
+    {
+        _eof_encountered = true;
 		return false;
+    }
 	buf = (const char*)&_next_hit;
 	buf_size = bytes_read;
 	

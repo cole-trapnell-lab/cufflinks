@@ -26,7 +26,7 @@
 		  about how to use Cufflinks or would like more information about 
 		  the software, please email <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>, 
 		  though we ask you to have a look at the <a href="http://dx.doi.org/10.1038/nbt.1621">paper</a> 
-		  and the  <a href="http://www.nature.com/nbt/journal/vaop/ncurrent/extref/nbt.1621-S1.pdf">
+		  and the  <a href="http://www.nature.com/nbt/journal/v28/n5/extref/nbt.1621-S1.pdf">
 		  supplemental methods</a> first, as your question be answered there.
 	</td><td align=right valign=middle>
   </td></tr>
@@ -57,15 +57,15 @@
 		  <div class="box">
 		    <ul>
 		      <table width="100%">
-				<tr><td>version 0.8.2 (BETA)</td> <td align="right">3/26/2010</td></tr>
+				<tr><td>version 0.8.3 (BETA)</td> <td align="right">6/30/2010</td></tr>
 				<tr>
-		      		<td><a href="./downloads/cufflinks-0.8.2.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+		      		<td><a href="./downloads/cufflinks-0.8.3.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
 		      	</tr>
 				<tr>
-					<td><a href="./downloads/cufflinks-0.8.2.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+					<td><a href="./downloads/cufflinks-0.8.3.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
 				</tr>
 				<tr>
-					<td><a href="./downloads/cufflinks-0.8.2.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+					<td><a href="./downloads/cufflinks-0.8.3.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
 				</tr>
 			  </table>
 		    </ul>
@@ -198,6 +198,12 @@
 	  Prints the help message and exits   
 	  </td></tr> 
 	  <tr><td VALIGN=top nowrap>
+	  <tt>-o/--output-dir &lt;string&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the name of the directory in which Cufflinks will write all of its 
+	  output.  The default is "./".
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>	
 	  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
 	  This is the expected (mean) inner distance between mate pairs.  For, 
@@ -861,6 +867,12 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  Prints the help message and exits   
 		  </td></tr> 
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-o/--output-dir &lt;string&gt;</tt>
+		  </td><td VALIGN=top>
+		  Sets the name of the directory in which Cuffdiff will write all of its 
+		  output.  The default is "./".
+		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
 		  </td><td VALIGN=top>

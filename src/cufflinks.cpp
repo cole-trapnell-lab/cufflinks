@@ -806,17 +806,26 @@ void driver(const string& hit_file_name, FILE* ref_gtf)
 	
 	shared_ptr<HitFactory> hit_factory;
 	
-	try
+    try
 	{
-		hit_factory = shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
+		hit_factory = shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
 	}
 	catch (std::runtime_error& e)
 	{
-		fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+		fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
 				hit_file_name.c_str());
-		exit(1);
+	    
+        try
+        {
+            hit_factory = shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
+        }
+        catch (std::runtime_error& e)
+        {
+            fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+                    hit_file_name.c_str());
+            exit(1);
+        }
 	}
-	
 	BundleFactory bundle_factory(*hit_factory, ref_gtf);
 	
 #if ENABLE_THREDS
