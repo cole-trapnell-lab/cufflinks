@@ -198,90 +198,39 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 
 #ifdef HAVE_BAM
 
-bool BAMHitFactory::get_hit_from_buf(int line_num, 
-									 const char* orig_bwt_buf, 
+
+// populate a bam_t This will 
+bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
+{
+	mark_curr_pos();
+	int bytes_read = samread(_hit_file, &_next_hit);
+	if (bytes_read == 0)
+		return false;
+	buf = (const char*)&_next_hit;
+	buf_size = bytes_read;
+	
+	return true;
+}
+
+bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf, 
 									 ReadHit& bh,
 									 bool strip_slash,
 									 char* name_out,
 									 char* name_tags)
 {
-	char bwt_buf[2048];
-	strcpy(bwt_buf, orig_bwt_buf);
-	// Are we still in the header region?
-	if (bwt_buf[0] == '@')
-		return false;
+	const bam1_t* hit_buf = (const bam1_t*)orig_bwt_buf;
 	
-	const char* buf = bwt_buf;
-	const char* _name = strsep((char**)&buf,"\t");
-	if (!_name)
-		return false;
-	char name[2048];
-	strncpy(name, _name, 2047); 
+	//int sam_flag = atoi(sam_flag_str);
 	
-	const char* sam_flag_str = strsep((char**)&buf,"\t");
-	if (!sam_flag_str)
-		return false;
+	int text_offset = hit_buf->core.pos;
+	int text_mate_pos = hit_buf->core.mpos;
+	int target_id = hit_buf->core.tid;
+	int mate_target_id = hit_buf->core.mtid;
 	
-	const char* text_name = strsep((char**)&buf,"\t");
-	if (!text_name)
-		return false;
-	
-	const char* text_offset_str = strsep((char**)&buf,"\t");
-	if (!text_offset_str)
-		return false;
-	
-	const char* map_qual_str =  strsep((char**)&buf,"\t");
-	if (!map_qual_str)
-		return false;
-	
-	const char* cigar_str = strsep((char**)&buf,"\t");
-	if (!cigar_str)
-		return false;
-	
-	const char* mate_ref_name =  strsep((char**)&buf,"\t");
-	if (!mate_ref_name)
-		return false;
-	
-	const char* mate_pos_str =  strsep((char**)&buf,"\t");
-	if (!mate_pos_str)
-		return false;
-	
-	const char* inferred_insert_sz_str =  strsep((char**)&buf,"\t");
-	if (!inferred_insert_sz_str)
-		return false;
-	
-	const char* seq_str =  strsep((char**)&buf,"\t");
-	if (!seq_str)
-		return false;
-	
-	const char* qual_str =  strsep((char**)&buf,"\t");
-	if (!qual_str)
-		return false;
-	
-	
-	int sam_flag = atoi(sam_flag_str);
-	int text_offset = atoi(text_offset_str);
-	int text_mate_pos = atoi(mate_pos_str);
-	
-	// Copy the tag out of the name field before we might wipe it out
-	char* pipe = strrchr(name, '|');
-	if (pipe)
-	{
-		if (name_tags)
-			strcpy(name_tags, pipe);
-		*pipe = 0;
-	}
-	// Stripping the slash and number following it gives the insert name
-	char* slash = strrchr(name, '/');
-	if (strip_slash && slash)
-		*slash = 0;
-	
-	const char* p_cig = cigar_str;
-	//int len = strlen(sequence);
 	vector<CigarOp> cigar;
 	bool spliced_alignment = false;
 	
-	double mapQ = atoi(map_qual_str);
+	double mapQ = hit_buf->core.qual;
 	long double error_prob;
 	if (mapQ > 0)
 	{
@@ -292,12 +241,14 @@ bool BAMHitFactory::get_hit_from_buf(int line_num,
 	{
 		error_prob = 1.0;
 	}
+
+	//header->target_name[c->tid]
 	
-	if (!strcmp(text_name, "*"))
+	if (target_id < 0)
 	{
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
-		bh = create_hit(name,
-						text_name,
+		bh = create_hit(bam1_qname(hit_buf),
+						"",
 						0, // SAM files are 1-indexed
 						0,
 						false,
@@ -308,63 +259,51 @@ bool BAMHitFactory::get_hit_from_buf(int line_num,
 						0);
 		return true;
 	}
-	// Mostly pilfered direct from the SAM tools:
-	while (*p_cig) 
+	
+	string text_name = _hit_file->header->target_name[target_id];
+	
+	for (int i = 0; i < hit_buf->core.n_cigar; ++i) 
 	{
-		char* t;
-		int length = (int)strtol(p_cig, &t, 10);
+		//char* t;
+
+		int length = bam1_cigar(hit_buf)[i] >> BAM_CIGAR_SHIFT;
 		if (length <= 0)
 		{
-			fprintf (stderr, "SAM error on line %d: CIGAR op has zero length\n", line_num);
+			//fprintf (stderr, "SAM error on line %d: CIGAR op has zero length\n", _line_num);
 			return false;
 		}
-		char op_char = toupper(*t);
+		
 		CigarOpCode opcode;
-		if (op_char == 'M') 
+		switch(bam1_cigar(hit_buf)[i] & BAM_CIGAR_MASK)
 		{
-			/*if (length > max_read_length)
-			{
-				fprintf(stderr, "SAM error on line %d:  %s: MATCH op has length > %d\n", line_num, name, max_read_length);
+			case BAM_CMATCH: opcode  = MATCH; break; 
+			case BAM_CINS: opcode  = INS; break;
+			case BAM_CDEL: opcode  = DEL; break; 
+			case BAM_CSOFT_CLIP: opcode  = SOFT_CLIP; break;
+			case BAM_CHARD_CLIP: opcode  = HARD_CLIP; break;
+			case BAM_CPAD: opcode  = PAD; break; 
+			case REF_SKIP:
+				spliced_alignment = true;
+				if (length > (int)max_intron_length)
+				{
+					//fprintf(stderr, "Encounter REF_SKIP > max_gene_length, skipping\n");
+					return false;
+				}
+				break;
+			default:
+				//fprintf (stderr, "SAM error on line %d: invalid CIGAR operation\n", _line_num);
 				return false;
-			}*/
-			opcode = MATCH;
 		}
-		else if (op_char == 'I') opcode = INS;
-		else if (op_char == 'D') opcode = DEL;
-		else if (op_char == 'N')
-		{
-			opcode = REF_SKIP;
-			spliced_alignment = true;
-			if (length > (int)max_intron_length)
-			{
-				//fprintf(stderr, "Encounter REF_SKIP > max_gene_length, skipping\n");
-				return false;
-			}
-		}
-		else if (op_char == 'S') opcode = SOFT_CLIP;
-		else if (op_char == 'H') opcode = HARD_CLIP;
-		else if (op_char == 'P') opcode = PAD;
-		else
-		{
-			fprintf (stderr, "SAM error on line %d: invalid CIGAR operation\n", line_num);
-			return false;
-		}
-		p_cig = t + 1;
-		//i += length;
+		
 		cigar.push_back(CigarOp(opcode, length));
 	}
-	if (*p_cig)
-	{
-		fprintf (stderr, "SAM error on line %d: unmatched CIGAR operation\n", line_num);
-		return false;
-	}
-    
+	
 	string mrnm;
-	if (strcmp(mate_ref_name, "*"))
+	if (mate_target_id >= 0)
 	{
-		if (!strcmp(mate_ref_name, "=") || !strcmp(mate_ref_name, text_name))
+		if (mate_target_id == target_id)
 		{
-			mrnm = text_name;
+			mrnm = _hit_file->header->target_name[mate_target_id];
 			if (abs((int)text_mate_pos - (int)text_offset) > max_intron_length)
 			{
 				//fprintf (stderr, "Mates are too distant, skipping\n");
@@ -384,53 +323,34 @@ bool BAMHitFactory::get_hit_from_buf(int line_num,
 	
 	CuffStrand source_strand = CUFF_STRAND_UNKNOWN;
 	unsigned char num_mismatches = 0;
-	
-	const char* tag_buf = buf;
-	
-	while((tag_buf = strsep((char**)&buf,"\t")))
+
+	uint8_t* ptr = bam_aux_get(hit_buf, "XS");
+	if (ptr)
 	{
-		
-		char* first_colon = strchr(tag_buf, ':');
-		if (first_colon)
-		{
-			*first_colon = 0;
-			++first_colon;
-			char* second_colon = strchr(first_colon, ':');
-			if (second_colon)
-			{
-				*second_colon = 0;
-				++second_colon;
-				const char* first_token = tag_buf;
-				//const char* second_token = first_colon;
-				const char* third_token = second_colon;
-				if (!strcmp(first_token, "XS"))
-				{				
-					if (*third_token == '-')
-						source_strand = CUFF_REV;
-					else if (*third_token == '+')
-						source_strand = CUFF_FWD;
-				}
-				else if (!strcmp(first_token, "NM"))
-				{
-					num_mismatches = atoi(third_token);
-				}
-				else 
-				{
-					
-				}
-			}
-		}
+		char src_strand_char = bam_aux2A(ptr);
+		if (src_strand_char == '-')
+			source_strand = CUFF_REV;
+		else if (src_strand_char == '+')
+			source_strand = CUFF_FWD;
 	}
+	
+	ptr = bam_aux_get(hit_buf, "NM");
+	if (ptr)
+	{
+		num_mismatches = bam_aux2i(ptr);
+	}
+
+	
 	
 	if (!spliced_alignment)
 	{
 		
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
-		bh = create_hit(name,
+		bh = create_hit(bam1_qname(hit_buf),
 						text_name,
 						text_offset - 1, // SAM files are 1-indexed
 						cigar[0].length,
-						sam_flag & 0x0010,
+						bam1_strand(hit_buf),
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
@@ -443,14 +363,14 @@ bool BAMHitFactory::get_hit_from_buf(int line_num,
 	{	
 		if (source_strand == CUFF_STRAND_UNKNOWN)
 		{
-			fprintf(stderr, "SAM error on line %d: found spliced alignment without XS attribute\n", line_num);
+			fprintf(stderr, "BAM record error: found spliced alignment without XS attribute\n");
 		}
 		
-		bh = create_hit(name,
+		bh = create_hit(bam1_qname(hit_buf),
 						text_name,
 						text_offset - 1,
 						cigar,
-						sam_flag & 0x0010,
+						bam1_strand(hit_buf),
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
@@ -458,7 +378,9 @@ bool BAMHitFactory::get_hit_from_buf(int line_num,
 						num_mismatches);
 		return true;
 	}
-	return false;
+	
+	
+	return true;
 }
 
 #endif
@@ -467,7 +389,7 @@ bool SAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 {
 	mark_curr_pos();
 	
-	bool new_rec = fgets(_hit_buf,  _hit_buf_max_sz - 1, hit_file());
+	bool new_rec = fgets(_hit_buf,  _hit_buf_max_sz - 1, _hit_file);
 	if (!new_rec)
 		return false;
 	++_line_num;

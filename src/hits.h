@@ -17,7 +17,7 @@
 #include <boost/shared_ptr.hpp>
 
 #ifdef HAVE_BAM
-#include <bam/bam.h>
+#include <bam/sam.h>
 #endif
 
 using namespace std;
@@ -34,7 +34,16 @@ using boost::shared_ptr;
 
 enum CuffStrand { CUFF_STRAND_UNKNOWN = 0, CUFF_FWD = 1, CUFF_REV = 2, CUFF_BOTH = 3 };
 
-enum CigarOpCode { MATCH, INS, DEL, REF_SKIP, SOFT_CLIP, HARD_CLIP, PAD };
+enum CigarOpCode 
+{ 
+	MATCH = BAM_CMATCH, 
+	INS = BAM_CINS, 
+	DEL = BAM_CDEL, 
+	REF_SKIP = BAM_CREF_SKIP,
+	SOFT_CLIP = BAM_CSOFT_CLIP, 
+	HARD_CLIP = BAM_CHARD_CLIP, 
+	PAD = BAM_CPAD
+};
 
 struct CigarOp
 {
@@ -408,10 +417,8 @@ bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);
 class HitFactory
 {
 public:
-	HitFactory(FILE* hit_file, 
-			   ReadTable& insert_table, 
+	HitFactory(ReadTable& insert_table, 
 			   RefSequenceTable& reference_table) : 
-		_hit_file(hit_file),
 		_insert_table(insert_table), 
 		_ref_table(reference_table) {}
 	
@@ -419,7 +426,7 @@ public:
 	{
 		if (this != &rhs)
 		{
-			_hit_file = rhs._hit_file;
+			//_hit_file = rhs._hit_file;
 			_insert_table = rhs._insert_table;
 			_ref_table = rhs._ref_table;
 		}
@@ -449,16 +456,15 @@ public:
 					   double error_prob,
 					   unsigned int  edit_dist);
 	
-	virtual void reset() { rewind(_hit_file); }
+	virtual void reset() = 0;
 	
-	virtual void undo_hit() { fseeko(_hit_file, _curr_pos, SEEK_SET); }
-	virtual void mark_curr_pos() { _curr_pos = ftell(_hit_file); }
+	virtual void undo_hit() = 0;
 	
 	// next_record() should always set _curr_pos before reading the
 	// next_record so undo_hit() will work properly.
 	virtual bool next_record(const char*& buf, size_t& buf_size) = 0;
 	
-	virtual bool records_remain() const { return feof(_hit_file); }
+	virtual bool records_remain() const = 0;
 	
 	virtual bool get_hit_from_buf(const char* bwt_buf, 
 								  ReadHit& bh,
@@ -468,11 +474,10 @@ public:
 	
 	RefSequenceTable& ref_table() { return _ref_table; }
 	
-	FILE* hit_file() { return _hit_file; }
+	//FILE* hit_file() { return _hit_file; }
 	
 private:
-	FILE* _hit_file;
-	off_t _curr_pos;
+
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
 };
@@ -483,16 +488,39 @@ private:
 class SAMHitFactory : public HitFactory
 {
 public:
-	SAMHitFactory(FILE* hit_file, 
+	SAMHitFactory(const string& hit_file_name, 
 				  ReadTable& insert_table, 
 				  RefSequenceTable& reference_table) : 
-	HitFactory(hit_file, insert_table, reference_table), _line_num(0) {}
+		HitFactory(insert_table, reference_table), 
+		_line_num(0), 
+		_curr_pos(0) 
+	{
+		_hit_file = fopen(hit_file_name.c_str(), "r");
+		if (_hit_file == NULL)
+		{
+			throw std::runtime_error("Error: could not open file for reading");
+		}
+	}
+	
+	~SAMHitFactory() 
+	{
+		if (_hit_file)
+		{
+			fclose(_hit_file);
+		}
+	}
 	
 	virtual void undo_hit() 
 	{ 
-		HitFactory::undo_hit(); 
+		fseeko(_hit_file, _curr_pos, SEEK_SET); 
 		--_line_num;
 	}
+	
+	void reset() { rewind(_hit_file); }
+	
+	void mark_curr_pos() { _curr_pos = ftell(_hit_file); }
+	bool records_remain() const { return feof(_hit_file); }
+	
 	bool next_record(const char*& buf, size_t& buf_size);
 	
 	bool get_hit_from_buf(const char* bwt_buf, 
@@ -504,6 +532,9 @@ private:
 	static const size_t _hit_buf_max_sz = 10 * 1024;
 	char _hit_buf[_hit_buf_max_sz];
 	int _line_num;
+	
+	FILE* _hit_file;
+	off_t _curr_pos;
 };
 
 #if HAVE_BAM
@@ -514,10 +545,48 @@ private:
 class BAMHitFactory : public HitFactory
 {
 public:
-	BAMHitFactory(FILE* hit_file, 
+	BAMHitFactory(const string& hit_file_name, 
 				  ReadTable& insert_table, 
 				  RefSequenceTable& reference_table) : 
-	HitFactory(hit_file, insert_table, reference_table) {}
+		HitFactory(insert_table, reference_table) 
+	{
+		_hit_file = samopen(hit_file_name.c_str(), "rb", 0);
+		if (_hit_file) 
+		{
+			throw std::runtime_error("Fail to open BAM file");
+		}
+		
+		_beginning = bgzf_tell(_hit_file->x.bam);
+	}	
+	
+	~BAMHitFactory() 
+	{
+		if (_hit_file)
+		{
+			samclose(_hit_file);
+		}
+	}
+	
+	void mark_curr_pos() 
+	{ 
+		_curr_pos = bgzf_tell(_hit_file->x.bam);
+	}
+
+	
+	void undo_hit() 
+	{ 
+		bgzf_seek(_hit_file->x.bam, _curr_pos, SEEK_SET);
+		//--_line_num;
+	}
+	
+	void reset() 
+	{ 
+		if (_hit_file && _hit_file->x.bam)
+		{
+			bgzf_seek(_hit_file->x.bam, _beginning, SEEK_SET);
+		}
+	}
+	
 	
 	bool next_record(const char*& buf, size_t& buf_size);
 	
@@ -526,6 +595,13 @@ public:
 						  bool strip_slash,
 						  char* name_out = NULL,
 						  char* name_tags = NULL);
+	
+private:
+	samfile_t* _hit_file; 
+	int64_t _curr_pos;
+	int64_t _beginning;
+	
+	bam1_t _next_hit; 
 };
 
 #endif

@@ -799,14 +799,25 @@ bool assemble_hits(BundleFactory& bundle_factory)
 }
 
 
-void driver(FILE* sam_hit_file, FILE* ref_gtf)
+void driver(const string& hit_file_name, FILE* ref_gtf)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
 	
-	SAMHitFactory hit_factory(sam_hit_file, it, rt);
+	shared_ptr<HitFactory> hit_factory;
 	
-	BundleFactory bundle_factory(hit_factory, ref_gtf);
+	try
+	{
+		hit_factory = shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
+	}
+	catch (std::runtime_error& e)
+	{
+		fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+				hit_file_name.c_str());
+		exit(1);
+	}
+	
+	BundleFactory bundle_factory(*hit_factory, ref_gtf);
 	
 #if ENABLE_THREDS
 	boost::thread asm_thread(assemble_hits,
@@ -832,14 +843,14 @@ int main(int argc, char** argv)
 	
     string sam_hits_file_name = argv[optind++];
 	
-    // Open the approppriate files
-    FILE* sam_hits_file = fopen(sam_hits_file_name.c_str(), "r");
-    if (sam_hits_file == NULL)
-    {
-        fprintf(stderr, "Error: cannot open SAM file %s for reading\n",
-                sam_hits_file_name.c_str());
-        exit(1);
-    }
+//    // Open the approppriate files
+//    FILE* sam_hits_file = fopen(sam_hits_file_name.c_str(), "r");
+//    if (sam_hits_file == NULL)
+//    {
+//        fprintf(stderr, "Error: cannot open SAM file %s for reading\n",
+//                sam_hits_file_name.c_str());
+//        exit(1);
+//    }
 	
 	srand48(time(NULL));
 	
@@ -870,7 +881,7 @@ int main(int argc, char** argv)
         }
     }
     
-    driver(sam_hits_file, ref_gtf);
+    driver(sam_hits_file_name, ref_gtf);
 	
 	return 0;
 }
