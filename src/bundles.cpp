@@ -424,19 +424,22 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			next_ref_scaff != ref_mRNAs.end() &&
 			next_ref_scaff->ref_id() != bh->ref_id())
 		{
-            vector<Scaffold>::iterator curr_ref_scaff = next_ref_scaff;
+			bool found_scaff = false;
+            vector<Scaffold>::iterator curr_ref_scaff = ref_mRNAs.begin();
 			for (size_t i = 0; i < _ref_scaff_offsets.size(); ++i)
 			{
 				if (_ref_scaff_offsets[i].first == bh->ref_id())
 				{
-					next_ref_scaff = _ref_scaff_offsets[i].second;
+					curr_ref_scaff = _ref_scaff_offsets[i].second;
+					found_scaff = true;
 				}
 			}
             // Hit incident on chromosome not in the annotation
-            if (next_ref_scaff == curr_ref_scaff)
+            if (!found_scaff)
             {
                 continue;
             }
+			next_ref_scaff = curr_ref_scaff;
 		}
 		
 		// break the bundle if there's a coverage gap or if alignments for a 
