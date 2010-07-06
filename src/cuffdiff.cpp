@@ -880,24 +880,14 @@ int main(int argc, char** argv)
     string ref_gtf_filename = argv[optind++];
 	
 	vector<FILE*> sam_hit_files;
-	vector<string> sam_hit_file_names;
+	vector<string> sam_hit_filenames;
     while(optind < argc)
     {
         string sam_hits_file_name = argv[optind++];
-		// Open the approppriate files
-		FILE* sam_hits_file = fopen(sam_hits_file_name.c_str(), "r");
-		if (sam_hits_file == NULL)
-		{
-			fprintf(stderr, "Error: cannot open SAM file %s for reading\n",
-					sam_hits_file_name.c_str());
-			exit(1);
-		}
-		
-		sam_hit_files.push_back(sam_hits_file);
-		sam_hit_file_names.push_back(sam_hits_file_name);
+		sam_hit_filenames.push_back(sam_hits_file_name);
     }
     	
-	while (sam_hit_files.size() < 2)
+	while (sam_hit_filenames.size() < 2)
     {
         fprintf(stderr, "Error: cuffdiff requires at least 2 SAM files\n");
         exit(1);

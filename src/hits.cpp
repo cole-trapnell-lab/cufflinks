@@ -287,7 +287,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 			case BAM_CSOFT_CLIP: opcode  = SOFT_CLIP; break;
 			case BAM_CHARD_CLIP: opcode  = HARD_CLIP; break;
 			case BAM_CPAD: opcode  = PAD; break; 
-			case REF_SKIP:
+			case BAM_CREF_SKIP:
+                opcode = REF_SKIP;
 				spliced_alignment = true;
 				if (length > (int)max_intron_length)
 				{
