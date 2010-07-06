@@ -537,7 +537,7 @@ void extract_sample_diffs(SampleDiffs& diff_map,
 	}
 }
 
-void driver(FILE* ref_gtf, vector<FILE*>& sam_hit_files, Outfiles& outfiles)
+void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
@@ -549,9 +549,9 @@ void driver(FILE* ref_gtf, vector<FILE*>& sam_hit_files, Outfiles& outfiles)
 	
 	vector<LocusBundleFactory> bundle_factories;
 	vector<long double> map_masses;
-	for (size_t i = 0; i < sam_hit_files.size(); ++i)
+	for (size_t i = 0; i < sam_hit_filenames.size(); ++i)
 	{
-		shared_ptr<SAMHitFactory> hs(new SAMHitFactory(sam_hit_files[i], it, rt));
+		shared_ptr<SAMHitFactory> hs(new SAMHitFactory(sam_hit_filenames[i], it, rt));
 		LocusBundleFactory lf(hs);
 		bundle_factories.push_back(lf);
 		BundleFactory standard_factory(*hs, NULL);
@@ -575,13 +575,13 @@ void driver(FILE* ref_gtf, vector<FILE*>& sam_hit_files, Outfiles& outfiles)
 	vector<Scaffold>::iterator ref_scaff_bundle_start = curr_ref_scaff;
 	Tests tests;
 	
-	tests.isoform_de_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
-	tests.tss_group_de_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
-	tests.gene_de_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
-	tests.cds_de_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
-	tests.diff_splicing_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
-	tests.diff_promoter_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
-	tests.diff_cds_tests = vector<SampleDiffs>((int)sam_hit_files.size() - 1);
+	tests.isoform_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.tss_group_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.gene_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.cds_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.diff_splicing_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.diff_promoter_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.diff_cds_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
 	
 	Tracking tracking;
 	
@@ -879,7 +879,7 @@ int main(int argc, char** argv)
 	
     string ref_gtf_filename = argv[optind++];
 	
-	vector<FILE*> sam_hit_files;
+	//vector<FILE*> sam_hit_files;
 	vector<string> sam_hit_filenames;
     while(optind < argc)
     {
@@ -917,7 +917,7 @@ int main(int argc, char** argv)
 	
 	Outfiles outfiles;
 	
-	for (size_t i = 1; i < sam_hit_files.size(); ++i)
+	for (size_t i = 1; i < sam_hit_filenames.size(); ++i)
 	{
 		char out_file_prefix[64];
 		sprintf(out_file_prefix, "%s/%lu_%lu", output_dir.c_str(), i - 1, i);
@@ -1044,7 +1044,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.gene_fpkm_tracking_out = gene_fpkm_out;
 	
-    driver(ref_gtf, sam_hit_files, outfiles);
+    driver(ref_gtf, sam_hit_filenames, outfiles);
 	
 	return 0;
 }

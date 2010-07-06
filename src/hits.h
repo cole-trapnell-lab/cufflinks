@@ -34,6 +34,7 @@ using boost::shared_ptr;
 
 enum CuffStrand { CUFF_STRAND_UNKNOWN = 0, CUFF_FWD = 1, CUFF_REV = 2, CUFF_BOTH = 3 };
 
+#ifdef HAVE_BAM
 enum CigarOpCode 
 { 
 	MATCH = BAM_CMATCH, 
@@ -44,6 +45,18 @@ enum CigarOpCode
 	HARD_CLIP = BAM_CHARD_CLIP, 
 	PAD = BAM_CPAD
 };
+#else
+enum CigarOpCode 
+{ 
+	MATCH, 
+	INS, 
+	DEL, 
+	REF_SKIP,
+	SOFT_CLIP, 
+	HARD_CLIP, 
+	PAD
+};
+#endif
 
 struct CigarOp
 {

@@ -62,6 +62,8 @@
 		EDD6AA481159BE6500D3F668 /* test_abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA461159BE6500D3F668 /* test_abundances.cpp */; };
 		EDD6AA6C1159C05600D3F668 /* test_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA471159BE6500D3F668 /* test_main.cpp */; };
 		EDD6AA8E1159C5CD00D3F668 /* libcppunit-1.12.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */; };
+		EDE107E611E37CCC005F1F4B /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
+		EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		EDE78A2D11B5F4F0000F8846 /* graph_optimize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */; };
 		EDE78A7A11B6E912000F8846 /* scaffold_graph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A7911B6E912000F8846 /* scaffold_graph.cpp */; };
 		EDE78BC611B716C3000F8846 /* matching_merge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78BC411B716C3000F8846 /* matching_merge.cpp */; };
@@ -185,7 +187,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EDE107E611E37CCC005F1F4B /* libbam.a in Frameworks */,
 				ED5D1EEA114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */,
+				EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -665,6 +669,7 @@
 					"$(inherited)",
 					/usr/local/lib,
 					"\"$(SRCROOT)\"",
+					/usr/local/libIntel64,
 				);
 				PRODUCT_NAME = cufflinks_xcode;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
@@ -692,6 +697,7 @@
 					"$(inherited)",
 					/usr/local/lib,
 					"\"$(SRCROOT)\"",
+					/usr/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = cuffdiff;
