@@ -346,7 +346,24 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		num_mismatches = bam_aux2i(ptr);
 	}
 
-	
+    
+    bool antisense_aln = bam1_strand(hit_buf);
+    
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+    {
+        if (_rg_props.platform() == SOLID)
+        {
+            if (antisense_aln)
+            {
+                source_strand = CUFF_REV;
+            }
+            else 
+            {
+                source_strand = CUFF_FWD;
+            }
+        }
+        // TODO: Illumina strand specific orientation inference here
+    }
 	
 	if (!spliced_alignment)
 	{
@@ -356,7 +373,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset - 1, // SAM files are 1-indexed
 						cigar[0].length,
-						bam1_strand(hit_buf),
+						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
@@ -376,7 +393,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset - 1,
 						cigar,
-						bam1_strand(hit_buf),
+						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
@@ -387,6 +404,107 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	
 	
 	return true;
+}
+
+Platform str_to_platform(const string pl_str)
+{
+    if (pl_str == "SOLiD")
+    {
+        return SOLID;
+    }
+    else if (pl_str == "Illumina") 
+    {
+        return ILLUMINA;
+    }
+    else 
+    {
+        return UNKNOWN_PLATFORM;
+    }
+}
+
+// Parses the 
+bool HitFactory::parse_header_string(const string& header_rec,
+                                     ReadGroupProperties& rg_props)
+{
+    vector<string> columns;
+    tokenize(header_rec, "\t", columns); 
+    if (columns[0] == "@RG")
+    {
+        for (size_t i = 1; i < columns.size(); ++i)
+        {
+            vector<string> fields;
+            tokenize(columns[i], ":", fields);
+            if (fields[0] == "PL")
+            {
+                if (rg_props.platform() == UNKNOWN_PLATFORM)
+                {
+                    Platform p = str_to_platform(fields[1]);
+                    rg_props.platform(p);
+                }
+                else 
+                {
+                    Platform p = str_to_platform(fields[1]);
+                    if (p != rg_props.platform())
+                    {
+                        fprintf(stderr, "Error: Processing reads from different platforms is not currently supported\n");
+                        return false;
+                    }
+                }
+
+            }
+        }
+    }
+    return true;
+}
+
+void HitFactory::finalize_rg_props()
+{
+    if (_rg_props.platform() == SOLID)
+    {
+        _rg_props.strandedness(STRANDED_PROTOCOL);
+        _rg_props.std_mate_orientation(MATES_POINT_SAME);
+    }
+    else
+    {
+        // Default to Illumina's unstranded protocol params for strandedness and
+        // mate orientation
+        _rg_props.strandedness(UNSTRANDED_PROTOCOL);
+        _rg_props.std_mate_orientation(MATES_POINT_TOWARD);
+    }
+}
+
+static const int MAX_HEADER_LEN = 4 * 1024 * 1024; // 4 MB
+
+bool BAMHitFactory::inspect_header()
+{
+    bam_header_t* header = _hit_file->header;
+    if (header->l_text >= MAX_HEADER_LEN)
+    {
+        fprintf(stderr, "Warning: BAM header too large\n");
+        return false;
+    }
+    
+    char* h_text = strdup(header->text);
+    char* pBuf = h_text;
+    while(pBuf - h_text < header->l_text)
+    {
+        char* nl = strchr(pBuf, '\n');
+        if (nl) 
+        {
+            *nl = 0; 
+            parse_header_string(pBuf, _rg_props);
+            pBuf = ++nl;
+        }
+        else 
+        {
+            pBuf = h_text + header->l_text;
+        }
+    }
+    
+    finalize_rg_props();
+    
+    free(h_text);
+    return true;
 }
 
 #endif
@@ -628,6 +746,24 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 			}
 		}
 	}
+    
+    bool antisense_aln = sam_flag & 0x0010;
+    
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+    {
+        if (_rg_props.platform() == SOLID)
+        {
+            if (antisense_aln)
+            {
+                source_strand = CUFF_REV;
+            }
+            else 
+            {
+                source_strand = CUFF_FWD;
+            }
+        }
+        // TODO: Illumina strand specific orientation inference here
+    }
 	
 	if (!spliced_alignment)
 	{
@@ -637,7 +773,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset - 1, // SAM files are 1-indexed
 						cigar[0].length,
-						sam_flag & 0x0010,
+						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
@@ -657,7 +793,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset - 1,
 						cigar,
-						sam_flag & 0x0010,
+						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
@@ -668,42 +804,29 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	return false;
 }
 
-//void add_hits_to_coverage(const HitList& hits, vector<short>& DoC)
-//{
-//	int max_hit_pos = -1;
-//	for (size_t i = 0; i < hits.size(); ++i)
-//	{
-//		max_hit_pos = max((int)hits[i].right(),max_hit_pos);
-//	}
-//	
-//	if ((int)DoC.size() < max_hit_pos)
-//		DoC.resize(max_hit_pos);
-//	
-//	for (size_t i = 0; i < hits.size(); ++i)
-//	{
-//		const ReadHit& bh = hits[i];
-//		
-//		if (!bh.accepted())
-//			continue;
-//		// split up the coverage contibution for this reads
-//		size_t j = bh.left();
-//		const vector<CigarOp>& cigar = bh.cigar();
-//
-//		for (size_t c = 0 ; c < cigar.size(); ++c)
-//		{
-//			switch(cigar[c].opcode)
-//			{
-//				case MATCH:
-//					for (size_t m = 0; m < cigar[c].length; ++m)
-//						DoC[j + m]++;
-//				//fall through this case to REF_SKIP is intentional
-//				case REF_SKIP:
-//					j += cigar[c].length;
-//					break;
-//				default:
-//					break;
-//			}
-//			 
-//		}
-//	}
-//}
+bool SAMHitFactory::inspect_header()
+{
+    char pBuf[10 * 1024];
+    
+    off_t curr_pos = ftello(_hit_file);
+    rewind(_hit_file);
+    
+    while (fgets(pBuf, 10*1024, _hit_file))
+    {
+        if (pBuf[0] != '@')
+        {
+            break; // done with the header.
+        }
+        char* nl = strchr(pBuf, '\n');
+        if (nl) 
+        {
+            *nl = 0; 
+            parse_header_string(pBuf, _rg_props);
+        }
+    }
+    
+    fseek(_hit_file, curr_pos, SEEK_SET);
+    
+    finalize_rg_props();
+    return true;
+}

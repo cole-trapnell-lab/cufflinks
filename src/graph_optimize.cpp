@@ -791,7 +791,9 @@ void compress_consitutive(vector<Scaffold>& hits)
     {
         Scaffold compressed = Scaffold(constitutive); 
         vector<Scaffold> completes; 
+        compressed.fill_gaps(2 * olap_radius);
         compressed.get_complete_subscaffolds(completes);
+        
         hits.insert(hits.end(), completes.begin(), completes.end()); 
     }
     

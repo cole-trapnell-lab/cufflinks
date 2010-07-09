@@ -13,6 +13,7 @@
 #include <utility>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
+
 #include <boost/vector_property_map.hpp>
 
 class Scaffold;

@@ -16,9 +16,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#ifdef HAVE_BAM
 #include <bam/sam.h>
-#endif
+
 
 using namespace std;
 using boost::shared_ptr;
@@ -420,6 +419,52 @@ private:
 };
 
 
+enum Strandedness 
+{
+    UNKNOWN_STRANDEDNESS,
+    STRANDED_PROTOCOL,
+    UNSTRANDED_PROTOCOL
+};
+
+enum StandardMateOrientation
+{
+    UNKNOWN_MATE_ORIENTATION,
+    MATES_POINT_TOWARD,
+    MATES_POINT_SAME,
+    MATES_POINT_AWAY
+};
+
+enum Platform
+{
+    UNKNOWN_PLATFORM,
+    ILLUMINA,
+    SOLID
+};
+
+class ReadGroupProperties
+{
+public:
+        
+    ReadGroupProperties() : 
+        _strandedness(UNKNOWN_STRANDEDNESS), 
+        _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
+        _platform(UNKNOWN_PLATFORM){} 
+    
+    Strandedness strandedness() const { return _strandedness; }
+    void strandedness(Strandedness s) { _strandedness = s; }
+    
+    StandardMateOrientation std_mate_orientation() const { return _std_mate_orient; }
+    void std_mate_orientation(StandardMateOrientation so)  { _std_mate_orient = so; }
+    
+    Platform platform() const { return _platform; }
+    void platform(Platform p)  { _platform = p; }    
+private:
+    
+    Strandedness _strandedness;
+    StandardMateOrientation _std_mate_orient;
+    Platform _platform;
+};
+
 bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);
 
 /******************************************************************************
@@ -430,6 +475,7 @@ bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);
 class HitFactory
 {
 public:
+    
 	HitFactory(ReadTable& insert_table, 
 			   RefSequenceTable& reference_table) : 
 		_insert_table(insert_table), 
@@ -489,10 +535,24 @@ public:
 	
 	//FILE* hit_file() { return _hit_file; }
 	
+    virtual bool inspect_header() = 0;
+    
+protected:
+    
+    bool parse_header_string(const string& header_rec,
+                             ReadGroupProperties& rg_props);
+    
+    void finalize_rg_props();
+    
+    // TODO: We want to keep a collection of these, indexed by RG ID.  See #180
+    ReadGroupProperties _rg_props; 
+    
 private:
 
+    
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
+
 };
 
 /******************************************************************************
@@ -513,6 +573,11 @@ public:
 		{
 			throw std::runtime_error("Error: could not open file for reading");
 		}
+        
+        if (inspect_header() == false)
+        {
+            throw std::runtime_error("Error: could not parse SAM header");
+        }
 	}
 	
 	~SAMHitFactory() 
@@ -541,6 +606,9 @@ public:
 						  bool strip_slash,
 						  char* name_out = NULL,
 						  char* name_tags = NULL);
+    
+    bool inspect_header();
+    
 private:
 	static const size_t _hit_buf_max_sz = 10 * 1024;
 	char _hit_buf[_hit_buf_max_sz];
@@ -549,8 +617,6 @@ private:
 	FILE* _hit_file;
 	off_t _curr_pos;
 };
-
-#ifdef HAVE_BAM
 
 /******************************************************************************
  BAMHitFactory turns SAM alignments into ReadHits
@@ -564,13 +630,18 @@ public:
 		HitFactory(insert_table, reference_table) 
 	{
 		_hit_file = samopen(hit_file_name.c_str(), "rb", 0);
-		if (_hit_file == NULL) 
+		if (_hit_file == NULL || _hit_file->header == NULL) 
 		{
 			throw std::runtime_error("Fail to open BAM file");
 		}
 		
 		_beginning = bgzf_tell(_hit_file->x.bam);
         _eof_encountered = false;
+        
+        if (inspect_header() == false)
+        {
+            throw std::runtime_error("Error: could not parse BAM header");
+        }
 	}	
 	
 	~BAMHitFactory() 
@@ -615,6 +686,8 @@ public:
 						  bool strip_slash,
 						  char* name_out = NULL,
 						  char* name_tags = NULL);
+    
+    bool inspect_header();
 	
 private:
 	samfile_t* _hit_file; 
@@ -624,8 +697,6 @@ private:
 	bam1_t _next_hit; 
     bool _eof_encountered;
 };
-
-#endif
 
 /*******************************************************************************
  MateHit is a class that encapsulates a paired-end alignment as a single object.

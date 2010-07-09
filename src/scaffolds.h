@@ -153,6 +153,9 @@ class Scaffold
 				case SOFT_CLIP:
 					g_left += cig[i].length;
 					break;
+                case HARD_CLIP:
+					//g_left += cig[i].length;
+					break;
 				default:
 					assert(false);
 					break;

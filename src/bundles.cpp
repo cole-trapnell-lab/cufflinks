@@ -254,11 +254,11 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 					R.strand() == CUFF_STRAND_UNKNOWN ||
 					L.strand() == R.strand();
 					
-					bool orientation_agree = pm.left_alignment()->antisense_align() != bh->antisense_align();
+					//bool orientation_agree = pm.left_alignment()->antisense_align() != bh->antisense_align();
 					
 					if (strand_agree && 
-						orientation_agree && (!Scaffold::overlap_in_genome(L, R, olap_radius) ||
-											  Scaffold::compatible(L,R)))
+                        (!Scaffold::overlap_in_genome(L, R, olap_radius) ||
+                         Scaffold::compatible(L,R)))
 					{					
 						pm.right_alignment(bh);
 						add_hit(pm);
@@ -679,6 +679,8 @@ void count_introns_in_read(const ReadHit& read,
 			case SOFT_CLIP:
 				g_left += cig[i].length;
 				break;
+            case HARD_CLIP:
+				break;
 			default:
 				assert(false);
 				break;
@@ -1013,6 +1015,9 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 				
 			case SOFT_CLIP:
 				g_left += cig[i].length;
+				break;
+                
+            case HARD_CLIP:
 				break;
 			default:
 				assert(false);
