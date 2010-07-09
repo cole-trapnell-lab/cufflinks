@@ -371,12 +371,12 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(bam1_qname(hit_buf),
 						text_name,
-						text_offset - 1, // SAM files are 1-indexed
+						text_offset, // BAM files are 0-indexed
 						cigar[0].length,
 						antisense_aln,
 						source_strand,
 						mrnm,
-						text_mate_pos - 1,
+						text_mate_pos,
 						error_prob,
 						num_mismatches);
 		return true;
@@ -391,12 +391,12 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		
 		bh = create_hit(bam1_qname(hit_buf),
 						text_name,
-						text_offset - 1,
+						text_offset,  // BAM files are 0-indexed
 						cigar,
 						antisense_aln,
 						source_strand,
 						mrnm,
-						text_mate_pos - 1,
+						text_mate_pos,
 						error_prob,
 						num_mismatches);
 		return true;
@@ -791,7 +791,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		
 		bh = create_hit(name,
 						text_name,
-						text_offset - 1,
+						text_offset,
 						cigar,
 						antisense_aln,
 						source_strand,

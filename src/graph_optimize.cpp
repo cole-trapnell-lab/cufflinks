@@ -887,8 +887,6 @@ void compress_redundant(vector<Scaffold>& fragments)
 
 void compress_fragments(vector<Scaffold>& fragments)
 {
-    //compress_consitutive(fragments);
-    
 #if ASM_VERBOSE
     fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
