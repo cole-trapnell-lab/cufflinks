@@ -316,7 +316,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 	normal norm(0, 0.1);
 	bool performed_collapse = false;
 	
-	double last_size = -1;
+	//double last_size = -1;
     long leftmost = 9999999999;
     long rightmost = -1;
     
@@ -363,7 +363,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
             replacements.push_back(i);
         }
 		
-		int curr_frag = 0;
+		size_t curr_frag = 0;
 		vector<int> curr_conflicts;
 		
 //		for (int i = 0; i < fragments.size(); ++i)
@@ -939,7 +939,7 @@ void compress_overlap_dag_paths(DAG& bundle_dag,
     //hits = new_scaffs;
 	
 #if ASM_VERBOSE
-    fprintf(stderr, "%s\tCompressed overlap graph from %d to %d fragments (%f percent)\n",
+    fprintf(stderr, "%s\tCompressed overlap graph from %lu to %lu fragments (%f percent)\n",
             bundle_label->c_str(), 
             hits.size(), 
             new_scaffs.size(), 

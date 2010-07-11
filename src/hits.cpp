@@ -310,7 +310,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		if (mate_target_id == target_id)
 		{
 			mrnm = _hit_file->header->target_name[mate_target_id];
-			if (abs((int)text_mate_pos - (int)text_offset) > max_intron_length)
+			if (abs((int)text_mate_pos - (int)text_offset) > (int)max_intron_length)
 			{
 				//fprintf (stderr, "Mates are too distant, skipping\n");
 				return false;
@@ -689,7 +689,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		if (!strcmp(mate_ref_name, "=") || !strcmp(mate_ref_name, text_name))
 		{
 			mrnm = text_name;
-			if (abs((int)text_mate_pos - (int)text_offset) > max_intron_length)
+			if (abs((int)text_mate_pos - (int)text_offset) > (int)max_intron_length)
 			{
 				//fprintf (stderr, "Mates are too distant, skipping\n");
 				return false;

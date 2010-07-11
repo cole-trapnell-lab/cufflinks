@@ -627,8 +627,8 @@ void count_introns_in_read(const ReadHit& read,
 	int read_len = read.read_len();
 	int small_anchor = floor(read_len * small_anchor_fraction);
 	
-	size_t r_left = 0;
-	size_t g_left = read.left();
+	int r_left = 0;
+	int g_left = read.left();
 	
 	for (size_t i = 0; i < cig.size(); ++i)
 	{
@@ -660,7 +660,7 @@ void count_introns_in_read(const ReadHit& read,
 				}
 				
 				vector<size_t>& hist = itr->second.hist;
-				if (hist.size() < read_len)
+				if (hist.size() < (size_t)read_len)
 				{
 					size_t num_new_bins = read_len - hist.size();
 					size_t new_left_bins = floor(num_new_bins / 2.0);
@@ -729,7 +729,7 @@ void minor_introns(int bundle_length,
 				if (!exists)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads based on overlap with much more abundant intron: %lu-%lu spanned by %d reads\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads based on overlap with much more abundant intron: %lu-%lu spanned by %d reads\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads,
@@ -886,7 +886,7 @@ void identify_bad_splices(const HitBundle& bundle,
 				if (counter.total_reads < 100 || overhang_ratio >= 0.50)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads, 
@@ -917,7 +917,7 @@ void identify_bad_splices(const HitBundle& bundle,
 				if (median <= hist.size() && hist[median] == 0)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads, 
@@ -943,7 +943,7 @@ void identify_bad_splices(const HitBundle& bundle,
 			if (!filtered)
 			{
 #if ASM_VERBOSE
-				fprintf(stderr, "Accepting intron %lu-%lu spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+				fprintf(stderr, "Accepting intron %d-%d spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 						itr->first.g_left(), 
 						itr->first.g_right(), 
 						itr->second.total_reads, 
