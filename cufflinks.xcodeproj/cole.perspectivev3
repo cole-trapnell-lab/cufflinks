@@ -286,7 +286,7 @@
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 338}, {276, 840}}</string>
+							<string>{{0, 585}, {276, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -333,7 +333,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDBEA4FF11EA2AA700C661A7</string>
+										<string>EDBEA53C11EA479200C661A7</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0D8411D800BC00CFD663</string>
@@ -361,13 +361,14 @@
 											<string>EDBBA57411DE759B0015175B</string>
 											<string>EDBBA57511DE759B0015175B</string>
 											<string>ED2A458B11E2A65C009AD73B</string>
-											<string>ED2A458D11E2A65C009AD73B</string>
 											<string>ED2A458E11E2A65C009AD73B</string>
 											<string>ED2A458F11E2A65C009AD73B</string>
 											<string>ED2A459811E2A689009AD73B</string>
 											<string>ED2A464E11E2C822009AD73B</string>
 											<string>EDBEA4FE11EA2AA700C661A7</string>
-											<string>ED2A459111E2A65C009AD73B</string>
+											<string>EDBEA51711EA426700C661A7</string>
+											<string>EDBEA52D11EA461800C661A7</string>
+											<string>EDBEA53B11EA479200C661A7</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -643,14 +644,14 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>EDBEA4C311EA26F200C661A7</string>
+				<string>EDBEA52111EA42B100C661A7</string>
 				<string>1CCC7628064C1048000F2A68</string>
 				<string>1CCC7629064C1048000F2A68</string>
-				<string>EDBEA4C411EA26F200C661A7</string>
-				<string>EDBEA4C511EA26F200C661A7</string>
-				<string>EDBEA4C611EA26F200C661A7</string>
-				<string>EDBEA4C711EA26F200C661A7</string>
-				<string>EDBEA4C811EA26F200C661A7</string>
+				<string>EDBEA52211EA42B100C661A7</string>
+				<string>EDBEA52311EA42B100C661A7</string>
+				<string>EDBEA52411EA42B100C661A7</string>
+				<string>EDBEA52511EA42B100C661A7</string>
+				<string>EDA514FA10C72929000A4F41</string>
 			</array>
 			<key>ToolbarConfigUserDefaultsMinorVersion</key>
 			<string>2</string>
@@ -684,6 +685,8 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>EDBEA52711EA42B100C661A7</string>
+		<string>EDBEA52811EA42B100C661A7</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>

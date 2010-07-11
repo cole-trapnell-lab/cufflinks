@@ -1049,6 +1049,20 @@ void inspect_map(BundleFactory& bundle_factory,
 	}
 	
 	bundle_factory.reset();
+    size_t alloced = 0;
+    size_t used = 0;
+    size_t num_introns = 0;
+    for (BadIntronTable::const_iterator itr = bad_introns.begin();
+         itr != bad_introns.end();
+         ++itr)
+    {
+        alloced += itr->second.capacity() * sizeof(AugmentedCuffOp);
+        used += itr->second.size() * sizeof(AugmentedCuffOp);
+        num_introns += itr->second.size();
+    }
+    
+    fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+    
 	return;
 }
 
