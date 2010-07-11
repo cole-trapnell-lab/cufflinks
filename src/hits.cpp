@@ -203,6 +203,8 @@ bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
         return false;
 	mark_curr_pos();
     
+    memset(&_next_hit, sizeof(_next_hit), 0);
+    
 	int bytes_read = samread(_hit_file, &_next_hit);
 	if (bytes_read < 0)
     {
