@@ -3,8 +3,8 @@
 	08FB7793FE84155DC02AAC07 /* Project object */ = {
 		activeArchitecturePreference = x86_64;
 		activeBuildConfigurationName = Debug;
-		activeExecutable = EDD0CD9D10C72AC200AF308F /* cufflinks */;
-		activeTarget = 8DD76F620486A84900D96B5E /* cufflinks */;
+		activeExecutable = EDD0CE2310C72F7D00AF308F /* cuffdiff */;
+		activeTarget = EDD0CE0810C72F7D00AF308F /* cuffdiff */;
 		addToTargets = (
 			8DD76F620486A84900D96B5E /* cufflinks */,
 		);
@@ -354,6 +354,14 @@
 			EDBEA5F911EA736C00C661A7 /* PBXTextBookmark */ = EDBEA5F911EA736C00C661A7 /* PBXTextBookmark */;
 			EDBEA5FA11EA737900C661A7 /* PBXTextBookmark */ = EDBEA5FA11EA737900C661A7 /* PBXTextBookmark */;
 			EDBEA60111EA74A000C661A7 /* PBXTextBookmark */ = EDBEA60111EA74A000C661A7 /* PBXTextBookmark */;
+			EDBEA60211EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60211EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60311EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60311EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60511EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60511EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60711EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60711EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60811EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60811EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60A11EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60A11EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60B11EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60B11EA75CD00C661A7 /* PBXTextBookmark */;
+			EDBEA60C11EA75CD00C661A7 /* PBXTextBookmark */ = EDBEA60C11EA75CD00C661A7 /* PBXTextBookmark */;
 			EDE107F011E37CF3005F1F4B = EDE107F011E37CF3005F1F4B /* PBXTextBookmark */;
 			EDE107F111E37CF3005F1F4B = EDE107F111E37CF3005F1F4B /* PBXTextBookmark */;
 			EDE1082711E383FB005F1F4B = EDE1082711E383FB005F1F4B /* PBXTextBookmark */;
@@ -863,7 +871,7 @@
 		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
 		name = "cuffdiff.cpp: 887";
 		rLen = 0;
-		rLoc = 25783;
+		rLoc = 25789;
 		rType = 0;
 		vrLen = 987;
 		vrLoc = 25436;
@@ -1036,9 +1044,9 @@
 	};
 	EDA5152010C72963000A4F41 /* bundles.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 15028}}";
-			sepNavSelRange = "{10508, 0}";
-			sepNavVisRange = "{10400, 1145}";
+			sepNavIntBoundsRect = "{{0, 0}, {1017, 15236}}";
+			sepNavSelRange = "{30038, 0}";
+			sepNavVisRange = "{28978, 1072}";
 		};
 	};
 	EDA5152210C72963000A4F41 /* common.cpp */ = {
@@ -2897,6 +2905,101 @@
 		vrLen = 1145;
 		vrLoc = 10400;
 	};
+	EDBEA60211EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 134";
+		rLen = 13;
+		rLoc = 3287;
+		rType = 0;
+		vrLen = 834;
+		vrLoc = 2948;
+	};
+	EDBEA60311EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDBEA60411EA75CD00C661A7 /* shared_count.hpp */;
+		name = "shared_count.hpp: 223";
+		rLen = 0;
+		rLoc = 4802;
+		rType = 0;
+		vrLen = 506;
+		vrLoc = 4534;
+	};
+	EDBEA60411EA75CD00C661A7 /* shared_count.hpp */ = {
+		isa = PBXFileReference;
+		name = shared_count.hpp;
+		path = "/usr/local/include/boost-1_41/boost/smart_ptr/detail/shared_count.hpp";
+		sourceTree = "<absolute>";
+	};
+	EDBEA60511EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDBEA60611EA75CD00C661A7 /* stl_iterator.h */;
+		name = "stl_iterator.h: 653";
+		rLen = 0;
+		rLoc = 20926;
+		rType = 0;
+		vrLen = 1028;
+		vrLoc = 20491;
+	};
+	EDBEA60611EA75CD00C661A7 /* stl_iterator.h */ = {
+		isa = PBXFileReference;
+		name = stl_iterator.h;
+		path = "/Developer/SDKs/MacOSX10.6.sdk/usr/include/c++/4.2.1/bits/stl_iterator.h";
+		sourceTree = "<absolute>";
+	};
+	EDBEA60711EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5153010C72963000A4F41 /* hits.cpp */;
+		name = "hits.cpp: 268";
+		rLen = 0;
+		rLoc = 6791;
+		rType = 0;
+		vrLen = 626;
+		vrLoc = 6481;
+	};
+	EDBEA60811EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDBEA60911EA75CD00C661A7 /* stl_vector.h */;
+		name = "stl_vector.h: 348";
+		rLen = 0;
+		rLoc = 12457;
+		rType = 0;
+		vrLen = 909;
+		vrLoc = 11978;
+	};
+	EDBEA60911EA75CD00C661A7 /* stl_vector.h */ = {
+		isa = PBXFileReference;
+		name = stl_vector.h;
+		path = "/Developer/SDKs/MacOSX10.6.sdk/usr/include/c++/4.2.1/bits/stl_vector.h";
+		sourceTree = "<absolute>";
+	};
+	EDBEA60A11EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 912";
+		rLen = 0;
+		rLoc = 24791;
+		rType = 0;
+		vrLen = 682;
+		vrLoc = 24160;
+	};
+	EDBEA60B11EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		rLen = 0;
+		rLoc = 1132;
+		rType = 1;
+	};
+	EDBEA60C11EA75CD00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 1133";
+		rLen = 0;
+		rLoc = 30038;
+		rType = 0;
+		vrLen = 764;
+		vrLoc = 29286;
+	};
 	EDD0CD9D10C72AC200AF308F /* cufflinks */ = {
 		isa = PBXExecutable;
 		activeArgIndices = (
@@ -3267,7 +3370,7 @@
 		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
 		name = "cuffdiff.cpp: 919";
 		rLen = 0;
-		rLoc = 26515;
+		rLoc = 26521;
 		rType = 0;
 		vrLen = 1275;
 		vrLoc = 26032;
@@ -3277,7 +3380,7 @@
 		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
 		name = "cuffdiff.cpp: 911";
 		rLen = 0;
-		rLoc = 26349;
+		rLoc = 26355;
 		rType = 0;
 		vrLen = 1579;
 		vrLoc = 26032;

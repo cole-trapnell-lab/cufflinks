@@ -554,7 +554,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 		shared_ptr<SAMHitFactory> hs(new SAMHitFactory(sam_hit_filenames[i], it, rt));
 		LocusBundleFactory lf(hs);
 		bundle_factories.push_back(lf);
-		BundleFactory standard_factory(*hs, NULL);
+		BundleFactory standard_factory(*hs, NULL, NULL);
 		
 		fprintf(stderr, "Counting hits in sample %lu\n", i);
 		long double map_mass = 0;
