@@ -196,9 +196,6 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   edit_dist);	
 }
 
-#ifdef HAVE_BAM
-
-
 // populate a bam_t This will 
 bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 {
@@ -507,7 +504,6 @@ bool BAMHitFactory::inspect_header()
     return true;
 }
 
-#endif
 
 bool SAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 {
