@@ -1029,12 +1029,21 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 }
 
 void inspect_map(BundleFactory& bundle_factory,
-						long double& map_mass, 
-						BadIntronTable& bad_introns)
+                 long double& map_mass, 
+                 BadIntronTable& bad_introns)
 {
 	HitBundle bundle;	
 	while(bundle_factory.next_bundle(bundle))
 	{
+#if ASM_VERBOSE
+        char bundle_label_buf[2048];
+        sprintf(bundle_label_buf, 
+                "%d-%d", 
+                bundle.left(),
+                bundle.right());
+        fprintf(stderr, "Inspecting bundle %s\n", bundle_label_buf);
+#endif
+        
 		const vector<MateHit>& hits = bundle.hits();
 		
 		identify_bad_splices(bundle, bad_introns);
