@@ -494,7 +494,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 print_sort_error(last_chr_name, 
                                  last_pos_seen, 
                                  bh_chr_name, 
-                                 last_pos_seen);
+                                 bh->left());
                 exit(1);
             }
         }
@@ -506,9 +506,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
                 const char* last_chr_name = _hit_fac.ref_table().get_name(last_ref_id_seen);
 				print_sort_error(last_chr_name, 
-                                 last_pos_seen, 
-                                 bh_chr_name, 
-                                 last_pos_seen);
+                                 last_pos_seen,
+                                 bh_chr_name,
+                                 bh->left());
 				exit(1);
 			}
 			
@@ -541,7 +541,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		
 		last_ref_id_seen = bh->ref_id();
 		last_pos_seen = bh->left();
-		
+		        
 		//curr_pos = ftello(hit_file);
 	}
 	

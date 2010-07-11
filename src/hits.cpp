@@ -791,7 +791,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		
 		bh = create_hit(name,
 						text_name,
-						text_offset,
+						text_offset - 1,
 						cigar,
 						antisense_aln,
 						source_strand,
