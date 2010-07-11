@@ -631,7 +631,7 @@ public:
 	{
 		_hit_file = samopen(hit_file_name.c_str(), "rb", 0);
         
-        memset(&_next_hit, sizeof(_next_hit), 0);
+        memset(&_next_hit, 0, sizeof(_next_hit));
         
 		if (_hit_file == NULL || _hit_file->header == NULL) 
 		{

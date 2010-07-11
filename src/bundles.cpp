@@ -625,7 +625,7 @@ void count_introns_in_read(const ReadHit& read,
 	const vector<CigarOp>& cig = read.cigar();
 	
 	int read_len = read.read_len();
-	int small_anchor = floor(read_len * small_anchor_fraction);
+	int small_anchor = (int)floor(read_len * small_anchor_fraction);
 	
 	int r_left = 0;
 	int g_left = read.left();
@@ -663,8 +663,8 @@ void count_introns_in_read(const ReadHit& read,
 				if (hist.size() < (size_t)read_len)
 				{
 					size_t num_new_bins = read_len - hist.size();
-					size_t new_left_bins = floor(num_new_bins / 2.0);
-					size_t new_right_bins = ceil(num_new_bins / 2.0);
+					size_t new_left_bins = (size_t)floor(num_new_bins / 2.0);
+					size_t new_right_bins = (size_t)ceil(num_new_bins / 2.0);
 					hist.insert(hist.begin(), new_left_bins, 0);
 					hist.insert(hist.end(), new_right_bins, 0);
 				}
