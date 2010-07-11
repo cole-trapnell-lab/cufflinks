@@ -451,7 +451,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
             next_mask_scaff++;
         }
         
-        if (next_mask_scaff->ref_id() == tmp.ref_id() &&
+        if (next_mask_scaff != mask_gtf_recs.end() &&
+            next_mask_scaff->ref_id() == tmp.ref_id() &&
             next_mask_scaff->left() <= tmp.left() &&
             next_mask_scaff->right() >= tmp.right())
         {
