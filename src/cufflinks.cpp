@@ -33,9 +33,9 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:";
 #endif
 
 static struct option long_options[] = {
@@ -52,6 +52,7 @@ static struct option long_options[] = {
 {"label",					required_argument,		 0,			 'L'},
 {"collapse-thresh",         required_argument,		 0,			 'c'},
 {"GTF",					    required_argument,		 0,			 'G'},
+{"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
@@ -80,6 +81,7 @@ void print_usage()
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "-L/--label                   all transcripts have this prefix in their IDs         [ default:   CUFF ]\n");
 	fprintf(stderr, "-G/--GTF                     quantitate against reference transcript annotations                      \n");
+    fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file                     \n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
@@ -160,6 +162,11 @@ int parse_options(int argc, char** argv)
 			case 'G':
 			{
 				ref_gtf_filename = optarg;
+				break;
+			}
+            case 'M':
+			{
+				mask_gtf_filename = optarg;
 				break;
 			}
             case 'o':
@@ -683,9 +690,9 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	
 	BadIntronTable bad_introns;
 	
+    bundle_factory.load_ref_rnas();
+    
 	inspect_map(bundle_factory, map_mass, bad_introns);
-	
-	bundle_factory.load_ref_rnas();
 	
 	if (ref_gtf_filename == "")
 	{
@@ -799,7 +806,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 }
 
 
-void driver(const string& hit_file_name, FILE* ref_gtf)
+void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
@@ -826,7 +833,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf)
             exit(1);
         }
 	}
-	BundleFactory bundle_factory(*hit_factory, ref_gtf);
+	BundleFactory bundle_factory(*hit_factory, ref_gtf, mask_gtf);
 	
 #if ENABLE_THREDS
 	boost::thread asm_thread(assemble_hits,
@@ -874,6 +881,18 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 	}
+    
+    FILE* mask_gtf = NULL;
+	if (mask_gtf_filename != "")
+	{
+		mask_gtf = fopen(mask_gtf_filename.c_str(), "r");
+		if (!mask_gtf)
+		{
+			fprintf(stderr, "Error: cannot open GTF file %s for reading\n",
+					mask_gtf_filename.c_str());
+			exit(1);
+		}
+	}
 	
     if (output_dir != "")
     {
@@ -890,7 +909,7 @@ int main(int argc, char** argv)
         }
     }
     
-    driver(sam_hits_file_name, ref_gtf);
+    driver(sam_hits_file_name, ref_gtf, mask_gtf);
 	
 	return 0;
 }

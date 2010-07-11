@@ -117,8 +117,8 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 class BundleFactory
 {
 public:
-	BundleFactory(HitFactory& fac, FILE* ref_rna_file)
-	: _hit_fac(fac), ref_mRNA_file(ref_rna_file){}
+	BundleFactory(HitFactory& fac, FILE* ref_rna_file, FILE* maskf)
+	: _hit_fac(fac), ref_mRNA_file(ref_rna_file), mask_file(maskf){}
 
 	bool next_bundle(HitBundle& bundle_out);
 	
@@ -133,18 +133,37 @@ public:
 	
 	void load_ref_rnas() 
 	{
-		::load_ref_rnas(ref_mRNA_file, _hit_fac.ref_table(), ref_mRNAs);
-		RefID last_id = 0;
-		for (vector<Scaffold>::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
-		{
-			if (i->ref_id() != last_id)
-			{
-				_ref_scaff_offsets.push_back(make_pair(i->ref_id(), i));
-			}
-			last_id = i->ref_id();
-		}
-		
-		next_ref_scaff = ref_mRNAs.begin();
+        if (ref_mRNA_file)
+        {
+            ::load_ref_rnas(ref_mRNA_file, _hit_fac.ref_table(), ref_mRNAs);
+            RefID last_id = 0;
+            for (vector<Scaffold>::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
+            {
+                if (i->ref_id() != last_id)
+                {
+                    _ref_scaff_offsets.push_back(make_pair(i->ref_id(), i));
+                }
+                last_id = i->ref_id();
+            }
+            
+            next_ref_scaff = ref_mRNAs.begin();
+        }
+        
+        if (mask_file)
+        {
+            ::load_ref_rnas(mask_file, _hit_fac.ref_table(), mask_gtf_recs);
+            RefID last_id = 0;
+            for (vector<Scaffold>::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
+            {
+                if (i->ref_id() != last_id)
+                {
+                    _mask_scaff_offsets.push_back(make_pair(i->ref_id(), i));
+                }
+                last_id = i->ref_id();
+            }
+            
+            next_mask_scaff = mask_gtf_recs.begin();
+        }
 	}
 	
 	void bad_intron_table(const BadIntronTable& bad_introns) 
@@ -162,6 +181,11 @@ private:
 	FILE* ref_mRNA_file;
 	vector<pair<RefID, vector<Scaffold>::iterator> > _ref_scaff_offsets;
 	vector<Scaffold>::iterator next_ref_scaff;
+    
+    vector<Scaffold> mask_gtf_recs;
+	FILE* mask_file;
+	vector<pair<RefID, vector<Scaffold>::iterator> > _mask_scaff_offsets;
+	vector<Scaffold>::iterator next_mask_scaff;
 	
 	BadIntronTable _bad_introns;
 };

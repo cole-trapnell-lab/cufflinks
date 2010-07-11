@@ -49,6 +49,7 @@ extern float high_phred_err_prob;
 
 extern std::string user_label;
 extern std::string ref_gtf_filename;
+extern std::string mask_gtf_filename;
 extern std::string output_dir;
 
 extern int collapse_thresh;

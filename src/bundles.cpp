@@ -401,22 +401,80 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		//_next_hit_num++;
 		// Chomp the newline
 		
-		shared_ptr<ReadHit> bh(new ReadHit());
 		
-		if (!_hit_fac.get_hit_from_buf(hit_buf, *bh, false))
+		ReadHit tmp;
+		if (!_hit_fac.get_hit_from_buf(hit_buf, tmp, false))
 		{
 			continue;
 		}
 		
-		if (bh->error_prob() > max_phred_err_prob)
+		if (tmp.error_prob() > max_phred_err_prob)
 			continue;
 		
-		if (bh->ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
+		if (tmp.ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
 			continue;
 		
-		if (spans_bad_intron(*bh))
+		if (spans_bad_intron(tmp))
 			continue;
 		
+        bool hit_within_mask = false;
+        
+        if (!mask_gtf_recs.empty() && 
+			next_mask_scaff != mask_gtf_recs.end() &&
+			next_mask_scaff->ref_id() != tmp.ref_id())
+		{
+			bool found_scaff = false;
+            vector<Scaffold>::iterator curr_mask_scaff = mask_gtf_recs.begin();
+			for (size_t i = 0; i < _mask_scaff_offsets.size(); ++i)
+			{
+				if (_mask_scaff_offsets[i].first == tmp.ref_id())
+				{
+					curr_mask_scaff = _mask_scaff_offsets[i].second;
+					found_scaff = true;
+                    break;
+				}
+			}
+            
+			next_mask_scaff = curr_mask_scaff;
+        }
+        
+        //check that we aren't sitting in the middle of a masked scaffold
+        while (next_mask_scaff != mask_gtf_recs.end() && 
+               next_mask_scaff->ref_id() == tmp.ref_id() &&
+               next_mask_scaff->right() <= tmp.left())
+        {
+            if (next_mask_scaff->left() >= tmp.left())
+            {
+                break;
+            }
+            
+            next_mask_scaff++;
+        }
+        
+        if (next_mask_scaff->ref_id() == tmp.ref_id() &&
+            next_mask_scaff->left() <= tmp.left() &&
+            next_mask_scaff->right() >= tmp.right())
+        {
+            hit_within_mask = true;
+        }
+                
+            
+//			while (next_mask_scaff != mask_gtf_recs.end() && 
+//				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
+//				   next_mask_scaff->ref_id() == bh->ref_id() &&
+//				   next_mask_scaff->left() <= bh->left() &&
+//				   next_mask_scaff->right() >= bh->right())
+//			{
+//				hit_within_mask = true;
+//                next_mask_scaff++;
+//			}
+		
+        if (hit_within_mask)
+            continue;
+        
+        shared_ptr<ReadHit> bh(new ReadHit());
+        *bh = tmp;
+        
 		if (left_boundary == -1)
 			left_boundary = bh->left();
 		

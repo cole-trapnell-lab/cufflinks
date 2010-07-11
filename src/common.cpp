@@ -58,6 +58,7 @@ float max_phred_err_prob = 1.0;
 
 std::string user_label = "CUFF";
 std::string ref_gtf_filename = "";
+std::string mask_gtf_filename = "";
 std::string output_dir = "./";
 
 int collapse_thresh = 10;

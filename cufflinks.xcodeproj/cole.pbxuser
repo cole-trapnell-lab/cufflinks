@@ -24,10 +24,10 @@
 			EDBBA0E511DA353E0015175B /* assemble.cpp:574 */,
 			EDBBA11D11DA465A0015175B /* filters.cpp:216 */,
 			EDBBA13311DA48550015175B /* filters.cpp:263 */,
-			EDBBA1A011DA8BAF0015175B /* bundles.cpp:768 */,
-			EDBBA1C011DA8ED20015175B /* bundles.cpp:652 */,
-			EDBBA1D811DA90C90015175B /* bundles.cpp:654 */,
-			EDBBA50B11DE73690015175B /* cufflinks.cpp:556 */,
+			EDBBA1A011DA8BAF0015175B /* bundles.cpp:826 */,
+			EDBBA1C011DA8ED20015175B /* bundles.cpp:710 */,
+			EDBBA1D811DA90C90015175B /* bundles.cpp:712 */,
+			EDBBA50B11DE73690015175B /* cufflinks.cpp:563 */,
 			EDE109EE11E7911B005F1F4B /* hits.cpp:268 */,
 			EDE10A0011E793D0005F1F4B /* hits.cpp:269 */,
 			EDE10A2111E79BAE005F1F4B /* hits.cpp:791 */,
@@ -37,10 +37,10 @@
 			EDE10ABA11E7AB4D005F1F4B /* hits.cpp:489 */,
 			EDE10ABE11E7AB5F005F1F4B /* hits.cpp:433 */,
 			EDE10AC711E7AB80005F1F4B /* hits.cpp:495 */,
-			EDE10AF011E7AF70005F1F4B /* cufflinks.cpp:286 */,
-			EDE10AFA11E7AFB2005F1F4B /* cufflinks.cpp:346 */,
-			EDE10B0911E7B1C8005F1F4B /* cufflinks.cpp:893 */,
-			EDE10B3A11E7B2D7005F1F4B /* cufflinks.cpp:815 */,
+			EDE10AF011E7AF70005F1F4B /* cufflinks.cpp:293 */,
+			EDE10AFA11E7AFB2005F1F4B /* cufflinks.cpp:353 */,
+			EDE10B0911E7B1C8005F1F4B /* cufflinks.cpp:912 */,
+			EDE10B3A11E7B2D7005F1F4B /* cufflinks.cpp:822 */,
 			EDE10B5611E7B51B005F1F4B /* filters.cpp:468 */,
 			EDE10B6611E7B620005F1F4B /* filters.cpp:331 */,
 			EDE10B7011E7B669005F1F4B /* filters.cpp:389 */,
@@ -49,10 +49,13 @@
 			EDE10BBD11E7CE4A005F1F4B /* gtf_reads.cpp:177 */,
 			EDE10BD011E7CEA2005F1F4B /* cuffdiff.cpp:271 */,
 			EDE10BD411E7CEB6005F1F4B /* bundles.cpp:366 */,
-			EDE10C0011E7D606005F1F4B /* bundles.cpp:544 */,
-			EDBEA50311EA415800C661A7 /* bundles.cpp:1074 */,
-			EDBEA51511EA426500C661A7 /* bundles.cpp:1075 */,
+			EDE10C0011E7D606005F1F4B /* bundles.cpp:602 */,
+			EDBEA50311EA415800C661A7 /* bundles.cpp:1132 */,
+			EDBEA51511EA426500C661A7 /* bundles.cpp:1133 */,
 			EDBEA54311EA4B4100C661A7 /* hits.h:634 */,
+			EDBEA5A311EA629000C661A7 /* bundles.cpp:587 */,
+			EDBEA5C511EA6F9900C661A7 /* bundles.cpp:422 */,
+			EDBEA5F311EA725600C661A7 /* bundles.cpp:406 */,
 		);
 		codeSenseManager = EDA5150110C72929000A4F41 /* Code sense */;
 		executables = (
@@ -299,6 +302,58 @@
 			EDBEA58F11EA599700C661A7 /* PBXTextBookmark */ = EDBEA58F11EA599700C661A7 /* PBXTextBookmark */;
 			EDBEA59011EA599700C661A7 /* PBXTextBookmark */ = EDBEA59011EA599700C661A7 /* PBXTextBookmark */;
 			EDBEA59111EA599700C661A7 /* PBXTextBookmark */ = EDBEA59111EA599700C661A7 /* PBXTextBookmark */;
+			EDBEA59611EA5EB600C661A7 /* PBXTextBookmark */ = EDBEA59611EA5EB600C661A7 /* PBXTextBookmark */;
+			EDBEA59711EA5EB600C661A7 /* PBXTextBookmark */ = EDBEA59711EA5EB600C661A7 /* PBXTextBookmark */;
+			EDBEA59811EA5EB600C661A7 /* PBXTextBookmark */ = EDBEA59811EA5EB600C661A7 /* PBXTextBookmark */;
+			EDBEA59911EA5EB600C661A7 /* PBXTextBookmark */ = EDBEA59911EA5EB600C661A7 /* PBXTextBookmark */;
+			EDBEA59A11EA609700C661A7 /* PBXTextBookmark */ = EDBEA59A11EA609700C661A7 /* PBXTextBookmark */;
+			EDBEA59B11EA615000C661A7 /* PBXTextBookmark */ = EDBEA59B11EA615000C661A7 /* PBXTextBookmark */;
+			EDBEA59C11EA615000C661A7 /* PBXTextBookmark */ = EDBEA59C11EA615000C661A7 /* PBXTextBookmark */;
+			EDBEA59D11EA615000C661A7 /* PBXTextBookmark */ = EDBEA59D11EA615000C661A7 /* PBXTextBookmark */;
+			EDBEA59E11EA615300C661A7 /* PBXTextBookmark */ = EDBEA59E11EA615300C661A7 /* PBXTextBookmark */;
+			EDBEA59F11EA615300C661A7 /* PBXTextBookmark */ = EDBEA59F11EA615300C661A7 /* PBXTextBookmark */;
+			EDBEA5A011EA622D00C661A7 /* PBXTextBookmark */ = EDBEA5A011EA622D00C661A7 /* PBXTextBookmark */;
+			EDBEA5A511EA62DF00C661A7 /* PBXTextBookmark */ = EDBEA5A511EA62DF00C661A7 /* PBXTextBookmark */;
+			EDBEA5A711EA630C00C661A7 /* PBXTextBookmark */ = EDBEA5A711EA630C00C661A7 /* PBXTextBookmark */;
+			EDBEA5A811EA659A00C661A7 /* PBXTextBookmark */ = EDBEA5A811EA659A00C661A7 /* PBXTextBookmark */;
+			EDBEA5A911EA663500C661A7 /* PBXTextBookmark */ = EDBEA5A911EA663500C661A7 /* PBXTextBookmark */;
+			EDBEA5AA11EA663500C661A7 /* PBXTextBookmark */ = EDBEA5AA11EA663500C661A7 /* PBXTextBookmark */;
+			EDBEA5AC11EA663500C661A7 /* PBXTextBookmark */ = EDBEA5AC11EA663500C661A7 /* PBXTextBookmark */;
+			EDBEA5AD11EA663500C661A7 /* PBXTextBookmark */ = EDBEA5AD11EA663500C661A7 /* PBXTextBookmark */;
+			EDBEA5AE11EA664700C661A7 /* PBXTextBookmark */ = EDBEA5AE11EA664700C661A7 /* PBXTextBookmark */;
+			EDBEA5B111EA6A2D00C661A7 /* PBXTextBookmark */ = EDBEA5B111EA6A2D00C661A7 /* PBXTextBookmark */;
+			EDBEA5B211EA6A2D00C661A7 /* PBXTextBookmark */ = EDBEA5B211EA6A2D00C661A7 /* PBXTextBookmark */;
+			EDBEA5B311EA6A2D00C661A7 /* PBXTextBookmark */ = EDBEA5B311EA6A2D00C661A7 /* PBXTextBookmark */;
+			EDBEA5BE11EA6F7F00C661A7 /* PBXTextBookmark */ = EDBEA5BE11EA6F7F00C661A7 /* PBXTextBookmark */;
+			EDBEA5BF11EA6F7F00C661A7 /* PBXTextBookmark */ = EDBEA5BF11EA6F7F00C661A7 /* PBXTextBookmark */;
+			EDBEA5C011EA6F7F00C661A7 /* PBXTextBookmark */ = EDBEA5C011EA6F7F00C661A7 /* PBXTextBookmark */;
+			EDBEA5C111EA6F7F00C661A7 /* PBXTextBookmark */ = EDBEA5C111EA6F7F00C661A7 /* PBXTextBookmark */;
+			EDBEA5C211EA6F7F00C661A7 /* PBXTextBookmark */ = EDBEA5C211EA6F7F00C661A7 /* PBXTextBookmark */;
+			EDBEA5C311EA6F7F00C661A7 /* PBXTextBookmark */ = EDBEA5C311EA6F7F00C661A7 /* PBXTextBookmark */;
+			EDBEA5C911EA6FA300C661A7 /* PBXTextBookmark */ = EDBEA5C911EA6FA300C661A7 /* PBXTextBookmark */;
+			EDBEA5CA11EA6FA300C661A7 /* PBXTextBookmark */ = EDBEA5CA11EA6FA300C661A7 /* PBXTextBookmark */;
+			EDBEA5CB11EA6FA300C661A7 /* PBXTextBookmark */ = EDBEA5CB11EA6FA300C661A7 /* PBXTextBookmark */;
+			EDBEA5CE11EA6FD800C661A7 /* PBXTextBookmark */ = EDBEA5CE11EA6FD800C661A7 /* PBXTextBookmark */;
+			EDBEA5CF11EA6FD800C661A7 /* PBXTextBookmark */ = EDBEA5CF11EA6FD800C661A7 /* PBXTextBookmark */;
+			EDBEA5D111EA6FD800C661A7 /* PBXTextBookmark */ = EDBEA5D111EA6FD800C661A7 /* PBXTextBookmark */;
+			EDBEA5D211EA6FD800C661A7 /* PBXTextBookmark */ = EDBEA5D211EA6FD800C661A7 /* PBXTextBookmark */;
+			EDBEA5D311EA6FD800C661A7 /* PBXTextBookmark */ = EDBEA5D311EA6FD800C661A7 /* PBXTextBookmark */;
+			EDBEA5D411EA6FDC00C661A7 /* PBXTextBookmark */ = EDBEA5D411EA6FDC00C661A7 /* PBXTextBookmark */;
+			EDBEA5D511EA6FDC00C661A7 /* PBXTextBookmark */ = EDBEA5D511EA6FDC00C661A7 /* PBXTextBookmark */;
+			EDBEA5E611EA713E00C661A7 /* PBXTextBookmark */ = EDBEA5E611EA713E00C661A7 /* PBXTextBookmark */;
+			EDBEA5E711EA713E00C661A7 /* PBXTextBookmark */ = EDBEA5E711EA713E00C661A7 /* PBXTextBookmark */;
+			EDBEA5E811EA713E00C661A7 /* PBXTextBookmark */ = EDBEA5E811EA713E00C661A7 /* PBXTextBookmark */;
+			EDBEA5E911EA713E00C661A7 /* PBXTextBookmark */ = EDBEA5E911EA713E00C661A7 /* PBXTextBookmark */;
+			EDBEA5EA11EA713E00C661A7 /* PBXTextBookmark */ = EDBEA5EA11EA713E00C661A7 /* PBXTextBookmark */;
+			EDBEA5EB11EA713E00C661A7 /* PBXTextBookmark */ = EDBEA5EB11EA713E00C661A7 /* PBXTextBookmark */;
+			EDBEA5F011EA71C200C661A7 /* PBXTextBookmark */ = EDBEA5F011EA71C200C661A7 /* PBXTextBookmark */;
+			EDBEA5F511EA726800C661A7 /* PBXTextBookmark */ = EDBEA5F511EA726800C661A7 /* PBXTextBookmark */;
+			EDBEA5F611EA729900C661A7 /* PBXTextBookmark */ = EDBEA5F611EA729900C661A7 /* PBXTextBookmark */;
+			EDBEA5F711EA72ED00C661A7 /* PBXTextBookmark */ = EDBEA5F711EA72ED00C661A7 /* PBXTextBookmark */;
+			EDBEA5F811EA730300C661A7 /* PBXTextBookmark */ = EDBEA5F811EA730300C661A7 /* PBXTextBookmark */;
+			EDBEA5F911EA736C00C661A7 /* PBXTextBookmark */ = EDBEA5F911EA736C00C661A7 /* PBXTextBookmark */;
+			EDBEA5FA11EA737900C661A7 /* PBXTextBookmark */ = EDBEA5FA11EA737900C661A7 /* PBXTextBookmark */;
+			EDBEA60111EA74A000C661A7 /* PBXTextBookmark */ = EDBEA60111EA74A000C661A7 /* PBXTextBookmark */;
 			EDE107F011E37CF3005F1F4B = EDE107F011E37CF3005F1F4B /* PBXTextBookmark */;
 			EDE107F111E37CF3005F1F4B = EDE107F111E37CF3005F1F4B /* PBXTextBookmark */;
 			EDE1082711E383FB005F1F4B = EDE1082711E383FB005F1F4B /* PBXTextBookmark */;
@@ -631,7 +686,7 @@
 		ignoreCount = 0;
 		lineNumber = 488;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.178441;
+		modificationTime = 300577816.46681;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -649,7 +704,7 @@
 		ignoreCount = 0;
 		lineNumber = 486;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.179269;
+		modificationTime = 300577816.467783;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -667,7 +722,7 @@
 		ignoreCount = 0;
 		lineNumber = 480;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.179655;
+		modificationTime = 300577816.468338;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -685,7 +740,7 @@
 		ignoreCount = 0;
 		lineNumber = 470;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.18012;
+		modificationTime = 300577816.468897;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -703,7 +758,7 @@
 		ignoreCount = 0;
 		lineNumber = 451;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.180558;
+		modificationTime = 300577816.469445;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -721,7 +776,7 @@
 		ignoreCount = 0;
 		lineNumber = 413;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.180955;
+		modificationTime = 300577816.469847;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -739,7 +794,7 @@
 		ignoreCount = 0;
 		lineNumber = 427;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.181369;
+		modificationTime = 300577816.470307;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -758,7 +813,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1033";
 		rLen = 0;
-		rLoc = 27445;
+		rLoc = 29191;
 		rType = 0;
 		vrLen = 1274;
 		vrLoc = 20148;
@@ -867,9 +922,9 @@
 	};
 	EDA5150B10C72963000A4F41 /* bundles.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 2262}}";
-			sepNavSelRange = "{2918, 20}";
-			sepNavVisRange = "{3273, 850}";
+			sepNavIntBoundsRect = "{{0, 0}, {1315, 2600}}";
+			sepNavSelRange = "{3287, 13}";
+			sepNavVisRange = "{2948, 834}";
 		};
 	};
 	EDA5150C10C72963000A4F41 /* codons.h */ = {
@@ -881,9 +936,9 @@
 	};
 	EDA5150D10C72963000A4F41 /* common.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 1443}}";
-			sepNavSelRange = "{1350, 37}";
-			sepNavVisRange = "{1182, 883}";
+			sepNavIntBoundsRect = "{{0, 0}, {1017, 1404}}";
+			sepNavSelRange = "{1053, 0}";
+			sepNavVisRange = "{569, 926}";
 		};
 	};
 	EDA5150E10C72963000A4F41 /* filters.h */ = {
@@ -930,9 +985,9 @@
 	};
 	EDA5151810C72963000A4F41 /* hits.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 11336}}";
-			sepNavSelRange = "{15194, 148}";
-			sepNavVisRange = "{14886, 860}";
+			sepNavIntBoundsRect = "{{0, 0}, {1315, 11271}}";
+			sepNavSelRange = "{18044, 0}";
+			sepNavVisRange = "{17752, 666}";
 			sepNavWindowFrame = "{{15, 615}, {750, 558}}";
 		};
 	};
@@ -981,16 +1036,16 @@
 	};
 	EDA5152010C72963000A4F41 /* bundles.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 14300}}";
-			sepNavSelRange = "{27316, 0}";
-			sepNavVisRange = "{26956, 910}";
+			sepNavIntBoundsRect = "{{0, 0}, {1017, 15028}}";
+			sepNavSelRange = "{10508, 0}";
+			sepNavVisRange = "{10400, 1145}";
 		};
 	};
 	EDA5152210C72963000A4F41 /* common.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 2392}}";
-			sepNavSelRange = "{1400, 41}";
-			sepNavVisRange = "{1052, 876}";
+			sepNavIntBoundsRect = "{{0, 0}, {1017, 2470}}";
+			sepNavSelRange = "{1191, 0}";
+			sepNavVisRange = "{830, 800}";
 		};
 	};
 	EDA5152310C72963000A4F41 /* cuffcompare.cpp */ = {
@@ -1002,23 +1057,23 @@
 	};
 	EDA5152410C72963000A4F41 /* cuffdiff.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 14508}}";
-			sepNavSelRange = "{10137, 12}";
-			sepNavVisRange = "{9594, 833}";
+			sepNavIntBoundsRect = "{{0, 0}, {1017, 14547}}";
+			sepNavSelRange = "{14848, 13}";
+			sepNavVisRange = "{14329, 978}";
 		};
 	};
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1009, 12272}}";
-			sepNavSelRange = "{10750, 0}";
-			sepNavVisRange = "{10463, 888}";
+			sepNavIntBoundsRect = "{{0, 0}, {1315, 12454}}";
+			sepNavSelRange = "{24791, 0}";
+			sepNavVisRange = "{24160, 682}";
 		};
 	};
 	EDA5152610C72963000A4F41 /* filters.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1009, 8658}}";
-			sepNavSelRange = "{8328, 0}";
-			sepNavVisRange = "{9801, 935}";
+			sepNavIntBoundsRect = "{{0, 0}, {1017, 8645}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRange = "{0, 912}";
 		};
 	};
 	EDA5152710C72963000A4F41 /* GArgs.cpp */ = {
@@ -1079,9 +1134,9 @@
 	};
 	EDA5153010C72963000A4F41 /* hits.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 10985}}";
-			sepNavSelRange = "{5624, 7}";
-			sepNavVisRange = "{5510, 847}";
+			sepNavIntBoundsRect = "{{0, 0}, {1315, 11167}}";
+			sepNavSelRange = "{6791, 0}";
+			sepNavVisRange = "{6481, 626}";
 		};
 	};
 	EDA5153110C72963000A4F41 /* scaffolds.cpp */ = {
@@ -1140,7 +1195,7 @@
 		ignoreCount = 0;
 		lineNumber = 420;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.181982;
+		modificationTime = 300577816.470692;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1158,7 +1213,7 @@
 		ignoreCount = 0;
 		lineNumber = 377;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.182689;
+		modificationTime = 300577816.471107;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1175,9 +1230,9 @@
 		hitCount = 0;
 		ignoreCount = 0;
 		lineNumber = 448;
-		modificationTime = 300569641.183195;
+		modificationTime = 300577951.255094;
 		originalNumberOfMultipleMatches = 1;
-		state = 0;
+		state = 1;
 	};
 	EDBBA09411DA26750015175B /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -1203,7 +1258,7 @@
 		ignoreCount = 0;
 		lineNumber = 328;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.183712;
+		modificationTime = 300577816.471852;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1221,7 +1276,7 @@
 		ignoreCount = 0;
 		lineNumber = 456;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.184228;
+		modificationTime = 300577816.472308;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1249,7 +1304,7 @@
 		ignoreCount = 0;
 		lineNumber = 574;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.184653;
+		modificationTime = 300577816.472725;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1304,7 +1359,7 @@
 		ignoreCount = 0;
 		lineNumber = 216;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.18504;
+		modificationTime = 300577816.473234;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1322,7 +1377,7 @@
 		ignoreCount = 0;
 		lineNumber = 263;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.185455;
+		modificationTime = 300577816.473771;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1356,7 +1411,7 @@
 		vrLen = 1117;
 		vrLoc = 2019;
 	};
-	EDBBA1A011DA8BAF0015175B /* bundles.cpp:768 */ = {
+	EDBBA1A011DA8BAF0015175B /* bundles.cpp:826 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1368,13 +1423,13 @@
 		functionName = "multimapping_introns(int bundle_length, int bundle_left, const IntronCountTable& intron_counts, vector<AugmentedCuffOp>& bad_introns, double fraction)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 768;
+		lineNumber = 826;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.185939;
+		modificationTime = 300577816.474274;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	EDBBA1C011DA8ED20015175B /* bundles.cpp:652 */ = {
+	EDBBA1C011DA8ED20015175B /* bundles.cpp:710 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1386,13 +1441,13 @@
 		functionName = "count_introns_in_read(const ReadHit& read, IntronCountTable& intron_counts)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 652;
+		lineNumber = 710;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.186875;
+		modificationTime = 300577816.474904;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	EDBBA1D811DA90C90015175B /* bundles.cpp:654 */ = {
+	EDBBA1D811DA90C90015175B /* bundles.cpp:712 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1404,9 +1459,9 @@
 		functionName = "count_introns_in_read(const ReadHit& read, IntronCountTable& intron_counts)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 654;
+		lineNumber = 712;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.187645;
+		modificationTime = 300577816.475448;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1510,7 +1565,7 @@
 		vrLen = 928;
 		vrLoc = 57;
 	};
-	EDBBA50B11DE73690015175B /* cufflinks.cpp:556 */ = {
+	EDBBA50B11DE73690015175B /* cufflinks.cpp:563 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1522,9 +1577,9 @@
 		functionName = "assemble_bundle(const RefSequenceTable& rt, HitBundle* bundle_ptr, long double map_mass, FILE* ftranscripts, FILE* fgene_abundances, FILE* ftrans_abundances)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 556;
+		lineNumber = 563;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.188596;
+		modificationTime = 300577816.47594;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1533,7 +1588,7 @@
 		fRef = EDA5150D10C72963000A4F41 /* common.h */;
 		name = "common.h: 77";
 		rLen = 0;
-		rLoc = 1628;
+		rLoc = 1666;
 		rType = 0;
 		vrLen = 911;
 		vrLoc = 1154;
@@ -1543,7 +1598,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 556";
 		rLen = 0;
-		rLoc = 16391;
+		rLoc = 16660;
 		rType = 0;
 		vrLen = 1178;
 		vrLoc = 15836;
@@ -1585,7 +1640,7 @@
 		vrLen = 855;
 		vrLoc = 11945;
 	};
-	EDBEA50311EA415800C661A7 /* bundles.cpp:1074 */ = {
+	EDBEA50311EA415800C661A7 /* bundles.cpp:1132 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1597,9 +1652,9 @@
 		functionName = "inspect_map(BundleFactory& bundle_factory, long double& map_mass, BadIntronTable& bad_introns)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 1074;
+		lineNumber = 1132;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.217453;
+		modificationTime = 300577816.485212;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1618,7 +1673,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 733;
 		vrLoc = 26772;
@@ -1628,7 +1683,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 735;
 		vrLoc = 26767;
@@ -1638,7 +1693,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 473;
 		vrLoc = 26767;
@@ -1648,7 +1703,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 835;
 		vrLoc = 26624;
@@ -1658,12 +1713,12 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 473;
 		vrLoc = 26767;
 	};
-	EDBEA51511EA426500C661A7 /* bundles.cpp:1075 */ = {
+	EDBEA51511EA426500C661A7 /* bundles.cpp:1133 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1673,11 +1728,11 @@
 		delayBeforeContinue = 0;
 		fileReference = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		functionName = "inspect_map(BundleFactory& bundle_factory, long double& map_mass, BadIntronTable& bad_introns)";
-		hitCount = 0;
+		hitCount = 1;
 		ignoreCount = 0;
-		lineNumber = 1075;
+		lineNumber = 1133;
 		location = cufflinks_xcode;
-		modificationTime = 300569642.97181;
+		modificationTime = 300577936.550873;
 		originalNumberOfMultipleMatches = 1;
 		state = 1;
 	};
@@ -1696,7 +1751,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1063";
 		rLen = 0;
-		rLoc = 28286;
+		rLoc = 30032;
 		rType = 0;
 		vrLen = 970;
 		vrLoc = 26943;
@@ -1706,7 +1761,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1063";
 		rLen = 0;
-		rLoc = 28286;
+		rLoc = 30032;
 		rType = 0;
 		vrLen = 969;
 		vrLoc = 26943;
@@ -1716,7 +1771,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1064";
 		rLen = 0;
-		rLoc = 28286;
+		rLoc = 30032;
 		rType = 0;
 		vrLen = 1051;
 		vrLoc = 26941;
@@ -1726,7 +1781,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1064";
 		rLen = 0;
-		rLoc = 28286;
+		rLoc = 30032;
 		rType = 0;
 		vrLen = 1065;
 		vrLoc = 26938;
@@ -1736,7 +1791,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1064";
 		rLen = 0;
-		rLoc = 28271;
+		rLoc = 30017;
 		rType = 0;
 		vrLen = 767;
 		vrLoc = 27237;
@@ -1841,20 +1896,20 @@
 		delayBeforeContinue = 0;
 		fileReference = EDA5151810C72963000A4F41 /* hits.h */;
 		functionName = "BAMHitFactory(const string& hit_file_name, ReadTable& insert_table, RefSequenceTable& reference_table)";
-		hitCount = 1;
+		hitCount = 0;
 		ignoreCount = 0;
 		lineNumber = 634;
 		location = cufflinks_xcode;
-		modificationTime = 300569643.316992;
+		modificationTime = 300577816.48617;
 		originalNumberOfMultipleMatches = 1;
-		state = 1;
+		state = 2;
 	};
 	EDBEA54B11EA4B8100C661A7 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1066";
 		rLen = 0;
-		rLoc = 28292;
+		rLoc = 30038;
 		rType = 0;
 		vrLen = 1046;
 		vrLoc = 26958;
@@ -2013,7 +2068,7 @@
 		fRef = EDA5150D10C72963000A4F41 /* common.h */;
 		name = "common.h: 64";
 		rLen = 37;
-		rLoc = 1350;
+		rLoc = 1388;
 		rType = 0;
 		vrLen = 883;
 		vrLoc = 1182;
@@ -2023,7 +2078,7 @@
 		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
 		name = "common.cpp: 74";
 		rLen = 41;
-		rLoc = 1400;
+		rLoc = 1436;
 		rType = 0;
 		vrLen = 876;
 		vrLoc = 1052;
@@ -2033,7 +2088,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 657";
 		rLen = 12;
-		rLoc = 16972;
+		rLoc = 18718;
 		rType = 0;
 		vrLen = 1224;
 		vrLoc = 16403;
@@ -2043,7 +2098,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 663";
 		rLen = 0;
-		rLoc = 17149;
+		rLoc = 18895;
 		rType = 0;
 		vrLen = 1217;
 		vrLoc = 16393;
@@ -2073,7 +2128,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 663";
 		rLen = 0;
-		rLoc = 17149;
+		rLoc = 18895;
 		rType = 0;
 		vrLen = 1185;
 		vrLoc = 16186;
@@ -2083,7 +2138,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 628";
 		rLen = 0;
-		rLoc = 16211;
+		rLoc = 17957;
 		rType = 0;
 		vrLen = 1126;
 		vrLoc = 15898;
@@ -2093,7 +2148,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 667";
 		rLen = 0;
-		rLoc = 17316;
+		rLoc = 19062;
 		rType = 0;
 		vrLen = 1281;
 		vrLoc = 16300;
@@ -2103,7 +2158,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 667";
 		rLen = 0;
-		rLoc = 17316;
+		rLoc = 19062;
 		rType = 0;
 		vrLen = 1281;
 		vrLoc = 16300;
@@ -2163,7 +2218,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1064";
 		rLen = 0;
-		rLoc = 28271;
+		rLoc = 30017;
 		rType = 0;
 		vrLen = 764;
 		vrLoc = 27255;
@@ -2253,7 +2308,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1031";
 		rLen = 13;
-		rLoc = 26993;
+		rLoc = 28739;
 		rType = 0;
 		vrLen = 985;
 		vrLoc = 26956;
@@ -2263,10 +2318,584 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1042";
 		rLen = 0;
-		rLoc = 27316;
+		rLoc = 29062;
 		rType = 0;
 		vrLen = 910;
 		vrLoc = 26956;
+	};
+	EDBEA59611EA5EB600C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5153010C72963000A4F41 /* hits.cpp */;
+		name = "hits.cpp: 295";
+		rLen = 0;
+		rLoc = 7603;
+		rType = 0;
+		vrLen = 1026;
+		vrLoc = 6854;
+	};
+	EDBEA59711EA5EB600C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 1042";
+		rLen = 0;
+		rLoc = 29062;
+		rType = 0;
+		vrLen = 1247;
+		vrLoc = 12129;
+	};
+	EDBEA59811EA5EB600C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		rLen = 0;
+		rLoc = 633;
+		rType = 1;
+	};
+	EDBEA59911EA5EB600C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 634";
+		rLen = 0;
+		rLoc = 14229;
+		rType = 0;
+		vrLen = 982;
+		vrLoc = 13692;
+	};
+	EDBEA59A11EA609700C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 634";
+		rLen = 0;
+		rLoc = 14229;
+		rType = 0;
+		vrLen = 1010;
+		vrLoc = 13692;
+	};
+	EDBEA59B11EA615000C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 167";
+		rLen = 0;
+		rLoc = 3280;
+		rType = 0;
+		vrLen = 631;
+		vrLoc = 17805;
+	};
+	EDBEA59C11EA615000C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		rLen = 0;
+		rLoc = 239;
+		rType = 1;
+	};
+	EDBEA59D11EA615000C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15697;
+		rType = 0;
+		vrLen = 769;
+		vrLoc = 13398;
+	};
+	EDBEA59E11EA615300C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 634";
+		rLen = 0;
+		rLoc = 14229;
+		rType = 0;
+		vrLen = 1010;
+		vrLoc = 13692;
+	};
+	EDBEA59F11EA615300C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15697;
+		rType = 0;
+		vrLen = 963;
+		vrLoc = 13284;
+	};
+	EDBEA5A011EA622D00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15697;
+		rType = 0;
+		vrLen = 963;
+		vrLoc = 13284;
+	};
+	EDBEA5A311EA629000C661A7 /* bundles.cpp:587 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		functionName = "BundleFactory::next_bundle(HitBundle& bundle_out)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 587;
+		location = cufflinks_xcode;
+		modificationTime = 300577816.486562;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	EDBEA5A511EA62DF00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15697;
+		rType = 0;
+		vrLen = 871;
+		vrLoc = 13376;
+	};
+	EDBEA5A711EA630C00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15697;
+		rType = 0;
+		vrLen = 871;
+		vrLoc = 13376;
+	};
+	EDBEA5A811EA659A00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15697;
+		rType = 0;
+		vrLen = 898;
+		vrLoc = 13376;
+	};
+	EDBEA5A911EA663500C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 793";
+		rLen = 0;
+		rLoc = 18044;
+		rType = 0;
+		vrLen = 666;
+		vrLoc = 17752;
+	};
+	EDBEA5AA11EA663500C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDBEA5AB11EA663500C661A7 /* operator_bool.hpp */;
+		name = "operator_bool.hpp: 47";
+		rLen = 0;
+		rLoc = 1212;
+		rType = 0;
+		vrLen = 720;
+		vrLoc = 688;
+	};
+	EDBEA5AB11EA663500C661A7 /* operator_bool.hpp */ = {
+		isa = PBXFileReference;
+		name = operator_bool.hpp;
+		path = "/usr/local/include/boost-1_41/boost/smart_ptr/detail/operator_bool.hpp";
+		sourceTree = "<absolute>";
+	};
+	EDBEA5AC11EA663500C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		rLen = 0;
+		rLoc = 586;
+		rType = 1;
+	};
+	EDBEA5AD11EA663500C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15691;
+		rType = 0;
+		vrLen = 739;
+		vrLoc = 13398;
+	};
+	EDBEA5AE11EA664700C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 529";
+		rLen = 0;
+		rLoc = 15691;
+		rType = 0;
+		vrLen = 898;
+		vrLoc = 13376;
+	};
+	EDBEA5B111EA6A2D00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 423";
+		rLen = 0;
+		rLoc = 12296;
+		rType = 0;
+		vrLen = 1018;
+		vrLoc = 680;
+	};
+	EDBEA5B211EA6A2D00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 117";
+		rLen = 20;
+		rLoc = 2918;
+		rType = 0;
+		vrLen = 874;
+		vrLoc = 3250;
+	};
+	EDBEA5B311EA6A2D00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 160";
+		rLen = 0;
+		rLoc = 4350;
+		rType = 0;
+		vrLen = 937;
+		vrLoc = 3194;
+	};
+	EDBEA5BE11EA6F7F00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 160";
+		rLen = 0;
+		rLoc = 4350;
+		rType = 0;
+		vrLen = 937;
+		vrLoc = 3194;
+	};
+	EDBEA5BF11EA6F7F00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150D10C72963000A4F41 /* common.h */;
+		name = "common.h: 49";
+		rLen = 0;
+		rLoc = 1053;
+		rType = 0;
+		vrLen = 926;
+		vrLoc = 569;
+	};
+	EDBEA5C011EA6F7F00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152210C72963000A4F41 /* common.cpp */;
+		name = "common.cpp: 61";
+		rLen = 0;
+		rLoc = 1191;
+		rType = 0;
+		vrLen = 800;
+		vrLoc = 830;
+	};
+	EDBEA5C111EA6F7F00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 169";
+		rLen = 0;
+		rLoc = 6848;
+		rType = 0;
+		vrLen = 958;
+		vrLoc = 5982;
+	};
+	EDBEA5C211EA6F7F00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 423";
+		rLen = 0;
+		rLoc = 12296;
+		rType = 0;
+		vrLen = 1018;
+		vrLoc = 680;
+	};
+	EDBEA5C311EA6F7F00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 443";
+		rLen = 0;
+		rLoc = 11062;
+		rType = 0;
+		vrLen = 1150;
+		vrLoc = 10836;
+	};
+	EDBEA5C511EA6F9900C661A7 /* bundles.cpp:422 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		functionName = "BundleFactory::next_bundle(HitBundle& bundle_out)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 422;
+		location = cufflinks_xcode;
+		modificationTime = 300577816.487013;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	EDBEA5C911EA6FA300C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5153010C72963000A4F41 /* hits.cpp */;
+		name = "hits.cpp: 214";
+		rLen = 0;
+		rLoc = 5738;
+		rType = 0;
+		vrLen = 588;
+		vrLoc = 5312;
+	};
+	EDBEA5CA11EA6FA300C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 404";
+		rLen = 0;
+		rLoc = 10144;
+		rType = 0;
+		vrLen = 823;
+		vrLoc = 10426;
+	};
+	EDBEA5CB11EA6FA300C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 404";
+		rLen = 0;
+		rLoc = 10144;
+		rType = 0;
+		vrLen = 823;
+		vrLoc = 10426;
+	};
+	EDBEA5CE11EA6FD800C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 404";
+		rLen = 0;
+		rLoc = 10144;
+		rType = 0;
+		vrLen = 1112;
+		vrLoc = 10260;
+	};
+	EDBEA5CF11EA6FD800C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDBEA5D011EA6FD800C661A7 /* shared_ptr.hpp */;
+		name = "shared_ptr.hpp: 412";
+		rLen = 0;
+		rLoc = 10169;
+		rType = 0;
+		vrLen = 772;
+		vrLoc = 9715;
+	};
+	EDBEA5D011EA6FD800C661A7 /* shared_ptr.hpp */ = {
+		isa = PBXFileReference;
+		name = shared_ptr.hpp;
+		path = "/usr/local/include/boost-1_41/boost/smart_ptr/shared_ptr.hpp";
+		sourceTree = "<absolute>";
+	};
+	EDBEA5D111EA6FD800C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 843";
+		rLen = 0;
+		rLoc = 23296;
+		rType = 0;
+		vrLen = 833;
+		vrLoc = 22120;
+	};
+	EDBEA5D211EA6FD800C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 121";
+		rLen = 0;
+		rLoc = 3013;
+		rType = 0;
+		vrLen = 797;
+		vrLoc = 2685;
+	};
+	EDBEA5D311EA6FD800C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 134";
+		rLen = 13;
+		rLoc = 3287;
+		rType = 0;
+		vrLen = 855;
+		vrLoc = 2809;
+	};
+	EDBEA5D411EA6FDC00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 404";
+		rLen = 0;
+		rLoc = 10144;
+		rType = 0;
+		vrLen = 823;
+		vrLoc = 10426;
+	};
+	EDBEA5D511EA6FDC00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 134";
+		rLen = 13;
+		rLoc = 3287;
+		rType = 0;
+		vrLen = 716;
+		vrLoc = 2948;
+	};
+	EDBEA5E611EA713E00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
+		name = "cuffdiff.cpp: 546";
+		rLen = 13;
+		rLoc = 14848;
+		rType = 0;
+		vrLen = 978;
+		vrLoc = 14329;
+	};
+	EDBEA5E711EA713E00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152610C72963000A4F41 /* filters.cpp */;
+		name = "filters.cpp: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 912;
+		vrLoc = 0;
+	};
+	EDBEA5E811EA713E00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 148";
+		rLen = 0;
+		rLoc = 3781;
+		rType = 0;
+		vrLen = 1186;
+		vrLoc = 3304;
+	};
+	EDBEA5E911EA713E00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 912";
+		rLen = 0;
+		rLoc = 24791;
+		rType = 0;
+		vrLen = 820;
+		vrLoc = 24037;
+	};
+	EDBEA5EA11EA713E00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		rLen = 0;
+		rLoc = 421;
+		rType = 1;
+	};
+	EDBEA5EB11EA713E00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 944;
+		vrLoc = 10144;
+	};
+	EDBEA5F011EA71C200C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 990;
+		vrLoc = 10484;
+	};
+	EDBEA5F311EA725600C661A7 /* bundles.cpp:406 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		functionName = "BundleFactory::next_bundle(HitBundle& bundle_out)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 406;
+		location = cufflinks_xcode;
+		modificationTime = 300577816.487514;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	EDBEA5F511EA726800C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 990;
+		vrLoc = 10484;
+	};
+	EDBEA5F611EA729900C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 977;
+		vrLoc = 10471;
+	};
+	EDBEA5F711EA72ED00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 977;
+		vrLoc = 10471;
+	};
+	EDBEA5F811EA730300C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 977;
+		vrLoc = 10471;
+	};
+	EDBEA5F911EA736C00C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 977;
+		vrLoc = 10471;
+	};
+	EDBEA5FA11EA737900C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 977;
+		vrLoc = 10471;
+	};
+	EDBEA60111EA74A000C661A7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 422";
+		rLen = 0;
+		rLoc = 10508;
+		rType = 0;
+		vrLen = 1145;
+		vrLoc = 10400;
 	};
 	EDD0CD9D10C72AC200AF308F /* cufflinks */ = {
 		isa = PBXExecutable;
@@ -2318,8 +2947,10 @@
 			NO,
 			NO,
 			NO,
-			YES,
 			NO,
+			NO,
+			YES,
+			YES,
 		);
 		argumentStrings = (
 			"--max-mle-iterations 4",
@@ -2371,6 +3002,8 @@
 			PEchr1MinQV15_15e6.sam,
 			PEchr1MinQV15_15e6.bam,
 			"-o perfect_abund -G mm9_chr123.gtf -p 6 fixed.sam",
+			"-M mask.gtf",
+			xxx.bam,
 		);
 		autoAttachOnCrash = 1;
 		breakpointsEnabled = 1;
@@ -2840,7 +3473,7 @@
 		ignoreCount = 0;
 		lineNumber = 268;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.189625;
+		modificationTime = 300577816.47634;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -2925,7 +3558,7 @@
 		ignoreCount = 0;
 		lineNumber = 269;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.190379;
+		modificationTime = 300577816.476767;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3140,7 +3773,7 @@
 		ignoreCount = 0;
 		lineNumber = 791;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.191038;
+		modificationTime = 300577816.477172;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3158,7 +3791,7 @@
 		ignoreCount = 0;
 		lineNumber = 330;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.191691;
+		modificationTime = 300577816.477561;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3254,7 +3887,7 @@
 		ignoreCount = 0;
 		lineNumber = 480;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.19233;
+		modificationTime = 300577816.47795;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3518,7 +4151,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 682";
 		rLen = 0;
-		rLoc = 17717;
+		rLoc = 19463;
 		rType = 0;
 		vrLen = 712;
 		vrLoc = 17014;
@@ -3580,7 +4213,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 752";
 		rLen = 0;
-		rLoc = 21215;
+		rLoc = 21490;
 		rType = 0;
 		vrLen = 565;
 		vrLoc = 20747;
@@ -3590,7 +4223,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 752";
 		rLen = 0;
-		rLoc = 21215;
+		rLoc = 21490;
 		rType = 0;
 		vrLen = 565;
 		vrLoc = 20747;
@@ -3600,7 +4233,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 752";
 		rLen = 0;
-		rLoc = 21215;
+		rLoc = 21490;
 		rType = 0;
 		vrLen = 1161;
 		vrLoc = 20504;
@@ -3696,7 +4329,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 752";
 		rLen = 0;
-		rLoc = 21215;
+		rLoc = 21490;
 		rType = 0;
 		vrLen = 565;
 		vrLoc = 20747;
@@ -3705,7 +4338,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		rLen = 0;
-		rLoc = 528;
+		rLoc = 586;
 		rType = 1;
 	};
 	EDE10AB111E7AB16005F1F4B /* PBXTextBookmark */ = {
@@ -3713,7 +4346,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 529";
 		rLen = 0;
-		rLoc = 13945;
+		rLoc = 15691;
 		rType = 0;
 		vrLen = 981;
 		vrLoc = 5761;
@@ -3732,7 +4365,7 @@
 		ignoreCount = 0;
 		lineNumber = 352;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.192979;
+		modificationTime = 300577816.478357;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3750,7 +4383,7 @@
 		ignoreCount = 0;
 		lineNumber = 489;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.193669;
+		modificationTime = 300577816.478791;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3768,7 +4401,7 @@
 		ignoreCount = 0;
 		lineNumber = 433;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.194342;
+		modificationTime = 300577816.479212;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3777,7 +4410,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 529";
 		rLen = 0;
-		rLoc = 13945;
+		rLoc = 15691;
 		rType = 0;
 		vrLen = 1602;
 		vrLoc = 5298;
@@ -3826,7 +4459,7 @@
 		ignoreCount = 0;
 		lineNumber = 495;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.195021;
+		modificationTime = 300577816.479581;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -3835,7 +4468,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 529";
 		rLen = 0;
-		rLoc = 13945;
+		rLoc = 15691;
 		rType = 0;
 		vrLen = 1602;
 		vrLoc = 5298;
@@ -3865,7 +4498,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 556";
 		rLen = 0;
-		rLoc = 16391;
+		rLoc = 16660;
 		rType = 0;
 		vrLen = 799;
 		vrLoc = 16023;
@@ -3875,7 +4508,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1020";
 		rLen = 0;
-		rLoc = 26895;
+		rLoc = 28641;
 		rType = 0;
 		vrLen = 509;
 		vrLoc = 26554;
@@ -3912,7 +4545,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 529";
 		rLen = 0;
-		rLoc = 13945;
+		rLoc = 15691;
 		rType = 0;
 		vrLen = 1669;
 		vrLoc = 5293;
@@ -3974,7 +4607,7 @@
 		vrLen = 647;
 		vrLoc = 11280;
 	};
-	EDE10AF011E7AF70005F1F4B /* cufflinks.cpp:286 */ = {
+	EDE10AF011E7AF70005F1F4B /* cufflinks.cpp:293 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -3986,18 +4619,18 @@
 		functionName = "scaffolds_for_bundle(const HitBundle& bundle, vector<Scaffold>& scaffolds, BundleStats* stats = NULL)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 286;
+		lineNumber = 293;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.945938;
+		modificationTime = 300577816.479988;
 		originalNumberOfMultipleMatches = 1;
-		state = 1;
+		state = 2;
 	};
 	EDE10AF411E7AF7B005F1F4B /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 278";
 		rLen = 12;
-		rLoc = 9123;
+		rLoc = 9392;
 		rType = 0;
 		vrLen = 1508;
 		vrLoc = 8593;
@@ -4034,7 +4667,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1019";
 		rLen = 0;
-		rLoc = 26867;
+		rLoc = 28613;
 		rType = 0;
 		vrLen = 492;
 		vrLoc = 26554;
@@ -4044,12 +4677,12 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1019";
 		rLen = 0;
-		rLoc = 26867;
+		rLoc = 28613;
 		rType = 0;
 		vrLen = 538;
 		vrLoc = 26501;
 	};
-	EDE10AFA11E7AFB2005F1F4B /* cufflinks.cpp:346 */ = {
+	EDE10AFA11E7AFB2005F1F4B /* cufflinks.cpp:353 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4061,9 +4694,9 @@
 		functionName = "scaffolds_for_bundle(const HitBundle& bundle, vector<Scaffold>& scaffolds, BundleStats* stats = NULL)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 346;
+		lineNumber = 353;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.196392;
+		modificationTime = 300577816.480353;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4082,7 +4715,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1019";
 		rLen = 0;
-		rLoc = 26867;
+		rLoc = 28613;
 		rType = 0;
 		vrLen = 1155;
 		vrLoc = 26141;
@@ -4102,7 +4735,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 278";
 		rLen = 12;
-		rLoc = 9123;
+		rLoc = 9392;
 		rType = 0;
 		vrLen = 1604;
 		vrLoc = 10101;
@@ -4112,7 +4745,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 278";
 		rLen = 12;
-		rLoc = 9123;
+		rLoc = 9392;
 		rType = 0;
 		vrLen = 1604;
 		vrLoc = 10101;
@@ -4122,7 +4755,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 321";
 		rLen = 0;
-		rLoc = 10253;
+		rLoc = 10522;
 		rType = 0;
 		vrLen = 1445;
 		vrLoc = 9747;
@@ -4132,7 +4765,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1019";
 		rLen = 0;
-		rLoc = 26867;
+		rLoc = 28613;
 		rType = 0;
 		vrLen = 538;
 		vrLoc = 26501;
@@ -4142,12 +4775,12 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 321";
 		rLen = 0;
-		rLoc = 10253;
+		rLoc = 10522;
 		rType = 0;
 		vrLen = 641;
 		vrLoc = 9879;
 	};
-	EDE10B0911E7B1C8005F1F4B /* cufflinks.cpp:893 */ = {
+	EDE10B0911E7B1C8005F1F4B /* cufflinks.cpp:912 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4157,20 +4790,20 @@
 		delayBeforeContinue = 0;
 		fileReference = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		functionName = "main(int argc, char** argv)";
-		hitCount = 0;
+		hitCount = 1;
 		ignoreCount = 0;
-		lineNumber = 893;
+		lineNumber = 912;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.197083;
+		modificationTime = 300577818.354454;
 		originalNumberOfMultipleMatches = 1;
-		state = 2;
+		state = 1;
 	};
 	EDE10B0D11E7B1DC005F1F4B /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 321";
 		rLen = 0;
-		rLoc = 10253;
+		rLoc = 10522;
 		rType = 0;
 		vrLen = 1216;
 		vrLoc = 23073;
@@ -4180,7 +4813,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 321";
 		rLen = 0;
-		rLoc = 10253;
+		rLoc = 10522;
 		rType = 0;
 		vrLen = 1146;
 		vrLoc = 21756;
@@ -4190,7 +4823,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1019";
 		rLen = 0;
-		rLoc = 26867;
+		rLoc = 28613;
 		rType = 0;
 		vrLen = 538;
 		vrLoc = 26501;
@@ -4200,7 +4833,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 581;
 		vrLoc = 21924;
@@ -4227,7 +4860,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 321";
 		rLen = 0;
-		rLoc = 10253;
+		rLoc = 10522;
 		rType = 0;
 		vrLen = 1146;
 		vrLoc = 21756;
@@ -4256,7 +4889,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		rLen = 0;
-		rLoc = 892;
+		rLoc = 911;
 		rType = 1;
 	};
 	EDE10B1C11E7B225005F1F4B /* PBXTextBookmark */ = {
@@ -4264,7 +4897,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 1216;
 		vrLoc = 23073;
@@ -4274,7 +4907,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 1249;
 		vrLoc = 23038;
@@ -4294,7 +4927,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 1036";
 		rLen = 0;
-		rLoc = 27133;
+		rLoc = 28879;
 		rType = 0;
 		vrLen = 519;
 		vrLoc = 26777;
@@ -4340,7 +4973,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 624;
 		vrLoc = 23663;
@@ -4350,7 +4983,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 624;
 		vrLoc = 23663;
@@ -4369,7 +5002,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		rLen = 0;
-		rLoc = 892;
+		rLoc = 911;
 		rType = 1;
 	};
 	EDE10B3811E7B2D4005F1F4B /* PBXTextBookmark */ = {
@@ -4377,7 +5010,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 1243;
 		vrLoc = 21791;
@@ -4387,12 +5020,12 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 784;
 		vrLoc = 22250;
 	};
-	EDE10B3A11E7B2D7005F1F4B /* cufflinks.cpp:815 */ = {
+	EDE10B3A11E7B2D7005F1F4B /* cufflinks.cpp:822 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4404,9 +5037,9 @@
 		functionName = "driver(const string& hit_file_name, FILE* ref_gtf)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 815;
+		lineNumber = 822;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.197835;
+		modificationTime = 300577816.481091;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4415,7 +5048,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 1173;
 		vrLoc = 22066;
@@ -4474,7 +5107,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		rLen = 0;
-		rLoc = 892;
+		rLoc = 911;
 		rType = 1;
 	};
 	EDE10B4E11E7B475005F1F4B /* PBXTextBookmark */ = {
@@ -4482,7 +5115,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 1206;
 		vrLoc = 21910;
@@ -4492,7 +5125,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 893";
 		rLen = 0;
-		rLoc = 24233;
+		rLoc = 24791;
 		rType = 0;
 		vrLen = 1206;
 		vrLoc = 21910;
@@ -4502,7 +5135,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 340";
 		rLen = 0;
-		rLoc = 10750;
+		rLoc = 11019;
 		rType = 0;
 		vrLen = 888;
 		vrLoc = 10463;
@@ -4512,7 +5145,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 340";
 		rLen = 0;
-		rLoc = 10750;
+		rLoc = 11019;
 		rType = 0;
 		vrLen = 1650;
 		vrLoc = 10059;
@@ -4522,7 +5155,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 340";
 		rLen = 0;
-		rLoc = 10750;
+		rLoc = 11019;
 		rType = 0;
 		vrLen = 1251;
 		vrLoc = 21910;
@@ -4541,7 +5174,7 @@
 		ignoreCount = 0;
 		lineNumber = 468;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.19853;
+		modificationTime = 300577816.481451;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4550,7 +5183,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 340";
 		rLen = 0;
-		rLoc = 10750;
+		rLoc = 11019;
 		rType = 0;
 		vrLen = 1251;
 		vrLoc = 21910;
@@ -4599,7 +5232,7 @@
 		ignoreCount = 0;
 		lineNumber = 331;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.199305;
+		modificationTime = 300577816.481881;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4647,7 +5280,7 @@
 		ignoreCount = 0;
 		lineNumber = 389;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.200013;
+		modificationTime = 300577816.482294;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4676,7 +5309,7 @@
 		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
 		name = "cufflinks.cpp: 340";
 		rLen = 0;
-		rLoc = 10750;
+		rLoc = 11019;
 		rType = 0;
 		vrLen = 888;
 		vrLoc = 10463;
@@ -4842,7 +5475,7 @@
 		ignoreCount = 0;
 		lineNumber = 790;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.200732;
+		modificationTime = 300577816.482662;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4860,7 +5493,7 @@
 		ignoreCount = 0;
 		lineNumber = 789;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.201557;
+		modificationTime = 300577816.483089;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5087,7 +5720,7 @@
 		hitCount = 0;
 		ignoreCount = 0;
 		lineNumber = 177;
-		modificationTime = 300569641.213309;
+		modificationTime = 300577816.483458;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5204,9 +5837,9 @@
 		hitCount = 0;
 		ignoreCount = 0;
 		lineNumber = 271;
-		modificationTime = 300569641.215871;
+		modificationTime = 300577951.255793;
 		originalNumberOfMultipleMatches = 1;
-		state = 0;
+		state = 1;
 	};
 	EDE10BD411E7CEB6005F1F4B /* bundles.cpp:366 */ = {
 		isa = PBXFileBreakpoint;
@@ -5222,7 +5855,7 @@
 		ignoreCount = 0;
 		lineNumber = 366;
 		location = cufflinks_xcode;
-		modificationTime = 300569642.277235;
+		modificationTime = 300577817.403629;
 		originalNumberOfMultipleMatches = 1;
 		state = 1;
 	};
@@ -5291,7 +5924,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 509";
 		rLen = 10;
-		rLoc = 13363;
+		rLoc = 15109;
 		rType = 0;
 		vrLen = 1504;
 		vrLoc = 12533;
@@ -5301,7 +5934,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 497";
 		rLen = 0;
-		rLoc = 12895;
+		rLoc = 14641;
 		rType = 0;
 		vrLen = 1228;
 		vrLoc = 8623;
@@ -5311,7 +5944,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 497";
 		rLen = 0;
-		rLoc = 12895;
+		rLoc = 14641;
 		rType = 0;
 		vrLen = 1417;
 		vrLoc = 8506;
@@ -5321,7 +5954,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 497";
 		rLen = 0;
-		rLoc = 12895;
+		rLoc = 14641;
 		rType = 0;
 		vrLen = 1259;
 		vrLoc = 8506;
@@ -5331,7 +5964,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 497";
 		rLen = 0;
-		rLoc = 12895;
+		rLoc = 14641;
 		rType = 0;
 		vrLen = 1228;
 		vrLoc = 8623;
@@ -5341,7 +5974,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 497";
 		rLen = 0;
-		rLoc = 12895;
+		rLoc = 14641;
 		rType = 0;
 		vrLen = 1417;
 		vrLoc = 8506;
@@ -5373,7 +6006,7 @@
 		vrLen = 1289;
 		vrLoc = 3091;
 	};
-	EDE10C0011E7D606005F1F4B /* bundles.cpp:544 */ = {
+	EDE10C0011E7D606005F1F4B /* bundles.cpp:602 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5385,9 +6018,9 @@
 		functionName = "BundleFactory::next_bundle(HitBundle& bundle_out)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 544;
+		lineNumber = 602;
 		location = cufflinks_xcode;
-		modificationTime = 300569641.216948;
+		modificationTime = 300577816.484714;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -5436,7 +6069,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 547";
 		rLen = 0;
-		rLoc = 14169;
+		rLoc = 15915;
 		rType = 0;
 		vrLen = 981;
 		vrLoc = 13376;
@@ -5446,7 +6079,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 547";
 		rLen = 0;
-		rLoc = 14169;
+		rLoc = 15915;
 		rType = 0;
 		vrLen = 901;
 		vrLoc = 13758;
@@ -5476,7 +6109,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 1322;
 		vrLoc = 13668;
@@ -5486,7 +6119,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 1322;
 		vrLoc = 13668;
@@ -5496,7 +6129,7 @@
 		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
 		name = "bundles.cpp: 531";
 		rLen = 189;
-		rLoc = 13977;
+		rLoc = 15723;
 		rType = 0;
 		vrLen = 1322;
 		vrLoc = 13668;
