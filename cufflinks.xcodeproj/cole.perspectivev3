@@ -280,13 +280,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>61</integer>
+									<integer>33</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 585}, {276, 840}}</string>
+							<string>{{0, 349}, {276, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>hits.cpp</string>
+								<string>hits.h</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>hits.cpp</string>
+										<string>hits.h</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDBEA53C11EA479200C661A7</string>
+										<string>EDBEA54D11EA4B8100C661A7</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0D8411D800BC00CFD663</string>
@@ -365,10 +365,10 @@
 											<string>ED2A458F11E2A65C009AD73B</string>
 											<string>ED2A459811E2A689009AD73B</string>
 											<string>ED2A464E11E2C822009AD73B</string>
-											<string>EDBEA4FE11EA2AA700C661A7</string>
 											<string>EDBEA51711EA426700C661A7</string>
-											<string>EDBEA52D11EA461800C661A7</string>
-											<string>EDBEA53B11EA479200C661A7</string>
+											<string>EDBEA54011EA4B2700C661A7</string>
+											<string>EDBEA54B11EA4B8100C661A7</string>
+											<string>EDBEA54C11EA4B8100C661A7</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>

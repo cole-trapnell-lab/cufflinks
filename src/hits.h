@@ -630,6 +630,9 @@ public:
 		HitFactory(insert_table, reference_table) 
 	{
 		_hit_file = samopen(hit_file_name.c_str(), "rb", 0);
+        
+        memset(&_next_hit, sizeof(_next_hit), 0);
+        
 		if (_hit_file == NULL || _hit_file->header == NULL) 
 		{
 			throw std::runtime_error("Fail to open BAM file");
