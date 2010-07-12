@@ -401,7 +401,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		//_next_hit_num++;
 		// Chomp the newline
 		
-		
 		ReadHit tmp;
 		if (!_hit_fac.get_hit_from_buf(hit_buf, tmp, false))
 		{

@@ -199,8 +199,15 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 // populate a bam_t This will 
 bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 {
+    if (_next_hit.data)
+    {
+        free(_next_hit.data);
+        _next_hit.data = NULL;
+    }
+    
     if (records_remain() == false)
         return false;
+    
 	mark_curr_pos();
     
     memset(&_next_hit, 0, sizeof(_next_hit));
