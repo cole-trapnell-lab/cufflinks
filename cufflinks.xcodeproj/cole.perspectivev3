@@ -233,6 +233,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -280,13 +282,11 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>61</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>75</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 536}, {276, 840}}</string>
+							<string>{{0, 580}, {276, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -303,7 +303,7 @@
 							<real>276</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>457 113 1376 899 0 0 1680 1028 </string>
+						<string>819 234 1376 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -314,14 +314,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>hits.cpp</string>
+								<string>filters.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +327,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>hits.cpp</string>
+										<string>filters.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDBEA61C11EAA54600C661A7</string>
+										<string>EDBEA6CD11ED3E5500C661A7</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0D8411D800BC00CFD663</string>
@@ -341,16 +339,13 @@
 											<string>ED1C0E0F11D8323B00CFD663</string>
 											<string>EDBBA09411DA26750015175B</string>
 											<string>EDBBA0F911DA3E0C0015175B</string>
-											<string>EDBBA10111DA433F0015175B</string>
 											<string>EDBBA10211DA433F0015175B</string>
 											<string>EDBBA16A11DA734C0015175B</string>
 											<string>EDBBA16B11DA734C0015175B</string>
-											<string>EDBBA30811DD516D0015175B</string>
 											<string>EDBBA30A11DD516D0015175B</string>
 											<string>EDBBA30B11DD516D0015175B</string>
 											<string>EDBBA34611DD5AA90015175B</string>
 											<string>EDBBA3FA11DD8E140015175B</string>
-											<string>EDBBA3FB11DD8E140015175B</string>
 											<string>EDBBA3FC11DD8E140015175B</string>
 											<string>EDBBA4EF11DE47460015175B</string>
 											<string>EDBBA57511DE759B0015175B</string>
@@ -359,21 +354,26 @@
 											<string>ED2A464E11E2C822009AD73B</string>
 											<string>EDBEA55211EA4E6E00C661A7</string>
 											<string>EDBEA55711EA508B00C661A7</string>
-											<string>EDBEA56811EA51E500C661A7</string>
 											<string>EDBEA59E11EA615300C661A7</string>
 											<string>EDBEA5AA11EA663500C661A7</string>
-											<string>EDBEA5BF11EA6F7F00C661A7</string>
-											<string>EDBEA5C011EA6F7F00C661A7</string>
 											<string>EDBEA5CF11EA6FD800C661A7</string>
-											<string>EDBEA5E711EA713E00C661A7</string>
 											<string>EDBEA5E811EA713E00C661A7</string>
-											<string>EDBEA5E911EA713E00C661A7</string>
 											<string>EDBEA60311EA75CD00C661A7</string>
 											<string>EDBEA60511EA75CD00C661A7</string>
 											<string>EDBEA60811EA75CD00C661A7</string>
 											<string>EDBEA61111EA789F00C661A7</string>
-											<string>EDBEA61A11EAA54600C661A7</string>
-											<string>EDBEA61B11EAA54600C661A7</string>
+											<string>EDBEA62111ED2D6100C661A7</string>
+											<string>EDBEA62D11ED354100C661A7</string>
+											<string>EDBEA64511ED36B800C661A7</string>
+											<string>EDBEA65011ED37AC00C661A7</string>
+											<string>EDBEA65D11ED37E800C661A7</string>
+											<string>EDBEA68211ED3B6800C661A7</string>
+											<string>EDBEA6AD11ED3D0800C661A7</string>
+											<string>EDBEA6B711ED3DBC00C661A7</string>
+											<string>EDBEA6BE11ED3DD100C661A7</string>
+											<string>EDBEA6BF11ED3DD100C661A7</string>
+											<string>EDBEA6C411ED3DE100C661A7</string>
+											<string>EDBEA6C511ED3DE100C661A7</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -389,7 +389,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {1078, 557}}</string>
 								<key>RubberWindowFrame</key>
-								<string>457 113 1376 899 0 0 1680 1028 </string>
+								<string>819 234 1376 899 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -413,6 +413,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {1078, 269}}</string>
+										<key>RubberWindowFrame</key>
+										<string>819 234 1376 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -429,8 +431,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {1078, 269}}</string>
-										<key>RubberWindowFrame</key>
-										<string>457 113 1376 899 0 0 1680 1028 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -695,7 +695,7 @@
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>457 113 1376 899 0 0 1680 1028 </string>
+	<string>819 234 1376 899 0 0 1920 1178 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

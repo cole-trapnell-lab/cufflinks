@@ -205,10 +205,10 @@ public:
 				{
 					if (gap > 0)
 					{
-						if (gap < (int)min_intron_length)
-							aug_ops.push_back(AugmentedCuffOp(CUFF_MATCH, g_left, gap));
-						else
-							aug_ops.push_back(AugmentedCuffOp(CUFF_UNKNOWN, g_left, gap));
+						//if (gap < (int)min_intron_length)
+						//	aug_ops.push_back(AugmentedCuffOp(CUFF_MATCH, g_left, gap));
+						//else
+                        aug_ops.push_back(AugmentedCuffOp(CUFF_UNKNOWN, g_left, gap));
 						g_left += gap;
 					
 					}

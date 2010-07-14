@@ -169,8 +169,8 @@ void pre_mrna_filter(int bundle_length,
 	
 	Scaffold smashed_gene;
 	
-	// setting introns_overwrite_matches in a gene smash takes only it's
-	// constitutive regions
+	// setting introns_overwrite_matches=false in a gene smash means exons take
+    // precedence over introns, so all retained introns will be present.
 	Scaffold::merge(hits, smashed_gene, false);
 	vector<bool> constitutive_introns(intron_doc.size(), true);
 	
@@ -231,6 +231,23 @@ void pre_mrna_filter(int bundle_length,
 		intron_idx++;
 	}
 	
+//    intron_idx = 0;
+//    for (map<pair<int,int>, int>::const_iterator itr2 = intron_doc.begin();
+//         itr2 != intron_doc.end();
+//         ++itr2)
+//    {
+//        if (!constitutive_introns[intron_idx])
+//		{
+//            fprintf(stderr, "%d-%d not constitutive\n", itr2->first.first,itr2->first.second);
+//        }
+//        
+//        if (constitutive_introns[intron_idx])
+//		{
+//            fprintf(stderr, "%d-%d is constitutive\n", itr2->first.first,itr2->first.second);
+//        }
+//        intron_idx++;
+//    }
+    
 	for (size_t j = 0; j < hits.size(); ++j)
 	{	
 		if (!toss[j])

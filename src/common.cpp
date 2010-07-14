@@ -40,7 +40,7 @@ uint32_t max_gene_length = 3000000;
 int max_partner_dist = 50000;
 int inner_dist_mean = 45;
 int inner_dist_std_dev = 40;
-int max_inner_dist = 105;
+int max_inner_dist = 1000;
 int olap_radius = 50;
 
 float min_isoform_fraction = 0.05;
