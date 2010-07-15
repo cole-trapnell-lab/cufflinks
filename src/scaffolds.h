@@ -120,11 +120,22 @@ struct AugmentedCuffOp
 		}
 		return false;
 	}
+    
+    static bool g_left_lt(const AugmentedCuffOp& lhs,
+						  const AugmentedCuffOp& rhs);
 	
 	bool operator!=(const AugmentedCuffOp& rhs) const
 	{
 		return !(*this == rhs);
 	}
+    
+    static void merge_ops(const std::vector<AugmentedCuffOp>& ops, 
+						  vector<AugmentedCuffOp>& merged,
+						  bool introns_overwrite_matches);
+    
+    static void fill_interstices(vector<AugmentedCuffOp>& to_fill,
+								 const vector<AugmentedCuffOp>& filler,
+								 bool allow_flank_fill);
 	
 	CuffOpCode opcode;
 	int genomic_offset;
@@ -222,8 +233,8 @@ public:
 			assert(false);
 		}
 		_mates_in_scaff.push_back(&mate);
-		sort(aug_ops.begin(), aug_ops.end(), g_left_lt);
-		merge_ops(aug_ops, _augmented_ops, false);
+		sort(aug_ops.begin(), aug_ops.end(), AugmentedCuffOp::g_left_lt);
+        AugmentedCuffOp::merge_ops(aug_ops, _augmented_ops, false);
 		_right = _augmented_ops.back().g_right();
 		_left = _augmented_ops.front().g_left();
 		
@@ -234,7 +245,7 @@ public:
 #ifdef DEBUG
 		if (r_check != _right)
 		{
-			merge_ops(aug_ops, _augmented_ops, false);
+            AugmentedCuffOp::merge_ops(aug_ops, _augmented_ops, false);
 		}
 #endif
 		assert (r_check == _right);
@@ -367,9 +378,6 @@ public:
 	
 	double worst_mate_score() const;
 	
-	static bool g_left_lt(const AugmentedCuffOp& lhs,
-						  const AugmentedCuffOp& rhs);
-	
 	const vector<AugmentedCuffOp>& augmented_ops() const { return _augmented_ops; }
 	
 	static bool overlap_in_genome(const Scaffold& lhs, 
@@ -401,13 +409,18 @@ public:
 		return false;
 	}
 	
+    // Fills in CUFF_UNKNOWNs up to filled_gap_size long
 	void fill_gaps(int filled_gap_size);
+    
+    // Fills in CUFF_UNKNOWNs with the contents of filler.  Filler must be
+    // a sortted, contiguous, non-overlapping vector of AugmentedCuffOps
+    void fill_gaps(const vector<AugmentedCuffOp>& filler);
 	
 	void clear_hits();
 	bool add_hit(const MateHit*);
 	
 	void get_complete_subscaffolds(vector<Scaffold>& complete);
-	
+    
 private: 
 	
 	static bool has_intron(const Scaffold& scaff)
@@ -462,14 +475,6 @@ private:
 	typedef vector<AugmentedCuffOp> OpList;
 	
 	bool check_merge_length(const vector<AugmentedCuffOp>& ops);
-	
-	static void fill_interstices(vector<AugmentedCuffOp>& to_fill,
-								 const vector<AugmentedCuffOp>& filler,
-								 bool allow_flank_fill);
-	
-	static void merge_ops(const std::vector<AugmentedCuffOp>& ops, 
-						  vector<AugmentedCuffOp>& merged,
-						  bool introns_overwrite_matches);
 	
 	vector<const MateHit*> _mates_in_scaff;
 	

@@ -787,7 +787,7 @@ void minor_introns(int bundle_length,
 				if (!exists)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads based on overlap with much more abundant intron: %lu-%lu spanned by %d reads\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads based on overlap with much more abundant intron: %d-%d spanned by %d reads\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads,

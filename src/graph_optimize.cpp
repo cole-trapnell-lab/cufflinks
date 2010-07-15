@@ -8,6 +8,7 @@
  */
 
 #include <vector>
+#include <algorithm>
 
 #include "graph_optimize.h"
 // for graph optimization only
@@ -61,6 +62,85 @@ bool op_left_lt_right_lt(const AugmentedCuffOp& lhs, const AugmentedCuffOp& rhs)
 	return false;
 }
 
+void extract_conflicting_ops(const vector<AugmentedCuffOp>& ops,
+                                       vector<AugmentedCuffOp>& conflict_ops)
+{	
+	for (size_t i = 0; i < ops.size(); ++i)
+	{
+		for (size_t j = i+1; j < ops.size(); ++j)
+		{
+			if (AugmentedCuffOp::overlap_in_genome(ops[i], ops[j]))
+			{
+				if (!AugmentedCuffOp::compatible(ops[i], ops[j]))
+				{
+					if (!binary_search(conflict_ops.begin(), conflict_ops.end(), ops[i]))
+					{
+						conflict_ops.push_back(ops[i]);
+						sort(conflict_ops.begin(), conflict_ops.end());
+					}
+					
+					if (!binary_search(conflict_ops.begin(), conflict_ops.end(), ops[j]))
+					{
+						conflict_ops.push_back(ops[j]);
+						sort(conflict_ops.begin(), conflict_ops.end());
+					}
+				}
+			}
+			else
+			{
+				break;
+			}
+            
+		}
+	}    
+}
+
+void collect_non_redundant_ops(const vector<Scaffold>& scaffolds,
+                               vector<AugmentedCuffOp>& ops)
+{
+
+	for (size_t i = 0; i < scaffolds.size(); ++i)
+	{
+		ops.insert(ops.end(), 
+				   scaffolds[i].augmented_ops().begin(), 
+				   scaffolds[i].augmented_ops().end());
+	}
+    sort(ops.begin(), ops.end());
+    vector<AugmentedCuffOp>::iterator new_end = unique(ops.begin(), ops.end());
+	ops.erase(new_end, ops.end());
+	
+	sort (ops.begin(), ops.end(), op_left_lt_right_lt);   
+}
+
+void fill_unambiguous_unknowns(vector<Scaffold>& scaffolds)
+{
+    vector<AugmentedCuffOp> conflict_ops;
+    vector<AugmentedCuffOp> ops;
+    
+    collect_non_redundant_ops(scaffolds, ops);
+    
+    extract_conflicting_ops(ops, conflict_ops);
+    
+    sort(conflict_ops.begin(), conflict_ops.end());
+    sort(ops.begin(), ops.end());
+    
+    vector<AugmentedCuffOp> non_conflict;
+    
+    set_difference(ops.begin(), 
+                   ops.end(), 
+                   conflict_ops.begin(), 
+                   conflict_ops.end(), 
+                   back_inserter(non_conflict));
+    sort(non_conflict.begin(), non_conflict.end(), AugmentedCuffOp::g_left_lt);
+    vector<AugmentedCuffOp> merged;
+    
+    AugmentedCuffOp::merge_ops(non_conflict, merged, true);
+    for (size_t i = 0; i < scaffolds.size(); ++i)
+    {
+        scaffolds[i].fill_gaps(merged);
+    }
+}
+
 // WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
 // to work correctly.
 void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
@@ -106,55 +186,16 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 			}
 		}
 	}
-	
+    
 #if ASM_VERBOSE
 	fprintf(stderr, "%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
 #endif
+    
+    vector<AugmentedCuffOp> ops;
+    collect_non_redundant_ops(scaffolds, ops);
 	
-	vector<AugmentedCuffOp> ops;
-	for (size_t i = 0; i < scaffolds.size(); ++i)
-	{
-		ops.insert(ops.end(), 
-				   scaffolds[i].augmented_ops().begin(), 
-				   scaffolds[i].augmented_ops().end());
-	}
-	
-	sort(ops.begin(), ops.end());
-	vector<AugmentedCuffOp>::iterator new_end = unique(ops.begin(), ops.end());
-	ops.erase(new_end, ops.end());
-	
-	sort (ops.begin(), ops.end(), op_left_lt_right_lt);
-	
-	vector<AugmentedCuffOp> conflict_ops;
-	
-	for (size_t i = 0; i < ops.size(); ++i)
-	{
-		for (size_t j = i+1; j < ops.size(); ++j)
-		{
-			if (AugmentedCuffOp::overlap_in_genome(ops[i], ops[j]))
-			{
-				if (!AugmentedCuffOp::compatible(ops[i], ops[j]))
-				{
-					if (!binary_search(conflict_ops.begin(), conflict_ops.end(), ops[i]))
-					{
-						conflict_ops.push_back(ops[i]);
-						sort(conflict_ops.begin(), conflict_ops.end());
-					}
-					
-					if (!binary_search(conflict_ops.begin(), conflict_ops.end(), ops[j]))
-					{
-						conflict_ops.push_back(ops[j]);
-						sort(conflict_ops.begin(), conflict_ops.end());
-					}
-				}
-			}
-			else
-			{
-				break;
-			}
-
-		}
-	}
+    vector<AugmentedCuffOp> conflict_ops;
+    extract_conflicting_ops(ops, conflict_ops);
 	
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
@@ -893,6 +934,8 @@ void compress_fragments(vector<Scaffold>& fragments)
 #endif
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 	
+    fill_unambiguous_unknowns(fragments);
+    
 	compress_consitutive(fragments);
 	
 	compress_redundant(fragments);
@@ -932,8 +975,11 @@ void compress_overlap_dag_paths(DAG& bundle_dag,
     {
         if (!compressed_paths[i].empty())
         {
-            //fprintf(stderr, "Path %d has %d fragments in it\n", i, compressed_paths[i].size());
-            new_scaffs.push_back(Scaffold(compressed_paths[i]));
+            Scaffold s(compressed_paths[i]);
+#if ASM_VERBOSE
+            fprintf(stderr, "Path over %d-%d has %d fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
+#endif
+            new_scaffs.push_back(s);
         }
     }
     //hits = new_scaffs;

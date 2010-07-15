@@ -392,11 +392,11 @@ void filter_hits(int bundle_length,
 					if (intron_pokin_read)
 					{
 						double fraction;
-						if (!hits[j].has_intron())
-						{ 
-							fraction = (3 * pre_mrna_fraction) + percent_mismatches;
-						}
-						else
+//						if (!hits[j].has_intron())
+//						{ 
+//							fraction = (3 * pre_mrna_fraction) + percent_mismatches;
+//						}
+//						else
 						{
 							fraction = pre_mrna_fraction + percent_mismatches;
 						}

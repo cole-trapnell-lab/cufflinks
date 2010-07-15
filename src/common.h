@@ -66,6 +66,8 @@ extern double small_anchor_fraction;
 
 extern double binomial_junc_filter_alpha;
 
+extern std::string library_type;
+
 #define ENABLE_THREADS 1
 
 #if ENABLE_THREADS
@@ -103,6 +105,57 @@ OutputIterator copy_if(InputIterator begin,
 	return destBegin;
 }
 
+enum Strandedness 
+{
+    UNKNOWN_STRANDEDNESS,
+    STRANDED_PROTOCOL,
+    UNSTRANDED_PROTOCOL
+};
+
+enum StandardMateOrientation
+{
+    UNKNOWN_MATE_ORIENTATION,
+    MATES_POINT_TOWARD,
+    MATES_POINT_SAME,
+    MATES_POINT_AWAY,
+    UNPAIRED,
+};
+
+enum Platform
+{
+    UNKNOWN_PLATFORM,
+    ILLUMINA,
+    SOLID
+};
+
+class ReadGroupProperties
+{
+public:
+    
+    ReadGroupProperties() : 
+    _strandedness(UNKNOWN_STRANDEDNESS), 
+    _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
+    _platform(UNKNOWN_PLATFORM){} 
+    
+    Strandedness strandedness() const { return _strandedness; }
+    void strandedness(Strandedness s) { _strandedness = s; }
+    
+    StandardMateOrientation std_mate_orientation() const { return _std_mate_orient; }
+    void std_mate_orientation(StandardMateOrientation so)  { _std_mate_orient = so; }
+    
+    Platform platform() const { return _platform; }
+    void platform(Platform p)  { _platform = p; }    
+private:
+    
+    Strandedness _strandedness;
+    StandardMateOrientation _std_mate_orient;
+    Platform _platform;
+};
+
+extern std::map<std::string, ReadGroupProperties> library_type_table;
+
+void print_library_table();
+void init_library_table();
 
 #define OPT_NUM_IMP_SAMPLES		260
 #define OPT_MLE_MAX_ITER		261

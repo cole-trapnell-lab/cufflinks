@@ -266,14 +266,41 @@ pair<DAGNode, DAGNode> add_terminal_nodes(DAG& bundle_dag)
     DAGNode source = add_vertex(bundle_dag);
     DAGNode sink = add_vertex(bundle_dag);
     
+    int num_attached_to_source = 0;
+    int num_attached_to_sink = 0;
+    
     for (size_t i = 0; i < num_vertices(bundle_dag); ++i)
     {
         if (!has_parent[i] && i != sink && i != source)
+        {
+            num_attached_to_source++;
             add_edge(source, i, bundle_dag);
-        
+        }
         if (!has_child[i] && i != source && i != sink)
+        {
+            num_attached_to_sink++;
             add_edge(i, sink, bundle_dag);
+        }
     }
     
+#if ASM_VERBOSE
+    HitsForNodeMap hits_for_node = get(vertex_name, bundle_dag);
+    DAG::vertex_iterator ki, ke;
+	for (tie(ki, ke) = vertices(bundle_dag); ki != ke; ++ki)
+	{
+        if (edge(source, *ki, bundle_dag).second)
+        {
+            const Scaffold* pS = hits_for_node[*ki];
+            fprintf(stderr, "%d-%d has edge from source\n", pS->left(), pS->right());
+        }
+        
+        if (edge(*ki, sink, bundle_dag).second)
+        {
+            const Scaffold* pS = hits_for_node[*ki];
+            fprintf(stderr, "%d-%d has edge to sink\n", pS->left(), pS->right());
+        }
+    }
+    fprintf(stderr, "%d source nodes, %d sink nodes\n", num_attached_to_source, num_attached_to_sink);
+#endif
     return make_pair(source, sink);
 }

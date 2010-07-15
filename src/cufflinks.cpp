@@ -89,6 +89,8 @@ void print_usage()
 	fprintf(stderr, "\nAdvanced Options:\n\n");
 	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    
+    print_library_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -849,6 +851,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 
 int main(int argc, char** argv)
 {
+    init_library_table();
+    
 	int parse_ret = parse_options(argc,argv);
     if (parse_ret)
         return parse_ret;

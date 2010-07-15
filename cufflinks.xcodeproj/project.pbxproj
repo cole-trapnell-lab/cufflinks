@@ -731,6 +731,7 @@
 				GCC_WARN_UNUSED_VALUE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
 					./src,
 					"/usr/local/include/boost-1_41",
 				);

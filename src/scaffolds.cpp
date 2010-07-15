@@ -74,54 +74,10 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 	return true;
 }
 
-bool Scaffold::g_left_lt(const AugmentedCuffOp& lhs,
-							  const AugmentedCuffOp& rhs)
+bool AugmentedCuffOp::g_left_lt(const AugmentedCuffOp& lhs,
+                                const AugmentedCuffOp& rhs)
 {
 	return lhs.g_left() < rhs.g_left();
-}
-
-bool is_known(const AugmentedCuffOp& op)
-{
-	return op.opcode != CUFF_UNKNOWN;
-}
-
-// verifies that no matter how the merge goes, the result wont be an insanely 
-// long gene.
-bool check_merge_length(const vector<AugmentedCuffOp>& ops)
-{
-	size_t g_max = 0;
-	size_t g_min = 0xFFFFFFFF;
-	
-	for (size_t i = 0; i < ops.size(); ++i)
-	{
-		//if (ops[i].opcode == CUFF_INTRON)
-		//	fprintf (stderr, "[%d] %d, %d (%d)\n", i, ops[i].g_left(),ops[i].g_right(), ops[i].g_right() - ops[i].g_left() );
-		assert (ops[i].g_left() < ops[i].g_right());
-		
-		if ((size_t)ops[i].g_left() < g_min)
-			g_min = ops[i].g_left();
-		if ((size_t)ops[i].g_right() > g_max)
-			g_max = ops[i].g_right();
-	}	
-	int merged_length = (int)g_max - (int)g_min + 1;
-	if (merged_length < 0 || merged_length > (int)max_gene_length)
-	{
-		return false;
-	}
-	return true;
-}
-
-inline bool has_intron(const Scaffold& scaff)
-{
-	
-	const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
-	for (size_t j = 0; j < ops.size(); ++j)
-	{
-		if (ops[j].opcode == CUFF_INTRON)
-			return true;
-	}
-	
-	return false;
 }
 
 void disjoint_ops(vector<AugmentedCuffOp>& to_reduce)
@@ -163,17 +119,15 @@ void record_gaps(const vector<AugmentedCuffOp>& to_fill,
 	}	
 }
 
-
-
 // This function "fills" the gaps in to_fill with 
 // AugmentedCuffOps from filler. The intersection of the gaps in both vectors
 // remains as gaps in the modified to_fill.
 
 // IMPORTANT: both vectors MUST be disjoint (see disjoint_matches) before calling
 // this function
-void Scaffold::fill_interstices(vector<AugmentedCuffOp>& to_fill,
-								const vector<AugmentedCuffOp>& filler,
-								bool allow_flank_fill)
+void AugmentedCuffOp::fill_interstices(vector<AugmentedCuffOp>& to_fill,
+                                       const vector<AugmentedCuffOp>& filler,
+                                       bool allow_flank_fill)
 {
 	vector<AugmentedCuffOp> filled = to_fill;
 	vector<pair<int, int> > gaps;
@@ -285,7 +239,7 @@ void Scaffold::fill_interstices(vector<AugmentedCuffOp>& to_fill,
 									   gap.second - op.g_left());
 				assert (gap_op.genomic_length > 0);
 				filled.push_back(gap_op);
-				                    
+                
 				break;
 			}
 			else if (op.g_left() <= gap.first && op.g_right() >= gap.first)
@@ -309,13 +263,13 @@ void Scaffold::fill_interstices(vector<AugmentedCuffOp>& to_fill,
 			{
 				assert(false);
 			}
-				
+            
 			++j;
 		}
 		
 		++i;
 	}
-
+    
 	sort(filled.begin(), filled.end(), g_left_lt);
     
     for (size_t i = 0; i < filled.size(); ++i)
@@ -334,11 +288,12 @@ void Scaffold::fill_interstices(vector<AugmentedCuffOp>& to_fill,
 	to_fill = filled;
 }
 
-#if 1
+
+
 // ops is assumed to be sorted
-void Scaffold::merge_ops(const vector<AugmentedCuffOp>& ops, 
-						 vector<AugmentedCuffOp>& merged,
-						 bool introns_overwrite_matches)
+void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops, 
+                                vector<AugmentedCuffOp>& merged,
+                                bool introns_overwrite_matches)
 {	
 #if DEBUG
 	//assert(std::adjacent_find(ops.begin(), ops.end(), g_left_lt) == ops.end());
@@ -374,16 +329,16 @@ void Scaffold::merge_ops(const vector<AugmentedCuffOp>& ops,
 			{
 				matches.push_back(ops[i]);
 			}break;
-			
+                
 			case CUFF_INTRON:
 			{
 				introns.push_back(ops[i]);
 			}break;
-			
+                
 			case CUFF_UNKNOWN:
 			{
 			}break;
-			
+                
 			default:
 				fprintf(stderr, "Unknown opcode, exiting\n");
 				exit(1);
@@ -442,24 +397,19 @@ void Scaffold::merge_ops(const vector<AugmentedCuffOp>& ops,
     }
 }
 
-#endif
 
-#if 0
-
-void Scaffold::merge_ops(const vector<AugmentedCuffOp>& ops, 
-						 vector<AugmentedCuffOp>& merged,
-						 bool introns_overwrite_matches)
+bool is_known(const AugmentedCuffOp& op)
 {
-#if DEBUG
-	//assert(std::adjacent_find(ops.begin(), ops.end(), g_left_lt) == ops.end());
-#endif
-	
-	if (ops.empty())
-		return;
-	
+	return op.opcode != CUFF_UNKNOWN;
+}
+
+// verifies that no matter how the merge goes, the result wont be an insanely 
+// long gene.
+bool check_merge_length(const vector<AugmentedCuffOp>& ops)
+{
 	size_t g_max = 0;
 	size_t g_min = 0xFFFFFFFF;
-
+	
 	for (size_t i = 0; i < ops.size(); ++i)
 	{
 		//if (ops[i].opcode == CUFF_INTRON)
@@ -470,114 +420,28 @@ void Scaffold::merge_ops(const vector<AugmentedCuffOp>& ops,
 			g_min = ops[i].g_left();
 		if ((size_t)ops[i].g_right() > g_max)
 			g_max = ops[i].g_right();
-	}
-	
+	}	
 	int merged_length = (int)g_max - (int)g_min + 1;
-	if (merged_length < 0 || (gaurd_assembly() && merged_length > (int)max_gene_length))
+	if (merged_length < 0 || merged_length > (int)max_gene_length)
 	{
-		fprintf(stderr, "Error: nonsense gene merge, exiting\n");
-		exit(1);
+		return false;
 	}
-	
-	vector<uint8_t> merge_state(g_max - g_min + 1, CUFF_UNKNOWN);
-	
-	for (size_t i = 0; i < ops.size(); ++i)
-	{
-		if (ops[i].opcode == CUFF_MATCH)
-		{
-			for (int j = ops[i].g_left(); j < ops[i].g_right(); ++j)
-			{
-				int offset = j - g_min;
-				if (merge_state[offset] == CUFF_UNKNOWN)
-					merge_state[offset] = CUFF_MATCH;
-			}
-		}
-		else if (ops[i].opcode == CUFF_INTRON)
-		{
-			const AugmentedCuffOp& intron_op = ops[i];
-			for (int j = intron_op.g_left(); j < intron_op.g_right(); ++j)
-			{
-				int offset = j - g_min;
-
-				if (merge_state[offset] == CUFF_UNKNOWN ||
-					(introns_overwrite_matches && merge_state[offset] == CUFF_MATCH))
-					merge_state[offset] = CUFF_INTRON;
-			}
-		}
-	}
-	
-	vector<AugmentedCuffOp>& smoothed = merged;
-	
-	//assert (merge_state.size() < 31374 || merge_state[31373] != CUFF_INTRON);
-//#if DEBUG
-//	for (size_t i = 1; i < merge_state.size(); ++i)
-//	{
-//		assert (!(merge_state[i] == CUFF_INTRON && merge_state[i - 1] == CUFF_UNKNOWN));
-//		assert (!(merge_state[i] == CUFF_UNKNOWN && merge_state[i - 1] == CUFF_INTRON));
-//	}
-//#endif
-	
-	AugmentedCuffOp* curr = NULL;
-	uint8_t last_state = CUFF_UNKNOWN;
-
-	for (size_t i = 0; i < merge_state.size(); ++i)
-	{
-		if (merge_state[i] != last_state)
-		{
-			if (curr &&  curr->opcode == CUFF_UNKNOWN && 
-				curr->genomic_length < (int)min_intron_length)
-			{
-				for (int j = 1; j <= curr->genomic_length; ++j)
-				{
-					merge_state[i - j] = CUFF_MATCH;
-				}
-			}
-			
-			smoothed.push_back(AugmentedCuffOp((CuffOpCode)(merge_state[i]), g_min + i,1));
-			
-			curr = &smoothed.back();
-		}
-		else if (curr)
-		{
-			curr->genomic_length++;
-		}
-		last_state = merge_state[i];
-	}
-	
-#if DEBUG
-	for (size_t i = 1; i < merge_state.size(); ++i)
-	{
-		assert (!(merge_state[i] == CUFF_INTRON && merge_state[i - 1] == CUFF_UNKNOWN));
-		assert (!(merge_state[i] == CUFF_UNKNOWN && merge_state[i - 1] == CUFF_INTRON));
-	}
-#endif
-	
-	smoothed.clear();
-	curr = NULL;
-	last_state = CUFF_UNKNOWN;
-	
-	for (size_t i = 0; i < merge_state.size(); ++i)
-	{
-		if (merge_state[i] != last_state)
-		{
-			smoothed.push_back(AugmentedCuffOp((CuffOpCode)(merge_state[i]), g_min + i, 1));
-			curr = &smoothed.back();
-			
-		}
-		else if (curr)
-		{
-			curr->genomic_length++;
-		}
-		last_state = merge_state[i];
-	}
-	
-	if (smoothed.back().opcode == CUFF_UNKNOWN)
-		smoothed.pop_back();
-	
-	merged = smoothed;
+	return true;
 }
 
-#endif
+inline bool has_intron(const Scaffold& scaff)
+{
+	
+	const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
+	for (size_t j = 0; j < ops.size(); ++j)
+	{
+		if (ops[j].opcode == CUFF_INTRON)
+			return true;
+	}
+	
+	return false;
+}
+
 //inline bool has_intron(const Scaffold& scaff)
 //{
 //	
@@ -605,9 +469,9 @@ void Scaffold::merge(const Scaffold& lhs,
 	ops.insert(ops.end(), lhs._augmented_ops.begin(), lhs._augmented_ops.end());
 	ops.insert(ops.end(), rhs._augmented_ops.begin(), rhs._augmented_ops.end());
 	
-	sort(ops.begin(), ops.end(), g_left_lt);
+	sort(ops.begin(), ops.end(), AugmentedCuffOp::g_left_lt);
 	
-	Scaffold::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
+	AugmentedCuffOp::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
 	
 	assert (ops.empty() || !(merged._augmented_ops.empty()));
 	
@@ -673,13 +537,13 @@ void Scaffold::merge(const vector<Scaffold>& s,
 													  merged._mates_in_scaff.end());
 	merged._mates_in_scaff.erase(new_end, merged._mates_in_scaff.end());
 	
-	sort(ops.begin(), ops.end(), g_left_lt);
+	sort(ops.begin(), ops.end(), AugmentedCuffOp::g_left_lt);
 	//merged._contigs.push_back(CuffAlign(ops.front().g_left(), vector<CuffOp>()));
 	
 	if (ops.empty())
 		return;
 	
-	Scaffold::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
+	AugmentedCuffOp::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
 	
 	//assert (ops.empty() || !(merged._augmented_ops.empty()));
 #ifdef DEBUG
@@ -687,7 +551,7 @@ void Scaffold::merge(const vector<Scaffold>& s,
 		merged._augmented_ops.front().opcode != CUFF_MATCH ||
 		merged._augmented_ops.back().opcode != CUFF_MATCH)
 	{
-		Scaffold::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
+		AugmentedCuffOp::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
 	}
 #endif
 	
@@ -704,7 +568,7 @@ void Scaffold::merge(const vector<Scaffold>& s,
 #ifdef DEBUG
 	if (r_check != merged._right)
 	{
-		Scaffold::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
+		AugmentedCuffOp::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
 	}
 #endif
 	
@@ -734,9 +598,36 @@ void Scaffold::fill_gaps(int filled_gap_size)
 		}
 	}
 	
-	sort(ops.begin(), ops.end(), g_left_lt);
+	sort(ops.begin(), ops.end(), AugmentedCuffOp::g_left_lt);
 	
-	Scaffold::merge_ops(ops, _augmented_ops, false);
+	AugmentedCuffOp::merge_ops(ops, _augmented_ops, false);
+	_has_intron = has_intron(*this);
+}
+
+void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
+{
+	OpList ops;
+	
+	const vector<AugmentedCuffOp>& orig_ops = augmented_ops();
+    int coord_shift = orig_ops[0].g_left() - filler[0].g_left();
+    
+	for (size_t i = 0; i < orig_ops.size(); ++i)
+	{
+		if (orig_ops[i].opcode == CUFF_UNKNOWN)
+		{
+            
+		}
+		else
+		{
+			ops.push_back(orig_ops[i]);
+		}
+	}
+    
+    AugmentedCuffOp::fill_interstices(ops, filler, false); 
+	
+	sort(ops.begin(), ops.end(), AugmentedCuffOp::g_left_lt);
+	
+	AugmentedCuffOp::merge_ops(ops, _augmented_ops, false);
 	_has_intron = has_intron(*this);
 }
 

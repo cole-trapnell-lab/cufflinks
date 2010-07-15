@@ -18,6 +18,7 @@
 
 #include <bam/sam.h>
 
+#include "common.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -33,7 +34,7 @@ using boost::shared_ptr;
 
 enum CuffStrand { CUFF_STRAND_UNKNOWN = 0, CUFF_FWD = 1, CUFF_REV = 2, CUFF_BOTH = 3 };
 
-#ifdef HAVE_BAM
+
 enum CigarOpCode 
 { 
 	MATCH = BAM_CMATCH, 
@@ -44,18 +45,6 @@ enum CigarOpCode
 	HARD_CLIP = BAM_CHARD_CLIP, 
 	PAD = BAM_CPAD
 };
-#else
-enum CigarOpCode 
-{ 
-	MATCH, 
-	INS, 
-	DEL, 
-	REF_SKIP,
-	SOFT_CLIP, 
-	HARD_CLIP, 
-	PAD
-};
-#endif
 
 struct CigarOp
 {
@@ -416,53 +405,6 @@ private:
 	RefID _next_id;
 	bool _keep_names;
 	InvertedIDTable _by_id;
-};
-
-
-enum Strandedness 
-{
-    UNKNOWN_STRANDEDNESS,
-    STRANDED_PROTOCOL,
-    UNSTRANDED_PROTOCOL
-};
-
-enum StandardMateOrientation
-{
-    UNKNOWN_MATE_ORIENTATION,
-    MATES_POINT_TOWARD,
-    MATES_POINT_SAME,
-    MATES_POINT_AWAY
-};
-
-enum Platform
-{
-    UNKNOWN_PLATFORM,
-    ILLUMINA,
-    SOLID
-};
-
-class ReadGroupProperties
-{
-public:
-        
-    ReadGroupProperties() : 
-        _strandedness(UNKNOWN_STRANDEDNESS), 
-        _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
-        _platform(UNKNOWN_PLATFORM){} 
-    
-    Strandedness strandedness() const { return _strandedness; }
-    void strandedness(Strandedness s) { _strandedness = s; }
-    
-    StandardMateOrientation std_mate_orientation() const { return _std_mate_orient; }
-    void std_mate_orientation(StandardMateOrientation so)  { _std_mate_orient = so; }
-    
-    Platform platform() const { return _platform; }
-    void platform(Platform p)  { _platform = p; }    
-private:
-    
-    Strandedness _strandedness;
-    StandardMateOrientation _std_mate_orient;
-    Platform _platform;
 };
 
 bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);

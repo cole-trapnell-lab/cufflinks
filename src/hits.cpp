@@ -429,7 +429,7 @@ Platform str_to_platform(const string pl_str)
     }
 }
 
-// Parses the 
+// Parses the header to determine platform and other properties
 bool HitFactory::parse_header_string(const string& header_rec,
                                      ReadGroupProperties& rg_props)
 {

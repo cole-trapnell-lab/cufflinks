@@ -75,6 +75,11 @@ int num_importance_samples = 1000;
 double small_anchor_fraction = 7 / 75.0;
 double binomial_junc_filter_alpha = 0.001;
 
+string default_library_type = "illumina-unstranded-paired-end";
+string library_type = "";
+
+map<string, ReadGroupProperties> library_type_table;
+
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
 #endif
@@ -178,4 +183,46 @@ out:
     free(q);
     free(path);
     return (rv);
+}
+
+void init_library_table()
+{
+    ReadGroupProperties std_illumina_paired;
+    std_illumina_paired.platform(ILLUMINA);
+    std_illumina_paired.std_mate_orientation(MATES_POINT_TOWARD);
+    std_illumina_paired.strandedness(UNSTRANDED_PROTOCOL);
+    
+    library_type_table["illumina-unstranded-paired-end"] = std_illumina_paired;
+   
+    ReadGroupProperties solid_fragment;
+    solid_fragment.platform(SOLID);
+    solid_fragment.std_mate_orientation(UNPAIRED);
+    solid_fragment.strandedness(STRANDED_PROTOCOL);
+    
+    library_type_table["solid-fragment"] = solid_fragment;
+    
+    ReadGroupProperties illumina_fragment;
+    illumina_fragment.platform(ILLUMINA);
+    illumina_fragment.std_mate_orientation(UNPAIRED);
+    illumina_fragment.strandedness(UNSTRANDED_PROTOCOL);
+    
+    library_type_table["illumina-fragment"] = illumina_fragment;
+}
+
+void print_library_table()
+{
+    fprintf (stderr, "Supported library types:\n");
+    for (map<string, ReadGroupProperties>::const_iterator itr = library_type_table.begin();
+         itr != library_type_table.end();
+         ++itr)
+    {
+        if (itr->first == default_library_type)
+        {
+            fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
+        }
+        else
+        {
+            fprintf(stderr, "\t%s\n", itr->first.c_str());
+        }
+    }
 }

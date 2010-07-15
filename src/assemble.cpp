@@ -540,8 +540,17 @@ bool make_scaffolds(int bundle_left,
         { 
             vector<Scaffold> c; 
             scaffolds[i].get_complete_subscaffolds(c); 
+            if (c.size() > 1)
+            {
+                int a = 4;
+            }
             completes.insert(completes.end(), c.begin(), c.end()); 
         } 
+        
+#if ASM_VERBOSE
+        fprintf(stderr, "Extracted %lu contiguous transfrags from %lu scaffolds\n", completes.size(), scaffolds.size());
+#endif
+        
         new_scaffs = completes;
         sort(new_scaffs.begin(), new_scaffs.end(), scaff_lt);
         
