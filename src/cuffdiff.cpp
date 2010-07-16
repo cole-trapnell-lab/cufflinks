@@ -11,6 +11,7 @@
 #include <config.h>
 #else
 #define PACKAGE_VERSION "INTERNAL"
+#define SVN_REVISION "XXX"
 #endif
 
 
@@ -45,9 +46,9 @@ using namespace std;
 using namespace boost;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:o:";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:o:";
 #endif
 
 static struct option long_options[] = {
@@ -73,7 +74,7 @@ static struct option long_options[] = {
 
 void print_usage()
 {
-	fprintf(stderr, "cuffdiff v%s\n", PACKAGE_VERSION); 
+	fprintf(stderr, "cuffdiff v%s (%s)\n", PACKAGE_VERSION, SVN_REVISION); 
 	fprintf(stderr, "-----------------------------\n"); 
 	
 	//NOTE: SPACES ONLY, bozo
@@ -182,7 +183,6 @@ public:
 	
 private:
 	shared_ptr<HitFactory>_hit_fac;
-	FILE* hit_file;
 };
 
 bool LocusBundleFactory::next_bundle(HitBundle& bundle_out, 
@@ -192,7 +192,7 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 {
 	HitBundle bundle = bundle_out;
 	
-	if (feof(hit_file))
+	if (!_hit_fac->records_remain())
 	{
 		return false;
 	}
@@ -551,7 +551,27 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 	vector<long double> map_masses;
 	for (size_t i = 0; i < sam_hit_filenames.size(); ++i)
 	{
-		shared_ptr<SAMHitFactory> hs(new SAMHitFactory(sam_hit_filenames[i], it, rt));
+        
+		shared_ptr<HitFactory> hs;
+        try
+        {
+            hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[i], it, rt));
+        }
+        catch (std::runtime_error& e) 
+        {
+            try
+            {
+                fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
+                        sam_hit_filenames[i].c_str());
+                hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[i], it, rt));
+            }
+            catch (std::runtime_error& e)
+            {
+                fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+                        sam_hit_filenames[i].c_str());
+                exit(1);
+            }
+        }
 		LocusBundleFactory lf(hs);
 		bundle_factories.push_back(lf);
 		BundleFactory standard_factory(*hs, NULL, NULL);
@@ -879,7 +899,6 @@ int main(int argc, char** argv)
 	
     string ref_gtf_filename = argv[optind++];
 	
-	//vector<FILE*> sam_hit_files;
 	vector<string> sam_hit_filenames;
     while(optind < argc)
     {
@@ -917,6 +936,21 @@ int main(int argc, char** argv)
 	
 	Outfiles outfiles;
 	
+    if (output_dir != "")
+    {
+        int retcode = mkpath(output_dir.c_str(), 0777);
+        if (retcode == -1)
+        {
+            if (errno != EEXIST)
+            {
+                fprintf (stderr, 
+                         "Error: cannot create directory %s\n", 
+                         output_dir.c_str());
+                exit(1);
+            }
+        }
+    }
+    
 	for (size_t i = 1; i < sam_hit_filenames.size(); ++i)
 	{
 		char out_file_prefix[64];
