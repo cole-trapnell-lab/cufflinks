@@ -1156,7 +1156,9 @@ void inspect_map(BundleFactory& bundle_factory,
         num_introns += itr->second.size();
     }
     
+#if ASM_VERBOSE
     fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+#endif
     
 	return;
 }
