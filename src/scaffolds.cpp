@@ -1097,6 +1097,7 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
 				else
 					left_known = _augmented_ops[last_unknown].g_right();
 				
+                fprintf(stderr, "excluding unknown region between %d-%d\n", left_known, right_known);
                 if (leftmost_known_op != -1 && rightmost_known_op != -1)
                 {
                     

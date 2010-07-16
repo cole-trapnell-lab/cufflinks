@@ -134,9 +134,27 @@ void fill_unambiguous_unknowns(vector<Scaffold>& scaffolds)
     sort(non_conflict.begin(), non_conflict.end(), AugmentedCuffOp::g_left_lt);
     vector<AugmentedCuffOp> merged;
     
+    CuffStrand s = CUFF_STRAND_UNKNOWN;
+    for (size_t i = 0; i < scaffolds.size(); ++i)
+    {
+        if (scaffolds[i].strand() != CUFF_STRAND_UNKNOWN)
+        {
+            if (s != CUFF_STRAND_UNKNOWN)
+            {
+                assert (s == scaffolds[i].strand());
+            }
+            else 
+            {
+                s = scaffolds[i].strand();
+            }
+
+        }
+    }
+    
     AugmentedCuffOp::merge_ops(non_conflict, merged, true);
     for (size_t i = 0; i < scaffolds.size(); ++i)
     {
+        scaffolds[i].strand(s);
         scaffolds[i].fill_gaps(merged);
     }
 }
