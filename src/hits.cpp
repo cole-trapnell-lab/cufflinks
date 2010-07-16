@@ -353,21 +353,18 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		num_mismatches = bam_aux2i(ptr);
 	}
 
-    
     bool antisense_aln = bam1_strand(hit_buf);
     
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
+        _rg_props.std_mate_orientation() == UNPAIRED)
     {
-        if (_rg_props.platform() == SOLID)
+        if (antisense_aln)
         {
-            if (antisense_aln)
-            {
-                source_strand = CUFF_REV;
-            }
-            else 
-            {
-                source_strand = CUFF_FWD;
-            }
+            source_strand = CUFF_REV;
+        }
+        else 
+        {
+            source_strand = CUFF_FWD;
         }
         // TODO: Illumina strand specific orientation inference here
     }
@@ -755,18 +752,16 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
     
     bool antisense_aln = sam_flag & 0x0010;
     
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
+        _rg_props.std_mate_orientation() == UNPAIRED)
     {
-        if (_rg_props.platform() == SOLID)
+        if (antisense_aln)
         {
-            if (antisense_aln)
-            {
-                source_strand = CUFF_REV;
-            }
-            else 
-            {
-                source_strand = CUFF_FWD;
-            }
+            source_strand = CUFF_REV;
+        }
+        else 
+        {
+            source_strand = CUFF_FWD;
         }
         // TODO: Illumina strand specific orientation inference here
     }

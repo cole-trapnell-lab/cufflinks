@@ -26,7 +26,13 @@
 #include <boost/numeric/ublas/io.hpp>
 #endif
 
+#include <boost/version.hpp>
+
+#if (BOOST_VERSION < 103800)
 #include <boost/vector_property_map.hpp>
+#else
+#include <boost/property_map/vector_property_map.hpp>
+#endif
 
 
 #include "abundances.h"

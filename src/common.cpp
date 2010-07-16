@@ -79,6 +79,7 @@ string default_library_type = "illumina-unstranded-paired-end";
 string library_type = "";
 
 map<string, ReadGroupProperties> library_type_table;
+const ReadGroupProperties* global_read_properties = NULL;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
@@ -207,6 +208,8 @@ void init_library_table()
     illumina_fragment.strandedness(UNSTRANDED_PROTOCOL);
     
     library_type_table["illumina-fragment"] = illumina_fragment;
+    
+    global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
 void print_library_table()

@@ -14,7 +14,13 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 
+#include <boost/version.hpp>
+
+#if (BOOST_VERSION < 103800)
 #include <boost/vector_property_map.hpp>
+#else
+#include <boost/property_map/vector_property_map.hpp>
+#endif
 
 class Scaffold;
 

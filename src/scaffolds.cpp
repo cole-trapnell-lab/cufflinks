@@ -609,7 +609,6 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
 	OpList ops;
 	
 	const vector<AugmentedCuffOp>& orig_ops = augmented_ops();
-    int coord_shift = orig_ops[0].g_left() - filler[0].g_left();
     
 	for (size_t i = 0; i < orig_ops.size(); ++i)
 	{

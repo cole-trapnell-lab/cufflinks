@@ -520,6 +520,13 @@ public:
         {
             throw std::runtime_error("Error: could not parse SAM header");
         }
+        
+        // Override header-inferred read group properities with whatever
+        // the user supplied.
+        if (global_read_properties != NULL)
+        {
+            _rg_props = *global_read_properties;
+        }
 	}
 	
 	~SAMHitFactory() 
@@ -586,6 +593,13 @@ public:
         if (inspect_header() == false)
         {
             throw std::runtime_error("Error: could not parse BAM header");
+        }
+        
+        // Override header-inferred read group properities with whatever
+        // the user supplied.
+        if (global_read_properties != NULL)
+        {
+            _rg_props = *global_read_properties;
         }
 	}	
 	

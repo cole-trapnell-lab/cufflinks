@@ -32,7 +32,14 @@
 
 #include <boost/graph/graph_traits.hpp>
 //#include <boost/numeric/ublas/io.hpp>
+
+#include <boost/version.hpp>
+
+#if (BOOST_VERSION < 103800)
 #include <boost/vector_property_map.hpp>
+#else
+#include <boost/property_map/vector_property_map.hpp>
+#endif
 
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
 using boost::math::normal; // typedef provides default type is double.
@@ -540,10 +547,6 @@ bool make_scaffolds(int bundle_left,
         { 
             vector<Scaffold> c; 
             scaffolds[i].get_complete_subscaffolds(c); 
-            if (c.size() > 1)
-            {
-                int a = 4;
-            }
             completes.insert(completes.end(), c.begin(), c.end()); 
         } 
         

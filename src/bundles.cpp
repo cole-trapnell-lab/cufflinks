@@ -475,6 +475,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         shared_ptr<ReadHit> bh(new ReadHit());
         *bh = tmp;
         
+        //right_bundle_boundary = max(right_bundle_boundary, bh->right());
+        
 		if (left_boundary == -1)
 			left_boundary = bh->left();
 		
@@ -523,9 +525,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			while (next_ref_scaff != ref_mRNAs.end() && 
 				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
 				   next_ref_scaff->ref_id() == bh->ref_id() &&
-                   right_bundle_boundary > next_ref_scaff->left() && 
-				   next_ref_scaff->left() <= bh->left() &&
-				   next_ref_scaff->right() >= bh->right())
+                   (right_bundle_boundary > next_ref_scaff->left() || 
+				    (next_ref_scaff->left() <= bh->left() &&
+				     next_ref_scaff->right() >= bh->right())))
 			{
 				hit_within_boundary = true;
 				right_bundle_boundary = max(right_bundle_boundary, next_ref_scaff->right());
@@ -662,16 +664,18 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	bundle_out = bundle;
 	bundle_out.finalize();
 	bundle_out.remove_hitless_scaffolds();
+    
 	return true;
 }
 
 struct IntronSpanCounter
 {
-	IntronSpanCounter() : left_reads(0), little_reads(0), total_reads(0), multimap_reads(0) {}
+	IntronSpanCounter() : left_reads(0), little_reads(0), total_reads(0), multimap_reads(0), fwd_strand_frags(0) {}
 	size_t left_reads;
 	size_t little_reads; // small span overhang
 	size_t total_reads;
 	size_t multimap_reads;
+    size_t fwd_strand_frags;
 	vector<size_t> hist;
 };
 
@@ -716,6 +720,16 @@ void count_introns_in_read(const ReadHit& read,
 				{
 					itr->second.little_reads++;
 				}
+                
+                if (read.source_strand() == CUFF_FWD)
+                {
+                    itr->second.fwd_strand_frags;
+                }
+                else 
+                {
+                    assert(read.source_strand() == CUFF_REV);
+                }
+
 				
 				vector<size_t>& hist = itr->second.hist;
 				if (hist.size() < (size_t)read_len)
@@ -787,7 +801,7 @@ void minor_introns(int bundle_length,
 				if (!exists)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads based on overlap with much more abundant intron: %d-%d spanned by %d reads\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads based on overlap with much more abundant intron: %d-%d spanned by %lu reads\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads,
@@ -800,6 +814,22 @@ void minor_introns(int bundle_length,
 					sort(bad_introns.begin(), bad_introns.end());
 				}
 			}
+            
+//            if ((itr->second.fwd_strand_frags == 0 &&
+//                 itr2->second.fwd_strand_frags != 0) ||
+//                (itr2->second.fwd_strand_frags == 0 &&
+//                 itr->second.fwd_strand_frags != 0))
+//            {
+//                int itr1_L = itr->first.g_left();
+//                int itr1_R = itr->first.g_right();
+//                int itr2_L = itr2->first.g_left();
+//                int itr2_R = itr2->first.g_right();
+//                
+//                if (abs(itr1_L - itr2_L) < 25 && abs(itr1_R - itr2_R) < 25)
+//                {
+//                    int a = 3;
+//                }
+//            }
 		}
 	}
 }
@@ -944,7 +974,7 @@ void identify_bad_splices(const HitBundle& bundle,
 				if (counter.total_reads < 100 || overhang_ratio >= 0.50)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads, 
@@ -975,7 +1005,7 @@ void identify_bad_splices(const HitBundle& bundle,
 				if (median <= hist.size() && hist[median] == 0)
 				{
 #if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+					fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads, 
@@ -1001,7 +1031,7 @@ void identify_bad_splices(const HitBundle& bundle,
 			if (!filtered)
 			{
 #if ASM_VERBOSE
-				fprintf(stderr, "Accepting intron %d-%d spanned by %d reads (%d low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+				fprintf(stderr, "Accepting intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 						itr->first.g_left(), 
 						itr->first.g_right(), 
 						itr->second.total_reads, 
@@ -1039,8 +1069,6 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 {
 
 	const vector<CigarOp>& cig = read.cigar();
-	
-	int read_len = read.read_len();
 	
 	size_t g_left = read.left();
 	BadIntronTable::const_iterator itr = _bad_introns.find(read.ref_id());

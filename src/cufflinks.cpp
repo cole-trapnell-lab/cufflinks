@@ -59,13 +59,15 @@ static struct option long_options[] = {
 #endif
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
+{"library-type",		 required_argument,		     0,			 OPT_LIBRARY_TYPE},
 {0, 0, 0, 0} // terminator
 };
 
 void print_usage()
 {
 	//NOTE: SPACES ONLY, bozo
-	fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION); 
+	fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
+    fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
 	fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
 	fprintf(stderr, "Options:\n\n");
@@ -89,6 +91,7 @@ void print_usage()
 	fprintf(stderr, "\nAdvanced Options:\n\n");
 	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "--library-type               Library prep used for input reads                     [ default:  below ]\n");
     
     print_library_table();
 }
@@ -176,6 +179,11 @@ int parse_options(int argc, char** argv)
 				output_dir = optarg;
 				break;
 			}
+            case OPT_LIBRARY_TYPE:
+			{
+				library_type = optarg;
+				break;
+			}
                 
 			default:
 				print_usage();
@@ -194,6 +202,22 @@ int parse_options(int argc, char** argv)
 		allow_junk_filtering = false;	
 	}
 	
+    if (library_type != "")
+    {
+        map<string, ReadGroupProperties>::iterator lib_itr = 
+            library_type_table.find(library_type);
+        if (lib_itr == library_type_table.end())
+        {
+            fprintf(stderr, "Error: Library type %s not supported\n", library_type.c_str());
+            exit(1);
+        }
+        else 
+        {
+            global_read_properties = &lib_itr->second;
+        }
+    }
+
+    
     //inner_dist_norm = normal(0, inner_dist_std_dev);
 	return 0;
 }
@@ -297,6 +321,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 			uint8_t guess = CUFF_STRAND_UNKNOWN;
 			Scaffold& hit = hits[i];
 			const vector<AugmentedCuffOp>& ops = hit.augmented_ops();
+            
 			for (size_t j = 0; j < ops.size(); ++j)
 			{
 				const AugmentedCuffOp& op = ops[j];
@@ -309,6 +334,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 					break;
 				}
 			}
+
             
 			if (guess != CUFF_BOTH && guess != CUFF_STRAND_UNKNOWN)
 				hits[i].strand((CuffStrand)guess);

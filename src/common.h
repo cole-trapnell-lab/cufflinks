@@ -154,11 +154,14 @@ private:
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;
 
+extern const ReadGroupProperties* global_read_properties;
+
 void print_library_table();
 void init_library_table();
 
 #define OPT_NUM_IMP_SAMPLES		260
 #define OPT_MLE_MAX_ITER		261
 #define OPT_FDR					262
+#define OPT_LIBRARY_TYPE        263
 
 #endif

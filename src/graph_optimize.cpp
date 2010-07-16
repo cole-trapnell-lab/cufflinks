@@ -995,7 +995,7 @@ void compress_overlap_dag_paths(DAG& bundle_dag,
         {
             Scaffold s(compressed_paths[i]);
 #if ASM_VERBOSE
-            fprintf(stderr, "Path over %d-%d has %d fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
+            fprintf(stderr, "Path over %d-%d has %lu fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
 #endif
             new_scaffs.push_back(s);
         }

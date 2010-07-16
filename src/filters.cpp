@@ -45,6 +45,9 @@ void filter_introns(int bundle_length,
 //#endif	
 	}
 	
+    
+    map<pair<int, int>, double> retained_doc;
+    
 	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
@@ -70,7 +73,46 @@ void filter_introns(int bundle_length,
 //#endif	
 						continue; 
 					}
+                    else
+                    {
+//#if ASM_VERBOSE
+//						fprintf(stderr, "\t Keeping intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+//#endif	    
+                    }
+
 					
+                    map<pair<int, int>, double>::iterator cached = retained_doc.find(itr->first);
+                    if (cached == retained_doc.end())
+                    {
+                        int doc = 0;
+                        for (size_t i = itr->first.first - bundle_left; 
+                             i < itr->first.second - bundle_left; 
+                             ++i)
+                        {
+                            doc += depth_of_coverage[i];
+                        }
+                        
+                        double rdoc = 0.0;
+                        if (itr->first.second != itr->first.first)
+                        {
+                            rdoc = doc / (double)(itr->first.second - itr->first.first);
+                        }
+                        pair<map<pair<int, int>, double>::iterator, bool> p = retained_doc.insert(make_pair(itr->first, rdoc));
+                        cached = p.first;
+                    }
+                    
+                    
+                    double rdoc = cached->second;
+                    if (itr->second < fraction * rdoc)
+                    {
+//            #if ASM_VERBOSE
+//
+//                        fprintf(stderr, "Filtering *** intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//            #endif
+                        toss[j] = true;
+                        continue;
+                    }
+                    
 					if (!filter_on_intron_overlap)
 						continue;
 					
@@ -141,11 +183,11 @@ void pre_mrna_filter(int bundle_length,
 	vector<bool> toss(hits.size(), false);
 	
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
-	double bundle_avg_doc = compute_doc(bundle_left, 
-										hits, 
-										depth_of_coverage, 
-										intron_doc,
-										true);
+	compute_doc(bundle_left, 
+                hits, 
+                depth_of_coverage, 
+                intron_doc,
+                true);
 	
 	// recompute the real DoCs
 	compute_doc(bundle_left, 
@@ -469,7 +511,7 @@ void filter_hits(int bundle_length,
 							 intron_doc,
 							 scaff_doc);
 	
-	double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
+//	double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
 	
 //#if ASM_VERBOSE
 //	fprintf(stderr, "\tthreshold is = %lf\n", bundle_thresh);
