@@ -93,14 +93,14 @@ void GFree(pointer* ptr){
 
 char* Gstrdup(const char* str) {
   if (str==NULL) return NULL;
-  char *copy = NULL;
+  char *copy=NULL;
   GMALLOC(copy, strlen(str)+1);
   strcpy(copy,str);
   return copy;
   }
 
 char* newEmptyStr() {
-  char* zs;
+  char* zs=NULL;
   GMALLOC(zs,1);
   zs[0]=0;
   return zs;
@@ -108,7 +108,7 @@ char* newEmptyStr() {
 
 char* Gstrdup(const char* sfrom, const char* sto) {
   if (sfrom==NULL || sto==NULL) return NULL;
-  char *copy;
+  char *copy=NULL;
   if (sfrom[0]==0) return newEmptyStr();
   GMALLOC(copy, sto-sfrom+2);
   strncpy(copy, sfrom, sto-sfrom+1);

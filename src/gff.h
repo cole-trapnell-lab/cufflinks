@@ -109,7 +109,7 @@ class GffAttr {
        //remove spaces at the end:
        while (*lastch==' ' && lastch!=av) lastch--;
        lastch[1]=0;
-       //practical use: if it doesn't have any spaces just strip those useless double quotes
+       //practical usage: if it doesn't have any spaces just strip those useless double quotes
        if (av[0]=='"' && strpbrk(av+1," ;")==NULL) {
                if (*lastch=='"') *lastch=0;
                attr_val=Gstrdup(av+1);
@@ -344,7 +344,7 @@ class GffObj:public GSeg {
             //'-' : (start,end) are relative to the reverse complement of xstart..xend region
    //--
    char* gffID; // ID name for mRNA (parent) feature
-   char* gname; // value of Name attribute (if given)
+   char* gname; // value of Name or "gene_id" attribute (if given)
    //-- friends:
    friend class GffReader;
    friend class GffExon;
@@ -372,7 +372,7 @@ public:
   int addExon(uint segstart, uint segend, double sc=0, char fr='.',
              int qs=0, int qe=0, bool iscds=false, char exontype=0);
 
-  int addExon(GffLine* gl, bool keepAttr=false);
+  int addExon(GffLine* gl, bool keepAttr=false, bool noExonAttr=true);
   void removeExon(int idx);
   /*
   uint  gstart; // global feature coordinates on genomic sequence
@@ -394,7 +394,7 @@ public:
    //if gfline->Parent!=NULL then this will also add the first sub-feature
    // otherwise, only the main feature is created
   void clearAttrs() {
-    if (attrs!=NULL) delete attrs;
+    if (attrs!=NULL) { delete attrs; attrs=NULL; }
     }
   GffObj(char* anid=NULL):GSeg(0,0), exons(true,true,true) { //exons: sorted, free, unique
        gffID=NULL;
@@ -445,7 +445,7 @@ public:
     void promote(GFeature* subf, GffLine* gfline); */
    //--------------
    GffObj* finalize(bool mergeCloseExons=false); //finalize parsing: must be called in order to merge adjacent/close proximity subfeatures
-   void parseAttrs(GffAttrs*& atrlist, char* info);
+   void parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr=false);
    const char* getSubfName() { //returns the generic feature type of the entries in exons array
      int sid=subftype_id;
      if (sid==gff_fid_exon && isCDS) sid=gff_fid_CDS;
@@ -687,6 +687,7 @@ public:
    void mRNA_CDS_coords(uint& cds_start, uint& cds_end);
    char* getSpliced(GFaSeqGet* faseq, bool CDSonly=false, int* rlen=NULL,
            uint* cds_start=NULL, uint* cds_end=NULL, GList<GSeg>* seglst=NULL);
+    char* getUnspliced(GFaSeqGet* faseq, int* rlen, GList<GSeg>* seglst);
    char* getSplicedTr(GFaSeqGet* faseq, bool CDSonly=true, int* rlen=NULL);
    //bool validCDS(GFaSeqGet* faseq); //has In-Frame Stop Codon ?
    bool empty() { return (start==0); }
@@ -730,6 +731,21 @@ class GSeqStat {
 };
 
 
+int gfo_cmpByLoc(const pointer p1, const pointer p2);
+
+class GfList: public GList<GffObj> {
+ //just adding the option to sort by genomic sequence and coordinate
+ public:
+   GfList(bool sortbyloc=false):GList<GffObj>(false,false,false) {
+    if (sortbyloc) this->setSorted((GCompareProc*)gfo_cmpByLoc);
+    }
+   void gSort() { //enforce sort by locus
+    //this may be needed for GTF files even when the list was created with sortbyloc=true
+    if (this->Sorted()) Sort(); //force re-sorting
+             else this->setSorted((GCompareProc*)gfo_cmpByLoc);
+    }
+};
+
 class GffReader {
   friend class GffObj;
   friend class GffLine;
@@ -742,28 +758,31 @@ class GffReader {
   GffNames* names; //just a pointer to the global static Gff names repository in GffObj
   GffLine* gffline;
   bool mrnaOnly; //read only mRNAs ? (exon/CDS features only)
+  bool sortbyloc; //sort by location: genomic sequence and start coordinate
   GHash<GffObj> phash; //transcript_id (Parent~Contig) => GffObj pointer
   char* gfoBuildId(const char* id, const char* ctg);
   void gfoRemove(const char* id, const char* ctg);
   void gfoAdd(const char* id, const char* ctg, GffObj* gfo);
   GffObj* gfoFind(const char* id, const char* ctg);
  public:
-  GList<GffObj> gflst; //all read gflst
+  GfList gflst; //all read gflst
   GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
-  GffReader(FILE* f, bool justmrna=false):phash(false),gflst(false,false,false), gseqstats(true,true,true) {
+  GffReader(FILE* f, bool justmrna=false, bool sort=false):phash(false),gflst(sort), gseqstats(true,true,true) {
       names=NULL;
       gffline=NULL;
       mrnaOnly=justmrna;
+      sortbyloc=sort;
       fpos=0;
       fname=NULL;
       fh=f;
       GMALLOC(linebuf, GFF_LINELEN);
       buflen=GFF_LINELEN-1;
       }
-  GffReader(char* fn, bool justmrna=false):phash(false),gflst(false,false,false) {
+  GffReader(char* fn, bool justmrna=false, bool sort=false):phash(false),gflst(sort) {
       names=NULL;
       fname=Gstrdup(fn);
       mrnaOnly=justmrna;
+      sortbyloc=sort;
       fh=fopen(fname, "rb");
       fpos=0;
       gffline=NULL;
