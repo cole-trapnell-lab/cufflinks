@@ -376,7 +376,8 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 	bool performed_collapse = false;
 	
 	//double last_size = -1;
-    long leftmost = 9999999999;
+    //long leftmost = 9999999999;
+    long leftmost = LONG_MAX-1;
     long rightmost = -1;
     
     for (size_t i = 0; i < fragments.size(); ++i)
@@ -875,7 +876,8 @@ void compress_consitutive(vector<Scaffold>& hits)
 void compress_redundant(vector<Scaffold>& fragments)
 {
     double last_size = -1;
-    long leftmost = 9999999999;
+    //long leftmost = 9999999999;
+    long leftmost = LONG_MAX-1;
     long rightmost = -1;
     
     for (size_t i = 0; i < fragments.size(); ++i)
