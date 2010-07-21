@@ -43,9 +43,9 @@ int inner_dist_std_dev = 40;
 int max_inner_dist = 1000;
 int olap_radius = 50;
 
-float min_isoform_fraction = 0.05;
-float min_intron_fraction = 0.05;
-float pre_mrna_fraction = 0.15;
+float min_isoform_fraction = 0.1;
+float min_intron_fraction = 0.1;
+float pre_mrna_fraction = 0.25;
 float high_phred_err_prob = 0.50; // about MAPQ = 3
 
 double transcript_score_thresh = -0.693;

@@ -8,6 +8,10 @@
  */
 
 #include "filters.h"
+#include <algorithm>
+#include <numeric>
+
+using namespace std;
 
 void filter_introns(int bundle_length,
 					int bundle_left,
@@ -45,9 +49,6 @@ void filter_introns(int bundle_length,
 //#endif	
 	}
 	
-    
-    map<pair<int, int>, double> retained_doc;
-    
 	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
@@ -73,46 +74,7 @@ void filter_introns(int bundle_length,
 //#endif	
 						continue; 
 					}
-                    else
-                    {
-//#if ASM_VERBOSE
-//						fprintf(stderr, "\t Keeping intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
-//#endif	    
-                    }
-
 					
-                    map<pair<int, int>, double>::iterator cached = retained_doc.find(itr->first);
-                    if (cached == retained_doc.end())
-                    {
-                        int doc = 0;
-                        for (size_t i = itr->first.first - bundle_left; 
-                             i < itr->first.second - bundle_left; 
-                             ++i)
-                        {
-                            doc += depth_of_coverage[i];
-                        }
-                        
-                        double rdoc = 0.0;
-                        if (itr->first.second != itr->first.first)
-                        {
-                            rdoc = doc / (double)(itr->first.second - itr->first.first);
-                        }
-                        pair<map<pair<int, int>, double>::iterator, bool> p = retained_doc.insert(make_pair(itr->first, rdoc));
-                        cached = p.first;
-                    }
-                    
-                    
-                    double rdoc = cached->second;
-                    if (itr->second < fraction * rdoc)
-                    {
-//            #if ASM_VERBOSE
-//
-//                        fprintf(stderr, "Filtering *** intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//            #endif
-                        toss[j] = true;
-                        continue;
-                    }
-                    
 					if (!filter_on_intron_overlap)
 						continue;
 					
@@ -172,6 +134,31 @@ void filter_introns(int bundle_length,
 	hits = filtered_hits;
 }
 
+double background_rate(const vector<int> depth_of_coverage,
+                       int left, 
+                       int right)
+{
+    vector<int> tmp;
+    
+    size_t r_bound = (size_t)min(right, (int) depth_of_coverage.size());
+    size_t l_bound = (size_t)max(left, 0);
+    
+    tmp.insert(tmp.end(), 
+               depth_of_coverage.begin() + l_bound, 
+               depth_of_coverage.begin() + r_bound);
+    
+    if (tmp.empty())
+        return 0;
+    
+    vector<int>::iterator new_end =  remove(tmp.begin(), tmp.end(), 0);
+    tmp.erase(new_end, tmp.end());
+    sort(tmp.begin(), tmp.end());
+    
+    size_t median = floor(tmp.size() / 2);
+    double median_doc = tmp[median];
+    return median_doc;
+}
+
 void pre_mrna_filter(int bundle_length,
 					 int bundle_left,
 					 vector<Scaffold>& hits)
@@ -183,112 +170,129 @@ void pre_mrna_filter(int bundle_length,
 	vector<bool> toss(hits.size(), false);
 	
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
+    double bundle_avg_doc = compute_doc(bundle_left, 
+										hits, 
+										depth_of_coverage, 
+										intron_doc,
+										true);
+    
 	compute_doc(bundle_left, 
-                hits, 
-                depth_of_coverage, 
-                intron_doc,
-                true);
-	
-	// recompute the real DoCs
-	compute_doc(bundle_left, 
-				hits, 
-				depth_of_coverage, 
-				intron_doc,
-				false);
-	
+										hits, 
+										depth_of_coverage, 
+										intron_doc,
+										false);
+    
 	record_doc_for_scaffolds(bundle_left, 
 							 hits, 
 							 depth_of_coverage, 
 							 intron_doc,
 							 scaff_doc);
-	
-//	vector<int>::iterator new_end = remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-//	depth_of_coverage.erase(new_end, depth_of_coverage.end());
-//	sort(depth_of_coverage.begin(), depth_of_coverage.end());
-//	
-//	size_t median = floor(depth_of_coverage.size() / 2);
-	
-	
-	Scaffold smashed_gene;
-	
-	// setting introns_overwrite_matches=false in a gene smash means exons take
-    // precedence over introns, so all retained introns will be present.
-	Scaffold::merge(hits, smashed_gene, false);
-	vector<bool> constitutive_introns(intron_doc.size(), true);
-	
-	size_t intron_idx = 0;
-	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
+    
+    
+	for(map<pair<int, int>, int >::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
 	{
 		int i_left = itr->first.first;
 		int i_right = itr->first.second;
 		
-		for (map<pair<int,int>, int>::const_iterator itr2 = intron_doc.begin();
-			 itr2 != intron_doc.end();
-			 ++itr2)
-		{
-			if (itr == itr2)
-				continue;
-			if (::overlap_in_genome(itr->first.first,
-									itr->first.second,
-									itr2->first.first,
-									itr2->first.second))
-			{
-				constitutive_introns[intron_idx] = false;
-			}
+        double intron_background = background_rate(depth_of_coverage, 
+                                                   i_left - bundle_left, 
+                                                   i_right - bundle_left);
+        
+        double cumul_cov = 0;
+        for (size_t i = 0; i < i_right - i_left; ++i)
+        {
+            size_t pos = (i_left - bundle_left) + i;
+            cumul_cov += depth_of_coverage[pos];
+        }
+        cumul_cov /= i_right - i_left;
+#if ASM_VERBOSE
+        fprintf(stderr, "retained intron %d-%d background: %lf\n", i_left, i_right, intron_background);
+#endif
+        if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
+        {
+            //fprintf(stderr, "\tskipping\n");
+
+            continue;
+        }
+        
+        for (size_t j = 0; j < hits.size(); ++j)
+        {
+            //if (hits[j].has_intron())
+            //    continue;
+            double thresh = (1.0/pre_mrna_fraction) * intron_background;
+            
+            int len = 0;
+            double doc = 0.0;
+            size_t curr_op = 0;
+            const vector<AugmentedCuffOp>& ops = hits[j].augmented_ops();
+            while (curr_op != ops.size())
+            {
+                const AugmentedCuffOp&  op = ops[curr_op];
+                
+                if (op.opcode == CUFF_MATCH)
+                {
+                    int op_len = 0;
+                    double op_doc = 0.0;
+                    int left_off = op.g_left();
+                    if (left_off + op.genomic_length > i_left && left_off < i_right)
+                    {
+                        if (left_off > i_left)
+                        {
+                            if (left_off + op.genomic_length <= i_right + 1)
+                            {
+                                op_len += op.genomic_length;
+                                int L = left_off - bundle_left;
+                                int R = L + op.genomic_length;
+                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0); 
+                            }
+                            else
+                            {
+                                op_len += i_right - left_off;
+                                int L = left_off - bundle_left;
+                                int R = L + (i_right - left_off);
+                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
+                            }
+                        }
+                        else
+                        {
+                            if (left_off + op.genomic_length <= i_right + 1)
+                            {
+                                op_len += (left_off + op.genomic_length - i_left);
+                                int L = left_off - bundle_left;
+                                int R = L + (left_off + op.genomic_length - i_left);
+                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
+                            }
+                            else
+                            {
+                                op_len = i_right - i_left;
+                                int L = left_off - bundle_left;
+                                int R = L + (i_right - i_left);
+                                op_doc = accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
+                            }
+                        }
+                    }
+                    
+                    len += op_len;
+                    doc += op_doc;
+                }
+                
+                if (op.g_left() >= i_right)
+                    break;
+                ++curr_op;
+            }
+            
+            if (len)
+            {
+                double hit_doc_in_region = doc / len;
+                if (hit_doc_in_region < thresh)
+                {
+                    toss[j] = true;
+                }
+            }
 		}
-		
-		int inner_dist = smashed_gene.match_length(i_left, i_right);
-		
-		// Intron retained in some isoforms?
-		int intron_len = itr->first.second - itr->first.first;
-		if (inner_dist == intron_len)
-		{
-			constitutive_introns[intron_idx] = false;
-		}
-		
-		for (size_t j = i_left; j < i_right; ++j)
-		{
-			double i_doc = itr->second;
-			double thresh = 3 * pre_mrna_fraction * i_doc;
-			if (depth_of_coverage[j - bundle_left] >= thresh)
-			{
-				constitutive_introns[intron_idx] = false;
-				break;
-			}
-		}
-		
-		if (constitutive_introns[intron_idx])
-		{
-			for (size_t j = 0; j < hits.size(); ++j)
-			{
-				if (hits[j].left() >= i_left && hits[j].right() < i_right)
-				{
-					toss[j] = true;
-				}
-			}
-		}
-		
-		intron_idx++;
 	}
-	
-//    intron_idx = 0;
-//    for (map<pair<int,int>, int>::const_iterator itr2 = intron_doc.begin();
-//         itr2 != intron_doc.end();
-//         ++itr2)
-//    {
-//        if (!constitutive_introns[intron_idx])
-//		{
-//            fprintf(stderr, "%d-%d not constitutive\n", itr2->first.first,itr2->first.second);
-//        }
-//        
-//        if (constitutive_introns[intron_idx])
-//		{
-//            fprintf(stderr, "%d-%d is constitutive\n", itr2->first.first,itr2->first.second);
-//        }
-//        intron_idx++;
-//    }
     
 	for (size_t j = 0; j < hits.size(); ++j)
 	{	
@@ -315,12 +319,149 @@ void pre_mrna_filter(int bundle_length,
 		}
 	}
 	
-	//#if ASM_VERBOSE
-	//	fprintf(stderr, "\tInitial filter pass complete\n");
-	//#endif
+#if ASM_VERBOSE
+	fprintf(stderr, "\tPre-mRNA filter pass complete, excluded %lu fragments\n", hits.size() - filtered_hits.size());
+#endif
 	
 	hits = filtered_hits;
 }
+
+//void pre_mrna_filter(int bundle_length,
+//					 int bundle_left,
+//					 vector<Scaffold>& hits)
+//{
+//	vector<int> depth_of_coverage(bundle_length,0);
+//	vector<double> scaff_doc;
+//	map<pair<int,int>, int> intron_doc;
+//	vector<Scaffold> filtered_hits;
+//	vector<bool> toss(hits.size(), false);
+//	
+//	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
+//	double bundle_avg_doc = compute_doc(bundle_left, 
+//										hits, 
+//										depth_of_coverage, 
+//										intron_doc,
+//										true);
+//	
+//	// recompute the real DoCs
+//	compute_doc(bundle_left, 
+//				hits, 
+//				depth_of_coverage, 
+//				intron_doc,
+//				false);
+//	
+//	record_doc_for_scaffolds(bundle_left, 
+//							 hits, 
+//							 depth_of_coverage, 
+//							 intron_doc,
+//							 scaff_doc);
+//	
+////	vector<int>::iterator new_end = remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
+////	depth_of_coverage.erase(new_end, depth_of_coverage.end());
+////	sort(depth_of_coverage.begin(), depth_of_coverage.end());
+////	
+////	size_t median = floor(depth_of_coverage.size() / 2);
+//	
+//	
+//	Scaffold smashed_gene;
+//	vector<Scaffold> spliced_hits;
+//    for (size_t i = 0; i < hits.size(); ++i)
+//    {
+//        const vector<const MateHit*>& m_hits = hits[i].mate_hits();
+//        for (size_t j = 0; j < m_hits.size(); ++j)
+//        {
+//            if (m_hits[j]->left_alignment() && !m_hits[j]->left_alignment()->contiguous())
+//            {
+//                spliced_hits.push_back(Scaffold(MateHit(m_hits[j]->ref_id(),
+//                                                        m_hits[j]->left_alignment(),
+//                                                        shared_ptr<const ReadHit>(),
+//                                                        0,
+//                                                        0)));
+//
+//            }
+//            if (m_hits[j]->right_alignment() && !m_hits[j]->right_alignment()->contiguous())
+//            {
+//                spliced_hits.push_back(Scaffold(MateHit(m_hits[j]->ref_id(),
+//                                                        m_hits[j]->right_alignment(),
+//                                                        shared_ptr<const ReadHit>(),
+//                                                        0,
+//                                                        0)));
+//                
+//            }
+//        }
+//    }
+//    
+//	Scaffold::merge(spliced_hits, smashed_gene, false);
+//	vector<bool> constitutive_introns(intron_doc.size(), true);
+//	
+//    vector<pair<int, int> > gaps = smashed_gene.gaps();
+//    
+//	//size_t intron_idx = 0;
+//    
+//	for(map<pair<int, int>, int >::const_iterator itr = intron_doc.begin();
+//		itr != intron_doc.end(); 
+//		++itr)
+//	{
+//		int i_left = itr->first.first;
+//		int i_right = itr->first.second;
+//		
+//        double cumul_cov = 0;
+//        for (size_t i = 0; i < i_right - i_left; ++i)
+//        {
+//            size_t pos = (i_left - bundle_left) + i;
+//            cumul_cov += depth_of_coverage[pos];
+//        }
+//        cumul_cov /= i_right - i_left;
+//#if ASM_VERBOSE
+//        fprintf(stderr, "retained intron %d-%d depth of cov: %lf\n", i_left, i_right, cumul_cov);
+//#endif
+//        if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
+//        {
+//            continue;
+//        }
+//        
+//        for (size_t j = 0; j < hits.size(); ++j)
+//        {
+//            //if (hits[j].has_intron())
+//            //    continue;
+//            if (hits[j].match_length(i_left, i_right))
+//            {
+//                toss[j] = true;
+//            }
+//		}
+//	}
+//    
+//	for (size_t j = 0; j < hits.size(); ++j)
+//	{	
+//		if (!toss[j])
+//		{
+//			filtered_hits.push_back(hits[j]);
+//			//#if ASM_VERBOSE
+//			//			if (hits[j].has_intron())
+//			//			{
+//			//				
+//			//				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//			//			}
+//			//#endif	
+//		}
+//		else
+//		{
+//#if ASM_VERBOSE
+//			//			if (hits[j].has_intron())
+//			//			{
+//			//				
+//			//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//			//			}
+//#endif	
+//		}
+//	}
+//	
+//	//#if ASM_VERBOSE
+//	//	fprintf(stderr, "\tInitial filter pass complete\n");
+//	//#endif
+//	
+//	hits = filtered_hits;
+//}
 
 void filter_hits(int bundle_length,
 				 int bundle_left,
@@ -511,7 +652,7 @@ void filter_hits(int bundle_length,
 							 intron_doc,
 							 scaff_doc);
 	
-//	double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
+	double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
 	
 //#if ASM_VERBOSE
 //	fprintf(stderr, "\tthreshold is = %lf\n", bundle_thresh);
