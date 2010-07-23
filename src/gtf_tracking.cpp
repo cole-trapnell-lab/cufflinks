@@ -303,9 +303,7 @@ void cluster_mRNAs(GList<GffObj> & mrnas, GList<GLocus> & loci, int qfidx, bool 
 	//mrnas sorted by start coordinate
 	//and so are the loci
 	//int rdisc=0;
-   //TODO: optimize this clustering pattern, using the fact that both mrnas and loci are sorted by start coordinate
-   // (so perhaps we should scan loci in reverse and give up after certain distance ? but check for problems with mrgloci )
-	for (int t=0;t<mrnas.Count();t++) {
+   	for (int t=0;t<mrnas.Count();t++) {
 		GArray<int> mrgloci(false);
 		GffObj* mrna=mrnas[t];
 		int lfound=0; //count of parent loci

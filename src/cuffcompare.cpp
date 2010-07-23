@@ -1,14 +1,13 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #else
- #define PACKAGE_VERSION "0.852"
+ #define PACKAGE_VERSION "0.853"
 #endif
 
 #include "GArgs.h"
 #include "GStr.h"
 #include "GHash.hh"
 #include "GList.hh"
-//#include "GFastaFile.h"
 #include "GFaSeqGet.h"
 #include "gff.h"
 #include <ctype.h>
@@ -51,26 +50,16 @@ Options:\n\
 -V  (mildly) verbose processing mode\n\
 "
 
+//TODO make -s option to accept&use a multifasta file (instead of a dir) (Feature #169)
+
 bool debug=false;
 bool perContigStats=true;
 bool reduceRefs=false;
 bool checkFasta=false;
 bool tmapFiles=true;
-// bool verbose=false; //moved it into gtf_tracking.h
-// bool largeScale=false;
 bool qtracking=true;
 bool debugExit=false;
 int debugCounter=0;
-
-/* report xloci with:
-    1) multiple ref isoforms where at least 2 of the isoforms share the first exon
-      while their CDS differs!
-    2) there are matching cufflinks assemblies in different timepoints for at least 2 these ref isoforms
-    3) the relative abundances of the matching cufflinks isoforms change over the time course
-       (suggesting differential splicing)
-
-  ATTENTION: the CDS data should be provided in the reference input file !
- */
 
 int polyrun_range=2000; //polymerase run range 2KB
 double scoreThreshold=0;
@@ -109,8 +98,6 @@ void printFasta(FILE* f, GStr& defline, char* seq, int seqlen=-1) {
 
 }
 
-//callback for a parsed GFF record
-
 void openfwrite(FILE* &f, GArgs& args, char opt) {
   GStr s=args.getOpt(opt);
   if (!s.is_empty()) {
@@ -122,7 +109,19 @@ void openfwrite(FILE* &f, GArgs& args, char opt) {
        }
      }
 }
+/*
+class GFastaPos {
+ public:
+   off_t fpos;
+ GFastaPos(off_t p=0) {
+   fpos=p;
+   }
+};
 
+GStr& fasta_index(GStr fname, GHash<GFastaEntry>* hfa=NULL, bool rebuild=false) {
+
+}
+*/
 //-- structure to keep track of data from multiple qry input files for a single genomic seq
 class GSeqTrack {
  public:
@@ -1596,7 +1595,7 @@ char getOvlCode(GffObj& m, GffObj& r, int& ovlen) {
      if (jmend<jmax)
         r_iovl=m.exons[imax]->overlapLen(r.exons[jmend]->end+1,r.exons[jmend+1]->start-1);
      if (l_iovl<4 && r_iovl<4) return 'c';
-     //TODO? check if any *_iovl>10 and return 'e' to signal an "unspliced intron" ?
+     //TODO? check if any x_iovl>10 and return 'e' to signal an "unspliced intron" ?
      // or we can check if any of them are >= the length of the corresponding ref intron on that side
      return 'j';
      }
@@ -1893,7 +1892,7 @@ bool inPolyRun(char strand, GffObj& m, GList<GLocus>* rloci, int& rlocidx) {
      floc.start=m.start;
      floc.end=m.end;
      rloci->Found(&floc,rlocidx);
-     if (rlocidx>=rloci->Count()) rlocidx=rloci->Count()-1;
+     if (rlocidx>=rloci->Count() || rlocidx<0) rlocidx=rloci->Count()-1;
      }
  GLocus* rloc=rloci->Get(rlocidx);
  //make sure rloc is the closest upstream locus
@@ -1947,12 +1946,90 @@ CTData* getBestOvl(GffObj& m) {
   return NULL;
 }
 
+void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
+  if (rloci==NULL or rloci->Count()<1) return;
+  int j=0;//current rloci index
+  for (int i=0;i<mrnas.Count();i++) {
+     GffObj& m=*mrnas[i];
+     char ovlcode=((CTData*)m.uptr)->getBestCode();
+     if (ovlcode=='u' || ovlcode<47) { //look for overlaps between mrnas and rloci
+         GLocus* rloc=rloci->Get(j);
+        CHECK_RLOC:
+         if (rloc->start>m.end) continue; //check next transfrag
+         if (m.start>rloc->end) {
+               j++;
+               if (j<rloci->Count()) {
+                   rloc=rloci->Get(j);
+                   goto CHECK_RLOC;
+                   }
+                 else //rloci exhausted
+                   break; //no chance of overlap from now on
+               }
+         //m overlaps rloc:
+         //check if m has a fuzzy intron overlap -> 's' (shadow, mapped on the wrong strand)
+         //  then if m is contained within an intron -> 'i'
+         //  otherwise it's just a plain cross-strand overlap: 'x'
+         int jm=0;
+         do { //while rloci overlap to this transfrag (m)
+           bool is_shadow=false;
+           GffObj* sovl=NULL;
+           bool is_intraintron=false;
+           GffObj* iovl=NULL;
+           if (rloc->introns.Count()>0) {
+               for (int n=0;n<rloc->introns.Count();n++) {
+                  GISeg& rintron=rloc->introns[n];
+                  if (rintron.start>m.end) break;
+                  if (m.start>rintron.end) continue;
+                  //overlap between m and intron
+                  if (m.end<=rintron.end && m.start>=rintron.start) {
+                      //((CTData*)m.uptr)->addOvl('i', rintron.t);
+                      is_intraintron=true;
+                      if (iovl==NULL || iovl->covlen<rintron.t->covlen) iovl=rintron.t;
+                      continue;
+                      }
+                  //check if any intron of m has a fuzz-match with rintron
+                  for (int e=1;e<m.exons.Count();e++) {
+                     GSeg mintron(m.exons[e-1]->end+1,m.exons[e]->start-1);
+                     if (rintron.coordMatch(&mintron,10)) {
+                        //((CTData*)m.uptr)->addOvl('s', rintron.t);
+                        is_shadow=true;
+                        if (sovl==NULL || sovl->covlen<rintron.t->covlen) sovl=rintron.t;
+                        break;
+                        }
+                     } //for each m intron
+                  } //for each intron of rloc
+               }//rloc has introns
+           bool xcode=true;
+           if (is_shadow) { ((CTData*)m.uptr)->addOvl('s', sovl); xcode=false; }
+                 // else
+           if (is_intraintron) { ((CTData*)m.uptr)->addOvl('i', iovl); xcode=false; }
+           if (xcode) {
+                   // just plain overlap, find the overlapping mrna in rloc
+                   GffObj* maxovl=NULL;
+                   int ovlen=0;
+                   for (int ri=0;ri<rloc->mrnas.Count();ri++) {
+                      int o=m.exonOverlapLen(*(rloc->mrnas[ri]));
+                      if (o>ovlen) {
+                          ovlen=o;
+                          maxovl=rloc->mrnas[ri];
+                          }
+                      }
+                   if (maxovl!=NULL) ((CTData*)m.uptr)->addOvl('x',maxovl);
+                   } //'x'
+           jm++;
+           } while (j+jm<rloci->Count() && rloci->Get(j+jm)->overlap(m));
+         } // 'u' code testing
+     } //for each transfrag
+}
+
 void reclass_mRNAs(char strand, GList<GffObj>& mrnas, GList<GLocus>* rloci, GFaSeqGet *faseq) {
   int rlocidx=-1;
   for (int i=0;i<mrnas.Count();i++) {
     GffObj& m=*mrnas[i];
     char ovlcode=((CTData*)m.uptr)->getBestCode();
-    if (ovlcode=='u' || ovlcode=='i' || ovlcode==0) {
+    //if (ovlcode=='u' || ovlcode=='i' || ovlcode==0) {
+    if (ovlcode=='u' || ovlcode<47) {
+      //check for overlaps with ref transcripts on the other strand
       if (inPolyRun(strand, m, rloci, rlocidx)) {
          ((CTData*)m.uptr)->addOvl('p',rloci->Get(rlocidx)->mrna_maxcov);
          }
@@ -1981,6 +2058,7 @@ void reclassLoci(char strand, GList<GLocus>& qloci, GList<GLocus>* rloci, GFaSeq
 }
 
 //for a single genomic sequence, all qry data and ref data is stored in gtrack
+//check for all 'u' transfrags if they are repeat ('r') or polymerase run 'p' or anything else
 void umrnaReclass(int qcount,  GSeqTrack& gtrack, FILE** ftr, GFaSeqGet* faseq=NULL) {
   for (int q=0;q<qcount;q++) {
     if (gtrack.qdata[q]==NULL) continue; //no transcripts in this q dataset for this genomic seq
@@ -1988,6 +2066,9 @@ void umrnaReclass(int qcount,  GSeqTrack& gtrack, FILE** ftr, GFaSeqGet* faseq=N
     reclassLoci('-', gtrack.qdata[q]->loci_r, gtrack.rloci_r, faseq);
     reclass_mRNAs('+', gtrack.qdata[q]->umrnas, gtrack.rloci_f, faseq);
     reclass_mRNAs('-', gtrack.qdata[q]->umrnas, gtrack.rloci_r, faseq);
+    //and also check for special cases with cross-strand overlaps:
+    reclass_XStrand(gtrack.qdata[q]->mrnas_f, gtrack.rloci_r);
+    reclass_XStrand(gtrack.qdata[q]->mrnas_r, gtrack.rloci_f);
     // print all tmap data here here:
     for (int i=0;i<gtrack.qdata[q]->tdata.Count();i++) {
       CTData* mdata=gtrack.qdata[q]->tdata[i];
@@ -2142,6 +2223,8 @@ void recheckUmrnas(GSeqData* gseqdata, GList<GffObj>& mrnas,
 }
 
 void umrnasXStrand(GList<GXLocus>& xloci, int qcount, GSeqTrack& gtrack) {
+  //try to determine the strand of unoriented transfrags based on possible overlaps
+  //with other, oriented transfrags
  for (int x=0;x<xloci.Count();x++) {
    if (xloci[x]->strand=='.') continue;
    if (xloci[x]->qloci.Count()==0) continue;
@@ -2180,15 +2263,14 @@ void umrnasXStrand(GList<GXLocus>& xloci, int qcount, GSeqTrack& gtrack) {
 void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl) {
 	//gtrack holds data for all input qry datasets for a chromosome/contig
 	//cluster QLoci
-	GList<GTrackLocus> loctracks(true,true,false);
-	//all vs all clustering across all qry data sets + ref
-   //one-strand set of loci from all datasets + ref loci
-  //GList<GLocus> all_loci(true,false,false);
+  GList<GTrackLocus> loctracks(true,true,false);
+  //all vs all clustering across all qry data sets + ref
+  //one-strand set of loci from all datasets + ref loci
   GList<GLocus>* wrkloci=NULL;
   //build xloci without references first
   //then add references only if they overlap an existing xloci
   int nq=0;
- 	for (int q=0;q<=qcount+1;q++) {
+  for (int q=0;q<=qcount+1;q++) {
     bool refcheck=false;
     if (q==qcount) { // check the unoriented loci
        while (nq<qcount &&
@@ -2207,9 +2289,9 @@ void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl
            refcheck=true;
            }
      else  {
-    	 if (gtrack.qdata[q]==NULL) continue;
-       if (strand=='+') wrkloci=&(gtrack.qdata[q]->loci_f);
-          else if (strand=='-') wrkloci=&(gtrack.qdata[q]->loci_r);
+          if (gtrack.qdata[q]==NULL) continue;
+          if (strand=='+') wrkloci=&(gtrack.qdata[q]->loci_f);
+             else if (strand=='-') wrkloci=&(gtrack.qdata[q]->loci_r);
          }
    // now do the all-vs-all clustering thing:
    for (int t=0;t<wrkloci->Count();t++) {
@@ -2242,16 +2324,16 @@ void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl
      } //for each set of loci (q)
  	//loctracks is now set with all x-clusters on this strand
  for (int i=0;i<loctracks.Count();i++) {
-    if (!loctracks[i]->hasQloci)
-          continue; //we really don't care here about reference-only clusters
-		GTrackLocus& loctrack=*loctracks[i];
-		//fprintf(fl,"-      \t%s:%d-%d(%c)", getGSeqName(gsid), loctrack.start,loctrack.end,strand);
-		findTMatches(loctrack, qcount);
-    for (int rl=0; rl < loctrack.rloci.Count(); rl++) {
-    		findTRMatch(loctrack, qcount, *(loctrack.rloci[rl]));
-       }
+   if (!loctracks[i]->hasQloci) continue; //we really don't care here about reference-only clusters
+   GTrackLocus& loctrack=*loctracks[i];
+   //fprintf(fl,"-      \t%s:%d-%d(%c)", getGSeqName(gsid), loctrack.start,loctrack.end,strand);
+   findTMatches(loctrack, qcount); //find matching transfrags in this xcluster
+   for (int rl=0; rl < loctrack.rloci.Count(); rl++) {
+      findTRMatch(loctrack, qcount, *(loctrack.rloci[rl]));
+      //find matching reference annotation for this xcluster and assign class codes to transfrags
+      }
     GList<GXLocus> xloci(false,false,false);
-		buildXLoci(loctrack, qcount, gtrack, strand, &xloci);
+    buildXLoci(loctrack, qcount, gtrack, strand, &xloci);
     //the newly created xloci are in xloci
     umrnasXStrand(xloci,qcount,gtrack);
     //also merge these xloci into the global list of xloci
@@ -2263,8 +2345,8 @@ void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl
               gtrack.xloci_r.Add(xloci[l]);
               }
             else gtrack.xloci_u.Add(xloci[l]);
-      }
-	  }//for each xcluster
+       }
+    }//for each xcluster
 }
 
 
