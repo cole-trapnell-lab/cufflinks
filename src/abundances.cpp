@@ -306,48 +306,30 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments, const v
 	if (transcripts.empty())
 		return;
 	
-	vector<double> tau(N,0);
-	double d = 0;
+	double X_g = 0;
 
-	for (size_t j = 0; j < N; ++j)
-	{
-		tau[j] = _abundances[j]->gamma() / _abundances[j]->effective_length();
-		d += tau[j];
-	}
-	for (size_t j = 0; j < N; ++j) { tau[j] /= d; }
-	
-	
-	
-	vector<double> X_t(N,0);
 	for (size_t i = 0; i < M; ++i)
 	{	
-		double prob_i = 0.0;
+		if (!alignments[i].left_alignment())
+			continue;
 		
-		int mate_mass = 0;
-		if (alignments[i].left_alignment() || alignments[i].right_alignment())
-			mate_mass = 1;
-		
+		bool mapped = false;
 		for (size_t j = 0; j < N; ++j)
+			if (_abundances[j]->cond_probs()->at(i) > 0)
 		{
-			prob_i += tau[j] * _abundances[j]->cond_prob_nums()->at(i);
+				mapped = true;
+				break;
+			}
+		
+		if (mapped)
+			X_g += (1.0 - alignments[i].error_prob());
 		}
 		
-		if (prob_i)
-		{
-			for (size_t j = 0; j < N; ++j)
-			{
-				// each transcript takes a fraction of this reads density proportional 
-				// to P(R_i|T_j)/P(R_i)
 				
-				double mass_frac = mate_mass * (1.0 - alignments[i].error_prob());
-				X_t[j] += ((tau[j] *  _abundances[j]->cond_prob_nums()->at(i))/prob_i) * mass_frac;
-			}
-		}
-	}
 	
 	for (size_t j = 0; j < N; ++j)
 	{
-		_abundances[j]->num_fragments(X_t[j]);
+		_abundances[j]->num_fragments(_abundances[j]->gamma() * X_g);
 	}
 }
 
