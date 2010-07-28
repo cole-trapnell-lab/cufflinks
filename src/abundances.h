@@ -20,8 +20,10 @@
 #include "hits.h"
 #include "scaffolds.h"
 #include "bundles.h"
+#include "biascorrection.h"
 
 namespace ublas = boost::numeric::ublas;
+
 
 struct ConfidenceInterval
 {
@@ -65,11 +67,15 @@ public:
 	
 	virtual double			num_fragments() const = 0;
 	virtual void			num_fragments(double nf) = 0;
+	virtual double			effective_length() const= 0;
+	virtual void			effective_length(double el) = 0;
 	
-	virtual double			effective_length() const = 0;
+	virtual const vector<double>*	cond_probs() const		{ return NULL; }
+	virtual void					cond_probs(vector<double>* cp) = 0;
 	
 	// The structural information for the object, if defined.
 	virtual const Scaffold* transfrag() const		{ return NULL; }
+	
 	
 	virtual set<string>		gene_id() const = 0;
 	virtual set<string>		gene_name() const = 0;
@@ -86,7 +92,8 @@ public:
 	virtual void			reference_tag(const string& r) = 0;
 	
 	virtual	void calculate_abundance(const vector<MateHit>& alignments,
-									 long double total_map_mass) = 0;
+									 long double total_map_mass,
+									 const EmpDist& frag_len_dist) = 0;
 };
 
 class TranscriptAbundance : public Abundance
@@ -100,7 +107,9 @@ public:
 		_FPKM_variance(0),
 		_gamma(0), 
 		_kappa(1.0), 
-		_num_fragments(0) {}
+		_num_fragments(0),
+		_eff_len(0),
+		_cond_probs(NULL) {}
 	
 	TranscriptAbundance(const TranscriptAbundance& other)
 	{
@@ -110,6 +119,17 @@ public:
 		_FPKM_conf = other._FPKM_conf;
 		_gamma = other._gamma;
 		_num_fragments = other._num_fragments;
+		_eff_len = other._eff_len;
+		_cond_probs = other._cond_probs;
+	}
+	
+	~TranscriptAbundance()
+	{
+		if (_cond_probs != NULL)
+		{
+			delete _cond_probs;
+			_cond_probs = NULL;
+		}
 	}
 	
 	AbundanceStatus status() const			{ return _status; }
@@ -134,7 +154,16 @@ public:
 	void transfrag(const Scaffold* tf)		{ _transfrag = tf; }
 	const Scaffold* transfrag() const		{ return _transfrag; }
 	
-	double effective_length() const;
+	double effective_length() const			{ return _eff_len; }
+	void effective_length(double el)		{ _eff_len = el; }
+	
+	const vector<double>* cond_probs() const	{ return _cond_probs; }
+	void cond_probs(vector<double>* cp) 	
+	{ 
+		if(_cond_probs != NULL) { delete _cond_probs; };
+		_cond_probs = cp;
+	}
+	
 	
 	set<string> gene_id() const	
 	{
@@ -206,7 +235,8 @@ public:
 	virtual void			reference_tag(const string& r) { _ref_tag = r; } 
 	
 	void calculate_abundance(const vector<MateHit>& alignments,
-							 long double total_map_mass);
+							 long double total_map_mass,
+							 const EmpDist& frag_len_dist);
 	
 private:
 	
@@ -220,16 +250,19 @@ private:
 	double _gamma;
 	double _kappa;
 	double _num_fragments;
+	double _eff_len;
+	vector<double>* _cond_probs;
 	
 	string _description;
 	string _locus_tag;
 	string _ref_tag;
+	
 };
 
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _sample_mass(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _sample_mass(0.0) , _bl_p(NULL) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -241,22 +274,26 @@ public:
 		_FPKM_variance = other._FPKM_variance;
 		_description = other._description;
 		_sample_mass = other._sample_mass;
+		_bl_p = other._bl_p;
 	}
 	
-	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
+	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances, BiasLearner* bl_p) : 
 		_abundances(abundances), 
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0),
-		_sample_mass(0.0) {}
+		_sample_mass(0.0),
+		_bl_p(bl_p) {}
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
-				   long double map_mass) :
+				   long double map_mass,
+				   BiasLearner* bl_p) :
 		_abundances(abundances), 
 		_gamma_covariance(gamma_covariance),
-		_sample_mass(map_mass)
+		_sample_mass(map_mass),
+		_bl_p(bl_p)
 	{
 		calculate_conf_intervals();
 		calculate_kappas();
@@ -299,10 +336,15 @@ public:
 	
 	double effective_length() const;
 	
+	//DUMMY FUNCTIONS
+	void effective_length(double ef) {}
+	void cond_probs(vector<double>* cp) {}
+
+
 	void filter_group(const vector<bool>& to_keep, 
 					  AbundanceGroup& filtered_group) const;
 	
-	void get_transfrags(vector<Scaffold>& scaffolds) const;
+	void get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const;
 												 
 	vector<shared_ptr<Abundance> >& abundances() { return _abundances; }
 	const vector<shared_ptr<Abundance> >& abundances() const { return _abundances; }
@@ -312,17 +354,37 @@ public:
 	
 	
 	void calculate_abundance(const vector<MateHit>& alignments,
-							 long double total_map_mass);
+							 long double total_map_mass,
+							 const EmpDist& frag_len_dist);
 	
 private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
 	
-	bool calculate_gammas(const vector<MateHit>& alignments);
+	bool calculate_gammas(const vector<MateHit>& alignments, 
+						  const vector<shared_ptr<Abundance> >& transcripts,
+						  const vector<shared_ptr<Abundance> >& mapped_transcripts);
 	void calculate_FPKM_variance();
 	void calculate_conf_intervals();
-	void calculate_counts(const vector<MateHit>& alignments);
+	void calculate_counts(const vector<MateHit>& alignments, const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
+	void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
+												  vector<shared_ptr<Abundance> >& transcripts,
+												  vector<shared_ptr<Abundance> >& mapped_transcripts,
+												  const EmpDist& frag_len_dist);
+	bool unbiased_cond_probs_and_effective_length(const vector<MateHit>& alignments,
+												  const Scaffold& transfrag,
+												  const EmpDist& frag_len_dist,
+												  const vector<char>& compatibilities,
+												  vector<double>& cond_probs,
+												  double& eff_len);
+	
+	bool cond_probs_and_effective_length(const vector<MateHit>& alignments,
+									const Scaffold& transfrag,
+									const EmpDist& frag_len_dist,
+									const vector<char>& compatibilities,
+									vector<double>& cond_probs,
+									double& eff_len);
 	
 	vector<shared_ptr<Abundance> > _abundances;
 	
@@ -334,28 +396,31 @@ private:
 	double _FPKM_variance;
 	string _description;
 	double _sample_mass;
+	BiasLearner* _bl_p;
+
 };
+
+void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
+							 const vector<MateHit>& alignments,
+							 vector<vector<char> >& compatibilities);
 
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
 								   vector<MateHit>& alignments);
 
-bool gamma_map(const vector<Scaffold>& transcripts,
+bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& alignments,
-			   const vector<int>& collapse_counts,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance);
 
-void gamma_mle(const vector<Scaffold>& transcripts,
+void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& alignments,
-			   const vector<int>& collapse_counts,
 			   vector<double>& gammas);
 
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,
 				   vector<int>& depth_of_coverage,
 				   map<pair<int, int>, int>& intron_depth_of_coverage,
-				   bool exclude_intra_intron,
-                   bool use_non_redundant = false);
+				   bool exclude_intra_intron);
 
 double major_isoform_intron_doc(map<pair<int, int>, int>& intron_doc);
 

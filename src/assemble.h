@@ -25,9 +25,10 @@
 #include "hits.h"
 #include "bundles.h"
 #include "scaffolds.h"
+#include "biascorrection.h"
 
 
-bool assemble_hits(BundleFactory& bundle_factory);
+bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_p);
 
 //bool intron_compatible(const MateHit& lhs, const MateHit& rhs);
 bool read_hits_overlap(const ReadHit* lhs, const ReadHit* rhs);
@@ -35,11 +36,13 @@ bool read_hits_intron_agree(const ReadHit* h1, const ReadHit* h2);
 
 int  match_length(const MateHit& m, int left, int right);
 
-bool distance_compatible(const MateHit& lhs, 
-						 const MateHit& rhs, 
-						 int max_inner_dist);
 
-bool make_scaffolds(int bundle_left,
+bool mate_graphs(const HitBundle& bundle, BundleStats* stats);
+
+
+
+bool make_scaffolds(const EmpDist& frag_len_dist, 
+                    int bundle_left,
 					int bundle_length,
 					vector<Scaffold>& hits,
 					vector<Scaffold>& scaffolds);

@@ -32,6 +32,8 @@
 		EDACE432114EFF5C009024DB /* differential.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE431114EFF5C009024DB /* differential.cpp */; };
 		EDACE43A114F031B009024DB /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
 		EDACE43B114F031B009024DB /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
+		EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */; };
+		EDBAC4C211FF5AD3002B7162 /* biascorrection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */; };
 		EDD0CE0A10C72F7D00AF308F /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
 		EDD0CE0C10C72F7D00AF308F /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
 		EDD0CE0D10C72F7D00AF308F /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
@@ -153,6 +155,8 @@
 		EDACE431114EFF5C009024DB /* differential.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = differential.cpp; path = src/differential.cpp; sourceTree = "<group>"; };
 		EDACE438114F031B009024DB /* clustering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = clustering.h; path = src/clustering.h; sourceTree = "<group>"; };
 		EDACE439114F031B009024DB /* clustering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = clustering.cpp; path = src/clustering.cpp; sourceTree = "<group>"; };
+		EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = biascorrection.cpp; path = src/biascorrection.cpp; sourceTree = "<group>"; };
+		EDBAC4C011FF5AD3002B7162 /* biascorrection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = biascorrection.h; path = src/biascorrection.h; sourceTree = "<group>"; };
 		EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transitive_reduction.h; path = src/transitive_reduction.h; sourceTree = "<group>"; };
 		EDD0CD9C10C72AC200AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -233,6 +237,7 @@
 				ED1C0C6D11D7D9C000CFD663 /* Autotools */,
 				EDA5150910C72963000A4F41 /* abundances.h */,
 				EDA5150A10C72963000A4F41 /* assemble.h */,
+				EDBAC4C011FF5AD3002B7162 /* biascorrection.h */,
 				EDA5150B10C72963000A4F41 /* bundles.h */,
 				EDACE438114F031B009024DB /* clustering.h */,
 				EDA5150C10C72963000A4F41 /* codons.h */,
@@ -260,6 +265,7 @@
 				EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */,
 				EDA5151E10C72963000A4F41 /* abundances.cpp */,
 				EDA5151F10C72963000A4F41 /* assemble.cpp */,
+				EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */,
 				EDA5152010C72963000A4F41 /* bundles.cpp */,
 				EDACE439114F031B009024DB /* clustering.cpp */,
 				EDA5152110C72963000A4F41 /* codons.cpp */,
@@ -477,6 +483,7 @@
 				EDE78A2D11B5F4F0000F8846 /* graph_optimize.cpp in Sources */,
 				EDE78A7A11B6E912000F8846 /* scaffold_graph.cpp in Sources */,
 				EDE78BC611B716C3000F8846 /* matching_merge.cpp in Sources */,
+				EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,6 +510,7 @@
 				EDD0CE1B10C72F7D00AF308F /* tokenize.cpp in Sources */,
 				EDACE432114EFF5C009024DB /* differential.cpp in Sources */,
 				EDACE43A114F031B009024DB /* clustering.cpp in Sources */,
+				EDBAC4C211FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

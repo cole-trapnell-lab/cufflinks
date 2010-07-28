@@ -80,8 +80,8 @@ void print_usage()
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-m/--inner-dist-mean         the average inner distance between mates              [ default:     45 ]\n");
-	fprintf(stderr, "-s/--inner-dist-std-dev      the inner distance standard deviation                 [ default:     20 ]\n");
+	fprintf(stderr, "-m/--frag-len-mean			  the average fragment length							[ default:    190 ]\n");
+	fprintf(stderr, "-s/--frag-len-std-dev        the fragment length standard deviation                [ default:     80 ]\n");
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "--FDR						  False discovery rate used in testing   [ default:   0.05 ]\n");
@@ -105,13 +105,13 @@ int parse_options(int argc, char** argv)
 			case -1:     /* Done with options. */
 				break;
 			case 'm':
-				inner_dist_mean = (uint32_t)parseInt(-200, "-m/--inner-dist-mean arg must be at least -200", print_usage);
+				def_frag_len_mean = (uint32_t)parseInt(0, "-m/--frag-len-mean arg must be at least 0", print_usage);
 				break;
 			case 'c':
 				min_read_count = (uint32_t)parseInt(0, "-c/--min-alignment-count arg must be at least 0", print_usage);
 				break;
 			case 's':
-				inner_dist_std_dev = (uint32_t)parseInt(0, "-s/--inner-dist-std-dev arg must be at least 0", print_usage);
+				def_frag_len_std_dev = (uint32_t)parseInt(0, "-s/--frag-len-std-dev arg must be at least 0", print_usage);
 				break;
 			case 'p':
 				num_threads = (uint32_t)parseInt(1, "-p/--num-threads arg must be at least 1", print_usage);
@@ -155,8 +155,6 @@ int parse_options(int argc, char** argv)
         }
     } while(next_option != -1);
 	
-	max_inner_dist = inner_dist_mean + 7 * inner_dist_std_dev;
-	inner_dist_norm = normal(inner_dist_mean, inner_dist_std_dev);
 	allow_junk_filtering = false;
 	
 	return 0;
@@ -346,6 +344,7 @@ void decr_pool_count()
 void quantitation_worker(const RefSequenceTable& rt,
 						 vector<HitBundle*>* sample_bundles,
 						 const vector<long double>& sample_masses,
+						 const vector<EmpDist> frag_len_dists,
 						 Tests& tests,
 						 Tracking& tracking)
 {
@@ -362,7 +361,7 @@ void quantitation_worker(const RefSequenceTable& rt,
     bundle_label.reset(new string(bundle_label_buf));
 	
 	
-	test_differential(rt, *sample_bundles, sample_masses, tests, tracking);
+	test_differential(rt, *sample_bundles, sample_masses, frag_len_dists, tests, tracking);
 	
 	for (size_t i = 0; i < sample_bundles->size(); ++i)
 	{
@@ -549,6 +548,9 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 	
 	vector<LocusBundleFactory> bundle_factories;
 	vector<long double> map_masses;
+	vector<EmpDist> frag_len_dists;
+    
+    max_frag_len = 0;
 	for (size_t i = 0; i < sam_hit_filenames.size(); ++i)
 	{
         
@@ -584,6 +586,9 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 		// don't actually need to set bad_introns in the factories when using a 
 		// reference GTF
 		map_masses.push_back(map_mass);
+		frag_len_dists.push_back(frag_len_dist);
+        max_frag_len = max(max_frag_len, frag_len_dist.max());
+
 	}
 	
 	vector<Scaffold>::iterator curr_ref_scaff = ref_mRNAs.begin();
@@ -667,6 +672,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 								  boost::cref(rt), 
 								  sample_bundles, 
 								  boost::cref(map_masses), 
+								  boost::cref(frag_len_dists),
 								  boost::ref(tests),
 								  boost::ref(tracking));
 
@@ -674,6 +680,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 				quantitation_worker(boost::cref(rt), 
 									sample_bundles, 
 									boost::cref(map_masses), 
+									boost::cref(frag_len_dists),
 									boost::ref(tests),
 									boost::ref(tracking));
 #endif
@@ -730,7 +737,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 					chr_name,
 					sample_bundles.front()->left(),
 					sample_bundles.front()->right());
-			test_differential(rt, sample_bundles, map_masses, tests, tracking);
+			test_differential(rt, sample_bundles, map_masses, frag_len_dists, tests, tracking);
 			
 			for (size_t i = 0; i < sample_bundles.size(); ++i)
 			{

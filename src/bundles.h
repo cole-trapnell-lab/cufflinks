@@ -19,6 +19,52 @@
 #include "GList.hh"
 #include "gtf_tracking.h"
 
+class EmpDist
+{
+	vector<double> _pdf;
+	vector<double> _cdf;
+	int _mode;
+	int _max;
+	int _min;
+    double _mean;
+    double _std_dev;
+	
+public:
+	
+	void pdf(vector<double>& pdf)	{ _pdf = pdf; }
+	double pdf(int l) const
+	{
+		if (l >= _pdf.size() || l < 0)
+			return 0;
+		return _pdf[l];
+	}
+	
+	void cdf(vector<double>& cdf)	{ _cdf = cdf; }
+	double cdf(int l) const
+	{
+		if (l >= _cdf.size())
+			return 1;
+        if (l < 0)
+            return 0;
+		return _cdf[l];
+	}
+	
+	void mode(int mode)				{ _mode = mode; }
+	int mode() const				{ return _mode; }
+	
+	void max(int max)				{ _max = max;  }
+	int max() const					{ return _max; }
+	
+	void min(int min)				{ _min = min;  }
+	int min() const					{ return _min; }
+    
+    void mean(double mean)				{ _mean = mean;  }
+	double mean() const					{ return _mean; }
+    
+    void std_dev(double std_dev)				{ _std_dev = std_dev;  }
+	double std_dev() const					{ return _std_dev; }
+};
+
 struct BundleStats
 {		
 	BundleStats() : 
@@ -59,7 +105,7 @@ public:
 	
 	const std::vector<MateHit>& hits() const { return _hits; } 
 	const std::vector<MateHit>& non_redundant_hits() const { return _non_redundant; } 
-	const std::vector<int>& collapse_counts() const { return _collapse_counts; } 
+	const std::vector<double>& collapse_counts() const { return _collapse_counts; } 
 	
 	RefID ref_id()  const
 	{
@@ -98,7 +144,7 @@ private:
 	int _rightmost;
 	std::vector<MateHit> _hits;
 	std::vector<MateHit> _non_redundant;
-	std::vector<int> _collapse_counts;
+	std::vector<double> _collapse_counts;
 	std::vector<Scaffold> _ref_scaffs; // user-supplied reference annotations overlapping the bundle
 	bool _final;
 	int _id;
@@ -106,13 +152,14 @@ private:
 	static int _next_id;
 	
 	typedef map<int, list<MateHit> > OpenMates;
-	
 	OpenMates _open_mates;
 };
 
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
-				   vector<Scaffold>& ref_mRNAs);
+				   vector<Scaffold>& ref_mRNAs,
+				   bool loadSeqs=false,
+				   bool loadFPKM=false);
 
 class BundleFactory
 {
@@ -131,11 +178,11 @@ public:
 		next_ref_scaff = ref_mRNAs.begin(); 
 	}
 	
-	void load_ref_rnas() 
-	{
+	void load_ref_rnas(bool loadSeqs=false, bool loadFPKM=false) 
+    {
         if (ref_mRNA_file)
         {
-            ::load_ref_rnas(ref_mRNA_file, _hit_fac.ref_table(), ref_mRNAs);
+            ::load_ref_rnas(ref_mRNA_file, _hit_fac.ref_table(), ref_mRNAs, loadSeqs, loadFPKM);
             RefID last_id = 0;
             for (vector<Scaffold>::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
             {
@@ -151,7 +198,7 @@ public:
         
         if (mask_file)
         {
-            ::load_ref_rnas(mask_file, _hit_fac.ref_table(), mask_gtf_recs);
+            ::load_ref_rnas(mask_file, _hit_fac.ref_table(), mask_gtf_recs, false, false);
             RefID last_id = 0;
             for (vector<Scaffold>::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
             {
@@ -164,11 +211,21 @@ public:
             
             next_mask_scaff = mask_gtf_recs.begin();
         }
-	}
-	
+    }
+        
 	void bad_intron_table(const BadIntronTable& bad_introns) 
 	{ 
 		_bad_introns = bad_introns;
+	}
+    
+    void frag_len_dist(shared_ptr<const EmpDist> fld) 
+	{ 
+		_frag_len_dist = fld;
+	}
+    
+    shared_ptr<const EmpDist> frag_len_dist() const 
+	{ 
+		return _frag_len_dist;
 	}
 	
 	
@@ -188,10 +245,12 @@ private:
 	vector<Scaffold>::iterator next_mask_scaff;
 	
 	BadIntronTable _bad_introns;
+    shared_ptr<const EmpDist> _frag_len_dist;
 };
 
 void inspect_map(BundleFactory& bundle_factory, 
 				 long double& map_mass, 
-				 BadIntronTable& bad_introns);
+				 BadIntronTable& bad_introns,
+                 EmpDist& frag_len_dist);
 
 #endif

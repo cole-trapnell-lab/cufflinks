@@ -29,7 +29,6 @@ using namespace std;
 
 //int insert_len = 250;
 //int insert_len_std_dev = 20;
-//int max_mate_inner_dist = -1; 
 //
 //uint32_t min_anchor_len = 5;
 uint32_t min_intron_length = 50;
@@ -38,9 +37,10 @@ uint32_t max_intron_length = 300000;
 
 uint32_t max_gene_length = 3000000;
 int max_partner_dist = 50000;
-int inner_dist_mean = 45;
-int inner_dist_std_dev = 40;
-int max_inner_dist = 1000;
+int def_frag_len_mean = 195;
+int def_frag_len_std_dev = 80;
+int def_max_frag_len = 1000;
+int max_frag_len = 1000;
 int olap_radius = 50;
 
 float min_isoform_fraction = 0.1;
@@ -50,8 +50,6 @@ float high_phred_err_prob = 0.50; // about MAPQ = 3
 
 double transcript_score_thresh = -0.693;
 
-normal inner_dist_norm;
-
 int num_threads = 1;
 
 float max_phred_err_prob = 1.0;
@@ -60,6 +58,7 @@ std::string user_label = "CUFF";
 std::string ref_gtf_filename = "";
 std::string mask_gtf_filename = "";
 std::string output_dir = "./";
+std::string fasta_dir;
 
 int collapse_thresh = 10;
 
@@ -83,6 +82,8 @@ const ReadGroupProperties* global_read_properties = NULL;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
+#else
+boost::shared_ptr<std::string> bundle_label;
 #endif
 
 extern void print_usage();
@@ -185,9 +186,9 @@ out:
     free(path);
     return (rv);
 }
-
+    
 void init_library_table()
-{
+	{
     ReadGroupProperties std_illumina_paired;
     std_illumina_paired.platform(ILLUMINA);
     std_illumina_paired.std_mate_orientation(MATES_POINT_TOWARD);
@@ -228,4 +229,40 @@ void print_library_table()
             fprintf(stderr, "\t%s\n", itr->first.c_str());
         }
     }
+}
+
+
+void encode_seq(const string seqStr, char* seq)
+{
+    
+	for (int i = 0; i < seqStr.length(); ++i)
+	{
+		switch(seqStr[i])
+		{
+			case 'A' : 
+			case 'a' : seq[i] = 0; break;
+			case 'c' : 
+			case 'C' : seq[i] = 1; break;
+			case 'G' :
+			case 'g' : seq[i] = 2; break;
+			case 'T' :
+			case 't' : seq[i] = 3; break;
+			default  : seq[i] = 4; break; // N
+		}
+	}
+}
+
+// Does NOT reverse!
+void complement(const char* seq, char* c_seq, int seqLen)
+{
+	for(int i = 0; i < seqLen; ++i)
+	{
+		switch(seq[i])
+		{
+			case 0: c_seq[i] = 3; break;
+			case 1: c_seq[i] = 2; break;
+			case 2: c_seq[i] = 1; break;
+			case 3: c_seq[i] = 0; break;
+		}
+	}
 }

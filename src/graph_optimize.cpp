@@ -365,7 +365,8 @@ struct FragIndexSortSmallerLR
 	}
 };
 
-bool collapse_equivalent_transfrags(vector<Scaffold>& fragments, 
+bool collapse_equivalent_transfrags(const EmpDist& frag_len_dist,
+                                    vector<Scaffold>& fragments, 
                                     uint32_t max_rounds)
 {
 	// The containment graph is a bipartite graph with an edge (u,v) when
@@ -475,15 +476,10 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						lhs_scaff.contains(c_scaff))
 					{
 						double c_len = c_scaff.right() - c_scaff.left();
-//						if (c_len / lhs_len < 0.95)
-//							break;
-						if (lhs_len - c_len > inner_dist_std_dev)
+
+						if (lhs_len - c_len > frag_len_dist.std_dev())
 							break;
-						
-						
-//						if (lhs_len - c_len > 30)
-//							break;
-						
+
 						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
 						{
 #if ASM_VERBOSE
@@ -873,7 +869,8 @@ void compress_consitutive(vector<Scaffold>& hits)
 }
 
 
-void compress_redundant(vector<Scaffold>& fragments)
+void compress_redundant(const EmpDist& frag_len_dist, 
+                        vector<Scaffold>& fragments)
 {
     double last_size = -1;
     //long leftmost = 9999999999;
@@ -913,7 +910,7 @@ void compress_redundant(vector<Scaffold>& fragments)
         if (last_size == -1 || 0.9 * last_size > fragments.size())
         {
             last_size = fragments.size();
-            if (!collapse_equivalent_transfrags(fragments, 1))
+            if (!collapse_equivalent_transfrags(frag_len_dist, fragments, 1))
             {
                 break;
             }
@@ -946,7 +943,8 @@ void compress_redundant(vector<Scaffold>& fragments)
 #endif	
 }
 
-void compress_fragments(vector<Scaffold>& fragments)
+void compress_fragments(const EmpDist& frag_len_dist,
+                        vector<Scaffold>& fragments)
 {
 #if ASM_VERBOSE
     fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
@@ -958,7 +956,7 @@ void compress_fragments(vector<Scaffold>& fragments)
     
 	compress_consitutive(fragments);
 	
-	compress_redundant(fragments);
+	compress_redundant(frag_len_dist, fragments);
     
 #if ASM_VERBOSE
     size_t post_hit_collapse_size = fragments.size();

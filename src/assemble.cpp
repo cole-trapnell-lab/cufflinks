@@ -14,16 +14,13 @@
 #include <map>
 #include <list>
 #include <vector>
-//#include <deque>
 #include <iostream>
-//#include <numeric>
 
 #include <lemon/topology.h>
 
 //#include <lemon/graph_utils.h>
 #include <lemon/bipartite_matching.h>
 
-//#include <boost/thread.hpp>
 #include <boost/ref.hpp>
 // DON'T move this, or mystery compiler errors will result. Affects gcc >= 4.1
 #include <boost/graph/vector_as_graph.hpp>
@@ -49,7 +46,7 @@ using boost::math::normal; // typedef provides default type is double.
 
 #include "common.h"
 #include "assemble.h"
-//#include "abundances.h"
+
 #include "bundles.h"
 //#include "filters.h"
 //#include "genes.h"
@@ -57,7 +54,6 @@ using boost::math::normal; // typedef provides default type is double.
 #include "clustering.h"
 #include "matching_merge.h"
 #include "graph_optimize.h"
-
 
 using namespace boost;
 using namespace std;
@@ -371,7 +367,8 @@ void holdout_transitivity_hazards(vector<Scaffold>& hits,
 	hits = filtered_hits;
 }
 
-bool make_scaffolds(int bundle_left,
+bool make_scaffolds(const EmpDist& frag_len_dist,
+                    int bundle_left,
 					int bundle_length,
 					vector<Scaffold>& hits,
 					vector<Scaffold>& scaffolds)
@@ -419,7 +416,7 @@ bool make_scaffolds(int bundle_left,
 		
         hits.insert(hits.end(), split_hazards.begin(), split_hazards.end());
 
-        compress_fragments(hits);
+        compress_fragments(frag_len_dist, hits);
 
 #if ASM_VERBOSE
         fprintf(stderr, "%s\tAssembling bundle with %lu hits\n", bundle_label->c_str(), hits.size());
@@ -498,7 +495,7 @@ bool make_scaffolds(int bundle_left,
 			
 			ReachGraph::UEdgeMap<long long> cov_weights(bp);
 			add_weights_to_reachability_bp_graph(bp, hits_for_node, orig_hits, hits, cov_weights);				
-			
+
 #if ASM_VERBOSE
             fprintf(stderr, "%s\tPerforming weighted matching\n", bundle_label->c_str());
 #endif
@@ -538,7 +535,7 @@ bool make_scaffolds(int bundle_left,
 		
 		fill_gaps(new_scaffs, 2 * olap_radius);
         
-        scaffolds = new_scaffs;
+		scaffolds = new_scaffs;
         
         // Cleave the partials at their unknowns to minimize FPKM dilation on  
         // the low end of the expression profile. 

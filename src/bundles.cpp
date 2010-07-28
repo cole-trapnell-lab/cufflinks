@@ -9,12 +9,15 @@
 
 #include <list>
 #include <map>
+#include <numeric>
 #include <boost/math/distributions/binomial.hpp>
 
 #include "common.h"
 #include "bundles.h"
 #include "scaffolds.h"
-#include "abundances.h"
+#include "gff.h"
+#include "GFastaFile.h"
+#include "GStr.h"
 
 using namespace std;
 using boost::math::binomial;
@@ -40,87 +43,116 @@ struct ScaffoldSorter
 	RefSequenceTable& rt;
 };
 
+char* getGSeqName(int gseq_id)
+{
+	return GffObj::names->gseqs.getName(gseq_id);
+}
+char* getFastaFile(int gseq_id) 
+{
+	if (fasta_dir == "") return NULL;
+	GStr s(fasta_dir.c_str());
+	s.trimR('/');
+	s.appendfmt("/%s",getGSeqName(gseq_id));
+	GStr sbase=s;
+	if (!fileExists(s.chars())) 
+		s.append(".fa");
+	if (!fileExists(s.chars())) s.append("sta");
+	if (fileExists(s.chars())) return Gstrdup(s.chars());
+	else
+	{
+		GMessage("Warning: cannot find genomic sequence file %s{.fa,.fasta}\n",sbase.chars());
+		return NULL;
+	}
+}
+
+//FIXME: needs refactoring
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
-				   vector<Scaffold>& ref_mRNAs) 
+				   vector<Scaffold>& ref_mRNAs,
+				   bool loadSeqs,
+				   bool loadFPKM) 
 {
+	if (loadSeqs)
+		fprintf(stderr,"Loading reference annotation and sequence\n");
+	else
+		fprintf(stderr,"Loading reference annotation\n");
+
 	GList<GSeqData> ref_rnas;
 	
 	if (ref_mRNA_file)
 	{
-		//read_mRNAs(ref_mRNA_file, false, ref_rnas, ref_rnas, NULL, -1, false);
-		read_mRNAs(ref_mRNA_file, ref_rnas);
+		read_transcripts(ref_mRNA_file, ref_rnas);
 	}
 	
+	int last_gseq_id = -1;
+	GFaSeqGet* faseq = NULL;
 	// Geo groups them by chr.
 	if (ref_rnas.Count()>0) //if any ref data was loaded
 	{
 		for (int j = 0; j < ref_rnas.Count(); ++j) 
 		{    //ref data is grouped by genomic sequence
 			char* name = GffObj::names->gseqs.getName(ref_rnas[j]->gseq_id);
+			
+			int f = 0;
+			int r = 0;
+			int u  = 0;
+			GffObj* rna_p;
 			RefID ref_id = rt.get_id(name, NULL);
-			for (int i = 0; i < ref_rnas[j]->mrnas_f.Count(); ++i)
+			int f_count = ref_rnas[j]->mrnas_f.Count();
+			int r_count = ref_rnas[j]->mrnas_r.Count();
+			int u_count = ref_rnas[j]->umrnas.Count();
+			
+			
+			while(!(f==f_count && r==r_count && u==u_count))
 			{	
-				GffObj& rna = *(ref_rnas[j]->mrnas_f[i]);
-				vector<AugmentedCuffOp> ops;
+				CuffStrand strand;
 				
-				for (int e = 0; e < rna.exons.Count(); ++e)
-				{
-					GffExon& ex = *(rna.exons[e]);
-					ops.push_back(AugmentedCuffOp(CUFF_MATCH, ex.start - 1, ex.end - ex.start + 1));
-					if (e + 1 < rna.exons.Count())
+				if (f < f_count)
 					{
-						GffExon& next_ex = *(rna.exons[e+1]);
-						ops.push_back(AugmentedCuffOp(CUFF_INTRON, ex.end, next_ex.start - ex.end - 1));
+					rna_p = ref_rnas[j]->mrnas_f[f++];
+					strand = CUFF_FWD;
 					}
-				}
-				
-				Scaffold ref_scaff(ref_id, CUFF_FWD, ops);
-				if (rna.getID())
+				else if (r < r_count) 
 				{
-					ref_scaff.annotated_trans_id(rna.getID());
+					rna_p = ref_rnas[j]->mrnas_r[r++];
+					strand = CUFF_REV;
 				}
-				if (rna.getGene())
-					ref_scaff.annotated_gene_id(rna.getGene());
-				char* short_name = rna.getAttr("gene_name");
-				if (short_name)
+				else 
 				{
-					ref_scaff.annotated_gene_name(short_name);
+					rna_p = ref_rnas[j]->umrnas[u++];
+					strand = CUFF_STRAND_UNKNOWN;
 				}
 				
-				char* nearest_ref_match = rna.getAttr("nearest_ref");
-				char* class_code = rna.getAttr("class_code");
 				
-				if (nearest_ref_match && class_code)
+				GffObj& rna = *rna_p;
+				
+
+				if (loadSeqs && rna.gseq_id != last_gseq_id) //next chromosome
 				{
-					ref_scaff.nearest_ref_id(nearest_ref_match);
-					ref_scaff.nearest_ref_classcode(*class_code);
-				}
-				
-				char* protein_id = rna.getAttr("p_id");
-				if (protein_id)
+					delete faseq;
+					faseq = NULL;
+					last_gseq_id = rna.gseq_id;
+					char* sfile = getFastaFile(last_gseq_id);
+					if (sfile != NULL) 
 				{
-					ref_scaff.annotated_protein_id(protein_id);
+						if (verbose)
+							GMessage("Processing sequence from fasta file '%s'\n",sfile);
+						faseq = new GFaSeqGet(sfile, false);
+						faseq->loadall();
+						GFREE(sfile);
 				}
-				
-				char* tss_id = rna.getAttr("tss_id");
-				if (tss_id)
+					else 
 				{
-					ref_scaff.annotated_tss_id(tss_id);
+						assert (false);
 				}
-				
-				ref_mRNAs.push_back(ref_scaff); 
 			}
 			
-			for (int i = 0; i < ref_rnas[j]->mrnas_r.Count(); ++i)
-			{	
-				GffObj& rna = *(ref_rnas[j]->mrnas_r[i]);
 				vector<AugmentedCuffOp> ops;
-				
 				for (int e = 0; e < rna.exons.Count(); ++e)
 				{
 					GffExon& ex = *(rna.exons[e]);
 					ops.push_back(AugmentedCuffOp(CUFF_MATCH, ex.start - 1, ex.end - ex.start + 1));
+					
 					if (e + 1 < rna.exons.Count())
 					{
 						GffExon& next_ex = *(rna.exons[e+1]);
@@ -128,18 +160,26 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					}
 				}
 				
-				Scaffold ref_scaff(ref_id, CUFF_REV, ops);
-				if (rna.getID())
-				{
-					ref_scaff.annotated_trans_id(rna.getID());
+				Scaffold ref_scaff(ref_id, strand, ops);
+				
+				char* rna_seq;
+				int seqlen=0;
+				if (loadSeqs){ 
+					assert (faseq);
+					rna_seq = rna.getSpliced(faseq, false, &seqlen);
 				}
+
+				if (rna.getID())
+					ref_scaff.annotated_trans_id(rna.getID());
+				
+				
 				if (rna.getGene())
 					ref_scaff.annotated_gene_id(rna.getGene());
+				
 				char* short_name = rna.getAttr("gene_name");
 				if (short_name)
-				{
 					ref_scaff.annotated_gene_name(short_name);
-				}
+				
 				
 				char* nearest_ref_match = rna.getAttr("nearest_ref");
 				char* class_code = rna.getAttr("class_code");
@@ -152,14 +192,29 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				
 				char* protein_id = rna.getAttr("p_id");
 				if (protein_id)
-				{
 					ref_scaff.annotated_protein_id(protein_id);
-				}
+				
 				
 				char* tss_id = rna.getAttr("tss_id");
 				if (tss_id)
-				{
 					ref_scaff.annotated_tss_id(tss_id);
+				
+				
+				if (loadFPKM)
+				{
+					const char* expr = rna.getAttr("FPKM");
+					if (expr!=NULL) {
+						if (expr[0]=='"') expr++;
+						ref_scaff.fpkm(strtod(expr, NULL));
+					}
+				}
+
+				
+				if (loadSeqs){
+					string rs = rna_seq;
+					std::transform(rs.begin(), rs.end(), rs.begin(), (int (*)(int))std::toupper);
+					ref_scaff.seq(rs);
+					GFREE(rna_seq);
 				}
 				
 				ref_mRNAs.push_back(ref_scaff); 
@@ -168,6 +223,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 		ScaffoldSorter sorter(rt);
 		sort(ref_mRNAs.begin(), ref_mRNAs.end(), sorter);
 	}
+	delete faseq;
 }
 
 
@@ -204,7 +260,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 	{
 		// This is a singleton, so just make a closed MateHit and
 		// continue
-		MateHit m(bh->ref_id(), bh, shared_ptr<ReadHit const>(), 0, 0);
+		MateHit m(bh->ref_id(), bh, shared_ptr<ReadHit const>());
 		add_hit(m);
 	}
 	else
@@ -218,7 +274,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 			// already have seen it's partner
 			if(bh->left() < bh->partner_pos())
 			{
-				MateHit open_hit(bh->ref_id(), bh, shared_ptr<ReadHit const>(), inner_dist_mean, max_inner_dist);
+				MateHit open_hit(bh->ref_id(), bh, shared_ptr<ReadHit const>());
 				
 				pair<OpenMates::iterator, bool> ret;
 				ret = _open_mates.insert(make_pair(bh->partner_pos(), 
@@ -228,7 +284,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 			}
 			else
 			{
-				add_hit(MateHit(bh->ref_id(), bh, shared_ptr<ReadHit const>(), inner_dist_mean, max_inner_dist));
+				add_hit(MateHit(bh->ref_id(), bh, shared_ptr<ReadHit const>()));
 			}
 		}
 		else
@@ -247,8 +303,8 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 				{
 					// Found a partner?
 					
-					Scaffold L(MateHit(bh->ref_id(), pm.left_alignment(), shared_ptr<ReadHit const>(), 0, 0));
-					Scaffold R(MateHit(bh->ref_id(), bh, shared_ptr<ReadHit const>(), 0, 0));
+					Scaffold L(MateHit(bh->ref_id(), pm.left_alignment(), shared_ptr<ReadHit const>()));
+					Scaffold R(MateHit(bh->ref_id(), bh, shared_ptr<ReadHit const>()));
 					
 					bool strand_agree = L.strand() == CUFF_STRAND_UNKNOWN ||
 					R.strand() == CUFF_STRAND_UNKNOWN ||
@@ -279,7 +335,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 				// close this one
 				if(bh->left() < bh->partner_pos())
 				{
-					MateHit open_hit(bh->ref_id(), bh, shared_ptr<ReadHit const>(), inner_dist_mean, max_inner_dist);
+					MateHit open_hit(bh->ref_id(), bh, shared_ptr<ReadHit const>());
 					
 					pair<OpenMates::iterator, bool> ret;
 					ret = _open_mates.insert(make_pair(bh->partner_pos(), 
@@ -289,7 +345,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadHit> bh)
 				}
 				else
 				{
-					add_hit(MateHit(bh->ref_id(), bh, shared_ptr<ReadHit const>(), inner_dist_mean, max_inner_dist));
+					add_hit(MateHit(bh->ref_id(), bh, shared_ptr<ReadHit const>()));
 				}
 			}
 		}
@@ -665,8 +721,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	bundle_out.finalize();
 	bundle_out.remove_hitless_scaffolds();
     
-	return true;
-}
+					return true;
+				}
 
 struct IntronSpanCounter
 {
@@ -1116,9 +1172,17 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 
 void inspect_map(BundleFactory& bundle_factory,
                  long double& map_mass, 
-                 BadIntronTable& bad_introns)
+                 BadIntronTable& bad_introns,
+                 EmpDist& frag_len_dist)
 {
-	HitBundle bundle;	
+	HitBundle bundle;
+	
+    map_mass = 0.0;
+    int min_read_len = numeric_limits<int>::max();
+    vector<double> frag_len_hist(def_max_frag_len+1,0);
+	list<pair<int, int> > open_ranges;
+    bool has_pairs = false;
+    
 	while(bundle_factory.next_bundle(bundle))
 	{
 #if ASM_VERBOSE
@@ -1129,18 +1193,86 @@ void inspect_map(BundleFactory& bundle_factory,
                 bundle.right());
         fprintf(stderr, "Inspecting bundle %s\n", bundle_label_buf);
 #endif
-        
-		const vector<MateHit>& hits = bundle.hits();
 		
 		identify_bad_splices(bundle, bad_introns);
+        
+        const vector<MateHit>& hits = bundle.non_redundant_hits();
+		const vector<double>& collapse_counts = bundle.collapse_counts();
 		
-		for (size_t i = 0; i < bundle.hits().size(); ++i)
+		int curr_range_start = hits[0].left();
+		int curr_range_end = numeric_limits<int>::max();
+		int next_range_start = -1;
+		
+		// This first loop calclates the map mass and finds ranges with no introns
+		for (size_t i = 0; i < hits.size(); ++i) 
 		{
 			double mate_len = 0;
 			if (hits[i].left_alignment() || hits[i].right_alignment())
 				mate_len = 1.0;
-			map_mass += mate_len * (1.0 - hits[i].error_prob()); 
+			map_mass += mate_len * collapse_counts[i]; 
+            
+			min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+			if (hits[i].right_alignment())
+				min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+            
+			
+			if (hits[i].left() > curr_range_end)
+			{
+				if (curr_range_end - curr_range_start > max_frag_len)
+					open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
+				curr_range_start = next_range_start;
+				curr_range_end = numeric_limits<int>::max();
+			}
+			if (hits[i].left_alignment()->contains_splice())
+			{
+				if (hits[i].left() - curr_range_start > max_frag_len)
+					open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
+				curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
+			}
+			if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
+			{
+				has_pairs = true;
+				assert(hits[i].right_alignment()->left() > hits[i].left());
+				curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
+				next_range_start = max(next_range_start, hits[i].right());
+			}
 		}
+        
+        if (has_pairs)
+		{
+			pair<int, int> curr_range(-1,-1);
+			
+			// This second loop uses the ranges found above to find the estimated frag length distribution
+			// It also finds the minimum read length to use in the linear interpolation
+			for (size_t i = 0; i < hits.size(); ++i)
+			{
+				if (hits[i].left() > curr_range.second && open_ranges.empty())
+					break;
+				
+				if (hits[i].left() > curr_range.second)
+				{
+					curr_range = open_ranges.front();
+					open_ranges.pop_front();
+				}
+				
+				if (hits[i].left() >= curr_range.first && hits[i].right() <= curr_range.second && hits[i].is_pair())
+				{
+					int mate_len = hits[i].right()-hits[i].left();
+					if (mate_len < max_frag_len)
+						frag_len_hist[mate_len] += collapse_counts[i];
+					min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+					min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+				}
+			}
+		}
+//		
+//		for (size_t i = 0; i < bundle.hits().size(); ++i)
+//		{
+//			double mate_len = 0;
+//			if (hits[i].left_alignment() || hits[i].right_alignment())
+//				mate_len = 1.0;
+//			map_mass += mate_len * (1.0 - hits[i].error_prob()); 
+//		}
 	}
 	
 	bundle_factory.reset();
@@ -1160,6 +1292,88 @@ void inspect_map(BundleFactory& bundle_factory,
     fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
 #endif
     
-	return;
+    long double tot_count = 0;
+	vector<double> frag_len_pdf(max_frag_len+1, 0.0);
+	vector<double> frag_len_cdf(max_frag_len+1, 0.0);
+	normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
+    
+	int frag_len_max = frag_len_hist.size()-1;
+    
+    tot_count = accumulate( frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
+    
+	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
+	if (!has_pairs || tot_count == 0)
+	{
+		frag_len_max = def_frag_len_mean + 3*def_frag_len_std_dev;
+		for(int i = min_read_len; i < frag_len_max; i++)
+		{
+			frag_len_hist[i] = cdf(frag_len_norm, i+0.5)-cdf(frag_len_norm, i-0.5);
+			tot_count += frag_len_hist[i];
+		}
+	}
+	else 
+	{	
+		double curr_total = 0;
+		int last_nonzero = min_read_len-1;
+		for(int i = 1; i < frag_len_hist.size(); i++)
+		{
+			if (frag_len_hist[i] > 0)
+			{
+				if (last_nonzero > 0 && last_nonzero != i-1)
+				{
+					double b = frag_len_hist[last_nonzero];
+					double m = (frag_len_hist[i] - b)/(i-last_nonzero);
+					for (int x = 1; x < i - last_nonzero; x++)
+					{
+						frag_len_hist[last_nonzero+x] = m * x + b;
+						tot_count += frag_len_hist[last_nonzero+x];
+						curr_total += frag_len_hist[last_nonzero+x];
+					}	
+				}
+				last_nonzero = i;
+			}
+			
+			curr_total += frag_len_hist[i];
+			
+			if (curr_total/tot_count > .9999)
+			{
+				frag_len_max = i; 
+				break;
+			}
+		}
+	}
+	
+    double mean = 0.0;
+
+	// Convert histogram to pdf and cdf, calculate mean
+	int frag_len_mode = 0;
+	for(int i = 1; i < frag_len_hist.size(); i++)
+	{
+		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
+		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
+		//fprintf(stderr, "%f\n", frag_len_hist[i]);
+        
+		if (frag_len_pdf[i] > frag_len_pdf[frag_len_mode])
+			frag_len_mode = i;
+        mean += frag_len_pdf[i] * i;
+	}
+    
+    double std_dev =  0.0;
+    for(int i = 1; i < frag_len_hist.size(); i++)
+    {
+        std_dev += frag_len_pdf[i] * ((i - mean) * (i - mean));
+    }
+    
+    std_dev = sqrt(std_dev);
+	
+	frag_len_dist.pdf(frag_len_pdf);
+	frag_len_dist.cdf(frag_len_cdf);
+	frag_len_dist.mode(frag_len_mode);
+	frag_len_dist.max(frag_len_max);
+	frag_len_dist.min(min_read_len);
+    frag_len_dist.mean(mean);
+    frag_len_dist.std_dev(std_dev);
+    
+   	return;
 }
 

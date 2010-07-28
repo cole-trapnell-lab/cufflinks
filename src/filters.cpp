@@ -241,7 +241,7 @@ void pre_mrna_filter(int bundle_length,
                         if (left_off > i_left)
                         {
                             if (left_off + op.genomic_length <= i_right + 1)
-                            {
+			{
                                 op_len += op.genomic_length;
                                 int L = left_off - bundle_left;
                                 int R = L + op.genomic_length;
@@ -254,7 +254,7 @@ void pre_mrna_filter(int bundle_length,
                                 int R = L + (i_right - left_off);
                                 op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
                             }
-                        }
+}
                         else
                         {
                             if (left_off + op.genomic_length <= i_right + 1)
@@ -287,13 +287,13 @@ void pre_mrna_filter(int bundle_length,
             {
                 double hit_doc_in_region = doc / len;
                 if (hit_doc_in_region < thresh)
-                {
+                            {
                     toss[j] = true;
                 }
             }
 		}
 	}
-    
+                    
 	for (size_t j = 0; j < hits.size(); ++j)
 	{	
 		if (!toss[j])
@@ -313,12 +313,12 @@ void pre_mrna_filter(int bundle_length,
 			//			if (hits[j].has_intron())
 			//			{
 			//				
-			//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+				//fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
 			//			}
 #endif	
 		}
 	}
-	
+    
 #if ASM_VERBOSE
 	fprintf(stderr, "\tPre-mRNA filter pass complete, excluded %lu fragments\n", hits.size() - filtered_hits.size());
 #endif
@@ -719,7 +719,7 @@ void filter_hits(int bundle_length,
 }
 
 
-void filter_junk_isoforms(vector<Scaffold>& scaffolds,
+void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 						  vector<double>& abundances)
 {
 	//	vector<double>::iterator max_ab = std::max_element(abundances.begin(),
@@ -727,55 +727,57 @@ void filter_junk_isoforms(vector<Scaffold>& scaffolds,
 	double max_fwd_ab = -1.0;
 	double max_rev_ab = -1.0;
 	
-	for (size_t s_id = 0; s_id < scaffolds.size(); ++s_id)
+	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		Scaffold& s = scaffolds[s_id];
-		if (s.strand() == CUFF_FWD || s.strand() == CUFF_STRAND_UNKNOWN)
+		const Scaffold& scaff = *(transcripts[t]->transfrag());
+		if (scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_STRAND_UNKNOWN)
 		{
-			if (abundances[s_id] > max_fwd_ab)
-				max_fwd_ab = abundances[s_id];
+			if (abundances[t] > max_fwd_ab)
+				max_fwd_ab = abundances[t];
 		}
-		if (s.strand() == CUFF_REV || s.strand() == CUFF_STRAND_UNKNOWN)
+		if (scaff.strand() == CUFF_REV || scaff.strand() == CUFF_STRAND_UNKNOWN)
 		{			
-			if (abundances[s_id] > max_rev_ab)
-				max_rev_ab = abundances[s_id];
+			if (abundances[t] > max_rev_ab)
+				max_rev_ab = abundances[t];
 		}
 	}
 	
 	// Try to categorize the crap transcripts for suppression
-	vector<bool> pre_mrna_junk(scaffolds.size(), false); //intra-intron, much lower abundance than container
-	vector<bool> chaff(scaffolds.size(), false); // only a single MateHit, impossible to reliably quantitate
-	vector<bool> repeats(scaffolds.size(), false); // too many low-quality hits
-	vector<bool> too_rare(scaffolds.size(), false); // too rare to be reliably quantitated, could be error
+	vector<bool> pre_mrna_junk(transcripts.size(), false); //intra-intron, much lower abundance than container
+	vector<bool> chaff(transcripts.size(), false); // only a single MateHit, impossible to reliably quantitate
+	vector<bool> repeats(transcripts.size(), false); // too many low-quality hits
+	vector<bool> too_rare(transcripts.size(), false); // too rare to be reliably quantitated, could be error
 	
-	vector<bool> illegal_microexon(scaffolds.size(), false); // initial or terminal exons are too short
+	vector<bool> illegal_microexon(transcripts.size(), false); // initial or terminal exons are too short
 	
 	//cerr << "Chucked : ";
-	for (size_t s = 0; s < scaffolds.size(); ++s)
+	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
+		const Scaffold& scaff = *(transcripts[t]->transfrag());
+
 		if (allow_junk_filtering)
 		{
-			const vector<const MateHit*> hits = scaffolds[s].mate_hits();
+			const vector<const MateHit*> hits = scaff.mate_hits();
 			
 			if (hits.size() <= 1)
-				chaff[s] = true;
+				chaff[t] = true;
 			
-			const vector<AugmentedCuffOp>& ops = scaffolds[s].augmented_ops();
-//			if (ops.front().genomic_length <= microexon_length || 
-//				ops.back().genomic_length <= microexon_length)
-//				illegal_microexon[s] = true;
+			const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
+			if (ops.front().genomic_length <= microexon_length || 
+				ops.back().genomic_length <= microexon_length)
+				illegal_microexon[t] = true;
 			
 			if (ops.size() == 1 && ops[0].opcode == CUFF_MATCH)
 			{
-				for (size_t j = 0; j < scaffolds.size(); ++j)
+				for (size_t j = 0; j < transcripts.size(); ++j)
 				{
-					const vector<AugmentedCuffOp>& j_ops = scaffolds[j].augmented_ops();
+					const vector<AugmentedCuffOp>& j_ops = scaff.augmented_ops();
 					for (size_t L = 0; L < j_ops.size(); L++)
 					{
 						if (AugmentedCuffOp::overlap_in_genome(ops[0], j_ops[L]) &&
 							j_ops[L].opcode == CUFF_INTRON)
 						{
-							//pre_mrna_junk[s] = true;
+							pre_mrna_junk[t] = true;
 						}
 					}
 				}
@@ -794,40 +796,36 @@ void filter_junk_isoforms(vector<Scaffold>& scaffolds,
 			}
 			double low_qual_frac = low_qual_hits / (double)hits.size();
 			if (low_qual_frac > low_qual_thresh)
-				repeats[s] = true;
+				repeats[t] = true;
 		}
 		
-		if (scaffolds[s].strand() == CUFF_FWD &&
-			(abundances[s] / max_fwd_ab) < min_isoform_fraction)
-        {
-			too_rare[s] = true;
-        }
-		if ((scaffolds[s].strand() == CUFF_REV ||  scaffolds[s].strand() == CUFF_STRAND_UNKNOWN) &&
-			(abundances[s] / max_rev_ab) < min_isoform_fraction)
-        {
-			too_rare[s] = true;
-        }
+		if (scaff.strand() == CUFF_FWD &&
+			(abundances[t] / max_fwd_ab) < min_isoform_fraction)
+			too_rare[t] = true;
+		if ((scaff.strand() == CUFF_REV ||  scaff.strand() == CUFF_STRAND_UNKNOWN) &&
+			(abundances[t] / max_rev_ab) < min_isoform_fraction)
+			too_rare[t] = true;
 		
 	}
 	
-	vector<Scaffold> non_junk_scaffolds;
+	vector<shared_ptr<Abundance> > non_junk_transcripts;
 	vector<double> non_junk_abundances;
-	for (size_t s = 0; s < scaffolds.size(); ++s)
+	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		if (!repeats[s] && !chaff[s] && !pre_mrna_junk[s] && !too_rare[s] /*&& !illegal_microexon[s]*/)
+		if (!repeats[t] && !chaff[t] && !pre_mrna_junk[t] && !too_rare[t] /*&& !illegal_microexon[t]*/)
 		{
-			non_junk_scaffolds.push_back(scaffolds[s]);
-			non_junk_abundances.push_back(abundances[s]);
+			non_junk_transcripts.push_back(transcripts[t]);
+			non_junk_abundances.push_back(abundances[t]);
 		}
         else
         {
-//#if ASM_VERBOSE
-//            fprintf(stderr, "Filtering isoform\n");
-//#endif
+#if ASM_VERBOSE
+            fprintf(stderr, "Filtering isoform\n");
+#endif
         }
 	}
 	
-	scaffolds = non_junk_scaffolds;
+	transcripts = non_junk_transcripts;
 	abundances = non_junk_abundances;
 }
 
@@ -866,9 +864,9 @@ void filter_junk_genes(vector<Gene>& genes)
         }
         else
         {
-//#if ASM_VERBOSE
-//            fprintf(stderr, "Filtering gene\n");
-//#endif
+#if ASM_VERBOSE
+            fprintf(stderr, "Filtering gene\n");
+#endif
         }
 	}
 	

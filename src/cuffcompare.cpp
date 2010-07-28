@@ -120,8 +120,6 @@ class GFastaPos {
 
 GStr& fasta_index(GStr fname, GHash<GFastaEntry>* hfa=NULL, bool rebuild=false) {
 
-}
-*/
 //-- structure to keep track of data from multiple qry input files for a single genomic seq
 class GSeqTrack {
  public:
@@ -1598,7 +1596,7 @@ char getOvlCode(GffObj& m, GffObj& r, int& ovlen) {
      //TODO? check if any x_iovl>10 and return 'e' to signal an "unspliced intron" ?
      // or we can check if any of them are >= the length of the corresponding ref intron on that side
      return 'j';
-     }
+      }
    /*
   if (icmatch && (jmax>=imax)) { //all qry introns match
        //but they may overlap

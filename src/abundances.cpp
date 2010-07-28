@@ -29,10 +29,9 @@
 
 //#define USE_LOG_CACHE
 
-void get_compatibilities(const vector<Scaffold>& transcripts,
+void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 						 const vector<MateHit>& alignments,
-						 vector<vector<char> >& compatibilities,
-						 vector<int>& transcripts_per_alignment)
+							 vector<vector<char> >& compatibilities)
 {
 	int M = alignments.size();
 	int N = transcripts.size();
@@ -42,83 +41,20 @@ void get_compatibilities(const vector<Scaffold>& transcripts,
 	for (size_t i = 0; i < alignments.size(); ++i)
 	{
 		const MateHit& hit = alignments[i];
-		//CuffStrand hs = hit.strand();
 		alignment_scaffs.push_back(Scaffold(hit));
 	} 
 	
-	for (int i = 0; i < M; ++i) 
-	{
-		for (int j = 0; j < N; ++j) 
-		{
-			if (Scaffold::overlap_in_genome(transcripts[j],alignment_scaffs[i], 0) &&
-				Scaffold::compatible(transcripts[j], alignment_scaffs[i]))
-			{
-				compatibilities[i][j] = 1;
-				transcripts_per_alignment[i]++;
-			}
-		}
-	}
-}
-
-
-// This matrix computes the conditional probability that a read came from a 
-// given transcripts, indenpendent of abundnace.
-void compute_alignment_cond_probs(const vector<Scaffold>& transcripts,
-								  const vector<MateHit>& alignments,
-								  vector<vector<double> >& cond_probs)
-{
-	int M = alignments.size();
-	int N = transcripts.size();
-	// count how many transcripts an alignment is compatible with
-	vector<int> transcripts_per_alignment(M,0);
-	
-	// the M x N matrix of 0/1 incidences
-	vector<vector<char> > A(M,vector<char>(N,0));
-	
-	get_compatibilities(transcripts, alignments, A, transcripts_per_alignment);	
-	
-	normal norm(inner_dist_mean, inner_dist_std_dev);
-	
-	//Z[i][j] == Prob(Y = y_i | X = x_j)
-	
-	for (int i = 0; i < M; ++i) {
-		for (int j = 0; j < N; ++j) {
-			if (A[i][j] == 1) {
-				const MateHit& mate = alignments[i];
-				pair<int,int> span = mate.genomic_inner_span();
-				double inner_dist_prob = 0.0;
-				if (span.first != -1 && span.second != -1)
-				{
-					int inner_dist = transcripts[j].match_length(span.first, 
-																 span.second);
-					inner_dist_prob = pdf(norm, inner_dist);
-				}
-				else
-				{
-					//inner_dist_prob = 1e-3;
-					inner_dist_prob = pdf(norm, inner_dist_mean);
-				}
-				
-				int transcript_len = transcripts[j].length();
-				double cond_prob = (1.0 / transcript_len);
-				cond_prob *= inner_dist_prob; 
-				cond_probs[i][j] = cond_prob;
-			}
-		}
-	}
-}
-
-
-// FIXME: use library-adjusted effective_length
-double TranscriptAbundance::effective_length() const
-{
-	if (_transfrag)
-	{
-		return _transfrag->length();
-	}
-	else
-	{
-		return 0;
+    for (int j = 0; j < N; ++j) 
+    {
+		const Scaffold& transfrag_j = *(transcripts[j]->transfrag());
+		for (int i = 0; i < M; ++i) 
+        {
+			if (transfrag_j.contains(alignment_scaffs[i])
+				&& Scaffold::compatible(transfrag_j, alignment_scaffs[i]))
+            {
+				compatibilities[j][i] = 1;
+            }
+        }
 	}
 }
 
@@ -126,8 +62,10 @@ double TranscriptAbundance::effective_length() const
 // a containing abundance group, which can probabilistically assign fragment
 // counts to this transcript before calling this function.
 void TranscriptAbundance::calculate_abundance(const vector<MateHit>& alignments,
-											   long double map_mass)
+											   long double map_mass,
+											  const EmpDist& frag_len_dist)
 {
+
 	_FPKM = num_fragments();
 	if (_FPKM == 0.0 || map_mass == 0.0)
 	{
@@ -225,22 +163,22 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 		}
 	}
 	
-	filtered_group = AbundanceGroup(new_ab, new_cov, _sample_mass);
+	filtered_group = AbundanceGroup(new_ab, new_cov, _sample_mass, _bl_p);
 	
 	//filtered_group.calculate_FPKM_variance();
 	//filtered_group.calculate_conf_intervals();
 	//filtered_group.calculate_kappas();
 }
 
-void AbundanceGroup::get_transfrags(vector<Scaffold>& scaffolds) const
+void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
 {
-	scaffolds.clear();
+	transfrags.clear();
 	foreach(shared_ptr<Abundance> pA, _abundances)
 	{
 		const Scaffold* pS = pA->transfrag();
 		if (pS)
 		{
-			scaffolds.push_back(*pS);
+			transfrags.push_back(pA);
 		}
 	}
 }
@@ -359,77 +297,86 @@ double AbundanceGroup::effective_length() const
 	return eff_len;
 }
 
-void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments)
+void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments, const vector<shared_ptr<Abundance> >& transcripts)
 {
-	int M = alignments.size();
 	
-	vector<Scaffold> transcripts;
-	get_transfrags(transcripts);
+	size_t M = alignments.size();
+	size_t N = transcripts.size();
 	
 	if (transcripts.empty())
 		return;
 	
-	int N = transcripts.size();
+	vector<double> tau(N,0);
+	double d = 0;
+
+	for (size_t j = 0; j < N; ++j)
+	{
+		tau[j] = _abundances[j]->gamma() / _abundances[j]->effective_length();
+		d += tau[j];
+	}
+	for (size_t j = 0; j < N; ++j) { tau[j] /= d; }
 	
-	vector<vector<double> > cond_probs (M,vector<double>(N,0));
 	
-	// FIXME: should operate on an AbundanceGroup, not on a vector of Scaffolds
-	compute_alignment_cond_probs(transcripts, alignments, cond_probs);
 	
-	vector<double> counts(N, 0);
-	
-	int total_gene_mass = 0;	
-	for (size_t i = 0; i < alignments.size(); ++i)
+	vector<double> X_t(N,0);
+	for (size_t i = 0; i < M; ++i)
 	{	
 		double prob_i = 0.0;
 		
 		int mate_mass = 0;
 		if (alignments[i].left_alignment() || alignments[i].right_alignment())
 			mate_mass = 1;
-		double assigned_mass = 0;
 		
-		for (size_t j = 0; j < transcripts.size(); ++j)
+		for (size_t j = 0; j < N; ++j)
 		{
-			prob_i += _abundances[j]->gamma() * cond_probs[i][j];
+			prob_i += tau[j] * _abundances[j]->cond_prob_nums()->at(i);
 		}
 		
 		if (prob_i)
 		{
-			total_gene_mass += mate_mass;
-			
-			for (size_t j = 0; j < transcripts.size(); ++j)
+			for (size_t j = 0; j < N; ++j)
 			{
 				// each transcript takes a fraction of this reads density proportional 
 				// to P(R_i|T_j)/P(R_i)
 				
 				double mass_frac = mate_mass * (1.0 - alignments[i].error_prob());
-				assigned_mass += mate_mass;
-				counts[j] += ((_abundances[j]->gamma() *  cond_probs[i][j])/prob_i) * mass_frac;
+				X_t[j] += ((tau[j] *  _abundances[j]->cond_prob_nums()->at(i))/prob_i) * mass_frac;
 			}
 		}
 	}
 	
-	for (size_t j = 0; j < transcripts.size(); ++j)
+	for (size_t j = 0; j < N; ++j)
 	{
-		_abundances[j]->num_fragments(counts[j]);
+		_abundances[j]->num_fragments(X_t[j]);
 	}
 }
 
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments,
-										 long double map_mass)
+										 long double map_mass,
+										 const EmpDist& frag_len_dist)
 {
 	_sample_mass = map_mass;
-	calculate_gammas(alignments);	
-	calculate_counts(alignments);
+	
+	vector<shared_ptr<Abundance> > transcripts;
+	get_transfrags(transcripts);
+	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
+	
+	compute_cond_probs_and_effective_lengths(alignments, transcripts, mapped_transcripts, frag_len_dist);
+	
+	calculate_gammas(alignments, transcripts, mapped_transcripts);		
+	calculate_counts(alignments, transcripts);  
 	
 	// This will compute the transcript level FPKMs
 	foreach(shared_ptr<Abundance> pA, _abundances)
 	{
-		pA->calculate_abundance(alignments, map_mass);
+		pA->calculate_abundance(alignments, map_mass, frag_len_dist);
 	}
 	
+	if (_bl_p != NULL || fasta_dir == "") // Only on last estimation run
+	{
 	calculate_conf_intervals();
 	calculate_kappas();
+}
 }
 
 void AbundanceGroup::calculate_conf_intervals()
@@ -565,132 +512,293 @@ void AbundanceGroup::calculate_FPKM_variance()
 	_FPKM_variance = variance;
 }
 
+
+
+bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alignments,
+													 const Scaffold& transcript,
+													 const EmpDist& frag_len_dist,
+													 const vector<char>& compatibilities,
+													 vector<double>& cond_probs,
+													 double& eff_len)
+{
+	int M = alignments.size();
+	int trans_len = transcript.length();
+	
+	// Calculate effective length
+	eff_len = 0;
+	for(int l = 1; l <= trans_len; l++)
+	{
+		eff_len += frag_len_dist.pdf(l) * (trans_len - l + 1);
+	}
+	eff_len = trans_len;
+	
+	// Calculate conditional probability of each alignment coming from this transcript 
+	// given the alignment comes from the locus
+	
+	bool mapped = false;
+	for (int i = 0; i < M; ++i) 
+	{
+		if (compatibilities[i] == 1) 
+		{
+			if (i>0 && hits_equals(alignments[i], alignments[i-1]))
+			{
+				cond_probs[i] = cond_probs[i-1];
+				continue;
+			}
+			pair<int,int> g_span = alignments[i].genomic_outer_span();
+			int frag_len = min(frag_len_dist.mode(), trans_len);
+			if (g_span.first != -1 && g_span.second != -1)
+			{
+				pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
+				frag_len = abs(t_span.second-t_span.first)+1;		
+			}
+			
+			cond_probs[i] = frag_len_dist.pdf(frag_len) / (trans_len - frag_len + 1);
+			if (cond_probs[i] > 0)
+				mapped = true;
+		}
+	}
+	return mapped;
+}
+
+bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateHit>& alignments,
+															  const Scaffold& transcript,
+															  const EmpDist& frag_len_dist,
+															  const vector<char>& compatibilities,
+															  vector<double>& cond_probs,
+															  double& eff_len)
+{
+	int M = alignments.size();
+	int trans_len = transcript.length();
+	
+	vector<double> start_bias(trans_len+1);
+	vector<double> end_bias(trans_len+1);
+	_bl_p->getBias(transcript, start_bias, end_bias);
+	start_bias[trans_len] = 1;
+	end_bias[trans_len] = 1;
+	
+	// Calculate bias of all possible fragments of a given length for ever possible length
+	// Also calculate unbiased effective length
+	
+	vector<double> tot_bias_for_len(trans_len+1);
+	eff_len = 0;
+	for(int l = frag_len_dist.min(); l <= trans_len; l++)
+	{
+		double tot = 0;
+		for(int i = 0; i <= trans_len - l; i++)
+			tot += start_bias[i]*end_bias[i+l-1];
+		tot_bias_for_len[l] = tot;
+		eff_len += frag_len_dist.pdf(l) * tot;
+	}
+	eff_len = trans_len;
+	
+	assert(!isnan(eff_len));
+	// Calculate conditional probability of each alignment coming from this transcript
+	// given the alignment comes from the locus
+	bool mapped;
+	for (int i = 0; i < M; ++i) {
+		if (compatibilities[i] == 1) 
+		{
+			const MateHit& hit = alignments[i];
+			if (i>0 && hits_equals(hit, alignments[i-1]))
+			{
+                cond_probs[i] = cond_probs[i-1];
+				continue;
+			}
+			int start = trans_len;
+			int end = trans_len;
+			int frag_len = min(frag_len_dist.mode(), trans_len);
+			
+			pair<int,int> g_span = hit.genomic_outer_span();
+			if (g_span.first != -1 && g_span.second != -1)
+			{
+				pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
+				start = t_span.first;
+				end = t_span.second;
+				frag_len = abs(end-start)+1;		
+			}
+			else if (hit.left_alignment()->antisense_align() && transcript.strand() != CUFF_REV 
+				|| !(hit.left_alignment()->antisense_align()) && transcript.strand() == CUFF_REV)
+			{
+				int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
+				end = transcript.genomic_to_transcript_coord(g_end);
+			}
+			else
+			{
+				int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
+				start = transcript.genomic_to_transcript_coord(g_start);
+			}
+			
+			cond_probs[i] = start_bias[start]*end_bias[end]*frag_len_dist.pdf(frag_len)/tot_bias_for_len[frag_len];
+			if (cond_probs[i] > 0)
+				mapped = true;
+		}
+	}
+	return mapped;
+}
+
+void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
+															  vector<shared_ptr<Abundance> >& transcripts,
+															  vector<shared_ptr<Abundance> >& mapped_transcripts,
+															  const EmpDist& frag_len_dist)
+{																	
+	int N = transcripts.size();
+	int M = alignments.size();
+
+	vector<vector<char> > compatibilities(N, vector<char>(M,0));
+	compute_compatibilities(transcripts, alignments, compatibilities);
+
+	
+	for (int j = 0; j < N; ++j) {
+		const Scaffold& transfrag = *(transcripts[j]->transfrag());
+		vector<double>& cond_probs = *(new vector<double>(M,0));
+		double eff_len;
+		
+		bool mapped;
+		if (transfrag.strand() == CUFF_STRAND_UNKNOWN || _bl_p == NULL) // We don't know the start and end OR we haven't learned bias.
+			mapped = cond_probs_and_effective_length(alignments, transfrag, frag_len_dist, compatibilities[j], cond_probs, eff_len);
+		else
+			mapped = unbiased_cond_probs_and_effective_length(alignments, transfrag, frag_len_dist, compatibilities[j], cond_probs, eff_len);
+		
+		transcripts[j]->effective_length(eff_len);
+		transcripts[j]->cond_probs(&cond_probs);
+		
+		if (mapped) 
+			mapped_transcripts.push_back(transcripts[j]);
+	}
+}
+
 // FIXME: This function doesn't really need to copy the transcripts out of 
 // the cluster.  Needs refactoring
-bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_cluster)
+bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_gene, 
+									  const vector<shared_ptr<Abundance> >& transcripts, 
+									  const vector<shared_ptr<Abundance> >& mapped_transcripts)
 {
-	vector<Scaffold> transfrags;
-	get_transfrags(transfrags);
-	
-	if (transfrags.empty())
+	if (mapped_transcripts.empty())
 		return true;
-	
-	vector<int> collapse_counts;
-	vector<MateHit> non_redundant_hits_in_gene;
 	
 	vector<double> gammas;
 	
-	collapse_hits(hits_in_cluster, non_redundant_hits_in_gene, collapse_counts);
-	
 #if ASM_VERBOSE
-	fprintf(stderr, "%s\tCalculating initial MLE\n", bundle_label->c_str());
+	fprintf(stderr, "Calculating intial MLE\n");
 #endif	
 	
-	gamma_mle(transfrags,
-			  non_redundant_hits_in_gene,
-			  collapse_counts,
+	gamma_mle(mapped_transcripts,
+			  hits_in_gene,
 			  gammas);
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "%s\tTossing likely garbage isoforms\n", bundle_label->c_str());
+	fprintf(stderr, "Tossing likely garbage isoforms\n");
 #endif
 	
 	for (size_t i = 0; i < gammas.size(); ++i)
 	{
 		if (isnan(gammas[i]))
 		{
-			fprintf(stderr, "%s\tWarning: isoform abundance is NaN!\n", bundle_label->c_str());
+			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
-	vector<Scaffold> filtered_scaffolds = transfrags;
+	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
 	vector<double> filtered_gammas = gammas;
+	filter_junk_isoforms(filtered_transcripts, filtered_gammas);
 	
-	filter_junk_isoforms(filtered_scaffolds, filtered_gammas);
-	
-	if (filtered_scaffolds.empty())
+	if (filtered_transcripts.empty())
 	{
 		//gammas = vector<double>(transfrags.size(), 0.0);
 		foreach (shared_ptr<Abundance> ab, _abundances)
 		{
 			ab->gamma(0);
 		}
-		_gamma_covariance = ublas::zero_matrix<double>(transfrags.size(), 
-													  transfrags.size());
+		_gamma_covariance = ublas::zero_matrix<double>(transcripts.size(), 
+													  transcripts.size());
 		return true;
 	}
 	
 	filtered_gammas.clear();
 	
+
 #if ASM_VERBOSE
-	fprintf(stderr, "%s\tRevising MLE\n", bundle_label->c_str());
+	fprintf(stderr, "Revising MLE\n");
 #endif
 	
-	gamma_mle(filtered_scaffolds,
-			  non_redundant_hits_in_gene,
-			  collapse_counts,
+	gamma_mle(filtered_transcripts,
+			  hits_in_gene,
 			  filtered_gammas);
 	
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
 	{
 		if (isnan(filtered_gammas[i]))
 		{
-			fprintf(stderr, "%s\tWarning: isoform abundance is NaN!\n", bundle_label->c_str());
+			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
 #if ASM_VERBOSE
-	fprintf(stderr, "%s\tImportance sampling posterior distribution\n", bundle_label->c_str());
+	fprintf(stderr, "Importance sampling posterior distribution\n");
 #endif
 	
-	bool success = gamma_map(filtered_scaffolds,
-							 non_redundant_hits_in_gene,
-							 collapse_counts,
+	bool success = true;
+	int N = transcripts.size();
+	
+	if (_bl_p != NULL || fasta_dir == "") // Only on last estimation run.
+	{
+		success = gamma_map(filtered_transcripts,
+							 hits_in_gene,
 							 filtered_gammas,
 							 _gamma_covariance);
+	
+	}
+	else 
+	{
+		_gamma_covariance = ublas::zero_matrix<double>(N, N);
+	}
+
 	
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
 	{
 		if (isnan(gammas[i]))
 		{
-			fprintf(stderr, "%s\tWarning: isoform abundance is NaN!\n", bundle_label->c_str());
+			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
 			success = false;
 		}
 	}
 	
 	// Now we need to fill in zeros for the isoforms we filtered out of the 
 	// MLE/MAP calculation
-	vector<double> updated_gammas = vector<double>(transfrags.size(), 0.0);
+	vector<double> updated_gammas = vector<double>(N, 0.0);
 	ublas::matrix<double> updated_gamma_cov;
-	updated_gamma_cov = ublas::zero_matrix<double>(transfrags.size(), 
-												   transfrags.size());
+	updated_gamma_cov = ublas::zero_matrix<double>(N, N);
 	
-	size_t curr_filtered_scaff = 0;
+	size_t cfs = 0;
+	const Scaffold* curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
 	StructurallyEqualScaffolds se;
-	vector<size_t> scaff_present(transfrags.size(), transfrags.size());
+	vector<size_t> scaff_present(N, N);
 	
-	for (size_t i = 0; i < transfrags.size(); ++i)
+	for (size_t i = 0; i < N; ++i)
 	{
-		if (curr_filtered_scaff < filtered_scaffolds.size())
+		const Scaffold& scaff_i = *(transcripts[i]->transfrag());
+		if (cfs < filtered_transcripts.size())
 		{
-			if (se(transfrags[i], filtered_scaffolds[curr_filtered_scaff]))
+			curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
+			if (se(scaff_i, *curr_filtered_scaff))
 			{
-				scaff_present[i] = curr_filtered_scaff;
-				curr_filtered_scaff++;
+				scaff_present[i] = cfs;
+				cfs++;
 			}
 		}
 	}
 	
-	for (size_t i = 0; i < transfrags.size(); ++i)
+	for (size_t i = 0; i < N; ++i)
 	{
-		if (scaff_present[i] != transfrags.size())
+		if (scaff_present[i] != N)
 		{
 			// then scaffolds[i] has a non-zero abundance, we need to fill
 			// that in along with relevant cells from the covariance matrix
 			updated_gammas[i] = filtered_gammas[scaff_present[i]];
-			for (size_t j = 0; j < transfrags.size(); ++j)
+			for (size_t j = 0; j < N; ++j)
 			{
-				if (scaff_present[j] != transfrags.size())
+				if (scaff_present[j] != N)
 				{
 					updated_gamma_cov(i,j) = _gamma_covariance(scaff_present[i],
 															   scaff_present[j]);
@@ -803,7 +911,7 @@ void Estep (int N,
 			int M, 
 			vector<double> const & p,
 			vector<vector<double> >& U,
-			vector<vector<double> > const & cond_probs,
+			const vector<vector<double> >& cond_probs,
 			const vector<double>& u) {
 	// given p, fills U with expected frequencies
 	int i,j;
@@ -812,14 +920,16 @@ void Estep (int N,
 	for (i = 0; i < M; ++i) {
 		ProbY = 0;
 		for (j = 0; j < N; ++j) {
-			ProbY += cond_probs[i][j] * p[j];
+			 //Indexing reversed to allow for easy filtering.
+			ProbY += cond_probs[j][i]  * p[j];
 					//cout << "ProbY = " << ProbY << endl;
 		}
 		ProbY = ProbY ? (1.0 / ProbY) : 0.0;
 		
 		for (j = 0; j < N; ++j) 
 		{
-			U[i][j] = u[i]* cond_probs[i][j] * p[j] * ProbY;
+			 //Indexing reversed to allow for easy filtering.
+			U[i][j] = u[i]* cond_probs[j][i] * p[j] * ProbY;
 		}
 	}	
 }
@@ -900,7 +1010,7 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 double logLike (int N, 
 				int M, 
 				vector<double> & p,
-				vector<vector<double> > const & cond_prob, 
+				const vector<vector<double> >& cond_prob, 
 				vector<double> const & u) {
 	int i,j;
 	
@@ -909,7 +1019,7 @@ double logLike (int N,
 	for (i= 0; i < M; i++) {
 		Prob_Y = 0;
 		for (j= 0; j < N; j++) {
-			Prob_Y += cond_prob[i][j] * p[j];
+			Prob_Y += cond_prob[j][i] * p[j];
 		}
 		if (Prob_Y > 0) {
 			ell += (u[i] * log(Prob_Y));
@@ -921,7 +1031,7 @@ double logLike (int N,
 //#define SEEPROB
 
 double EM (int N, int M, vector<double> & newP, 
-		   vector<vector<double> > const & cond_prob, 
+		   const vector<vector<double> >& cond_prob, 
 		   vector<double> const & u) 
 {
 	double sum = 0;
@@ -970,54 +1080,58 @@ double EM (int N, int M, vector<double> & newP,
 	}
 	
 	if (iter == max_mle_iterations)
-		fprintf(stderr, "%s\tWARNING: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n", bundle_label->c_str());
+		fprintf(stderr, "Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
 	
 	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
 	return newEll;
 }
 
-void compute_fisher(const vector<Scaffold>& transcripts,
+void compute_fisher(const vector<shared_ptr<Abundance> >& transcripts,
 					const vector<double>& abundances,
 					const vector<MateHit>& alignments,
 					const vector<double>& u,
-					const vector<vector<char> >& compatibilities,
-					const vector<vector<double> >& cond_probs,
 					boost::numeric::ublas::matrix<double>& fisher)
 {
 	int M = alignments.size();
 	int N = transcripts.size();  
 	
-	normal norm(inner_dist_mean, inner_dist_std_dev);
-	
 	vector<long double> denoms(M, 0.0);
 	vector<vector<long double> > P(M,vector<long double>(N,0));
 
+	for (int j = 0; j < N; ++j)
+	{
+		const vector<double>& cond_probs_j = *(transcripts[j]->cond_probs());
 	for (int x = 0; x < M; ++x)
 	{
-		for (int j = 0; j < N; ++j)
-		{
-			if (!compatibilities[x][j])
+			if (cond_probs_j[x]==0)
 				continue;
 			long double alpha = 0.0;
-			alpha = cond_probs[x][j];
+			alpha = cond_probs_j[x];
 			alpha *= abundances[j];
 			denoms[x] += alpha;
 		}
-		denoms[x] *= denoms[x];
 	}
+	
+	for (int x = 0; x < M; ++x)
+		denoms[x] *= denoms[x];
+	
 	
 	for (int j = 0; j < N; ++j)
 	{
+		const vector<double>& cond_probs_j = *(transcripts[j]->cond_probs());
 		for (int k = 0; k < N; ++k)
 		{
+			
+			const vector<double>& cond_probs_k = *(transcripts[k]->cond_probs());
+
 			for (int x = 0; x < M; ++x)
 			{
-				if (!(compatibilities[x][j] && compatibilities[x][k]))
+				if (cond_probs_j[x]==0 && cond_probs_k[x]==0)
 					continue;
 				
 				assert(denoms[x] != 0.0);
 				
-				double fisher_x_j_k = cond_probs[x][j] * cond_probs[x][k] / denoms[x];
+				double fisher_x_j_k = cond_probs_j[x] * cond_probs_k[x] / denoms[x];
 				
 				fisher(j,k) += u[x] * fisher_x_j_k;
 			}
@@ -1279,7 +1393,7 @@ float_type log_space_add(float_type log_p, float_type log_q)
 void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
 							const vector<vector<double> >& cond_probs,
 							const vector<ublas::vector<double> >& samples,
-							const vector<double>& collapse_counts,
+							const vector<double>& u,
 							double scale,
 							const ublas::vector<double>& MLE,
 							vector<ublas::vector<double> >& weighted_samples,
@@ -1288,8 +1402,8 @@ void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
 	if (cond_probs.empty())
 		return;
 	
-	int N = cond_probs.front().size();
-	int M = cond_probs.size();
+	int M = cond_probs.front().size();
+	int N = cond_probs.size();
 	
 	//cerr << "Cov^-1"<<inv_cov << endl;
 	for (size_t i = 0; i < samples.size(); ++i)
@@ -1298,11 +1412,13 @@ void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
 		
 		//cerr << "s: "<<samples[i] << endl;
 		
+
+		
 		double ell = logLike(N,
 								 M,
 								 sample, 
 								 cond_probs, 
-								 collapse_counts);
+							 u);
 		
 		ublas::vector<double> diff = (samples[i] - MLE);
 		//cerr << "diff: "<<diff << endl;
@@ -1388,9 +1504,8 @@ void compute_posterior_expectation(const vector<ublas::vector<double> >& weighte
 	}
 }
 
-bool gamma_map(const vector<Scaffold>& transcripts,
+bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& alignments,
-			   const vector<int>& collapse_counts,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance)
 {	
@@ -1407,28 +1522,16 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	typedef ublas::matrix<double> matrix_type;
 	matrix_type fisher = ublas::zero_matrix<double>(N,N);
 	
-	// the M x N matrix of 0/1 incidences
-	vector<vector<char> > A(M,vector<char>(N,0));
-	vector<int> transcripts_per_alignment(M, 0);
-	
-	get_compatibilities(transcripts, alignments, A, transcripts_per_alignment);	
-	
 	vector<double> u;
-	for (size_t i = 0; i < collapse_counts.size(); ++i)
+	for (size_t i = 0; i < alignments.size(); ++i)
 	{
-		u.push_back(collapse_counts[i]);
+		u.push_back(1);
 	}
-	
-	vector<vector<double> > cond_probs (M,vector<double>(N,0));
-	
-	compute_alignment_cond_probs(transcripts, alignments, cond_probs);
 	
 	compute_fisher(transcripts,
 				   gamma_map_estimate,
 				   alignments,
 				   u,
-				   A,
-				   cond_probs,
 				   fisher);
 	
 	ublas::matrix<double> epsilon = ublas::zero_matrix<double>(N,N);
@@ -1448,7 +1551,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	double ch = cholesky_factorize(fisher_chol);
 	if (ch != 0.0)
 	{
-		fprintf(stderr, "%s\tWarning: Fisher matrix is not positive definite (bad element: %lg)\n", bundle_label->c_str(), ch);
+		fprintf(stderr, "Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1472,7 +1575,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	ch = cholesky_factorize(test_fisher);
 	if (ch != 0.0 || !invertible)
 	{
-		fprintf(stderr, "%s\tWarning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", bundle_label->c_str(), ch);
+		fprintf(stderr, "Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1497,7 +1600,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (ch != 0.0)
 	{
-		fprintf(stderr, "%s\tWarning: Covariance matrix is not positive definite (bad element: %lg)\n", bundle_label->c_str(), ch);
+		fprintf(stderr, "Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1551,7 +1654,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (samples.size() < 100)
 	{
-		fprintf(stderr, "%s\tWarning: not-enough samples for MAP re-estimation\n", bundle_label->c_str());
+		fprintf(stderr, "Warning: not-enough samples for MAP re-estimation\n");
 		return false;
 	}
 	
@@ -1564,7 +1667,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	//assert (det);
 	if (s == 0.0)
 	{
-		fprintf(stderr, "%s\tError: sqrt(det(cov)) == 0, %lf after rounding. \n", bundle_label->c_str(), det);
+		fprintf(stderr, "Error: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
 		//cerr << covariance << endl;
 		return false;
 	}
@@ -1575,7 +1678,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (!invertible)
 	{
-		fprintf(stderr, "%s\tWarning: covariance matrix is not invertible, probability interval is not available\n", bundle_label->c_str());
+		fprintf(stderr, "Warning: covariance matrix is not invertible, probability interval is not available\n");
 		return false;
 	}
 	
@@ -1584,6 +1687,12 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	ublas::vector<double> log_expectation(N);
 	vector<ublas::vector<double> > weighted_samples;
+	
+	vector<vector<double> > cond_probs(N, vector<double>());
+	for(int j = 0; j < N; ++j)
+	{
+		cond_probs[j]= *(transcripts[j]->cond_probs());
+	}
 	
 	compute_sample_weights(fisher,
 						   cond_probs,
@@ -1601,7 +1710,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (log_total_weight == 0 || sample_weights.size() < 100)
 	{
-		fprintf(stderr, "%s\tWarning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n", bundle_label->c_str());
+		fprintf(stderr, "Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
 		return false;
 	}
 	
@@ -1616,7 +1725,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	{
 		if (isinf(expectation(e)) || isnan(expectation(e)))
 		{
-			fprintf(stderr, "%s\tWarning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.", bundle_label->c_str());
+			fprintf(stderr, "Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
 			return false;
 		}
 	}
@@ -1636,7 +1745,7 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	
 	if (m == 0 || isinf(m) || isnan(m))
 	{
-		fprintf(stderr, "%s\tWarning: restimation failed, could not renormalize MAP estimate\n", bundle_label->c_str());
+		fprintf(stderr, "Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
 		return false;
 	}
 	
@@ -1709,9 +1818,8 @@ bool gamma_map(const vector<Scaffold>& transcripts,
 	return true;
 }
 
-void gamma_mle(const vector<Scaffold>& transcripts,
+void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 				   const vector<MateHit>& alignments,
-				   const vector<int>& collapse_counts,
 				   vector<double>& gammas)
 {
 	gammas.clear();
@@ -1732,10 +1840,8 @@ void gamma_mle(const vector<Scaffold>& transcripts,
 	if (M > 0)
 	{
 		
-		vector<vector<double> > cond_probs (M,vector<double>(N,0));
 		//vector<vector<double> > saliencies (M,vector<double>(N,0));
 		
-		compute_alignment_cond_probs(transcripts, alignments, cond_probs);
 		
 		//compute_saliencies(cond_probs, saliencies, saliency_weight);
 		
@@ -1743,19 +1849,18 @@ void gamma_mle(const vector<Scaffold>& transcripts,
 
 		double logL;
 		
-		vector<int> transcripts_per_alignment(M,0);
-		
-		// the M x N matrix of 0/1 incidences
-		vector<vector<char> > A(M,vector<char>(N,0));
-		
-		get_compatibilities(transcripts, alignments, A, transcripts_per_alignment);
 		
 		vector<double> u;
-		for (size_t i = 0; i < collapse_counts.size(); ++i)
+		for (size_t i = 0; i < alignments.size(); ++i)
 		{
-			double saliency = collapse_counts[i];
-			u.push_back(saliency);
+			u.push_back(1);
 		}
+		vector<vector<double> > cond_probs(N, vector<double>());
+		for (size_t j = 0; j < N; ++j)
+		{
+			cond_probs[j] = *(transcripts[j]->cond_probs());
+		}
+		
 		
 		logL = EM(N, M, prob, cond_probs, u);
 
@@ -1787,16 +1892,13 @@ double compute_doc(int bundle_origin,
 				   const vector<Scaffold>& scaffolds,
 				   vector<int>& depth_of_coverage,
 				   map<pair<int, int>, int>& intron_depth_of_coverage,
-				   bool exclude_intra_intron,
-                   bool use_non_redundant)
+				   bool exclude_intra_intron)
 {
 	vector<bool> intronic(depth_of_coverage.size(), false);
 	depth_of_coverage = vector<int>(depth_of_coverage.size(), 0);
 	
 	vector<Scaffold> hits;
 	
-    if (!use_non_redundant)
-    {
         for (size_t i = 0; i < scaffolds.size(); ++i)
         {
             const vector<const MateHit*>& scaff_hits = scaffolds[i].mate_hits(); 
@@ -1807,11 +1909,6 @@ double compute_doc(int bundle_origin,
                 hits.push_back(Scaffold(**itr));
             }
         }
-    }
-    else
-    {
-        hits = scaffolds;
-    }
 	
 	for (size_t i = 0; i < hits.size(); ++i)
 	{
@@ -1991,18 +2088,18 @@ double get_intron_doc(const Scaffold& s,
 			pair<int,int> op_intron(op.g_left(), op.g_right());
 			map<pair<int, int>, int >::const_iterator itr = intron_depth_of_coverage.find(op_intron);
 			//			assert (itr != intron_depth_of_coverage.end());
-//#if ASM_VERBOSE
-//			if (itr == intron_depth_of_coverage.end())
-//			{
-//				map<pair<int, int>, int >::const_iterator zi;
-//				for (zi = intron_depth_of_coverage.begin();
-//					 zi != intron_depth_of_coverage.end();
-//					 ++zi)
-//				{
-//					fprintf(stderr, "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
-//				}
-//			}
-//#endif
+#if ASM_VERBOSE
+			if (itr == intron_depth_of_coverage.end())
+			{
+				map<pair<int, int>, int >::const_iterator zi;
+				for (zi = intron_depth_of_coverage.begin();
+					 zi != intron_depth_of_coverage.end();
+					 ++zi)
+				{
+					fprintf(stderr, "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
+				}
+			}
+#endif
 			doc += itr->second;
 		}
 	}	
@@ -2053,4 +2150,159 @@ double get_scaffold_min_doc(int bundle_origin,
 	}
 	
 	return min_doc;
+}
+
+long double get_map_mass(BundleFactory& bundle_factory, EmpDist& frag_len_dist)
+{
+	HitBundle bundle;
+	long double map_mass = 0;
+	
+	vector<double> frag_len_hist(def_max_frag_len+1,0);
+	list<pair<int, int> > open_ranges;
+	
+	int min_read_len = numeric_limits<int>::max();
+	bool has_pairs = false;
+	while(bundle_factory.next_bundle(bundle))
+	{
+		const vector<MateHit>& hits = bundle.non_redundant_hits();
+		const vector<double>& collapse_counts = bundle.collapse_counts();
+		
+		int curr_range_start = hits[0].left();
+		int curr_range_end = numeric_limits<int>::max();
+		int next_range_start = -1;
+		
+		// This first loop calclates the map mass and finds ranges with no introns
+		for (size_t i = 0; i < hits.size(); ++i) 
+		{
+			double mate_len = 0;
+			if (hits[i].left_alignment() || hits[i].right_alignment())
+				mate_len = 1.0;
+			map_mass += mate_len * collapse_counts[i]; 
+
+			min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+			if (hits[i].right_alignment())
+				min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+
+			
+			if (hits[i].left() > curr_range_end)
+			{
+				if (curr_range_end - curr_range_start > max_frag_len)
+					open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
+				curr_range_start = next_range_start;
+				curr_range_end = numeric_limits<int>::max();
+			}
+			if (hits[i].left_alignment()->contains_splice())
+			{
+				if (hits[i].left() - curr_range_start > max_frag_len)
+					open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
+				curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
+			}
+			if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
+			{
+				has_pairs = true;
+				assert(hits[i].right_alignment()->left() > hits[i].left());
+				curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
+				next_range_start = max(next_range_start, hits[i].right());
+			}
+		}
+		
+		if (has_pairs)
+		{
+			pair<int, int> curr_range(-1,-1);
+			
+			// This second loop uses the ranges found above to find the estimated frag length distribution
+			// It also finds the minimum read length to use in the linear interpolation
+			for (size_t i = 0; i < hits.size(); ++i)
+			{
+				if (hits[i].left() > curr_range.second && open_ranges.empty())
+					break;
+				
+				if (hits[i].left() > curr_range.second)
+				{
+					curr_range = open_ranges.front();
+					open_ranges.pop_front();
+				}
+				
+				if (hits[i].left() >= curr_range.first && hits[i].right() <= curr_range.second && hits[i].is_pair())
+				{
+					int mate_len = hits[i].right()-hits[i].left();
+					if (mate_len < max_frag_len)
+						frag_len_hist[mate_len] += collapse_counts[i];
+					min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+					min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+				}
+			}
+		}
+	}
+				
+	long double tot_count = 0;
+	vector<double> frag_len_pdf(max_frag_len+1, 0.0);
+	vector<double> frag_len_cdf(max_frag_len+1, 0.0);
+	normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
+
+	int frag_len_max = frag_len_hist.size()-1;
+
+	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
+	if (!has_pairs)
+	{
+		frag_len_max = def_frag_len_mean + 3*def_frag_len_std_dev;
+		for(int i = min_read_len; i < frag_len_max; i++)
+		{
+			frag_len_hist[i] = cdf(frag_len_norm, i+0.5)-cdf(frag_len_norm, i-0.5);
+			tot_count += frag_len_hist[i];
+		}
+	}
+	else 
+	{	
+		tot_count = accumulate( frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
+		double curr_total = 0;
+		int last_nonzero = min_read_len-1;
+		for(int i = 1; i < frag_len_hist.size(); i++)
+		{
+			if (frag_len_hist[i] > 0)
+			{
+				if (last_nonzero > 0 && last_nonzero != i-1)
+				{
+					double b = frag_len_hist[last_nonzero];
+					double m = (frag_len_hist[i] - b)/(i-last_nonzero);
+					for (int x = 1; x < i - last_nonzero; x++)
+					{
+						frag_len_hist[last_nonzero+x] = m * x + b;
+						tot_count += frag_len_hist[last_nonzero+x];
+						curr_total += frag_len_hist[last_nonzero+x];
+					}	
+				}
+				last_nonzero = i;
+			}
+			
+			curr_total += frag_len_hist[i];
+			
+			if (curr_total/tot_count > .9999)
+			{
+				frag_len_max = i; 
+				break;
+			}
+		}
+	}
+	
+	// Convert histogram to pdf and cdf
+	int frag_len_mode = 0;
+	for(int i = 1; i < frag_len_hist.size(); i++)
+	{
+		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
+		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
+		fprintf(stderr, "%f\n", frag_len_hist[i]);
+
+		if (frag_len_pdf[i] > frag_len_pdf[frag_len_mode])
+			frag_len_mode = i;
+	}
+	
+	frag_len_dist.pdf(frag_len_pdf);
+	frag_len_dist.cdf(frag_len_cdf);
+	frag_len_dist.mode(frag_len_mode);
+	frag_len_dist.max(frag_len_max);
+	frag_len_dist.min(min_read_len);
+	
+	bundle_factory.reset();
+	return map_mass;
 }

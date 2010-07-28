@@ -14,6 +14,7 @@
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/visitors.hpp>
 
+#include "bundles.h"
 #include "scaffold_graph.h"
 #include "scaffolds.h"
 
@@ -79,10 +80,12 @@ public:
 
 void fill_gaps(vector<Scaffold>& scaffolds, int fill_size);
 
-void compress_fragments(vector<Scaffold>& hits);
+void compress_fragments(const EmpDist& frag_len_dist,
+                        vector<Scaffold>& hits);
 
-bool collapse_equivalent_transfrags(vector<Scaffold>& scaffolds, 
-                                   uint32_t max_rounds = 0xFFFFFFFF);
+bool collapse_equivalent_transfrags(const EmpDist& frag_len_dist,
+                                    vector<Scaffold>& scaffolds, 
+                                    uint32_t max_rounds = 0xFFFFFFFF);
 
 bool collapse_contained_transfrags(vector<Scaffold>& scaffolds, 
                                    uint32_t max_rounds = 0xFFFFFFFF);

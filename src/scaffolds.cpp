@@ -30,9 +30,9 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 		{
             int left_diff = abs(lhs.g_left() - rhs.g_left());
             int right_diff = abs(lhs.g_right() - rhs.g_right());
-            if (left_diff + right_diff > max_inner_dist)
-                return false;
-		}
+				if (left_diff + right_diff > max_frag_len)
+					return false;
+			}
 		else if (l_match > bowtie_overhang_tolerance)
 		{
 			return false;
@@ -40,7 +40,7 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 	}
 	else if (rhs.opcode == CUFF_UNKNOWN)
 	{
-		if (l_match > max_inner_dist)
+		if (l_match > max_frag_len)
 			return false;
 	}
 	
@@ -57,7 +57,7 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 		{
             int left_diff = abs(lhs.g_left() - rhs.g_left());
             int right_diff = abs(lhs.g_right() - rhs.g_right());
-            if (left_diff + right_diff > max_inner_dist)
+				if (left_diff + right_diff > max_frag_len)
                 return false;
 		}
 		else if (r_match > bowtie_overhang_tolerance)
@@ -67,7 +67,7 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 	}	
 	else if (lhs.opcode == CUFF_UNKNOWN)
 	{
-		if (r_match > max_inner_dist)
+		if (r_match > max_frag_len)
 			return false;
 	}
 	
@@ -396,7 +396,7 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
         }
     }
 }
-
+    
 
 bool is_known(const AugmentedCuffOp& op)
 {
@@ -425,13 +425,13 @@ bool check_merge_length(const vector<AugmentedCuffOp>& ops)
 	if (merged_length < 0 || merged_length > (int)max_gene_length)
 	{
 		return false;
-	}
+			}
 	return true;
-}
+		}
 
 inline bool has_intron(const Scaffold& scaff)
-{
-	
+			{
+			
 	const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
 	for (size_t j = 0; j < ops.size(); ++j)
 	{
@@ -665,7 +665,7 @@ bool Scaffold::strand_agree(const Scaffold& lhs,
 	return strand;
 }
 
-
+	
 bool Scaffold::compatible(const Scaffold& lhs, 
 						  const Scaffold& rhs)
 {	
@@ -741,7 +741,7 @@ bool Scaffold::distance_compatible_contigs(const Scaffold& lhs,
 			{
 				// check compatibility
 				if (!AugmentedCuffOp::compatible(r_op, l_op))
-					return false;
+						return false;
 //				if (r_op.opcode == CUFF_UNKNOWN && 
 //					l_op.opcode == CUFF_MATCH)
 //				{
@@ -784,23 +784,27 @@ double Scaffold::score_overlap(const AugmentedCuffOp& op,
 							   int inner_left_edge, 
 							   int inner_right_edge)
 {
-	assert (op.opcode == CUFF_MATCH);
-	int mlen = AugmentedCuffOp::match_length(op, 
-											 inner_left_edge, 
-											 inner_right_edge);
-	if (mlen > inner_dist_mean)
-	{
-		double c = cdf(inner_dist_norm, mlen) - 0.5;
-	//	if (c == 1.0)
-	//		return -1000.0;
-		double weight = log(1 - c);
-		assert (weight <= 0.0);
-		return weight;
-	}
-	else
-	{
-		return 0;
-	}
+	assert(false);
+	return 0; 
+	/*
+     assert (op.opcode == CUFF_MATCH);
+     int mlen = AugmentedCuffOp::match_length(op, 
+     inner_left_edge, 
+     inner_right_edge);
+     if (mlen > inner_dist_mean)
+     {
+     double c = cdf(inner_dist_norm, mlen) - 0.5;
+     //	if (c == 1.0)
+     //		return -1000.0;
+     double weight = log(1 - c);
+     assert (weight <= 0.0);
+     return weight;
+     }
+     else
+     {
+     return 0;
+     }
+	 */
 }
 
 double Scaffold::min_score(const Scaffold& contig, 
@@ -1008,6 +1012,99 @@ double Scaffold::worst_mate_score() const
 	return min_score;	
 }
 
+
+int Scaffold::genomic_to_transcript_coord(int g_coord) const
+{
+	int s_coord = 0;
+	size_t curr_op = 0;
+	const AugmentedCuffOp* op;
+
+	while (curr_op != _augmented_ops.size())
+	{
+		op = &_augmented_ops[curr_op];
+		
+		if (op->g_right() > g_coord)
+			break;
+		if (op->opcode == CUFF_MATCH)
+			s_coord += op->genomic_length;
+		
+		++curr_op;
+	}
+	
+	int remainder = g_coord - (*op).g_left();
+	
+	if (remainder <= bowtie_overhang_tolerance || op->opcode == CUFF_MATCH)
+		s_coord += remainder; 
+	else
+		s_coord -= (op->genomic_length-remainder);
+	
+	if(strand()==CUFF_REV)
+		s_coord = length() - 1 - s_coord;
+	
+	assert(s_coord >= 0 && s_coord < length());
+	return s_coord;
+}
+
+// start and end (first and second) are the first and final coordinates of the span
+pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
+{
+	int s_start;
+	int s_end;
+	
+	int s_coord = 0;
+	size_t curr_op = 0;
+	const AugmentedCuffOp* op;
+	// First, find start
+	while (curr_op != _augmented_ops.size())
+	{
+		op = &_augmented_ops[curr_op];
+		
+		if (op->g_right() > g_span.first)
+			break;
+		if (op->opcode == CUFF_MATCH)
+			s_coord += op->genomic_length;
+		
+		++curr_op;
+	}
+
+	int remainder = g_span.first - (*op).g_left();
+	
+	if (remainder <= bowtie_overhang_tolerance || op->opcode == CUFF_MATCH)
+		s_start = s_coord + remainder; 
+	else
+		s_start = s_coord - (op->genomic_length-remainder);
+
+	
+	// Now, find end
+	while (curr_op != _augmented_ops.size())
+	{
+		op = &_augmented_ops[curr_op];
+		
+		if (op->g_right() > g_span.second)
+			break;
+		if (op->opcode == CUFF_MATCH)
+			s_coord += op->genomic_length;
+		++curr_op;
+	}
+	
+	remainder = g_span.second - op->g_left();
+	
+	if (remainder < bowtie_overhang_tolerance || op->opcode == CUFF_MATCH)
+		s_end = s_coord + remainder; 
+	else
+		s_end = s_coord - (op->genomic_length-remainder);
+	
+	if(strand()==CUFF_REV)
+	{
+		int scaff_len = length();
+		s_start = scaff_len - 1 - s_start;
+		s_end = scaff_len - 1 - s_end;
+		swap(s_start, s_end);
+	}
+	
+	return make_pair(s_start, s_end);
+}
+
 int Scaffold::match_length(int left, int right) const
 {
 	int len = 0;
@@ -1034,6 +1131,7 @@ int Scaffold::match_length(int left, int right) const
 	
 	return len;
 }
+
 
 void Scaffold::clear_hits()
 {
@@ -1116,11 +1214,11 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                         {
                             known.add_hit(&m);
                         }
-                    }
+                        }
                     
                     complete.push_back(known);
-                }
-                
+                    }
+                    
 				last_unknown = i;
                 leftmost_known_op = -1;
 			}

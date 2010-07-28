@@ -65,7 +65,7 @@ bool hits_equals(const MateHit& lhs, const MateHit& rhs)
 // Assumes hits are sorted by mate_hit_lt
 void collapse_hits(const vector<MateHit>& hits,
 				   vector<MateHit>& non_redundant,
-				   vector<int>& collapse_counts)
+				   vector<double>& collapse_counts)
 {
 	copy(hits.begin(), hits.end(), back_inserter(non_redundant));
 	vector<MateHit>::iterator new_end = unique(non_redundant.begin(), 
@@ -73,17 +73,17 @@ void collapse_hits(const vector<MateHit>& hits,
 											   hits_equals);
 	non_redundant.erase(new_end, non_redundant.end());
 	
-	collapse_counts = vector<int>(non_redundant.size(), 1);
+	collapse_counts = vector<double>(non_redundant.size(), 0.0);
 	size_t curr_aln = 0;
 	size_t curr_unique_aln = 0;
-	while (curr_aln < collapse_counts.size())
+	while (curr_aln < hits.size())
 	{
 		if (hits_equals(non_redundant[curr_unique_aln], hits[curr_aln]))
-			collapse_counts[curr_unique_aln]++;
+			collapse_counts[curr_unique_aln] += (1.0 - hits[curr_aln].error_prob());
+		else if (hits_equals(non_redundant[++curr_unique_aln], hits[curr_aln]))
+			collapse_counts[curr_unique_aln] += (1.0 - hits[curr_aln].error_prob());
 		else
-		{
-			curr_unique_aln++;
-		}
+			assert(false);
 		
 		++curr_aln;
 	}

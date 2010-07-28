@@ -31,10 +31,10 @@ extern uint32_t min_intron_length;
 
 extern uint32_t max_gene_length;
 extern int max_partner_dist;
-extern int inner_dist_mean;
-extern int inner_dist_std_dev;
-extern int max_inner_dist;
-extern normal inner_dist_norm;
+extern int def_frag_len_mean;
+extern int def_frag_len_std_dev;
+extern int def_max_frag_len;
+extern int max_frag_len;
 extern double transcript_score_thresh;
 extern int olap_radius;
 extern float pre_mrna_fraction;
@@ -51,6 +51,7 @@ extern std::string user_label;
 extern std::string ref_gtf_filename;
 extern std::string mask_gtf_filename;
 extern std::string output_dir;
+extern std::string fasta_dir;
 
 extern int collapse_thresh;
 extern int microexon_length;
@@ -68,10 +69,12 @@ extern double binomial_junc_filter_alpha;
 
 extern std::string library_type;
 
-#define ENABLE_THREADS 1
+#define ENABLE_THREADS 0
 
 #if ENABLE_THREADS
 extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
+#else
+extern boost::shared_ptr<std::string> bundle_label;
 #endif
 
 #define ASM_VERBOSE 0
@@ -87,7 +90,10 @@ float parseFloat(float lower,
 				 const char *errmsg, 
 				 void (*print_usage)());
 
+void encode_seq(const std::string seqStr, char* seq);
+void complement(const char* seq, char* c_seq, int seqlen);
 int mkpath(const char *s, mode_t mode);
+
 
 template<typename InputIterator,
 		 typename OutputIterator,

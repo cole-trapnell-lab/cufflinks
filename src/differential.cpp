@@ -540,6 +540,7 @@ struct SampleAbundances
 	vector<AbundanceGroup> genes;
 	double sample_mass;
 	double cluster_mass;
+	const EmpDist& frag_len_dist;
 };
 
 #if ENABLE_THREADS
@@ -549,6 +550,7 @@ mutex test_storage_lock; // don't modify the above struct without locking here
 void test_differential(const RefSequenceTable& rt, 
 					   const vector<HitBundle*>& sample_bundles,
 					   const vector<long double>& sample_masses,
+					   const vector<EmpDist>& frag_len_dists,
 					   Tests& tests,
 					   Tracking& tracking)
 {
@@ -581,6 +583,7 @@ void test_differential(const RefSequenceTable& rt,
 	{
 		samples[i].cluster_mass = sample_bundles[i]->hits().size();
 		samples[i].sample_mass = sample_masses[i];
+		samples[i].frag_len_dist = frag_len_dists[i];
 		vector<shared_ptr<Abundance> > abundances;
 		
 		foreach(const Scaffold& s, sample_bundles[i]->ref_scaffolds())
@@ -602,7 +605,8 @@ void test_differential(const RefSequenceTable& rt,
 		
 		// Compute the individual transcript FPKMs
 		samples[i].transcripts.calculate_abundance(hits_in_cluster,
-												   samples[i].sample_mass);
+												   samples[i].sample_mass,
+												   samples[i].frag_len_dist);
 		
 		// Cluster transcripts by gene_id
 		vector<AbundanceGroup> transcripts_by_gene_id;

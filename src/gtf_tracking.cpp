@@ -303,6 +303,8 @@ void cluster_mRNAs(GList<GffObj> & mrnas, GList<GLocus> & loci, int qfidx, bool 
 	//mrnas sorted by start coordinate
 	//and so are the loci
 	//int rdisc=0;
+   //TODO: optimize this clustering pattern, using the fact that both mrnas and loci are sorted by start coordinate
+   // (so perhaps we should scan loci in reverse and give up after certain distance ? but check for problems with mrgloci )
    	for (int t=0;t<mrnas.Count();t++) {
 		GArray<int> mrgloci(false);
 		GffObj* mrna=mrnas[t];
@@ -450,6 +452,16 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 		r=ref_data[ri];
 	return r;
 }
+
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
+	GffReader* gffr=new GffReader(f, true);
+    //          keepAttrs   mergeCloseExons   noExonAttrs
+	gffr->readAll(true,          true,        false);
+	//                 is_ref?   check_for_dups,
+	parse_mRNAs(gffr->gflst, seqdata, false,    false);
+    delete gffr;
+}
+
 
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	         bool check_for_dups, int qfidx, const char* fname, bool checkseq) {

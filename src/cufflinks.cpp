@@ -28,14 +28,15 @@
 #include "filters.h"
 #include "genes.h"
 #include "assemble.h"
+#include "biascorrection.h"
 #include "gtf_tracking.h"
 
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:";
 #endif
 
 static struct option long_options[] = {
@@ -54,6 +55,7 @@ static struct option long_options[] = {
 {"GTF",					    required_argument,		 0,			 'G'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
+{"reference-seq-dir",		required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -71,9 +73,9 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-m/--inner-dist-mean         the average inner distance between mates              [ default:     45 ]\n");
-	fprintf(stderr, "-s/--inner-dist-std-dev      the inner distance standard deviation                 [ default:     20 ]\n");
-	fprintf(stderr, "-c/--collapse-thresh         Median depth of cov needed for preassembly collapse   [ default:  10000 ]\n");
+	fprintf(stderr, "-m/--frag-len-mean			  the average fragment length							[ default:     190 ]\n");
+	fprintf(stderr, "-s/--frag-len-std-dev		  the fragment length standard deviation                [ default:     80 ]\n");
+	fprintf(stderr, "-c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
 	fprintf(stderr, "-F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
 	fprintf(stderr, "-f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
 	fprintf(stderr, "-a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
@@ -85,6 +87,7 @@ void print_usage()
 	fprintf(stderr, "-G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file                     \n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
+	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias corr    [ default:   NULL ]\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
 #endif
@@ -106,10 +109,10 @@ int parse_options(int argc, char** argv)
 			case -1:     /* Done with options. */
 				break;
 			case 'm':
-				inner_dist_mean = (uint32_t)parseInt(-200, "-m/--inner-dist-mean arg must be at least -200", print_usage);
+				def_frag_len_mean = (uint32_t)parseInt(0, "-m/--frag-len-mean arg must be at least 0", print_usage);
 				break;
 			case 's':
-				inner_dist_std_dev = (uint32_t)parseInt(0, "-s/--inner-dist-std-dev arg must be at least 0", print_usage);
+				def_frag_len_std_dev = (uint32_t)parseInt(0, "-s/--frag-len-std-dev arg must be at least 0", print_usage);
 				break;
 			case 't':
 				transcript_score_thresh = parseFloat(-99999999, 0, "-t/--transcript-score-thresh must less than or equal to 0", print_usage);
@@ -179,6 +182,11 @@ int parse_options(int argc, char** argv)
 				output_dir = optarg;
 				break;
 			}
+            case 'r':
+			{
+				fasta_dir = optarg;
+				break;
+            }    
             case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
@@ -191,11 +199,6 @@ int parse_options(int argc, char** argv)
         }
     } while(next_option != -1);
 	
-    // FIXME: Set this using the empirical fragment length dist.
-	//max_inner_dist = inner_dist_mean + 7 * inner_dist_std_dev;
-    
-	inner_dist_norm = normal(inner_dist_mean, inner_dist_std_dev);
-	min_intron_fraction = min_isoform_fraction;
     
 	if (ref_gtf_filename != "")
 	{
@@ -284,7 +287,8 @@ CuffStrand guess_strand_for_interval(const vector<uint8_t>& strand_guess,
 	return (CuffStrand)guess;
 }
 
-bool scaffolds_for_bundle(const HitBundle& bundle, 
+bool scaffolds_for_bundle(const EmpDist& frag_len_dist, 
+                          const HitBundle& bundle, 
 						  vector<Scaffold>& scaffolds,
 						  BundleStats* stats = NULL)
 {
@@ -380,9 +384,17 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	
 	if (saw_fwd && saw_rev)
 	{
-		assembled_successfully |= make_scaffolds(bundle.left(), bundle.length(), fwd_hits, fwd_scaffolds);
+		assembled_successfully |= make_scaffolds(frag_len_dist,
+                                                 bundle.left(), 
+                                                 bundle.length(), 
+                                                 fwd_hits, 
+                                                 fwd_scaffolds);
         
-		assembled_successfully |= make_scaffolds(bundle.left(), bundle.length(), rev_hits, rev_scaffolds);
+		assembled_successfully |= make_scaffolds(frag_len_dist,
+                                                 bundle.left(), 
+                                                 bundle.length(), 
+                                                 rev_hits, 
+                                                 rev_scaffolds);
 		
 		add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, scaffolds, true);
 		add_non_shadow_scaffs(rev_scaffolds, fwd_scaffolds, scaffolds, false);
@@ -391,7 +403,8 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		if (saw_fwd || (!saw_fwd && !saw_rev))
 		{
-			assembled_successfully |= make_scaffolds(bundle.left(),
+			assembled_successfully |= make_scaffolds(frag_len_dist,
+                                                     bundle.left(),
 													 bundle.length(),
 													 fwd_hits,
 													 fwd_scaffolds);
@@ -399,7 +412,8 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		}
 		else
 		{
-			assembled_successfully |= make_scaffolds(bundle.left(), 
+			assembled_successfully |= make_scaffolds(frag_len_dist,
+                                                     bundle.left(), 
 													 bundle.length(), 
 													 rev_hits, 
 													 rev_scaffolds);
@@ -442,6 +456,7 @@ void decr_pool_count()
 void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 								   //const RefSequenceTable& rt,
 								   long double map_mass,
+                                   const EmpDist& frag_len_dist,
 								   vector<Gene>& genes)
 {
 	if (transfrag_cluster.abundances().empty())
@@ -468,7 +483,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	
 	avg_read_length /= hits_in_cluster.size();
 	
-	transfrag_cluster.calculate_abundance(hits_in_cluster, map_mass);
+	transfrag_cluster.calculate_abundance(hits_in_cluster, map_mass, frag_len_dist);
 	
 	vector<AbundanceGroup> transfrags_by_strand;
 	cluster_transcripts<ConnectByStrand>(transfrag_cluster,
@@ -538,7 +553,9 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 
 void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 									long double map_mass,
-									vector<Gene>& genes)
+									const EmpDist& frag_len_dist,
+									vector<Gene>& genes,
+									BiasLearner* bl_p)
 {	
 	vector<Scaffold> partials;
 	vector<Scaffold> completes;
@@ -566,7 +583,7 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 		abundances.push_back(ab);
 	}
 	
-	AbundanceGroup transfrags = AbundanceGroup(abundances);
+	AbundanceGroup transfrags = AbundanceGroup(abundances, bl_p);
 	
 	vector<AbundanceGroup> transfrags_by_cluster;
 	
@@ -575,7 +592,7 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 	
 	foreach(AbundanceGroup& cluster, transfrags_by_cluster)
 	{
-		quantitate_transcript_cluster(cluster, map_mass, genes);
+		quantitate_transcript_cluster(cluster, map_mass, frag_len_dist, genes);
 	}
 #if ASM_VERBOSE
     fprintf(stderr, "%s\tBundle quantitation complete\n", bundle_label->c_str());
@@ -585,11 +602,12 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
 					 long double map_mass,
+                     const EmpDist& frag_len_dist,
+					 BiasLearner* bl_p,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
 					 FILE* ftrans_abundances)
 {
-	
 	HitBundle& bundle = *bundle_ptr;
     
     char bundle_label_buf[2048];
@@ -598,7 +616,12 @@ void assemble_bundle(const RefSequenceTable& rt,
             rt.get_name(bundle.ref_id()),
             bundle.left(),
             bundle.right());
+    
+#if ENABLE_THREADS
     bundle_label.reset(new string(bundle_label_buf));
+#else
+    bundle_label = shared_ptr<string>(new string(bundle_label_buf));
+#endif
     
     fprintf(stderr, "%s\tProcessing new bundle with %d alignments\n", 
             bundle_label->c_str(),
@@ -616,7 +639,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	}
 	else 
 	{
-		bool success = scaffolds_for_bundle(bundle, scaffolds, NULL);
+		bool success = scaffolds_for_bundle(frag_len_dist, bundle, scaffolds, NULL);
 		if (!success)
 		{
 			delete bundle_ptr;
@@ -625,9 +648,12 @@ void assemble_bundle(const RefSequenceTable& rt,
 	}
 	
 	vector<Gene> genes;
+    
 	quantitate_transcript_clusters(scaffolds, 
 								   map_mass, 
-								   genes);
+								   frag_len_dist,
+								   genes,
+								   bl_p);
     
 #if ASM_VERBOSE
     fprintf(stderr, "%s\tFiltering bundle assembly\n", bundle_label->c_str());
@@ -697,7 +723,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	//fprintf(fbundle_tracking, "CLOSE %d\n", bundle.id());
 	
 	if (ref_gtf_filename != "" && num_scaffs_reported > bundle.ref_scaffolds().size())
-	{
+    {
 		fprintf(stderr, "Error: reported more isoforms than in reference!\n");
 		exit(1);
 	}
@@ -709,21 +735,34 @@ void assemble_bundle(const RefSequenceTable& rt,
 #if ENABLE_THREADS
 	out_file_lock.unlock();
 #endif
-	
+
 	delete bundle_ptr;
 }
 
-bool assemble_hits(BundleFactory& bundle_factory)
+bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 {
 	fprintf(stderr, "Counting hits in map\n");
 	long double map_mass = 0.0;
 	
 	BadIntronTable bad_introns;
 	
-    bundle_factory.load_ref_rnas();
+    if (bias_learner==NULL)
+    {
+        bundle_factory.load_ref_rnas(false, false);
+    }
+    else 
+    {
+        bundle_factory.load_ref_rnas();
+    }
+
+    if (bundle_factory.frag_len_dist() == NULL)
+    {
+        shared_ptr<EmpDist> frag_len_dist(new EmpDist);
+        inspect_map(bundle_factory, map_mass, bad_introns, *frag_len_dist);
+        max_frag_len = frag_len_dist->max();
+        bundle_factory.frag_len_dist(frag_len_dist);
+    }
     
-	inspect_map(bundle_factory, map_mass, bad_introns);
-	
 	if (ref_gtf_filename == "")
 	{
 		bundle_factory.bad_intron_table(bad_introns);
@@ -736,11 +775,6 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	HitBundle bundle;
 	
 	int num_bundles = 0;
-	vector<size_t> bundle_sizes;
-	vector<size_t> nr_bundle_sizes;
-	vector<int> bundle_compatible;
-	vector<int> bundle_uncollapsible;
-	vector<int> bundle_spans;
 	
 	RefSequenceTable& rt = bundle_factory.hit_factory().ref_table();
     
@@ -799,15 +833,18 @@ bool assemble_hits(BundleFactory& bundle_factory)
 			thread asmbl(assemble_bundle,
 						 boost::cref(rt), 
 						 bundle_ptr, 
-						 map_mass, 
+						 map_mass,
+                         *bundle_factory.frag_len_dist(),
+                         bias_learner,
 						 ftranscripts, 
 						 fgene_abundances,
-						 ftrans_abundances
-						 );
+						 ftrans_abundances);
 #else
 			assemble_bundle(boost::cref(rt), 
 							bundle_ptr, 
-							map_mass, 
+							map_mass,
+                            *bundle_factory.frag_len_dist(),
+                            bias_learner,
 							ftranscripts,
 							fgene_abundances,
 							ftrans_abundances);
@@ -831,18 +868,17 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 	}
 #endif
-	
+    
 	return true;
 }
-
-
+	
 void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
-	
+
 	shared_ptr<HitFactory> hit_factory;
-	
+
     try
 	{
 		hit_factory = shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
@@ -851,7 +887,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	{
 		fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
 				hit_file_name.c_str());
-	    
+	
         try
         {
             hit_factory = shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
@@ -865,14 +901,36 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	}
 	BundleFactory bundle_factory(*hit_factory, ref_gtf, mask_gtf);
 	
-#if ENABLE_THREDS
-	boost::thread asm_thread(assemble_hits,
-							 bundle_factory);
+#if ENABLE_THREADS
+	boost::thread asm_thread(assemble_hits, bundle_factory, NULL);
 	asm_thread.join();
 #else	
-	assemble_hits(bundle_factory);
+	assemble_hits(bundle_factory, NULL);
 #endif
 	
+    if (fasta_dir == "") return;
+    
+	hit_factory.reset();
+    
+	//ref_gtf = fopen(string(output_dir + "/initial_est/transcripts.gtf").c_str(), "r");
+	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
+	
+	BundleFactory bundle_factory2(*hit_factory, ref_gtf, mask_gtf);
+	bundle_factory2.frag_len_dist(bundle_factory.frag_len_dist());
+    
+    assert(bundle_factory.frag_len_dist());
+    
+	BiasLearner bl(*bundle_factory.frag_len_dist());
+	learn_bias(bundle_factory2, bl);
+	
+	//bundle_factory2.reset();
+	
+#if ENABLE_THREADS
+	boost::thread asm_requant_thread(assemble_hits, bundle_factory2, &bl);
+	asm_requant_thread.join();
+#else	
+	assemble_hits(bundle_factory2, &bl);
+#endif
 }
 
 int main(int argc, char** argv)
@@ -891,14 +949,7 @@ int main(int argc, char** argv)
 	
     string sam_hits_file_name = argv[optind++];
 	
-//    // Open the approppriate files
-//    FILE* sam_hits_file = fopen(sam_hits_file_name.c_str(), "r");
-//    if (sam_hits_file == NULL)
-//    {
-//        fprintf(stderr, "Error: cannot open SAM file %s for reading\n",
-//                sam_hits_file_name.c_str());
-//        exit(1);
-//    }
+
 	
 	srand48(time(NULL));
 	

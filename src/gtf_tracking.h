@@ -1034,6 +1034,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NULL, 
               bool check_for_dups=false, int qfidx=-1, const char* fname=NULL, bool checkseq=false);
 
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata);
 
 bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl=false);
 

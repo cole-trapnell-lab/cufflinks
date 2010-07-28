@@ -17,7 +17,7 @@
 #include "scaffolds.h"
 #include "genes.h"
 
-void filter_junk_isoforms(vector<Scaffold>& scaffolds,
+void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 						  vector<double>& abundances);
 
 

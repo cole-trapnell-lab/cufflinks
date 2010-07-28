@@ -141,6 +141,12 @@ struct ReadHit
 		return len;
 	}
 	
+	bool contains_splice() const
+	{
+                // FIXME: This won't be true once we start supporting INDEL operators in CIGAR strings. See Ticket #183
+		return (_cigar.size() > 1);
+	}
+	
 	bool operator==(const ReadHit& rhs) const
 	{
 	    return (_insert_id == rhs._insert_id &&
@@ -407,6 +413,7 @@ private:
 	InvertedIDTable _by_id;
 };
 
+
 bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);
 
 /******************************************************************************
@@ -669,9 +676,7 @@ class MateHit
 public:
 	MateHit(uint32_t refid, 
 			shared_ptr<ReadHit const> left_alignment, 
-			shared_ptr<ReadHit const> right_alignment,
-			int expected_inner_dist,
-			int max_inner_dist) : 
+			shared_ptr<ReadHit const> right_alignment) : 
 	_refid(refid), 
 	_left_alignment(left_alignment),
 	_right_alignment(right_alignment)
@@ -697,6 +702,11 @@ public:
 	{
 		_right_alignment = right_alignment;
 		//_closed = true;
+	}
+	
+	bool is_pair() const
+	{
+		return (_left_alignment && _right_alignment);
 	}
 	
 	int left() const 
@@ -768,6 +778,17 @@ public:
 		return -1;
 	}
 	
+	pair<int,int> genomic_outer_span() const
+	{
+		if (_left_alignment && _right_alignment)
+		{
+			return make_pair(left(),
+							 right() - 1);
+		}
+
+		return make_pair(-1,-1);
+	}	
+	
 	pair<int,int> genomic_inner_span() const 
 	{
 		if (_left_alignment && _right_alignment)
@@ -775,10 +796,7 @@ public:
 			return make_pair(_left_alignment->right(),
 							 _right_alignment->left() - 1);
 		}
-		else
-		{
-			return make_pair(-1,-1);
-		}
+
 		return make_pair(-1,-1);
 	}
 	
@@ -804,8 +822,6 @@ public:
 	RefID _refid;
 	shared_ptr<ReadHit const> _left_alignment;
 	shared_ptr<ReadHit const> _right_alignment;
-	//int _expected_inner_dist;
-	//int _max_inner_dist;
 	//bool _closed;
 };
 
@@ -818,7 +834,7 @@ bool hits_equals(const MateHit& lhs, const MateHit& rhs);
 // Assumes hits are sorted by mate_hit_lt
 void collapse_hits(const vector<MateHit>& hits,
 				   vector<MateHit>& non_redundant,
-				   vector<int>& collapse_counts);
+				   vector<double>& collapse_counts);
 
 
 

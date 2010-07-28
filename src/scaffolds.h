@@ -238,6 +238,7 @@ public:
 		_right = _augmented_ops.back().g_right();
 		_left = _augmented_ops.front().g_left();
 		
+		
 		int r_check = _left;
 		for (size_t i = 0; i < _augmented_ops.size(); ++i)
 			r_check += _augmented_ops[i].genomic_length;
@@ -252,6 +253,7 @@ public:
 		
 		_has_intron = has_intron(*this);
 		
+		//FIXME: reinstate this assert after fixing the Graveley bug.
 		assert(!_has_intron || _strand != CUFF_STRAND_UNKNOWN);
 
         assert (_augmented_ops.front().opcode == CUFF_MATCH);
@@ -314,6 +316,12 @@ public:
 	const string& nearest_ref_id() const { return _nearest_ref_id; }
 	void nearest_ref_id(const string& ann_name) { _nearest_ref_id = ann_name; }	
 	
+	double fpkm() const {return _fpkm; }
+	void fpkm(double fpkm) { _fpkm = fpkm; }
+ 
+	const string& seq() const { return _seq; } 
+	void seq(const string& s) {	_seq = s; } 
+			
 	char nearest_ref_classcode() const { return _classcode; }
 	void nearest_ref_classcode(char cc) { _classcode = cc; }
 	
@@ -352,6 +360,10 @@ public:
 	
 	int length() const
 	{
+		
+		if(_seq != "")
+			return _seq.length();
+		
 		int len = 0;
 		
 		// FIXME: this estimate really should include estimates of the CUFF_UNKNOWN lengths
@@ -377,6 +389,13 @@ public:
 	double score() const;
 	
 	double worst_mate_score() const;
+	
+	pair<int,int> genomic_to_transcript_span(pair<int,int> g_span) const;
+	int genomic_to_transcript_coord(int g_coord) const;
+
+	
+	static bool g_left_lt(const AugmentedCuffOp& lhs,
+						  const AugmentedCuffOp& rhs);
 	
 	const vector<AugmentedCuffOp>& augmented_ops() const { return _augmented_ops; }
 	
@@ -423,6 +442,8 @@ public:
     
 private: 
 	
+	void initialize_exon_lists();
+	
 	static bool has_intron(const Scaffold& scaff)
 	{
 		
@@ -443,7 +464,7 @@ private:
 		for (size_t j = 0; j < ops.size(); ++j)
 		{
 			if (ops[j].opcode == CUFF_UNKNOWN && 
-				ops[j].genomic_length > max_inner_dist)
+				ops[j].genomic_length > max_frag_len)
 				return true;
 		}
 		
@@ -476,6 +497,14 @@ private:
 	
 	bool check_merge_length(const vector<AugmentedCuffOp>& ops);
 	
+	static void fill_interstices(vector<AugmentedCuffOp>& to_fill,
+								 const vector<AugmentedCuffOp>& filler,
+								 bool allow_flank_fill);
+	
+	static void merge_ops(const std::vector<AugmentedCuffOp>& ops, 
+						  vector<AugmentedCuffOp>& merged,
+						  bool introns_overwrite_matches);
+	
 	vector<const MateHit*> _mates_in_scaff;
 	
 	int _left;
@@ -492,6 +521,10 @@ private:
 	string _annotated_tss_id;
 	string _nearest_ref_id;
 	char _classcode;
+	
+	string _seq;
+	double _fpkm;
+
 };
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);
@@ -506,6 +539,5 @@ struct StructurallyEqualScaffolds
 			   lhs.augmented_ops() == rhs.augmented_ops();
 	}
 };
-
 
 #endif
