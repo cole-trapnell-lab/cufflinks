@@ -344,7 +344,7 @@ void decr_pool_count()
 void quantitation_worker(const RefSequenceTable& rt,
 						 vector<HitBundle*>* sample_bundles,
 						 const vector<long double>& sample_masses,
-						 const vector<EmpDist> frag_len_dists,
+						 const vector<EmpDist>& frag_len_dists,
 						 Tests& tests,
 						 Tracking& tracking)
 {
@@ -550,10 +550,10 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 	vector<long double> map_masses;
 	vector<EmpDist> frag_len_dists;
     
-    max_frag_len = 0;
+    //max_frag_len = 0;
+    int tmp_max_frag_len = 0;
 	for (size_t i = 0; i < sam_hit_filenames.size(); ++i)
 	{
-        
 		shared_ptr<HitFactory> hs;
         try
         {
@@ -581,16 +581,21 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 		fprintf(stderr, "Counting hits in sample %lu\n", i);
 		long double map_mass = 0;
 		BadIntronTable bad_introns;
-		inspect_map(standard_factory, map_mass, bad_introns);
+        
+        EmpDist frag_len_dist;
+        
+		inspect_map(standard_factory, map_mass, bad_introns, frag_len_dist);
 		
 		// don't actually need to set bad_introns in the factories when using a 
 		// reference GTF
 		map_masses.push_back(map_mass);
 		frag_len_dists.push_back(frag_len_dist);
-        max_frag_len = max(max_frag_len, frag_len_dist.max());
+        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist.max());
 
 	}
 	
+    max_frag_len = tmp_max_frag_len;
+    
 	vector<Scaffold>::iterator curr_ref_scaff = ref_mRNAs.begin();
 	
 	RefID last_ref_seen = curr_ref_scaff->ref_id();

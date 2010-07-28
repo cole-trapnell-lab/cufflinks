@@ -540,7 +540,7 @@ struct SampleAbundances
 	vector<AbundanceGroup> genes;
 	double sample_mass;
 	double cluster_mass;
-	const EmpDist& frag_len_dist;
+	EmpDist frag_len_dist;
 };
 
 #if ENABLE_THREADS
@@ -596,7 +596,7 @@ void test_differential(const RefSequenceTable& rt,
 			abundances.push_back(ab);
 		}
 		
-		samples[i].transcripts = AbundanceGroup(abundances);
+		samples[i].transcripts = AbundanceGroup(abundances, NULL);
 		
 		vector<MateHit> hits_in_cluster;
 		
@@ -650,7 +650,8 @@ void test_differential(const RefSequenceTable& rt,
 			}
 			AbundanceGroup cds(cds_abundances,
 							   cds_gamma_cov, 
-							   samples[i].sample_mass);
+							   samples[i].sample_mass,
+                               NULL);
 			
 			vector<AbundanceGroup> cds_by_gene;
 			
@@ -696,9 +697,11 @@ void test_differential(const RefSequenceTable& rt,
 			{
 				primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
 			}
+            
 			AbundanceGroup primary_transcripts(primary_transcript_abundances,
 											   tss_gamma_cov,
-											   samples[i].sample_mass);
+											   samples[i].sample_mass,
+                                               NULL);
 			
 			vector<AbundanceGroup> primary_transcripts_by_gene;
 			

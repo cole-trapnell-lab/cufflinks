@@ -272,21 +272,17 @@
 								<string>08FB7795FE84155DC02AAC07</string>
 								<string>C6859E8C029090F304C91782</string>
 								<string>1C37FBAC04509CD000000102</string>
-								<string>EDBAC5D51200826F002B7162</string>
-								<string>EDBAC5D61200826F002B7162</string>
 								<string>1C37FAAC04509CD000000102</string>
 								<string>1C77FABC04509CD000000102</string>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>13</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>71</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 307}, {276, 990}}</string>
+							<string>{{0, 422}, {276, 990}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -321,7 +317,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>abundances.cpp</string>
+								<string>cuffdiff.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,15 +325,14 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>abundances.cpp</string>
+										<string>cuffdiff.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDBAC677120092C5002B7162</string>
+										<string>EDBAC6ED1200AE2D002B7162</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0E0F11D8323B00CFD663</string>
-											<string>EDBBA09411DA26750015175B</string>
 											<string>EDBBA10211DA433F0015175B</string>
 											<string>EDBBA16A11DA734C0015175B</string>
 											<string>EDBBA34611DD5AA90015175B</string>
@@ -365,7 +360,6 @@
 											<string>EDBAC5D91200826F002B7162</string>
 											<string>EDBAC5DB1200826F002B7162</string>
 											<string>EDBAC5DC1200826F002B7162</string>
-											<string>EDBAC5DD1200826F002B7162</string>
 											<string>EDBAC5DF1200826F002B7162</string>
 											<string>EDBAC5E01200826F002B7162</string>
 											<string>EDBAC5E21200826F002B7162</string>
@@ -373,14 +367,17 @@
 											<string>EDBAC5E41200826F002B7162</string>
 											<string>EDBAC5E51200826F002B7162</string>
 											<string>EDBAC5E61200826F002B7162</string>
-											<string>EDBAC622120087CC002B7162</string>
-											<string>EDBAC64F120090DB002B7162</string>
-											<string>EDBAC6551200910F002B7162</string>
-											<string>EDBAC6581200912A002B7162</string>
 											<string>EDBAC662120091C6002B7162</string>
 											<string>EDBAC664120091C6002B7162</string>
-											<string>EDBAC675120092C5002B7162</string>
-											<string>EDBAC676120092C5002B7162</string>
+											<string>EDBAC6AC1200AB68002B7162</string>
+											<string>EDBAC6AD1200AB68002B7162</string>
+											<string>EDBAC6C31200ACAB002B7162</string>
+											<string>EDBAC6C41200ACAB002B7162</string>
+											<string>EDBAC6C61200ACAB002B7162</string>
+											<string>EDBAC6D11200AD04002B7162</string>
+											<string>EDBAC6E71200AE19002B7162</string>
+											<string>EDBAC6E81200AE19002B7162</string>
+											<string>EDBAC6EC1200AE28002B7162</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -394,18 +391,18 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {812, 686}}</string>
+								<string>{{0, 0}, {812, 679}}</string>
 								<key>RubberWindowFrame</key>
 								<string>84 129 1110 1049 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>686pt</string>
+							<string>679pt</string>
 						</dict>
 						<dict>
 							<key>Proportion</key>
-							<string>317pt</string>
+							<string>324pt</string>
 							<key>Tabs</key>
 							<array>
 								<dict>
@@ -419,7 +416,7 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {812, 290}}</string>
+										<string>{{10, 27}, {812, 297}}</string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -435,7 +432,9 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {812, 290}}</string>
+										<string>{{10, 27}, {812, 297}}</string>
+										<key>RubberWindowFrame</key>
+										<string>84 129 1110 1049 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -473,9 +472,7 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {812, 290}}</string>
-										<key>RubberWindowFrame</key>
-										<string>84 129 1110 1049 0 0 1920 1178 </string>
+										<string>{{10, 27}, {812, 297}}</string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>
@@ -503,11 +500,11 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>EDBAC47011FF3BD2002B7162</string>
+				<string>EDBAC6B21200AB68002B7162</string>
 				<string>1CA23ED40692098700951B8B</string>
-				<string>EDBAC47111FF3BD2002B7162</string>
+				<string>EDBAC6B31200AB68002B7162</string>
 				<string>EDA514FA10C72929000A4F41</string>
-				<string>EDBAC47211FF3BD2002B7162</string>
+				<string>EDBAC6B41200AB68002B7162</string>
 				<string>1CA23EDF0692099D00951B8B</string>
 				<string>1CA23EE00692099D00951B8B</string>
 				<string>1CA23EE10692099D00951B8B</string>
@@ -656,14 +653,14 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>EDBAC5FB12008419002B7162</string>
+				<string>EDBAC6EE1200AE2D002B7162</string>
 				<string>1CCC7628064C1048000F2A68</string>
 				<string>1CCC7629064C1048000F2A68</string>
-				<string>EDBAC5FC12008419002B7162</string>
-				<string>EDBAC5FD12008419002B7162</string>
-				<string>EDBAC5FE12008419002B7162</string>
-				<string>EDBAC5FF12008419002B7162</string>
-				<string>EDBAC60012008419002B7162</string>
+				<string>EDBAC6EF1200AE2D002B7162</string>
+				<string>EDBAC6F01200AE2D002B7162</string>
+				<string>EDBAC6F11200AE2D002B7162</string>
+				<string>EDBAC6F21200AE2D002B7162</string>
+				<string>EDA514FA10C72929000A4F41</string>
 			</array>
 			<key>ToolbarConfigUserDefaultsMinorVersion</key>
 			<string>2</string>
@@ -697,8 +694,8 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>EDBAC60212008419002B7162</string>
-		<string>EDBAC60312008419002B7162</string>
+		<string>EDBAC6F31200AE2D002B7162</string>
+		<string>EDBAC6F41200AE2D002B7162</string>
 		<string>/Users/cole/develop/merged_cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>

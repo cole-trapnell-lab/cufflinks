@@ -177,6 +177,7 @@ void get_ds_tests(size_t curr_sample_idx,
 void test_differential(const RefSequenceTable& rt, 
 					   const vector<HitBundle*>& sample_bundles,
 					   const vector<long double>& sample_masses,
+                       const vector<EmpDist>& frag_len_dists,
 					   Tests& tests,
 					   Tracking& tracking);
 
