@@ -741,7 +741,6 @@ void assemble_bundle(const RefSequenceTable& rt,
 
 bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 {
-	fprintf(stderr, "Counting hits in map\n");
 	long double map_mass = 0.0;
 	
 	BadIntronTable bad_introns;
@@ -907,7 +906,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 #else	
 	assemble_hits(bundle_factory, NULL);
 #endif
-	
+	 
     if (fasta_dir == "") return;
     
 	hit_factory.reset();

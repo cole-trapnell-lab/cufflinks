@@ -512,7 +512,6 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 	{
 		eff_len += frag_len_dist.pdf(l) * (trans_len - l + 1);
 	}
-	eff_len = trans_len;
 	
 	// Calculate conditional probability of each alignment coming from this transcript 
 	// given the alignment comes from the locus
@@ -520,26 +519,50 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 	bool mapped = false;
 	for (int i = 0; i < M; ++i) 
 	{
+
+		
 		if (compatibilities[i] == 1) 
 		{
-			if (i>0 && hits_equals(alignments[i], alignments[i-1]))
+			const MateHit& hit = alignments[i];
+
+			if (i>0 && hits_equals(hit, alignments[i-1]))
 			{
 				cond_probs[i] = cond_probs[i-1];
 				continue;
 			}
-			pair<int,int> g_span = alignments[i].genomic_outer_span();
-			int frag_len = min(frag_len_dist.mode(), trans_len);
+			
+			pair<int,int> g_span = hit.genomic_outer_span();
+			int frag_len;
+			
 			if (g_span.first != -1 && g_span.second != -1)
 			{
 				pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
 				frag_len = abs(t_span.second-t_span.first)+1;		
 			}
-			
+			else if (hit.left_alignment()->antisense_align() && transcript.strand() != CUFF_REV 
+					 || !(hit.left_alignment()->antisense_align()) && transcript.strand() == CUFF_REV)
+			{
+				int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
+				int end = transcript.genomic_to_transcript_coord(g_end);
+				frag_len = min(frag_len_dist.mode(), end);
+			}
+			else
+			{
+				int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
+				int start = transcript.genomic_to_transcript_coord(g_start);
+				if (start == trans_len) // Overhang
+					frag_len = min(frag_len_dist.mode(), trans_len);
+				else
+					frag_len = min(frag_len_dist.mode(), trans_len-start);
+			}
+		
 			cond_probs[i] = frag_len_dist.pdf(frag_len) / (trans_len - frag_len + 1);
 			if (cond_probs[i] > 0)
 				mapped = true;
 		}
 	}
+	
+
 	return mapped;
 }
 
@@ -572,7 +595,6 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 		tot_bias_for_len[l] = tot;
 		eff_len += frag_len_dist.pdf(l) * tot;
 	}
-	eff_len = trans_len;
 	
 	assert(!isnan(eff_len));
 	// Calculate conditional probability of each alignment coming from this transcript
@@ -589,7 +611,7 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 			}
 			int start = trans_len;
 			int end = trans_len;
-			int frag_len = min(frag_len_dist.mode(), trans_len);
+			int frag_len;
 			
 			pair<int,int> g_span = hit.genomic_outer_span();
 			if (g_span.first != -1 && g_span.second != -1)
@@ -604,11 +626,16 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 			{
 				int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
 				end = transcript.genomic_to_transcript_coord(g_end);
+				frag_len = min(frag_len_dist.mode(), end);
 			}
 			else
 			{
 				int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
 				start = transcript.genomic_to_transcript_coord(g_start);
+				if (start == trans_len) // Overhang
+					frag_len = min(frag_len_dist.mode(), trans_len);
+				else
+					frag_len = min(frag_len_dist.mode(), trans_len-start);
 			}
 			
 			cond_probs[i] = start_bias[start]*end_bias[end]*frag_len_dist.pdf(frag_len)/tot_bias_for_len[frag_len];

@@ -1175,8 +1175,9 @@ void inspect_map(BundleFactory& bundle_factory,
                  BadIntronTable& bad_introns,
                  EmpDist& frag_len_dist)
 {
+	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.");
+
 	HitBundle bundle;
-	
     map_mass = 0.0;
     int min_read_len = numeric_limits<int>::max();
     vector<double> frag_len_hist(def_max_frag_len+1,0);

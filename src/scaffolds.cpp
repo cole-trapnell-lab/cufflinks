@@ -1041,7 +1041,9 @@ int Scaffold::genomic_to_transcript_coord(int g_coord) const
 	if(strand()==CUFF_REV)
 		s_coord = length() - 1 - s_coord;
 	
-	assert(s_coord >= 0 && s_coord < length());
+	if (s_coord < 0 || s_coord >= length()) // This will handle overhangs
+		return length();
+	
 	return s_coord;
 }
 

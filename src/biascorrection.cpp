@@ -120,8 +120,8 @@ bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 			
 			get_compatibility_list(transcripts, alignments, compatibilities);	
 			
-			vector<vector<long double> > startHists(N, vector<long double>());
-			vector<vector<long double> > endHists(N, vector<long double>());
+			vector<vector<long double> > startHists(N+1, vector<long double>()); // +1 to catch overhangs
+			vector<vector<long double> > endHists(N+1, vector<long double>());
 			
 			
 			for (int j = 0; j < N; ++j)
@@ -176,9 +176,6 @@ bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 						pair<int, int> t_span = transcript.genomic_to_transcript_span(hit.genomic_outer_span());
 						startHists[*it][t_span.first] += num_hits*transcript.fpkm()/locus_fpkm;
 						endHists[*it][t_span.second] += num_hits*transcript.fpkm()/locus_fpkm;
-						assert(t_span.second >= 75);
-						assert(t_span.first < transcript.length()-75);
-
 					}
 				}
 			}
@@ -254,8 +251,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 	
 	char seq[seqLen];
 	char c_seq[seqLen];
-	encode_seq(transcript.seq(), seq);
-	complement(seq, c_seq, seqLen);
+	encode_seq(transcript.seq(), seq, c_seq);
 	
 	char seqSlice[MAX_SLICE];
 	
@@ -467,8 +463,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 	
 	char seq[seqLen];
 	char c_seq[seqLen];
-	encode_seq(transcript.seq(), seq);
-	complement(seq, c_seq, seqLen);
+	encode_seq(transcript.seq(), seq, c_seq);
 	
 	char seqSlice[MAX_SLICE];
 	

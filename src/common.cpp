@@ -232,7 +232,8 @@ void print_library_table()
 }
 
 
-void encode_seq(const string seqStr, char* seq)
+// c_seq is complement, *NOT* REVERSE complement
+void encode_seq(const string seqStr, char* seq, char* c_seq)
 {
     
 	for (int i = 0; i < seqStr.length(); ++i)
@@ -240,29 +241,15 @@ void encode_seq(const string seqStr, char* seq)
 		switch(seqStr[i])
 		{
 			case 'A' : 
-			case 'a' : seq[i] = 0; break;
+			case 'a' : seq[i] = 0; c_seq[i] = 3; break;
 			case 'c' : 
-			case 'C' : seq[i] = 1; break;
+			case 'C' : seq[i] = 1; c_seq[i] = 2; break;
 			case 'G' :
-			case 'g' : seq[i] = 2; break;
+			case 'g' : seq[i] = 2; c_seq[i] = 1; break;
 			case 'T' :
-			case 't' : seq[i] = 3; break;
-			default  : seq[i] = 4; break; // N
+			case 't' : seq[i] = 3; c_seq[i] = 0; break;
+			default  : seq[i] = 4; c_seq[i] = 4; break; // N
 		}
 	}
 }
 
-// Does NOT reverse!
-void complement(const char* seq, char* c_seq, int seqLen)
-{
-	for(int i = 0; i < seqLen; ++i)
-	{
-		switch(seq[i])
-		{
-			case 0: c_seq[i] = 3; break;
-			case 1: c_seq[i] = 2; break;
-			case 2: c_seq[i] = 1; break;
-			case 3: c_seq[i] = 0; break;
-		}
-	}
-}

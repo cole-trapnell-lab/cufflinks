@@ -90,8 +90,7 @@ float parseFloat(float lower,
 				 const char *errmsg, 
 				 void (*print_usage)());
 
-void encode_seq(const std::string seqStr, char* seq);
-void complement(const char* seq, char* c_seq, int seqlen);
+void encode_seq(const std::string seqStr, char* seq, char* c_seq);
 int mkpath(const char *s, mode_t mode);
 
 
