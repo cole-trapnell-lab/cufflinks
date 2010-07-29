@@ -910,7 +910,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	BiasLearner bl(*bundle_factory.frag_len_dist());
 	learn_bias(bundle_factory2, bl);
 	
-	//bundle_factory2.reset();
+	bundle_factory2.reset();
 	
 #if ENABLE_THREADS
 	boost::thread asm_requant_thread(assemble_hits, bundle_factory2, &bl);
