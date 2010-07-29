@@ -899,17 +899,17 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         }
 	}
 	BundleFactory bundle_factory(*hit_factory, ref_gtf, mask_gtf);
-	
+
 #if ENABLE_THREADS
 	boost::thread asm_thread(assemble_hits, bundle_factory, NULL);
 	asm_thread.join();
 #else	
 	assemble_hits(bundle_factory, NULL);
 #endif
-	 
+
     if (fasta_dir == "") return;
     
-	hit_factory.reset();
+	hit_factory->reset();
     
 	//ref_gtf = fopen(string(output_dir + "/initial_est/transcripts.gtf").c_str(), "r");
 	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
