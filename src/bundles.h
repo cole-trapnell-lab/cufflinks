@@ -228,6 +228,15 @@ public:
 		return _frag_len_dist;
 	}
 	
+	void map_mass(long double mm) 
+	{
+		_map_mass = mm;
+	}
+	
+	long double map_mass() const
+	{
+		return _map_mass;
+	}
 	
 	bool spans_bad_intron(const ReadHit& read);
 	
@@ -246,6 +255,7 @@ private:
 	
 	BadIntronTable _bad_introns;
     shared_ptr<const EmpDist> _frag_len_dist;
+	long double _map_mass;
 };
 
 void inspect_map(BundleFactory& bundle_factory, 
