@@ -491,7 +491,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
 		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen;
 		
-		if (!start_in_bounds && !end_in_bounds) // Make sure we are in bounds of the sequence
+		if (start_in_bounds || end_in_bounds) // Make sure we are in bounds of the sequence
 		{
 			for(int j=0; j < _M; j++)
 			{

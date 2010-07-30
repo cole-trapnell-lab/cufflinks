@@ -557,6 +557,7 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 			}
 		
 			cond_probs[i] = frag_len_dist.pdf(frag_len) / (trans_len - frag_len + 1);
+			assert(!isnan(cond_probs[i]));
 			if (cond_probs[i] > 0)
 				mapped = true;
 		}
@@ -585,7 +586,7 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 	// Calculate bias of all possible fragments of a given length for ever possible length
 	// Also calculate unbiased effective length
 	
-	vector<double> tot_bias_for_len(trans_len+1);
+	vector<double> tot_bias_for_len(trans_len+1,1);
 	eff_len = 0;
 	for(int l = frag_len_dist.min(); l <= trans_len; l++)
 	{
@@ -639,6 +640,7 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 			}
 			
 			cond_probs[i] = start_bias[start]*end_bias[end]*frag_len_dist.pdf(frag_len)/tot_bias_for_len[frag_len];
+			assert(!isnan(cond_probs[i]));
 			if (cond_probs[i] > 0)
 				mapped = true;
 		}
