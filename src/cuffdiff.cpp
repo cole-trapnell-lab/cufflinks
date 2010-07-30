@@ -1047,7 +1047,7 @@ int main(int argc, char** argv)
 	}
 	
 	char isoform_fpkm_tracking_name[256];
-	sprintf(isoform_fpkm_tracking_name, "isoforms.fpkm_tracking");
+	sprintf(isoform_fpkm_tracking_name, "%s/isoforms.fpkm_tracking", output_dir.c_str());
 	FILE* isoform_fpkm_out = fopen(isoform_fpkm_tracking_name, "w");
 	if (!isoform_fpkm_out)
 	{
@@ -1058,7 +1058,7 @@ int main(int argc, char** argv)
 	outfiles.isoform_fpkm_tracking_out = isoform_fpkm_out;
 
 	char tss_group_fpkm_tracking_name[256];
-	sprintf(tss_group_fpkm_tracking_name, "tss_groups.fpkm_tracking");
+	sprintf(tss_group_fpkm_tracking_name, "%s/tss_groups.fpkm_tracking", output_dir.c_str());
 	FILE* tss_group_fpkm_out = fopen(tss_group_fpkm_tracking_name, "w");
 	if (!tss_group_fpkm_out)
 	{
@@ -1069,7 +1069,7 @@ int main(int argc, char** argv)
 	outfiles.tss_group_fpkm_tracking_out = tss_group_fpkm_out;
 
 	char cds_fpkm_tracking_name[256];
-	sprintf(cds_fpkm_tracking_name, "cds.fpkm_tracking");
+	sprintf(cds_fpkm_tracking_name, "%s/cds.fpkm_tracking", output_dir.c_str());
 	FILE* cds_fpkm_out = fopen(cds_fpkm_tracking_name, "w");
 	if (!cds_fpkm_out)
 	{
@@ -1080,7 +1080,7 @@ int main(int argc, char** argv)
 	outfiles.cds_fpkm_tracking_out = cds_fpkm_out;
 	
 	char gene_fpkm_tracking_name[256];
-	sprintf(gene_fpkm_tracking_name, "genes.fpkm_tracking");
+	sprintf(gene_fpkm_tracking_name, "%s/genes.fpkm_tracking", output_dir.c_str());
 	FILE* gene_fpkm_out = fopen(gene_fpkm_tracking_name, "w");
 	if (!gene_fpkm_out)
 	{

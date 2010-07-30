@@ -94,7 +94,8 @@ libcufflinks_a_SOURCES = \
 	filters.cpp \
     scaffold_graph.cpp \
     matching_merge.cpp \
-    graph_optimize.cpp 
+    graph_optimize.cpp \
+    biascorrection.cpp 
 	
 libgc_a_SOURCES = \
 	codons.cpp \

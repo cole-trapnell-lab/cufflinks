@@ -118,8 +118,10 @@ class GFastaPos {
    }
 };
 
-GStr& fasta_index(GStr fname, GHash<GFastaEntry>* hfa=NULL, bool rebuild=false) {
 
+GStr& fasta_index(GStr fname, GHash<GFastaEntry>* hfa=NULL, bool rebuild=false) {
+}
+ */
 //-- structure to keep track of data from multiple qry input files for a single genomic seq
 class GSeqTrack {
  public:

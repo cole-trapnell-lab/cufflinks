@@ -889,7 +889,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	bundle_factory.load_ref_rnas();
 	/*
 #if ENABLE_THREADS
-	boost::thread asm_thread(assemble_hits, bundle_factory, NULL);
+	boost::thread asm_thread(assemble_hits, bundle_factory, (BiasLearner*)NULL);
 	asm_thread.join();
 #else	
 	assemble_hits(bundle_factory, NULL);
