@@ -177,10 +177,10 @@ void pre_mrna_filter(int bundle_length,
 										true);
     
 	compute_doc(bundle_left, 
-										hits, 
-										depth_of_coverage, 
-										intron_doc,
-										false);
+                hits, 
+                depth_of_coverage, 
+                intron_doc,
+                false);
     
 	record_doc_for_scaffolds(bundle_left, 
 							 hits, 
@@ -213,7 +213,7 @@ void pre_mrna_filter(int bundle_length,
         if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
         {
             //fprintf(stderr, "\tskipping\n");
-
+            
             continue;
         }
         
@@ -241,7 +241,7 @@ void pre_mrna_filter(int bundle_length,
                         if (left_off > i_left)
                         {
                             if (left_off + op.genomic_length <= i_right + 1)
-			{
+                            {
                                 op_len += op.genomic_length;
                                 int L = left_off - bundle_left;
                                 int R = L + op.genomic_length;
@@ -254,7 +254,7 @@ void pre_mrna_filter(int bundle_length,
                                 int R = L + (i_right - left_off);
                                 op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
                             }
-}
+                        }
                         else
                         {
                             if (left_off + op.genomic_length <= i_right + 1)
@@ -287,13 +287,13 @@ void pre_mrna_filter(int bundle_length,
             {
                 double hit_doc_in_region = doc / len;
                 if (hit_doc_in_region < thresh)
-                            {
+                {
                     toss[j] = true;
                 }
             }
 		}
 	}
-                    
+    
 	for (size_t j = 0; j < hits.size(); ++j)
 	{	
 		if (!toss[j])
@@ -313,7 +313,7 @@ void pre_mrna_filter(int bundle_length,
 			//			if (hits[j].has_intron())
 			//			{
 			//				
-				//fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+            //fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
 			//			}
 #endif	
 		}
@@ -759,8 +759,8 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 		{
 			const vector<const MateHit*> hits = scaff.mate_hits();
 			
-			if (hits.size() <= 1)
-				chaff[t] = true;
+//			if (hits.size() <= 1)
+//				chaff[t] = true;
 			
 			const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
 			if (ops.front().genomic_length <= microexon_length || 

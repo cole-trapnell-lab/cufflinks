@@ -77,7 +77,7 @@ extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, 
 extern boost::shared_ptr<std::string> bundle_label;
 #endif
 
-#define ASM_VERBOSE 0
+#define ASM_VERBOSE 1
 
 bool gaurd_assembly();
 

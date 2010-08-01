@@ -887,14 +887,14 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	max_frag_len = frag_len_dist->max();
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 	bundle_factory.load_ref_rnas();
-	/*
+	
 #if ENABLE_THREADS
 	boost::thread asm_thread(assemble_hits, bundle_factory, (BiasLearner*)NULL);
 	asm_thread.join();
 #else	
 	assemble_hits(bundle_factory, NULL);
 #endif
-*/
+
     if (fasta_dir == "") return;
     
 	hit_factory->reset();

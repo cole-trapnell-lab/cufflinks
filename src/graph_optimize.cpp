@@ -883,30 +883,10 @@ void compress_redundant(const EmpDist& frag_len_dist,
         rightmost = std::max((long)fragments[i].right(), rightmost);
     }
     
-    long bundle_length = rightmost - leftmost;
+    //long bundle_length = rightmost - leftmost;
     
     while (true)
     {
-#if ASM_VERBOSE
-        vector<int>  depth_of_coverage(bundle_length,0);
-        map<pair<int,int>, int> intron_depth_of_coverage;
-        compute_doc(leftmost,
-                    fragments,
-                    depth_of_coverage,
-                    intron_depth_of_coverage,
-                    false,
-                    true);
-        
-        vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-        depth_of_coverage.erase(new_end, depth_of_coverage.end());
-        sort(depth_of_coverage.begin(), depth_of_coverage.end());
-        
-        size_t median = floor(depth_of_coverage.size() / 2);
-        
-		
-        fprintf(stderr, "%s\tMedian depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-#endif
-		
         if (last_size == -1 || 0.9 * last_size > fragments.size())
         {
             last_size = fragments.size();
@@ -920,27 +900,6 @@ void compress_redundant(const EmpDist& frag_len_dist,
             break;
         }
     }
-	
-#if ASM_VERBOSE
-    vector<int>  depth_of_coverage(bundle_length,0);
-    map<pair<int,int>, int> intron_depth_of_coverage;
-    compute_doc(leftmost,
-                fragments,
-                depth_of_coverage,
-                intron_depth_of_coverage,
-                false,
-                true);
-    
-    vector<int>::iterator new_end =  remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-    depth_of_coverage.erase(new_end, depth_of_coverage.end());
-    sort(depth_of_coverage.begin(), depth_of_coverage.end());
-    
-    size_t median = floor(depth_of_coverage.size() / 2);
-    
-    //#if ASM_VERBOSE
-    fprintf(stderr, "%s\tFinal median depth of coverage is %d\n", bundle_label->c_str(), depth_of_coverage[median]);
-    
-#endif	
 }
 
 void compress_fragments(const EmpDist& frag_len_dist,

@@ -7,7 +7,8 @@ AM_CXXFLAGS =
 bin_PROGRAMS = \
 	cufflinks \
 	cuffcompare \
-	cuffdiff 
+	cuffdiff \
+    gtf_to_sam
 #	gtf_reads
 
 noinst_HEADERS = \
@@ -117,6 +118,10 @@ cuffcompare_LDADD = libgc.a
 cuffdiff_SOURCES = cuffdiff.cpp
 cuffdiff_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
 cuffdiff_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+
+gtf_to_sam_SOURCES = gtf_to_sam.cpp
+gtf_to_sam_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
+gtf_to_sam_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 #gtf_reads_SOURCES = gtf_reads.cpp
 #gtf_reads_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 

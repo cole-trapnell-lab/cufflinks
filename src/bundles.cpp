@@ -442,7 +442,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	RefID first_ref_id_seen = 0;
 	
 	int last_pos_seen = 0;
-
+    
 	//off_t curr_pos = ftello(hit_file);
 	
 	int right_bundle_boundary = 0;
@@ -513,17 +513,17 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         {
             hit_within_mask = true;
         }
-                
-            
-//			while (next_mask_scaff != mask_gtf_recs.end() && 
-//				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
-//				   next_mask_scaff->ref_id() == bh->ref_id() &&
-//				   next_mask_scaff->left() <= bh->left() &&
-//				   next_mask_scaff->right() >= bh->right())
-//			{
-//				hit_within_mask = true;
-//                next_mask_scaff++;
-//			}
+        
+        
+        //			while (next_mask_scaff != mask_gtf_recs.end() && 
+        //				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
+        //				   next_mask_scaff->ref_id() == bh->ref_id() &&
+        //				   next_mask_scaff->left() <= bh->left() &&
+        //				   next_mask_scaff->right() >= bh->right())
+        //			{
+        //				hit_within_mask = true;
+        //                next_mask_scaff++;
+        //			}
 		
         if (hit_within_mask)
             continue;
@@ -574,7 +574,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 				{
 					break;
 				}
-
+                
 				next_ref_scaff++;
 			}
             
@@ -614,7 +614,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 exit(1);
             }
         }
-
+        
 		if (hit_within_boundary)
 		{
 			if (bh->left() < last_pos_seen)
@@ -657,7 +657,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		
 		last_ref_id_seen = bh->ref_id();
 		last_pos_seen = bh->left();
-		        
+        
 		//curr_pos = ftello(hit_file);
 	}
 	
@@ -685,9 +685,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 					// Now we're on the right scaffold, gotta get to the right
 					// coords
 					if (overlap_in_genome(itr->left(), 
-									  itr->right(), 
-									  bundle.left(), 
-									  bundle.right()))
+                                          itr->right(), 
+                                          bundle.left(), 
+                                          bundle.right()))
 					{	
 						bundle.add_ref_scaffold(*itr);
 					}
@@ -721,8 +721,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	bundle_out.finalize();
 	bundle_out.remove_hitless_scaffolds();
     
-					return true;
-				}
+    return true;
+}
 
 struct IntronSpanCounter
 {
