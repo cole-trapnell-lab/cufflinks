@@ -188,13 +188,13 @@ bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		delete bundle_ptr;
 	}
 	bl.normalizeParameters();
-	bl.output();
+	//bl.output();
 	return true;
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
-//Fdriconst int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,2,2,2,1,1,1}; //Length of connections at each position in the window
+const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+//const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,2,2,2,1,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
 const int BiasLearner::_M = 21; //Number of positions spanned by window

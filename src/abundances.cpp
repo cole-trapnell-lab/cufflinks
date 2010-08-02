@@ -577,9 +577,13 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 	int M = alignments.size();
 	int trans_len = transcript.length();
 	
-	vector<double> start_bias(trans_len+1);
-	vector<double> end_bias(trans_len+1);
+	vector<double> start_bias(trans_len+1, 0);
+	vector<double> end_bias(trans_len+1, 0);
 	_bl_p->getBias(transcript, start_bias, end_bias);
+	
+	double avg_bias = accumulate( start_bias.begin(), start_bias.end(), 0.0 ) + accumulate( end_bias.begin(), end_bias.end(), 0.0 );
+	avg_bias /= (2*trans_len);
+
 	start_bias[trans_len] = 1;
 	end_bias[trans_len] = 1;
 	
@@ -639,8 +643,14 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 					frag_len = min(frag_len_dist.mode(), trans_len-start);
 			}
 			
-			cond_probs[i] = start_bias[start]*end_bias[end]*frag_len_dist.pdf(frag_len)/tot_bias_for_len[frag_len];
+			cond_probs[i] = start_bias[start]*end_bias[end]*frag_len_dist.pdf(frag_len);
+			if (hit.is_pair())
+				cond_probs[i] /= tot_bias_for_len[frag_len];
+			else
+				cond_probs[i] /= avg_bias*(trans_len - frag_len + 1);
+
 			assert(!isnan(cond_probs[i]));
+			
 			if (cond_probs[i] > 0)
 				mapped = true;
 		}
