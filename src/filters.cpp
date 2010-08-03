@@ -652,22 +652,12 @@ void filter_hits(int bundle_length,
 							 intron_doc,
 							 scaff_doc);
 	
-	double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
+	
 	
 //#if ASM_VERBOSE
+//    double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
 //	fprintf(stderr, "\tthreshold is = %lf\n", bundle_thresh);
 //#endif
-	
-//	for (size_t j = 0; j < hits.size(); ++j)
-//	{
-//		double doc = scaff_doc[j];
-//		if (!hits[j].has_intron() && 
-//			!hits[j].has_suspicious_unknown() &&
-//			doc < bundle_thresh)
-//		{
-//			toss[j] = true;
-//		}
-//	}
 	
 	if (!intron_doc.empty())
 	{

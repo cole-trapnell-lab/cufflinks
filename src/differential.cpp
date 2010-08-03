@@ -603,9 +603,10 @@ void test_differential(const RefSequenceTable& rt,
 		get_alignments_from_scaffolds(samples[i].transcripts.abundances(),
 									  hits_in_cluster);
 		
-		// Compute the individual transcript FPKMs
+		// Compute the individual transcript FPKMs via each sample's 
+        // AbundanceGroup for this locus.
+
 		samples[i].transcripts.calculate_abundance(hits_in_cluster,
-												   samples[i].sample_mass,
 												   samples[i].frag_len_dist);
 		
 		// Cluster transcripts by gene_id
@@ -650,7 +651,6 @@ void test_differential(const RefSequenceTable& rt,
 			}
 			AbundanceGroup cds(cds_abundances,
 							   cds_gamma_cov, 
-							   samples[i].sample_mass,
                                NULL);
 			
 			vector<AbundanceGroup> cds_by_gene;
@@ -700,7 +700,6 @@ void test_differential(const RefSequenceTable& rt,
             
 			AbundanceGroup primary_transcripts(primary_transcript_abundances,
 											   tss_gamma_cov,
-											   samples[i].sample_mass,
                                                NULL);
 			
 			vector<AbundanceGroup> primary_transcripts_by_gene;

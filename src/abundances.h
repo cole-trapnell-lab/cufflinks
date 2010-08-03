@@ -47,6 +47,7 @@ public:
 	
 	// Fragments Per Kilbase of transcript per Million fragments mapped
 	virtual double				FPKM() const = 0;
+    virtual void				FPKM(double fpkm) = 0;
 	virtual double				FPKM_variance() const = 0;
 	virtual void				FPKM_variance(double v) = 0;
 	
@@ -67,6 +68,10 @@ public:
 	
 	virtual double			num_fragments() const = 0;
 	virtual void			num_fragments(double nf) = 0;
+    
+    virtual double          mass_fraction() const = 0;
+	virtual void            mass_fraction(double mf) = 0;
+    
 	virtual double			effective_length() const= 0;
 	virtual void			effective_length(double el) = 0;
 	
@@ -91,9 +96,8 @@ public:
 	virtual const string&	reference_tag() const = 0;
 	virtual void			reference_tag(const string& r) = 0;
 	
-	virtual	void calculate_abundance(const vector<MateHit>& alignments,
-									 long double total_map_mass,
-									 const EmpDist& frag_len_dist) = 0;
+//	virtual	void calculate_abundance(const vector<MateHit>& alignments,
+//									 const EmpDist& frag_len_dist) = 0;
 };
 
 class TranscriptAbundance : public Abundance
@@ -109,7 +113,8 @@ public:
 		_kappa(1.0), 
 		_num_fragments(0),
 		_eff_len(0),
-		_cond_probs(NULL) {}
+		_cond_probs(NULL),
+        _sample_mass_fraction(0.0) {}
 	
 	TranscriptAbundance(const TranscriptAbundance& other)
 	{
@@ -121,6 +126,7 @@ public:
 		_num_fragments = other._num_fragments;
 		_eff_len = other._eff_len;
 		_cond_probs = other._cond_probs;
+        _sample_mass_fraction = other._sample_mass_fraction;
 	}
 	
 	~TranscriptAbundance()
@@ -136,6 +142,7 @@ public:
 	void status(AbundanceStatus s)			{ _status = s; }
 	
 	double FPKM() const						{ return _FPKM; }
+    void FPKM(double fpkm)                  { _FPKM = fpkm; }
 	double FPKM_variance() const			{ return _FPKM_variance; }
 	void   FPKM_variance(double v)			{ _FPKM_variance = v; }
 	
@@ -150,6 +157,9 @@ public:
 	
 	double num_fragments() const			{ return _num_fragments; }
 	void num_fragments(double nf)			{ _num_fragments = nf; }
+    
+	double mass_fraction() const			{ return _sample_mass_fraction; }
+	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
 	
 	void transfrag(const Scaffold* tf)		{ _transfrag = tf; }
 	const Scaffold* transfrag() const		{ return _transfrag; }
@@ -234,9 +244,8 @@ public:
 	virtual const string&	reference_tag() const { return _ref_tag; }
 	virtual void			reference_tag(const string& r) { _ref_tag = r; } 
 	
-	void calculate_abundance(const vector<MateHit>& alignments,
-							 long double total_map_mass,
-							 const EmpDist& frag_len_dist);
+//	void calculate_abundance(const vector<MateHit>& alignments,
+//							 const EmpDist& frag_len_dist);
 	
 private:
 	
@@ -257,12 +266,13 @@ private:
 	string _locus_tag;
 	string _ref_tag;
 	
+    long double _sample_mass_fraction;
 };
 
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _sample_mass(0.0) , _bl_p(NULL) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0) , _bl_p(NULL) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -273,7 +283,6 @@ public:
 		_kappa_covariance = other._kappa_covariance;
 		_FPKM_variance = other._FPKM_variance;
 		_description = other._description;
-		_sample_mass = other._sample_mass;
 		_bl_p = other._bl_p;
 	}
 	
@@ -283,16 +292,13 @@ public:
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0),
-		_sample_mass(0.0),
 		_bl_p(bl_p) {}
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
-				   long double map_mass,
 				   BiasLearner* bl_p) :
 		_abundances(abundances), 
 		_gamma_covariance(gamma_covariance),
-		_sample_mass(map_mass),
 		_bl_p(bl_p)
 	{
 		calculate_conf_intervals();
@@ -303,6 +309,8 @@ public:
 	void status(AbundanceStatus s)			{ }
 	
 	double FPKM() const;
+    void   FPKM(double fpkm)                { }
+    
 	double FPKM_variance() const			{ return _FPKM_variance; }
 	void   FPKM_variance(double v)			{ }
 	
@@ -317,6 +325,9 @@ public:
 	
 	double num_fragments() const;
 	void num_fragments(double nf)			{  }
+    
+    double mass_fraction() const;
+	void mass_fraction(double mf)			{  }
 	
 	//const Scaffold* transfrag() const		{ return NULL; }
 	
@@ -354,7 +365,6 @@ public:
 	
 	
 	void calculate_abundance(const vector<MateHit>& alignments,
-							 long double total_map_mass,
 							 const EmpDist& frag_len_dist);
 	
 private:
@@ -395,7 +405,6 @@ private:
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
-	double _sample_mass;
 	BiasLearner* _bl_p;
 
 };

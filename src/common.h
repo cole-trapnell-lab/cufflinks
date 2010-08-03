@@ -26,6 +26,8 @@ using boost::math::normal;
 
 #include <boost/thread.hpp>
 
+#include <boost/shared_ptr.hpp>
+
 extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;
 
@@ -133,6 +135,8 @@ enum Platform
     SOLID
 };
 
+class EmpDist;
+
 class ReadGroupProperties
 {
 public:
@@ -140,7 +144,8 @@ public:
     ReadGroupProperties() : 
     _strandedness(UNKNOWN_STRANDEDNESS), 
     _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
-    _platform(UNKNOWN_PLATFORM){} 
+    _platform(UNKNOWN_PLATFORM),
+    _total_map_mass(0.0) {} 
     
     Strandedness strandedness() const { return _strandedness; }
     void strandedness(Strandedness s) { _strandedness = s; }
@@ -149,12 +154,21 @@ public:
     void std_mate_orientation(StandardMateOrientation so)  { _std_mate_orient = so; }
     
     Platform platform() const { return _platform; }
-    void platform(Platform p)  { _platform = p; }    
+    void platform(Platform p)  { _platform = p; }   
+    
+    long double total_map_mass() const { return _total_map_mass; }
+    void total_map_mass(long double p)  { _total_map_mass = p; }  
+    
+    boost::shared_ptr<EmpDist const> frag_len_dist() const { return _frag_len_dist; }
+    void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }  
+    
 private:
     
     Strandedness _strandedness;
     StandardMateOrientation _std_mate_orient;
     Platform _platform;
+    long double _total_map_mass;
+    boost::shared_ptr<EmpDist const> _frag_len_dist;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;

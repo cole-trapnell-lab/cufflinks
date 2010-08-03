@@ -35,13 +35,6 @@ void fill_gaps(vector<Scaffold>& scaffolds, int fill_size)
 
 enum ConflictState { UNKNOWN_CONFLICTS = 0, SAME_CONFLICTS, DIFF_CONFLICTS };
 
-bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
-{
-    if (lhs.left() != rhs.left())
-        return lhs.left() < rhs.left();
-    return lhs.right() < rhs.right();
-}
-
 bool scaff_left_lt_right_gt(const Scaffold& lhs, const Scaffold& rhs)
 {
     if (lhs.left() != rhs.left())
@@ -882,8 +875,10 @@ void compress_redundant(const EmpDist& frag_len_dist,
         leftmost = std::min((long)fragments[i].left(), leftmost);
         rightmost = std::max((long)fragments[i].right(), rightmost);
     }
-    
+     
+#if ASM_VERBOSE
     //long bundle_length = rightmost - leftmost;
+#endif
     
     while (true)
     {

@@ -37,8 +37,8 @@ void ones(ublas::matrix<long double>& A)
 }
 
 void get_compatibility_list(const vector<Scaffold>& transcripts,
-						 const vector<MateHit>& alignments,
-						 vector<list<int> >& compatibilities)
+                            const vector<MateHit>& alignments,
+                            vector<list<int> >& compatibilities)
 {
 	int M = alignments.size();
 	int N = transcripts.size();
@@ -68,13 +68,13 @@ void get_compatibility_list(const vector<Scaffold>& transcripts,
 
 bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 {
-	bundle_factory.load_ref_rnas(true, true);
+	//bundle_factory.load_ref_rnas(true, true);
 
 	HitBundle bundle;
 	
 	int num_bundles = 0;
 
-	RefSequenceTable& rt = bundle_factory.hit_factory().ref_table();
+	RefSequenceTable& rt = bundle_factory.ref_table();
 
 	while(true)
 	{

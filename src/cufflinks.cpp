@@ -455,7 +455,7 @@ void decr_pool_count()
 
 void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 								   //const RefSequenceTable& rt,
-								   long double map_mass,
+                                   double total_map_mass,
                                    const EmpDist& frag_len_dist,
 								   vector<Gene>& genes)
 {
@@ -483,7 +483,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	
 	avg_read_length /= hits_in_cluster.size();
 	
-	transfrag_cluster.calculate_abundance(hits_in_cluster, map_mass, frag_len_dist);
+	transfrag_cluster.calculate_abundance(hits_in_cluster, frag_len_dist);
 	
 	vector<AbundanceGroup> transfrags_by_strand;
 	cluster_transcripts<ConnectByStrand>(transfrag_cluster,
@@ -521,12 +521,11 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				
 				double s_len = transfrag->length();
 				
-				density_per_bp *= (map_mass / 1000000.0); // yields (mass/(length/1000))
+				density_per_bp *= (total_map_mass / 1000000.0); // yields (mass/(length/1000))
 				density_per_bp *= (s_len/ 1000.0);
 				density_per_bp /= s_len;
 				density_per_bp *= avg_read_length;
 				//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
-                
 				
 				if (density_score > min_isoform_fraction)
 				{
@@ -552,7 +551,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 }
 
 void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
-									long double map_mass,
+									long double total_map_mass,
 									const EmpDist& frag_len_dist,
 									vector<Gene>& genes,
 									BiasLearner* bl_p)
@@ -592,7 +591,7 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 	
 	foreach(AbundanceGroup& cluster, transfrags_by_cluster)
 	{
-		quantitate_transcript_cluster(cluster, map_mass, frag_len_dist, genes);
+		quantitate_transcript_cluster(cluster, total_map_mass, frag_len_dist, genes);
 	}
 #if ASM_VERBOSE
     fprintf(stderr, "%s\tBundle quantitation complete\n", bundle_label->c_str());
@@ -743,11 +742,11 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 {
 	srand(time(0));
 	
-	HitBundle bundle;
+	HitBundle bundle();
 	
 	int num_bundles = 0;
 	
-	RefSequenceTable& rt = bundle_factory.hit_factory().ref_table();
+	RefSequenceTable& rt = bundle_factory.ref_table();
     
 	//FILE* fbundle_tracking = fopen("open_bundles", "w");
     
@@ -804,8 +803,8 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 			thread asmbl(assemble_bundle,
 						 boost::cref(rt), 
 						 bundle_ptr, 
-						 bundle_factory.map_mass(),
-                         *bundle_factory.frag_len_dist(),
+						 bundle_factory.read_group_properties()->total_map_mass(),
+                         *bundle_factory.read_group_properties()->frag_len_dist(),
                          bias_learner,
 						 ftranscripts, 
 						 fgene_abundances,
@@ -813,8 +812,8 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 #else
 			assemble_bundle(boost::cref(rt), 
 							bundle_ptr, 
-							bundle_factory.map_mass(),
-                            *bundle_factory.frag_len_dist(),
+							bundle_factory.read_group_properties()->total_map_mass(),
+                            *bundle_factory.read_group_properties()->frag_len_dist(),
                             bias_learner,
 							ftranscripts,
 							fgene_abundances,
@@ -870,30 +869,45 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory bundle_factory(*hit_factory, ref_gtf, mask_gtf);
+	BundleFactory bundle_factory(*hit_factory);
 	
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
 	BadIntronTable bad_introns;
 	
+    vector<shared_ptr<Scaffold> > ref_mRNAs;
+    if (ref_gtf)
+    {
+        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
+        bundle_factory.set_ref_rnas(ref_mRNAs);
+    }
+    
+    vector<shared_ptr<Scaffold> > mask_rnas;
+    if (mask_gtf)
+    {
+        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
+        bundle_factory.set_mask_rnas(mask_rnas);
+    }
+    
 	inspect_map(bundle_factory, map_mass, bad_introns, *frag_len_dist);
 	
-	bundle_factory.frag_len_dist(frag_len_dist);
-	bundle_factory.map_mass(map_mass);
+    shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+    *rg_props = *global_read_properties;
+    
+    rg_props->frag_len_dist(frag_len_dist);
+    rg_props->total_map_mass(map_mass);
+    
+    bundle_factory.read_group_properties(rg_props);
+	//bundle_factory.read_group_properties()->frag_len_dist(frag_len_dist);
+//	bundle_factory.read_group_properties()->total_map_mass(map_mass);
 	if (ref_gtf_filename == "")
 	{
 		bundle_factory.bad_intron_table(bad_introns);
 	}
 	max_frag_len = frag_len_dist->max();
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
-	bundle_factory.load_ref_rnas();
-	
-#if ENABLE_THREADS
-	boost::thread asm_thread(assemble_hits, bundle_factory, (BiasLearner*)NULL);
-	asm_thread.join();
-#else	
+
 	assemble_hits(bundle_factory, NULL);
-#endif
 
     if (fasta_dir == "") return;
     
@@ -901,23 +915,36 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
 	ref_gtf = fopen(string(output_dir + "/initial_est/transcripts.gtf").c_str(), "r");
 	//ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
-	
-	BundleFactory bundle_factory2(*hit_factory, ref_gtf, mask_gtf);
-	bundle_factory2.frag_len_dist(frag_len_dist);
-	bundle_factory2.map_mass(map_mass);
-	bundle_factory2.load_ref_rnas(true,true);
     
-	BiasLearner bl(*bundle_factory.frag_len_dist());
+	BundleFactory bundle_factory2(*hit_factory);
+    
+    if (ref_gtf)
+    {
+        ref_mRNAs.clear();
+        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, true, true);
+        bundle_factory2.set_ref_rnas(ref_mRNAs);
+    }
+    
+    if (mask_gtf)
+    {
+        mask_rnas.clear();
+        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
+        bundle_factory2.set_mask_rnas(mask_rnas);
+    }
+    
+	 bundle_factory2.read_group_properties(rg_props);
+    
+	BiasLearner bl(*rg_props->frag_len_dist());
 	learn_bias(bundle_factory2, bl);
 	
 	bundle_factory2.reset();
 	
-#if ENABLE_THREADS
-	boost::thread asm_requant_thread(assemble_hits, bundle_factory2, &bl);
-	asm_requant_thread.join();
-#else	
+//#if ENABLE_THREADS
+//	boost::thread asm_requant_thread(assemble_hits, bundle_factory2, &bl);
+//	asm_requant_thread.join();
+//#else	
 	assemble_hits(bundle_factory2, &bl);
-#endif
+//#endif
 }
 
 int main(int argc, char** argv)

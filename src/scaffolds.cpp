@@ -1233,3 +1233,35 @@ bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs)
 {
 	return lhs.left() < rhs.left();
 }
+
+bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs)
+{
+    if (lhs.left() != rhs.left())
+        return lhs.left() < rhs.left();
+    return lhs.right() < rhs.right();
+}
+
+bool scaff_lt_rt_oplt(const Scaffold& lhs, const Scaffold& rhs)
+{
+    if (scaff_lt_rt(lhs, rhs))
+        return true;
+    if (scaff_lt_rt(rhs, lhs))
+        return false;
+    
+    // Now we need to actually compare the alignment ops
+    const vector<AugmentedCuffOp>& lhs_ops = lhs.augmented_ops();
+    const vector<AugmentedCuffOp>& rhs_ops = rhs.augmented_ops();
+    
+    if (lhs_ops.size() != rhs_ops.size())
+        return lhs_ops.size() < rhs_ops.size();
+    
+    for (size_t i = 0; i < lhs_ops.size(); ++i)
+    {
+        if (lhs_ops[i] != rhs_ops[i])
+        {
+            return lhs_ops[i] < rhs_ops[i];
+        }
+    }
+    
+    return false;
+}

@@ -528,6 +528,8 @@ private:
 };
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);
+bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs);
+bool scaff_lt_rt_oplt(const Scaffold& lhs, const Scaffold& rhs);
 
 bool overlap_in_genome(int ll, int lr, int rl, int rr);
 

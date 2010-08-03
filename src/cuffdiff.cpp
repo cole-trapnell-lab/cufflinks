@@ -26,6 +26,7 @@
 #include "hits.h"
 #include "bundles.h"
 #include "abundances.h"
+#include "tokenize.h"
 
 #include <boost/thread.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -160,6 +161,7 @@ int parse_options(int argc, char** argv)
 	return 0;
 }
 
+#if 0
 // like a normal bundle factory, except the user must explicitly ask for 
 // a range of alignments for the bunde.  NOTE: this factory does NOT seek 
 // backwards - it is up to you to ask for monotonically increasing loci
@@ -223,7 +225,7 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 			const char* sam_name = rt.get_name(bh->ref_id());
 			if (!gtf_name)
 			{
-				// The GTF name isn't even inthe SAM file, we'll never find
+				// The GTF name isn't even in the SAM file, we'll never find
 				// records by advancing the SAM.  Give up.  hit_within_boundary
 				// will remain false, and we'll break out of the loop and 
 				// reset the SAM file pointer
@@ -295,41 +297,142 @@ bool LocusBundleFactory::next_bundle(HitBundle& bundle_out,
 	return true;
 }
 
-void make_sample_bundles(vector<Scaffold>& ref_mrnas,
-						 vector<LocusBundleFactory>& bundle_factories,
-						 vector<HitBundle*>& locus_bundles)
+#endif
+
+// This factory merges bundles in a requested locus from several replicates
+class ReplicatedBundleFactory
 {
-	RefID ref_id = 0;
-	int left_boundary = 999999999;
-	int right_boundary = -1;
-	for (size_t i = 0; i < ref_mrnas.size(); ++i)
-	{
-		assert (ref_id == 0 || ref_mrnas[i].ref_id());
-		ref_id = ref_mrnas[i].ref_id();
-		
-		if (ref_mrnas[i].left() < left_boundary)
-			left_boundary = ref_mrnas[i].left();
-		if (ref_mrnas[i].right() > right_boundary)
-			right_boundary = ref_mrnas[i].right();
-	}
+public:
+	ReplicatedBundleFactory(const vector<shared_ptr<BundleFactory> >& factories)
+        : _factories(factories) {}
 	
+	bool next_bundle(HitBundle& bundle_out)
+    {
+        bundle_out = HitBundle(); 
+        vector<HitBundle> bundles;
+       
+        bool non_empty_bundle = false;
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            bundles.push_back(HitBundle());
+            if (fac->next_bundle(bundles.back()))
+            {
+                non_empty_bundle = true;
+            }
+        }
+        
+        if (non_empty_bundle == false)
+        {
+            return false;
+        }
+        
+        for (size_t i = 1; i < bundles.size(); ++i)
+        {
+            const vector<Scaffold>& s1 = bundles[i].ref_scaffolds();
+            const vector<Scaffold>& s2 =  bundles[i-1].ref_scaffolds();
+            assert (s1.size() == s2.size());
+            for (size_t j = 0; j < s1.size(); ++j)
+            {
+                assert (s1[j].annotated_trans_id() == s2[j].annotated_trans_id());
+            }
+        }
+        
+        // Merge the replicates into a combined bundle of hits.
+        HitBundle::combine(bundles, bundle_out);
+        return true;
+    }
+	
+    // NOTE: if we need to put this back, we should replace it with a ref_table()
+    // accessor for all BundleFactories, since that's all anybody is calling this
+    // guy to get at.
+	//shared_ptr<HitFactory> hit_factory() { return _hit_fac; } 
+	
+	void reset() 
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            fac->reset();
+        }
+    }
+    
+    // NOTE: This routine implements a sort-of hack.  Ultimately, we want
+    // BundleFactories to have one ReadGroupProperties per replicate, and
+    // this routine forces all replicates to have the same one, which 
+    // isn't very good, because this throws away the individual fragment
+    // length distributions and bias models associated with each replicate.
+    // We're probably losing a fair amount of power here.
+    void read_group_properties(shared_ptr<ReadGroupProperties> rg_props)
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            shared_ptr<ReadGroupProperties> copy_props(new ReadGroupProperties);
+            *copy_props = *rg_props;
+            fac->read_group_properties(copy_props);
+        }
+    }
+	
+    shared_ptr<ReadGroupProperties const> read_group_properties()
+    {
+        for (size_t i = 1; i < _factories.size(); ++i)
+        {
+            if (_factories[i-1]->read_group_properties() != 
+                _factories[i]->read_group_properties())
+            {
+                return shared_ptr<ReadGroupProperties>();
+            }
+        }
+        if (_factories.empty())
+        {
+             return shared_ptr<ReadGroupProperties>();   
+        }
+        return _factories.front()->read_group_properties();
+    }
+    
+private:
+	vector<shared_ptr<BundleFactory> > _factories;
+};
+
+// Gets the next set of bundles to process, advancing all sample factories
+// and all replicates within those factories by one set of overlapping 
+// transcripts
+bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
+                  vector<HitBundle*>& locus_bundles)
+{
+    bool non_empty_sample_bundle = false;
 	for (size_t i = 0; i < bundle_factories.size(); ++i)
 	{
-		LocusBundleFactory& fac = bundle_factories[i];
+		ReplicatedBundleFactory& fac = bundle_factories[i];
 		HitBundle* bundle = new HitBundle;
-		for (size_t j = 0; j < ref_mrnas.size(); ++j)
-		{
-			bundle->add_ref_scaffold(ref_mrnas[j]);
-		}
-		
-		fac.next_bundle(*bundle, ref_id, left_boundary, right_boundary);
-		assert (!bundle->ref_scaffolds().empty());
-		locus_bundles.push_back(bundle);
+		if (fac.next_bundle(*bundle))
+        {
+            non_empty_sample_bundle = true;
+            assert (!bundle->ref_scaffolds().empty());
+        }
+        locus_bundles.push_back(bundle);
 	}
+    
+    if (non_empty_sample_bundle == false)
+    {
+        return false;
+    }
+    
+    // TODO: insert check that all the samples have indentical sets of 
+    // reference transcipts.
+    for (size_t i = 1; i < locus_bundles.size(); ++i)
+    {
+        const vector<Scaffold>& s1 = locus_bundles[i]->ref_scaffolds();
+        const vector<Scaffold>& s2 =  locus_bundles[i-1]->ref_scaffolds();
+        assert (s1.size() == s2.size());
+        for (size_t j = 0; j < s1.size(); ++j)
+        {
+            assert (s1[j].annotated_trans_id() == s2[j].annotated_trans_id());
+        }
+    }
+    
+    return true;
 }	
 
 #if ENABLE_THREADS
-
 mutex thread_pool_lock;
 int curr_threads = 0;
 
@@ -536,219 +639,178 @@ void extract_sample_diffs(SampleDiffs& diff_map,
 	}
 }
 
-void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles)
+void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
 	
-	vector<Scaffold> ref_mRNAs;
-	load_ref_rnas(ref_gtf, rt, ref_mRNAs);
-	if (ref_mRNAs.empty())
-		return;
+	vector<shared_ptr<Scaffold> > ref_mRNAs;
+//	load_ref_rnas(ref_gtf, rt, ref_mRNAs);
+//	if (ref_mRNAs.empty())
+//		return;
+    
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, false);
+    if (ref_mRNAs.empty())
+        return;
 	
-	vector<LocusBundleFactory> bundle_factories;
+	vector<ReplicatedBundleFactory> bundle_factories;
 	vector<long double> map_masses;
 	vector<EmpDist> frag_len_dists;
     
     //max_frag_len = 0;
+    
+    vector<HitFactory*> all_hit_factories;
+    
     int tmp_max_frag_len = 0;
-	for (size_t i = 0; i < sam_hit_filenames.size(); ++i)
+	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
-		shared_ptr<HitFactory> hs;
-        try
+        vector<string> sam_hit_filenames;
+        tokenize(sam_hit_filename_lists[i], ",", sam_hit_filenames);
+        
+        vector<shared_ptr<BundleFactory> > replicate_factories;
+        for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
-            hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[i], it, rt));
-        }
-        catch (std::runtime_error& e) 
-        {
+            HitFactory* hs = NULL;
             try
             {
-                fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-                        sam_hit_filenames[i].c_str());
-                hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[i], it, rt));
+                hs = new BAMHitFactory(sam_hit_filenames[j], it, rt);
             }
-            catch (std::runtime_error& e)
+            catch (std::runtime_error& e) 
             {
-                fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
-                        sam_hit_filenames[i].c_str());
-                exit(1);
+                try
+                {
+                    fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
+                            sam_hit_filename_lists[i].c_str());
+                    hs = new SAMHitFactory(sam_hit_filenames[j], it, rt);
+                }
+                catch (std::runtime_error& e)
+                {
+                    fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+                            sam_hit_filenames[j].c_str());
+                    exit(1);
+                }
             }
+            
+            all_hit_factories.push_back(hs);
+            
+            shared_ptr<BundleFactory> hf(new BundleFactory(*hs));
+            replicate_factories.push_back(hf);
+            replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
-		LocusBundleFactory lf(hs);
-		bundle_factories.push_back(lf);
-		BundleFactory standard_factory(*hs, NULL, NULL);
-		
-		fprintf(stderr, "Counting hits in sample %lu\n", i);
-		long double map_mass = 0;
-		BadIntronTable bad_introns;
         
-        EmpDist frag_len_dist;
-        
-		inspect_map(standard_factory, map_mass, bad_introns, frag_len_dist);
-		
-		// don't actually need to set bad_introns in the factories when using a 
-		// reference GTF
-		map_masses.push_back(map_mass);
-		frag_len_dists.push_back(frag_len_dist);
-        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist.max());
-
+        ReplicatedBundleFactory rep_factory(replicate_factories);
+        bundle_factories.push_back(rep_factory);
 	}
+    
+    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+    {
+        //fprintf(stderr, "Counting hits in sample %lu\n", i);
+        long double map_mass = 0;
+        BadIntronTable bad_introns;
+        
+        shared_ptr<EmpDist> frag_len_dist(new EmpDist);
+        
+        inspect_map(fac, map_mass, bad_introns, *frag_len_dist);
+        
+        shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+        *rg_props = *global_read_properties;
+        
+        rg_props->frag_len_dist(frag_len_dist);
+        rg_props->total_map_mass(map_mass);
+       
+        fac.read_group_properties(rg_props);
+        
+        // don't actually need to set bad_introns in the factories when using a 
+        // reference GTF
+        map_masses.push_back(map_mass);
+        frag_len_dists.push_back(*frag_len_dist);
+        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist->max());
+    }
 	
     max_frag_len = tmp_max_frag_len;
-    
-	vector<Scaffold>::iterator curr_ref_scaff = ref_mRNAs.begin();
 	
-	RefID last_ref_seen = curr_ref_scaff->ref_id();
-	int left_boundary = curr_ref_scaff->left();
-	int right_boundary = curr_ref_scaff->right();
-	
-	vector<Scaffold>::iterator ref_scaff_bundle_start = curr_ref_scaff;
 	Tests tests;
 	
-	tests.isoform_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
-	tests.tss_group_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
-	tests.gene_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
-	tests.cds_de_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
-	tests.diff_splicing_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
-	tests.diff_promoter_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
-	tests.diff_cds_tests = vector<SampleDiffs>((int)sam_hit_filenames.size() - 1);
+	tests.isoform_de_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
+	tests.tss_group_de_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
+	tests.gene_de_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
+	tests.cds_de_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
+	tests.diff_splicing_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
+	tests.diff_promoter_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
+	tests.diff_cds_tests = vector<SampleDiffs>((int)sam_hit_filename_lists.size() - 1);
 	
 	Tracking tracking;
 	
-	while (curr_ref_scaff != ref_mRNAs.end())
+	while (true)
 	{
-		if (curr_ref_scaff->left() > right_boundary ||
-			curr_ref_scaff->ref_id() != last_ref_seen)
-		{
 #if ENABLE_THREADS			
-			while(1)
-			{
-				thread_pool_lock.lock();
-				if (curr_threads < num_threads)
-				{
-					thread_pool_lock.unlock();
-					break;
-				}
-				
-				thread_pool_lock.unlock();
-				
-				boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-				
-			}
+        while(1)
+        {
+            thread_pool_lock.lock();
+            if (curr_threads < num_threads)
+            {
+                thread_pool_lock.unlock();
+                break;
+            }
+            
+            thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
 #endif
-			
-			vector<Scaffold> ref_mrnas;
-			
-			ref_mrnas.insert(ref_mrnas.end(), 
-							 ref_scaff_bundle_start, 
-							 curr_ref_scaff);
-			
-			vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
-			
-			// grab the alignments for this locus in each of the samples
-			make_sample_bundles(ref_mrnas, bundle_factories, *sample_bundles);
-			bool non_empty_bundle = false;
-			for (size_t i = 0; i < sample_bundles->size(); ++i)
-			{
-				if (!(*sample_bundles)[i]->hits().empty())
-				{
-					non_empty_bundle = true;
-					break;
-				}
-			}
-			if (non_empty_bundle)
-			{
-				RefID bundle_chr_id = sample_bundles->front()->ref_id();
-				assert (bundle_chr_id != 0);
-				const char* chr_name = rt.get_name(bundle_chr_id);
-				assert (chr_name);
-				fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
-						chr_name,
-						sample_bundles->front()->left(),
-						sample_bundles->front()->right());
-			
-			
+        
+        vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
+        
+        // grab the alignments for this locus in each of the samples
+        if (next_bundles(bundle_factories, *sample_bundles) == false)
+        {
+            // No more reference transcripts.  We're done
+            break;
+        }
+        bool non_empty_bundle = false;
+        for (size_t i = 0; i < sample_bundles->size(); ++i)
+        {
+            if (!(*sample_bundles)[i]->hits().empty())
+            {
+                non_empty_bundle = true;
+                break;
+            }
+        }
+        if (non_empty_bundle)
+        {
+            RefID bundle_chr_id = sample_bundles->front()->ref_id();
+            assert (bundle_chr_id != 0);
+            const char* chr_name = rt.get_name(bundle_chr_id);
+            assert (chr_name);
+            fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
+                    chr_name,
+                    sample_bundles->front()->left(),
+                    sample_bundles->front()->right());
+        
+        
 #if ENABLE_THREADS			
-				thread_pool_lock.lock();
-				curr_threads++;
-				thread_pool_lock.unlock();
-				
-				thread quantitate(quantitation_worker,
-								  boost::cref(rt), 
-								  sample_bundles, 
-								  boost::cref(map_masses), 
-								  boost::cref(frag_len_dists),
-								  boost::ref(tests),
-								  boost::ref(tracking));
+            thread_pool_lock.lock();
+            curr_threads++;
+            thread_pool_lock.unlock();
+            
+            thread quantitate(quantitation_worker,
+                              boost::cref(rt), 
+                              sample_bundles, 
+                              boost::cref(map_masses), 
+                              boost::cref(frag_len_dists),
+                              boost::ref(tests),
+                              boost::ref(tracking));
 
 #else
-				quantitation_worker(boost::cref(rt), 
-									sample_bundles, 
-									boost::cref(map_masses), 
-									boost::cref(frag_len_dists),
-									boost::ref(tests),
-									boost::ref(tracking));
+            quantitation_worker(boost::cref(rt), 
+                                sample_bundles, 
+                                boost::cref(map_masses), 
+                                boost::cref(frag_len_dists),
+                                boost::ref(tests),
+                                boost::ref(tracking));
 #endif
-			}
-			left_boundary = curr_ref_scaff->left();
-			if (curr_ref_scaff->ref_id() != last_ref_seen)
-			{
-				right_boundary = curr_ref_scaff->right();
-			}
-			last_ref_seen = curr_ref_scaff->ref_id();
-			ref_scaff_bundle_start = curr_ref_scaff;
-		}
-		right_boundary = max(right_boundary, curr_ref_scaff->right());
-		++curr_ref_scaff;
-	}
-	
-	if (ref_scaff_bundle_start != ref_mRNAs.end())
-	{
-		vector<Scaffold> ref_mrnas;
-		
-		ref_mrnas.insert(ref_mrnas.end(), 
-						 ref_scaff_bundle_start, 
-						 curr_ref_scaff);
-		
-		vector<HitBundle*> sample_bundles;
-		
-		// grab the alignments for this locus in each of the samples
-		make_sample_bundles(ref_mrnas, bundle_factories, sample_bundles);
-		bool non_empty_bundle = false;
-		for (size_t i = 0; i < sample_bundles.size(); ++i)
-		{
-			if (!sample_bundles[i]->hits().empty())
-			{
-				non_empty_bundle = true;
-				break;
-			}
-		}
-		if (non_empty_bundle)
-		{
-			RefID bundle_chr_id = sample_bundles.front()->ref_id();
-			assert (bundle_chr_id != 0);
-			const char* chr_name = rt.get_name(bundle_chr_id);
-			assert (chr_name);
-			
-			char bundle_label_buf[2048];
-			sprintf(bundle_label_buf, 
-					"%s:%d-%d", 
-					rt.get_name(sample_bundles.front()->ref_id()),
-					sample_bundles.front()->left(),
-					sample_bundles.front()->right());
-			bundle_label.reset(new string(bundle_label_buf));
-			
-			fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
-					chr_name,
-					sample_bundles.front()->left(),
-					sample_bundles.front()->right());
-			test_differential(rt, sample_bundles, map_masses, frag_len_dists, tests, tracking);
-			
-			for (size_t i = 0; i < sample_bundles.size(); ++i)
-			{
-				delete sample_bundles[i];
-			}
-		}
+        }
 	}
 	
 	// wait for the workers to finish up before reporting everthing.
@@ -895,10 +957,18 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filenames, Outfiles& outfiles
 	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
 	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
 	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
+    
+    foreach (HitFactory* fac, all_hit_factories)
+    {
+        delete fac;
+    }
+    
 }
 
 int main(int argc, char** argv)
 {
+    init_library_table();
+    
 	int parse_ret = parse_options(argc,argv);
     if (parse_ret)
         return parse_ret;

@@ -664,6 +664,13 @@ private:
     bool _eof_encountered;
 };
 
+// Forward declaration of BundleFactory, because MateHit will need a pointer
+// back to the Factory that created.  Ultimately, we should replace this
+// with a pointer back to the ReadGroupProperty object corresponding to each 
+// MateHit.  That, however, requires that we link fragment length distributions
+// and bias models, etc, with each read group, and that's more than we can 
+// afford to implement right now.
+
 /*******************************************************************************
  MateHit is a class that encapsulates a paired-end alignment as a single object.
  MateHits can be "open" when one hit has been read from a stream of individual
@@ -674,9 +681,11 @@ private:
 class MateHit
 {
 public:
-	MateHit(uint32_t refid, 
+	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
+            uint32_t refid, 
 			shared_ptr<ReadHit const> left_alignment, 
 			shared_ptr<ReadHit const> right_alignment) : 
+    _rg_props(rg_props),
 	_refid(refid), 
 	_left_alignment(left_alignment),
 	_right_alignment(right_alignment)
@@ -690,18 +699,18 @@ public:
 
 	//bool closed() {return _closed;}
 	
+    shared_ptr<ReadGroupProperties const> read_group_props() const { return _rg_props; }
+    
 	shared_ptr<ReadHit const> left_alignment() const {return _left_alignment;}
 	void left_alignment(shared_ptr<ReadHit const> left_alignment) 
 	{
 		_left_alignment = shared_ptr<ReadHit const>(left_alignment);
-		//_closed = true;
 	}
 	
 	shared_ptr<ReadHit const> right_alignment() const {return _right_alignment;}					
 	void right_alignment(shared_ptr<ReadHit const> right_alignment)  
 	{
 		_right_alignment = right_alignment;
-		//_closed = true;
 	}
 	
 	bool is_pair() const
@@ -818,7 +827,9 @@ public:
 			edits += _right_alignment->edit_dist();
 		return edits;
 	}
+private:
 	
+    shared_ptr<ReadGroupProperties const> _rg_props;
 	RefID _refid;
 	shared_ptr<ReadHit const> _left_alignment;
 	shared_ptr<ReadHit const> _right_alignment;

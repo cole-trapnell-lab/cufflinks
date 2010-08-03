@@ -14,6 +14,7 @@
 #endif
 #include <boost/bind.hpp>
 #include <vector>
+#include <numeric>
 #include "hits.h"
 #include "scaffolds.h"
 #include "GList.hh"
@@ -91,10 +92,10 @@ typedef map<RefID, vector<AugmentedCuffOp> > BadIntronTable;
 class HitBundle
 {
 public:
-	HitBundle() : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id) {}
-	~HitBundle() 
-	{
-	}
+	HitBundle() 
+    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _num_replicates(1) {}
+    
+	~HitBundle() {}
 	
 	int left()   const { return _leftmost;  }
 	int right()  const { return _rightmost; }
@@ -128,7 +129,8 @@ public:
 	
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
-	void add_open_hit(shared_ptr<ReadHit> bh);
+	void add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
+                      shared_ptr<ReadHit> bh);
 	
 	// Commits any mates still open as singleton hits
 	void finalize_open_mates();
@@ -139,8 +141,40 @@ public:
 	
 	void remove_hitless_scaffolds();
 	
+    int num_replicates() const { return _num_replicates; }
+    
+    static void combine(const vector<HitBundle>& in_bundles,
+                        HitBundle& out_bundle)
+    {
+        out_bundle._hits.clear();
+        out_bundle._ref_scaffs.clear();
+        
+        for (size_t i = 1; i < in_bundles.size(); ++i)
+        {
+            assert(in_bundles[i].ref_id() == in_bundles[i-1].ref_id());
+        }
+        
+        foreach(const HitBundle& in_bundle, in_bundles)
+        {
+            out_bundle._hits.insert(out_bundle._hits.end(),
+                                    in_bundle._hits.begin(),
+                                    in_bundle._hits.end());
+            out_bundle._ref_scaffs.insert(out_bundle._ref_scaffs.end(),
+                                          in_bundle._ref_scaffs.begin(),
+                                          in_bundle._ref_scaffs.end());
+        }
+        
+        foreach (Scaffold& rs, out_bundle._ref_scaffs)
+        {
+            rs.clear_hits();
+        }
+        
+        out_bundle.finalize();
+        out_bundle._num_replicates = (int)in_bundles.size();
+    }
+    
 private:
-	int _leftmost;
+    int _leftmost;
 	int _rightmost;
 	std::vector<MateHit> _hits;
 	std::vector<MateHit> _non_redundant;
@@ -153,64 +187,64 @@ private:
 	
 	typedef map<int, list<MateHit> > OpenMates;
 	OpenMates _open_mates;
+    int _num_replicates;
 };
 
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
-				   vector<Scaffold>& ref_mRNAs,
+				   vector<shared_ptr<Scaffold> >& ref_mRNAs,
 				   bool loadSeqs=false,
 				   bool loadFPKM=false);
 
 class BundleFactory
 {
 public:
-	BundleFactory(HitFactory& fac, FILE* ref_rna_file, FILE* maskf)
-	: _hit_fac(fac), ref_mRNA_file(ref_rna_file), mask_file(maskf){}
+    
+	BundleFactory(HitFactory& fac)
+	: _hit_fac(fac) {}
 
 	bool next_bundle(HitBundle& bundle_out);
-	
-	HitFactory& hit_factory() { return _hit_fac; } 
-	
+    
+    RefSequenceTable& ref_table() { return _hit_fac.ref_table(); }
+    
 	void reset() 
 	{ 
 		//rewind(hit_file); 
 		_hit_fac.reset();
 		next_ref_scaff = ref_mRNAs.begin(); 
+        next_mask_scaff = mask_gtf_recs.begin();
 	}
 	
-	void load_ref_rnas(bool loadSeqs=false, bool loadFPKM=false) 
+    void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
-        if (ref_mRNA_file)
+        ref_mRNAs = mRNAs;
+        RefID last_id = 0;
+        for (vector<shared_ptr<Scaffold> >::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
         {
-            ::load_ref_rnas(ref_mRNA_file, _hit_fac.ref_table(), ref_mRNAs, loadSeqs, loadFPKM);
-            RefID last_id = 0;
-            for (vector<Scaffold>::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
+            if ((*i)->ref_id() != last_id)
             {
-                if (i->ref_id() != last_id)
-                {
-                    _ref_scaff_offsets.push_back(make_pair(i->ref_id(), i));
-                }
-                last_id = i->ref_id();
+                _ref_scaff_offsets.push_back(make_pair((*i)->ref_id(), i));
             }
-            
-            next_ref_scaff = ref_mRNAs.begin();
+            last_id = (*i)->ref_id();
         }
         
-        if (mask_file)
+        next_ref_scaff = ref_mRNAs.begin();
+    }
+    
+    void set_mask_rnas(const vector<shared_ptr<Scaffold> >& masks)
+    {
+        mask_gtf_recs = masks;
+        RefID last_id = 0;
+        for (vector<shared_ptr<Scaffold> >::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
         {
-            ::load_ref_rnas(mask_file, _hit_fac.ref_table(), mask_gtf_recs, false, false);
-            RefID last_id = 0;
-            for (vector<Scaffold>::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
+            if ((*i)->ref_id() != last_id)
             {
-                if (i->ref_id() != last_id)
-                {
-                    _mask_scaff_offsets.push_back(make_pair(i->ref_id(), i));
-                }
-                last_id = i->ref_id();
+                _mask_scaff_offsets.push_back(make_pair((*i)->ref_id(), i));
             }
-            
-            next_mask_scaff = mask_gtf_recs.begin();
+            last_id = (*i)->ref_id();
         }
+        
+        next_mask_scaff = mask_gtf_recs.begin();
     }
         
 	void bad_intron_table(const BadIntronTable& bad_introns) 
@@ -218,49 +252,271 @@ public:
 		_bad_introns = bad_introns;
 	}
     
-    void frag_len_dist(shared_ptr<const EmpDist> fld) 
-	{ 
-		_frag_len_dist = fld;
-	}
+    void read_group_properties(shared_ptr<const ReadGroupProperties> rg)
+    {
+        _rg_props = rg;
+    }
     
-    shared_ptr<const EmpDist> frag_len_dist() const 
-	{ 
-		return _frag_len_dist;
-	}
-	
-	void map_mass(long double mm) 
-	{
-		_map_mass = mm;
-	}
-	
-	long double map_mass() const
-	{
-		return _map_mass;
-	}
+    shared_ptr<const ReadGroupProperties> read_group_properties() const
+    {
+        return _rg_props;
+    }
+    
+//    void frag_len_dist(shared_ptr<const EmpDist> fld) 
+//	{ 
+//		_frag_len_dist = fld;
+//	}
+//    
+//    shared_ptr<const EmpDist> frag_len_dist() const 
+//	{ 
+//		return _frag_len_dist;
+//	}
+//    
+//    long double total_map_mass() const 
+//    { 
+//        return _total_map_mass; 
+//    }
+//    
+//    void total_map_mass(long double tmm) 
+//    { 
+//        _total_map_mass = tmm; 
+//    }
 	
 	bool spans_bad_intron(const ReadHit& read);
 	
 private:
 	HitFactory& _hit_fac;
-
-	vector<Scaffold> ref_mRNAs;
-	FILE* ref_mRNA_file;
-	vector<pair<RefID, vector<Scaffold>::iterator> > _ref_scaff_offsets;
-	vector<Scaffold>::iterator next_ref_scaff;
+//    long double _total_map_mass;
     
-    vector<Scaffold> mask_gtf_recs;
-	FILE* mask_file;
-	vector<pair<RefID, vector<Scaffold>::iterator> > _mask_scaff_offsets;
-	vector<Scaffold>::iterator next_mask_scaff;
+	vector<shared_ptr<Scaffold> > ref_mRNAs;
+	//FILE* ref_mRNA_file;
+	vector<pair<RefID, vector<shared_ptr<Scaffold> >::iterator> > _ref_scaff_offsets;
+	vector<shared_ptr<Scaffold> >::iterator next_ref_scaff;
+    
+    vector<shared_ptr<Scaffold> > mask_gtf_recs;
+	//FILE* mask_file;
+	vector<pair<RefID, vector<shared_ptr<Scaffold> >::iterator> > _mask_scaff_offsets;
+	vector<shared_ptr<Scaffold> >::iterator next_mask_scaff;
 	
 	BadIntronTable _bad_introns;
-    shared_ptr<const EmpDist> _frag_len_dist;
-	long double _map_mass;
+    
+    shared_ptr<ReadGroupProperties const> _rg_props;
+    
+//    shared_ptr<const EmpDist> _frag_len_dist;
 };
 
-void inspect_map(BundleFactory& bundle_factory, 
-				 long double& map_mass, 
-				 BadIntronTable& bad_introns,
-                 EmpDist& frag_len_dist);
+void identify_bad_splices(const HitBundle& bundle, 
+						  BadIntronTable& bad_splice_ops);
+
+template<class BundleFactoryType>
+void inspect_map(BundleFactoryType& bundle_factory,
+                 long double& map_mass, 
+                 BadIntronTable& bad_introns,
+                 EmpDist& frag_len_dist)
+{
+	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.\n");
+    
+	HitBundle bundle;
+    map_mass = 0.0;
+    int min_read_len = numeric_limits<int>::max();
+    vector<double> frag_len_hist(def_max_frag_len+1,0);
+	list<pair<int, int> > open_ranges;
+    bool has_pairs = false;
+    
+	while(bundle_factory.next_bundle(bundle))
+	{
+#if ASM_VERBOSE
+        char bundle_label_buf[2048];
+        sprintf(bundle_label_buf, 
+                "%d-%d", 
+                bundle.left(),
+                bundle.right());
+        fprintf(stderr, "Inspecting bundle %s\n", bundle_label_buf);
+#endif
+		
+		identify_bad_splices(bundle, bad_introns);
+        
+        const vector<MateHit>& hits = bundle.non_redundant_hits();
+		const vector<double>& collapse_counts = bundle.collapse_counts();
+		
+		int curr_range_start = hits[0].left();
+		int curr_range_end = numeric_limits<int>::max();
+		int next_range_start = -1;
+		
+		// This first loop calclates the map mass and finds ranges with no introns
+		for (size_t i = 0; i < hits.size(); ++i) 
+		{
+			double mate_len = 0;
+			if (hits[i].left_alignment() || hits[i].right_alignment())
+				mate_len = 1.0;
+			map_mass += mate_len * collapse_counts[i]; 
+            
+			min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+			if (hits[i].right_alignment())
+				min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+            
+			
+			if (hits[i].left() > curr_range_end)
+			{
+				if (curr_range_end - curr_range_start > max_frag_len)
+					open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
+				curr_range_start = next_range_start;
+				curr_range_end = numeric_limits<int>::max();
+			}
+			if (hits[i].left_alignment()->contains_splice())
+			{
+				if (hits[i].left() - curr_range_start > max_frag_len)
+					open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
+				curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
+			}
+			if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
+			{
+				has_pairs = true;
+				assert(hits[i].right_alignment()->left() > hits[i].left());
+				curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
+				next_range_start = max(next_range_start, hits[i].right());
+			}
+		}
+        
+        if (has_pairs)
+		{
+			pair<int, int> curr_range(-1,-1);
+			
+			// This second loop uses the ranges found above to find the estimated frag length distribution
+			// It also finds the minimum read length to use in the linear interpolation
+			for (size_t i = 0; i < hits.size(); ++i)
+			{
+				if (hits[i].left() > curr_range.second && open_ranges.empty())
+					break;
+				
+				if (hits[i].left() > curr_range.second)
+				{
+					curr_range = open_ranges.front();
+					open_ranges.pop_front();
+				}
+				
+				if (hits[i].left() >= curr_range.first && hits[i].right() <= curr_range.second && hits[i].is_pair())
+				{
+					int mate_len = hits[i].right()-hits[i].left();
+					if (mate_len < max_frag_len)
+						frag_len_hist[mate_len] += collapse_counts[i];
+					min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+					min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+				}
+			}
+		}
+        //		
+        //		for (size_t i = 0; i < bundle.hits().size(); ++i)
+        //		{
+        //			double mate_len = 0;
+        //			if (hits[i].left_alignment() || hits[i].right_alignment())
+        //				mate_len = 1.0;
+        //			map_mass += mate_len * (1.0 - hits[i].error_prob()); 
+        //		}
+	}
+	
+    size_t alloced = 0;
+    size_t used = 0;
+    size_t num_introns = 0;
+    for (BadIntronTable::const_iterator itr = bad_introns.begin();
+         itr != bad_introns.end();
+         ++itr)
+    {
+        alloced += itr->second.capacity() * sizeof(AugmentedCuffOp);
+        used += itr->second.size() * sizeof(AugmentedCuffOp);
+        num_introns += itr->second.size();
+    }
+    
+#if ASM_VERBOSE
+    fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+#endif
+    
+    long double tot_count = 0;
+	vector<double> frag_len_pdf(max_frag_len+1, 0.0);
+	vector<double> frag_len_cdf(max_frag_len+1, 0.0);
+	normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
+    
+	int frag_len_max = frag_len_hist.size()-1;
+    
+    tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
+    
+	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
+	if (!has_pairs || tot_count == 0)
+	{
+		frag_len_max = def_frag_len_mean + 3*def_frag_len_std_dev;
+		for(int i = min_read_len; i < frag_len_max; i++)
+		{
+			frag_len_hist[i] = cdf(frag_len_norm, i+0.5)-cdf(frag_len_norm, i-0.5);
+			tot_count += frag_len_hist[i];
+		}
+	}
+	else 
+	{	
+		double curr_total = 0;
+		int last_nonzero = min_read_len-1;
+		for(int i = 1; i < frag_len_hist.size(); i++)
+		{
+			if (frag_len_hist[i] > 0)
+			{
+				if (last_nonzero > 0 && last_nonzero != i-1)
+				{
+					double b = frag_len_hist[last_nonzero];
+					double m = (frag_len_hist[i] - b)/(i-last_nonzero);
+					for (int x = 1; x < i - last_nonzero; x++)
+					{
+						frag_len_hist[last_nonzero+x] = m * x + b;
+						tot_count += frag_len_hist[last_nonzero+x];
+						curr_total += frag_len_hist[last_nonzero+x];
+					}	
+				}
+				last_nonzero = i;
+			}
+			
+			curr_total += frag_len_hist[i];
+			
+			if (curr_total/tot_count > .9999)
+			{
+				frag_len_max = i; 
+				break;
+			}
+		}
+	}
+	
+    double mean = 0.0;
+    
+	// Convert histogram to pdf and cdf, calculate mean
+	int frag_len_mode = 0;
+	for(int i = 1; i < frag_len_hist.size(); i++)
+	{
+		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
+		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
+		//fprintf(stderr, "%f\n", frag_len_hist[i]);
+        
+		if (frag_len_pdf[i] > frag_len_pdf[frag_len_mode])
+			frag_len_mode = i;
+        mean += frag_len_pdf[i] * i;
+	}
+    
+    double std_dev =  0.0;
+    for(int i = 1; i < frag_len_hist.size(); i++)
+    {
+        std_dev += frag_len_pdf[i] * ((i - mean) * (i - mean));
+    }
+    
+    std_dev = sqrt(std_dev);
+	
+	frag_len_dist.pdf(frag_len_pdf);
+	frag_len_dist.cdf(frag_len_cdf);
+	frag_len_dist.mode(frag_len_mode);
+	frag_len_dist.max(frag_len_max);
+	frag_len_dist.min(min_read_len);
+    frag_len_dist.mean(mean);
+    frag_len_dist.std_dev(std_dev);
+    
+    bundle_factory.reset();
+    
+   	return;
+}
+
 
 #endif
