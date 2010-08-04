@@ -358,8 +358,7 @@ struct FragIndexSortSmallerLR
 	}
 };
 
-bool collapse_equivalent_transfrags(const EmpDist& frag_len_dist,
-                                    vector<Scaffold>& fragments, 
+bool collapse_equivalent_transfrags(vector<Scaffold>& fragments, 
                                     uint32_t max_rounds)
 {
 	// The containment graph is a bipartite graph with an edge (u,v) when
@@ -431,6 +430,25 @@ bool collapse_equivalent_transfrags(const EmpDist& frag_len_dist,
 //			}
 //		}
 		
+        double mean_length = 0;
+        for (size_t i = 0; i < fragments.size(); ++i)
+        {
+            mean_length += fragments[i].length();
+        }
+        
+        mean_length /= fragments.size();
+        
+        double variance = 0.0;
+        for (size_t i = 0; i < fragments.size(); ++i)
+        {
+            double v = fragments[i].length() - mean_length;
+            v *= v;
+            variance += v;
+        }
+        
+        variance /= fragments.size();
+        double frag_len_std_dev = sqrt(variance);
+        
 		int num_merges = 0;
 		
 		while (curr_frag < smaller_idx_array.size())
@@ -470,7 +488,7 @@ bool collapse_equivalent_transfrags(const EmpDist& frag_len_dist,
 					{
 						double c_len = c_scaff.right() - c_scaff.left();
 
-						if (lhs_len - c_len > frag_len_dist.std_dev())
+						if (lhs_len - c_len > frag_len_std_dev)
 							break;
 
 						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
@@ -606,210 +624,6 @@ bool collapse_equivalent_transfrags(const EmpDist& frag_len_dist,
 	return performed_collapse;
 }
 
-
-//bool collapse_equivalent_transfrags(vector<Scaffold>& fragments, 
-//                                    uint32_t max_rounds)
-//{
-//	// The containment graph is a bipartite graph with an edge (u,v) when
-//	// u is (not necessarily properly) contained in v and is the two are
-//	// compatible.
-//	typedef lemon::SmartBpUGraph ContainmentGraph;
-//	normal norm(0, 0.1);
-//	bool performed_collapse = false;
-//	
-//	double last_size = -1;
-//    long leftmost = 9999999999;
-//    long rightmost = -1;
-//    
-//    for (size_t i = 0; i < fragments.size(); ++i)
-//    {
-//        leftmost = std::min((long)fragments[i].left(), leftmost);
-//        rightmost = std::max((long)fragments[i].right(), rightmost);
-//    }
-//    
-//    long bundle_length = rightmost - leftmost;
-//    
-//	while (max_rounds--)
-//	{
-//		
-//		sort (fragments.begin(), fragments.end(), scaff_lt_rt);
-//		
-//#if ASM_VERBOSE
-//		fprintf(stderr, "%s\tStarting new collapse round\n", bundle_label->c_str());
-//#endif
-//#if ASM_VERBOSE
-//        fprintf(stderr, "%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
-//#endif
-//        bool will_perform_collapse = false;
-//		
-//#if ASM_VERBOSE
-//        fprintf(stderr, "%s\tAssessing overlaps between %lu fragments for identical conflict sets\n", 
-//                bundle_label->c_str(), 
-//                fragments.size());
-//#endif
-//        vector<size_t> replacements;
-//        for (size_t i = 0; i < fragments.size(); ++i)
-//        {
-//            replacements.push_back(i);
-//        }
-//		
-//		int curr_frag = 0;
-//		vector<int> curr_conflicts;
-//		
-//		for (int i = 1; i < fragments.size(); ++i)
-//		{
-//			if (Scaffold::overlap_in_genome(fragments[0], fragments[i], 0))
-//			{
-//				if (!Scaffold::compatible(fragments[0], fragments[i]))
-//				{
-//					curr_conflicts.push_back(i);
-//				}
-//			}
-//			else
-//			{
-//				break;
-//			}
-//		}
-//		
-//		while (curr_frag < fragments.size())
-//		{
-//			if (replacements[curr_frag] == curr_frag)
-//			{
-//				curr_conflicts.clear();
-//				
-//				for (int i = curr_frag - 1; i >= 0; --i)
-//				{
-//					if (Scaffold::overlap_in_genome(fragments[i], fragments[curr_frag], 0))
-//					{
-//						if (!Scaffold::compatible(fragments[i], fragments[curr_frag]))
-//						{
-//							curr_conflicts.push_back(i);
-//						}
-//					}
-//					else
-//					{
-//						break;
-//					}
-//				}
-//				
-//				for (int i = curr_frag + 1; i < fragments.size(); ++i)
-//				{
-//					if (Scaffold::overlap_in_genome(fragments[i], fragments[curr_frag], 0))
-//					{
-//						if (!Scaffold::compatible(fragments[i], fragments[curr_frag]))
-//						{
-//							curr_conflicts.push_back(i);
-//						}
-//					}
-//					else
-//					{
-//						break;
-//					}
-//				}
-//				
-//				sort(curr_conflicts.begin(), curr_conflicts.end());
-//				
-//				//bool advanced_curr = false;
-//				for (int c = curr_frag + 1; c < fragments.size(); ++c)
-//				{
-//					if (fragments[c].contains(fragments[curr_frag]))
-//					{
-//						if (!Scaffold::compatible(fragments[curr_frag], fragments[c]))
-//							continue;
-//						vector<int> c_conflicts;
-//						// Find c's conflicts
-//						for (int i = c - 1; i >= 0; --i)
-//						{
-//							if (Scaffold::overlap_in_genome(fragments[i], fragments[c], 0))
-//							{
-//								if (!Scaffold::compatible(fragments[i], fragments[c]))
-//								{
-//									c_conflicts.push_back(i);
-//									if (c_conflicts.size() > curr_conflicts.size())
-//										break;
-//								}
-//							}
-//							else
-//							{
-//								break;
-//							}
-//						}
-//						
-//						for (int i = c + 1; i < fragments.size(); ++i)
-//						{
-//							if (Scaffold::overlap_in_genome(fragments[i], fragments[c], 0))
-//							{
-//								if (!Scaffold::compatible(fragments[i], fragments[c]))
-//								{
-//									c_conflicts.push_back(i);
-//									if (c_conflicts.size() > curr_conflicts.size())
-//										break;
-//								}
-//							}
-//							else
-//							{
-//								break;
-//							}
-//						}
-//						if (c_conflicts.size() != curr_conflicts.size())
-//						{
-//							//break;
-//							continue;
-//						}
-//						
-//						sort(c_conflicts.begin(), c_conflicts.end());
-//						
-//						if (c_conflicts == curr_conflicts)
-//						{
-//							// merge and set curr_conflicts = c_conflicts
-//							// advance curr_frag to = c
-//							
-//							vector<Scaffold> s;
-//							s.push_back(fragments[c]);
-//							s.push_back(fragments[curr_frag]);
-//							fragments[c] = Scaffold(s);
-//							replacements[curr_frag] = c;
-//							//curr_conflicts = c_conflicts;
-//							curr_frag = c;
-//							//advanced_curr = true;
-//							will_perform_collapse = true;
-//							//break;
-//						}
-//					}
-//					else 
-//					{
-//						break;
-//					}
-//
-//				}
-//			}
-//			
-//			//if (!advanced_curr)
-//			{
-//				++curr_frag;
-//			}
-//		}
-//		
-//		if (will_perform_collapse == false)
-//			return performed_collapse;
-//		
-//
-//        vector<Scaffold> replaced;
-//        for (size_t i = 0; i < fragments.size(); ++i)
-//        {
-//            if (replacements[i] == i)
-//            {
-//                replaced.push_back(fragments[i]);
-//            }
-//        }
-//        
-//        fragments = replaced;
-//        sort(fragments.begin(), fragments.end(), scaff_lt_rt);
-//		performed_collapse = true;
-//	}
-//	return performed_collapse;
-//}
-
 void compress_consitutive(vector<Scaffold>& hits)
 {
     vector<bool> scaffold_mask;
@@ -862,8 +676,7 @@ void compress_consitutive(vector<Scaffold>& hits)
 }
 
 
-void compress_redundant(const EmpDist& frag_len_dist, 
-                        vector<Scaffold>& fragments)
+void compress_redundant(vector<Scaffold>& fragments)
 {
     double last_size = -1;
     //long leftmost = 9999999999;
@@ -885,7 +698,7 @@ void compress_redundant(const EmpDist& frag_len_dist,
         if (last_size == -1 || 0.9 * last_size > fragments.size())
         {
             last_size = fragments.size();
-            if (!collapse_equivalent_transfrags(frag_len_dist, fragments, 1))
+            if (!collapse_equivalent_transfrags(fragments, 1))
             {
                 break;
             }
@@ -897,8 +710,7 @@ void compress_redundant(const EmpDist& frag_len_dist,
     }
 }
 
-void compress_fragments(const EmpDist& frag_len_dist,
-                        vector<Scaffold>& fragments)
+void compress_fragments(vector<Scaffold>& fragments)
 {
 #if ASM_VERBOSE
     fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
@@ -910,7 +722,7 @@ void compress_fragments(const EmpDist& frag_len_dist,
     
 	compress_consitutive(fragments);
 	
-	compress_redundant(frag_len_dist, fragments);
+	compress_redundant(fragments);
     
 #if ASM_VERBOSE
     size_t post_hit_collapse_size = fragments.size();

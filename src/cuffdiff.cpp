@@ -370,6 +370,29 @@ public:
             fac->read_group_properties(copy_props);
         }
     }
+    
+    
+    void inspect_replicate_maps()
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+            *rg_props = *global_read_properties;
+            
+            long double map_mass = 0.0;
+            BadIntronTable bad_introns;
+            
+            shared_ptr<EmpDist> frag_len_dist(new EmpDist);
+            
+            inspect_map(*fac, map_mass, bad_introns, *frag_len_dist);
+            
+            rg_props->frag_len_dist(frag_len_dist);
+            rg_props->total_map_mass(map_mass);
+            
+            fac->read_group_properties(rg_props);
+            
+        }
+    }
 	
     shared_ptr<ReadGroupProperties const> read_group_properties()
     {
@@ -447,7 +470,6 @@ void decr_pool_count()
 void quantitation_worker(const RefSequenceTable& rt,
 						 vector<HitBundle*>* sample_bundles,
 						 const vector<long double>& sample_masses,
-						 const vector<EmpDist>& frag_len_dists,
 						 Tests& tests,
 						 Tracking& tracking)
 {
@@ -464,7 +486,7 @@ void quantitation_worker(const RefSequenceTable& rt,
     bundle_label.reset(new string(bundle_label_buf));
 	
 	
-	test_differential(rt, *sample_bundles, sample_masses, frag_len_dists, tests, tracking);
+	test_differential(rt, *sample_bundles, sample_masses, tests, tracking);
 	
 	for (size_t i = 0; i < sample_bundles->size(); ++i)
 	{
@@ -655,7 +677,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	
 	vector<ReplicatedBundleFactory> bundle_factories;
 	vector<long double> map_masses;
-	vector<EmpDist> frag_len_dists;
     
     //max_frag_len = 0;
     
@@ -701,31 +722,33 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         ReplicatedBundleFactory rep_factory(replicate_factories);
         bundle_factories.push_back(rep_factory);
 	}
-    
+
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
-        //fprintf(stderr, "Counting hits in sample %lu\n", i);
-        long double map_mass = 0;
-        BadIntronTable bad_introns;
-        
-        shared_ptr<EmpDist> frag_len_dist(new EmpDist);
-        
-        inspect_map(fac, map_mass, bad_introns, *frag_len_dist);
-        
-        shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
-        *rg_props = *global_read_properties;
-        
-        rg_props->frag_len_dist(frag_len_dist);
-        rg_props->total_map_mass(map_mass);
-       
-        fac.read_group_properties(rg_props);
-        
-        // don't actually need to set bad_introns in the factories when using a 
-        // reference GTF
-        map_masses.push_back(map_mass);
-        frag_len_dists.push_back(*frag_len_dist);
-        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist->max());
+        fac.inspect_replicate_maps();
     }
+    
+//    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+//    {
+//        //fprintf(stderr, "Counting hits in sample %lu\n", i);
+//        long double map_mass = 0;
+//        BadIntronTable bad_introns;
+//        
+//        shared_ptr<EmpDist> frag_len_dist(new EmpDist);
+//        
+////        inspect_map(fac, map_mass, bad_introns, *frag_len_dist);
+//        
+////        shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+////        *rg_props = *global_read_properties;
+//        
+//
+//        
+//        // don't actually need to set bad_introns in the factories when using a 
+//        // reference GTF
+//        map_masses.push_back(map_mass);
+//        frag_len_dists.push_back(*frag_len_dist);
+//        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist->max());
+//    }
 	
     max_frag_len = tmp_max_frag_len;
 	
@@ -798,7 +821,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                               boost::cref(rt), 
                               sample_bundles, 
                               boost::cref(map_masses), 
-                              boost::cref(frag_len_dists),
                               boost::ref(tests),
                               boost::ref(tracking));
 
@@ -806,7 +828,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
             quantitation_worker(boost::cref(rt), 
                                 sample_bundles, 
                                 boost::cref(map_masses), 
-                                boost::cref(frag_len_dists),
                                 boost::ref(tests),
                                 boost::ref(tracking));
 #endif

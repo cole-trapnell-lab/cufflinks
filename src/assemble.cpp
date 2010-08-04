@@ -367,8 +367,7 @@ void holdout_transitivity_hazards(vector<Scaffold>& hits,
 	hits = filtered_hits;
 }
 
-bool make_scaffolds(const EmpDist& frag_len_dist,
-                    int bundle_left,
+bool make_scaffolds(int bundle_left,
 					int bundle_length,
 					vector<Scaffold>& hits,
 					vector<Scaffold>& scaffolds)
@@ -416,7 +415,7 @@ bool make_scaffolds(const EmpDist& frag_len_dist,
 		
         hits.insert(hits.end(), split_hazards.begin(), split_hazards.end());
 
-        compress_fragments(frag_len_dist, hits);
+        compress_fragments(hits);
 
 #if ASM_VERBOSE
         fprintf(stderr, "%s\tAssembling bundle with %lu hits\n", bundle_label->c_str(), hits.size());

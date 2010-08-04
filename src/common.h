@@ -45,7 +45,7 @@ extern int num_threads;
 
 static const int bowtie_overhang_tolerance = 8;
 extern float min_isoform_fraction;
-extern float min_intron_fraction;
+//extern float min_isoform_fraction;
 extern float max_phred_err_prob;
 extern float high_phred_err_prob;
 

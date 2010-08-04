@@ -41,8 +41,7 @@ bool mate_graphs(const HitBundle& bundle, BundleStats* stats);
 
 
 
-bool make_scaffolds(const EmpDist& frag_len_dist, 
-                    int bundle_left,
+bool make_scaffolds(int bundle_left,
 					int bundle_length,
 					vector<Scaffold>& hits,
 					vector<Scaffold>& scaffolds);

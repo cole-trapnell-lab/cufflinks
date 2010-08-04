@@ -664,7 +664,7 @@ void filter_hits(int bundle_length,
 		filter_introns(bundle_length, 
 					   bundle_left, 
 					   hits, 
-					   min_intron_fraction, 
+					   min_isoform_fraction, 
 					   true,
 					   true);
 		if (bundle_avg_doc > 3000)
@@ -672,7 +672,7 @@ void filter_hits(int bundle_length,
 			filter_introns(bundle_length, 
 						   bundle_left, 
 						   hits, 
-						   min_intron_fraction, 
+						   min_isoform_fraction, 
 						   true,
 						   false);
 		}

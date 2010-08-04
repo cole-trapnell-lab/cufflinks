@@ -95,9 +95,6 @@ public:
 	
 	virtual const string&	reference_tag() const = 0;
 	virtual void			reference_tag(const string& r) = 0;
-	
-//	virtual	void calculate_abundance(const vector<MateHit>& alignments,
-//									 const EmpDist& frag_len_dist) = 0;
 };
 
 class TranscriptAbundance : public Abundance
@@ -244,9 +241,6 @@ public:
 	virtual const string&	reference_tag() const { return _ref_tag; }
 	virtual void			reference_tag(const string& r) { _ref_tag = r; } 
 	
-//	void calculate_abundance(const vector<MateHit>& alignments,
-//							 const EmpDist& frag_len_dist);
-	
 private:
 	
 	void calculate_FPKM_err_bar(double variance);
@@ -364,8 +358,7 @@ public:
 	const ublas::matrix<double>& kappa_cov() const { return _kappa_covariance; }
 	
 	
-	void calculate_abundance(const vector<MateHit>& alignments,
-							 const EmpDist& frag_len_dist);
+	void calculate_abundance(const vector<MateHit>& alignments);
 	
 private:
 	
@@ -378,20 +371,19 @@ private:
 	void calculate_conf_intervals();
 	void calculate_counts(const vector<MateHit>& alignments, const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
+    
 	void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
 												  vector<shared_ptr<Abundance> >& transcripts,
-												  vector<shared_ptr<Abundance> >& mapped_transcripts,
-												  const EmpDist& frag_len_dist);
+												  vector<shared_ptr<Abundance> >& mapped_transcripts);
+    
 	bool unbiased_cond_probs_and_effective_length(const vector<MateHit>& alignments,
 												  const Scaffold& transfrag,
-												  const EmpDist& frag_len_dist,
 												  const vector<char>& compatibilities,
 												  vector<double>& cond_probs,
 												  double& eff_len);
 	
 	bool cond_probs_and_effective_length(const vector<MateHit>& alignments,
 									const Scaffold& transfrag,
-									const EmpDist& frag_len_dist,
 									const vector<char>& compatibilities,
 									vector<double>& cond_probs,
 									double& eff_len);

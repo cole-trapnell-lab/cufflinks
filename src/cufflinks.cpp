@@ -34,9 +34,9 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:";
 #endif
 
 static struct option long_options[] = {
@@ -127,7 +127,7 @@ int parse_options(int argc, char** argv)
 				min_isoform_fraction = parseFloat(0, 1.0, "-F/--min-isoform-fraction must be between 0 and 1.0", print_usage);
 				break;
 			case 'f':
-				min_intron_fraction = parseFloat(0, 1.0, "-f/--min-intron-fraction must be between 0 and 1.0", print_usage);
+				min_isoform_fraction = parseFloat(0, 1.0, "-f/--min-intron-fraction must be between 0 and 1.0", print_usage);
 				break;
 			case 'I':
 				max_intron_length = parseInt(1, "-I/--max-intron-length must be at least 1", print_usage);
@@ -287,8 +287,7 @@ CuffStrand guess_strand_for_interval(const vector<uint8_t>& strand_guess,
 	return (CuffStrand)guess;
 }
 
-bool scaffolds_for_bundle(const EmpDist& frag_len_dist, 
-                          const HitBundle& bundle, 
+bool scaffolds_for_bundle(const HitBundle& bundle, 
 						  vector<Scaffold>& scaffolds,
 						  BundleStats* stats = NULL)
 {
@@ -309,7 +308,7 @@ bool scaffolds_for_bundle(const EmpDist& frag_len_dist,
 	filter_introns(bundle.length(), 
 				   bundle.left(), 
 				   hits, 
-				   min_intron_fraction, 
+				   min_isoform_fraction, 
 				   false,
 				   true);
 	
@@ -384,14 +383,12 @@ bool scaffolds_for_bundle(const EmpDist& frag_len_dist,
 	
 	if (saw_fwd && saw_rev)
 	{
-		assembled_successfully |= make_scaffolds(frag_len_dist,
-                                                 bundle.left(), 
+		assembled_successfully |= make_scaffolds(bundle.left(), 
                                                  bundle.length(), 
                                                  fwd_hits, 
                                                  fwd_scaffolds);
         
-		assembled_successfully |= make_scaffolds(frag_len_dist,
-                                                 bundle.left(), 
+		assembled_successfully |= make_scaffolds(bundle.left(), 
                                                  bundle.length(), 
                                                  rev_hits, 
                                                  rev_scaffolds);
@@ -403,8 +400,7 @@ bool scaffolds_for_bundle(const EmpDist& frag_len_dist,
 	{
 		if (saw_fwd || (!saw_fwd && !saw_rev))
 		{
-			assembled_successfully |= make_scaffolds(frag_len_dist,
-                                                     bundle.left(),
+			assembled_successfully |= make_scaffolds(bundle.left(),
 													 bundle.length(),
 													 fwd_hits,
 													 fwd_scaffolds);
@@ -412,8 +408,7 @@ bool scaffolds_for_bundle(const EmpDist& frag_len_dist,
 		}
 		else
 		{
-			assembled_successfully |= make_scaffolds(frag_len_dist,
-                                                     bundle.left(), 
+			assembled_successfully |= make_scaffolds(bundle.left(), 
 													 bundle.length(), 
 													 rev_hits, 
 													 rev_scaffolds);
@@ -456,8 +451,7 @@ void decr_pool_count()
 void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 								   //const RefSequenceTable& rt,
                                    double total_map_mass,
-                                   const EmpDist& frag_len_dist,
-								   vector<Gene>& genes)
+                                   vector<Gene>& genes)
 {
 	if (transfrag_cluster.abundances().empty())
 		return;
@@ -483,7 +477,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	
 	avg_read_length /= hits_in_cluster.size();
 	
-	transfrag_cluster.calculate_abundance(hits_in_cluster, frag_len_dist);
+	transfrag_cluster.calculate_abundance(hits_in_cluster);
 	
 	vector<AbundanceGroup> transfrags_by_strand;
 	cluster_transcripts<ConnectByStrand>(transfrag_cluster,
@@ -552,7 +546,6 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 
 void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 									long double total_map_mass,
-									const EmpDist& frag_len_dist,
 									vector<Gene>& genes,
 									BiasLearner* bl_p)
 {	
@@ -591,7 +584,7 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 	
 	foreach(AbundanceGroup& cluster, transfrags_by_cluster)
 	{
-		quantitate_transcript_cluster(cluster, total_map_mass, frag_len_dist, genes);
+		quantitate_transcript_cluster(cluster, total_map_mass, genes);
 	}
 #if ASM_VERBOSE
     fprintf(stderr, "%s\tBundle quantitation complete\n", bundle_label->c_str());
@@ -601,7 +594,6 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
 					 long double map_mass,
-                     const EmpDist& frag_len_dist,
 					 BiasLearner* bl_p,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
@@ -638,7 +630,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	}
 	else 
 	{
-		bool success = scaffolds_for_bundle(frag_len_dist, bundle, scaffolds, NULL);
+		bool success = scaffolds_for_bundle(bundle, scaffolds, NULL);
 		if (!success)
 		{
 			delete bundle_ptr;
@@ -649,8 +641,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	vector<Gene> genes;
     
 	quantitate_transcript_clusters(scaffolds, 
-								   map_mass, 
-								   frag_len_dist,
+								   map_mass,
 								   genes,
 								   bl_p);
     
@@ -804,7 +795,6 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 						 boost::cref(rt), 
 						 bundle_ptr, 
 						 bundle_factory.read_group_properties()->total_map_mass(),
-                         *bundle_factory.read_group_properties()->frag_len_dist(),
                          bias_learner,
 						 ftranscripts, 
 						 fgene_abundances,
@@ -813,7 +803,6 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 			assemble_bundle(boost::cref(rt), 
 							bundle_ptr, 
 							bundle_factory.read_group_properties()->total_map_mass(),
-                            *bundle_factory.read_group_properties()->frag_len_dist(),
                             bias_learner,
 							ftranscripts,
 							fgene_abundances,
@@ -907,7 +896,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	max_frag_len = frag_len_dist->max();
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 
-	assemble_hits(bundle_factory, NULL);
+	assemble_hits(bundle_factory, (BiasLearner*)NULL);
 
     if (fasta_dir == "") return;
     
@@ -932,7 +921,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory2.set_mask_rnas(mask_rnas);
     }
     
-	 bundle_factory2.read_group_properties(rg_props);
+    bundle_factory2.read_group_properties(rg_props);
     
 	BiasLearner bl(*rg_props->frag_len_dist());
 	learn_bias(bundle_factory2, bl);

@@ -58,23 +58,6 @@ void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 	}
 }
 
-// NOTE: Do not call this function directly - it needs to be called by 
-// a containing abundance group, which can probabilistically assign fragment
-// counts to this transcript before calling this function.
-
-//void TranscriptAbundance::calculate_abundance(const vector<MateHit>& alignments,
-//											  const EmpDist& frag_len_dist)
-//{
-//    assert(false)
-//	_FPKM = transcript_mass_fraction;
-//	if (_FPKM == 0.0 || transcript_mass_fraction == 0.0)
-//	{
-//		return;
-//	}
-//	_FPKM /= (effective_length() / 1000.0);
-//	_FPKM /= (1000000.0);
-//}
-
 AbundanceStatus AbundanceGroup::status() const
 {
 	foreach(shared_ptr<Abundance> ab, _abundances)
@@ -364,14 +347,13 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
 	}
 }
 
-void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments,
-										 const EmpDist& frag_len_dist)
+void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 {
 	vector<shared_ptr<Abundance> > transcripts;
 	get_transfrags(transcripts);
 	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
 	
-	compute_cond_probs_and_effective_lengths(alignments, transcripts, mapped_transcripts, frag_len_dist);
+	compute_cond_probs_and_effective_lengths(alignments, transcripts, mapped_transcripts);
 	
 	calculate_gammas(alignments, transcripts, mapped_transcripts);		
 	
@@ -503,7 +485,6 @@ void AbundanceGroup::calculate_FPKM_variance()
 
 bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alignments,
 													 const Scaffold& transcript,
-													 const EmpDist& frag_len_dist,
 													 const vector<char>& compatibilities,
 													 vector<double>& cond_probs,
 													 double& eff_len)
@@ -511,7 +492,10 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 	int M = alignments.size();
 	int trans_len = transcript.length();
 	
-	// Calculate effective length
+    assert(false);
+    
+	// Calculate effective length for each transcript and for each 
+    // frag_len_dist in the set of MateHits
 	eff_len = 0;
 	for(int l = 1; l <= trans_len; l++)
 	{
@@ -527,7 +511,7 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 		if (compatibilities[i] == 1) 
 		{
 			const MateHit& hit = alignments[i];
-
+            const EmpDist& frag_len_dist = *(hit.read_group_props().frag_len_dist());
 			if (i>0 && hits_equals(hit, alignments[i-1]))
 			{
 				cond_probs[i] = cond_probs[i-1];
@@ -572,7 +556,6 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 
 bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateHit>& alignments,
 															  const Scaffold& transcript,
-															  const EmpDist& frag_len_dist,
 															  const vector<char>& compatibilities,
 															  vector<double>& cond_probs,
 															  double& eff_len)
@@ -663,8 +646,7 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 
 void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 															  vector<shared_ptr<Abundance> >& transcripts,
-															  vector<shared_ptr<Abundance> >& mapped_transcripts,
-															  const EmpDist& frag_len_dist)
+															  vector<shared_ptr<Abundance> >& mapped_transcripts)
 {																	
 	int N = transcripts.size();
 	int M = alignments.size();
@@ -680,9 +662,9 @@ void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateH
 		
 		bool mapped;
 		if (transfrag.strand() == CUFF_STRAND_UNKNOWN || _bl_p == NULL) // We don't know the start and end OR we haven't learned bias.
-			mapped = cond_probs_and_effective_length(alignments, transfrag, frag_len_dist, compatibilities[j], cond_probs, eff_len);
+			mapped = cond_probs_and_effective_length(alignments, transfrag, compatibilities[j], cond_probs, eff_len);
 		else
-			mapped = unbiased_cond_probs_and_effective_length(alignments, transfrag, frag_len_dist, compatibilities[j], cond_probs, eff_len);
+			mapped = unbiased_cond_probs_and_effective_length(alignments, transfrag, compatibilities[j], cond_probs, eff_len);
 		
 		transcripts[j]->effective_length(eff_len);
 		transcripts[j]->cond_probs(&cond_probs);
@@ -2174,159 +2156,4 @@ double get_scaffold_min_doc(int bundle_origin,
 	}
 	
 	return min_doc;
-}
-
-long double get_map_mass(BundleFactory& bundle_factory, EmpDist& frag_len_dist)
-{
-	HitBundle bundle;
-	long double map_mass = 0;
-	
-	vector<double> frag_len_hist(def_max_frag_len+1,0);
-	list<pair<int, int> > open_ranges;
-	
-	int min_read_len = numeric_limits<int>::max();
-	bool has_pairs = false;
-	while(bundle_factory.next_bundle(bundle))
-	{
-		const vector<MateHit>& hits = bundle.non_redundant_hits();
-		const vector<double>& collapse_counts = bundle.collapse_counts();
-		
-		int curr_range_start = hits[0].left();
-		int curr_range_end = numeric_limits<int>::max();
-		int next_range_start = -1;
-		
-		// This first loop calclates the map mass and finds ranges with no introns
-		for (size_t i = 0; i < hits.size(); ++i) 
-		{
-			double mate_len = 0;
-			if (hits[i].left_alignment() || hits[i].right_alignment())
-				mate_len = 1.0;
-			map_mass += mate_len * collapse_counts[i]; 
-
-			min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
-			if (hits[i].right_alignment())
-				min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
-
-			
-			if (hits[i].left() > curr_range_end)
-			{
-				if (curr_range_end - curr_range_start > max_frag_len)
-					open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
-				curr_range_start = next_range_start;
-				curr_range_end = numeric_limits<int>::max();
-			}
-			if (hits[i].left_alignment()->contains_splice())
-			{
-				if (hits[i].left() - curr_range_start > max_frag_len)
-					open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
-				curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
-			}
-			if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
-			{
-				has_pairs = true;
-				assert(hits[i].right_alignment()->left() > hits[i].left());
-				curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
-				next_range_start = max(next_range_start, hits[i].right());
-			}
-		}
-		
-		if (has_pairs)
-		{
-			pair<int, int> curr_range(-1,-1);
-			
-			// This second loop uses the ranges found above to find the estimated frag length distribution
-			// It also finds the minimum read length to use in the linear interpolation
-			for (size_t i = 0; i < hits.size(); ++i)
-			{
-				if (hits[i].left() > curr_range.second && open_ranges.empty())
-					break;
-				
-				if (hits[i].left() > curr_range.second)
-				{
-					curr_range = open_ranges.front();
-					open_ranges.pop_front();
-				}
-				
-				if (hits[i].left() >= curr_range.first && hits[i].right() <= curr_range.second && hits[i].is_pair())
-				{
-					int mate_len = hits[i].right()-hits[i].left();
-					if (mate_len < max_frag_len)
-						frag_len_hist[mate_len] += collapse_counts[i];
-					min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
-					min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
-				}
-			}
-		}
-	}
-				
-	long double tot_count = 0;
-	vector<double> frag_len_pdf(max_frag_len+1, 0.0);
-	vector<double> frag_len_cdf(max_frag_len+1, 0.0);
-	normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
-
-	int frag_len_max = frag_len_hist.size()-1;
-
-	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
-	if (!has_pairs)
-	{
-		frag_len_max = def_frag_len_mean + 3*def_frag_len_std_dev;
-		for(int i = min_read_len; i < frag_len_max; i++)
-		{
-			frag_len_hist[i] = cdf(frag_len_norm, i+0.5)-cdf(frag_len_norm, i-0.5);
-			tot_count += frag_len_hist[i];
-		}
-	}
-	else 
-	{	
-		tot_count = accumulate( frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
-		double curr_total = 0;
-		int last_nonzero = min_read_len-1;
-		for(int i = 1; i < frag_len_hist.size(); i++)
-		{
-			if (frag_len_hist[i] > 0)
-			{
-				if (last_nonzero > 0 && last_nonzero != i-1)
-				{
-					double b = frag_len_hist[last_nonzero];
-					double m = (frag_len_hist[i] - b)/(i-last_nonzero);
-					for (int x = 1; x < i - last_nonzero; x++)
-					{
-						frag_len_hist[last_nonzero+x] = m * x + b;
-						tot_count += frag_len_hist[last_nonzero+x];
-						curr_total += frag_len_hist[last_nonzero+x];
-					}	
-				}
-				last_nonzero = i;
-			}
-			
-			curr_total += frag_len_hist[i];
-			
-			if (curr_total/tot_count > .9999)
-			{
-				frag_len_max = i; 
-				break;
-			}
-		}
-	}
-	
-	// Convert histogram to pdf and cdf
-	int frag_len_mode = 0;
-	for(int i = 1; i < frag_len_hist.size(); i++)
-	{
-		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
-		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
-		fprintf(stderr, "%f\n", frag_len_hist[i]);
-
-		if (frag_len_pdf[i] > frag_len_pdf[frag_len_mode])
-			frag_len_mode = i;
-	}
-	
-	frag_len_dist.pdf(frag_len_pdf);
-	frag_len_dist.cdf(frag_len_cdf);
-	frag_len_dist.mode(frag_len_mode);
-	frag_len_dist.max(frag_len_max);
-	frag_len_dist.min(min_read_len);
-	
-	bundle_factory.reset();
-	return map_mass;
 }

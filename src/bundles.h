@@ -261,32 +261,11 @@ public:
     {
         return _rg_props;
     }
-    
-//    void frag_len_dist(shared_ptr<const EmpDist> fld) 
-//	{ 
-//		_frag_len_dist = fld;
-//	}
-//    
-//    shared_ptr<const EmpDist> frag_len_dist() const 
-//	{ 
-//		return _frag_len_dist;
-//	}
-//    
-//    long double total_map_mass() const 
-//    { 
-//        return _total_map_mass; 
-//    }
-//    
-//    void total_map_mass(long double tmm) 
-//    { 
-//        _total_map_mass = tmm; 
-//    }
 	
 	bool spans_bad_intron(const ReadHit& read);
 	
 private:
 	HitFactory& _hit_fac;
-//    long double _total_map_mass;
     
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
 	//FILE* ref_mRNA_file;
@@ -301,8 +280,6 @@ private:
 	BadIntronTable _bad_introns;
     
     shared_ptr<ReadGroupProperties const> _rg_props;
-    
-//    shared_ptr<const EmpDist> _frag_len_dist;
 };
 
 void identify_bad_splices(const HitBundle& bundle, 

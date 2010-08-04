@@ -44,7 +44,7 @@ int max_frag_len = 1000;
 int olap_radius = 50;
 
 float min_isoform_fraction = 0.1;
-float min_intron_fraction = 0.1;
+//float min_isoform_fraction = 0.1;
 float pre_mrna_fraction = 0.25;
 float high_phred_err_prob = 0.50; // about MAPQ = 3
 
