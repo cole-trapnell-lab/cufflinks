@@ -492,8 +492,8 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 	int M = alignments.size();
 	int trans_len = transcript.length();
 	
-    assert(false);
-    
+#warning "PUT EFFECTIVE LENGTH CALCULATION BACK"
+#if 0
 	// Calculate effective length for each transcript and for each 
     // frag_len_dist in the set of MateHits
 	eff_len = 0;
@@ -501,6 +501,11 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 	{
 		eff_len += frag_len_dist.pdf(l) * (trans_len - l + 1);
 	}
+#else
+    eff_len = trans_len;
+#endif
+    
+    
 	
 	// Calculate conditional probability of each alignment coming from this transcript 
 	// given the alignment comes from the locus
@@ -511,7 +516,7 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 		if (compatibilities[i] == 1) 
 		{
 			const MateHit& hit = alignments[i];
-            const EmpDist& frag_len_dist = *(hit.read_group_props().frag_len_dist());
+            const EmpDist& frag_len_dist = *(hit.read_group_props()->frag_len_dist());
 			if (i>0 && hits_equals(hit, alignments[i-1]))
 			{
 				cond_probs[i] = cond_probs[i-1];
@@ -573,6 +578,8 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 	start_bias[trans_len] = 1;
 	end_bias[trans_len] = 1;
 	
+#warning "PUT EFFECTIVE LENGTH CALCULATION BACK"
+#if 0
 	// Calculate bias of all possible fragments of a given length for ever possible length
 	// Also calculate unbiased effective length
 	
@@ -586,6 +593,10 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 		tot_bias_for_len[l] = tot;
 		eff_len += frag_len_dist.pdf(l) * tot;
 	}
+#else
+    vector<double> tot_bias_for_len(trans_len+1,1);
+	eff_len = trans_len;    
+#endif
 	
 	assert(!isnan(eff_len));
 	// Calculate conditional probability of each alignment coming from this transcript
@@ -595,6 +606,7 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 		if (compatibilities[i] == 1) 
 		{
 			const MateHit& hit = alignments[i];
+            const EmpDist& frag_len_dist = *(hit.read_group_props()->frag_len_dist());
 			if (i>0 && hits_equals(hit, alignments[i-1]))
 			{
                 cond_probs[i] = cond_probs[i-1];
