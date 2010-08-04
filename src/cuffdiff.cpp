@@ -355,22 +355,21 @@ public:
         }
     }
     
-    // NOTE: This routine implements a sort-of hack.  Ultimately, we want
-    // BundleFactories to have one ReadGroupProperties per replicate, and
-    // this routine forces all replicates to have the same one, which 
-    // isn't very good, because this throws away the individual fragment
-    // length distributions and bias models associated with each replicate.
-    // We're probably losing a fair amount of power here.
-    void read_group_properties(shared_ptr<ReadGroupProperties> rg_props)
-    {
-        foreach (shared_ptr<BundleFactory> fac, _factories)
-        {
-            shared_ptr<ReadGroupProperties> copy_props(new ReadGroupProperties);
-            *copy_props = *rg_props;
-            fac->read_group_properties(copy_props);
-        }
-    }
-    
+//    // NOTE: This routine implements a sort-of hack.  Ultimately, we want
+//    // BundleFactories to have one ReadGroupProperties per replicate, and
+//    // this routine forces all replicates to have the same one, which 
+//    // isn't very good, because this throws away the individual fragment
+//    // length distributions and bias models associated with each replicate.
+//    // We're probably losing a fair amount of power here.
+//    void read_group_properties(shared_ptr<ReadGroupProperties> rg_props)
+//    {
+//        foreach (shared_ptr<BundleFactory> fac, _factories)
+//        {
+//            shared_ptr<ReadGroupProperties> copy_props(new ReadGroupProperties);
+//            *copy_props = *rg_props;
+//            fac->read_group_properties(copy_props);
+//        }
+//    }
     
     void inspect_replicate_maps()
     {
@@ -394,22 +393,22 @@ public:
         }
     }
 	
-    shared_ptr<ReadGroupProperties const> read_group_properties()
-    {
-        for (size_t i = 1; i < _factories.size(); ++i)
-        {
-            if (_factories[i-1]->read_group_properties() != 
-                _factories[i]->read_group_properties())
-            {
-                return shared_ptr<ReadGroupProperties>();
-            }
-        }
-        if (_factories.empty())
-        {
-             return shared_ptr<ReadGroupProperties>();   
-        }
-        return _factories.front()->read_group_properties();
-    }
+//    shared_ptr<ReadGroupProperties const> read_group_properties()
+//    {
+//        for (size_t i = 1; i < _factories.size(); ++i)
+//        {
+//            if (_factories[i-1]->read_group_properties() != 
+//                _factories[i]->read_group_properties())
+//            {
+//                return shared_ptr<ReadGroupProperties>();
+//            }
+//        }
+//        if (_factories.empty())
+//        {
+//             return shared_ptr<ReadGroupProperties>();   
+//        }
+//        return _factories.front()->read_group_properties();
+//    }
     
 private:
 	vector<shared_ptr<BundleFactory> > _factories;
@@ -486,7 +485,7 @@ void quantitation_worker(const RefSequenceTable& rt,
     bundle_label.reset(new string(bundle_label_buf));
 	
 	
-	test_differential(rt, *sample_bundles, sample_masses, tests, tracking);
+	test_differential(rt, *sample_bundles, tests, tracking);
 	
 	for (size_t i = 0; i < sample_bundles->size(); ++i)
 	{

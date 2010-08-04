@@ -315,7 +315,8 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             //assert (parent != NULL);
             pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
             inserted = count_per_replicate.insert(make_pair(rg_props, 0.0));
-            inserted.first->second += (1.0 - alignments[i].error_prob());
+            double more_mass = (1.0 - alignments[i].error_prob());
+            inserted.first->second += more_mass;
         }
     }
     

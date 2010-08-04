@@ -105,12 +105,11 @@ struct Tests
 
 struct FPKMContext
 {
-	FPKMContext(double c, double r, double v, double m)
-		: counts(c), FPKM(r), FPKM_variance(v), log_sample_mass(m) {}
+	FPKMContext(double c, double r, double v)
+		: counts(c), FPKM(r), FPKM_variance(v) {}
 	double counts;
 	double FPKM;
 	double FPKM_variance;
-	double log_sample_mass;
 };
 
 struct FPKMTracking
@@ -140,43 +139,8 @@ struct Tracking
 
 extern double min_read_count;
 
-
-#if 0
-// This performs a between-group test on an isoform or TSS grouping, on two 
-// different samples.
-bool test_diffexp(size_t sample1,
-				  size_t sample2,
-				  size_t transcript_group_id,
-				  const FPKMContext& curr,
-				  const FPKMContext& prev,
-				  SampleDifference& test);
-
-// This performs between-group tests on isoforms or TSS groupings in a single
-// locus, on two different samples.
-int get_de_tests(size_t curr_sample_idx,
-				 const QuantGroup& curr_quant_group,
-				 long double curr_mass,
-				 size_t prev_sample_idx,
-				 const QuantGroup& prev_quant_group,
-				 long double prev_mass,
-				 SampleDiffs& isoform_de_tests,
-				 bool enough_reads);
-
-// This performs within-group tests on a set of isoforms or a set of TSS groups.
-// This is a way of looking for meaningful differential splicing or differential
-// promoter use.
-void get_ds_tests(size_t curr_sample_idx,
-				  const QuantGroup& curr_quant_group,
-				  size_t prev_sample_idx,
-				  const QuantGroup& prev_quant_group,
-				  SampleDiffs& diff_tests,
-				  bool enough_reads);
-
-#endif
-
 void test_differential(const RefSequenceTable& rt, 
 					   const vector<HitBundle*>& sample_bundles,
-					   const vector<long double>& sample_masses,
 					   Tests& tests,
 					   Tracking& tracking);
 

@@ -29,19 +29,14 @@ bool test_diffexp(const FPKMContext& curr,
 	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
 	{
 		assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
-		double log_curr = log(curr.counts);
-		double log_prev = log(prev.counts);
-		
+//		double log_curr = log(curr.counts);
+//		double log_prev = log(prev.counts);
+        
 		double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
 		double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
-		
-		// Note: this is written a little differently in the supplement, 
-		// where the numerator of the tests includes an explicit sum of
-		// logs to get the isoform counts in log space.  We have already
-		// performed X_g * gamma_j here, so we just take the log of 
-		// that product.
-		
-		double numerator = (log_curr + prev.log_sample_mass - log_prev - curr.log_sample_mass);
+        
+        double numerator = log(prev.FPKM / curr.FPKM);
+        
 		double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
 		double stat = numerator / denominator;
 		
@@ -110,9 +105,7 @@ bool test_diffexp(const FPKMContext& curr,
 // This performs between-group tests on isoforms or TSS groupings in a single
 // locus, on two different samples.
 int get_de_tests(const Abundance& prev_abundance,
-				 long double prev_mass,
 				 const Abundance& curr_abundance,
-				 long double curr_mass,
 				 SampleDiffs& de_tests,
 				 bool enough_reads)
 {
@@ -123,22 +116,18 @@ int get_de_tests(const Abundance& prev_abundance,
 	inserted = de_tests.insert(make_pair(curr_abundance.description(),
 										 SampleDifference())); 
 	if (curr_abundance.status() == NUMERIC_OK && 
-		prev_abundance.status() == NUMERIC_OK && 
-		curr_mass > 0 &&
-		prev_mass > 0)
+		prev_abundance.status() == NUMERIC_OK &&
+        curr_abundance.FPKM() > 0 &&
+        prev_abundance.FPKM() > 0)
 	{
-		double log_mass_curr = log(curr_mass);
-		double log_mass_prev = log(prev_mass);
 		
 		FPKMContext r1(curr_abundance.num_fragments(), 
 					   curr_abundance.FPKM(), 
-					   curr_abundance.FPKM_variance(), 
-					   log_mass_curr);
+					   curr_abundance.FPKM_variance());
 		
 		FPKMContext r2(prev_abundance.num_fragments(), 
 					   prev_abundance.FPKM(), 
-					   prev_abundance.FPKM_variance(), 
-					   log_mass_prev);
+					   prev_abundance.FPKM_variance());
 		
 		test.test_status = FAIL;
 
@@ -469,7 +458,6 @@ string make_ref_tag(const string& ref, char classcode)
 	return string(tag_buf);
 }
 void add_to_tracking_table(Abundance& ab,
-						   double log_sample_mass,
 						   FPKMTrackingTable& track)
 
 {
@@ -507,8 +495,7 @@ void add_to_tracking_table(Abundance& ab,
 	
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
 								 ab.FPKM(), 
-								 ab.FPKM_variance(), 
-								 log_sample_mass);
+								 ab.FPKM_variance());
 	
 	inserted.first->second.fpkm_series.push_back(r1);
 }
@@ -538,7 +525,6 @@ struct SampleAbundances
 	vector<AbundanceGroup> cds;
 	vector<AbundanceGroup> gene_cds;
 	vector<AbundanceGroup> genes;
-	double sample_mass;
 	double cluster_mass;
 };
 
@@ -548,7 +534,6 @@ mutex test_storage_lock; // don't modify the above struct without locking here
 
 void test_differential(const RefSequenceTable& rt, 
 					   const vector<HitBundle*>& sample_bundles,
-					   const vector<long double>& sample_masses,
 					   Tests& tests,
 					   Tracking& tracking)
 {
@@ -580,7 +565,6 @@ void test_differential(const RefSequenceTable& rt,
 	for (size_t i = 0; i < sample_bundles.size(); ++i)
 	{
 		samples[i].cluster_mass = sample_bundles[i]->hits().size();
-		samples[i].sample_mass = sample_masses[i];
 		vector<shared_ptr<Abundance> > abundances;
 		
 		foreach(const Scaffold& s, sample_bundles[i]->ref_scaffolds())
@@ -722,26 +706,24 @@ void test_differential(const RefSequenceTable& rt,
 	for (size_t i = 0; i < samples.size(); ++i)
 	{
 		const AbundanceGroup& ab_group = samples[i].transcripts;
-		samples[i].sample_mass = sample_masses[i];
-		double log_mass_curr = log(sample_masses[i]);
 		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
-			add_to_tracking_table(*ab, log_mass_curr, tracking.isoform_fpkm_tracking);
+			add_to_tracking_table(*ab, tracking.isoform_fpkm_tracking);
 		}
 		
 		foreach (AbundanceGroup& ab, samples[i].cds)
 		{
-			add_to_tracking_table(ab, log_mass_curr, tracking.cds_fpkm_tracking);
+			add_to_tracking_table(ab, tracking.cds_fpkm_tracking);
 		}
 		
 		foreach (AbundanceGroup& ab, samples[i].primary_transcripts)
 		{
-			add_to_tracking_table(ab, log_mass_curr, tracking.tss_group_fpkm_tracking);
+			add_to_tracking_table(ab, tracking.tss_group_fpkm_tracking);
 		}
 		
 		foreach (AbundanceGroup& ab, samples[i].genes)
 		{
-			add_to_tracking_table(ab, log_mass_curr, tracking.gene_fpkm_tracking);
+			add_to_tracking_table(ab, tracking.gene_fpkm_tracking);
 		}
 	}
 	
@@ -757,9 +739,7 @@ void test_differential(const RefSequenceTable& rt,
 		for (size_t j = 0; j < samples[i].transcripts.abundances().size(); ++j)
 		{
 			get_de_tests(*(samples[i-1].transcripts.abundances()[j]), 
-						 sample_masses[i-1],
 						 *(samples[i].transcripts.abundances()[j]),
-						 sample_masses[i],
 						 tests.isoform_de_tests[i-1],
 						 enough_reads);
 		}
@@ -767,9 +747,7 @@ void test_differential(const RefSequenceTable& rt,
 		for (size_t j = 0; j < samples[i].cds.size(); ++j)
 		{
 			get_de_tests(samples[i-1].cds[j], 
-						 sample_masses[i-1],
 						 samples[i].cds[j],
-						 sample_masses[i],
 						 tests.cds_de_tests[i-1],
 						 enough_reads);
 		}
@@ -777,9 +755,7 @@ void test_differential(const RefSequenceTable& rt,
 		for (size_t j = 0; j < samples[i].primary_transcripts.size(); ++j)
 		{
 			get_de_tests(samples[i-1].primary_transcripts[j], 
-						 sample_masses[i-1],
 						 samples[i].primary_transcripts[j],
-						 sample_masses[i],
 						 tests.tss_group_de_tests[i-1],
 						 enough_reads);
 		}
@@ -787,9 +763,7 @@ void test_differential(const RefSequenceTable& rt,
 		for (size_t j = 0; j < samples[i].genes.size(); ++j)
 		{
 			get_de_tests(samples[i-1].genes[j], 
-						 sample_masses[i-1],
 						 samples[i].genes[j],
-						 sample_masses[i],
 						 tests.gene_de_tests[i-1],
 						 enough_reads);
 		}
