@@ -342,11 +342,6 @@ public:
         return true;
     }
 	
-    // NOTE: if we need to put this back, we should replace it with a ref_table()
-    // accessor for all BundleFactories, since that's all anybody is calling this
-    // guy to get at.
-	//shared_ptr<HitFactory> hit_factory() { return _hit_fac; } 
-	
 	void reset() 
     {
         foreach (shared_ptr<BundleFactory> fac, _factories)
@@ -354,22 +349,6 @@ public:
             fac->reset();
         }
     }
-    
-//    // NOTE: This routine implements a sort-of hack.  Ultimately, we want
-//    // BundleFactories to have one ReadGroupProperties per replicate, and
-//    // this routine forces all replicates to have the same one, which 
-//    // isn't very good, because this throws away the individual fragment
-//    // length distributions and bias models associated with each replicate.
-//    // We're probably losing a fair amount of power here.
-//    void read_group_properties(shared_ptr<ReadGroupProperties> rg_props)
-//    {
-//        foreach (shared_ptr<BundleFactory> fac, _factories)
-//        {
-//            shared_ptr<ReadGroupProperties> copy_props(new ReadGroupProperties);
-//            *copy_props = *rg_props;
-//            fac->read_group_properties(copy_props);
-//        }
-//    }
     
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
@@ -395,23 +374,6 @@ public:
         }
 		
     }
-	
-//    shared_ptr<ReadGroupProperties const> read_group_properties()
-//    {
-//        for (size_t i = 1; i < _factories.size(); ++i)
-//        {
-//            if (_factories[i-1]->read_group_properties() != 
-//                _factories[i]->read_group_properties())
-//            {
-//                return shared_ptr<ReadGroupProperties>();
-//            }
-//        }
-//        if (_factories.empty())
-//        {
-//             return shared_ptr<ReadGroupProperties>();   
-//        }
-//        return _factories.front()->read_group_properties();
-//    }
     
 private:
 	vector<shared_ptr<BundleFactory> > _factories;
@@ -471,7 +433,6 @@ void decr_pool_count()
 
 void quantitation_worker(const RefSequenceTable& rt,
 						 vector<HitBundle*>* sample_bundles,
-						 const vector<long double>& sample_masses,
 						 Tests& tests,
 						 Tracking& tracking)
 {
@@ -724,34 +685,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         bundle_factories.push_back(rep_factory);
 	}
 	
-	int tmp_min_frag_len = numer_limits<int>::max();
+	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
         fac.inspect_replicate_maps(tmp_min_frag_len, tmp_max_frag_len);
     }
-    
-//    foreach (ReplicatedBundleFactory& fac, bundle_factories)
-//    {
-//        //fprintf(stderr, "Counting hits in sample %lu\n", i);
-//        long double map_mass = 0;
-//        BadIntronTable bad_introns;
-//        
-//        shared_ptr<EmpDist> frag_len_dist(new EmpDist);
-//        
-////        inspect_map(fac, map_mass, bad_introns, *frag_len_dist);
-//        
-////        shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
-////        *rg_props = *global_read_properties;
-//        
-//
-//        
-//        // don't actually need to set bad_introns in the factories when using a 
-//        // reference GTF
-//        map_masses.push_back(map_mass);
-//        frag_len_dists.push_back(*frag_len_dist);
-//        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist->max());
-//    }
 	
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
@@ -824,14 +763,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
             thread quantitate(quantitation_worker,
                               boost::cref(rt), 
                               sample_bundles, 
-                              boost::cref(map_masses), 
                               boost::ref(tests),
                               boost::ref(tracking));
 
 #else
             quantitation_worker(boost::cref(rt), 
                                 sample_bundles, 
-                                boost::cref(map_masses), 
                                 boost::ref(tests),
                                 boost::ref(tracking));
 #endif

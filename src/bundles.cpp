@@ -34,10 +34,11 @@ struct ScaffoldSorter
 		{
 			return c < 0;
 		}
-		else
+		if (lhs->left() != rhs->left())
 		{
 			return lhs->left() < rhs->left();
 		}
+        return false;
 	}
 	
 	RefSequenceTable& rt;
@@ -529,35 +530,37 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         *bh = tmp;
         
 		if (left_boundary == -1)
-			left_boundary = bh->left();
-		
-		if (!ref_mRNAs.empty() && 
-			next_ref_scaff != ref_mRNAs.end() &&
-			(*next_ref_scaff)->ref_id() != bh->ref_id())
-		{
-			bool found_scaff = false;
-            vector<shared_ptr<Scaffold> >::iterator curr_ref_scaff = ref_mRNAs.begin();
-			for (size_t i = 0; i < _ref_scaff_offsets.size(); ++i)
-			{
-				if (_ref_scaff_offsets[i].first == bh->ref_id())
-				{
-					curr_ref_scaff = _ref_scaff_offsets[i].second;
-					found_scaff = true;
-				}
-			}
-            // Hit incident on chromosome not in the annotation
-            if (!found_scaff)
+        {
+            if (ref_mRNAs.empty() || bh->right() <= (*next_ref_scaff)->left())
             {
-                continue;
+                left_boundary = bh->left();
+                right_bundle_boundary = bh->left();
             }
-			next_ref_scaff = curr_ref_scaff;
-		}
+            else if (!ref_mRNAs.empty() && (*next_ref_scaff)->right() <= bh->left())
+            {
+                left_boundary = (*next_ref_scaff)->left();
+                right_bundle_boundary = (*next_ref_scaff)->right();
+            }
+            else 
+            {
+                left_boundary = bh->left();
+                right_bundle_boundary = bh->left();
+            }
+        }
 		
-		// break the bundle if there's a coverage gap or if alignments for a 
-		// new contig are encountered.
-		
+        // if the hit here overlaps the current bundle interval,
+        // we have to include it, and expand the bundle interval
+        if (overlap_in_genome(bh->left(),bh->right(),left_boundary, right_bundle_boundary + olap_radius))
+        {
+            right_bundle_boundary = max(right_bundle_boundary, bh->right());
+        }
+        
+        // expand the bundle interval as far as needed to include the overlapping
+        // chain of reference transcripts that also overlap the initial bundle
+        // interval, whether the initial bundle interval came from a hit or the
+        // current reference transcript in the GTF record stream.
 		bool hit_within_boundary = false;
-		
+		bool olaps_reference = false;
 		if (!ref_mRNAs.empty())
 		{
 			//check that we aren't sitting in the middle of an annotated scaffold
@@ -589,53 +592,35 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 {
                     break;
                 }
-               
-                // Overlap between the bundle interval and this reference
-                // transcript?
-                bool bundle_olap = (right_bundle_boundary > (*next_ref_scaff)->left());
-            
-                // Have we hit this scaffold yet with this fragment?
-                bool left_hit_olap = ((*next_ref_scaff)->left() <= bh->left()); 
-                bool right_hit_olap = ((*next_ref_scaff)->right() >= bh->right());
                 
-                if (left_hit_olap && right_hit_olap)
-                {
-                    hit_within_boundary = true;
-                    right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
-                }
-                else if (bundle_olap)
+                // if the ref_scaff here overlaps the current bundle interval,
+                // we have to include it, and expand the bundle interval
+                if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),left_boundary, right_bundle_boundary))
                 {
                     right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
+                    olaps_reference = true;
                 }
-                else
+                
+                // If the ref transcript is to the right of the bundle interval, 
+                // then we can leave this the ref transcript out for now
+                if ((*next_ref_scaff)->left() > right_bundle_boundary)
                 {
+                    // we've gone beyond the bundle and this hit, so we're 
+                    // not going to expand the right boundary any further
+                    // until we see more hits
                     break;
                 }
                 
                 next_ref_scaff++;
             }
-            
-//			while (next_ref_scaff != ref_mRNAs.end() && 
-//				   (!last_ref_id_seen || bh->ref_id() == last_ref_id_seen) &&
-//				   (*next_ref_scaff)->ref_id() == bh->ref_id() &&
-//                   (right_bundle_boundary > (*next_ref_scaff)->left() || 
-//                    ((*next_ref_scaff)->left() <= bh->left() &&
-//				     (*next_ref_scaff)->right() >= bh->right())))
-//			{
-//				hit_within_boundary = true;
-//				right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
-//                
-//                next_ref_scaff++;
-//			}
-            
 		}
-		
-		if (last_ref_id_seen == 0)
-			hit_within_boundary = true;
-		else if (bh->ref_id() == last_ref_id_seen)
+
+        if (last_ref_id_seen == 0 || bh->ref_id() == last_ref_id_seen)
         {
             if (bh->left() <= right_bundle_boundary)
+            {
                 hit_within_boundary = true;
+            }
         }
         else
         {
@@ -676,7 +661,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			if (!singleton)
 			{
 				if ((int)bh->partner_pos() + olap_radius - (int)bh->left() < (int)max_partner_dist)
+                {
 					right_bundle_boundary = max(right_bundle_boundary, bh->partner_pos() + olap_radius);
+                }
 			}
 			
 			bundle.add_open_hit(read_group_properties(), bh);

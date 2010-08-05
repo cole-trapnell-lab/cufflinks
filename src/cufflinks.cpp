@@ -733,7 +733,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 {
 	srand(time(0));
 	
-	HitBundle bundle();
+	HitBundle bundle;
 	
 	int num_bundles = 0;
 	
@@ -763,7 +763,12 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 		
 		if (bundle.right() - bundle.left() > 3000000)
 		{
-			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label->c_str());
+            char bundle_label_buf[2048];
+            sprintf(bundle_label_buf, 
+                    "%d-%d", 
+                    bundle.left(),
+                    bundle.right());
+			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
 		if (bundle.hits().size())
 		{

@@ -316,7 +316,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
         
         const vector<MateHit>& hits = bundle.non_redundant_hits();
 		const vector<double>& collapse_counts = bundle.collapse_counts();
-		
+		if (hits.empty())
+            continue;
+        
 		int curr_range_start = hits[0].left();
 		int curr_range_end = numeric_limits<int>::max();
 		int next_range_start = -1;

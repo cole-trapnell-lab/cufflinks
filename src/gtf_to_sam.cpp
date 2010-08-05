@@ -170,13 +170,13 @@ void driver(FILE* ref_gtf, FILE* sam_out)
 	ReadTable it;
 	RefSequenceTable rt(true, false);
     
-    vector<Scaffold> ref_mRNAs;
+    vector<shared_ptr<Scaffold> > ref_mRNAs;
     
 	::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, false);
     
     for (size_t i = 0; i < ref_mRNAs.size(); ++i)
     {
-        print_scaff_as_sam(sam_out, rt, ref_mRNAs[i]);
+        print_scaff_as_sam(sam_out, rt, *ref_mRNAs[i]);
     }
 }
 
