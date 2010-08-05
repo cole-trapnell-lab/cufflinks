@@ -371,7 +371,7 @@ public:
 //        }
 //    }
     
-    void inspect_replicate_maps()
+    void inspect_replicate_maps(int& min_len, int& max_len)
     {
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
@@ -387,10 +387,13 @@ public:
             
             rg_props->frag_len_dist(frag_len_dist);
             rg_props->total_map_mass(map_mass);
-            
+			
             fac->read_group_properties(rg_props);
             
+			min_len = min(min_len, frag_len_dist->min());
+			max_len = max(max_len, frag_len_dist->max());
         }
+		
     }
 	
 //    shared_ptr<ReadGroupProperties const> read_group_properties()
@@ -676,12 +679,11 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	
 	vector<ReplicatedBundleFactory> bundle_factories;
 	vector<long double> map_masses;
-    
-    //max_frag_len = 0;
+
     
     vector<HitFactory*> all_hit_factories;
     
-    int tmp_max_frag_len = 0;
+
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
         vector<string> sam_hit_filenames;
@@ -721,10 +723,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         ReplicatedBundleFactory rep_factory(replicate_factories);
         bundle_factories.push_back(rep_factory);
 	}
-
+	
+	int tmp_min_frag_len = numer_limits<int>::max();
+	int tmp_max_frag_len = 0;
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
-        fac.inspect_replicate_maps();
+        fac.inspect_replicate_maps(tmp_min_frag_len, tmp_max_frag_len);
     }
     
 //    foreach (ReplicatedBundleFactory& fac, bundle_factories)
@@ -749,6 +753,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 //        tmp_max_frag_len = max(tmp_max_frag_len, frag_len_dist->max());
 //    }
 	
+	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	
 	Tests tests;

@@ -295,7 +295,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
 	HitBundle bundle;
     map_mass = 0.0;
-    int min_read_len = numeric_limits<int>::max();
+    int min_len = numeric_limits<int>::max();
+	int max_len = 0;
     vector<double> frag_len_hist(def_max_frag_len+1,0);
 	list<pair<int, int> > open_ranges;
     bool has_pairs = false;
@@ -328,21 +329,21 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				mate_len = 1.0;
 			map_mass += mate_len * collapse_counts[i]; 
             
-			min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())
-				min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+				min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
             
 			
 			if (hits[i].left() > curr_range_end)
 			{
-				if (curr_range_end - curr_range_start > max_frag_len)
+				if (curr_range_end - curr_range_start > max_len)
 					open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
 				curr_range_start = next_range_start;
 				curr_range_end = numeric_limits<int>::max();
 			}
 			if (hits[i].left_alignment()->contains_splice())
 			{
-				if (hits[i].left() - curr_range_start > max_frag_len)
+				if (hits[i].left() - curr_range_start > max_len)
 					open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
 				curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
 			}
@@ -375,10 +376,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				if (hits[i].left() >= curr_range.first && hits[i].right() <= curr_range.second && hits[i].is_pair())
 				{
 					int mate_len = hits[i].right()-hits[i].left();
-					if (mate_len < max_frag_len)
+					if (mate_len < max_len)
 						frag_len_hist[mate_len] += collapse_counts[i];
-					min_read_len = min(min_read_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
-					min_read_len = min(min_read_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+					min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+					min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
 				}
 			}
 		}
@@ -409,8 +410,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 #endif
     
     long double tot_count = 0;
-	vector<double> frag_len_pdf(max_frag_len+1, 0.0);
-	vector<double> frag_len_cdf(max_frag_len+1, 0.0);
+	vector<double> frag_len_pdf(max_len+1, 0.0);
+	vector<double> frag_len_cdf(max_len+1, 0.0);
 	normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
     
 	int frag_len_max = frag_len_hist.size()-1;
@@ -421,7 +422,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	if (!has_pairs || tot_count == 0)
 	{
 		frag_len_max = def_frag_len_mean + 3*def_frag_len_std_dev;
-		for(int i = min_read_len; i < frag_len_max; i++)
+		for(int i = min_len; i < frag_len_max; i++)
 		{
 			frag_len_hist[i] = cdf(frag_len_norm, i+0.5)-cdf(frag_len_norm, i-0.5);
 			tot_count += frag_len_hist[i];
@@ -430,7 +431,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	else 
 	{	
 		double curr_total = 0;
-		int last_nonzero = min_read_len-1;
+		int last_nonzero = min_len-1;
 		for(int i = 1; i < frag_len_hist.size(); i++)
 		{
 			if (frag_len_hist[i] > 0)
@@ -486,7 +487,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	frag_len_dist.cdf(frag_len_cdf);
 	frag_len_dist.mode(frag_len_mode);
 	frag_len_dist.max(frag_len_max);
-	frag_len_dist.min(min_read_len);
+	frag_len_dist.min(min_len);
     frag_len_dist.mean(mean);
     frag_len_dist.std_dev(std_dev);
     

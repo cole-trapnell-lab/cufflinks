@@ -37,6 +37,8 @@ extern int def_frag_len_mean;
 extern int def_frag_len_std_dev;
 extern int def_max_frag_len;
 extern int max_frag_len;
+extern int min_frag_len;
+
 extern double transcript_score_thresh;
 extern int olap_radius;
 extern float pre_mrna_fraction;
@@ -71,7 +73,7 @@ extern double binomial_junc_filter_alpha;
 
 extern std::string library_type;
 
-#define ENABLE_THREADS 1
+#define ENABLE_THREADS 0
 
 #if ENABLE_THREADS
 extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
@@ -79,7 +81,7 @@ extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, 
 extern boost::shared_ptr<std::string> bundle_label;
 #endif
 
-#define ASM_VERBOSE 1
+#define ASM_VERBOSE 0
 
 bool gaurd_assembly();
 

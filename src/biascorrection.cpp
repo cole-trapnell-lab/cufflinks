@@ -188,13 +188,13 @@ bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		delete bundle_ptr;
 	}
 	bl.normalizeParameters();
-	//bl.output();
+	bl.output();
 	return true;
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
-const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-//const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,2,2,2,1,1,1}; //Length of connections at each position in the window
+//const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,2,2,2,1,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
 const int BiasLearner::_M = 21; //Number of positions spanned by window
@@ -338,18 +338,26 @@ void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nL
 	if (n > 1) 
 		genNList(seqSlice, start+1, n-1, nList);
 	
-	if (seqSlice[start]==4)
+	
+	if (n==1 && seqSlice[start]==4)
+	{
+		for (int j=0; j<4; ++j) 
+			nList.push_back(j);
+	}
+	else if (n==1)
+	{
+		nList.push_back(seqSlice[start]);
+	}
+	else if (seqSlice[start]==4)
 	{
 		for (int i = nList.size()-1; i>=0; --i)
 		{
 			for (int j=0; j<4; ++j) 
-			{
 				nList.push_back(nList.front()+j*pow4[n-1]);
-			}
 			nList.pop_front();
 		}
 	}
-	else 
+	else
 	{
 		for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 			(*it)+=seqSlice[start]*pow4[n-1];
@@ -360,19 +368,20 @@ void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nL
 void BiasLearner::normalizeParameters()
 {
 	//Normalize position parameters	
-	//vector<long double> posParam_sums;
+	vector<long double> posParam_sums;
 	vector<long double> posExp_sums;
 	colSums(_posParams, posParam_sums); // Total starts for each length class
 	colSums(_posExp, posExp_sums); // Total FPKM for each length class
 	
 	for(int i=0; i < _posParams.size1(); i++)
+	{
 		for(int j=0; j < _posParams.size2(); j++)
 		{
 			_posParams(i,j) /= posParam_sums[j];
 			_posExp(i,j) /= posExp_sums[j];
 			_posParams(i,j) /= _posExp(i,j);
 		}
-	
+	}
 	ublas::matrix<long double> startExp_sums;
 	ublas::matrix<long double> startParam_sums;
 	fourSums(_startParams, startParam_sums);
@@ -409,7 +418,6 @@ void BiasLearner::normalizeParameters()
 			}
 
 		}
-	ones(_posParams);
 }
 
 void BiasLearner::output()
@@ -424,8 +432,8 @@ void BiasLearner::output()
 	myfile2.open (endfile.c_str());
 	string posfile = output_dir + "/posBias.csv";
 	myfile3.open (posfile.c_str());
-	string posfile2 = output_dir + "/posExp.csv";
-	myfile4.open (posfile2.c_str());
+	//string posfile2 = output_dir + "/posExp.csv";
+	//myfile4.open (posfile2.c_str());
 
 
 	for (int i = 0; i < _N; ++i)
@@ -444,17 +452,16 @@ void BiasLearner::output()
 		for(int j = 0; j < _posParams.size1(); ++j)
 		{
 			myfile3 << _posParams(j,i) <<",";
-			myfile4 << _posExp(j,i) <<",";
+			//myfile4 << _posExp(j,i) <<",";
 		}
-		//myfile3 << "," << posParam_sums[i];
 		myfile3 <<endl;
-		myfile4 <<endl;
+		//myfile4 <<endl;
 	}
 	
 	myfile1.close();
 	myfile2.close();
 	myfile3.close();
-	myfile4.close();
+//	myfile4.close();
 }
 
 void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases)

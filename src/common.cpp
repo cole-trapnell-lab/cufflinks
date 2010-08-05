@@ -37,10 +37,11 @@ uint32_t max_intron_length = 300000;
 
 uint32_t max_gene_length = 3000000;
 int max_partner_dist = 50000;
-int def_frag_len_mean = 195;
+int def_frag_len_mean = 200;
 int def_frag_len_std_dev = 80;
 int def_max_frag_len = 1000;
 int max_frag_len = 1000;
+int min_frag_len = 1;
 int olap_radius = 50;
 
 float min_isoform_fraction = 0.1;

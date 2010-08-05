@@ -73,7 +73,7 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-m/--frag-len-mean			  the average fragment length							[ default:     190 ]\n");
+	fprintf(stderr, "-m/--frag-len-mean			  the average fragment length							[ default:     200 ]\n");
 	fprintf(stderr, "-s/--frag-len-std-dev		  the fragment length standard deviation                [ default:     80 ]\n");
 	fprintf(stderr, "-c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
 	fprintf(stderr, "-F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
@@ -894,6 +894,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 		bundle_factory.bad_intron_table(bad_introns);
 	}
 	max_frag_len = frag_len_dist->max();
+	min_frag_len = frag_len_dist->min();
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 
 	assemble_hits(bundle_factory, (BiasLearner*)NULL);
@@ -902,8 +903,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
 	hit_factory->reset();
     
-	ref_gtf = fopen(string(output_dir + "/initial_est/transcripts.gtf").c_str(), "r");
-	//ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
+	//ref_gtf = fopen(string(output_dir + "/initial_est/transcripts.gtf").c_str(), "r");
+	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
     
 	BundleFactory bundle_factory2(*hit_factory);
     

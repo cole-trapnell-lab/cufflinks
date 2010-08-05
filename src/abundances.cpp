@@ -493,25 +493,13 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 	int M = alignments.size();
 	int trans_len = transcript.length();
 	
-#warning "PUT EFFECTIVE LENGTH CALCULATION BACK"
-#if 0
-	// Calculate effective length for each transcript and for each 
-    // frag_len_dist in the set of MateHits
-	eff_len = 0;
-	for(int l = 1; l <= trans_len; l++)
-	{
-		eff_len += frag_len_dist.pdf(l) * (trans_len - l + 1);
-	}
-#else
-    eff_len = trans_len;
-#endif
-    
-    
-	
 	// Calculate conditional probability of each alignment coming from this transcript 
 	// given the alignment comes from the locus
 	
 	bool mapped = false;
+	double tot_mass = 0.0;
+	map<shared_ptr<ReadGroupProperties const>, double> mass_per_replicate;
+	
 	for (int i = 0; i < M; ++i) 
 	{
 		if (compatibilities[i] == 1) 
@@ -551,12 +539,36 @@ bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alig
 		
 			cond_probs[i] = frag_len_dist.pdf(frag_len) / (trans_len - frag_len + 1);
 			assert(!isnan(cond_probs[i]));
+			
 			if (cond_probs[i] > 0)
-				mapped = true;
+			{
+				// Keep track of counts per replicate
+				shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
+				pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
+				inserted = mass_per_replicate.insert(make_pair(rg_props, 0.0));
+				double more_mass = (1.0 - alignments[i].error_prob());
+				inserted.first->second += more_mass;
+				tot_mass += more_mass;
+				
+				mapped = true; // At least one alignment mapped
+			}
 		}
 	}
 	
-
+	// Find average of effective lengths
+	eff_len = 0.0;
+	for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = mass_per_replicate.begin();
+         itr != mass_per_replicate.end();
+         ++itr)
+    {
+		double rep_eff_len = 0.0;
+        double rep_mass = itr->second;
+        const EmpDist frag_len_dist = *(itr->first->frag_len_dist());
+		for(int l = frag_len_dist.min(); l <= trans_len; l++)
+			rep_eff_len += frag_len_dist.pdf(l) * (trans_len - l + 1);
+		eff_len += rep_eff_len * (rep_mass/tot_mass);
+    }
+	
 	return mapped;
 }
 
@@ -579,30 +591,22 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 	start_bias[trans_len] = 1;
 	end_bias[trans_len] = 1;
 	
-#warning "PUT EFFECTIVE LENGTH CALCULATION BACK"
-#if 0
-	// Calculate bias of all possible fragments of a given length for ever possible length
-	// Also calculate unbiased effective length
-	
+	// Calculate bias of all possible fragments of a given length for ever possible length	
 	vector<double> tot_bias_for_len(trans_len+1,1);
-	eff_len = 0;
-	for(int l = frag_len_dist.min(); l <= trans_len; l++)
+	for(int l = min_frag_len; l <= trans_len; l++)
 	{
 		double tot = 0;
 		for(int i = 0; i <= trans_len - l; i++)
 			tot += start_bias[i]*end_bias[i+l-1];
 		tot_bias_for_len[l] = tot;
-		eff_len += frag_len_dist.pdf(l) * tot;
 	}
-#else
-    vector<double> tot_bias_for_len(trans_len+1,1);
-	eff_len = trans_len;    
-#endif
-	
-	assert(!isnan(eff_len));
+
 	// Calculate conditional probability of each alignment coming from this transcript
 	// given the alignment comes from the locus
-	bool mapped;
+	bool mapped = false;
+	double tot_mass = 0.0;
+	map<shared_ptr<ReadGroupProperties const>, double> mass_per_replicate;
+
 	for (int i = 0; i < M; ++i) {
 		if (compatibilities[i] == 1) 
 		{
@@ -651,9 +655,34 @@ bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateH
 			assert(!isnan(cond_probs[i]));
 			
 			if (cond_probs[i] > 0)
-				mapped = true;
+			{
+				// Keep track of counts per replicate
+				shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
+				pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
+				inserted = mass_per_replicate.insert(make_pair(rg_props, 0.0));
+				double more_mass = (1.0 - alignments[i].error_prob());
+				inserted.first->second += more_mass;
+				tot_mass += more_mass;
+			
+				mapped = true; // At least one alignment mapped
+			}
 		}
 	}
+	
+	// Find average of effective lengths
+	eff_len = 0.0;
+	for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = mass_per_replicate.begin();
+         itr != mass_per_replicate.end();
+         ++itr)
+    {
+		double rep_eff_len = 0.0;
+        double rep_mass = itr->second;
+        const EmpDist frag_len_dist = *(itr->first->frag_len_dist());
+		for(int l = frag_len_dist.min(); l <= trans_len; l++)
+			rep_eff_len += frag_len_dist.pdf(l) * tot_bias_for_len[l];
+		eff_len += rep_eff_len * (rep_mass/tot_mass);
+    }
+	
 	return mapped;
 }
 
