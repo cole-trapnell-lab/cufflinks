@@ -475,7 +475,8 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 			avg_read_length += hit.right_alignment()->read_len(); 
 	}
 	
-	avg_read_length /= hits_in_cluster.size();
+    if (hits_in_cluster.size())
+        avg_read_length /= hits_in_cluster.size();
 	
 	transfrag_cluster.calculate_abundance(hits_in_cluster);
 	
@@ -521,7 +522,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				density_per_bp *= avg_read_length;
 				//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
 				
-				if (density_score > min_isoform_fraction)
+				if (!allow_junk_filtering || density_score > min_isoform_fraction || major_isoform_FPKM == 0.0)
 				{
 					isoforms.push_back(Isoform(*transfrag,
 											   gene_id,
@@ -770,7 +771,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
                     bundle.right());
 			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
-		if (bundle.hits().size())
+		//if (bundle.hits().size())
 		{
 			BundleStats stats;
 			num_bundles++;

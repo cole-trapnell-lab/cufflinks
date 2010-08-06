@@ -433,73 +433,52 @@ void print_sort_error(const char* last_chr_name,
     fprintf(stderr, "You may be able to fix this by running:\n\t$ LC_ALL=\"C\" sort -k 3,3 -k 4,4n input.sam > fixed.sam\n");
 }
 
-// This is my least favorite function in Cufflinks.  It should be banished to
-// Hell and re-written.  It is utterly loathesome.
-bool BundleFactory::next_bundle(HitBundle& bundle_out)
+shared_ptr<ReadHit> BundleFactory::next_valid_alignment()
 {
-	HitBundle bundle;
-	
-	if (!_hit_fac.records_remain())
-	{
-		return false;
-	}
-	//char bwt_buf[2048];
-	
-	RefID last_ref_id_seen = 0;
-	RefID first_ref_id_seen = 0;
-	
-	int last_pos_seen = 0;
-    
-	//off_t curr_pos = ftello(hit_file);
-	
-	int right_bundle_boundary = 0;
-	
-	int left_boundary = -1;
-	
-	const char* hit_buf;
+    const char* hit_buf;
 	size_t hit_buf_size = 0;
-	//while (fgets(bwt_buf, 2048, hit_file))
-	while(_hit_fac.next_record(hit_buf, hit_buf_size))
-	{
-		//_next_hit_num++;
-		// Chomp the newline
-		
-		ReadHit tmp;
-		if (!_hit_fac.get_hit_from_buf(hit_buf, tmp, false))
-		{
-			continue;
-		}
-		
-		if (tmp.error_prob() > max_phred_err_prob)
-			continue;
-		
-		if (tmp.ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
-			continue;
-		
-		if (spans_bad_intron(tmp))
-			continue;
-		
+    shared_ptr<ReadHit> bh;
+    
+    while (true)
+    {
+    
+        if (!_hit_fac.next_record(hit_buf, hit_buf_size))
+            break;
+        
+        ReadHit tmp;
+        if (!_hit_fac.get_hit_from_buf(hit_buf, tmp, false))
+            continue;
+        
+        if (tmp.error_prob() > max_phred_err_prob)
+            continue;
+        
+        if (tmp.ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
+            continue;
+        
+        if (spans_bad_intron(tmp))
+            continue;
+        
         bool hit_within_mask = false;
         
         // We want to skip stuff that overlaps masked GTF records, so 
         // sync up the masking chromosome
         if (!mask_gtf_recs.empty() && 
-			next_mask_scaff != mask_gtf_recs.end() &&
-			(*next_mask_scaff)->ref_id() != tmp.ref_id())
-		{
-			bool found_scaff = false;
+            next_mask_scaff != mask_gtf_recs.end() &&
+            (*next_mask_scaff)->ref_id() != tmp.ref_id())
+        {
+            bool found_scaff = false;
             vector<shared_ptr<Scaffold> >::iterator curr_mask_scaff = mask_gtf_recs.begin();
-			for (size_t i = 0; i < _mask_scaff_offsets.size(); ++i)
-			{
-				if (_mask_scaff_offsets[i].first == tmp.ref_id())
-				{
-					curr_mask_scaff = _mask_scaff_offsets[i].second;
-					found_scaff = true;
+            for (size_t i = 0; i < _mask_scaff_offsets.size(); ++i)
+            {
+                if (_mask_scaff_offsets[i].first == tmp.ref_id())
+                {
+                    curr_mask_scaff = _mask_scaff_offsets[i].second;
+                    found_scaff = true;
                     break;
-				}
-			}
+                }
+            }
             
-			next_mask_scaff = curr_mask_scaff;
+            next_mask_scaff = curr_mask_scaff;
         }
         
         //check that we aren't sitting in the middle of a masked scaffold
@@ -522,35 +501,132 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         {
             hit_within_mask = true;
         }
-		
+        
         if (hit_within_mask)
             continue;
-        
-        shared_ptr<ReadHit> bh(new ReadHit());
+        bh = shared_ptr<ReadHit>(new ReadHit());
         *bh = tmp;
+        break;
+    }
+    return bh;
+}
+
+// This is my least favorite function in Cufflinks.  It should be banished to
+// Hell and re-written.  It is utterly loathesome.
+bool BundleFactory::next_bundle(HitBundle& bundle_out)
+{
+	HitBundle bundle;
+	
+	//char bwt_buf[2048];
+	
+    // The most recent RefID and position we've seen in the hit stream
+	RefID last_hit_ref_id_seen = 0;
+    int last_hit_pos_seen = 0;
+    
+    // The most recent RefID and position we've seen in the reference RNA stream
+	RefID last_ref_rna_ref_id_seen = 0;
+    int last_ref_rna_pos_seen = 0;
+    
+    // The first RefID we saw in either stream
+	RefID first_ref_id_seen = 0;
+
+	
+	int right_bundle_boundary = 0;
+	int left_bundle_boundary = -1;
+	
+    
+	while(true)
+	{
+        shared_ptr<ReadHit> bh = next_valid_alignment();
         
-		if (left_boundary == -1)
+        // Initialize the bundle boundaries using the hit or the next 
+        // reference transcript, whichever is first in the stream
+		if (left_bundle_boundary == -1)
         {
-            if (ref_mRNAs.empty() || bh->right() <= (*next_ref_scaff)->left())
+            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
             {
-                left_boundary = bh->left();
-                right_bundle_boundary = bh->left();
+                if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
+                {
+                    int a = 3;
+                }
             }
-            else if (!ref_mRNAs.empty() && (*next_ref_scaff)->right() <= bh->left())
+            
+            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL)
             {
-                left_boundary = (*next_ref_scaff)->left();
-                right_bundle_boundary = (*next_ref_scaff)->right();
+                if (bh->right() <= (*next_ref_scaff)->left())
+                {
+                    // if this hit doesn't overlap the next ref transcript
+                    // and falls to its left, we should skip it.  We need
+                    // this to maintain synchronization of multiple
+                    // streams driven by the same set of reference transcripts
+                    continue;
+//                    left_bundle_boundary = bh->left();
+//                    right_bundle_boundary = bh->left();
+//                    first_ref_id_seen = bh->ref_id();
+                }
+                else
+                {
+                    left_bundle_boundary = (*next_ref_scaff)->left();
+                    right_bundle_boundary = (*next_ref_scaff)->right();
+                    first_ref_id_seen = (*next_ref_scaff)->ref_id();
+                }
+
+//                else if ((*next_ref_scaff)->right() <= bh->left())
+//                {
+//                    left_bundle_boundary = (*next_ref_scaff)->left();
+//                    right_bundle_boundary = (*next_ref_scaff)->right();
+//                    first_ref_id_seen = (*next_ref_scaff)->ref_id();
+//                }
+//                else 
+//                {
+//                    assert (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),bh->left(), bh->right()));
+//                    left_bundle_boundary = min((*next_ref_scaff)->left(), bh->left());
+//                    right_bundle_boundary = max((*next_ref_scaff)->right(), bh->right());
+//                }
+
             }
-            else 
+            else if (!ref_mRNAs.empty())
             {
-                left_boundary = bh->left();
-                right_bundle_boundary = bh->left();
+                if (next_ref_scaff != ref_mRNAs.end())
+                {
+                    left_bundle_boundary = (*next_ref_scaff)->left();
+                    right_bundle_boundary = (*next_ref_scaff)->right();
+                    first_ref_id_seen = (*next_ref_scaff)->ref_id();
+                }
+                else 
+                {
+                    return false;
+                }
+
+            }
+            else if (bh != NULL)
+            {
+                left_bundle_boundary = bh->left();
+                right_bundle_boundary = bh->right();
+                first_ref_id_seen = bh->ref_id();
+            }
+            else
+            {
+                if (!_hit_fac.records_remain() && next_ref_scaff == ref_mRNAs.end())
+                {
+                    return false;
+                }
+                else 
+                {
+                    // if we get here, there are more records, but this one is
+                    // null, and we've reached the end of the reference trancripts
+                    // or there weren't any
+                    continue;
+                }
             }
         }
+        
+        assert(left_bundle_boundary != -1);
 		
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
-        if (overlap_in_genome(bh->left(),bh->right(),left_boundary, right_bundle_boundary + olap_radius))
+        if (bh && ref_mRNAs.empty()
+            && overlap_in_genome(bh->left(),bh->right(),left_bundle_boundary, right_bundle_boundary + olap_radius))
         {
             right_bundle_boundary = max(right_bundle_boundary, bh->right());
         }
@@ -563,39 +639,42 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		bool olaps_reference = false;
 		if (!ref_mRNAs.empty())
 		{
-			//check that we aren't sitting in the middle of an annotated scaffold
-			while (next_ref_scaff != ref_mRNAs.end() && 
-				   (*next_ref_scaff)->ref_id() == bh->ref_id() &&
-				   (*next_ref_scaff)->right() <= bh->left())
-			{
-				if ((*next_ref_scaff)->left() >= bh->left())
-				{
-					break;
-				}
-                
-				next_ref_scaff++;
-			}
-            
             while(next_ref_scaff < ref_mRNAs.end())
             {
+                if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
+                {
+                    if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
+                    {
+                        int a = 3;
+                    }
+                }
+                
                 assert(next_ref_scaff >= ref_mRNAs.begin());
                 // Transitioned to a new chromosome in the stream of hits?  
                 // Stop scanning through reference scaffolds.
-                if (last_ref_id_seen && bh->ref_id() != last_ref_id_seen)
+                if (bh && last_hit_ref_id_seen && bh->ref_id() != last_hit_ref_id_seen)
                 {
                     break;
                 }
                 
                 // Have we run off the end of this block of reference 
                 // transcript?
-                if ((*next_ref_scaff)->ref_id() != bh->ref_id())
+                if (bh && (*next_ref_scaff)->ref_id() != bh->ref_id())
+                {
+                    break;
+                }
+                
+                // Transitioned to a new chromosome in the stream of reference transcripts?  
+                // Stop scanning through reference scaffolds.
+                if (last_ref_rna_ref_id_seen && 
+                    last_ref_rna_ref_id_seen != (*next_ref_scaff)->ref_id())
                 {
                     break;
                 }
                 
                 // if the ref_scaff here overlaps the current bundle interval,
                 // we have to include it, and expand the bundle interval
-                if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),left_boundary, right_bundle_boundary))
+                if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),left_bundle_boundary, right_bundle_boundary))
                 {
                     right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
                     olaps_reference = true;
@@ -611,11 +690,19 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                     break;
                 }
                 
+                last_ref_rna_ref_id_seen = (*next_ref_scaff)->ref_id();
+                last_ref_rna_pos_seen = (*next_ref_scaff)->left();
+                
                 next_ref_scaff++;
             }
 		}
 
-        if (last_ref_id_seen == 0 || bh->ref_id() == last_ref_id_seen)
+        if (bh == NULL)
+        {
+            break;
+        }
+        
+        if (last_hit_ref_id_seen == 0 || bh->ref_id() == last_hit_ref_id_seen)
         {
             if (bh->left() <= right_bundle_boundary)
             {
@@ -625,12 +712,12 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         else
         {
             const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
-            const char* last_chr_name = _hit_fac.ref_table().get_name(last_ref_id_seen);
+            const char* last_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
             
             if (strcmp(last_chr_name, bh_chr_name) >= 0)
             { 
                 print_sort_error(last_chr_name, 
-                                 last_pos_seen, 
+                                 last_hit_pos_seen, 
                                  bh_chr_name, 
                                  bh->left());
                 exit(1);
@@ -639,32 +726,37 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         
 		if (hit_within_boundary)
 		{
-			if (bh->left() < last_pos_seen)
+			if (bh->left() < last_hit_pos_seen)
 			{
                 const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
-                const char* last_chr_name = _hit_fac.ref_table().get_name(last_ref_id_seen);
+                const char* last_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
 				print_sort_error(last_chr_name, 
-                                 last_pos_seen,
+                                 last_hit_pos_seen,
                                  bh_chr_name,
                                  bh->left());
 				exit(1);
 			}
 			
-			if (bh->right() + olap_radius - left_boundary < (int)max_gene_length)
-			{
-				right_bundle_boundary = max(right_bundle_boundary, bh->right() + olap_radius);
-			}
-			
-			bool singleton = (bh->partner_ref_id() == 0 
-							  || bh->partner_ref_id() != bh->ref_id() ||
-							  abs(bh->partner_pos() - bh->left()) > max_partner_dist);
-			if (!singleton)
-			{
-				if ((int)bh->partner_pos() + olap_radius - (int)bh->left() < (int)max_partner_dist)
+            // We want to drive the bundling entirely by the ref_mRNAs, if they
+            // are there.
+            if (ref_mRNAs.empty())
+            {
+                if (bh->right() + olap_radius - left_bundle_boundary < (int)max_gene_length)
                 {
-					right_bundle_boundary = max(right_bundle_boundary, bh->partner_pos() + olap_radius);
+                    right_bundle_boundary = max(right_bundle_boundary, bh->right() + olap_radius);
                 }
-			}
+                
+                bool singleton = (bh->partner_ref_id() == 0 
+                                  || bh->partner_ref_id() != bh->ref_id() ||
+                                  abs(bh->partner_pos() - bh->left()) > max_partner_dist);
+                if (!singleton)
+                {
+                    if ((int)bh->partner_pos() + olap_radius - (int)bh->left() < (int)max_partner_dist)
+                    {
+                        right_bundle_boundary = max(right_bundle_boundary, bh->partner_pos() + olap_radius);
+                    }
+                }
+            }
 			
 			bundle.add_open_hit(read_group_properties(), bh);
 		}
@@ -674,13 +766,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			break;
 		}
 		
-		if (!last_ref_id_seen)
-		{
-			first_ref_id_seen = bh->ref_id();
-		}
-		
-		last_ref_id_seen = bh->ref_id();
-		last_pos_seen = bh->left();
+		last_hit_ref_id_seen = bh->ref_id();
+		last_hit_pos_seen = bh->left();
         
 		//curr_pos = ftello(hit_file);
 	}
@@ -692,7 +779,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		vector<shared_ptr<Scaffold> >::iterator itr = next_ref_scaff;
 		while(itr < ref_mRNAs.end())
 		{
-			if ((*itr)->ref_id() != last_ref_id_seen || (*itr)->left() >= right_bundle_boundary)
+			if ((*itr)->ref_id() != last_ref_rna_ref_id_seen || (*itr)->left() >= right_bundle_boundary)
 				break;
 			itr++;
 		}
@@ -704,20 +791,20 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			{
 				// if we haven't backed up to the scaffold we need to be on
 				// keep scanning through the reference annotations
-				if ((*itr)->ref_id() == last_ref_id_seen)
+				if ((*itr)->ref_id() == last_ref_rna_ref_id_seen)
 				{
 					// Now we're on the right scaffold, gotta get to the right
 					// coords
 
 					if (overlap_in_genome((*itr)->left(), 
                                           (*itr)->right(), 
-                                          bundle.left(), 
-                                          bundle.right()))
+                                          left_bundle_boundary, 
+                                          right_bundle_boundary))
 
 					{	
 						bundle.add_ref_scaffold(**itr);
 					}
-					else if ((*itr)->right() < bundle.left())
+					else if ((*itr)->right() < left_bundle_boundary)
 					{	
 						// This reference record is now to the left of 
 						// the bundle of alignments
@@ -742,7 +829,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		}
 	}
 	
-	
+	assert (left_bundle_boundary != -1);
 	bundle_out = bundle;
 	bundle_out.finalize();
 	//bundle_out.remove_hitless_scaffolds();

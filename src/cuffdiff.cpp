@@ -393,7 +393,7 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
 		if (fac.next_bundle(*bundle))
         {
             non_empty_sample_bundle = true;
-            assert (!bundle->ref_scaffolds().empty());
+            //assert (!bundle->ref_scaffolds().empty());
         }
         locus_bundles.push_back(bundle);
 	}

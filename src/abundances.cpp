@@ -335,16 +335,27 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
     
     double num_replicates = count_per_replicate.size();
     
-    avg_X_g /= num_replicates;
-    avg_mass_fraction /= num_replicates;
+    if (num_replicates)
+    {
+        avg_X_g /= num_replicates;
+        avg_mass_fraction /= num_replicates;
+    }
     
 	for (size_t j = 0; j < N; ++j)
 	{
 		_abundances[j]->num_fragments(_abundances[j]->gamma() * avg_X_g);
         double j_avg_mass_fraction = _abundances[j]->gamma() * avg_mass_fraction;
         _abundances[j]->mass_fraction(j_avg_mass_fraction);
-        double FPKM = j_avg_mass_fraction * 1000000000/ _abundances[j]->effective_length();
-        _abundances[j]->FPKM(FPKM);
+        if (j_avg_mass_fraction)
+        {
+            double FPKM = j_avg_mass_fraction * 1000000000/ _abundances[j]->effective_length();
+            _abundances[j]->FPKM(FPKM);
+        }
+        else 
+        {
+            _abundances[j]->FPKM(0);
+        }
+
 	}
 }
 
@@ -472,9 +483,14 @@ void AbundanceGroup::calculate_FPKM_variance()
     {
         for (size_t j = 0; j < _abundances.size(); ++j)
         {
-            double L = _abundances[i]->effective_length() * _abundances[j]->effective_length();
-            double g = _gamma_covariance(i,j) / L;
-            var_cumul_gamma += g;
+            if (_abundances[i]->effective_length())
+            {
+                assert(!isnan(_gamma_covariance(i,j)));
+                double L = _abundances[i]->effective_length() * _abundances[j]->effective_length();
+                assert(!isnan(L));
+                double g = _gamma_covariance(i,j) / L;
+                var_cumul_gamma += g;
+            }
         }    
     }
     
@@ -723,7 +739,16 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_gene,
 									  const vector<shared_ptr<Abundance> >& mapped_transcripts)
 {
 	if (mapped_transcripts.empty())
+    {
+		//gammas = vector<double>(transfrags.size(), 0.0);
+		foreach (shared_ptr<Abundance> ab, _abundances)
+		{
+			ab->gamma(0);
+		}
+		_gamma_covariance = ublas::zero_matrix<double>(transcripts.size(), 
+                                                       transcripts.size());
 		return true;
+    }
 	
 	vector<double> gammas;
 	

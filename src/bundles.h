@@ -280,6 +280,8 @@ private:
 	BadIntronTable _bad_introns;
     
     shared_ptr<ReadGroupProperties const> _rg_props;
+    
+    shared_ptr<ReadHit> next_valid_alignment();
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
