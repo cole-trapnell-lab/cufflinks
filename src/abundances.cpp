@@ -483,13 +483,16 @@ void AbundanceGroup::calculate_FPKM_variance()
     {
         for (size_t j = 0; j < _abundances.size(); ++j)
         {
-            if (_abundances[i]->effective_length())
+            if (_abundances[i]->effective_length() && _abundances[j]->effective_length())
             {
                 assert(!isnan(_gamma_covariance(i,j)));
                 double L = _abundances[i]->effective_length() * _abundances[j]->effective_length();
-                assert(!isnan(L));
-                double g = _gamma_covariance(i,j) / L;
-                var_cumul_gamma += g;
+                assert(!isnan(L)); 
+                if (L != 0.0)
+                {
+                    double g = _gamma_covariance(i,j) / L;
+                    var_cumul_gamma += g;
+                }
             }
         }    
     }
