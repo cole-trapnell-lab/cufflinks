@@ -641,6 +641,11 @@ void GffReader::parseAll(GffRecFunc* gproc, bool keepAttr, bool noExonAttr, void
 
 void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
   while (nextGffLine()!=NULL) {
+      if (gffline->ID == NULL)
+      {
+          fprintf(stderr, "Warning: malformed GTF record encountered, no transcript_id.  Skipping...!\n");
+          continue;
+      }
     if (gffline->Parent==NULL) {//no parent, new GFF3-like record starting
        //check for uniqueness of gffline->ID in phash !
        GffObj* f=gfoFind(gffline->ID, gffline->gseqname);
