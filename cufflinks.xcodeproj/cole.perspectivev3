@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ActivePerspectiveName</key>
-	<string>Project</string>
+	<string>Debug</string>
 	<key>AllowedModules</key>
 	<array>
 		<dict>
@@ -200,8 +200,8 @@
 	<array/>
 	<key>PerspectiveWidths</key>
 	<array>
-		<integer>1304</integer>
-		<integer>1304</integer>
+		<integer>1271</integer>
+		<integer>1271</integer>
 	</array>
 	<key>Perspectives</key>
 	<array>
@@ -280,11 +280,12 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
+									<integer>82</integer>
 									<integer>79</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 529}, {276, 837}}</string>
+							<string>{{0, 663}, {276, 837}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -300,8 +301,6 @@
 							<string>MainColumn</string>
 							<real>276</real>
 						</array>
-						<key>RubberWindowFrame</key>
-						<string>467 282 1271 896 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -317,7 +316,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>abundances.cpp</string>
+								<string>gff.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -325,11 +324,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>abundances.cpp</string>
+										<string>gff.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDD94E85120EEFC300AA1086</string>
+										<string>EDD94ED21210DEA900AA1086</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0E0F11D8323B00CFD663</string>
@@ -338,7 +337,6 @@
 											<string>EDBBA34611DD5AA90015175B</string>
 											<string>EDBBA3FA11DD8E140015175B</string>
 											<string>EDBBA3FC11DD8E140015175B</string>
-											<string>ED2A464E11E2C822009AD73B</string>
 											<string>EDBEA55211EA4E6E00C661A7</string>
 											<string>EDBEA55711EA508B00C661A7</string>
 											<string>EDBEA5AA11EA663500C661A7</string>
@@ -351,7 +349,10 @@
 											<string>EDD94E5A120E624D00AA1086</string>
 											<string>EDD94E5B120E624D00AA1086</string>
 											<string>EDD94E5C120E624D00AA1086</string>
-											<string>EDD94E6E120E62FF00AA1086</string>
+											<string>EDD94EA91210DCB600AA1086</string>
+											<string>EDD94EB81210DD1200AA1086</string>
+											<string>EDD94EB91210DD1200AA1086</string>
+											<string>EDD94EBF1210DD1400AA1086</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -366,8 +367,6 @@
 							<dict>
 								<key>Frame</key>
 								<string>{{0, 0}, {973, 554}}</string>
-								<key>RubberWindowFrame</key>
-								<string>467 282 1271 896 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -407,8 +406,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {973, 269}}</string>
-										<key>RubberWindowFrame</key>
-										<string>467 282 1271 896 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -529,12 +526,14 @@
 					<key>GeometryConfiguration</key>
 					<dict>
 						<key>Frame</key>
-						<string>{{0, 0}, {1304, 275}}</string>
+						<string>{{0, 0}, {1271, 139}}</string>
+						<key>RubberWindowFrame</key>
+						<string>294 132 1271 896 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugCLIModule</string>
 					<key>Proportion</key>
-					<string>275pt</string>
+					<string>139pt</string>
 				</dict>
 				<dict>
 					<key>ContentConfiguration</key>
@@ -553,8 +552,8 @@
 								<string>yes</string>
 								<key>sizes</key>
 								<array>
-									<string>{{0, 0}, {611, 333}}</string>
-									<string>{{611, 0}, {693, 333}}</string>
+									<string>{{0, 0}, {596, 333}}</string>
+									<string>{{596, 0}, {675, 333}}</string>
 								</array>
 							</dict>
 							<key>VerticalSplitView</key>
@@ -569,8 +568,8 @@
 								<string>yes</string>
 								<key>sizes</key>
 								<array>
-									<string>{{0, 0}, {1304, 333}}</string>
-									<string>{{0, 333}, {1304, 378}}</string>
+									<string>{{0, 0}, {1271, 333}}</string>
+									<string>{{0, 333}, {1271, 378}}</string>
 								</array>
 							</dict>
 						</dict>
@@ -590,7 +589,7 @@
 						<key>DebugSTDIOWindowFrame</key>
 						<string>{{200, 200}, {500, 300}}</string>
 						<key>Frame</key>
-						<string>{{0, 280}, {1304, 711}}</string>
+						<string>{{0, 144}, {1271, 711}}</string>
 						<key>PBXDebugSessionStackFrameViewKey</key>
 						<dict>
 							<key>DebugVariablesTableConfiguration</key>
@@ -600,11 +599,15 @@
 								<string>Value</string>
 								<real>85</real>
 								<string>Summary</string>
-								<real>383</real>
+								<real>365</real>
 							</array>
 							<key>Frame</key>
-							<string>{{611, 0}, {693, 333}}</string>
+							<string>{{596, 0}, {675, 333}}</string>
+							<key>RubberWindowFrame</key>
+							<string>294 132 1271 896 0 0 1680 1028 </string>
 						</dict>
+						<key>RubberWindowFrame</key>
+						<string>294 132 1271 896 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugSessionModule</string>
@@ -668,13 +671,12 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>EDD94E70120E62FF00AA1086</string>
 		<string>EDD94D71120DAFBA00AA1086</string>
 		<string>EDD94D72120DAFBA00AA1086</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>467 282 1271 896 0 0 1920 1178 </string>
+	<string>294 132 1271 896 0 0 1680 1028 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

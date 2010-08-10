@@ -3,8 +3,8 @@
 	08FB7793FE84155DC02AAC07 /* Project object */ = {
 		activeArchitecturePreference = x86_64;
 		activeBuildConfigurationName = Debug;
-		activeExecutable = EDD0CD9D10C72AC200AF308F /* cufflinks */;
-		activeTarget = 8DD76F620486A84900D96B5E /* cufflinks */;
+		activeExecutable = EDD6A9D611598ABA00D3F668 /* cuffcompare */;
+		activeTarget = EDD6A9BA11598AB900D3F668 /* cuffcompare */;
 		addToTargets = (
 			8DD76F620486A84900D96B5E /* cufflinks */,
 			EDD0CE0810C72F7D00AF308F /* cuffdiff */,
@@ -17,6 +17,7 @@
 			EDD94E58120E624800AA1086 /* abundances.cpp:578 */,
 			EDD94E64120E629900AA1086 /* abundances.cpp:591 */,
 			EDD94E6A120E62C700AA1086 /* abundances.cpp:586 */,
+			EDD94EC81210DDB700AA1086 /* gff.cpp:649 */,
 		);
 		codeSenseManager = EDA5150110C72929000A4F41 /* Code sense */;
 		executables = (
@@ -490,6 +491,27 @@
 			EDD94E6E120E62FF00AA1086 /* PBXTextBookmark */ = EDD94E6E120E62FF00AA1086 /* PBXTextBookmark */;
 			EDD94E6F120E62FF00AA1086 /* PBXTextBookmark */ = EDD94E6F120E62FF00AA1086 /* PBXTextBookmark */;
 			EDD94E85120EEFC300AA1086 /* PBXTextBookmark */ = EDD94E85120EEFC300AA1086 /* PBXTextBookmark */;
+			EDD94EA91210DCB600AA1086 /* PBXTextBookmark */ = EDD94EA91210DCB600AA1086 /* PBXTextBookmark */;
+			EDD94EAA1210DCB600AA1086 /* PBXTextBookmark */ = EDD94EAA1210DCB600AA1086 /* PBXTextBookmark */;
+			EDD94EAB1210DCB600AA1086 /* PBXTextBookmark */ = EDD94EAB1210DCB600AA1086 /* PBXTextBookmark */;
+			EDD94EAC1210DCC000AA1086 /* PBXTextBookmark */ = EDD94EAC1210DCC000AA1086 /* PBXTextBookmark */;
+			EDD94EAD1210DCC000AA1086 /* PBXTextBookmark */ = EDD94EAD1210DCC000AA1086 /* PBXTextBookmark */;
+			EDD94EAF1210DCC000AA1086 /* PBXTextBookmark */ = EDD94EAF1210DCC000AA1086 /* PBXTextBookmark */;
+			EDD94EB01210DCC000AA1086 /* PBXTextBookmark */ = EDD94EB01210DCC000AA1086 /* PBXTextBookmark */;
+			EDD94EB11210DCC000AA1086 /* PBXTextBookmark */ = EDD94EB11210DCC000AA1086 /* PBXTextBookmark */;
+			EDD94EB41210DCE800AA1086 /* PBXTextBookmark */ = EDD94EB41210DCE800AA1086 /* PBXTextBookmark */;
+			EDD94EB51210DCE800AA1086 /* PBXTextBookmark */ = EDD94EB51210DCE800AA1086 /* PBXTextBookmark */;
+			EDD94EB61210DCF200AA1086 /* PBXTextBookmark */ = EDD94EB61210DCF200AA1086 /* PBXTextBookmark */;
+			EDD94EB81210DD1200AA1086 /* PBXTextBookmark */ = EDD94EB81210DD1200AA1086 /* PBXTextBookmark */;
+			EDD94EB91210DD1200AA1086 /* PBXTextBookmark */ = EDD94EB91210DD1200AA1086 /* PBXTextBookmark */;
+			EDD94EBA1210DD1200AA1086 /* PBXTextBookmark */ = EDD94EBA1210DD1200AA1086 /* PBXTextBookmark */;
+			EDD94EBB1210DD1200AA1086 /* PBXTextBookmark */ = EDD94EBB1210DD1200AA1086 /* PBXTextBookmark */;
+			EDD94EBC1210DD1400AA1086 /* PBXTextBookmark */ = EDD94EBC1210DD1400AA1086 /* PBXTextBookmark */;
+			EDD94EBD1210DD1400AA1086 /* PBXTextBookmark */ = EDD94EBD1210DD1400AA1086 /* PBXTextBookmark */;
+			EDD94EBF1210DD1400AA1086 /* PBXTextBookmark */ = EDD94EBF1210DD1400AA1086 /* PBXTextBookmark */;
+			EDD94EC41210DD4C00AA1086 /* PBXTextBookmark */ = EDD94EC41210DD4C00AA1086 /* PBXTextBookmark */;
+			EDD94EC51210DD5500AA1086 /* PBXTextBookmark */ = EDD94EC51210DD5500AA1086 /* PBXTextBookmark */;
+			EDD94ED21210DEA900AA1086 /* PBXTextBookmark */ = EDD94ED21210DEA900AA1086 /* PBXTextBookmark */;
 		};
 		sourceControlManager = EDA5150010C72929000A4F41 /* Source Control */;
 		userBuildSettings = {
@@ -2834,9 +2856,9 @@
 	};
 	EDA5151510C72963000A4F41 /* gff.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {751, 10439}}";
-			sepNavSelRange = "{20459, 10}";
-			sepNavVisRange = "{7833, 2247}";
+			sepNavIntBoundsRect = "{{0, 0}, {936, 10153}}";
+			sepNavSelRange = "{24799, 7}";
+			sepNavVisRange = "{23784, 1165}";
 		};
 	};
 	EDA5151710C72963000A4F41 /* gtf_tracking.h */ = {
@@ -2884,9 +2906,9 @@
 	};
 	EDA5151E10C72963000A4F41 /* abundances.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {936, 28119}}";
-			sepNavSelRange = "{14854, 0}";
-			sepNavVisRange = "{14503, 1172}";
+			sepNavIntBoundsRect = "{{0, 0}, {936, 28678}}";
+			sepNavSelRange = "{29084, 0}";
+			sepNavVisRange = "{28755, 790}";
 		};
 	};
 	EDA5151F10C72963000A4F41 /* assemble.cpp */ = {
@@ -2920,9 +2942,9 @@
 	};
 	EDA5152410C72963000A4F41 /* cuffdiff.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {936, 15132}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1243, 14807}}";
 			sepNavSelRange = "{9830, 0}";
-			sepNavVisRange = "{8434, 958}";
+			sepNavVisRange = "{9411, 845}";
 		};
 	};
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
@@ -2948,9 +2970,9 @@
 	};
 	EDA5152810C72963000A4F41 /* GBase.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1017, 8112}}";
-			sepNavSelRange = "{2308, 0}";
-			sepNavVisRange = "{1757, 700}";
+			sepNavIntBoundsRect = "{{0, 0}, {1210, 7917}}";
+			sepNavSelRange = "{6942, 0}";
+			sepNavVisRange = "{5545, 769}";
 		};
 	};
 	EDA5152A10C72963000A4F41 /* genes.cpp */ = {
@@ -2969,9 +2991,9 @@
 	};
 	EDA5152C10C72963000A4F41 /* gff.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {996, 15691}}";
-			sepNavSelRange = "{14288, 12}";
-			sepNavVisRange = "{14410, 1884}";
+			sepNavIntBoundsRect = "{{0, 0}, {912, 16562}}";
+			sepNavSelRange = "{20997, 0}";
+			sepNavVisRange = "{20485, 1781}";
 		};
 	};
 	EDA5152D10C72963000A4F41 /* GStr.cpp */ = {
@@ -3877,12 +3899,13 @@
 	EDD6A9D611598ABA00D3F668 /* cuffcompare */ = {
 		isa = PBXExecutable;
 		activeArgIndices = (
+			NO,
+			NO,
+			NO,
+			NO,
+			NO,
+			NO,
 			YES,
-			YES,
-			NO,
-			NO,
-			NO,
-			NO,
 		);
 		argumentStrings = (
 			"-r NCBI36.48.short.gtf",
@@ -3891,6 +3914,7 @@
 			y2_short.gtf,
 			"-r  MB8_plus_exons.cannonical_chr_names.gtf",
 			transcripts.gtf,
+			"-r gencode_v4.annotation.GRCh37.gtf -s ./  -o pooled -d 600 lymph-node.gtf",
 		);
 		autoAttachOnCrash = 1;
 		breakpointsEnabled = 1;
@@ -3930,7 +3954,9 @@
 		showTypeColumn = 0;
 		sourceDirectories = (
 		);
-		startupPath = /Users/cole/tmp/boel/;
+		startupPath = /Users/cole/tmp;
+		variableFormatDictionary = {
+		};
 	};
 	EDD6AA221159BA2E00D3F668 /* Unit Tests */ = {
 		activeExec = 0;
@@ -4233,7 +4259,7 @@
 		ignoreCount = 0;
 		lineNumber = 961;
 		location = cufflinks_xcode;
-		modificationTime = 302968768.267325;
+		modificationTime = 303095372.369893;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4281,7 +4307,7 @@
 		ignoreCount = 0;
 		lineNumber = 938;
 		location = cufflinks_xcode;
-		modificationTime = 302968768.268942;
+		modificationTime = 303095372.370856;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4299,7 +4325,7 @@
 		ignoreCount = 0;
 		lineNumber = 934;
 		location = cufflinks_xcode;
-		modificationTime = 302968768.26963;
+		modificationTime = 303095372.373582;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4494,7 +4520,7 @@
 		ignoreCount = 0;
 		lineNumber = 342;
 		location = cufflinks_xcode;
-		modificationTime = 302968768.270252;
+		modificationTime = 303095372.374037;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4582,7 +4608,7 @@
 		ignoreCount = 0;
 		lineNumber = 578;
 		location = cufflinks_xcode;
-		modificationTime = 302968768.272654;
+		modificationTime = 303095372.374443;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4669,9 +4695,9 @@
 		hitCount = 0;
 		ignoreCount = 0;
 		lineNumber = 591;
-		modificationTime = 302968768.273584;
+		modificationTime = 303095464.860515;
 		originalNumberOfMultipleMatches = 1;
-		state = 0;
+		state = 1;
 	};
 	EDD94E66120E62A700AA1086 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -4707,7 +4733,7 @@
 		ignoreCount = 0;
 		lineNumber = 586;
 		location = cufflinks_xcode;
-		modificationTime = 302968768.274571;
+		modificationTime = 303095372.375308;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -4740,6 +4766,238 @@
 		rType = 0;
 		vrLen = 1172;
 		vrLoc = 14503;
+	};
+	EDD94EA91210DCB600AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151E10C72963000A4F41 /* abundances.cpp */;
+		name = "abundances.cpp: 1137";
+		rLen = 0;
+		rLoc = 29084;
+		rType = 0;
+		vrLen = 790;
+		vrLoc = 28755;
+	};
+	EDD94EAA1210DCB600AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 651";
+		rLen = 0;
+		rLoc = 21076;
+		rType = 0;
+		vrLen = 1733;
+		vrLoc = 20485;
+	};
+	EDD94EAB1210DCB600AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 651";
+		rLen = 0;
+		rLoc = 21114;
+		rType = 0;
+		vrLen = 1876;
+		vrLoc = 20501;
+	};
+	EDD94EAC1210DCC000AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152410C72963000A4F41 /* cuffdiff.cpp */;
+		name = "cuffdiff.cpp: 338";
+		rLen = 0;
+		rLoc = 9830;
+		rType = 0;
+		vrLen = 835;
+		vrLoc = 9411;
+	};
+	EDD94EAD1210DCC000AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDD94EAE1210DCC000AA1086 /* asm getc  0x00007fff878a312b */;
+		name = "asm getc  0x00007fff878a312b: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1410;
+		vrLoc = 0;
+	};
+	EDD94EAE1210DCC000AA1086 /* asm getc  0x00007fff878a312b */ = {
+		isa = PBXFileReference;
+		path = "asm getc  0x00007fff878a312b";
+		sourceTree = "<group>";
+	};
+	EDD94EAF1210DCC000AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 651";
+		rLen = 0;
+		rLoc = 21114;
+		rType = 0;
+		vrLen = 1546;
+		vrLoc = 20573;
+	};
+	EDD94EB01210DCC000AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152810C72963000A4F41 /* GBase.cpp */;
+		rLen = 0;
+		rLoc = 276;
+		rType = 1;
+	};
+	EDD94EB11210DCC000AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152810C72963000A4F41 /* GBase.cpp */;
+		name = "GBase.cpp: 277";
+		rLen = 0;
+		rLoc = 6942;
+		rType = 0;
+		vrLen = 812;
+		vrLoc = 6551;
+	};
+	EDD94EB41210DCE800AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 651";
+		rLen = 0;
+		rLoc = 21114;
+		rType = 0;
+		vrLen = 1876;
+		vrLoc = 20501;
+	};
+	EDD94EB51210DCE800AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152810C72963000A4F41 /* GBase.cpp */;
+		name = "GBase.cpp: 277";
+		rLen = 0;
+		rLoc = 6942;
+		rType = 0;
+		vrLen = 1024;
+		vrLoc = 6627;
+	};
+	EDD94EB61210DCF200AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152810C72963000A4F41 /* GBase.cpp */;
+		name = "GBase.cpp: 277";
+		rLen = 0;
+		rLoc = 6942;
+		rType = 0;
+		vrLen = 769;
+		vrLoc = 5545;
+	};
+	EDD94EB81210DD1200AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152810C72963000A4F41 /* GBase.cpp */;
+		name = "GBase.cpp: 277";
+		rLen = 0;
+		rLoc = 6942;
+		rType = 0;
+		vrLen = 978;
+		vrLoc = 5444;
+	};
+	EDD94EB91210DD1200AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151510C72963000A4F41 /* gff.h */;
+		name = "gff.h: 812";
+		rLen = 7;
+		rLoc = 24799;
+		rType = 0;
+		vrLen = 1165;
+		vrLoc = 23784;
+	};
+	EDD94EBA1210DD1200AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		rLen = 7;
+		rLoc = 20589;
+		rType = 0;
+	};
+	EDD94EBB1210DD1200AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 642";
+		rLen = 7;
+		rLoc = 20589;
+		rType = 0;
+		vrLen = 1815;
+		vrLoc = 20485;
+	};
+	EDD94EBC1210DD1400AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152810C72963000A4F41 /* GBase.cpp */;
+		name = "GBase.cpp: 277";
+		rLen = 0;
+		rLoc = 6942;
+		rType = 0;
+		vrLen = 769;
+		vrLoc = 5545;
+	};
+	EDD94EBD1210DD1400AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDD94EBE1210DD1400AA1086 /* asm strlen  0x00007fff87852170 */;
+		name = "asm strlen  0x00007fff87852170: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1243;
+		vrLoc = 0;
+	};
+	EDD94EBE1210DD1400AA1086 /* asm strlen  0x00007fff87852170 */ = {
+		isa = PBXFileReference;
+		path = "asm strlen  0x00007fff87852170";
+		sourceTree = "<group>";
+	};
+	EDD94EBF1210DD1400AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 642";
+		rLen = 7;
+		rLoc = 20589;
+		rType = 0;
+		vrLen = 1107;
+		vrLoc = 20485;
+	};
+	EDD94EC41210DD4C00AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 649";
+		rLen = 0;
+		rLoc = 20997;
+		rType = 0;
+		vrLen = 1597;
+		vrLoc = 20423;
+	};
+	EDD94EC51210DD5500AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 649";
+		rLen = 0;
+		rLoc = 20997;
+		rType = 0;
+		vrLen = 1597;
+		vrLoc = 20423;
+	};
+	EDD94EC81210DDB700AA1086 /* gff.cpp:649 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		functionName = "GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr)";
+		hitCount = 1;
+		ignoreCount = 0;
+		lineNumber = 649;
+		location = cufflinks_xcode;
+		modificationTime = 303095458.09407;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	EDD94ED21210DEA900AA1086 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152C10C72963000A4F41 /* gff.cpp */;
+		name = "gff.cpp: 651";
+		rLen = 0;
+		rLoc = 20997;
+		rType = 0;
+		vrLen = 1781;
+		vrLoc = 20485;
 	};
 	EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */ = {
 		uiCtxt = {
