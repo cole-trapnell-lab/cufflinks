@@ -547,8 +547,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 
 void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 									long double total_map_mass,
-									vector<Gene>& genes,
-									BiasLearner* bl_p)
+									vector<Gene>& genes)
 {	
 	vector<Scaffold> partials;
 	vector<Scaffold> completes;
@@ -576,7 +575,7 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 		abundances.push_back(ab);
 	}
 	
-	AbundanceGroup transfrags = AbundanceGroup(abundances, bl_p);
+	AbundanceGroup transfrags = AbundanceGroup(abundances);
 	
 	vector<AbundanceGroup> transfrags_by_cluster;
 	
@@ -595,7 +594,6 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
 					 long double map_mass,
-					 BiasLearner* bl_p,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
 					 FILE* ftrans_abundances)
@@ -643,8 +641,7 @@ void assemble_bundle(const RefSequenceTable& rt,
     
 	quantitate_transcript_clusters(scaffolds, 
 								   map_mass,
-								   genes,
-								   bl_p);
+								   genes);
     
 #if ASM_VERBOSE
     fprintf(stderr, "%s\tFiltering bundle assembly\n", bundle_label->c_str());
@@ -730,7 +727,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	delete bundle_ptr;
 }
 
-bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
+bool assemble_hits(BundleFactory& bundle_factory)
 {
 	srand(time(0));
 	
@@ -801,7 +798,6 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 						 boost::cref(rt), 
 						 bundle_ptr, 
 						 bundle_factory.read_group_properties()->total_map_mass(),
-                         bias_learner,
 						 ftranscripts, 
 						 fgene_abundances,
 						 ftrans_abundances);
@@ -809,7 +805,6 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bias_learner)
 			assemble_bundle(boost::cref(rt), 
 							bundle_ptr, 
 							bundle_factory.read_group_properties()->total_map_mass(),
-                            bias_learner,
 							ftranscripts,
 							fgene_abundances,
 							ftrans_abundances);
@@ -903,7 +898,9 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	min_frag_len = frag_len_dist->min();
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 
-	assemble_hits(bundle_factory, (BiasLearner*)NULL);
+	if (fasta_dir != "") final_est_run = false;
+	
+	assemble_hits(bundle_factory);
 
     if (fasta_dir == "") return;
     
@@ -930,8 +927,9 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     bundle_factory2.read_group_properties(rg_props);
     
-	BiasLearner bl(*rg_props->frag_len_dist());
-	learn_bias(bundle_factory2, bl);
+	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
+	learn_bias(bundle_factory2, *bl);
+	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
 	
 	bundle_factory2.reset();
 	
@@ -939,7 +937,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 //	boost::thread asm_requant_thread(assemble_hits, bundle_factory2, &bl);
 //	asm_requant_thread.join();
 //#else	
-	assemble_hits(bundle_factory2, &bl);
+	final_est_run = true;
+	assemble_hits(bundle_factory2);
 //#endif
 }
 

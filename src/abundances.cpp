@@ -153,7 +153,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 		}
 	}
 	
-	filtered_group = AbundanceGroup(new_ab, new_cov, _bl_p);
+	filtered_group = AbundanceGroup(new_ab, new_cov);
 }
 
 void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
@@ -315,7 +315,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             //assert (parent != NULL);
             pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
             inserted = count_per_replicate.insert(make_pair(rg_props, 0.0));
-            double more_mass = (1.0 - alignments[i].error_prob());
+            double more_mass = alignments[i].collapse_mass();
             inserted.first->second += more_mass;
         }
     }
@@ -365,14 +365,17 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 	get_transfrags(transcripts);
 	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
 	
-	compute_cond_probs_and_effective_lengths(alignments, transcripts, mapped_transcripts);
+	vector<MateHit> nr_alignments;
+	collapse_hits(alignments, nr_alignments);
 	
-	calculate_gammas(alignments, transcripts, mapped_transcripts);		
+	compute_cond_probs_and_effective_lengths(nr_alignments, transcripts, mapped_transcripts);
+	
+	calculate_gammas(nr_alignments, transcripts, mapped_transcripts);		
 	
     // This will also compute the transcript level FPKMs
-    calculate_counts(alignments, transcripts);  
+    calculate_counts(nr_alignments, transcripts);  
 
-	if (_bl_p != NULL || fasta_dir == "") // Only on last estimation run
+	if (final_est_run) // Only on last estimation run
 	{
         calculate_conf_intervals();
         calculate_kappas();
@@ -503,207 +506,6 @@ void AbundanceGroup::calculate_FPKM_variance()
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
 
-bool AbundanceGroup::cond_probs_and_effective_length(const vector<MateHit>& alignments,
-													 const Scaffold& transcript,
-													 const vector<char>& compatibilities,
-													 vector<double>& cond_probs,
-													 double& eff_len)
-{
-	int M = alignments.size();
-	int trans_len = transcript.length();
-	
-	// Calculate conditional probability of each alignment coming from this transcript 
-	// given the alignment comes from the locus
-	
-	bool mapped = false;
-	double tot_mass = 0.0;
-	map<shared_ptr<ReadGroupProperties const>, double> mass_per_replicate;
-	
-	for (int i = 0; i < M; ++i) 
-	{
-		if (compatibilities[i] == 1) 
-		{
-			const MateHit& hit = alignments[i];
-            const EmpDist& frag_len_dist = *(hit.read_group_props()->frag_len_dist());
-			if (i>0 && hits_equals(hit, alignments[i-1]))
-			{
-				cond_probs[i] = cond_probs[i-1];
-				continue;
-			}
-			
-			pair<int,int> g_span = hit.genomic_outer_span();
-			int frag_len;
-			
-			if (g_span.first != -1 && g_span.second != -1)
-			{
-				pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
-				frag_len = abs(t_span.second-t_span.first)+1;		
-			}
-			else if (hit.left_alignment()->antisense_align() && transcript.strand() != CUFF_REV 
-					 || !(hit.left_alignment()->antisense_align()) && transcript.strand() == CUFF_REV)
-			{
-				int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
-				int end = transcript.genomic_to_transcript_coord(g_end);
-				frag_len = min(frag_len_dist.mode(), end);
-			}
-			else
-			{
-				int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
-				int start = transcript.genomic_to_transcript_coord(g_start);
-				if (start == trans_len) // Overhang
-					frag_len = min(frag_len_dist.mode(), trans_len);
-				else
-					frag_len = min(frag_len_dist.mode(), trans_len-start);
-			}
-		
-			cond_probs[i] = frag_len_dist.pdf(frag_len) / (trans_len - frag_len + 1);
-			assert(!isnan(cond_probs[i]));
-			
-			if (cond_probs[i] > 0)
-			{
-				// Keep track of counts per replicate
-				shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
-				pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
-				inserted = mass_per_replicate.insert(make_pair(rg_props, 0.0));
-				double more_mass = (1.0 - alignments[i].error_prob());
-				inserted.first->second += more_mass;
-				tot_mass += more_mass;
-				
-				mapped = true; // At least one alignment mapped
-			}
-		}
-	}
-	
-	// Find average of effective lengths
-	eff_len = 0.0;
-	for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = mass_per_replicate.begin();
-         itr != mass_per_replicate.end();
-         ++itr)
-    {
-		double rep_eff_len = 0.0;
-        double rep_mass = itr->second;
-        const EmpDist frag_len_dist = *(itr->first->frag_len_dist());
-		for(int l = frag_len_dist.min(); l <= trans_len; l++)
-			rep_eff_len += frag_len_dist.pdf(l) * (trans_len - l + 1);
-		eff_len += rep_eff_len * (rep_mass/tot_mass);
-    }
-	
-	return mapped;
-}
-
-bool AbundanceGroup::unbiased_cond_probs_and_effective_length(const vector<MateHit>& alignments,
-															  const Scaffold& transcript,
-															  const vector<char>& compatibilities,
-															  vector<double>& cond_probs,
-															  double& eff_len)
-{
-	int M = alignments.size();
-	int trans_len = transcript.length();
-	
-	vector<double> start_bias(trans_len+1, 0);
-	vector<double> end_bias(trans_len+1, 0);
-	_bl_p->getBias(transcript, start_bias, end_bias);
-	
-	double avg_bias = accumulate( start_bias.begin(), start_bias.end(), 0.0 ) + accumulate( end_bias.begin(), end_bias.end(), 0.0 );
-	avg_bias /= (2*trans_len);
-
-	start_bias[trans_len] = 1;
-	end_bias[trans_len] = 1;
-	
-	// Calculate bias of all possible fragments of a given length for ever possible length	
-	vector<double> tot_bias_for_len(trans_len+1,1);
-	for(int l = min_frag_len; l <= trans_len; l++)
-	{
-		double tot = 0;
-		for(int i = 0; i <= trans_len - l; i++)
-			tot += start_bias[i]*end_bias[i+l-1];
-		tot_bias_for_len[l] = tot;
-	}
-
-	// Calculate conditional probability of each alignment coming from this transcript
-	// given the alignment comes from the locus
-	bool mapped = false;
-	double tot_mass = 0.0;
-	map<shared_ptr<ReadGroupProperties const>, double> mass_per_replicate;
-
-	for (int i = 0; i < M; ++i) {
-		if (compatibilities[i] == 1) 
-		{
-			const MateHit& hit = alignments[i];
-            const EmpDist& frag_len_dist = *(hit.read_group_props()->frag_len_dist());
-			if (i>0 && hits_equals(hit, alignments[i-1]))
-			{
-                cond_probs[i] = cond_probs[i-1];
-				continue;
-			}
-			int start = trans_len;
-			int end = trans_len;
-			int frag_len;
-			
-			pair<int,int> g_span = hit.genomic_outer_span();
-			if (g_span.first != -1 && g_span.second != -1)
-			{
-				pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
-				start = t_span.first;
-				end = t_span.second;
-				frag_len = abs(end-start)+1;		
-			}
-			else if (hit.left_alignment()->antisense_align() && transcript.strand() != CUFF_REV 
-				|| !(hit.left_alignment()->antisense_align()) && transcript.strand() == CUFF_REV)
-			{
-				int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
-				end = transcript.genomic_to_transcript_coord(g_end);
-				frag_len = min(frag_len_dist.mode(), end);
-			}
-			else
-			{
-				int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
-				start = transcript.genomic_to_transcript_coord(g_start);
-				if (start == trans_len) // Overhang
-					frag_len = min(frag_len_dist.mode(), trans_len);
-				else
-					frag_len = min(frag_len_dist.mode(), trans_len-start);
-			}
-			
-			cond_probs[i] = start_bias[start]*end_bias[end]*frag_len_dist.pdf(frag_len);
-			if (hit.is_pair())
-				cond_probs[i] /= tot_bias_for_len[frag_len];
-			else
-				cond_probs[i] /= avg_bias*(trans_len - frag_len + 1);
-
-			assert(!isnan(cond_probs[i]));
-			
-			if (cond_probs[i] > 0)
-			{
-				// Keep track of counts per replicate
-				shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
-				pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
-				inserted = mass_per_replicate.insert(make_pair(rg_props, 0.0));
-				double more_mass = (1.0 - alignments[i].error_prob());
-				inserted.first->second += more_mass;
-				tot_mass += more_mass;
-			
-				mapped = true; // At least one alignment mapped
-			}
-		}
-	}
-	
-	// Find average of effective lengths
-	eff_len = 0.0;
-	for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = mass_per_replicate.begin();
-         itr != mass_per_replicate.end();
-         ++itr)
-    {
-		double rep_eff_len = 0.0;
-        double rep_mass = itr->second;
-        const EmpDist frag_len_dist = *(itr->first->frag_len_dist());
-		for(int l = frag_len_dist.min(); l <= trans_len; l++)
-			rep_eff_len += frag_len_dist.pdf(l) * tot_bias_for_len[l];
-		eff_len += rep_eff_len * (rep_mass/tot_mass);
-    }
-	
-	return mapped;
-}
 
 void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 															  vector<shared_ptr<Abundance> >& transcripts,
@@ -715,29 +517,29 @@ void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateH
 	vector<vector<char> > compatibilities(N, vector<char>(M,0));
 	compute_compatibilities(transcripts, alignments, compatibilities);
 
-	
 	for (int j = 0; j < N; ++j) {
 		const Scaffold& transfrag = *(transcripts[j]->transfrag());
 		vector<double>& cond_probs = *(new vector<double>(M,0));
-		double eff_len;
 		
-		bool mapped;
-		if (transfrag.strand() == CUFF_STRAND_UNKNOWN || _bl_p == NULL) // We don't know the start and end OR we haven't learned bias.
-			mapped = cond_probs_and_effective_length(alignments, transfrag, compatibilities[j], cond_probs, eff_len);
-		else
-			mapped = unbiased_cond_probs_and_effective_length(alignments, transfrag, compatibilities[j], cond_probs, eff_len);
+		BiasCorrectionHelper bch(transfrag);
 		
-		transcripts[j]->effective_length(eff_len);
+		for(int i = 0 ; i < M; ++i)
+		{
+			if (compatibilities[j][i]==1)
+				cond_probs[i] = bch.get_cond_prob(alignments[i]);
+		}
+		
+		transcripts[j]->effective_length(bch.get_effective_length());
 		transcripts[j]->cond_probs(&cond_probs);
 		
-		if (mapped) 
+		if (bch.is_mapped()) 
 			mapped_transcripts.push_back(transcripts[j]);
 	}
 }
 
 // FIXME: This function doesn't really need to copy the transcripts out of 
 // the cluster.  Needs refactoring
-bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_gene, 
+bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments, 
 									  const vector<shared_ptr<Abundance> >& transcripts, 
 									  const vector<shared_ptr<Abundance> >& mapped_transcripts)
 {
@@ -760,7 +562,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_gene,
 #endif	
 	
 	gamma_mle(mapped_transcripts,
-			  hits_in_gene,
+			  nr_alignments,
 			  gammas);
 	
 #if ASM_VERBOSE
@@ -799,7 +601,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_gene,
 #endif
 	
 	gamma_mle(filtered_transcripts,
-			  hits_in_gene,
+			  nr_alignments,
 			  filtered_gammas);
 	
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
@@ -817,13 +619,12 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& hits_in_gene,
 	bool success = true;
 	int N = transcripts.size();
 	
-	if (_bl_p != NULL || fasta_dir == "") // Only on last estimation run.
+	if (final_est_run) // Only on last estimation run.
 	{
 		success = gamma_map(filtered_transcripts,
-							 hits_in_gene,
-							 filtered_gammas,
-							 _gamma_covariance);
-	
+							nr_alignments,
+							filtered_gammas,
+							_gamma_covariance);
 	}
 	else 
 	{
@@ -1581,12 +1382,12 @@ void compute_posterior_expectation(const vector<ublas::vector<double> >& weighte
 }
 
 bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& alignments,
+			   const vector<MateHit>& nr_alignments,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance)
 {	
 	int N = transcripts.size();	
-	int M = alignments.size();
+	int M = nr_alignments.size();
 	
 	gamma_covariance = ublas::zero_matrix<double>(N);
 	
@@ -1598,15 +1399,14 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	typedef ublas::matrix<double> matrix_type;
 	matrix_type fisher = ublas::zero_matrix<double>(N,N);
 	
-	vector<double> u;
-	for (size_t i = 0; i < alignments.size(); ++i)
+	vector<double> u(M);
+	for (size_t i = 0; i < M; ++i)
 	{
-		u.push_back(1);
+		u[i] = nr_alignments[i].collapse_mass();
 	}
-	
 	compute_fisher(transcripts,
 				   gamma_map_estimate,
-				   alignments,
+				   nr_alignments,
 				   u,
 				   fisher);
 	
@@ -1895,8 +1695,8 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 }
 
 void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
-				   const vector<MateHit>& alignments,
-				   vector<double>& gammas)
+			   const vector<MateHit>& nr_alignments,
+			   vector<double>& gammas)
 {
 	gammas.clear();
 	if (transcripts.empty())
@@ -1909,7 +1709,7 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		return;
 	}
 	
-	int M = alignments.size();
+	int M = nr_alignments.size();
 	int N = transcripts.size();
 
 	
@@ -1926,15 +1726,15 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		double logL;
 		
 		
-		vector<double> u;
-		for (size_t i = 0; i < alignments.size(); ++i)
-		{
-			u.push_back(1);
-		}
 		vector<vector<double> > cond_probs(N, vector<double>());
 		for (size_t j = 0; j < N; ++j)
 		{
 			cond_probs[j] = *(transcripts[j]->cond_probs());
+		}
+		vector<double> u(M);
+		for (size_t i = 0; i < M; ++i)
+		{
+			u[i] = nr_alignments[i].collapse_mass();
 		}
 		
 		

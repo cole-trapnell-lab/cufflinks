@@ -688,7 +688,8 @@ public:
     _rg_props(rg_props),
 	_refid(refid), 
 	_left_alignment(left_alignment),
-	_right_alignment(right_alignment)
+	_right_alignment(right_alignment),
+	_collapse_mass(0.0)
 	{
 		//_expected_inner_dist = min(genomic_inner_dist(), _expected_inner_dist);
 	}
@@ -717,6 +718,11 @@ public:
 	{
 		return (_left_alignment && _right_alignment);
 	}
+	
+	double mass() const { return 1.0 - error_prob(); }
+	double collapse_mass() const { return _collapse_mass; }
+	void collapse_mass(double m) { _collapse_mass = m; }
+	void incr_collapse_mass(double incr) { _collapse_mass += incr; }
 	
 	int left() const 
 	{
@@ -827,12 +833,14 @@ public:
 			edits += _right_alignment->edit_dist();
 		return edits;
 	}
+	
 private:
 	
     shared_ptr<ReadGroupProperties const> _rg_props;
 	RefID _refid;
 	shared_ptr<ReadHit const> _left_alignment;
 	shared_ptr<ReadHit const> _right_alignment;
+	double _collapse_mass;
 	//bool _closed;
 };
 
@@ -844,8 +852,7 @@ bool hits_equals(const MateHit& lhs, const MateHit& rhs);
 
 // Assumes hits are sorted by mate_hit_lt
 void collapse_hits(const vector<MateHit>& hits,
-				   vector<MateHit>& non_redundant,
-				   vector<double>& collapse_counts);
+				   vector<MateHit>& non_redundant);
 
 
 

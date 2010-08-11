@@ -27,6 +27,8 @@
 
 using namespace std;
 
+bool final_est_run = true;
+
 //int insert_len = 250;
 //int insert_len_std_dev = 20;
 //

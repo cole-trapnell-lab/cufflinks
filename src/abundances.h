@@ -139,7 +139,11 @@ public:
 	void status(AbundanceStatus s)			{ _status = s; }
 	
 	double FPKM() const						{ return _FPKM; }
-    void FPKM(double fpkm)                  { _FPKM = fpkm; }
+    void FPKM(double fpkm)                  
+	{ 
+		_FPKM = fpkm;
+		_transfrag->fpkm(fpkm);
+	}
 	double FPKM_variance() const			{ return _FPKM_variance; }
 	void   FPKM_variance(double v)			{ _FPKM_variance = v; }
 	
@@ -158,7 +162,7 @@ public:
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
 	
-	void transfrag(const Scaffold* tf)		{ _transfrag = tf; }
+	void transfrag(Scaffold* tf)		{ _transfrag = tf; }
 	const Scaffold* transfrag() const		{ return _transfrag; }
 	
 	double effective_length() const			{ return _eff_len; }
@@ -246,7 +250,7 @@ private:
 	void calculate_FPKM_err_bar(double variance);
 	
 	AbundanceStatus _status;
-	const Scaffold* _transfrag;
+	Scaffold* _transfrag;
 	double _FPKM;
 	double _FPKM_variance;
 	ConfidenceInterval _FPKM_conf;
@@ -266,7 +270,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0) , _bl_p(NULL) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -277,23 +281,18 @@ public:
 		_kappa_covariance = other._kappa_covariance;
 		_FPKM_variance = other._FPKM_variance;
 		_description = other._description;
-		_bl_p = other._bl_p;
 	}
 	
-	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances, BiasLearner* bl_p) : 
+	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
 		_abundances(abundances), 
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
-		_FPKM_variance(0.0),
-		_bl_p(bl_p) {}
-	
+		_FPKM_variance(0.0){}
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
-				   const ublas::matrix<double>& gamma_covariance,
-				   BiasLearner* bl_p) :
+				   const ublas::matrix<double>& gamma_covariance) :
 		_abundances(abundances), 
-		_gamma_covariance(gamma_covariance),
-		_bl_p(bl_p)
+		_gamma_covariance(gamma_covariance)
 	{
 		calculate_conf_intervals();
 		calculate_kappas();
@@ -364,29 +363,17 @@ private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
 	
-	bool calculate_gammas(const vector<MateHit>& alignments, 
+	bool calculate_gammas(const vector<MateHit>& nr_alignments, 
 						  const vector<shared_ptr<Abundance> >& transcripts,
 						  const vector<shared_ptr<Abundance> >& mapped_transcripts);
 	void calculate_FPKM_variance();
 	void calculate_conf_intervals();
-	void calculate_counts(const vector<MateHit>& alignments, const vector<shared_ptr<Abundance> >& transcripts);
+	void calculate_counts(const vector<MateHit>& nr_alignments, const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
     
 	void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
 												  vector<shared_ptr<Abundance> >& transcripts,
 												  vector<shared_ptr<Abundance> >& mapped_transcripts);
-    
-	bool unbiased_cond_probs_and_effective_length(const vector<MateHit>& alignments,
-												  const Scaffold& transfrag,
-												  const vector<char>& compatibilities,
-												  vector<double>& cond_probs,
-												  double& eff_len);
-	
-	bool cond_probs_and_effective_length(const vector<MateHit>& alignments,
-									const Scaffold& transfrag,
-									const vector<char>& compatibilities,
-									vector<double>& cond_probs,
-									double& eff_len);
 	
 	vector<shared_ptr<Abundance> > _abundances;
 	
@@ -397,7 +384,6 @@ private:
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
-	BiasLearner* _bl_p;
 
 };
 
@@ -409,12 +395,12 @@ void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundan
 								   vector<MateHit>& alignments);
 
 bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& alignments,
+			   const vector<MateHit>& nr_alignments,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance);
 
 void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& alignments,
+			   const vector<MateHit>& nr_alignments,
 			   vector<double>& gammas);
 
 double compute_doc(int bundle_origin, 

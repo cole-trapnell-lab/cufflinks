@@ -27,6 +27,7 @@
 #include "bundles.h"
 #include "abundances.h"
 #include "tokenize.h"
+#include "biascorrection.h"
 
 #include <boost/thread.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -47,9 +48,9 @@ using namespace std;
 using namespace boost;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:o:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:o:r:";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:o:";
+const char *short_options = "m:s:F:c:I:j:Q:L:o:r:";
 #endif
 
 static struct option long_options[] = {
@@ -62,9 +63,9 @@ static struct option long_options[] = {
 {"min-map-qual",			required_argument,		 0,			 'Q'},
 {"label",					required_argument,		 0,			 'L'},
 {"min-alignment-count",     required_argument,		 0,			 'c'},
-{"GTF",					    required_argument,		 0,			 'G'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"output-dir",			    required_argument,		 0,			 'o'},
+{"reference-seq-dir",		required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -87,6 +88,7 @@ void print_usage()
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "--FDR						  False discovery rate used in testing   [ default:   0.05 ]\n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
+	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias corr    [ default:   NULL ]\n");
 
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
@@ -140,16 +142,16 @@ int parse_options(int argc, char** argv)
 				}
 				break;
 			}
-			case 'G':
-			{
-				ref_gtf_filename = optarg;
-				break;
-			}
             case 'o':
 			{
 				output_dir = optarg;
 				break;
 			}
+			case 'r':
+			{
+				fasta_dir = optarg;
+				break;
+            }    
 			default:
 				print_usage();
 				return 1;
@@ -373,6 +375,18 @@ public:
 			max_len = max(max_len, frag_len_dist->max());
         }
 		
+    }
+	
+	void learn_replicate_bias()
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+			shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+			BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
+			learn_bias(*fac, *bl);
+			rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
+			fac.reset();
+        }
     }
     
 private:
@@ -638,10 +652,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
     if (ref_mRNAs.empty())
         return;
 	
-	vector<ReplicatedBundleFactory> bundle_factories;
-	vector<long double> map_masses;
-
-    
+	vector<ReplicatedBundleFactory> bundle_factories;    
     vector<HitFactory*> all_hit_factories;
     
 
@@ -707,7 +718,8 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	
 	Tracking tracking;
 	
-	while (true)
+	final_est_run = false;
+	while (fasta_dir != "") // Only run initial estimation if correcting bias
 	{
 #if ENABLE_THREADS			
         while(1)
@@ -791,6 +803,102 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 	}
 #endif
+	
+	if (fasta_dir != "")
+	{
+		foreach (ReplicatedBundleFactory& fac, bundle_factories)
+		{
+			fac.reset();
+			fac.learn_replicate_bias();
+		}
+	}
+	
+	final_est_run = true;
+	while (true)
+	{
+#if ENABLE_THREADS			
+        while(1)
+        {
+            thread_pool_lock.lock();
+            if (curr_threads < num_threads)
+            {
+                thread_pool_lock.unlock();
+                break;
+            }
+            
+            thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+#endif
+        
+        vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
+        
+        // grab the alignments for this locus in each of the samples
+        if (next_bundles(bundle_factories, *sample_bundles) == false)
+        {
+            // No more reference transcripts.  We're done
+            break;
+        }
+        bool non_empty_bundle = false;
+        for (size_t i = 0; i < sample_bundles->size(); ++i)
+        {
+            if (!(*sample_bundles)[i]->hits().empty())
+            {
+                non_empty_bundle = true;
+                break;
+            }
+        }
+        if (non_empty_bundle)
+        {
+            RefID bundle_chr_id = sample_bundles->front()->ref_id();
+            assert (bundle_chr_id != 0);
+            const char* chr_name = rt.get_name(bundle_chr_id);
+            assert (chr_name);
+            fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
+                    chr_name,
+                    sample_bundles->front()->left(),
+                    sample_bundles->front()->right());
+			
+			
+#if ENABLE_THREADS			
+            thread_pool_lock.lock();
+            curr_threads++;
+            thread_pool_lock.unlock();
+            
+            thread quantitate(quantitation_worker,
+                              boost::cref(rt), 
+                              sample_bundles, 
+                              boost::ref(tests),
+                              boost::ref(tracking));
+			
+#else
+            quantitation_worker(boost::cref(rt), 
+                                sample_bundles, 
+                                boost::ref(tests),
+                                boost::ref(tracking));
+#endif
+        }
+	}
+	
+	// wait for the workers to finish up before reporting everthing.
+#if ENABLE_THREADS	
+	while(1)
+	{
+		thread_pool_lock.lock();
+		if (curr_threads == 0)
+		{
+			thread_pool_lock.unlock();
+			break;
+		}
+		
+		thread_pool_lock.unlock();
+		//fprintf(stderr, "waiting to for all workers to finish\n");
+		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+	}
+#endif
+	
 	
 	//double FDR = 0.05;
 	int total_iso_de_tests = 0;

@@ -65,8 +65,45 @@ void get_compatibility_list(const vector<Scaffold>& transcripts,
 	}
 }
 
+void map_frag_to_transcript(const Scaffold& transcript, const MateHit& hit, int& start, int& end, int& frag_len)
+{
+	
+	int trans_len = transcript.length();
+	
+	// Defaults will cause them to be ignored when they are unknown
+	start = trans_len;
+	end = trans_len;
+	
+	shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
+	
+	if (hit.is_pair())
+	{
+		pair<int,int> g_span = hit.genomic_outer_span();
+		pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
+		start = t_span.first;
+		end = t_span.second;
+		frag_len = abs(end-start)+1;		
+	}
+	else if (hit.left_alignment()->antisense_align() && transcript.strand() != CUFF_REV 
+			 || !(hit.left_alignment()->antisense_align()) && transcript.strand() == CUFF_REV)
+	{
+		int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
+		end = transcript.genomic_to_transcript_coord(g_end);
+		frag_len = min(frag_len_dist->mode(), end);
+	}
+	else
+	{
+		int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
+		start = transcript.genomic_to_transcript_coord(g_start);
+		if (start == trans_len) // Overhang
+			frag_len = min(frag_len_dist->mode(), trans_len);
+		else
+			frag_len = min(frag_len_dist->mode(), trans_len-start);
+	}
+	
+}
 
-bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
+void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 {
 	//bundle_factory.load_ref_rnas(true, true);
 
@@ -102,94 +139,81 @@ bool learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 					bundle.right(),
 					(int)bundle.non_redundant_hits().size());
 			
-			
-			const vector<Scaffold>& transcripts = bundle.ref_scaffolds();
-			const vector<MateHit>& alignments = bundle.non_redundant_hits();
-			
-			
-			int M = alignments.size();
-			int N = transcripts.size();
-			
-			if (N==0)
+				
+			if (bundle.non_redundant_hits().size()==0)
 			{
 				delete bundle_ptr;
 				continue;
 			}
-			
-			vector<list<int> > compatibilities(M,list<int>());
-			
-			get_compatibility_list(transcripts, alignments, compatibilities);	
-			
-			vector<vector<long double> > startHists(N+1, vector<long double>()); // +1 to catch overhangs
-			vector<vector<long double> > endHists(N+1, vector<long double>());
-			
-			
-			for (int j = 0; j < N; ++j)
-			{
-				int size = transcripts[j].length();
-				startHists[j].resize(size);
-				endHists[j].resize(size);
-			}
 
-			for (int i = 0; i < M; ++i)
-			{
-				const MateHit& hit = alignments[i];
-				if (!hit.left_alignment() && !hit.right_alignment())
-					continue;
-				
-				
-				double num_hits = bundle.collapse_counts()[i];
-				long double locus_fpkm = 0;
-				
-				for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
-				{
-					locus_fpkm += transcripts[*it].fpkm(); 
-				}
-				
-				if (locus_fpkm==0)
-					continue;
-				
-				for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
-				{	
-					const Scaffold& transcript = transcripts[*it];
-					assert(transcript.strand()!=CUFF_STRAND_UNKNOWN); //Filtered in compatibility list
-					
-					if (!hit.is_pair())
-					{
-						assert(hit.left_alignment()); // Singletons should always be left.
-						bool antisense = hit.left_alignment()->antisense_align();
-						if (antisense && transcript.strand()==CUFF_FWD || !antisense && transcript.strand() == CUFF_REV)
-						{
-							int g_end  = (transcript.strand()==CUFF_FWD) ? hit.right()-1:hit.left();
-							int s_end = transcript.genomic_to_transcript_coord(g_end);
-							endHists[*it][s_end] += num_hits*transcript.fpkm()/locus_fpkm;
-						}
-						else
-						{
-							int g_start = (transcript.strand()==CUFF_FWD) ? hit.left():hit.right()-1;
-							int s_start = transcript.genomic_to_transcript_coord(g_start);
-							startHists[*it][s_start] += num_hits*transcript.fpkm()/locus_fpkm;
-						}
-					}
-					else 
-					{
-						pair<int, int> t_span = transcript.genomic_to_transcript_span(hit.genomic_outer_span());
-						startHists[*it][t_span.first] += num_hits*transcript.fpkm()/locus_fpkm;
-						endHists[*it][t_span.second] += num_hits*transcript.fpkm()/locus_fpkm;
-					}
-				}
-			}
-			for (int j = 0; j < N; ++j)
-			{
-				if (transcripts[j].strand()!=CUFF_STRAND_UNKNOWN && transcripts[j].fpkm() > 0)
-					bl.processTranscript(startHists[j], endHists[j], transcripts[j]);
-			}
+			process_bundle(bundle, bl);
+			
 		}
 		delete bundle_ptr;
 	}
 	bl.normalizeParameters();
 	bl.output();
-	return true;
+}
+
+void process_bundle(HitBundle& bundle, BiasLearner& bl)
+{
+	const vector<Scaffold>& transcripts = bundle.ref_scaffolds();
+	const vector<MateHit>& nr_alignments = bundle.non_redundant_hits();
+	
+	int M = nr_alignments.size();
+	int N = transcripts.size();
+	
+	vector<list<int> > compatibilities(M,list<int>());
+	get_compatibility_list(transcripts, nr_alignments, compatibilities);	
+	
+	vector<vector<long double> > startHists(N+1, vector<long double>()); // +1 to catch overhangs
+	vector<vector<long double> > endHists(N+1, vector<long double>());
+
+	for (int j = 0; j < N; ++j)
+	{
+		int size = transcripts[j].length();
+		startHists[j].resize(size);
+		endHists[j].resize(size);
+	}
+	
+	for (int i = 0; i < M; ++i)
+	{
+		const MateHit& hit = nr_alignments[i];
+		if (!hit.left_alignment() && !hit.right_alignment())
+			continue;
+		
+		
+		double num_hits = nr_alignments[i].collapse_mass();
+		long double locus_fpkm = 0;
+		
+		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
+		{
+			locus_fpkm += transcripts[*it].fpkm(); 
+		}
+		
+		if (locus_fpkm==0)
+			continue;
+		
+		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
+		{	
+			const Scaffold& transcript = transcripts[*it];
+			assert(transcript.strand()!=CUFF_STRAND_UNKNOWN); //Filtered in compatibility list
+			
+			int start;
+			int end;
+			int frag_len;
+			
+			map_frag_to_transcript(transcript, hit, start, end, frag_len);
+			
+			startHists[*it][start] += num_hits*transcripts[*it].fpkm()/locus_fpkm;
+			endHists[*it][end] += num_hits*transcripts[*it].fpkm()/locus_fpkm;
+		}
+	}
+	for (int j = 0; j < N; ++j)
+	{
+		if (transcripts[j].strand()!=CUFF_STRAND_UNKNOWN && transcripts[j].fpkm() > 0)
+			bl.processTranscript(startHists[j], endHists[j], transcripts[j]);
+	}
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
@@ -203,7 +227,7 @@ const int BiasLearner::lengthBins[] = {791,1265,1707,2433}; //Quantiles derived 
 const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.25,.3,.35,.4,.5,.6,.7,.75,.8,.85,.9,.95,1};
 //const double BiasLearner::positionBins[] = {0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19,0.20,0.21,0.22,0.23,0.24,0.25,0.26,0.27,0.28,0.29,0.30,0.31,0.32,0.33,0.34,0.35,0.36,0.37,0.38,0.39,0.40,0.41,0.42,0.43,0.44,0.45,0.46,0.47,0.48,0.49,0.50,0.51,0.52,0.53,0.54,0.55,0.56,0.57,0.58,0.59,0.60,0.61,0.62,0.63,0.64,0.65,0.66,0.67,0.68,0.69,0.70,0.71,0.72,0.73,0.74,0.75,0.76,0.77,0.78,0.79,0.80,0.81,0.82,0.83,0.84,0.85,0.86,0.87,0.88,0.89,0.90,0.91,0.92,0.93,0.94,0.95,0.96,0.97,0.98,0.99,1};
 
-BiasLearner::BiasLearner(const EmpDist& frag_len_dist)
+BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 {
 	_frag_len_dist = frag_len_dist;
 	_startParams = ublas::zero_matrix<long double>(_M,_N);
@@ -215,7 +239,7 @@ BiasLearner::BiasLearner(const EmpDist& frag_len_dist)
 }
 
 
-inline int BiasLearner::seqToInt(const char* seqSlice, int n)
+inline int BiasLearner::seqToInt(const char* seqSlice, int n) const
 {
 	int c = 0;
 	for(int i = 0; i < n; i++)
@@ -226,7 +250,7 @@ inline int BiasLearner::seqToInt(const char* seqSlice, int n)
 	return c;
 }
 
-inline void BiasLearner::getSlice(const char* seq, char* slice, int start, int end) // INCLUSIVE!
+inline void BiasLearner::getSlice(const char* seq, char* slice, int start, int end) const// INCLUSIVE!
 {
 	if (end >= start)
 	{
@@ -243,6 +267,7 @@ inline void BiasLearner::getSlice(const char* seq, char* slice, int start, int e
 		}
 	}
 }
+
 
 void BiasLearner::processTranscript(const std::vector<long double>& startHist, const std::vector<long double>& endHist, const Scaffold& transcript)
 {
@@ -271,7 +296,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 		if (i > binCutoff)
 			binCutoff=positionBins[++currBin]*seqLen;
 		_posParams(currBin, lenClass) += startHist[i]/fpkm;
-		_posExp(currBin, lenClass) += _frag_len_dist.cdf(seqLen-i);
+		_posExp(currBin, lenClass) += _frag_len_dist->cdf(seqLen-i);
 		
 		
 		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
@@ -292,7 +317,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 				if (v >= 0)
 				{
 					_startParams(j,v) += startHist[i]/fpkm;
-					_startExp(j,v) += _frag_len_dist.cdf(seqLen-i);
+					_startExp(j,v) += _frag_len_dist->cdf(seqLen-i);
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -301,7 +326,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
 						_startParams(j,*it) += startHist[i]/(fpkm * (double)nList.size());
-						_startExp(j,*it) += _frag_len_dist.cdf(seqLen-i)/nList.size();
+						_startExp(j,*it) += _frag_len_dist->cdf(seqLen-i)/nList.size();
 					}
 				}
 			}
@@ -314,7 +339,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 				if (v >= 0)
 				{
 					_endParams(j,v) += endHist[i]/fpkm;
-					_endExp(j,v) += _frag_len_dist.cdf(i+1);
+					_endExp(j,v) += _frag_len_dist->cdf(i+1);
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -323,7 +348,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
 						_endParams(j,*it) += endHist[i]/(fpkm * (double)nList.size());
-						_endExp(j,*it) += _frag_len_dist.cdf(i+1)/nList.size();
+						_endExp(j,*it) += _frag_len_dist->cdf(i+1)/nList.size();
 					}
 				}
 			}
@@ -332,7 +357,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 }
 
 
-void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nList)
+void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nList) const
 {
 
 	if (n > 1) 
@@ -464,7 +489,7 @@ void BiasLearner::output()
 //	myfile4.close();
 }
 
-void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases)
+void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases) const
 {
 	int seqLen = transcript.length();
 	
@@ -554,3 +579,115 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 		endBiases[i] = endBias;
 	}
 }
+	
+int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> rgp)
+{
+	int trans_len = _transcript->length();
+	_rg_index.insert(make_pair(rgp, _size));
+	
+	// Defaults are values for a run not using bias correction
+	vector<double> start_bias(trans_len+1, 1.0);
+	vector<double> end_bias(trans_len+1, 1.0);
+	double avg_bias = 1.0;
+	
+	if (rgp->bias_learner()!=NULL && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
+	{
+		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias);
+		
+		avg_bias = accumulate( start_bias.begin(), start_bias.end(), 0.0 ) + accumulate( end_bias.begin(), end_bias.end(), 0.0 );
+		avg_bias -= 2;
+		avg_bias /= (2.0*trans_len);
+	}
+	
+	vector<double> tot_bias_for_len(trans_len+1,1.0);
+	for(int l = rgp->frag_len_dist()->min(); l <= trans_len; l++)
+	{
+		double tot = 0;
+		for(int i = 0; i <= trans_len - l; i++)
+			tot += start_bias[i]*end_bias[i+l-1];
+		tot_bias_for_len[l] = tot;
+	}
+	
+	_start_biases.push_back(start_bias);
+	_end_biases.push_back(end_bias);
+	_tot_biases_for_len.push_back(tot_bias_for_len);
+	_avg_biases.push_back(avg_bias);
+	_rg_masses.push_back(0.0);
+	
+	return _size++; // Index of new element
+}
+
+int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
+{
+	map<shared_ptr<ReadGroupProperties const>, int>::iterator iter;
+	iter = _rg_index.find(rgp);
+	
+	if (iter==_rg_index.end()) //This rg is not yet in the index, so add it.
+	{
+		return add_read_group(rgp);
+	}
+	
+	return iter->second;
+}
+
+// Hit needs to be collapsed
+double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
+{
+	shared_ptr<ReadGroupProperties const> rgp = hit.read_group_props();
+	
+	int i = get_index(rgp);
+	
+	int start;
+	int end;
+	int frag_len;
+	int trans_len = _transcript->length();
+	
+	map_frag_to_transcript(*_transcript, hit, start, end, frag_len);
+	
+	double cond_prob = 1.0;
+	cond_prob *= _start_biases[i][start];
+	cond_prob *= _end_biases[i][end];
+	cond_prob *= rgp->frag_len_dist()->pdf(frag_len);
+	
+	if (hit.is_pair())
+		cond_prob /= _tot_biases_for_len[i][frag_len];
+	else
+		cond_prob /= _avg_biases[i]*(trans_len - frag_len + 1);
+	
+	if (cond_prob > 0 && hit.collapse_mass() > 0)
+	{
+		_rg_masses[i] += hit.collapse_mass();
+		_mapped = true;
+	}
+	
+	assert(!isnan(cond_prob));
+	return cond_prob;
+}
+
+double BiasCorrectionHelper::get_effective_length()
+{
+	double tot_mass = accumulate( _rg_masses.begin(), _rg_masses.end(), 0.0 );
+	
+	double eff_len = 0.0;
+    for (map<shared_ptr<ReadGroupProperties const>, int>::iterator itr = _rg_index.begin();
+         itr != _rg_index.end();
+         ++itr)
+	{
+		int i = itr->second;
+		double rg_eff_len = 0.0;
+		shared_ptr<const EmpDist> frag_len_dist = itr->first->frag_len_dist();
+		for(int l = frag_len_dist->min(); l <= _transcript->length(); l++)
+			rg_eff_len += frag_len_dist->pdf(l) * _tot_biases_for_len[i][l];
+		if(tot_mass == 0)
+			eff_len += rg_eff_len / _size;
+		else
+			eff_len += rg_eff_len * (_rg_masses[i]/tot_mass);
+	}
+	
+	assert(!isnan(eff_len));
+	return eff_len;
+}
+																		
+																		
+																		
+																		

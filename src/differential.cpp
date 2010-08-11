@@ -567,7 +567,7 @@ void test_differential(const RefSequenceTable& rt,
 		samples[i].cluster_mass = sample_bundles[i]->hits().size();
 		vector<shared_ptr<Abundance> > abundances;
 		
-		foreach(const Scaffold& s, sample_bundles[i]->ref_scaffolds())
+		foreach(Scaffold& s, sample_bundles[i]->ref_scaffolds())
 		{
 			TranscriptAbundance* pT = new TranscriptAbundance;
 			pT->transfrag(&s);
@@ -577,7 +577,7 @@ void test_differential(const RefSequenceTable& rt,
 			abundances.push_back(ab);
 		}
 		
-		samples[i].transcripts = AbundanceGroup(abundances, NULL);
+		samples[i].transcripts = AbundanceGroup(abundances);
 		
 		vector<MateHit> hits_in_cluster;
 		
@@ -630,8 +630,7 @@ void test_differential(const RefSequenceTable& rt,
 				cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
 			}
 			AbundanceGroup cds(cds_abundances,
-							   cds_gamma_cov, 
-                               NULL);
+							   cds_gamma_cov);
 			
 			vector<AbundanceGroup> cds_by_gene;
 			
@@ -679,8 +678,7 @@ void test_differential(const RefSequenceTable& rt,
 			}
             
 			AbundanceGroup primary_transcripts(primary_transcript_abundances,
-											   tss_gamma_cov,
-                                               NULL);
+											   tss_gamma_cov);
 			
 			vector<AbundanceGroup> primary_transcripts_by_gene;
 			

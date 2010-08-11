@@ -378,20 +378,22 @@ void HitBundle::remove_hitless_scaffolds()
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
 }
 
-void HitBundle::finalize()
+void HitBundle::finalize(bool is_combined)
 {
 	_final = true;
 	
 	finalize_open_mates();
 	
-	sort(_hits.begin(), _hits.end(), mate_hit_lt);
-	collapse_hits(_hits, _non_redundant, _collapse_counts);
-	
-	sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt);
-	vector<Scaffold>::iterator new_end = unique(_ref_scaffs.begin(), 
+	if (!is_combined)
+	{
+		sort(_hits.begin(), _hits.end(), mate_hit_lt);
+		collapse_hits(_hits, _non_redundant);
+		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt);
+		vector<Scaffold>::iterator new_end = unique(_ref_scaffs.begin(), 
 												_ref_scaffs.end(),
 												StructurallyEqualScaffolds());
-	_ref_scaffs.erase(new_end, _ref_scaffs.end());
+		_ref_scaffs.erase(new_end, _ref_scaffs.end());
+	}
 	
 	for (size_t i = 0; i < _hits.size(); ++i)
 	{

@@ -28,6 +28,8 @@ using boost::math::normal;
 
 #include <boost/shared_ptr.hpp>
 
+extern bool final_est_run;
+
 extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;
 
@@ -73,7 +75,7 @@ extern double binomial_junc_filter_alpha;
 
 extern std::string library_type;
 
-#define ENABLE_THREADS 1
+#define ENABLE_THREADS 0
 
 #if ENABLE_THREADS
 extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
@@ -138,6 +140,7 @@ enum Platform
 };
 
 class EmpDist;
+class BiasLearner;
 
 class ReadGroupProperties
 {
@@ -164,6 +167,9 @@ public:
     boost::shared_ptr<EmpDist const> frag_len_dist() const { return _frag_len_dist; }
     void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }  
     
+	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
+    void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 
+	
 private:
     
     Strandedness _strandedness;
@@ -171,6 +177,7 @@ private:
     Platform _platform;
     long double _total_map_mass;
     boost::shared_ptr<EmpDist const> _frag_len_dist;
+	boost::shared_ptr<BiasLearner const> _bias_learner;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;

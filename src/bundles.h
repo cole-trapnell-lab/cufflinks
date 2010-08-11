@@ -83,6 +83,7 @@ struct BundleStats
 
 typedef map<RefID, vector<AugmentedCuffOp> > BadIntronTable;
 
+
 /*******************************************************************************
  HitBundle is a set of MateHit objects that, were you to look at the interval
  graph of their spanning intervals in genomic coordinates, you'd see a single
@@ -106,7 +107,6 @@ public:
 	
 	const std::vector<MateHit>& hits() const { return _hits; } 
 	const std::vector<MateHit>& non_redundant_hits() const { return _non_redundant; } 
-	const std::vector<double>& collapse_counts() const { return _collapse_counts; } 
 	
 	RefID ref_id()  const
 	{
@@ -125,7 +125,7 @@ public:
 		_ref_scaffs.push_back(scaff);
 	}
 	
-	const vector<Scaffold>& ref_scaffolds() const { return _ref_scaffs; }
+	vector<Scaffold>& ref_scaffolds() { return _ref_scaffs; }
 	
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
@@ -137,7 +137,7 @@ public:
 	
 	// Sorts the hits, and performs other functions needed to prepare this 
 	// bundle for assembly and quantitation
-	void finalize();
+	void finalize(bool is_combined=false);
 	
 	void remove_hitless_scaffolds();
 	
@@ -147,29 +147,106 @@ public:
                         HitBundle& out_bundle)
     {
         out_bundle._hits.clear();
+		out_bundle._non_redundant.clear();
         out_bundle._ref_scaffs.clear();
         
         for (size_t i = 1; i < in_bundles.size(); ++i)
         {
             assert(in_bundles[i].ref_id() == in_bundles[i-1].ref_id());
         }
+
+		// Merge  hits
+		vector<int> indices(in_bundles.size(),0);
+		while(true)
+		{
+			int next_bundle = -1;
+			const MateHit* next_hit; 
+			for(int i = 0; i < in_bundles.size(); ++i)
+			{
+				const vector<MateHit> curr_hits = in_bundles[i].hits();
+				
+				if (indices[i] == curr_hits.size())
+					continue;
+				
+				const MateHit* curr_hit = &curr_hits[indices[i]];
+				
+				if (next_bundle == -1 || mate_hit_lt(*curr_hit, *next_hit))
+				{
+					next_bundle = i;
+					next_hit = curr_hit;
+				}
+			}
+			
+			if(next_bundle==-1)
+				break;
+			
+			out_bundle._hits.push_back(*next_hit);
+		}
+		
+		// Merge collapsed hits
+		indices = vector<int>(in_bundles.size(), 0);
+		while(true)
+		{
+			int next_bundle = -1;
+			const MateHit* next_hit; 
+			for(int i = 0; i < in_bundles.size(); ++i)
+			{
+				const vector<MateHit> curr_non_redundant_hits = in_bundles[i].non_redundant_hits();
+				
+				if (indices[i] == curr_non_redundant_hits.size())
+					continue;
+				
+				const MateHit* curr_hit = &curr_non_redundant_hits[indices[i]];
+				
+				if (next_bundle == -1 || mate_hit_lt(*curr_hit, *next_hit))
+				{
+					next_bundle = i;
+					next_hit = curr_hit;
+				}
+			}
+			
+			if(next_bundle==-1)
+				break;
+			
+			out_bundle._non_redundant.push_back(*next_hit);
+		}
         
-        foreach(const HitBundle& in_bundle, in_bundles)
-        {
-            out_bundle._hits.insert(out_bundle._hits.end(),
-                                    in_bundle._hits.begin(),
-                                    in_bundle._hits.end());
-            out_bundle._ref_scaffs.insert(out_bundle._ref_scaffs.end(),
-                                          in_bundle._ref_scaffs.begin(),
-                                          in_bundle._ref_scaffs.end());
-        }
-        
+		// Merge ref scaffolds
+		indices = vector<int>(in_bundles.size(), 0);
+		StructurallyEqualScaffolds se;
+		while(true)
+		{
+			int next_bundle = -1;
+			const Scaffold* next_scaff; 
+			for(int i = 0; i < in_bundles.size(); ++i)
+			{
+				const vector<Scaffold> curr_scaffs = in_bundles[i]._ref_scaffs;
+				
+				if (indices[i] == curr_scaffs.size())
+					continue;
+				
+				const Scaffold* curr_scaff = &curr_scaffs[indices[i]];
+				
+				if (next_bundle == -1 || scaff_lt_rt_oplt(*curr_scaff, *next_scaff))
+				{
+					next_bundle = i;
+					next_scaff = curr_scaff;
+				}
+			}
+			
+			if(next_bundle==-1)
+				break;
+			
+			if (out_bundle._ref_scaffs.size()==0 || se(out_bundle._ref_scaffs.back(), *next_scaff)) 
+				out_bundle._ref_scaffs.push_back(*next_scaff);
+		}
+		
         foreach (Scaffold& rs, out_bundle._ref_scaffs)
         {
             rs.clear_hits();
         }
         
-        out_bundle.finalize();
+        out_bundle.finalize(true); // true means everything is already sorted, etc.
         out_bundle._num_replicates = (int)in_bundles.size();
     }
     
@@ -178,7 +255,6 @@ private:
 	int _rightmost;
 	std::vector<MateHit> _hits;
 	std::vector<MateHit> _non_redundant;
-	std::vector<double> _collapse_counts;
 	std::vector<Scaffold> _ref_scaffs; // user-supplied reference annotations overlapping the bundle
 	bool _final;
 	int _id;
@@ -252,12 +328,12 @@ public:
 		_bad_introns = bad_introns;
 	}
     
-    void read_group_properties(shared_ptr<const ReadGroupProperties> rg)
+    void read_group_properties(shared_ptr<ReadGroupProperties> rg)
     {
         _rg_props = rg;
     }
     
-    shared_ptr<const ReadGroupProperties> read_group_properties() const
+    shared_ptr<ReadGroupProperties> read_group_properties()
     {
         return _rg_props;
     }
@@ -279,7 +355,7 @@ private:
 	
 	BadIntronTable _bad_introns;
     
-    shared_ptr<ReadGroupProperties const> _rg_props;
+    shared_ptr<ReadGroupProperties> _rg_props;
     
     shared_ptr<ReadHit> next_valid_alignment();
 };
@@ -317,7 +393,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		identify_bad_splices(bundle, bad_introns);
         
         const vector<MateHit>& hits = bundle.non_redundant_hits();
-		const vector<double>& collapse_counts = bundle.collapse_counts();
 		if (hits.empty())
             continue;
         
@@ -328,10 +403,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		// This first loop calclates the map mass and finds ranges with no introns
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
-			double mate_len = 0;
-			if (hits[i].left_alignment() || hits[i].right_alignment())
-				mate_len = 1.0;
-			map_mass += mate_len * collapse_counts[i]; 
+			map_mass += hits[i].collapse_mass(); 
             
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())
@@ -381,7 +453,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				{
 					int mate_len = hits[i].right()-hits[i].left();
 					if (mate_len < max_len)
-						frag_len_hist[mate_len] += collapse_counts[i];
+						frag_len_hist[mate_len] += hits[i].collapse_mass();
 					min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 					min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
 				}
