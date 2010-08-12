@@ -545,22 +545,27 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         // reference transcript, whichever is first in the stream
 		if (left_bundle_boundary == -1)
         {
-            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
-            {
-                if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
-                {
-                    int a = 3;
-                }
-            }
+//            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
+//            {
+//                if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
+//                {
+//                    int a = 3;
+//                }
+//            }
             
             if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL)
             {
-                if (bh->right() <= (*next_ref_scaff)->left())
+                if ((bh->ref_id() == (*next_ref_scaff)->ref_id() &&
+                     bh->right() <= (*next_ref_scaff)->left()) ||
+                     bh->ref_id() != (*next_ref_scaff)->ref_id())
                 {
                     // if this hit doesn't overlap the next ref transcript
                     // and falls to its left, we should skip it.  We need
                     // this to maintain synchronization of multiple
                     // streams driven by the same set of reference transcripts
+                    
+                    // if the hit stream disagrees with the reference transcript stream
+                    // on which RefID is next, just skip the hit.
                     continue;
 //                    left_bundle_boundary = bh->left();
 //                    right_bundle_boundary = bh->left();
@@ -625,6 +630,13 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         
         assert(left_bundle_boundary != -1);
 		
+        if (left_bundle_boundary == 82827)
+        {
+            int a = 4;
+        }
+        
+        
+        
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
         if (bh && ref_mRNAs.empty()
@@ -645,10 +657,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
             {
                 if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
                 {
-                    if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
-                    {
-                        int a = 3;
-                    }
+//                    if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
+//                    {
+//                        int a = 3;
+//                    }
                 }
                 
                 assert(next_ref_scaff >= ref_mRNAs.begin());
@@ -663,7 +675,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 // transcript?
                 if (bh && (*next_ref_scaff)->ref_id() != bh->ref_id())
                 {
-                    break;
+                    if (last_ref_rna_ref_id_seen && (*next_ref_scaff)->ref_id() != last_ref_rna_ref_id_seen)
+                    {
+                        break;
+                    }
                 }
                 
                 // Transitioned to a new chromosome in the stream of reference transcripts?  
@@ -774,6 +789,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		//curr_pos = ftello(hit_file);
 	}
 	
+    assert(left_bundle_boundary != -1);
+    
 	bundle.finalize_open_mates();
 	
 	if (!ref_mRNAs.empty())
@@ -834,6 +851,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	assert (left_bundle_boundary != -1);
 	bundle_out = bundle;
 	bundle_out.finalize();
+    assert(bundle_out.right() != -1);
 	//bundle_out.remove_hitless_scaffolds();
     
     return true;
