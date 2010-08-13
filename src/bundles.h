@@ -163,7 +163,7 @@ public:
 			const MateHit* next_hit; 
 			for(int i = 0; i < in_bundles.size(); ++i)
 			{
-				const vector<MateHit> curr_hits = in_bundles[i].hits();
+				const vector<MateHit>& curr_hits = in_bundles[i].hits();
 				
 				if (indices[i] == curr_hits.size())
 					continue;
@@ -181,6 +181,7 @@ public:
 				break;
 			
 			out_bundle._hits.push_back(*next_hit);
+			indices[next_bundle]++;
 		}
 		
 		// Merge collapsed hits
@@ -191,7 +192,7 @@ public:
 			const MateHit* next_hit; 
 			for(int i = 0; i < in_bundles.size(); ++i)
 			{
-				const vector<MateHit> curr_non_redundant_hits = in_bundles[i].non_redundant_hits();
+				const vector<MateHit>& curr_non_redundant_hits = in_bundles[i].non_redundant_hits();
 				
 				if (indices[i] == curr_non_redundant_hits.size())
 					continue;
@@ -209,6 +210,7 @@ public:
 				break;
 			
 			out_bundle._non_redundant.push_back(*next_hit);
+			indices[next_bundle]++;
 		}
         
 		// Merge ref scaffolds
@@ -220,7 +222,7 @@ public:
 			const Scaffold* next_scaff; 
 			for(int i = 0; i < in_bundles.size(); ++i)
 			{
-				const vector<Scaffold> curr_scaffs = in_bundles[i]._ref_scaffs;
+				const vector<Scaffold>& curr_scaffs = in_bundles[i]._ref_scaffs;
 				
 				if (indices[i] == curr_scaffs.size())
 					continue;
@@ -239,6 +241,7 @@ public:
 			
 			if (out_bundle._ref_scaffs.size()==0 || se(out_bundle._ref_scaffs.back(), *next_scaff)) 
 				out_bundle._ref_scaffs.push_back(*next_scaff);
+			indices[next_bundle]++;
 		}
 		
         foreach (Scaffold& rs, out_bundle._ref_scaffs)
