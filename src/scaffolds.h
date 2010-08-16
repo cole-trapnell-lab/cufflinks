@@ -530,15 +530,19 @@ private:
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);
 bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs);
 bool scaff_lt_rt_oplt(const Scaffold& lhs, const Scaffold& rhs);
+bool scaff_lt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs);
+bool scaff_lt_rt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs);
+bool scaff_lt_rt_oplt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs);
+
 
 bool overlap_in_genome(int ll, int lr, int rl, int rr);
 
 struct StructurallyEqualScaffolds
 {
-	bool operator()(const Scaffold& lhs, const Scaffold& rhs)
+	bool operator()(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
 	{
-		return lhs.ref_id() == rhs.ref_id() && 
-			   lhs.augmented_ops() == rhs.augmented_ops();
+		return lhs->ref_id() == rhs->ref_id() && 
+		lhs->augmented_ops() == rhs->augmented_ops();
 	}
 };
 

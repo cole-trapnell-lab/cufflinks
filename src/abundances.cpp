@@ -46,11 +46,11 @@ void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 	
     for (int j = 0; j < N; ++j) 
     {
-		const Scaffold& transfrag_j = *(transcripts[j]->transfrag());
+		shared_ptr<Scaffold> transfrag_j = transcripts[j]->transfrag();
 		for (int i = 0; i < M; ++i) 
         {
-			if (transfrag_j.contains(alignment_scaffs[i])
-				&& Scaffold::compatible(transfrag_j, alignment_scaffs[i]))
+			if (transfrag_j->contains(alignment_scaffs[i])
+				&& Scaffold::compatible(*transfrag_j, alignment_scaffs[i]))
             {
 				compatibilities[j][i] = 1;
             }
@@ -161,7 +161,7 @@ void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) 
 	transfrags.clear();
 	foreach(shared_ptr<Abundance> pA, _abundances)
 	{
-		const Scaffold* pS = pA->transfrag();
+		shared_ptr<Scaffold> pS = pA->transfrag();
 		if (pS)
 		{
 			transfrags.push_back(pA);
@@ -518,7 +518,7 @@ void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateH
 	compute_compatibilities(transcripts, alignments, compatibilities);
 
 	for (int j = 0; j < N; ++j) {
-		const Scaffold& transfrag = *(transcripts[j]->transfrag());
+		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
 		vector<double>& cond_probs = *(new vector<double>(M,0));
 		
 		BiasCorrectionHelper bch(transfrag);
@@ -648,17 +648,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	updated_gamma_cov = ublas::zero_matrix<double>(N, N);
 	
 	size_t cfs = 0;
-	const Scaffold* curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
+	shared_ptr<Scaffold> curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
 	StructurallyEqualScaffolds se;
 	vector<size_t> scaff_present(N, N);
 	
 	for (size_t i = 0; i < N; ++i)
 	{
-		const Scaffold& scaff_i = *(transcripts[i]->transfrag());
+		shared_ptr<Scaffold> scaff_i = transcripts[i]->transfrag();
 		if (cfs < filtered_transcripts.size())
 		{
 			curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
-			if (se(scaff_i, *curr_filtered_scaff))
+			if (se(scaff_i, curr_filtered_scaff))
 			{
 				scaff_present[i] = cfs;
 				cfs++;
@@ -758,7 +758,7 @@ void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundan
 
 	foreach(shared_ptr<Abundance> pA, abundances)
 	{			
-		const Scaffold* pS = pA->transfrag();
+		shared_ptr<Scaffold> pS = pA->transfrag();
 		assert (pS);
 		hits_in_gene_set.insert(pS->mate_hits().begin(),
 								pS->mate_hits().end());

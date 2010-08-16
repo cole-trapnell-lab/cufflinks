@@ -20,14 +20,14 @@ void ConnectByExonOverlap::operator()(const AbundanceGroup& cluster,
 	
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
-		const Scaffold* scaff_i = abundances[i]->transfrag();
-		assert (scaff_i != NULL);
+		shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
+		assert (scaff_i);
 		const vector<AugmentedCuffOp>& i_ops = scaff_i->augmented_ops();
 		
 		for (size_t j = i + 1; j < abundances.size(); ++j)
 		{
-			const Scaffold* scaff_j = abundances[j]->transfrag();
-			assert (scaff_j != NULL);
+			shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
+			assert (scaff_j);
 			
 			const vector<AugmentedCuffOp>& j_ops = scaff_j->augmented_ops();
 			for (size_t K = 0; K < i_ops.size(); K++)
@@ -127,13 +127,13 @@ void ConnectByStrand::operator()(const AbundanceGroup& cluster,
 	
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
-		const Scaffold* scaff_i = abundances[i]->transfrag();
-		assert (scaff_i != NULL);
+		shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
+		assert (scaff_i);
 		
 		for (size_t j = i + 1; j < abundances.size(); ++j)
 		{
-			const Scaffold* scaff_j = abundances[j]->transfrag();
-			assert (scaff_j != NULL);
+			shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
+			assert (scaff_j);
 			if (scaff_i->strand() == scaff_j->strand())
 			{
 				add_edge(i, j, G);

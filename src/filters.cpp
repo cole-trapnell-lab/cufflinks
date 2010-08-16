@@ -719,13 +719,13 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		const Scaffold& scaff = *(transcripts[t]->transfrag());
-		if (scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_STRAND_UNKNOWN)
+		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
+		if (scaff->strand() == CUFF_FWD || scaff->strand() == CUFF_STRAND_UNKNOWN)
 		{
 			if (abundances[t] > max_fwd_ab)
 				max_fwd_ab = abundances[t];
 		}
-		if (scaff.strand() == CUFF_REV || scaff.strand() == CUFF_STRAND_UNKNOWN)
+		if (scaff->strand() == CUFF_REV || scaff->strand() == CUFF_STRAND_UNKNOWN)
 		{			
 			if (abundances[t] > max_rev_ab)
 				max_rev_ab = abundances[t];
@@ -743,16 +743,16 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	//cerr << "Chucked : ";
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		const Scaffold& scaff = *(transcripts[t]->transfrag());
+		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
 
 		if (allow_junk_filtering)
 		{
-			const vector<const MateHit*> hits = scaff.mate_hits();
+			const vector<const MateHit*> hits = scaff->mate_hits();
 			
 //			if (hits.size() <= 1)
 //				chaff[t] = true;
 			
-			const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
+			const vector<AugmentedCuffOp>& ops = scaff->augmented_ops();
 			if (ops.front().genomic_length <= microexon_length || 
 				ops.back().genomic_length <= microexon_length)
 				illegal_microexon[t] = true;
@@ -761,7 +761,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 			{
 				for (size_t j = 0; j < transcripts.size(); ++j)
 				{
-					const vector<AugmentedCuffOp>& j_ops = scaff.augmented_ops();
+					const vector<AugmentedCuffOp>& j_ops = scaff->augmented_ops();
 					for (size_t L = 0; L < j_ops.size(); L++)
 					{
 						if (AugmentedCuffOp::overlap_in_genome(ops[0], j_ops[L]) &&
@@ -789,10 +789,10 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 				repeats[t] = true;
 		}
 		
-		if (scaff.strand() == CUFF_FWD &&
+		if (scaff->strand() == CUFF_FWD &&
 			(abundances[t] / max_fwd_ab) < min_isoform_fraction)
 			too_rare[t] = true;
-		if ((scaff.strand() == CUFF_REV ||  scaff.strand() == CUFF_STRAND_UNKNOWN) &&
+		if ((scaff->strand() == CUFF_REV ||  scaff->strand() == CUFF_STRAND_UNKNOWN) &&
 			(abundances[t] / max_rev_ab) < min_isoform_fraction)
 			too_rare[t] = true;
 		

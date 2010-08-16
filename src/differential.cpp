@@ -480,7 +480,7 @@ void add_to_tracking_table(Abundance& ab,
 	{
 		fpkm_track.locus_tag = ab.locus_tag();
 		fpkm_track.description = ab.description();
-		const Scaffold* transfrag = ab.transfrag();
+		shared_ptr<Scaffold> transfrag = ab.transfrag();
 		if (transfrag && transfrag->nearest_ref_id() != "")
 		{
 			fpkm_track.classcode = transfrag->nearest_ref_classcode();
@@ -546,13 +546,13 @@ void test_differential(const RefSequenceTable& rt,
 	bool perform_tss_analysis = true;
 	for (size_t i = 0; i < sample_bundles.size(); ++i)
 	{
-		foreach(const Scaffold& s, sample_bundles[i]->ref_scaffolds())
+		foreach(shared_ptr<Scaffold> s, sample_bundles[i]->ref_scaffolds())
 		{
-			if (s.annotated_tss_id() == "")
+			if (s->annotated_tss_id() == "")
 			{
 				perform_tss_analysis = false;
 			}
-			if (s.annotated_protein_id() == "")
+			if (s->annotated_protein_id() == "")
 			{
 				perform_cds_analysis = false;
 			}
@@ -567,12 +567,12 @@ void test_differential(const RefSequenceTable& rt,
 		samples[i].cluster_mass = sample_bundles[i]->hits().size();
 		vector<shared_ptr<Abundance> > abundances;
 		
-		foreach(Scaffold& s, sample_bundles[i]->ref_scaffolds())
+		foreach(shared_ptr<Scaffold> s, sample_bundles[i]->ref_scaffolds())
 		{
 			TranscriptAbundance* pT = new TranscriptAbundance;
-			pT->transfrag(&s);
+			pT->transfrag(s);
 			shared_ptr<Abundance> ab(pT);
-			ab->description(s.annotated_trans_id());
+			ab->description(s->annotated_trans_id());
 			ab->locus_tag(locus_tag);
 			abundances.push_back(ab);
 		}

@@ -330,12 +330,12 @@ public:
         
         for (size_t i = 1; i < bundles.size(); ++i)
         {
-            const vector<Scaffold>& s1 = bundles[i].ref_scaffolds();
-            const vector<Scaffold>& s2 =  bundles[i-1].ref_scaffolds();
+            const vector<shared_ptr<Scaffold> >& s1 = bundles[i].ref_scaffolds();
+            const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1].ref_scaffolds();
             assert (s1.size() == s2.size());
             for (size_t j = 0; j < s1.size(); ++j)
             {
-                assert (s1[j].annotated_trans_id() == s2[j].annotated_trans_id());
+                assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
             }
         }
         
@@ -385,7 +385,7 @@ public:
 			BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
 			learn_bias(*fac, *bl);
 			rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
-			fac.reset();
+			fac->reset();
         }
     }
     
@@ -421,12 +421,12 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
     // reference transcipts.
     for (size_t i = 1; i < locus_bundles.size(); ++i)
     {
-        const vector<Scaffold>& s1 = locus_bundles[i]->ref_scaffolds();
-        const vector<Scaffold>& s2 =  locus_bundles[i-1]->ref_scaffolds();
+        const vector<shared_ptr<Scaffold> >& s1 = locus_bundles[i]->ref_scaffolds();
+        const vector<shared_ptr<Scaffold> >& s2 =  locus_bundles[i-1]->ref_scaffolds();
         assert (s1.size() == s2.size());
         for (size_t j = 0; j < s1.size(); ++j)
         {
-            assert (s1[j].annotated_trans_id() == s2[j].annotated_trans_id());
+            assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
         }
     }
     
@@ -644,11 +644,8 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	RefSequenceTable rt(true, false);
 	
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
-//	load_ref_rnas(ref_gtf, rt, ref_mRNAs);
-//	if (ref_mRNAs.empty())
-//		return;
-    
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, false);
+
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, fasta_dir!="", false);
     if (ref_mRNAs.empty())
         return;
 	

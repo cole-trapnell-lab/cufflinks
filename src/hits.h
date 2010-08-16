@@ -719,11 +719,7 @@ public:
 		return (_left_alignment && _right_alignment);
 	}
 	
-	double mass() const { return 1.0 - error_prob(); }
-	double collapse_mass() const { return _collapse_mass; }
-	void collapse_mass(double m) { _collapse_mass = m; }
-	void incr_collapse_mass(double incr) { _collapse_mass += incr; }
-	
+
 	int left() const 
 	{
 		if (_right_alignment && _left_alignment)
@@ -833,6 +829,11 @@ public:
 			edits += _right_alignment->edit_dist();
 		return edits;
 	}
+	
+	double mass() const { return (1.0 - error_prob()); }
+	double collapse_mass() const { return _collapse_mass; }
+	void collapse_mass(double m) { _collapse_mass = m; }
+	void incr_collapse_mass(double incr) { _collapse_mass += incr; }
 	
 private:
 	

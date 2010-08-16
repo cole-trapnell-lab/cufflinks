@@ -79,7 +79,7 @@ public:
 	virtual void					cond_probs(vector<double>* cp) = 0;
 	
 	// The structural information for the object, if defined.
-	virtual const Scaffold* transfrag() const		{ return NULL; }
+	virtual shared_ptr<Scaffold> transfrag() const		{ return shared_ptr<Scaffold>(); }
 	
 	
 	virtual set<string>		gene_id() const = 0;
@@ -103,7 +103,7 @@ public:
 	
 	TranscriptAbundance() : 
 		_status(NUMERIC_OK), 
-		_transfrag(NULL), 
+		_transfrag(shared_ptr<Scaffold>()), 
 		_FPKM(0), 
 		_FPKM_variance(0),
 		_gamma(0), 
@@ -162,8 +162,8 @@ public:
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
 	
-	void transfrag(Scaffold* tf)		{ _transfrag = tf; }
-	const Scaffold* transfrag() const		{ return _transfrag; }
+	void transfrag(shared_ptr<Scaffold> tf)		{ _transfrag = tf; }
+	shared_ptr<Scaffold> transfrag() const		{ return _transfrag; }
 	
 	double effective_length() const			{ return _eff_len; }
 	void effective_length(double el)		{ _eff_len = el; }
@@ -250,7 +250,7 @@ private:
 	void calculate_FPKM_err_bar(double variance);
 	
 	AbundanceStatus _status;
-	Scaffold* _transfrag;
+	shared_ptr<Scaffold> _transfrag;
 	double _FPKM;
 	double _FPKM_variance;
 	ConfidenceInterval _FPKM_conf;
@@ -321,8 +321,6 @@ public:
     
     double mass_fraction() const;
 	void mass_fraction(double mf)			{  }
-	
-	//const Scaffold* transfrag() const		{ return NULL; }
 	
 	set<string> gene_id() const;	
 	set<string> gene_name() const;

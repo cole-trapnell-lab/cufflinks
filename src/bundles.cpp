@@ -247,9 +247,9 @@ bool HitBundle::add_hit(const MateHit& hit)
 
 struct HitLessScaffold
 {
-	bool operator()(const Scaffold& x)
+	bool operator()(shared_ptr<Scaffold> x)
 	{
-		return x.mate_hits().empty();
+		return x->mate_hits().empty();
 	}
 };
 
@@ -372,7 +372,7 @@ void HitBundle::finalize_open_mates()
 
 void HitBundle::remove_hitless_scaffolds()
 {
-	vector<Scaffold>::iterator new_end = remove_if(_ref_scaffs.begin(),
+	vector<shared_ptr<Scaffold> >::iterator new_end = remove_if(_ref_scaffs.begin(),
 												   _ref_scaffs.end(),
 												   HitLessScaffold());
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
@@ -388,11 +388,16 @@ void HitBundle::finalize(bool is_combined)
 	{
 		sort(_hits.begin(), _hits.end(), mate_hit_lt);
 		collapse_hits(_hits, _non_redundant);
-		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt);
-		vector<Scaffold>::iterator new_end = unique(_ref_scaffs.begin(), 
+		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt_sp);
+		vector<shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
 												_ref_scaffs.end(),
 												StructurallyEqualScaffolds());
 		_ref_scaffs.erase(new_end, _ref_scaffs.end());
+	}
+	
+	for (size_t j = 0; j < _ref_scaffs.size(); ++j)
+	{
+		_ref_scaffs[j]->clear_hits();
 	}
 	
 	for (size_t i = 0; i < _hits.size(); ++i)
@@ -404,20 +409,19 @@ void HitBundle::finalize(bool is_combined)
 		for (size_t j = 0; j < _ref_scaffs.size(); ++j)
 		{
 			// add hit only adds if the hit is structurally compatible
-			if (_ref_scaffs[j].Scaffold::contains(hs) &&
-				Scaffold::compatible(_ref_scaffs[j], hs))
+			if (_ref_scaffs[j]->Scaffold::contains(hs))
 			{
-				_ref_scaffs[j].add_hit(hit);
+				_ref_scaffs[j]->add_hit(hit);
 			}
 		}
 	}
-	
+		
 	for (size_t i = 0; i < _ref_scaffs.size(); ++i)
 	{
-		if (_ref_scaffs[i].left() < _leftmost)
-			_leftmost = _ref_scaffs[i].left();
-		if (_ref_scaffs[i].right() > _rightmost)
-			_rightmost = _ref_scaffs[i].right();
+		if (_ref_scaffs[i]->left() < _leftmost)
+			_leftmost = _ref_scaffs[i]->left();
+		if (_ref_scaffs[i]->right() > _rightmost)
+			_rightmost = _ref_scaffs[i]->right();
 	}
 }
 
@@ -821,7 +825,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                                           right_bundle_boundary))
 
 					{	
-						bundle.add_ref_scaffold(**itr);
+						bundle.add_ref_scaffold(*itr);
 					}
 					else if ((*itr)->right() < left_bundle_boundary)
 					{	

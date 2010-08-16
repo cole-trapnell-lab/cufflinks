@@ -1158,6 +1158,7 @@ bool Scaffold::add_hit(const MateHit* hit)
 	return false;
 }
 
+
 void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
 {
 	if (!has_unknown())
@@ -1264,4 +1265,19 @@ bool scaff_lt_rt_oplt(const Scaffold& lhs, const Scaffold& rhs)
     }
     
     return false;
+}
+
+bool scaff_lt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+{
+	return scaff_lt(*lhs,*rhs);
+}
+
+bool scaff_lt_rt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+{
+	return scaff_lt_rt(*lhs,*rhs);
+}
+
+bool scaff_lt_rt_oplt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+{
+	return scaff_lt_rt_oplt(*lhs,*rhs);
 }

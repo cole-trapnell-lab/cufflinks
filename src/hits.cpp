@@ -45,9 +45,9 @@ bool hits_equals(const MateHit& lhs, const MateHit& rhs)
 	if (lhs.ref_id() != rhs.ref_id())
 		return false;
 	
-	if ((lhs.left_alignment() == NULL) != (rhs.left_alignment() == NULL))
+	if ((lhs.left_alignment().get() == NULL) != (rhs.left_alignment().get() == NULL))
 		return false;
-	if ((lhs.right_alignment() == NULL) != (rhs.right_alignment() == NULL))
+	if ((lhs.right_alignment().get() == NULL) != (rhs.right_alignment().get() == NULL))
 		return false;
 	if (lhs.left_alignment())
 	{

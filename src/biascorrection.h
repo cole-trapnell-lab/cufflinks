@@ -60,7 +60,7 @@ public:
 	void normalizeParameters();
 	void output();
 	
-	void getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases) const;
+	void getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases, vector<double>& posBiases) const;
 
 };
 
@@ -70,15 +70,17 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl);
 // Helps with the complexities of bias correction with replicates in cond_probs and eff_lens
 class BiasCorrectionHelper{
 	
-	const Scaffold* _transcript;
+	shared_ptr<Scaffold> _transcript;
 	map<shared_ptr<ReadGroupProperties const>, int> _rg_index;
 	int _size;
 	bool _mapped;
 	
 	vector<vector<double> > _start_biases;
 	vector<vector<double> > _end_biases;
+	vector<vector<double> > _pos_biases;
 	vector<vector<double> > _tot_biases_for_len;
-	vector<double> _avg_biases;
+	vector<double> _mean_start_biases;
+	vector<double> _mean_end_biases;
 	vector<double> _rg_masses;
 	
 	int add_read_group(shared_ptr<ReadGroupProperties const> rgp);	
@@ -86,9 +88,9 @@ class BiasCorrectionHelper{
 	
 public:
 	
-	BiasCorrectionHelper(const Scaffold& transcript) 
+	BiasCorrectionHelper(shared_ptr<Scaffold> transcript) 
 	{ 
-		_transcript = &transcript;
+		_transcript = transcript;
 		_mapped = false;
 		_size = 0; 
 	}

@@ -113,19 +113,19 @@ public:
 		if (!_hits.empty())
 			return _hits.front().ref_id();
 		else if (!_ref_scaffs.empty())
-			return _ref_scaffs.front().ref_id();
+			return _ref_scaffs.front()->ref_id();
 		else
 			return 0;
 	}
 	
 	int id() const { return _id; }
 	
-	void add_ref_scaffold(const Scaffold& scaff)
+	void add_ref_scaffold(shared_ptr<Scaffold> scaff)
 	{
 		_ref_scaffs.push_back(scaff);
 	}
 	
-	vector<Scaffold>& ref_scaffolds() { return _ref_scaffs; }
+	vector<shared_ptr<Scaffold> >& ref_scaffolds() { return _ref_scaffs; }
 	
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
@@ -215,19 +215,18 @@ public:
         
 		// Merge ref scaffolds
 		indices = vector<int>(in_bundles.size(), 0);
-		StructurallyEqualScaffolds se;
 		while(true)
 		{
 			int next_bundle = -1;
-			const Scaffold* next_scaff; 
+			shared_ptr<Scaffold> next_scaff; 
 			for(int i = 0; i < in_bundles.size(); ++i)
 			{
-				const vector<Scaffold>& curr_scaffs = in_bundles[i]._ref_scaffs;
+				const vector<shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]._ref_scaffs;
 				
 				if (indices[i] == curr_scaffs.size())
 					continue;
 				
-				const Scaffold* curr_scaff = &curr_scaffs[indices[i]];
+				shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
 				
 				if (next_bundle == -1 || scaff_lt_rt_oplt(*curr_scaff, *next_scaff))
 				{
@@ -239,16 +238,11 @@ public:
 			if(next_bundle==-1)
 				break;
 			
-			if (out_bundle._ref_scaffs.size()==0 || se(out_bundle._ref_scaffs.back(), *next_scaff)) 
-				out_bundle._ref_scaffs.push_back(*next_scaff);
+			if (out_bundle._ref_scaffs.size()==0 || out_bundle._ref_scaffs.back().get() != next_scaff.get()) 
+				out_bundle._ref_scaffs.push_back(next_scaff);
 			indices[next_bundle]++;
 		}
-		
-        foreach (Scaffold& rs, out_bundle._ref_scaffs)
-        {
-            rs.clear_hits();
-        }
-        
+		        
         out_bundle.finalize(true); // true means everything is already sorted, etc.
         out_bundle._num_replicates = (int)in_bundles.size();
     }
@@ -258,7 +252,7 @@ private:
 	int _rightmost;
 	std::vector<MateHit> _hits;
 	std::vector<MateHit> _non_redundant;
-	std::vector<Scaffold> _ref_scaffs; // user-supplied reference annotations overlapping the bundle
+	std::vector<shared_ptr<Scaffold> > _ref_scaffs; // user-supplied reference annotations overlapping the bundle
 	bool _final;
 	int _id;
 	
@@ -406,7 +400,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		// This first loop calclates the map mass and finds ranges with no introns
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
-			map_mass += hits[i].collapse_mass(); 
+  			map_mass += hits[i].collapse_mass(); 
             
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())

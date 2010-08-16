@@ -288,10 +288,11 @@ CuffStrand guess_strand_for_interval(const vector<uint8_t>& strand_guess,
 }
 
 bool scaffolds_for_bundle(const HitBundle& bundle, 
-						  vector<Scaffold>& scaffolds,
+						  vector<shared_ptr<Scaffold> >& scaffolds,
 						  BundleStats* stats = NULL)
 {
 	vector<Scaffold> hits;
+	vector<Scaffold> tmp_scaffs;
 	
     //	for (size_t i = 0; i < bundle.non_redundant_hits().size(); ++i)
     //	{
@@ -393,8 +394,8 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                                                  rev_hits, 
                                                  rev_scaffolds);
 		
-		add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, scaffolds, true);
-		add_non_shadow_scaffs(rev_scaffolds, fwd_scaffolds, scaffolds, false);
+		add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, tmp_scaffs, true);
+		add_non_shadow_scaffs(rev_scaffolds, fwd_scaffolds, tmp_scaffs, false);
 	}
 	else
 	{
@@ -404,7 +405,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 													 bundle.length(),
 													 fwd_hits,
 													 fwd_scaffolds);
-			scaffolds.insert(scaffolds.end(),fwd_scaffolds.begin(), fwd_scaffolds.end());
+			tmp_scaffs.insert(tmp_scaffs.end(),fwd_scaffolds.begin(), fwd_scaffolds.end());
 		}
 		else
 		{
@@ -412,22 +413,27 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 													 bundle.length(), 
 													 rev_hits, 
 													 rev_scaffolds);
-			scaffolds.insert(scaffolds.end(),rev_scaffolds.begin(), rev_scaffolds.end());
+			tmp_scaffs.insert(tmp_scaffs.end(),rev_scaffolds.begin(), rev_scaffolds.end());
 		}
 	}
 	
 	// Make sure all the reads are accounted for, including the redundant ones...
-	for (size_t i = 0; i < scaffolds.size(); ++i)
+	for (size_t i = 0; i < tmp_scaffs.size(); ++i)
 	{
-		scaffolds[i].clear_hits();
+		tmp_scaffs[i].clear_hits();
 		for (size_t j = 0; j < bundle.hits().size(); ++j)
 		{
 			const MateHit& h = bundle.hits()[j];
-			scaffolds[i].add_hit(&h);
+			tmp_scaffs[i].add_hit(&h);
 		}
 	}
 	
-	sort(scaffolds.begin(), scaffolds.end(), scaff_lt);
+	sort(tmp_scaffs.begin(), tmp_scaffs.end(), scaff_lt);
+	
+	foreach(Scaffold& scaff, tmp_scaffs)
+	{
+		scaffolds.push_back(shared_ptr<Scaffold>(new Scaffold(scaff)));
+	}
 	
 	return assembled_successfully;
 }
@@ -511,7 +517,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				double density_score = major_isoform_FPKM ? (FPKM / major_isoform_FPKM) : 0;
 				double density_per_bp = FPKM;
 				
-				const Scaffold* transfrag = iso_ab->transfrag();
+				shared_ptr<Scaffold> transfrag = iso_ab->transfrag();
 				assert(transfrag);
 				
 				double s_len = transfrag->length();
@@ -545,16 +551,16 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
     
 }
 
-void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
+void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 									long double total_map_mass,
 									vector<Gene>& genes)
 {	
-	vector<Scaffold> partials;
-	vector<Scaffold> completes;
-    
+	vector<shared_ptr<Scaffold> > partials;
+	vector<shared_ptr<Scaffold> > completes;
+	
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
-		if (scaffolds[i].has_unknown())
+		if (scaffolds[i]->has_unknown())
 		{
 			partials.push_back(scaffolds[i]);
 		}
@@ -567,10 +573,10 @@ void quantitate_transcript_clusters(vector<Scaffold>& scaffolds,
 	scaffolds = completes;
 	
 	vector<shared_ptr<Abundance> > abundances;
-	foreach(Scaffold& s, scaffolds)
+	foreach(shared_ptr<Scaffold> s, scaffolds)
 	{
 		TranscriptAbundance* pT = new TranscriptAbundance;
-		pT->transfrag(&s);
+		pT->transfrag(s);
 		shared_ptr<Abundance> ab(pT);
 		abundances.push_back(ab);
 	}
@@ -621,7 +627,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
 	
-	vector<Scaffold> scaffolds;
+	vector<shared_ptr<Scaffold> > scaffolds;
 	
 	if (ref_gtf_filename != "")
 	{
@@ -758,7 +764,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		}
 		
 		HitBundle& bundle = *bundle_ptr;
-		
+
 		if (bundle.right() - bundle.left() > 3000000)
 		{
             char bundle_label_buf[2048];
@@ -888,12 +894,12 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     rg_props->total_map_mass(map_mass);
     
     bundle_factory.read_group_properties(rg_props);
-	//bundle_factory.read_group_properties()->frag_len_dist(frag_len_dist);
-//	bundle_factory.read_group_properties()->total_map_mass(map_mass);
+
 	if (ref_gtf_filename == "")
 	{
 		bundle_factory.bad_intron_table(bad_introns);
 	}
+	
 	max_frag_len = frag_len_dist->max();
 	min_frag_len = frag_len_dist->min();
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);

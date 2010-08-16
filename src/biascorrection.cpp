@@ -36,7 +36,7 @@ void ones(ublas::matrix<long double>& A)
 			A(i,j) = 1;
 }
 
-void get_compatibility_list(const vector<Scaffold>& transcripts,
+void get_compatibility_list(const vector<shared_ptr<Scaffold> >& transcripts,
                             const vector<MateHit>& alignments,
                             vector<list<int> >& compatibilities)
 {
@@ -55,9 +55,9 @@ void get_compatibility_list(const vector<Scaffold>& transcripts,
 	{
 		for (int j = 0; j < N; ++j) 
 		{
-			if (transcripts[j].strand() != CUFF_STRAND_UNKNOWN
-				&& transcripts[j].contains(alignment_scaffs[i]) 
-				&& Scaffold::compatible(transcripts[j],alignment_scaffs[i]))
+			if (transcripts[j]->strand() != CUFF_STRAND_UNKNOWN
+				&& transcripts[j]->contains(alignment_scaffs[i]) 
+				&& Scaffold::compatible(*transcripts[j],alignment_scaffs[i]))
 			{
 				compatibilities[i].push_back(j);
 			}
@@ -157,7 +157,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 
 void process_bundle(HitBundle& bundle, BiasLearner& bl)
 {
-	const vector<Scaffold>& transcripts = bundle.ref_scaffolds();
+	const vector<shared_ptr<Scaffold> >& transcripts = bundle.ref_scaffolds();
 	const vector<MateHit>& nr_alignments = bundle.non_redundant_hits();
 	
 	int M = nr_alignments.size();
@@ -171,9 +171,9 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 
 	for (int j = 0; j < N; ++j)
 	{
-		int size = transcripts[j].length();
-		startHists[j].resize(size);
-		endHists[j].resize(size);
+		int size = transcripts[j]->length();
+		startHists[j].resize(size+1); // +1 catches overhangs
+		endHists[j].resize(size+1);
 	}
 	
 	for (int i = 0; i < M; ++i)
@@ -188,7 +188,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 		
 		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
 		{
-			locus_fpkm += transcripts[*it].fpkm(); 
+			locus_fpkm += transcripts[*it]->fpkm(); 
 		}
 		
 		if (locus_fpkm==0)
@@ -196,7 +196,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 		
 		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
 		{	
-			const Scaffold& transcript = transcripts[*it];
+			const Scaffold& transcript = *transcripts[*it];
 			assert(transcript.strand()!=CUFF_STRAND_UNKNOWN); //Filtered in compatibility list
 			
 			int start;
@@ -205,14 +205,14 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 			
 			map_frag_to_transcript(transcript, hit, start, end, frag_len);
 			
-			startHists[*it][start] += num_hits*transcripts[*it].fpkm()/locus_fpkm;
-			endHists[*it][end] += num_hits*transcripts[*it].fpkm()/locus_fpkm;
+			startHists[*it][start] += num_hits*transcript.fpkm()/locus_fpkm;
+			endHists[*it][end] += num_hits*transcript.fpkm()/locus_fpkm;
 		}
 	}
 	for (int j = 0; j < N; ++j)
 	{
-		if (transcripts[j].strand()!=CUFF_STRAND_UNKNOWN && transcripts[j].fpkm() > 0)
-			bl.processTranscript(startHists[j], endHists[j], transcripts[j]);
+		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->fpkm() > 0)
+			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
 	}
 }
 
@@ -450,7 +450,7 @@ void BiasLearner::output()
 	ofstream myfile1;
 	ofstream myfile2;
 	ofstream myfile3;
-	ofstream myfile4;
+	//ofstream myfile4;
 	string startfile = output_dir + "/startBias.csv";
 	myfile1.open (startfile.c_str());
 	string endfile = output_dir + "/endBias.csv";
@@ -489,7 +489,7 @@ void BiasLearner::output()
 //	myfile4.close();
 }
 
-void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases) const
+void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases, vector<double>& posBiases) const
 {
 	int seqLen = transcript.length();
 	
@@ -575,8 +575,9 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 				}
 			}
 		}
-		startBiases[i] = startBias*posBias;
+		startBiases[i] = startBias;
 		endBiases[i] = endBias;
+		posBiases[i] = posBias;
 	}
 }
 	
@@ -588,30 +589,43 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	// Defaults are values for a run not using bias correction
 	vector<double> start_bias(trans_len+1, 1.0);
 	vector<double> end_bias(trans_len+1, 1.0);
-	double avg_bias = 1.0;
+	vector<double> pos_bias(trans_len+1, 1.0);
+	double mean_start_bias = 1.0;
+	double mean_end_bias = 1.0;
 	
 	if (rgp->bias_learner()!=NULL && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
 	{
-		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias);
-		
-		avg_bias = accumulate( start_bias.begin(), start_bias.end(), 0.0 ) + accumulate( end_bias.begin(), end_bias.end(), 0.0 );
-		avg_bias -= 2;
-		avg_bias /= (2.0*trans_len);
+		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias, pos_bias);
 	}
+	
+	shared_ptr<EmpDist const> frag_len_dist = rgp->frag_len_dist();
 	
 	vector<double> tot_bias_for_len(trans_len+1,1.0);
 	for(int l = rgp->frag_len_dist()->min(); l <= trans_len; l++)
 	{
 		double tot = 0;
+		double start = 0;
+		double end = 0;
 		for(int i = 0; i <= trans_len - l; i++)
-			tot += start_bias[i]*end_bias[i+l-1];
+		{
+			tot += start_bias[i]*pos_bias[i]*end_bias[i+l-1];
+			if(frag_len_dist->pdf(l) > 0) // Avoid issues where pos_bias is nan
+			{
+				start += start_bias[i]*pos_bias[i];
+				end += end_bias[i+l-1];
+			}
+		}
 		tot_bias_for_len[l] = tot;
+		mean_start_bias += start * frag_len_dist->pdf(l);
+		mean_end_bias += end * frag_len_dist->pdf(l); 
 	}
 	
 	_start_biases.push_back(start_bias);
 	_end_biases.push_back(end_bias);
+	_pos_biases.push_back(pos_bias);
 	_tot_biases_for_len.push_back(tot_bias_for_len);
-	_avg_biases.push_back(avg_bias);
+	_mean_start_biases.push_back(mean_start_bias);
+	_mean_end_biases.push_back(mean_end_bias);
 	_rg_masses.push_back(0.0);
 	
 	return _size++; // Index of new element
@@ -647,12 +661,15 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];
 	cond_prob *= _end_biases[i][end];
+	cond_prob *= _pos_biases[i][start];
 	cond_prob *= rgp->frag_len_dist()->pdf(frag_len);
 	
 	if (hit.is_pair())
 		cond_prob /= _tot_biases_for_len[i][frag_len];
+	else if (start==trans_len) // The hit is a singleton at the end of a fragment
+		cond_prob /= _mean_end_biases[i]*(trans_len - frag_len + 1);
 	else
-		cond_prob /= _avg_biases[i]*(trans_len - frag_len + 1);
+		cond_prob /= _mean_start_biases[i]*(trans_len - frag_len + 1);
 	
 	if (cond_prob > 0 && hit.collapse_mass() > 0)
 	{
