@@ -2,7 +2,6 @@
 #include "gdna.h"
 #include <ctype.h>
 
-
 void GSubSeq::setup(uint sstart, int slen, int sovl, int qfrom, int qto) {
      if (sovl==0) {
        GFREE(sq);
@@ -21,7 +20,6 @@ void GSubSeq::setup(uint sstart, int slen, int sovl, int qfrom, int qto) {
   sqlen=slen;
 }
 
-
 void GFaSeqGet::finit(const char* fn, off_t fofs, bool validate) {
  fh=fopen(fn,"rb");
  if (fh==NULL) {
@@ -38,7 +36,6 @@ GFaSeqGet::GFaSeqGet(FILE* f, off_t fofs, bool validate) {
  initialParse(fofs, validate);
  lastsub=new GSubSeq();
 }
-
 
 void GFaSeqGet::initialParse(off_t fofs, bool checkall) {
  static const char gfa_ERRPARSE[]="Error (GFaSeqGet): invalid FASTA file format.\n";
@@ -130,72 +127,79 @@ const char* GFaSeqGet::subseq(uint cstart, int& clen) {
   uint bend=lastsub->sqstart+lastsub->sqlen-1;
   uint cend=cstart+clen-1;
   int qlen=0; //only the extra len to be allocated/appended/prepended
-  uint qstart=1; //start coordinate of the new seq block of length qlen to be read from file
+  uint qstart=cstart; //start coordinate of the new seq block of length qlen to be read from file
   int newlen=0; //the new total length of the buffered sequence lastsub->sq
   int kovl=0;
-  int kfrom=0;//0-based offsets for copying
-  int kto=0;  //  a previously read sequence chunk
+  int czfrom=0;//0-based offsets for copying a previously read sequence chunk
+  int czto=0;
   uint newstart=cstart;
-  if (cstart>=bstart && cend<=bend) { //new req included in exising buffer
+  if (cstart>=bstart && cend<=bend) { //new reg contained within existing buffer
      return (const char*) &(lastsub->sq[cstart-bstart]) ;
     }
   //extend downward
   uint newend=GMAX(cend, bend);
-
-  if (cstart<bstart) {
+  if (cstart<bstart) { //requested start < old buffer start
     newstart=cstart;
     newlen=(newend-newstart+1);
     if (newlen>MAX_FASUBSEQ) {
        newlen=MAX_FASUBSEQ;
-       newend=cstart+newlen-1;
+       newend=cstart+newlen-1; //keep newstart, set newend
        }
-    qstart=cstart;
+    qlen=bstart-cstart;
     if (newend>bstart) { //overlap
-       if (newend>bend) {// new req is larger, two regions to update
+       if (newend>bend) {// new region is larger & around the old one - so we have two regions to update
          kovl=bend-bstart+1;
-         lastsub->setup(newstart, newlen, kovl, 0, bstart-cstart); //this should realloc and copy the kovl subseq
+         czfrom=0;
+         czto=bstart-cstart;
+         lastsub->setup(newstart, newlen, kovl, czfrom, czto); //this should realloc and copy the kovl subseq
          qlen=bstart-cstart;
          loadsubseq(newstart, qlen);
-         clen=qlen+kovl;
          qlen=newend-bend;
+         int toread=qlen;
          loadsubseq(bend+1, qlen);
-         clen+=qlen;
+         clen-=(toread-qlen);
          lastsub->sqlen=clen;
          return (const char*)lastsub->sq;
          }
-       qlen=bstart-cstart;
+        //newend<=bend
        kovl=newend-bstart+1;
-       //kfrom=0;
-       kto=bstart-cstart;
        }
-      else { // non overlapping new segment
-       qlen=newlen;
+     else { //no overlap with previous buffer
+       if (newend>bend) kovl=bend-bstart+1;
+                   else kovl=newend-bstart+1;
        }
+     qlen=bstart-cstart;
+     czfrom=0;
+     czto=qlen;
     } //cstart<bstart
-   else { //possibly extend upwards
-    //bstart<=cstart && cend>bend
+   else { //cstart>=bstart, possibly extend upwards
     newstart=bstart;
     newlen=(newend-newstart+1);
     if (newlen>MAX_FASUBSEQ) {
-       newstart=bstart+(newlen-MAX_FASUBSEQ);//keep newend
+       newstart=bstart+(newlen-MAX_FASUBSEQ);//keep newend, assign newstart
        newlen=MAX_FASUBSEQ;
-       }
-    if (newstart<bend) { //overlap
-       qlen=newend-bend; //to read from file
-       qstart=bend+1;
-       kovl=bend-newstart+1;
-       kfrom=newstart-bstart;
-       //kto=0;
-       }
-      else { //non-overlapping new segment
-       qlen=newlen;
-       qstart=newstart; //read the whole thing anew
-       }
+       if (newstart<=bend) { //overlap with old buffer
+          kovl=bend-newstart+1;
+          czfrom=newstart-bstart;
+          czto=0;
+          }
+       else { //not overlapping old buffer
+         kovl=0;
+         }
+       } //newstart reassigned
+    else { //we can extend the buffer to include the old one
+      qlen=newend-bend; //how much to read from file
+      qstart=bend+1;
+      kovl=bend-bstart+1;
+      czfrom=0;
+      czto=0;
+      }
     }
-
-  lastsub->setup(newstart, newlen, kovl, kfrom, kto); //this should realloc but copy any overlapping region
+  lastsub->setup(newstart, newlen, kovl, czfrom, czto); //this should realloc but copy any overlapping region
   lastsub->sqlen-=qlen; //appending may result in a premature eof
+  int toread=qlen;
   loadsubseq(qstart, qlen); //read the missing chunk, if any
+  clen-=(toread-qlen);
   lastsub->sqlen+=qlen;
   return (const char*)(lastsub->sq+(cstart-newstart));
 }
@@ -221,7 +225,6 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
   //assumes enough lastsub->sq space allocated previously
   //only loads the requested clen chars from file, at offset &lastsub->sq[cstart-lastsub->sqstart]
   int sofs=cstart-lastsub->sqstart;
-  bool appending=(sofs>0);
   char* seqp=lastsub->sq+sofs;
   //find the proper file offset and read the appropriate lines
   uint seqofs=cstart-1;
@@ -230,7 +233,7 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
   off_t fstart=fseqstart+startlno * (linelen+lendlen);
   fstart+=lineofs;
   fseek(fh, fstart, SEEK_SET);
-  int toread=(int)clen;
+  int toread=clen;
   if (toread==0) toread=MAX_FASUBSEQ; //read max allowed, or to the end of file
   int actualrlen=0;
   int sublen=0;
@@ -238,9 +241,9 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
     int reqrlen=linelen-lineofs;
     if (reqrlen>toread) reqrlen=toread; //in case we need to read just a few chars
     actualrlen=fread((void*)seqp, 1, reqrlen, fh);
-    //if (appending && actualrlen<reqrlen) { //eof reached prematurely
     if (actualrlen<reqrlen) { //eof reached prematurely
       while (seqp[actualrlen-1]=='\n' || seqp[actualrlen-1]=='\r') actualrlen--;
+      //check for new sequences in between
       clen=actualrlen;
       sublen+=actualrlen;
       return (const char*)seqp;
@@ -251,10 +254,10 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
     }
   //read the rest of the lines
   while (toread>=linelen) {
-    actualrlen=fread((void*)&(seqp[sublen]), 1, linelen, fh);
-    //if (appending && actualrlen<linelen) {
+    char* rseqp=&(seqp[sublen]);
+    actualrlen=fread((void*)rseqp, 1, linelen, fh);
     if (actualrlen<linelen) {
-      while (seqp[actualrlen-1]=='\n' || seqp[actualrlen-1]=='\r') actualrlen--;
+      while (rseqp[actualrlen-1]=='\n' || rseqp[actualrlen-1]=='\r') actualrlen--;
       sublen+=actualrlen;
       clen=sublen;
       return (const char*)seqp;
@@ -265,17 +268,17 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
     }
   // read the last partial line, if any
   if (toread>0) {
-    actualrlen=fread((void*)&(seqp[sublen]), 1, toread, fh);
-    if (appending || actualrlen<toread) {
-      while (seqp[actualrlen-1]=='\n' || seqp[actualrlen-1]=='\r')
+    char* rseqp=&(seqp[sublen]);
+    actualrlen=fread((void*)rseqp, 1, toread, fh);
+    if (actualrlen<toread) {
+      while (rseqp[actualrlen-1]=='\n' || rseqp[actualrlen-1]=='\r')
           actualrlen--;
       }
-    toread-=actualrlen;
+    //toread-=actualrlen;
     sublen+=actualrlen;
     }
   //lastsub->sqlen+=sublen;
   clen=sublen;
-  //GMessage(" sublen = %d\n", sublen);
   return (const char*)seqp;
   }
 

@@ -5,8 +5,8 @@
 #include "GList.hh"
 
 
-#define MAX_FASUBSEQ 0x10000000
-//max 256MB sequence data held in memory at a time
+#define MAX_FASUBSEQ 0x20000000
+//max 512MB sequence data held in memory at a time
 
 class GSubSeq {
  public:
@@ -51,6 +51,7 @@ class GFaSeqGet {
   void finit(const char* fn, off_t fofs, bool validate);
  public:
   GFaSeqGet() {
+    fh=NULL;
     fseqstart=0;
     linelen=0;
     lendch='\0';
@@ -86,6 +87,8 @@ class GFaSeqGet {
   char* copyRange(uint cstart, uint cend, bool revCmpl=false, bool upCase=false);
 
   void loadall() {
+    //TODO: must read the whole sequence differently here - line by line
+    //so when EOF or another '>' line is found the reading stops
     int clen=MAX_FASUBSEQ;
     subseq(1, clen);
     }
