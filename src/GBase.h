@@ -12,12 +12,15 @@
   #include <windows.h>
 #endif
 
+#include <stdint.h>
+
 #ifdef DEBUG
 #undef NDEBUG
 #endif
 
-typedef unsigned int uint32;
-typedef int int32;
+typedef int32_t int32;
+typedef uint32_t uint32;
+
 typedef unsigned char uchar;
 typedef unsigned char byte;
 
@@ -30,7 +33,7 @@ typedef unsigned char byte;
 #ifndef MAXUINT
 #define MAXUINT ((unsigned int)-1)
 #endif
-
+/*
 #if defined(_NATIVE_64) || defined(_LP64) || defined(__LP64__)
  typedef long int64;
  typedef unsigned long uint64;
@@ -39,6 +42,10 @@ typedef unsigned char byte;
  typedef long long int64;
  typedef unsigned long long uint64;
 #endif
+*/
+
+typedef int64_t int64;
+typedef uint64_t uint64;
 
 /****************************************************************************/
 
@@ -340,6 +347,7 @@ class GLineReader {
    char* chars() { return buf; }
    char* line() { return buf; }
    int readcount() { return lcount; } //number of lines read
+   void setFile(FILE* stream) { file=stream; }
    int length() { return len; }
    int size() { return len; } //same as size();
    bool isEof() {return isEOF; }
