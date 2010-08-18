@@ -903,110 +903,152 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	vector<SampleDifference*> isoform_exp_diffs;
 	for (size_t i = 0; i < tests.isoform_de_tests.size(); ++i)
 	{
-		total_iso_de_tests += tests.isoform_de_tests[i].size();
-		extract_sample_diffs(tests.isoform_de_tests[i], isoform_exp_diffs);
+        for (size_t j = 0; j < i; ++j)
+        {
+            total_iso_de_tests += tests.isoform_de_tests[i][j].size();
+            extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
+        }
 	}
 	int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
 	fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
 	for (size_t i = 0; i < tests.isoform_de_tests.size(); ++i)
 	{
-		FILE* fout = outfiles.isoform_de_outfiles[i];
-		print_tests(fout, "log(fold_change)", tests.isoform_de_tests[i]);
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.isoform_de_outfiles[i][j];
+            assert (fout != NULL);
+            print_tests(fout, "log(fold_change)", tests.isoform_de_tests[i][j]);
+        }
 	}
 	
 	int total_group_de_tests = 0;
 	vector<SampleDifference*> tss_group_exp_diffs;
 	for (size_t i = 0; i < tests.tss_group_de_tests.size(); ++i)
 	{
-		extract_sample_diffs(tests.tss_group_de_tests[i], tss_group_exp_diffs);
-		total_group_de_tests += tests.tss_group_de_tests[i].size();
+        for (size_t j = 0; j < i; ++j)
+        {
+            extract_sample_diffs(tests.tss_group_de_tests[i], tss_group_exp_diffs);
+            total_group_de_tests += tests.tss_group_de_tests[i].size();
+        }
 	}
 	
 	int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
 	fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
 	for (size_t i = 0; i < tests.tss_group_de_tests.size(); ++i)
 	{
-		FILE* fout = outfiles.group_de_outfiles[i];
-		print_tests(fout, "log(fold_change)", tests.tss_group_de_tests[i]);
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.group_de_outfiles[i];
+            print_tests(fout, "log(fold_change)", tests.tss_group_de_tests[i]);
+        }
 	}
 	
 	int total_gene_de_tests = 0;
 	vector<SampleDifference*> gene_exp_diffs;
 	for (size_t i = 0; i < tests.gene_de_tests.size(); ++i)
 	{
+        for (size_t j = 0; j < i; ++j)
+        {
 		total_gene_de_tests += tests.gene_de_tests[i].size();
 		extract_sample_diffs(tests.gene_de_tests[i], gene_exp_diffs);
+        }
 	}
 	
 	int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
 	fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
 	for (size_t i = 0; i < tests.gene_de_tests.size(); ++i)
-	{
-		FILE* fout = outfiles.gene_de_outfiles[i];
-		print_tests(fout, "log(fold_change)", tests.gene_de_tests[i]);
+	{        
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.gene_de_outfiles[i];
+            print_tests(fout, "log(fold_change)", tests.gene_de_tests[i]);
+        }
 	}	
 
 	int total_cds_de_tests = 0;
 	vector<SampleDifference*> cds_exp_diffs;
 	for (size_t i = 0; i < tests.cds_de_tests.size(); ++i)
 	{
-		total_cds_de_tests += tests.cds_de_tests[i].size();
-		extract_sample_diffs(tests.cds_de_tests[i], cds_exp_diffs);
+        for (size_t j = 0; j < i; ++j)
+        {
+            total_cds_de_tests += tests.cds_de_tests[i].size();
+            extract_sample_diffs(tests.cds_de_tests[i], cds_exp_diffs);
+        }
 	}
 	int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
 	fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
 	for (size_t i = 0; i < tests.cds_de_tests.size(); ++i)
 	{
-		FILE* fout = outfiles.cds_de_outfiles[i];
-		print_tests(fout, "log(fold_change)", tests.cds_de_tests[i]);
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.cds_de_outfiles[i];
+            print_tests(fout, "log(fold_change)", tests.cds_de_tests[i]);
+        }
 	}
 	
 	int total_diff_splice_tests = 0;
 	vector<SampleDifference*> splicing_diffs;
 	for (size_t i = 0; i < tests.diff_splicing_tests.size(); ++i)
 	{
-		total_diff_splice_tests += tests.diff_splicing_tests[i].size();
-		extract_sample_diffs(tests.diff_splicing_tests[i], splicing_diffs);
+        for (size_t j = 0; j < i; ++j)
+        {
+            total_diff_splice_tests += tests.diff_splicing_tests[i].size();
+            extract_sample_diffs(tests.diff_splicing_tests[i], splicing_diffs);
+        }
 	}
 	
 	int splicing_tests = fdr_significance(FDR, splicing_diffs);
 	fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
 	for (size_t i = 0; i < tests.diff_splicing_tests.size(); ++i)
 	{
-		FILE* fout = outfiles.diff_splicing_outfiles[i];
-		const SampleDiffs& diffs = tests.diff_splicing_tests[i];
-		print_tests(fout, "sqrt(JS)", diffs);
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.diff_splicing_outfiles[i];
+            const SampleDiffs& diffs = tests.diff_splicing_tests[i];
+            print_tests(fout, "sqrt(JS)", diffs);
+        }
 	}
 	
 	int total_diff_promoter_tests = 0;
 	vector<SampleDifference*> promoter_diffs;
 	for (size_t i = 0; i < tests.diff_splicing_tests.size(); ++i)
 	{
-		total_diff_promoter_tests += tests.diff_promoter_tests[i].size();
-		extract_sample_diffs(tests.diff_promoter_tests[i], promoter_diffs);
-
+        for (size_t j = 0; j < i; ++j)
+        {
+            total_diff_promoter_tests += tests.diff_promoter_tests[i].size();
+            extract_sample_diffs(tests.diff_promoter_tests[i], promoter_diffs);
+        }
 	}
 	int promoter_tests = fdr_significance(FDR, promoter_diffs);
 	fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
 	for (size_t i = 0; i < tests.diff_promoter_tests.size(); ++i)
 	{
-		FILE* fout = outfiles.diff_promoter_outfiles[i];
-		print_tests(fout, "sqrt(JS)", tests.diff_promoter_tests[i]);
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.diff_promoter_outfiles[i];
+            print_tests(fout, "sqrt(JS)", tests.diff_promoter_tests[i]);
+        }
 	}
 
 	int total_diff_cds_tests = 0;
 	vector<SampleDifference*> cds_use_diffs;
 	for (size_t i = 0; i < tests.diff_cds_tests.size(); ++i)
 	{
-		extract_sample_diffs(tests.diff_cds_tests[i], cds_use_diffs);
-		total_diff_cds_tests += tests.diff_cds_tests[i].size();
+        for (size_t j = 0; j < i; ++j)
+        {
+            extract_sample_diffs(tests.diff_cds_tests[i], cds_use_diffs);
+            total_diff_cds_tests += tests.diff_cds_tests[i].size();
+        }
 	}
 	int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
 	fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
 	for (size_t i = 0; i < tests.diff_cds_tests.size(); ++i)
 	{
-		FILE* fout = outfiles.diff_cds_outfiles[i];
-		print_tests(fout, "sqrt(JS)", tests.diff_cds_tests[i]);
+        for (size_t j = 0; j < i; ++j)
+        {
+            FILE* fout = outfiles.diff_cds_outfiles[i];
+            print_tests(fout, "sqrt(JS)", tests.diff_cds_tests[i]);
+        }
 	}
 	
 	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
@@ -1102,85 +1144,95 @@ int main(int argc, char** argv)
     
 	for (size_t i = 1; i < sam_hit_filenames.size(); ++i)
 	{
-		char out_file_prefix[64];
-		sprintf(out_file_prefix, "%s/%lu_%lu", output_dir.c_str(), i - 1, i);
-		char iso_out_file_name[256];
-		sprintf(iso_out_file_name, "%s_isoform_exp.diff", out_file_prefix);
-		FILE* iso_out = fopen(iso_out_file_name, "w");
-		if (!iso_out)
-		{
-			fprintf(stderr, "Error: cannot open differential isoform transcription file %s for writing\n",
-					iso_out_file_name);
-			exit(1);
-		}
-		
-		char group_out_file_name[256];
-		sprintf(group_out_file_name, "%s_tss_group_exp.diff", out_file_prefix);
-		FILE* group_out = fopen(group_out_file_name, "w");
-		if (!group_out)
-		{
-			fprintf(stderr, "Error: cannot open differential TSS group transcription file %s for writing\n",
-					group_out_file_name);
-			exit(1);
-		}
-		
-		char gene_out_file_name[256];
-		sprintf(gene_out_file_name, "%s_gene_exp.diff", out_file_prefix);
-		FILE* gene_out = fopen(gene_out_file_name, "w");
-		if (!group_out)
-		{
-			fprintf(stderr, "Error: cannot open gene expression file %s for writing\n",
-					gene_out_file_name);
-			exit(1);
-		}
-		
-		char cds_out_file_name[256];
-		sprintf(cds_out_file_name, "%s_cds_exp.diff", out_file_prefix);
-		FILE* cds_out = fopen(cds_out_file_name, "w");
-		if (!cds_out)
-		{
-			fprintf(stderr, "Error: cannot open cds expression file %s for writing\n",
-					cds_out_file_name);
-			exit(1);
-		}
-		
-		char diff_splicing_out_file_name[256];
-		sprintf(diff_splicing_out_file_name, "%s_splicing.diff", out_file_prefix);
-		FILE* diff_splicing_out = fopen(diff_splicing_out_file_name, "w");
-		if (!diff_splicing_out)
-		{
-			fprintf(stderr, "Error: cannot open differential splicing file %s for writing\n",
-					diff_splicing_out_file_name);
-			exit(1);
-		}
-		
-		char diff_promoter_out_file_name[256];
-		sprintf(diff_promoter_out_file_name, "%s_promoters.diff", out_file_prefix);
-		FILE* diff_promoter_out = fopen(diff_promoter_out_file_name, "w");
-		if (!diff_promoter_out)
-		{
-			fprintf(stderr, "Error: cannot open differential transcription start file %s for writing\n",
-					diff_promoter_out_file_name);
-			exit(1);
-		}
-		
-		char diff_cds_out_file_name[256];
-		sprintf(diff_cds_out_file_name, "%s_cds.diff", out_file_prefix);
-		FILE* diff_cds_out = fopen(diff_cds_out_file_name, "w");
-		if (!diff_cds_out)
-		{
-			fprintf(stderr, "Error: cannot open differential relative CDS file %s for writing\n",
-					diff_cds_out_file_name);
-			exit(1);
-		}
-		
-		outfiles.isoform_de_outfiles.push_back(iso_out);
-		outfiles.group_de_outfiles.push_back(group_out);
-		outfiles.gene_de_outfiles.push_back(gene_out);
-		outfiles.cds_de_outfiles.push_back(cds_out);
-		outfiles.diff_splicing_outfiles.push_back(diff_splicing_out);
-		outfiles.diff_promoter_outfiles.push_back(diff_promoter_out);
-		outfiles.diff_cds_outfiles.push_back(diff_cds_out);
+        outfiles.isoform_de_outfiles.push_back(vector<SampleDiffs>());
+        outfiles.group_de_outfiles.push_back(vector<SampleDiffs>());
+        outfiles.gene_de_outfiles.push_back(vector<SampleDiffs>());
+        outfiles.cds_de_outfiles.push_back(vector<SampleDiffs>());
+        outfiles.diff_splicing_outfiles.push_back(vector<SampleDiffs>());
+        outfiles.diff_promoter_outfiles.push_back(vector<SampleDiffs>());
+        outfiles.diff_cds_outfiles.push_back(vector<SampleDiffs>());
+        for (size_t j = 0; j < i; ++j)
+        {
+            char out_file_prefix[64];
+            sprintf(out_file_prefix, "%s/%lu_%lu", output_dir.c_str(), j, i);
+            char iso_out_file_name[256];
+            sprintf(iso_out_file_name, "%s_isoform_exp.diff", out_file_prefix);
+            FILE* iso_out = fopen(iso_out_file_name, "w");
+            if (!iso_out)
+            {
+                fprintf(stderr, "Error: cannot open differential isoform transcription file %s for writing\n",
+                        iso_out_file_name);
+                exit(1);
+            }
+            
+            char group_out_file_name[256];
+            sprintf(group_out_file_name, "%s_tss_group_exp.diff", out_file_prefix);
+            FILE* group_out = fopen(group_out_file_name, "w");
+            if (!group_out)
+            {
+                fprintf(stderr, "Error: cannot open differential TSS group transcription file %s for writing\n",
+                        group_out_file_name);
+                exit(1);
+            }
+            
+            char gene_out_file_name[256];
+            sprintf(gene_out_file_name, "%s_gene_exp.diff", out_file_prefix);
+            FILE* gene_out = fopen(gene_out_file_name, "w");
+            if (!group_out)
+            {
+                fprintf(stderr, "Error: cannot open gene expression file %s for writing\n",
+                        gene_out_file_name);
+                exit(1);
+            }
+            
+            char cds_out_file_name[256];
+            sprintf(cds_out_file_name, "%s_cds_exp.diff", out_file_prefix);
+            FILE* cds_out = fopen(cds_out_file_name, "w");
+            if (!cds_out)
+            {
+                fprintf(stderr, "Error: cannot open cds expression file %s for writing\n",
+                        cds_out_file_name);
+                exit(1);
+            }
+            
+            char diff_splicing_out_file_name[256];
+            sprintf(diff_splicing_out_file_name, "%s_splicing.diff", out_file_prefix);
+            FILE* diff_splicing_out = fopen(diff_splicing_out_file_name, "w");
+            if (!diff_splicing_out)
+            {
+                fprintf(stderr, "Error: cannot open differential splicing file %s for writing\n",
+                        diff_splicing_out_file_name);
+                exit(1);
+            }
+            
+            char diff_promoter_out_file_name[256];
+            sprintf(diff_promoter_out_file_name, "%s_promoters.diff", out_file_prefix);
+            FILE* diff_promoter_out = fopen(diff_promoter_out_file_name, "w");
+            if (!diff_promoter_out)
+            {
+                fprintf(stderr, "Error: cannot open differential transcription start file %s for writing\n",
+                        diff_promoter_out_file_name);
+                exit(1);
+            }
+            
+            char diff_cds_out_file_name[256];
+            sprintf(diff_cds_out_file_name, "%s_cds.diff", out_file_prefix);
+            FILE* diff_cds_out = fopen(diff_cds_out_file_name, "w");
+            if (!diff_cds_out)
+            {
+                fprintf(stderr, "Error: cannot open differential relative CDS file %s for writing\n",
+                        diff_cds_out_file_name);
+                exit(1);
+            }
+            
+            outfiles.isoform_de_outfiles.back().push_back(iso_out);
+            outfiles.group_de_outfiles.back().push_back(group_out);
+            outfiles.gene_de_outfiles.back().push_back(gene_out);
+            outfiles.cds_de_outfiles.back().push_back(cds_out);
+            outfiles.diff_splicing_outfiles.back().push_back(diff_splicing_out);
+            outfiles.diff_promoter_outfiles.back().push_back(diff_promoter_out);
+            outfiles.diff_cds_outfiles.back().push_back(diff_cds_out);
+        }
 	}
 	
 	char isoform_fpkm_tracking_name[256];

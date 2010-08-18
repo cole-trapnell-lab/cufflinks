@@ -76,14 +76,14 @@ typedef map<string, SampleDifference > SampleDiffs;
 
 struct Outfiles
 {
-	vector<FILE*> isoform_de_outfiles;
-	vector<FILE*> group_de_outfiles;
-	vector<FILE*> gene_de_outfiles;
-	vector<FILE*> cds_de_outfiles;
+	vector<vector<FILE*> > isoform_de_outfiles;
+	vector<vector<FILE*> > group_de_outfiles;
+	vector<vector<FILE*> > gene_de_outfiles;
+	vector<vector<FILE*> > cds_de_outfiles;
 	
-	vector<FILE*> diff_splicing_outfiles;
-	vector<FILE*> diff_promoter_outfiles;
-	vector<FILE*> diff_cds_outfiles;
+	vector<vector<FILE*> > diff_splicing_outfiles;
+	vector<vector<FILE*> > diff_promoter_outfiles;
+	vector<vector<FILE*> > diff_cds_outfiles;
 	
 	FILE* isoform_fpkm_tracking_out;
 	FILE* tss_group_fpkm_tracking_out;
@@ -93,14 +93,14 @@ struct Outfiles
 
 struct Tests
 {
-	vector<SampleDiffs> isoform_de_tests;
-	vector<SampleDiffs> tss_group_de_tests;
-	vector<SampleDiffs> gene_de_tests;
-	vector<SampleDiffs> cds_de_tests;
+	vector<vector<SampleDiffs> > isoform_de_tests;
+	vector<vector<SampleDiffs> > tss_group_de_tests;
+	vector<vector<SampleDiffs> > gene_de_tests;
+	vector<vector<SampleDiffs> > cds_de_tests;
 	
-	vector<SampleDiffs> diff_splicing_tests; // to be performed on the isoforms of a single tss group
-	vector<SampleDiffs> diff_promoter_tests; // to be performed on the tss groups of a single gene
-	vector<SampleDiffs> diff_cds_tests; // to be performed on the cds groups of a single gene
+	vector<vector<SampleDiffs> > diff_splicing_tests; // to be performed on the isoforms of a single tss group
+	vector<vector<SampleDiffs> > diff_promoter_tests; // to be performed on the tss groups of a single gene
+	vector<vector<SampleDiffs> > diff_cds_tests; // to be performed on the cds groups of a single gene
 };
 
 struct FPKMContext

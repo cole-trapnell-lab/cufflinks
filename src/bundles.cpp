@@ -406,6 +406,11 @@ void HitBundle::finalize(bool is_combined)
 		
 		Scaffold hs(*hit);
 		
+        if (i >= 1)
+        {
+            assert (hit->ref_id() == _hits[i-1].ref_id());
+        }
+        
 		for (size_t j = 0; j < _ref_scaffs.size(); ++j)
 		{
 			// add hit only adds if the hit is structurally compatible
@@ -562,23 +567,43 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 if (bh->ref_id() != (*next_ref_scaff)->ref_id())
                 {
                     const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
-                    const char* last_chr_name = _hit_fac.ref_table().get_name((*next_ref_scaff)->ref_id());
+                    const char* ref_rna_chr_name = _hit_fac.ref_table().get_name((*next_ref_scaff)->ref_id());
+                    const char* last_bh_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
                     
                     // if the BAM/SAM file isn't lexicographically sorted by chromosome, print an error
                     // and exit.
-                    if (strcmp(last_chr_name, bh_chr_name) >= 0)
+                    if (last_bh_chr_name && strcmp(last_bh_chr_name, bh_chr_name) > 0)
                     { 
-                        print_sort_error(last_chr_name, 
+                        print_sort_error(last_bh_chr_name, 
                                          last_hit_pos_seen, 
                                          bh_chr_name, 
                                          bh->left());
                         exit(1);
                     }
-                    else 
+                    
+                    if (bh_chr_name && ref_rna_chr_name)
                     {
-                        continue;
-                    }
+                        if (strcmp(bh_chr_name, ref_rna_chr_name) < 0)
+                        {
+                            // hit is lexicographically less than the reference,
+                            // so skip the hit.
+                            continue;
+                        }
+                        else 
+                        {
+                            // reference is lexicographically less than
+                            // the hit, so wait on the hit and emit this bundle.
+                            left_bundle_boundary = (*next_ref_scaff)->left();
+                            right_bundle_boundary = (*next_ref_scaff)->right();
+                            first_ref_id_seen = (*next_ref_scaff)->ref_id();
+                            
+                        }
 
+                    }
+                    // Then these hits are on a chromosome not in the reference annotation, but which are lexicographically
+                    // less than the next reference record, so just skip them
+                    
+                    continue;
                 }
                 if ((bh->ref_id() == (*next_ref_scaff)->ref_id() &&
                      bh->right() <= (*next_ref_scaff)->left()))
@@ -679,57 +704,31 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 		{
             while(next_ref_scaff < ref_mRNAs.end())
             {
-                if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
+                if (first_ref_id_seen == (*next_ref_scaff)->ref_id())
                 {
-//                    if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
-//                    {
-//                        int a = 3;
-//                    }
-                }
-                
-                assert(next_ref_scaff >= ref_mRNAs.begin());
-                // Transitioned to a new chromosome in the stream of hits?  
-                // Stop scanning through reference scaffolds.
-                if (bh && last_hit_ref_id_seen && bh->ref_id() != last_hit_ref_id_seen)
-                {
-                    break;
-                }
-                
-                // Have we run off the end of this block of reference 
-                // transcript?
-                if (bh && (*next_ref_scaff)->ref_id() != bh->ref_id())
-                {
-                    if (last_ref_rna_ref_id_seen && (*next_ref_scaff)->ref_id() != last_ref_rna_ref_id_seen)
+                    // if the ref_scaff here overlaps the current bundle interval,
+                    // we have to include it, and expand the bundle interval
+                    if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),left_bundle_boundary, right_bundle_boundary))
                     {
+                        right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
+                        olaps_reference = true;
+                    }
+                    
+                    // If the ref transcript is to the right of the bundle interval, 
+                    // then we can leave this the ref transcript out for now
+                    if ((*next_ref_scaff)->left() > right_bundle_boundary)
+                    {
+                        // we've gone beyond the bundle and this hit, so we're 
+                        // not going to expand the right boundary any further
+                        // until we see more hits
                         break;
                     }
                 }
-                
-                // Transitioned to a new chromosome in the stream of reference transcripts?  
-                // Stop scanning through reference scaffolds.
-                if (last_ref_rna_ref_id_seen && 
-                    last_ref_rna_ref_id_seen != (*next_ref_scaff)->ref_id())
+                else 
                 {
                     break;
                 }
-                
-                // if the ref_scaff here overlaps the current bundle interval,
-                // we have to include it, and expand the bundle interval
-                if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),left_bundle_boundary, right_bundle_boundary))
-                {
-                    right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
-                    olaps_reference = true;
-                }
-                
-                // If the ref transcript is to the right of the bundle interval, 
-                // then we can leave this the ref transcript out for now
-                if ((*next_ref_scaff)->left() > right_bundle_boundary)
-                {
-                    // we've gone beyond the bundle and this hit, so we're 
-                    // not going to expand the right boundary any further
-                    // until we see more hits
-                    break;
-                }
+
                 
                 last_ref_rna_ref_id_seen = (*next_ref_scaff)->ref_id();
                 last_ref_rna_pos_seen = (*next_ref_scaff)->left();
@@ -743,9 +742,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
             break;
         }
         
-        if (last_hit_ref_id_seen == 0 || bh->ref_id() == last_hit_ref_id_seen)
+        if (last_hit_ref_id_seen == 0 || bh->ref_id() == first_ref_id_seen)
         {
-            if (bh->left() <= right_bundle_boundary)
+            if (bh->left() >= left_bundle_boundary && bh->left() <= right_bundle_boundary)
             {
                 hit_within_boundary = true;
             }

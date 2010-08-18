@@ -378,14 +378,17 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
 	while(bundle_factory.next_bundle(bundle))
 	{
-#if ASM_VERBOSE
+//#if ASM_VERBOSE
+        const RefSequenceTable& rt = bundle_factory.ref_table();
+        const char* chrom = rt.get_name(bundle.ref_id());
         char bundle_label_buf[2048];
         sprintf(bundle_label_buf, 
-                "%d-%d", 
+                "%s:%d-%d",
+                chrom,
                 bundle.left(),
                 bundle.right());
-        fprintf(stderr, "Inspecting bundle %s\n", bundle_label_buf);
-#endif
+        fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
+//#endif
 		
 		identify_bad_splices(bundle, bad_introns);
         
