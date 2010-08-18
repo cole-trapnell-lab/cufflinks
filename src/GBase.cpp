@@ -28,10 +28,12 @@ void GError(const char* format,...){
     va_end(arguments);
     #ifdef DEBUG
      // modify here if you want a core dump
-     abort();
+     // abort();
     #endif
   #endif
+#if NDEBUG
     exit(1);
+#endif
   }
 // Warning routine (just print message without exiting)
 void GMessage(const char* format,...){

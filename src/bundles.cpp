@@ -559,9 +559,29 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
             
             if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL)
             {
+                if (bh->ref_id() != (*next_ref_scaff)->ref_id())
+                {
+                    const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
+                    const char* last_chr_name = _hit_fac.ref_table().get_name((*next_ref_scaff)->ref_id());
+                    
+                    // if the BAM/SAM file isn't lexicographically sorted by chromosome, print an error
+                    // and exit.
+                    if (strcmp(last_chr_name, bh_chr_name) >= 0)
+                    { 
+                        print_sort_error(last_chr_name, 
+                                         last_hit_pos_seen, 
+                                         bh_chr_name, 
+                                         bh->left());
+                        exit(1);
+                    }
+                    else 
+                    {
+                        continue;
+                    }
+
+                }
                 if ((bh->ref_id() == (*next_ref_scaff)->ref_id() &&
-                     bh->right() <= (*next_ref_scaff)->left()) ||
-                     bh->ref_id() != (*next_ref_scaff)->ref_id())
+                     bh->right() <= (*next_ref_scaff)->left()))
                 {
                     // if this hit doesn't overlap the next ref transcript
                     // and falls to its left, we should skip it.  We need
