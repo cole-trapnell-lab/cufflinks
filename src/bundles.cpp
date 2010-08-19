@@ -556,7 +556,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         {
 //            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
 //            {
-//                if ((*next_ref_scaff)->annotated_trans_id() == "ENSMUST00000000402")
+//                if ((*next_ref_scaff)->annotated_trans_id() == "TCONS_000000371:")
 //                {
 //                    int a = 3;
 //                }
@@ -678,14 +678,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         }
         
         assert(left_bundle_boundary != -1);
-		
-        if (left_bundle_boundary == 82827)
-        {
-            int a = 4;
-        }
-        
-        
-        
+
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
         if (bh && ref_mRNAs.empty()
@@ -754,7 +747,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
             const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
             const char* last_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
             
-            if (strcmp(last_chr_name, bh_chr_name) >= 0)
+            if (strcmp(last_chr_name, bh_chr_name) > 0)
             { 
                 print_sort_error(last_chr_name, 
                                  last_hit_pos_seen, 
