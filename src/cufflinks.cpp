@@ -305,13 +305,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		const MateHit& hit = bundle.hits()[i];
 		hits.push_back(Scaffold(hit));
 	}
-    
-	filter_introns(bundle.length(), 
-				   bundle.left(), 
-				   hits, 
-				   min_isoform_fraction, 
-				   false,
-				   true);
 	
 	vector<uint8_t> strand_guess(bundle.length(), CUFF_STRAND_UNKNOWN);
 	guess_strand(bundle.left(),

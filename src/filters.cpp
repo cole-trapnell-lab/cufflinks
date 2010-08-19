@@ -69,9 +69,9 @@ void filter_introns(int bundle_length,
 					if (doc < bundle_avg_thresh)
 					{
 						toss[j] = true;
-//#if ASM_VERBOSE
-//						fprintf(stderr, "\t Filtering intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
-//#endif	
+#if ASM_VERBOSE
+						fprintf(stderr, "\t Filtering intron %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+#endif	
 						continue; 
 					}
 					
@@ -92,9 +92,9 @@ void filter_introns(int bundle_length,
 						double thresh = itr2->second * fraction;
 						if (doc < thresh)
 						{
-//#if ASM_VERBOSE
-//							fprintf(stderr, "\t Filtering intron (due to overlap) %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
-//#endif	
+#if ASM_VERBOSE
+							fprintf(stderr, "\t Filtering intron (due to overlap) %d - %d: %f thresh %f\n", itr->first.first, itr->first.second, doc, bundle_avg_thresh);
+#endif	
 							toss[j] = true;
 						}
 					}
@@ -117,13 +117,13 @@ void filter_introns(int bundle_length,
 		}
 		else
 		{
-//#if ASM_VERBOSE
-//			if (hits[j].has_intron())
-//			{
-//				
-//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//			}
-//#endif	
+#if ASM_VERBOSE
+			if (hits[j].has_intron())
+			{
+				
+				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			}
+#endif	
 		}
 	}
 	
@@ -289,6 +289,10 @@ void pre_mrna_filter(int bundle_length,
                 if (hit_doc_in_region < thresh)
                 {
                     toss[j] = true;
+                    if (hits[j].has_intron())
+                    {
+                        fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+                    }
                 }
             }
 		}
@@ -310,11 +314,11 @@ void pre_mrna_filter(int bundle_length,
 		else
 		{
 #if ASM_VERBOSE
-			//			if (hits[j].has_intron())
-			//			{
-			//				
-            //fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-			//			}
+			if (hits[j].has_intron())
+			{
+				
+                fprintf(stderr, "\t@@@ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			}
 #endif	
 		}
 	}
@@ -522,8 +526,6 @@ void filter_hits(int bundle_length,
 				{
 					double idoc = itr->second;
 					double doc = scaff_doc[j];
-					//if (doc <= 3)
-					//	toss[j] = true;
 					
 					if (!hits[j].has_intron() && 
 						doc < pre_mrna_fraction * (idoc * intron_multiplier))
@@ -587,11 +589,10 @@ void filter_hits(int bundle_length,
 						if (doc < thresh)
 						{
 							toss[j] = true; 
-//							if (hits[j].has_intron())
-//							{
-//								fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//								int a = 4;
-//							}
+							if (hits[j].has_intron())
+							{
+								fprintf(stderr, "\t^^^Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+							}
 						}
 					}
 				}
@@ -615,11 +616,11 @@ void filter_hits(int bundle_length,
 		else
 		{
 #if ASM_VERBOSE
-//			if (hits[j].has_intron())
-//			{
-//				
-//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//			}
+			if (hits[j].has_intron())
+			{
+				
+				fprintf(stderr, "\t!!!Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			}
 #endif	
 		}
 	}
@@ -661,12 +662,12 @@ void filter_hits(int bundle_length,
 	
 	if (!intron_doc.empty())
 	{
-		filter_introns(bundle_length, 
-					   bundle_left, 
-					   hits, 
-					   min_isoform_fraction, 
-					   true,
-					   true);
+//		filter_introns(bundle_length, 
+//					   bundle_left, 
+//					   hits, 
+//					   min_isoform_fraction, 
+//					   true,
+//					   true);
 		if (bundle_avg_doc > 3000)
 		{
 			filter_introns(bundle_length, 
@@ -693,13 +694,13 @@ void filter_hits(int bundle_length,
 		}
 		else
 		{
-//#if ASM_VERBOSE
-//			if (hits[j].has_intron())
-//			{
-//				
-//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//			}
-//#endif	
+#if ASM_VERBOSE
+			if (hits[j].has_intron())
+			{
+				
+				fprintf(stderr, "\t***Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+			}
+#endif	
 		}
 	}
 	
@@ -749,13 +750,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 		{
 			const vector<const MateHit*> hits = scaff->mate_hits();
 			
-//			if (hits.size() <= 1)
-//				chaff[t] = true;
-			
 			const vector<AugmentedCuffOp>& ops = scaff->augmented_ops();
-			if (ops.front().genomic_length <= microexon_length || 
-				ops.back().genomic_length <= microexon_length)
-				illegal_microexon[t] = true;
 			
 			if (ops.size() == 1 && ops[0].opcode == CUFF_MATCH)
 			{
@@ -802,7 +797,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	vector<double> non_junk_abundances;
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		if (!repeats[t] && !chaff[t] && !pre_mrna_junk[t] && !too_rare[t] /*&& !illegal_microexon[t]*/)
+		if (!repeats[t] && !pre_mrna_junk[t] && !too_rare[t])
 		{
 			non_junk_transcripts.push_back(transcripts[t]);
 			non_junk_abundances.push_back(abundances[t]);
@@ -855,7 +850,7 @@ void filter_junk_genes(vector<Gene>& genes)
         else
         {
 #if ASM_VERBOSE
-            fprintf(stderr, "Filtering gene\n");
+            fprintf(stderr, "Filtering transfrags from gene\n");
 #endif
         }
 	}

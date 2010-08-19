@@ -353,6 +353,10 @@ void holdout_transitivity_hazards(vector<Scaffold>& hits,
 		}
 		if (overlaps_evil_intron)
 		{
+            if (hits[i].has_intron())
+            {
+                fprintf(stderr, "&&& Holding out intron-containing hazard at %d-%d\n", hits[i].left(), hits[i].right());
+            }
 			hazards.push_back(hits[i]);
 		}	
 		else

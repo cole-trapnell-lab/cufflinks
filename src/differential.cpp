@@ -239,9 +239,9 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 	gradient = ublas::zero_vector<double>(sample_kappas.size() * kappa_length);
 	for (size_t i = 0; i < sample_kappas.size(); ++i)
 	{
-		for (size_t j = 0; j < kappa_length; ++j)
+		for (size_t k = 0; k < kappa_length; ++k)
 		{
-			gradient(i*kappa_length + j) = sample_kappas[i](j);
+			gradient(i*kappa_length + k) = sample_kappas[i](k);
 		}
 	}
 	
@@ -259,24 +259,24 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 	
 	for (size_t i = 0; i < sample_kappas.size(); ++i)
 	{
-		for (size_t j = 0; j < kappa_length; ++j)
+		for (size_t k = 0; k < kappa_length; ++k)
 		{
-			if (denoms(j) == 0.0 || gradient(i*kappa_length + j) == 0.0)
+			if (denoms(k) == 0.0 || gradient(i*kappa_length + k) == 0.0)
 			{
-				gradient(i*kappa_length + j) = 0.0;
+				gradient(i*kappa_length + k) = 0.0;
 			}
 			else
 			{
 #ifdef DEBUG
 				ublas::vector<double>& grad_tmp = gradient;
 #endif
-				gradient(i*kappa_length + j) /= denoms(j);
-				gradient(i*kappa_length + j) = log(gradient(i*kappa_length + j));
-				gradient(i*kappa_length + j) /= sample_kappas.size();
-				gradient(i*kappa_length + j) *= (1.0/(2.0*js));
+				gradient(i*kappa_length + k) /= denoms(k);
+				gradient(i*kappa_length + k) = log(gradient(i*kappa_length + k));
+				gradient(i*kappa_length + k) /= sample_kappas.size();
+				gradient(i*kappa_length + k) *= (1.0/(2.0*js));
 				
 #ifdef DEBUG
-				if(isinf(gradient(i*kappa_length + j)))
+				if(isinf(gradient(i*kappa_length + k)))
 				{
 					cerr << grad_tmp << endl;
 					cerr << sample_kappas[i] << endl;
@@ -308,12 +308,12 @@ void make_js_covariance_matrix(vector<ublas::matrix<double> >& kappa_covariances
 											   kappa_covariances.size() * kappa_length);
 	for (size_t i = 0; i < kappa_covariances.size(); ++i)
 	{
-		for (size_t j = 0; j < kappa_length; ++j)
+		for (size_t k = 0; k < kappa_length; ++k)
 		{
 			for (size_t k = 0; k < kappa_length; ++k)
 			{
-				js_covariance(i*kappa_length + j, i*kappa_length + k) = 
-				kappa_covariances[i](j,k);
+				js_covariance(i*kappa_length + k, i*kappa_length + k) = 
+				kappa_covariances[i](k,k);
 			}
 		}
 	}
@@ -725,73 +725,76 @@ void test_differential(const RefSequenceTable& rt,
 		}
 	}
 	
-	for (size_t i = 1; i < samples.size(); ++i)
+	for (size_t i = 0; i < samples.size(); ++i)
 	{
 		bool multi_transcript_locus = samples[i].transcripts.abundances().size() > 1;
-		bool enough_reads = !(multi_transcript_locus &&
-							 (samples[i].cluster_mass < min_read_count ||
-							  samples[i-1].cluster_mass < min_read_count));
 		
-		assert (samples[i].transcripts.abundances().size() == 
-				samples[i-1].transcripts.abundances().size());
-		for (size_t j = 0; j < samples[i].transcripts.abundances().size(); ++j)
-		{
-			get_de_tests(*(samples[i-1].transcripts.abundances()[j]), 
-						 *(samples[i].transcripts.abundances()[j]),
-						 tests.isoform_de_tests[i-1],
-						 enough_reads);
-		}
-		
-		for (size_t j = 0; j < samples[i].cds.size(); ++j)
-		{
-			get_de_tests(samples[i-1].cds[j], 
-						 samples[i].cds[j],
-						 tests.cds_de_tests[i-1],
-						 enough_reads);
-		}
-		
-		for (size_t j = 0; j < samples[i].primary_transcripts.size(); ++j)
-		{
-			get_de_tests(samples[i-1].primary_transcripts[j], 
-						 samples[i].primary_transcripts[j],
-						 tests.tss_group_de_tests[i-1],
-						 enough_reads);
-		}
-		
-		for (size_t j = 0; j < samples[i].genes.size(); ++j)
-		{
-			get_de_tests(samples[i-1].genes[j], 
-						 samples[i].genes[j],
-						 tests.gene_de_tests[i-1],
-						 enough_reads);
-		}
-		
-		// Differential promoter use
-		for (size_t j = 0; j < samples[i].gene_primary_transcripts.size(); ++j)
-		{
-			get_ds_tests(samples[i-1].gene_primary_transcripts[j], 
-						 samples[i].gene_primary_transcripts[j],
-						 tests.diff_promoter_tests[i-1],
-						 enough_reads);
-		}
-		
-		// Differential coding sequence output
-		for (size_t j = 0; j < samples[i].gene_cds.size(); ++j)
-		{
-			get_ds_tests(samples[i-1].gene_cds[j], 
-						 samples[i].gene_cds[j],
-						 tests.diff_cds_tests[i-1],
-						 enough_reads);
-		}
-		
-		// Differential splicing of primary transcripts
-		for (size_t j = 0; j < samples[i].primary_transcripts.size(); ++j)
-		{
-			get_ds_tests(samples[i-1].primary_transcripts[j], 
-						 samples[i].primary_transcripts[j],
-						 tests.diff_splicing_tests[i-1],
-						 enough_reads);
-		}
+        for (size_t j = 0; j < i; ++j)
+        {
+            bool enough_reads = !(multi_transcript_locus &&
+                                  (samples[i].cluster_mass < min_read_count ||
+                                   samples[j].cluster_mass < min_read_count));
+            assert (samples[i].transcripts.abundances().size() == 
+                    samples[j].transcripts.abundances().size());
+            for (size_t k = 0; k < samples[i].transcripts.abundances().size(); ++k)
+            {
+                get_de_tests(*(samples[j].transcripts.abundances()[k]), 
+                             *(samples[i].transcripts.abundances()[k]),
+                             tests.isoform_de_tests[i][j],
+                             enough_reads);
+            }
+            
+            for (size_t k = 0; k < samples[i].cds.size(); ++k)
+            {
+                get_de_tests(samples[j].cds[k], 
+                             samples[i].cds[k],
+                             tests.cds_de_tests[i][j],
+                             enough_reads);
+            }
+            
+            for (size_t k = 0; k < samples[i].primary_transcripts.size(); ++k)
+            {
+                get_de_tests(samples[j].primary_transcripts[k], 
+                             samples[i].primary_transcripts[k],
+                             tests.tss_group_de_tests[i][j],
+                             enough_reads);
+            }
+            
+            for (size_t k = 0; k < samples[i].genes.size(); ++k)
+            {
+                get_de_tests(samples[j].genes[k], 
+                             samples[i].genes[k],
+                             tests.gene_de_tests[i][j],
+                             enough_reads);
+            }
+            
+            // Differential promoter use
+            for (size_t k = 0; k < samples[i].gene_primary_transcripts.size(); ++k)
+            {
+                get_ds_tests(samples[j].gene_primary_transcripts[k], 
+                             samples[i].gene_primary_transcripts[k],
+                             tests.diff_promoter_tests[i][j],
+                             enough_reads);
+            }
+            
+            // Differential coding sequence output
+            for (size_t k = 0; k < samples[i].gene_cds.size(); ++k)
+            {
+                get_ds_tests(samples[j].gene_cds[k], 
+                             samples[i].gene_cds[k],
+                             tests.diff_cds_tests[i][j],
+                             enough_reads);
+            }
+            
+            // Differential splicing of primary transcripts
+            for (size_t k = 0; k < samples[i].primary_transcripts.size(); ++k)
+            {
+                get_ds_tests(samples[j].primary_transcripts[k], 
+                             samples[i].primary_transcripts[k],
+                             tests.diff_splicing_tests[i][j],
+                             enough_reads);
+            }
+        }
 	}
 	
 #if ENABLE_THREADS
