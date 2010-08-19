@@ -308,12 +308,12 @@ void make_js_covariance_matrix(vector<ublas::matrix<double> >& kappa_covariances
 											   kappa_covariances.size() * kappa_length);
 	for (size_t i = 0; i < kappa_covariances.size(); ++i)
 	{
-		for (size_t k = 0; k < kappa_length; ++k)
+		for (size_t j = 0; j < kappa_length; ++j)
 		{
 			for (size_t k = 0; k < kappa_length; ++k)
 			{
-				js_covariance(i*kappa_length + k, i*kappa_length + k) = 
-				kappa_covariances[i](k,k);
+				js_covariance(i*kappa_length + j, i*kappa_length + k) = 
+				kappa_covariances[i](j,k);
 			}
 		}
 	}
@@ -725,7 +725,7 @@ void test_differential(const RefSequenceTable& rt,
 		}
 	}
 	
-	for (size_t i = 0; i < samples.size(); ++i)
+	for (size_t i = 1; i < samples.size(); ++i)
 	{
 		bool multi_transcript_locus = samples[i].transcripts.abundances().size() > 1;
 		

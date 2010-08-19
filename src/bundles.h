@@ -288,9 +288,16 @@ public:
         next_mask_scaff = mask_gtf_recs.begin();
 	}
 	
+    // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
+    // samples will clobber each other
     void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
-        ref_mRNAs = mRNAs;
+        ref_mRNAs.clear();
+        for (vector<shared_ptr<Scaffold> >::const_iterator i = mRNAs.begin(); i < mRNAs.end(); ++i)
+        {
+            ref_mRNAs.push_back(shared_ptr<Scaffold>(new Scaffold(**i)));
+        }
+        
         RefID last_id = 0;
         for (vector<shared_ptr<Scaffold> >::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
         {
