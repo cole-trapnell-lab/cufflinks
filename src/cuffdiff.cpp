@@ -652,7 +652,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	vector<ReplicatedBundleFactory> bundle_factories;    
     vector<HitFactory*> all_hit_factories;
     
-
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
         vector<string> sam_hit_filenames;
