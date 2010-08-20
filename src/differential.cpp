@@ -496,8 +496,13 @@ void add_to_tracking_table(Abundance& ab,
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
 								 ab.FPKM(), 
 								 ab.FPKM_variance());
+    
+    
 	
-	inserted.first->second.fpkm_series.push_back(r1);
+    vector<FPKMContext>& fpkms = inserted.first->second.fpkm_series;
+    fpkms.push_back(r1);
+     // TODO: remove this assert
+    //assert (inserted.first->second.fpkm_series.size() <= 2);
 }
 
 string bundle_locus_tag(const RefSequenceTable& rt, 

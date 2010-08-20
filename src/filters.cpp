@@ -38,15 +38,15 @@ void filter_introns(int bundle_length,
 	{
 		bundle_avg_doc = major_isoform_intron_doc(intron_doc);
 		bundle_avg_thresh = fraction * bundle_avg_doc;
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\tFiltering bundle introns, avg (intron) doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
-//#endif
+#if ASM_VERBOSE
+		fprintf(stderr, "\tFiltering bundle introns, avg (intron) doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
+#endif
 	}
 	else
 	{
-//#if ASM_VERBOSE
-//		fprintf(stderr, "\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
-//#endif	
+#if ASM_VERBOSE
+		fprintf(stderr, "\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
+#endif	
 	}
 	
 	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
@@ -127,10 +127,10 @@ void filter_introns(int bundle_length,
 		}
 	}
 	
-//#if ASM_VERBOSE
-//	
-//	fprintf(stderr, "\tIntron filtering pass finished\n");
-//#endif	
+#if ASM_VERBOSE
+	
+	fprintf(stderr, "\tIntron filtering pass finished: excluded %d fragments\n", (int)hits.size() - (int)filtered_hits.size());
+#endif	
 	hits = filtered_hits;
 }
 
@@ -805,7 +805,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
         else
         {
 #if ASM_VERBOSE
-            fprintf(stderr, "Filtering isoform\n");
+            fprintf(stderr, "Filtering isoform %d-%d\n", transcripts[t]->transfrag()->left(), transcripts[t]->transfrag()->right());
 #endif
         }
 	}
@@ -850,7 +850,7 @@ void filter_junk_genes(vector<Gene>& genes)
         else
         {
 #if ASM_VERBOSE
-            fprintf(stderr, "Filtering transfrags from gene\n");
+            fprintf(stderr, "Filtering transfrags from gene %d-%d\n", g.left(), g.right());
 #endif
         }
 	}

@@ -238,7 +238,7 @@ public:
 			if(next_bundle==-1)
 				break;
 			
-			if (out_bundle._ref_scaffs.size()==0 || out_bundle._ref_scaffs.back().get() != next_scaff.get()) 
+			if (out_bundle._ref_scaffs.size()==0 || out_bundle._ref_scaffs.back()->annotated_trans_id() != next_scaff->annotated_trans_id()) 
 				out_bundle._ref_scaffs.push_back(next_scaff);
 			indices[next_bundle]++;
 		}

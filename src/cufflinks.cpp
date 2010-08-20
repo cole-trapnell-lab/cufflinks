@@ -305,7 +305,28 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		const MateHit& hit = bundle.hits()[i];
 		hits.push_back(Scaffold(hit));
 	}
+    
+    vector<int> depth_of_coverage(bundle.length(),0);
+	vector<double> scaff_doc;
+	map<pair<int,int>, int> intron_doc;
 	
+	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
+	double bundle_avg_doc = compute_doc(bundle.left(), 
+										hits, 
+										depth_of_coverage, 
+										intron_doc,
+										true);
+    
+    if (bundle_avg_doc > 3000)
+    {
+        filter_introns(bundle.length(), 
+                       bundle.left(), 
+                       hits, 
+                       min_isoform_fraction, 
+                       false,
+                       true);
+    }
+    
 	vector<uint8_t> strand_guess(bundle.length(), CUFF_STRAND_UNKNOWN);
 	guess_strand(bundle.left(),
 				 hits,
