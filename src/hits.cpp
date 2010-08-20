@@ -62,6 +62,11 @@ bool hits_equals(const MateHit& lhs, const MateHit& rhs)
 	return true;
 }
 
+bool has_no_collapse_mass(const MateHit& hit)
+{
+	return hit.collapse_mass() == 0;
+}
+
 // Assumes hits are sorted by mate_hit_lt
 void collapse_hits(const vector<MateHit>& hits,
 				   vector<MateHit>& non_redundant)
@@ -86,6 +91,8 @@ void collapse_hits(const vector<MateHit>& hits,
 		
 		++curr_aln;
 	}
+	
+	non_redundant.erase(remove_if(non_redundant.begin(),non_redundant.end(),has_no_collapse_mass), non_redundant.end()); 
 	
 }
 

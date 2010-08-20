@@ -152,7 +152,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		delete bundle_ptr;
 	}
 	bl.normalizeParameters();
-	bl.output();
+	//bl.output();
 }
 
 void process_bundle(HitBundle& bundle, BiasLearner& bl)
@@ -404,7 +404,10 @@ void BiasLearner::normalizeParameters()
 		{
 			_posParams(i,j) /= posParam_sums[j];
 			_posExp(i,j) /= posExp_sums[j];
-			_posParams(i,j) /= _posExp(i,j);
+			if (_posExp(i,j) == 0)
+				_posParams(i,j) = numeric_limits<long double>::max();
+			else
+				_posParams(i,j) /= _posExp(i,j);
 		}
 	}
 	ublas::matrix<long double> startExp_sums;
@@ -443,6 +446,7 @@ void BiasLearner::normalizeParameters()
 			}
 
 		}
+	ones(_posParams);
 }
 
 void BiasLearner::output()
@@ -592,6 +596,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	vector<double> pos_bias(trans_len+1, 1.0);
 	double mean_start_bias = 1.0;
 	double mean_end_bias = 1.0;
+	double eff_len = 0.0;
 	
 	if (rgp->bias_learner()!=NULL && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
 	{
@@ -609,13 +614,11 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 		for(int i = 0; i <= trans_len - l; i++)
 		{
 			tot += start_bias[i]*pos_bias[i]*end_bias[i+l-1];
-			if(frag_len_dist->pdf(l) > 0) // Avoid issues where pos_bias is nan
-			{
-				start += start_bias[i]*pos_bias[i];
-				end += end_bias[i+l-1];
-			}
+			start += start_bias[i]*pos_bias[i];
+			end += end_bias[i+l-1];
 		}
 		tot_bias_for_len[l] = tot;
+		eff_len += tot * frag_len_dist->pdf(l);
 		mean_start_bias += start * frag_len_dist->pdf(l);
 		mean_end_bias += end * frag_len_dist->pdf(l); 
 	}
@@ -624,6 +627,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	_end_biases.push_back(end_bias);
 	_pos_biases.push_back(pos_bias);
 	_tot_biases_for_len.push_back(tot_bias_for_len);
+	_eff_lens.push_back(eff_len);
 	_mean_start_biases.push_back(mean_start_bias);
 	_mean_end_biases.push_back(mean_end_bias);
 	_rg_masses.push_back(0.0);
@@ -683,24 +687,29 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 
 double BiasCorrectionHelper::get_effective_length()
 {
-	double tot_mass = accumulate( _rg_masses.begin(), _rg_masses.end(), 0.0 );
 	
+	if (_size==0)
+		return _transcript->length();
+
+	
+	double tot_mass = accumulate( _rg_masses.begin(), _rg_masses.end(), 0.0 );
 	double eff_len = 0.0;
+	
+	if (tot_mass==0)
+		return _transcript->length();
+	
     for (map<shared_ptr<ReadGroupProperties const>, int>::iterator itr = _rg_index.begin();
          itr != _rg_index.end();
          ++itr)
 	{
 		int i = itr->second;
-		double rg_eff_len = 0.0;
-		shared_ptr<const EmpDist> frag_len_dist = itr->first->frag_len_dist();
-		for(int l = frag_len_dist->min(); l <= _transcript->length(); l++)
-			rg_eff_len += frag_len_dist->pdf(l) * _tot_biases_for_len[i][l];
-		if(tot_mass == 0)
-			eff_len += rg_eff_len / _size;
-		else
-			eff_len += rg_eff_len * (_rg_masses[i]/tot_mass);
+		double rg_eff_len = _eff_lens[i];
+		eff_len += rg_eff_len * (_rg_masses[i]/tot_mass);
 	}
 	
+	
+	
+	assert(eff_len>0);
 	assert(!isnan(eff_len));
 	return eff_len;
 }
