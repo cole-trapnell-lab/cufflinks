@@ -735,6 +735,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         }
         else
         {
+            past_right_end = true;
             const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
             const char* last_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
             
