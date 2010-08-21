@@ -776,7 +776,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			
 			bundle.add_open_hit(read_group_properties(), bh);
 		}
-		else if (bh->left() > right_bundle_boundary)
+		else if (bh->left() > right_bundle_boundary || bh->ref_id() != first_ref_id_seen)
 		{
 			_hit_fac.undo_hit();
 			break;
