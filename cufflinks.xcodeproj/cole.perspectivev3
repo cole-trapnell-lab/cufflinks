@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ActivePerspectiveName</key>
-	<string>Project</string>
+	<string>Debug</string>
 	<key>AllowedModules</key>
 	<array>
 		<dict>
@@ -302,8 +302,6 @@
 							<string>MainColumn</string>
 							<real>267</real>
 						</array>
-						<key>RubberWindowFrame</key>
-						<string>0 129 1680 899 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -314,8 +312,6 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -333,7 +329,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED71048C1220590400A4BBDF</string>
+										<string>ED7104A712205D2500A4BBDF</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0E0F11D8323B00CFD663</string>
@@ -347,7 +343,7 @@
 											<string>EDBEA6BF11ED3DD100C661A7</string>
 											<string>ED70726B11F79D170028F305</string>
 											<string>ED71044012203EED00A4BBDF</string>
-											<string>ED71048B1220590400A4BBDF</string>
+											<string>ED71049312205AAE00A4BBDF</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -362,8 +358,6 @@
 							<dict>
 								<key>Frame</key>
 								<string>{{0, 0}, {1391, 479}}</string>
-								<key>RubberWindowFrame</key>
-								<string>0 129 1680 899 0 0 1680 1028 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -387,8 +381,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {1391, 347}}</string>
-										<key>RubberWindowFrame</key>
-										<string>0 129 1680 899 0 0 1680 1028 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -515,6 +507,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXProjectModuleGUID</key>
@@ -526,6 +520,8 @@
 					<dict>
 						<key>Frame</key>
 						<string>{{0, 0}, {1680, 140}}</string>
+						<key>RubberWindowFrame</key>
+						<string>0 129 1680 899 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugCLIModule</string>
@@ -600,7 +596,11 @@
 							</array>
 							<key>Frame</key>
 							<string>{{787, 0}, {893, 335}}</string>
+							<key>RubberWindowFrame</key>
+							<string>0 129 1680 899 0 0 1680 1028 </string>
 						</dict>
+						<key>RubberWindowFrame</key>
+						<string>0 129 1680 899 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugSessionModule</string>

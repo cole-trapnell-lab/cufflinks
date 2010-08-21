@@ -660,7 +660,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 
         assert(left_bundle_boundary != -1);
 		
-
+        if ((*next_ref_scaff)->annotated_trans_id() == "NM_000029")
+        {
+            int a = 3;
+        }
 
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
@@ -718,11 +721,16 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
             break;
         }
         
+        bool past_right_end = false;
         if (last_hit_ref_id_seen == 0 || bh->ref_id() == first_ref_id_seen)
         {
-            if (bh->left() >= left_bundle_boundary && bh->left() <= right_bundle_boundary)
+            if (bh->left() >= left_bundle_boundary && bh->right() <= right_bundle_boundary)
             {
                 hit_within_boundary = true;
+            }
+            else if (bh->left() >= right_bundle_boundary)
+            {
+                past_right_end = true;
             }
         }
         else
@@ -776,7 +784,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			
 			bundle.add_open_hit(read_group_properties(), bh);
 		}
-		else if (bh->left() > right_bundle_boundary || bh->ref_id() != first_ref_id_seen)
+		else if (past_right_end)
 		{
 			_hit_fac.undo_hit();
 			break;
