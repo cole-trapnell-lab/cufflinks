@@ -555,14 +555,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         // reference transcript, whichever is first in the stream
 		if (left_bundle_boundary == -1)
         {
-//            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end())
-//            {
-//                if ((*next_ref_scaff)->annotated_trans_id() == "TCONS_000000371:")
-//                {
-//                    int a = 3;
-//                }
-//            }
-            
             if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL) // We're not done
             {
                 if (bh->ref_id() != (*next_ref_scaff)->ref_id())
@@ -629,19 +621,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                     first_ref_id_seen = (*next_ref_scaff)->ref_id();
                 }
 
-//                else if ((*next_ref_scaff)->right() <= bh->left())
-//                {
-//                    left_bundle_boundary = (*next_ref_scaff)->left();
-//                    right_bundle_boundary = (*next_ref_scaff)->right();
-//                    first_ref_id_seen = (*next_ref_scaff)->ref_id();
-//                }
-//                else 
-//                {
-//                    assert (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),bh->left(), bh->right()));
-//                    left_bundle_boundary = min((*next_ref_scaff)->left(), bh->left());
-//                    right_bundle_boundary = max((*next_ref_scaff)->right(), bh->right());
-//                }
-
             }
             else if (!ref_mRNAs.empty())
             {
@@ -678,11 +657,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                 }
             }
         }
-        
+
         assert(left_bundle_boundary != -1);
 		
-		if ((*next_ref_scaff)->annotated_trans_id()=="NM_000029")
-			fprintf(stderr,"HERE\n");
+
 
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
@@ -798,7 +776,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 			
 			bundle.add_open_hit(read_group_properties(), bh);
 		}
-		else
+		else if (bh->left() > right_bundle_boundary)
 		{
 			_hit_fac.undo_hit();
 			break;
