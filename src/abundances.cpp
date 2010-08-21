@@ -978,8 +978,8 @@ void compute_fisher(const vector<shared_ptr<Abundance> >& transcripts,
 	for (int j = 0; j < N; ++j)
 	{
 		const vector<double>& cond_probs_j = *(transcripts[j]->cond_probs());
-	for (int x = 0; x < M; ++x)
-	{
+		for (int x = 0; x < M; ++x)
+		{
 			if (cond_probs_j[x]==0)
 				continue;
 			long double alpha = 0.0;

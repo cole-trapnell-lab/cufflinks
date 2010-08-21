@@ -605,7 +605,8 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	
 	shared_ptr<EmpDist const> frag_len_dist = rgp->frag_len_dist();
 	
-	vector<double> tot_bias_for_len(trans_len+1,1.0);
+	vector<double> tot_bias_for_len(trans_len+1, 0);
+	tot_bias_for_len[trans_len] = trans_len;
 	for(int l = rgp->frag_len_dist()->min(); l <= trans_len; l++)
 	{
 		double tot = 0;
@@ -617,10 +618,11 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 			start += start_bias[i]*pos_bias[i];
 			end += end_bias[i+l-1];
 		}
-		tot_bias_for_len[l] = tot;
-		eff_len += tot * frag_len_dist->pdf(l);
-		mean_start_bias += start * frag_len_dist->pdf(l);
-		mean_end_bias += end * frag_len_dist->pdf(l); 
+		double p_len = frag_len_dist->pdf(l);
+		tot_bias_for_len[l] += tot;
+		eff_len += tot * p_len;
+		mean_start_bias += start * p_len;
+		mean_end_bias += end * p_len; 
 	}
 	
 	_start_biases.push_back(start_bias);
