@@ -619,7 +619,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 			end += end_bias[i+l-1];
 		}
 		double p_len = frag_len_dist->pdf(l);
-		tot_bias_for_len[l] += tot;
+		tot_bias_for_len[l] = tot;
 		eff_len += tot * p_len;
 		mean_start_bias += start * p_len;
 		mean_end_bias += end * p_len; 

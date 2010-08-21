@@ -589,6 +589,8 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	vector<shared_ptr<Abundance> > abundances;
 	foreach(shared_ptr<Scaffold> s, scaffolds)
 	{
+		if (s->annotated_trans_id() == "NM_000029")
+			fprintf(stderr, "HERE FIRST\n");
 		TranscriptAbundance* pT = new TranscriptAbundance;
 		pT->transfrag(s);
 		shared_ptr<Abundance> ab(pT);

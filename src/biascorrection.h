@@ -91,6 +91,8 @@ public:
 	
 	BiasCorrectionHelper(shared_ptr<Scaffold> transcript) 
 	{ 
+		if (transcript->annotated_trans_id()=="NM_000029")
+			fprintf(stderr,"HERE\n");
 		_transcript = transcript;
 		_mapped = false;
 		_size = 0; 

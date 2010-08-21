@@ -550,7 +550,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	{
         shared_ptr<ReadHit> bh = next_valid_alignment();
         
-        // Initialize the bundle boundaries using the hit or the next 
+
+		// Initialize the bundle boundaries using the hit or the next 
         // reference transcript, whichever is first in the stream
 		if (left_bundle_boundary == -1)
         {
@@ -562,7 +563,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 //                }
 //            }
             
-            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL)
+            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL) // We're not done
             {
                 if (bh->ref_id() != (*next_ref_scaff)->ref_id())
                 {
@@ -605,6 +606,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
                     
                     continue;
                 }
+				
                 if ((bh->ref_id() == (*next_ref_scaff)->ref_id() &&
                      bh->right() <= (*next_ref_scaff)->left()))
                 {
@@ -678,6 +680,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         }
         
         assert(left_bundle_boundary != -1);
+		
+		if ((*next_ref_scaff)->annotated_trans_id()=="NM_000029")
+			fprintf(stderr,"HERE\n");
 
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
