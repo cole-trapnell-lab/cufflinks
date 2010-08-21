@@ -659,11 +659,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
         }
 
         assert(left_bundle_boundary != -1);
-		
-        if ((*next_ref_scaff)->annotated_trans_id() == "NM_000029")
-        {
-            int a = 3;
-        }
 
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
