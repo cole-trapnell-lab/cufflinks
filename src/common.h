@@ -47,7 +47,7 @@ extern float pre_mrna_fraction;
 
 extern int num_threads;
 
-static const int bowtie_overhang_tolerance = 8;
+extern int bowtie_overhang_tolerance;
 extern float min_isoform_fraction;
 //extern float min_isoform_fraction;
 extern float max_phred_err_prob;
@@ -191,5 +191,6 @@ void init_library_table();
 #define OPT_MLE_MAX_ITER		261
 #define OPT_FDR					262
 #define OPT_LIBRARY_TYPE        263
+#define OPT_OVERHANG_TOLERANCE  264
 
 #endif

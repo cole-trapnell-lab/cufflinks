@@ -46,6 +46,8 @@ int max_frag_len = 1000;
 int min_frag_len = 1;
 int olap_radius = 50;
 
+int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
+
 float min_isoform_fraction = 0.1;
 //float min_isoform_fraction = 0.1;
 float pre_mrna_fraction = 0.25;

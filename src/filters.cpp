@@ -289,10 +289,10 @@ void pre_mrna_filter(int bundle_length,
                 if (hit_doc_in_region < thresh)
                 {
                     toss[j] = true;
-                    if (hits[j].has_intron())
-                    {
-                        fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-                    }
+//                    if (hits[j].has_intron())
+//                    {
+//                        fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//                    }
                 }
             }
 		}
@@ -589,10 +589,10 @@ void filter_hits(int bundle_length,
 						if (doc < thresh)
 						{
 							toss[j] = true; 
-							if (hits[j].has_intron())
-							{
-								fprintf(stderr, "\t^^^Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-							}
+//							if (hits[j].has_intron())
+//							{
+//								fprintf(stderr, "\t^^^Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+//							}
 						}
 					}
 				}

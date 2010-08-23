@@ -59,6 +59,8 @@ static struct option long_options[] = {
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
+{"overhang-tolerance",      required_argument,		 0,			 OPT_OVERHANG_TOLERANCE},
+
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"library-type",		 required_argument,		     0,			 OPT_LIBRARY_TYPE},
@@ -92,6 +94,7 @@ void print_usage()
 	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
 #endif
 	fprintf(stderr, "\nAdvanced Options:\n\n");
+    fprintf(stderr, "--overhang-tolerance         number of terminal exon bp to tolerate in introns     [ default:      8 ]\n");
 	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "--library-type               Library prep used for input reads                     [ default:  below ]\n");
@@ -141,6 +144,9 @@ int parse_options(int argc, char** argv)
 				break;
 			case 'A':
 				small_anchor_fraction = parseFloat(0, 1.0, "-A/--small-anchor-fraction must be  between 0 and 1.0", print_usage);
+				break;
+            case OPT_OVERHANG_TOLERANCE:
+				bowtie_overhang_tolerance = parseInt(0, "--overhang-tolerance must be at least 0", print_usage);
 				break;
 			case OPT_NUM_IMP_SAMPLES:
 				num_importance_samples = parseInt(1, "--num-importance-samples must be at least 1", print_usage);
