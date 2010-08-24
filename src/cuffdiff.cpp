@@ -764,19 +764,20 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 break;
             }
         }
-        if (non_empty_bundle)
-        {
-            RefID bundle_chr_id = sample_bundles->front()->ref_id();
-            assert (bundle_chr_id != 0);
-            const char* chr_name = rt.get_name(bundle_chr_id);
-            assert (chr_name);
-            fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
-                    chr_name,
-                    sample_bundles->front()->left(),
-                    sample_bundles->front()->right());
+
+        RefID bundle_chr_id = sample_bundles->front()->ref_id();
+        assert (bundle_chr_id != 0);
+        const char* chr_name = rt.get_name(bundle_chr_id);
+        assert (chr_name);
+        fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
+                chr_name,
+                sample_bundles->front()->left(),
+                sample_bundles->front()->right());
         
         
 #if ENABLE_THREADS			
+        if (non_empty_bundle)
+        {
             thread_pool_lock.lock();
             curr_threads++;
             thread_pool_lock.unlock();
@@ -786,14 +787,25 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                               sample_bundles, 
                               boost::ref(tests),
                               boost::ref(tracking));
-
-#else
+        }
+        else 
+        {
+            // if the whole bundle is empty, just deal with it in the 
+            // main thread and save the overhead, since we'll be done
+            // super quickly.
             quantitation_worker(boost::cref(rt), 
                                 sample_bundles, 
                                 boost::ref(tests),
                                 boost::ref(tracking));
-#endif
         }
+
+#else
+        quantitation_worker(boost::cref(rt), 
+                            sample_bundles, 
+                            boost::ref(tests),
+                            boost::ref(tracking));
+#endif
+
 	}
 	
 	// wait for the workers to finish up before reporting everthing.
@@ -859,19 +871,20 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 break;
             }
         }
+
+        RefID bundle_chr_id = sample_bundles->front()->ref_id();
+        assert (bundle_chr_id != 0);
+        const char* chr_name = rt.get_name(bundle_chr_id);
+        assert (chr_name);
+        fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
+                chr_name,
+                sample_bundles->front()->left(),
+                sample_bundles->front()->right());
+			
+			
+#if ENABLE_THREADS	
         if (non_empty_bundle)
         {
-            RefID bundle_chr_id = sample_bundles->front()->ref_id();
-            assert (bundle_chr_id != 0);
-            const char* chr_name = rt.get_name(bundle_chr_id);
-            assert (chr_name);
-            fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
-                    chr_name,
-                    sample_bundles->front()->left(),
-                    sample_bundles->front()->right());
-			
-			
-#if ENABLE_THREADS			
             thread_pool_lock.lock();
             curr_threads++;
             thread_pool_lock.unlock();
@@ -881,14 +894,21 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                               sample_bundles, 
                               boost::ref(tests),
                               boost::ref(tracking));
-			
-#else
+        }
+        else 
+        {
             quantitation_worker(boost::cref(rt), 
                                 sample_bundles, 
                                 boost::ref(tests),
                                 boost::ref(tracking));
-#endif
         }
+#else
+        quantitation_worker(boost::cref(rt), 
+                            sample_bundles, 
+                            boost::ref(tests),
+                            boost::ref(tracking));
+#endif
+
 	}
 	
 	// wait for the workers to finish up before reporting everthing.

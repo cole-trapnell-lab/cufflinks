@@ -483,13 +483,13 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
 		end=gffline->fend;
 		isCDS=gffline->is_cds; //for now
     addExon(gffline, keepAttr, noExonAttr);
-		if (keepAttr && noExonAttr) {
+		if (keepAttr && (noExonAttr || attrs == NULL)) {
 			//simply move the attrs from this first exon
 			//to the transcript
-      if (exons.First()->attrs!=NULL) {
-			attrs=exons.First()->attrs;
-			exons.First()->attrs=NULL;
-		}
+          if (exons.First()->attrs!=NULL) {
+                attrs=exons.First()->attrs;
+                exons.First()->attrs=NULL;
+            }
     }
     } //GTF line
 	else { //GffReader made sure this is a parent line (no parent)
