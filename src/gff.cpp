@@ -690,7 +690,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
   phash.Clear();
 }
 
-//this may be called prematurely if exon records are not grouped by parent
+//this may be called prematurely if exon records are not grouped by parent!
 GffObj* GffObj::finalize(bool mergeCloseExons) {
  udata=0;
  uptr=NULL;
@@ -703,6 +703,10 @@ GffObj* GffObj::finalize(bool mergeCloseExons) {
        int dist=(int)(exons[ni]->start-mend);
        if (dist<0 || dist>mindist) break; //no merging with next segment
        mend=exons[ni]->end;
+       covlen-=exons[i]->len();
+       exons[i]->end=mend;
+       covlen+=exons[i]->len();
+       covlen-=exons[ni]->len();
        exons[i]->end=mend;
        if (exons[ni]->attrs!=NULL && (exons[i]->attrs==NULL || 
             exons[i]->attrs->Count()<exons[ni]->attrs->Count())) {
