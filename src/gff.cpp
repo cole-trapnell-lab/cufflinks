@@ -707,7 +707,6 @@ GffObj* GffObj::finalize(bool mergeCloseExons) {
        exons[i]->end=mend;
        covlen+=exons[i]->len();
        covlen-=exons[ni]->len();
-       exons[i]->end=mend;
        if (exons[ni]->attrs!=NULL && (exons[i]->attrs==NULL || 
             exons[i]->attrs->Count()<exons[ni]->attrs->Count())) {
               //use the other exon attributes, if more
