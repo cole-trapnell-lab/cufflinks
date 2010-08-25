@@ -19,6 +19,7 @@ const byte exMskMinSpliceL = 0x04;
 const byte exMskMinSpliceR = 0x08;
 const byte exMskTag = 0x80;
 */
+
 //reserved Gffnames::feats entries
 extern const int gff_fid_mRNA;
 extern const int gff_fid_exon;
@@ -147,20 +148,6 @@ protected:
    GffNameInfo(const char* n) {
      name=Gstrdup(n);
      }
-   /*
-   GffNameInfo(const char* n, bool strshared=false) {
-     idx=-1;
-     if (strshared) {
-        shared=1;
-        name=(char *)n;
-        }
-     else {
-        shared=0;
-        name = (n==NULL) ? NULL : Gstrdup(n);
-        }
-     }
-     */
-
    ~GffNameInfo() {
       //if (shared==0)
           GFREE(name);
@@ -176,14 +163,6 @@ protected:
      return (strcmp(this->name, d.name)<0);
      }
 };
-
-/*
- int compareNameId(const pointer item1, const pointer item2) {
-  GffNameInfo* ni1=(GffNameInfo*)item1;
-  GffNameInfo* ni2=(GffNameInfo*)item2;
-  return (ni1->id > ni2->id )? 1 : (ni1->id==ni2->id ? 0 : -1);
-}
-*/
 
 class GffNameList:public GList<GffNameInfo> {
   friend class GffNameInfo;
@@ -374,10 +353,6 @@ public:
 
   int addExon(GffLine* gl, bool keepAttr=false, bool noExonAttr=true);
   void removeExon(int idx);
-  /*
-  uint  gstart; // global feature coordinates on genomic sequence
-  uint  gend;   // ALWAYS gstart <= gend
-  */
   char  strand; //true if features are on the reverse complement strand
   double gscore;
   double uscore; //custom, user-computed score, if needed
@@ -394,7 +369,11 @@ public:
    //if gfline->Parent!=NULL then this will also add the first sub-feature
    // otherwise, only the main feature is created
   void clearAttrs() {
-    if (attrs!=NULL) { delete attrs; attrs=NULL; }
+    if (attrs!=NULL) {
+      bool sharedattrs=(exons.Count()>0 && exons[0]->attrs==attrs);
+      delete attrs; attrs=NULL;
+      if (sharedattrs) exons[0]->attrs=NULL;
+      }
     }
   GffObj(char* anid=NULL):GSeg(0,0), exons(true,true,true) { //exons: sorted, free, unique
        gffID=NULL;
@@ -417,10 +396,6 @@ public:
        CDphase=0;
        gseq_id=-1;
        track_id=-1;
-       /*
-       gstart=0;
-       gend=0;
-       */
        xstart=0;
        xend=0;
        xstatus=0;
@@ -434,15 +409,9 @@ public:
    ~GffObj() {
        GFREE(gffID);
        GFREE(gname);
-       if (attrs!=NULL) delete attrs;
+       clearAttrs();
        gffnames_unref(names);
        }
-   /*
-    void addFeature(GffLine* gfline);
-    int getFeatureId(int fnid);
-    int getFeatureId(const char* fname);
-    GFeature* hasFeature(char* parentID);
-    void promote(GFeature* subf, GffLine* gfline); */
    //--------------
    GffObj* finalize(bool mergeCloseExons=false); //finalize parsing: must be called in order to merge adjacent/close proximity subfeatures
    void parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr=false);
@@ -459,10 +428,29 @@ public:
      if (attrs==NULL) return NULL;
      return names->attrs.getName(attrs->Get(i)->attr_id);
      }
-   char* getAttr(const char* atrname) {
-     if (attrs==NULL || names==NULL || atrname==NULL) return NULL;
-     return attrs->getAttr(names, atrname);
+   char* getAttr(const char* attrname, bool checkFirstExon=false) {
+     if (names==NULL || attrname==NULL) return NULL;
+     char* r=NULL;
+     if (attrs==NULL) {
+         if (!checkFirstExon) return NULL;
+         }
+       else r=attrs->getAttr(names, attrname);
+     if (r!=NULL) return r;
+     if (checkFirstExon && exons.Count()>0) {
+        r=exons[0]->getAttr(names, attrname);
+        }
+     return r; 
      }
+
+   char* getExonAttr(GffExon* exon, const char* attrname) {
+      if (exon==NULL || attrname==NULL) return NULL;
+      return exon->getAttr(names, attrname);
+      }
+
+   char* getExonAttr(int exonidx, const char* attrname) {
+      if (exonidx<0 || exonidx>=exons.Count() || attrname==NULL) return NULL;
+      return exons[exonidx]->getAttr(names, attrname);
+      }
 
    char* getAttrValue(int i) {
      if (attrs==NULL) return NULL;
@@ -474,23 +462,7 @@ public:
    const char* getTrackName() {
      return names->tracks.getName(track_id);
      }
-   /* 
-   bool overlap(GffObj* mrna) {
-     //basic overlap: just segment ends
-     return overlap(*mrna);
-     }
-   bool overlap(GffObj& d) {
-      //ignores strand and gseq_id -- the user must do that in advance
-     // just rough locus overlap, exons may not overlap
-      return (gstart<d.gstart ? (d.gstart<=gend) : (gstart<=d.gend));
-      }
-
-    bool overlap(uint s, uint e) {
-      if (s>e) swap(s,e);
-      return (gstart<s ? (s<=gend) : (gstart<=e));
-      }
-    */
-    bool exonOverlap(uint s, uint e) {//check if ANY exon overlaps given segment
+   bool exonOverlap(uint s, uint e) {//check if ANY exon overlaps given segment
       //ignores strand!
       if (s>e) swap(s,e);
       for (int i=0;i<exons.Count();i++) {
@@ -506,7 +478,6 @@ public:
             if (exons[i]->start>m.exons[j]->end) continue;
             if (m.exons[j]->start>exons[i]->end) break;
             //-- overlap if we are here:
-            // if (exons[i]->overlap(m.exons[j])) return true;
             return true;
             }
          }
@@ -654,20 +625,8 @@ public:
      }
    char* getID() { return gffID; }
    char* getGene() { return gname; }
-   //void calcScore();
-   /*int exonCount() { return exoncount; }
-   GffExon* getExonSegs() { return exons; }
-   int cdsCount() { return cdscount; }
-   GffExon* getCDSegs() { return cds; } */
-
-   /* bool validateMapping(int qrylen, bool pmap_parsing, int minpid,
-                                         int mincov, int maxintron);*/
-   /* int addSeg(char* feat, int nstart, int nend, int sc=0, char fr='.',
-                                          char* tid=NULL, char* tinfo=NULL);*/
    int addSeg(GffLine* gfline);
    int addSeg(int fnid, GffLine* gfline);
-    // (int fnid, char* feat, int nstart, int nend, int sc=0,
-    //                           char fr='.', char* tid=NULL, char* tinfo=NULL);
    void getCDSegs(GArray<GffCDSeg>& cds);
    void printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
                                 uint segstart, uint segend, int exidx, char phase, bool gff3);
@@ -692,8 +651,6 @@ public:
    //bool validCDS(GFaSeqGet* faseq); //has In-Frame Stop Codon ?
    bool empty() { return (start==0); }
 };
-
-//int cmpGMapScore(const pointer a, const pointer b);
 
 typedef bool GffRecFunc(GffObj* gobj, void* usrptr1, void* usrptr2);
 //user callback after parsing a mapping object:
@@ -803,12 +760,13 @@ class GffReader {
 
   GffLine* nextGffLine();
 
-  // parse -> block parsing functions -- do not use, 
-  // they always assume that subfeatures (exons) are grouped together by parent
+  // parse* - block parsing functions -- do not use, 
+  //  they always assume that subfeatures (exons) are grouped together by parent
+  //  but unfortunately GFF doesn't require this
   GffObj* parse(bool keepAttr=false, bool noExonAttr=true);
   void parseAll(GffRecFunc* gproc, bool keepAttr=false, bool noExonAttr=true, void* userptr1=NULL, void* userptr2=NULL);
 
-  // use this instead of parse: load all subfeatures, re-group them in memory:
+  // use this instead of parse* functions: load all subfeatures, re-group them in memory:
   void readAll(bool keepAttr=false, bool mergeCloseExons=false, bool noExonAttr=true); //just reads all gff records into gflst GList
 
 }; // end of GffReader

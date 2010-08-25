@@ -288,8 +288,15 @@ int GffObj::addExon(GffLine* gl, bool keepAttr, bool noExonAttr) {
       udata=1;//merge 0-distance segments
   int eidx=addExon(gl->fstart, gl->fend, gl->score, gl->phase,
          gl->qstart,gl->qend, gl->is_cds, gl->exontype);
-  if (eidx>=0 && keepAttr) {
-      parseAttrs(exons[eidx]->attrs, gl->info, noExonAttr);
+  if (eidx<0) return eidx; //this should never happen
+  if (keepAttr) {
+     if (noExonAttr) { 
+         if (attrs==NULL) //place the parsed attributes directly at transcript level
+           parseAttrs(attrs, gl->info, noExonAttr);
+         }
+       else { //need all exon-level attributes
+         parseAttrs(exons[eidx]->attrs, gl->info, noExonAttr);
+         }
       }
   return eidx;
 }
@@ -468,13 +475,13 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
 		else {
 			//group of other subfeatures of type ftype:
 			ftype_id=names->feats.addName(gffline->ftype);
-        }
+			}
 		gffID=gffline->Parent;
 		gffline->Parent=NULL; //just take over
 		if (gffline->gname!=NULL) {
 			gname=gffline->gname;
 			gffline->gname=NULL;
-        }
+			}
 		gseq_id=names->gseqs.addName(gffline->gseqname);
 		track_id=names->tracks.addName(gffline->track);
 		strand=gffline->strand;
@@ -482,17 +489,11 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
 		start=gffline->fstart;
 		end=gffline->fend;
 		isCDS=gffline->is_cds; //for now
-    addExon(gffline, keepAttr, noExonAttr);
-		if (keepAttr && (noExonAttr || attrs == NULL)) {
-			//simply move the attrs from this first exon
-			//to the transcript
-          if (exons.First()->attrs!=NULL) {
-                attrs=exons.First()->attrs;
-                exons.First()->attrs=NULL;
-            }
-    }
-    } //GTF line
-	else { //GffReader made sure this is a parent line (no parent)
+		addExon(gffline, keepAttr, noExonAttr); 
+		//this parses attrs and if noExonAttr is true attrs are
+		//assigned directly at transcript level
+	} //no-parent GTF line
+	else { //GffReader made sure this is a parent line (with no parent)
 		//even for a mRNA with a Parent= line
 		gscore=gffline->score;
 		if (gffline->ID==NULL || gffline->ID[0]==0)
