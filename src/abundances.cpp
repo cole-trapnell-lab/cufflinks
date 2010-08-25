@@ -501,8 +501,10 @@ void AbundanceGroup::calculate_FPKM_variance()
     }
     
     double mass_coeff = (1000000000 * mass_fraction());
-	
-    _FPKM_variance = mass_coeff * gamma() + (mass_coeff * mass_coeff * var_cumul_gamma);
+	//double left = (mass_coeff * gamma());
+    double eff_len = effective_length(); 
+    //double right = (mass_coeff * mass_coeff * var_cumul_gamma);
+    _FPKM_variance = ((mass_coeff * gamma()) / eff_len) + (mass_coeff * mass_coeff * var_cumul_gamma);
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
 
