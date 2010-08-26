@@ -104,8 +104,9 @@ bool test_diffexp(const FPKMContext& curr,
 
 // This performs between-group tests on isoforms or TSS groupings in a single
 // locus, on two different samples.
-int get_de_tests(const Abundance& prev_abundance,
-				 const Abundance& curr_abundance,
+pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
+                 const FPKMContext& prev_abundance,
+				 const FPKMContext& curr_abundance,
 				 SampleDiffs& de_tests,
 				 bool enough_reads)
 {
@@ -113,21 +114,26 @@ int get_de_tests(const Abundance& prev_abundance,
 			
 	SampleDifference test;
 	pair<SampleDiffs::iterator, bool> inserted;
-	inserted = de_tests.insert(make_pair(curr_abundance.description(),
-										 SampleDifference())); 
-	if (curr_abundance.status() == NUMERIC_OK && 
-		prev_abundance.status() == NUMERIC_OK &&
-        curr_abundance.FPKM() > 0 &&
-        prev_abundance.FPKM() > 0)
+//	inserted = de_tests.insert(make_pair(curr_abundance.description(),
+//										 SampleDifference())); 
+    inserted = de_tests.insert(make_pair(description,
+    									 SampleDifference())); 
+	if (curr_abundance.status == NUMERIC_OK && 
+		prev_abundance.status == NUMERIC_OK &&
+        curr_abundance.FPKM > 0 &&
+        prev_abundance.FPKM > 0)
 	{
 		
-		FPKMContext r1(curr_abundance.num_fragments(), 
-					   curr_abundance.FPKM(), 
-					   curr_abundance.FPKM_variance());
-		
-		FPKMContext r2(prev_abundance.num_fragments(), 
-					   prev_abundance.FPKM(), 
-					   prev_abundance.FPKM_variance());
+        const FPKMContext& r1 = curr_abundance;
+        const FPKMContext& r2 = prev_abundance;
+        
+//		FPKMContext r1(curr_abundance.num_fragments(), 
+//					   curr_abundance.FPKM(), 
+//					   curr_abundance.FPKM_variance());
+//		
+//		FPKMContext r2(prev_abundance.num_fragments(), 
+//					   prev_abundance.FPKM(), 
+//					   prev_abundance.FPKM_variance());
 		
 		test.test_status = FAIL;
 
@@ -155,13 +161,9 @@ int get_de_tests(const Abundance& prev_abundance,
 		test.test_status = NOTEST;
 	}
 	
-	test.gene_names = curr_abundance.gene_name();
-	test.protein_ids = curr_abundance.protein_id();
-	test.locus_desc = curr_abundance.locus_tag();
-	test.description = curr_abundance.description();
 	inserted.first->second = test;
 	
-	return total_iso_de_tests;
+	return make_pair(total_iso_de_tests, inserted.first);
 }
 
 double entropy(const ublas::vector<double>& p)
@@ -457,7 +459,8 @@ string make_ref_tag(const string& ref, char classcode)
 	
 	return string(tag_buf);
 }
-void add_to_tracking_table(Abundance& ab,
+void add_to_tracking_table(size_t sample_index,
+                           Abundance& ab,
 						   FPKMTrackingTable& track)
 
 {
@@ -495,12 +498,44 @@ void add_to_tracking_table(Abundance& ab,
 	
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
 								 ab.FPKM(), 
-								 ab.FPKM_variance());
+								 ab.FPKM_variance(),
+                                 ab.status());
     
     
 	
     vector<FPKMContext>& fpkms = inserted.first->second.fpkm_series;
-    fpkms.push_back(r1);
+    if (sample_index < fpkms.size())
+    {
+        // if the fpkm series already has an entry matching this description
+        // for this sample index, then we are dealing with a group of transcripts
+        // that occupies multiple (genomically disjoint) bundles.  We need
+        // to add this bundle's contribution to the FPKM, fragments, and variance 
+        // to whatever's already there.  
+        
+        // NOTE: we can simply sum the FKPM_variances, because we are currently
+        // assuming that transcripts in disjoint bundles share no alignments and 
+        // thus have FPKM covariance == 0;  This assumption will no longer be
+        // true if we decide to do multireads the right way.
+        
+        FPKMContext& existing = fpkms[sample_index];
+        existing.FPKM += r1.FPKM;
+        existing.counts += r1.counts;
+        existing.FPKM_variance += r1.FPKM_variance;
+        if (existing.status == NUMERIC_FAIL || r1.status == NUMERIC_FAIL)
+        {
+            existing.status = NUMERIC_FAIL;
+        }
+        else 
+        {
+            existing.status = NUMERIC_OK;
+        }
+
+    }
+    else 
+    {
+        fpkms.push_back(r1);
+    }
+
      // TODO: remove this assert
     //assert (inserted.first->second.fpkm_series.size() <= 2);
 }
@@ -711,22 +746,22 @@ void test_differential(const RefSequenceTable& rt,
 		const AbundanceGroup& ab_group = samples[i].transcripts;
 		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
-			add_to_tracking_table(*ab, tracking.isoform_fpkm_tracking);
+			add_to_tracking_table(i, *ab, tracking.isoform_fpkm_tracking);
 		}
 		
 		foreach (AbundanceGroup& ab, samples[i].cds)
 		{
-			add_to_tracking_table(ab, tracking.cds_fpkm_tracking);
+			add_to_tracking_table(i, ab, tracking.cds_fpkm_tracking);
 		}
 		
 		foreach (AbundanceGroup& ab, samples[i].primary_transcripts)
 		{
-			add_to_tracking_table(ab, tracking.tss_group_fpkm_tracking);
+			add_to_tracking_table(i, ab, tracking.tss_group_fpkm_tracking);
 		}
 		
 		foreach (AbundanceGroup& ab, samples[i].genes)
 		{
-			add_to_tracking_table(ab, tracking.gene_fpkm_tracking);
+			add_to_tracking_table(i, ab, tracking.gene_fpkm_tracking);
 		}
 	}
 	
@@ -743,35 +778,88 @@ void test_differential(const RefSequenceTable& rt,
                     samples[j].transcripts.abundances().size());
             for (size_t k = 0; k < samples[i].transcripts.abundances().size(); ++k)
             {
-                get_de_tests(*(samples[j].transcripts.abundances()[k]), 
-                             *(samples[i].transcripts.abundances()[k]),
-                             tests.isoform_de_tests[i][j],
-                             enough_reads);
+                const Abundance& curr_abundance = *(samples[j].transcripts.abundances()[k]);
+                const string& desc = curr_abundance.description();
+                FPKMTrackingTable::iterator itr = tracking.isoform_fpkm_tracking.find(desc);
+                assert (itr != tracking.isoform_fpkm_tracking.end());
+                
+                pair<int, SampleDiffs::iterator> result;
+                result = get_de_tests(desc,
+                                      itr->second.fpkm_series[j], 
+                                      itr->second.fpkm_series[i],
+                                      tests.isoform_de_tests[i][j],
+                                      enough_reads);
+                
+                result.second->second.gene_names = curr_abundance.gene_name();
+                result.second->second.protein_ids = curr_abundance.protein_id();
+                result.second->second.locus_desc = curr_abundance.locus_tag();
+                result.second->second.description = curr_abundance.description();
             }
             
             for (size_t k = 0; k < samples[i].cds.size(); ++k)
             {
-                get_de_tests(samples[j].cds[k], 
-                             samples[i].cds[k],
+                const Abundance& curr_abundance = samples[j].cds[k];
+                const string& desc = curr_abundance.description();
+                FPKMTrackingTable::iterator itr = tracking.cds_fpkm_tracking.find(desc);
+                assert (itr != tracking.cds_fpkm_tracking.end());
+                
+                pair<int, SampleDiffs::iterator> result;
+                result = get_de_tests(desc,
+                             itr->second.fpkm_series[j], 
+                             itr->second.fpkm_series[i],
                              tests.cds_de_tests[i][j],
                              enough_reads);
+                
+                result.second->second.gene_names = curr_abundance.gene_name();
+                result.second->second.protein_ids = curr_abundance.protein_id();
+                result.second->second.locus_desc = curr_abundance.locus_tag();
+                result.second->second.description = curr_abundance.description();
             }
             
             for (size_t k = 0; k < samples[i].primary_transcripts.size(); ++k)
             {
-                get_de_tests(samples[j].primary_transcripts[k], 
-                             samples[i].primary_transcripts[k],
+                const Abundance& curr_abundance = samples[j].primary_transcripts[k];
+                const string& desc = curr_abundance.description();
+                FPKMTrackingTable::iterator itr = tracking.tss_group_fpkm_tracking.find(desc);
+                assert (itr != tracking.tss_group_fpkm_tracking.end());
+                
+                pair<int, SampleDiffs::iterator> result;
+                result = get_de_tests(desc,
+                             itr->second.fpkm_series[j], 
+                             itr->second.fpkm_series[i],
                              tests.tss_group_de_tests[i][j],
                              enough_reads);
+                
+                result.second->second.gene_names = curr_abundance.gene_name();
+                result.second->second.protein_ids = curr_abundance.protein_id();
+                result.second->second.locus_desc = curr_abundance.locus_tag();
+                result.second->second.description = curr_abundance.description();
             }
             
             for (size_t k = 0; k < samples[i].genes.size(); ++k)
             {
-                get_de_tests(samples[j].genes[k], 
-                             samples[i].genes[k],
+                const Abundance& curr_abundance = samples[j].genes[k];
+                const string& desc = curr_abundance.description();
+                FPKMTrackingTable::iterator itr = tracking.gene_fpkm_tracking.find(desc);
+                assert (itr != tracking.gene_fpkm_tracking.end());
+                
+                pair<int, SampleDiffs::iterator> result;
+                result = get_de_tests(desc,
+                             itr->second.fpkm_series[j], 
+                             itr->second.fpkm_series[i],
                              tests.gene_de_tests[i][j],
                              enough_reads);
+                
+                result.second->second.gene_names = curr_abundance.gene_name();
+                result.second->second.protein_ids = curr_abundance.protein_id();
+                result.second->second.locus_desc = curr_abundance.locus_tag();
+                result.second->second.description = curr_abundance.description();
             }
+            
+            // FIXME: the code below will not properly test for differential
+            // splicing/promoter use when a gene (e.g.) occupies two
+            // disjoint bundles.  We need to store the covariance matrices (etc)
+            // in the FPKMContexts to handle that case properly.
             
             // Differential promoter use
             for (size_t k = 0; k < samples[i].gene_primary_transcripts.size(); ++k)

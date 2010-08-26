@@ -105,11 +105,12 @@ struct Tests
 
 struct FPKMContext
 {
-	FPKMContext(double c, double r, double v)
-		: counts(c), FPKM(r), FPKM_variance(v) {}
+	FPKMContext(double c, double r, double v, AbundanceStatus s)
+		: counts(c), FPKM(r), FPKM_variance(v), status(s) {}
 	double counts;
 	double FPKM;
 	double FPKM_variance;
+    AbundanceStatus status;
 };
 
 struct FPKMTracking

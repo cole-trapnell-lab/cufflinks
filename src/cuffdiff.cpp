@@ -774,6 +774,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 sample_bundles->front()->left(),
                 sample_bundles->front()->right());
         
+        if (sample_bundles->front()->left() == 146515370 &&
+            sample_bundles->front()->right() == 146645714)
+        {
+            int a= 4;
+        }
+        
         
 #if ENABLE_THREADS			
         if (non_empty_bundle)
@@ -880,7 +886,11 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 chr_name,
                 sample_bundles->front()->left(),
                 sample_bundles->front()->right());
-			
+        if (sample_bundles->front()->left() == 146515370 &&
+            sample_bundles->front()->right() == 146645714)
+        {
+            int a= 4;
+        }	
 			
 #if ENABLE_THREADS	
         if (non_empty_bundle)
