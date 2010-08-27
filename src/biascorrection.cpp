@@ -637,6 +637,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	return _size++; // Index of new element
 }
 
+int num_adds = 0;
 int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
 {
 	map<shared_ptr<ReadGroupProperties const>, int>::iterator iter;
@@ -644,6 +645,7 @@ int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
 	
 	if (iter==_rg_index.end()) //This rg is not yet in the index, so add it.
 	{
+        num_adds++;
 		return add_read_group(rgp);
 	}
 	

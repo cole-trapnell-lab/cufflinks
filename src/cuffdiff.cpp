@@ -163,144 +163,6 @@ int parse_options(int argc, char** argv)
 	return 0;
 }
 
-#if 0
-// like a normal bundle factory, except the user must explicitly ask for 
-// a range of alignments for the bunde.  NOTE: this factory does NOT seek 
-// backwards - it is up to you to ask for monotonically increasing loci
-class LocusBundleFactory
-{
-public:
-	LocusBundleFactory(shared_ptr<HitFactory> fac)
-		: _hit_fac(fac) {}
-	
-	
-	bool next_bundle(HitBundle& bundle_out, 
-					 RefID ref_id, 
-					 int left_boundary, 
-					 int right_boundary);
-	
-	shared_ptr<HitFactory> hit_factory() { return _hit_fac; } 
-	
-	void reset() { _hit_fac->reset(); }
-	
-private:
-	shared_ptr<HitFactory>_hit_fac;
-};
-
-bool LocusBundleFactory::next_bundle(HitBundle& bundle_out, 
-									 RefID ref_id, 
-									 int left_boundary, 
-									 int right_boundary)
-{
-	HitBundle bundle = bundle_out;
-	
-	if (!_hit_fac->records_remain())
-	{
-		return false;
-	}
-	//char bwt_buf[2048];
-	
-	RefID last_ref_id_seen = 0;
-	int last_pos_seen = 0;
-	
-	const char* hit_buf;
-	size_t hit_buf_size = 0;
-	//while (fgets(bwt_buf, 2048, hit_file))
-	while(_hit_fac->next_record(hit_buf, hit_buf_size))
-	{
-		shared_ptr<ReadHit> bh(new ReadHit());
-		
-		if (!_hit_fac->get_hit_from_buf(hit_buf, *bh, false))
-		{
-			continue;
-		}
-		
-		if (bh->ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
-			continue;
-		
-		bool hit_within_boundary = false;
-		
-		if (bh->ref_id() != ref_id)
-		{
-			RefSequenceTable& rt = _hit_fac->ref_table();
-			const char* gtf_name = rt.get_name(ref_id);
-			const char* sam_name = rt.get_name(bh->ref_id());
-			if (!gtf_name)
-			{
-				// The GTF name isn't even in the SAM file, we'll never find
-				// records by advancing the SAM.  Give up.  hit_within_boundary
-				// will remain false, and we'll break out of the loop and 
-				// reset the SAM file pointer
-			}
-			else
-			{
-				// the LocusBundleFactory's ref table should be populated with all 
-				// values from the SAM
-				assert (sam_name); 
-				int c = strcmp(gtf_name, sam_name);
-				
-				if (c > 0)
-				{
-					// we need to keep advancing the SAM file, to catch up
-					// with the GTF file
-					continue;
-				}
-				else
-				{
-					// else the GTF file is before the SAM file, we'll never find
-					// records by advancing the SAM.  Give up.  hit_within_boundary
-					// will remain false, and we'll break out of the loop and 
-					// reset the SAM file pointer
-				}
-			}
-		}
-		else
-		{
-			if (bh->right() < left_boundary)
-				continue;
-			
-			if (bh->error_prob() > max_phred_err_prob)
-				continue;
-			
-			if (bh->left() <= right_boundary)
-				hit_within_boundary = true;
-		}
-		
-		if (hit_within_boundary)
-		{
-			if (bh->left() < last_pos_seen)
-			{
-				fprintf(stderr, "Error: this SAM file doesn't appear to be correctly sorted!\n");
-				fprintf(stderr, "\tcurrent hit is at %s:%d, last one was at %s:%d\n", 
-						_hit_fac->ref_table().get_name(bh->ref_id()),
-						bh->left(),
-						_hit_fac->ref_table().get_name(last_ref_id_seen),
-						last_pos_seen);
-				
-				exit(1);
-			}
-			
-			bundle.add_open_hit(bh);
-		}
-		else
-		{
-			_hit_fac->undo_hit();
-			break;
-		}
-		
-		last_ref_id_seen = bh->ref_id();
-		last_pos_seen = bh->left();
-	}
-	
-	bundle.finalize_open_mates();
-	bundle_out = bundle;
-	bundle_out.finalize();
-	assert (!bundle_out.ref_scaffolds().empty());
-	return true;
-}
-
-#endif
-
 // This factory merges bundles in a requested locus from several replicates
 class ReplicatedBundleFactory
 {
@@ -434,14 +296,15 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
 }	
 
 #if ENABLE_THREADS
-mutex thread_pool_lock;
-int curr_threads = 0;
+mutex locus_thread_pool_lock;
+int locus_curr_threads = 0;
+int locus_num_threads = 0;
 
-void decr_pool_count()
+void decr_locus_pool_count()
 {
-	thread_pool_lock.lock();
-	curr_threads--;
-	thread_pool_lock.unlock();	
+	locus_thread_pool_lock.lock();
+	locus_curr_threads--;
+	locus_thread_pool_lock.unlock();	
 }
 #endif
 
@@ -451,7 +314,7 @@ void quantitation_worker(const RefSequenceTable& rt,
 						 Tracking& tracking)
 {
 #if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_pool_count);
+	boost::this_thread::at_thread_exit(decr_locus_pool_count);
 #endif
 
 	char bundle_label_buf[2048];
@@ -642,7 +505,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
-	
+    
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
 
     ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, fasta_dir!="", false);
@@ -692,13 +555,20 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         bundle_factories.push_back(rep_factory);
 	}
 	
+//    if (bundle_factories.size() > num_threads)
+//    {
+//        locus_num_threads = 1;
+//    }
+    
+    locus_num_threads = 1;
+    
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
         fac.inspect_replicate_maps(tmp_min_frag_len, tmp_max_frag_len);
     }
-	
+    
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	
@@ -733,14 +603,14 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 #if ENABLE_THREADS			
         while(1)
         {
-            thread_pool_lock.lock();
-            if (curr_threads < num_threads)
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
             {
-                thread_pool_lock.unlock();
+                locus_thread_pool_lock.unlock();
                 break;
             }
             
-            thread_pool_lock.unlock();
+            locus_thread_pool_lock.unlock();
             
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             
@@ -774,19 +644,13 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 sample_bundles->front()->left(),
                 sample_bundles->front()->right());
         
-        if (sample_bundles->front()->left() == 146515370 &&
-            sample_bundles->front()->right() == 146645714)
-        {
-            int a= 4;
-        }
-        
         
 #if ENABLE_THREADS			
         if (non_empty_bundle)
         {
-            thread_pool_lock.lock();
-            curr_threads++;
-            thread_pool_lock.unlock();
+            locus_thread_pool_lock.lock();
+            locus_curr_threads++;
+            locus_thread_pool_lock.unlock();
             
             thread quantitate(quantitation_worker,
                               boost::cref(rt), 
@@ -818,14 +682,14 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 #if ENABLE_THREADS	
 	while(1)
 	{
-		thread_pool_lock.lock();
-		if (curr_threads == 0)
+		locus_thread_pool_lock.lock();
+		if (locus_curr_threads == 0)
 		{
-			thread_pool_lock.unlock();
+			locus_thread_pool_lock.unlock();
 			break;
 		}
 		
-		thread_pool_lock.unlock();
+		locus_thread_pool_lock.unlock();
 		//fprintf(stderr, "waiting to for all workers to finish\n");
 		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 	}
@@ -846,14 +710,14 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 #if ENABLE_THREADS			
         while(1)
         {
-            thread_pool_lock.lock();
-            if (curr_threads < num_threads)
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
             {
-                thread_pool_lock.unlock();
+                locus_thread_pool_lock.unlock();
                 break;
             }
             
-            thread_pool_lock.unlock();
+            locus_thread_pool_lock.unlock();
             
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             
@@ -895,9 +759,9 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 #if ENABLE_THREADS	
         if (non_empty_bundle)
         {
-            thread_pool_lock.lock();
-            curr_threads++;
-            thread_pool_lock.unlock();
+            locus_thread_pool_lock.lock();
+            locus_curr_threads++;
+            locus_thread_pool_lock.unlock();
             
             thread quantitate(quantitation_worker,
                               boost::cref(rt), 
@@ -925,14 +789,14 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 #if ENABLE_THREADS	
 	while(1)
 	{
-		thread_pool_lock.lock();
-		if (curr_threads == 0)
+		locus_thread_pool_lock.lock();
+		if (locus_curr_threads == 0)
 		{
-			thread_pool_lock.unlock();
+			locus_thread_pool_lock.unlock();
 			break;
 		}
 		
-		thread_pool_lock.unlock();
+		locus_thread_pool_lock.unlock();
 		//fprintf(stderr, "waiting to for all workers to finish\n");
 		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 	}

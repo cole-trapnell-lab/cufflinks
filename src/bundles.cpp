@@ -1194,7 +1194,7 @@ void identify_bad_splices(const HitBundle& bundle,
 			if (itr->second.total_reads > 1000)
 			{
 				sort(hist.begin(), hist.end());
-				size_t median = floor(hist.size() / 2);
+				size_t median = (size_t)floor(hist.size() / 2);
 				if (median <= hist.size() && hist[median] == 0)
 				{
 #if ASM_VERBOSE

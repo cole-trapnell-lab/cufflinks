@@ -572,6 +572,162 @@ struct SampleAbundances
 mutex test_storage_lock; // don't modify the above struct without locking here
 #endif
 
+
+#if ENABLE_THREADS
+mutex sample_thread_pool_lock;
+int sample_curr_threads = 0;
+int sample_num_threads = 0;
+
+void decr_sample_pool_count()
+{
+	sample_thread_pool_lock.lock();
+	sample_curr_threads--;
+	sample_thread_pool_lock.unlock();	
+}
+#endif
+
+void sample_abundance_worker(const string& locus_tag,
+                             SampleAbundances& sample,
+                             HitBundle* sample_bundle,
+                             bool perform_cds_analysis,
+                             bool perform_tss_analysis)
+{
+#if ENABLE_THREADS
+	boost::this_thread::at_thread_exit(decr_sample_pool_count);
+#endif
+    
+    vector<shared_ptr<Abundance> > abundances;
+    
+    foreach(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+    {
+        TranscriptAbundance* pT = new TranscriptAbundance;
+        pT->transfrag(s);
+        shared_ptr<Abundance> ab(pT);
+        ab->description(s->annotated_trans_id());
+        ab->locus_tag(locus_tag);
+        abundances.push_back(ab);
+    }
+    
+    sample.transcripts = AbundanceGroup(abundances);
+    
+    vector<MateHit> hits_in_cluster;
+    
+    get_alignments_from_scaffolds(sample.transcripts.abundances(),
+                                  hits_in_cluster);
+    
+    // Compute the individual transcript FPKMs via each sample's 
+    // AbundanceGroup for this locus.
+    
+    sample.transcripts.calculate_abundance(hits_in_cluster);
+    
+    // Cluster transcripts by gene_id
+    vector<AbundanceGroup> transcripts_by_gene_id;
+    cluster_transcripts<ConnectByAnnotatedGeneId>(sample.transcripts,
+                                                  transcripts_by_gene_id);
+    foreach(AbundanceGroup& ab_group, transcripts_by_gene_id)
+    {
+        ab_group.locus_tag(locus_tag);
+        set<string> gene_ids = ab_group.gene_id();
+        assert (gene_ids.size() == 1);
+        ab_group.description(*(gene_ids.begin()));
+    }
+    
+    sample.genes = transcripts_by_gene_id;
+    
+    if (perform_cds_analysis)
+    {
+        // Cluster transcripts by CDS
+        vector<AbundanceGroup> transcripts_by_cds;
+        ublas::matrix<double> cds_gamma_cov;
+        cluster_transcripts<ConnectByAnnotatedProteinId>(sample.transcripts,
+                                                         transcripts_by_cds,
+                                                         &cds_gamma_cov);
+        foreach(AbundanceGroup& ab_group, transcripts_by_cds)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> protein_ids = ab_group.protein_id();
+            assert (protein_ids.size() == 1);
+            string desc = *(protein_ids.begin()); 
+            assert (desc != "");
+            ab_group.description(*(protein_ids.begin()));
+        }
+        
+        sample.cds = transcripts_by_cds;
+        
+        // Group the CDS clusters by gene
+        vector<shared_ptr<Abundance> > cds_abundances;
+        foreach (AbundanceGroup& ab_group, sample.cds)
+        {
+            cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+        }
+        AbundanceGroup cds(cds_abundances,
+                           cds_gamma_cov);
+        
+        vector<AbundanceGroup> cds_by_gene;
+        
+        cluster_transcripts<ConnectByAnnotatedGeneId>(cds,
+                                                      cds_by_gene);
+        
+        foreach(AbundanceGroup& ab_group, cds_by_gene)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> gene_ids = ab_group.gene_id();
+            assert (gene_ids.size() == 1);
+            ab_group.description(*(gene_ids.begin()));
+        }
+        
+        sample.gene_cds = cds_by_gene;
+    }
+    
+    if (perform_tss_analysis)
+    {
+        // Cluster transcripts by start site (TSS)
+        vector<AbundanceGroup> transcripts_by_tss;
+        
+        ublas::matrix<double> tss_gamma_cov;
+        cluster_transcripts<ConnectByAnnotatedTssId>(sample.transcripts,
+                                                     transcripts_by_tss,
+                                                     &tss_gamma_cov);
+        
+        foreach(AbundanceGroup& ab_group, transcripts_by_tss)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> tss_ids = ab_group.tss_id();
+            assert (tss_ids.size() == 1);
+            string desc = *(tss_ids.begin()); 
+            assert (desc != "");
+            ab_group.description(*(tss_ids.begin()));
+        }
+        
+        sample.primary_transcripts = transcripts_by_tss;
+        
+        // Group TSS clusters by gene
+        vector<shared_ptr<Abundance> > primary_transcript_abundances;
+        foreach (AbundanceGroup& ab_group, sample.primary_transcripts)
+        {
+            primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+        }
+        
+        AbundanceGroup primary_transcripts(primary_transcript_abundances,
+                                           tss_gamma_cov);
+        
+        vector<AbundanceGroup> primary_transcripts_by_gene;
+        
+        cluster_transcripts<ConnectByAnnotatedGeneId>(primary_transcripts,
+                                                      primary_transcripts_by_gene);
+        
+        foreach(AbundanceGroup& ab_group, primary_transcripts_by_gene)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> gene_ids = ab_group.gene_id();
+            assert (gene_ids.size() == 1);
+            ab_group.description(*(gene_ids.begin()));
+        }
+        
+        sample.gene_primary_transcripts = primary_transcripts_by_gene;
+    }
+}
+
 void test_differential(const RefSequenceTable& rt, 
 					   const vector<HitBundle*>& sample_bundles,
 					   Tests& tests,
@@ -580,6 +736,8 @@ void test_differential(const RefSequenceTable& rt,
 	if (sample_bundles.empty())
 		return;
 	
+    sample_num_threads = sample_bundles.size();
+    
 	string locus_tag = bundle_locus_tag(rt, *(sample_bundles.front()));
 	
 	bool perform_cds_analysis = true;
@@ -604,139 +762,60 @@ void test_differential(const RefSequenceTable& rt,
 	// set up the transfrag abundance group for each samples
 	for (size_t i = 0; i < sample_bundles.size(); ++i)
 	{
-		samples[i].cluster_mass = sample_bundles[i]->hits().size();
-		vector<shared_ptr<Abundance> > abundances;
-		
-		foreach(shared_ptr<Scaffold> s, sample_bundles[i]->ref_scaffolds())
-		{
-			TranscriptAbundance* pT = new TranscriptAbundance;
-			pT->transfrag(s);
-			shared_ptr<Abundance> ab(pT);
-			ab->description(s->annotated_trans_id());
-			ab->locus_tag(locus_tag);
-			abundances.push_back(ab);
-		}
-		
-		samples[i].transcripts = AbundanceGroup(abundances);
-		
-		vector<MateHit> hits_in_cluster;
-		
-		get_alignments_from_scaffolds(samples[i].transcripts.abundances(),
-									  hits_in_cluster);
-		
-		// Compute the individual transcript FPKMs via each sample's 
-        // AbundanceGroup for this locus.
-
-		samples[i].transcripts.calculate_abundance(hits_in_cluster);
-		
-		// Cluster transcripts by gene_id
-		vector<AbundanceGroup> transcripts_by_gene_id;
-		cluster_transcripts<ConnectByAnnotatedGeneId>(samples[i].transcripts,
-													  transcripts_by_gene_id);
-		foreach(AbundanceGroup& ab_group, transcripts_by_gene_id)
-		{
-			ab_group.locus_tag(locus_tag);
-			set<string> gene_ids = ab_group.gene_id();
-			assert (gene_ids.size() == 1);
-			ab_group.description(*(gene_ids.begin()));
-		}
-		
-		samples[i].genes = transcripts_by_gene_id;
-		
-		if (perform_cds_analysis)
-		{
-			// Cluster transcripts by CDS
-			vector<AbundanceGroup> transcripts_by_cds;
-			ublas::matrix<double> cds_gamma_cov;
-			cluster_transcripts<ConnectByAnnotatedProteinId>(samples[i].transcripts,
-															 transcripts_by_cds,
-															 &cds_gamma_cov);
-			foreach(AbundanceGroup& ab_group, transcripts_by_cds)
-			{
-				ab_group.locus_tag(locus_tag);
-				set<string> protein_ids = ab_group.protein_id();
-				assert (protein_ids.size() == 1);
-				string desc = *(protein_ids.begin()); 
-				assert (desc != "");
-				ab_group.description(*(protein_ids.begin()));
-			}
-			
-			samples[i].cds = transcripts_by_cds;
-			
-			// Group the CDS clusters by gene
-			vector<shared_ptr<Abundance> > cds_abundances;
-			foreach (AbundanceGroup& ab_group, samples[i].cds)
-			{
-				cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-			}
-			AbundanceGroup cds(cds_abundances,
-							   cds_gamma_cov);
-			
-			vector<AbundanceGroup> cds_by_gene;
-			
-			cluster_transcripts<ConnectByAnnotatedGeneId>(cds,
-														  cds_by_gene);
-			
-			foreach(AbundanceGroup& ab_group, cds_by_gene)
-			{
-				ab_group.locus_tag(locus_tag);
-				set<string> gene_ids = ab_group.gene_id();
-				assert (gene_ids.size() == 1);
-				ab_group.description(*(gene_ids.begin()));
-			}
-			
-			samples[i].gene_cds = cds_by_gene;
-		}
-		
-		if (perform_tss_analysis)
-		{
-			// Cluster transcripts by start site (TSS)
-			vector<AbundanceGroup> transcripts_by_tss;
-			
-			ublas::matrix<double> tss_gamma_cov;
-			cluster_transcripts<ConnectByAnnotatedTssId>(samples[i].transcripts,
-														 transcripts_by_tss,
-														 &tss_gamma_cov);
-			
-			foreach(AbundanceGroup& ab_group, transcripts_by_tss)
-			{
-				ab_group.locus_tag(locus_tag);
-				set<string> tss_ids = ab_group.tss_id();
-				assert (tss_ids.size() == 1);
-				string desc = *(tss_ids.begin()); 
-				assert (desc != "");
-				ab_group.description(*(tss_ids.begin()));
-			}
-			
-			samples[i].primary_transcripts = transcripts_by_tss;
-			
-			// Group TSS clusters by gene
-			vector<shared_ptr<Abundance> > primary_transcript_abundances;
-			foreach (AbundanceGroup& ab_group, samples[i].primary_transcripts)
-			{
-				primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-			}
+        samples[i].cluster_mass = sample_bundles[i]->hits().size();
+#if ENABLE_THREADS			
+        while(1)
+        {
+            sample_thread_pool_lock.lock();
+            if (sample_curr_threads < sample_num_threads)
+            {
+                sample_thread_pool_lock.unlock();
+                break;
+            }
             
-			AbundanceGroup primary_transcripts(primary_transcript_abundances,
-											   tss_gamma_cov);
-			
-			vector<AbundanceGroup> primary_transcripts_by_gene;
-			
-			cluster_transcripts<ConnectByAnnotatedGeneId>(primary_transcripts,
-														  primary_transcripts_by_gene);
-			
-			foreach(AbundanceGroup& ab_group, primary_transcripts_by_gene)
-			{
-				ab_group.locus_tag(locus_tag);
-				set<string> gene_ids = ab_group.gene_id();
-				assert (gene_ids.size() == 1);
-				ab_group.description(*(gene_ids.begin()));
-			}
-			
-			samples[i].gene_primary_transcripts = primary_transcripts_by_gene;
-		}
+            sample_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+        
+        sample_thread_pool_lock.lock();
+        sample_curr_threads++;
+        sample_thread_pool_lock.unlock();
+        
+        thread quantitate(sample_abundance_worker,
+                          boost::cref(locus_tag),
+                          boost::ref(samples[i]),
+                          boost::ref(sample_bundles[i]),
+                          perform_cds_analysis,
+                          perform_tss_analysis);
+#else
+        sample_abundance_worker(boost::cref(locus_tag),
+                                boost::ref(samples[i]),
+                                boost::ref(sample_bundles[i]),
+                                perform_cds_analysis,
+                                perform_tss_analysis);
+#endif
+        
 	}
-
+    
+    // wait for the workers to finish up before reporting everthing.
+#if ENABLE_THREADS	
+	while(1)
+	{
+		sample_thread_pool_lock.lock();
+		if (sample_curr_threads == 0)
+		{
+			sample_thread_pool_lock.unlock();
+			break;
+		}
+		
+		sample_thread_pool_lock.unlock();
+		//fprintf(stderr, "waiting to for all workers to finish\n");
+		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+	}
+#endif
+    
 #if ENABLE_THREADS
 	test_storage_lock.lock();
 #endif

@@ -383,6 +383,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	list<pair<int, int> > open_ranges;
     bool has_pairs = false;
     
+    size_t total_hits = 0;
+    size_t total_non_redundant_hits = 0;
+    
 	while(bundle_factory.next_bundle(bundle))
 	{
 //#if ASM_VERBOSE
@@ -407,6 +410,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		int curr_range_end = numeric_limits<int>::max();
 		int next_range_start = -1;
 		
+        total_non_redundant_hits += bundle.non_redundant_hits().size();
+        total_hits += bundle.hits().size();
+
 		// This first loop calclates the map mass and finds ranges with no introns
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
@@ -491,7 +497,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 #if ASM_VERBOSE
     fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
 #endif
-    
+    fprintf(stderr, "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
+            
     long double tot_count = 0;
 	vector<double> frag_len_pdf(max_len+1, 0.0);
 	vector<double> frag_len_cdf(max_len+1, 0.0);

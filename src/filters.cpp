@@ -154,7 +154,7 @@ double background_rate(const vector<int> depth_of_coverage,
     tmp.erase(new_end, tmp.end());
     sort(tmp.begin(), tmp.end());
     
-    size_t median = floor(tmp.size() / 2);
+    size_t median = (size_t)floor(tmp.size() / 2);
     double median_doc = tmp[median];
     return median_doc;
 }

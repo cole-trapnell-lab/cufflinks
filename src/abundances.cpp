@@ -793,24 +793,32 @@ void Estep (int N,
 			const vector<vector<double> >& cond_probs,
 			const vector<double>& u) {
 	// given p, fills U with expected frequencies
-	int i,j;
-	double ProbY;
-
-	for (i = 0; i < M; ++i) {
-		ProbY = 0;
-		for (j = 0; j < N; ++j) {
-			 //Indexing reversed to allow for easy filtering.
-			ProbY += cond_probs[j][i]  * p[j];
-					//cout << "ProbY = " << ProbY << endl;
-		}
-		ProbY = ProbY ? (1.0 / ProbY) : 0.0;
-		
-		for (j = 0; j < N; ++j) 
-		{
-			 //Indexing reversed to allow for easy filtering.
-			U[i][j] = u[i]* cond_probs[j][i] * p[j] * ProbY;
-		}
-	}	
+	int i,j;	
+    
+    vector<double> frag_prob_sums(M, 0.0);
+    
+    for (j = 0; j < N; ++j) 
+    {
+        for (i = 0; i < M; ++i) 
+        {
+            frag_prob_sums [i] += cond_probs[j][i] * p[j];
+        }
+    }
+    
+    for (i = 0; i < M; ++i) 
+    {
+        frag_prob_sums[i] = frag_prob_sums[i] ? (1.0 / frag_prob_sums[i]) : 0.0;
+    }
+    
+    for (j = 0; j < N; ++j) 
+    {
+        for (i = 0; i < M; ++i) 
+        {
+            double ProbY = frag_prob_sums[i];
+            double exp_i_j = u[i] * cond_probs[j][i] * p[j] * ProbY;
+            U[j][i] = exp_i_j;
+        }
+    }
 }
 
 
@@ -824,7 +832,7 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 		//cout << "." <<  v[j] << ".\n";
 		for (i = 0; i < M; ++i) {
 			//	cout << U[i][j] << " \n";
-			v[j] += U[i][j];
+			v[j] += U[j][i];
 		}
 		m += v[j];
 	}
@@ -916,7 +924,7 @@ double EM (int N, int M, vector<double> & newP,
 	double sum = 0;
 	double newEll = 0;
 	vector<double> p(N,0);
-	vector<vector<double> > U(M,vector<double>(N,0));
+	vector<vector<double> > U(N, vector<double>(M,0));
 	double ell = 0; 
 	int iter = 0;
 	int j;
