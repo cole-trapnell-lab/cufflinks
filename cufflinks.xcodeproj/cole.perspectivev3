@@ -233,8 +233,6 @@
 			<key>Layout</key>
 			<array>
 				<dict>
-					<key>BecomeActive</key>
-					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -282,7 +280,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>51</integer>
+									<integer>49</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
@@ -316,12 +314,14 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>differential.cpp</string>
+								<string>cuffdiff.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>differential.cpp</string>
+										<string>cuffdiff.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDFE381512294FEE00F24CD3</string>
+										<string>EDFE381C12295AE800F24CD3</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0E0F11D8323B00CFD663</string>
@@ -363,8 +363,8 @@
 											<string>EDFE378D12286A1000F24CD3</string>
 											<string>EDFE379E1228719000F24CD3</string>
 											<string>EDFE37D71228779E00F24CD3</string>
-											<string>EDFE381212294FD300F24CD3</string>
-											<string>EDFE381312294FD300F24CD3</string>
+											<string>EDFE381A12295AE800F24CD3</string>
+											<string>EDFE381B12295AE800F24CD3</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -681,7 +681,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>EDFE381112294EF300F24CD3</string>
+		<string>EDFE381D12295AE800F24CD3</string>
 		<string>EDFE36E612269DED00F24CD3</string>
 		<string>EDFE36E812269DED00F24CD3</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>

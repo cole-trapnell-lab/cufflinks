@@ -501,6 +501,17 @@ void extract_sample_diffs(SampleDiffs& diff_map,
 	}
 }
 
+void inspect_map_worker(ReplicatedBundleFactory& fac,
+                        int& tmp_min_frag_len, 
+                        int& tmp_max_frag_len)
+{
+#if ENABLE_THREADS
+	boost::this_thread::at_thread_exit(decr_locus_pool_count);
+#endif
+    
+    fac.inspect_replicate_maps(tmp_min_frag_len, tmp_max_frag_len);
+}
+
 void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 	ReadTable it;
@@ -560,15 +571,60 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 //        locus_num_threads = 1;
 //    }
     
-    locus_num_threads = 1;
+    locus_num_threads = num_threads;
     
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
-        fac.inspect_replicate_maps(tmp_min_frag_len, tmp_max_frag_len);
+#if ENABLE_THREADS			
+        while(1)
+        {
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
+            {
+                locus_thread_pool_lock.unlock();
+                break;
+            }
+            
+            locus_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+        locus_thread_pool_lock.lock();
+        locus_curr_threads++;
+        locus_thread_pool_lock.unlock();
+        
+        thread inspect(inspect_map_worker,
+                       boost::ref(fac),
+                       boost::ref(tmp_min_frag_len),
+                       boost::ref(tmp_max_frag_len));  
+#else
+        inspect_map_worker(boost::ref(fac),
+                           boost::ref(tmp_min_frag_len),
+                           boost::ref(tmp_max_frag_len));
+#endif
     }
     
+    // wait for the workers to finish up before reporting everthing.
+#if ENABLE_THREADS	
+	while(1)
+	{
+		locus_thread_pool_lock.lock();
+		if (locus_curr_threads == 0)
+		{
+			locus_thread_pool_lock.unlock();
+			break;
+		}
+		
+		locus_thread_pool_lock.unlock();
+		//fprintf(stderr, "waiting to for all workers to finish\n");
+		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+	}
+#endif
+    
+    locus_num_threads = 1;
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	
