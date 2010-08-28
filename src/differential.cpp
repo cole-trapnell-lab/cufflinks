@@ -736,7 +736,9 @@ void test_differential(const RefSequenceTable& rt,
 	if (sample_bundles.empty())
 		return;
 	
+#if ENABLE_THREADS
     sample_num_threads = num_threads;
+#endif
     
 	string locus_tag = bundle_locus_tag(rt, *(sample_bundles.front()));
 	

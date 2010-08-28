@@ -575,7 +575,9 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 //        locus_num_threads = 1;
 //    }
     
+#if ENABLE_THREADS
     locus_num_threads = num_threads;
+#endif
     
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
@@ -628,7 +630,10 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	}
 #endif
     
+#if ENABLE_THREADS
     locus_num_threads = 1;
+#endif
+    
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	

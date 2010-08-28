@@ -286,6 +286,11 @@ public:
 		_hit_fac.reset();
 		next_ref_scaff = ref_mRNAs.begin(); 
         next_mask_scaff = mask_gtf_recs.begin();
+        
+        foreach(shared_ptr<Scaffold>& ref_scaff, ref_mRNAs)
+        {
+            ref_scaff->clear_hits();
+        }
 	}
 	
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
@@ -407,8 +412,13 @@ void inspect_map(BundleFactoryType& bundle_factory,
         
         const vector<MateHit>& hits = bundle.non_redundant_hits();
 		if (hits.empty())
+        {
+            foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
+            {
+                ref_scaff->clear_hits();
+            }
             continue;
-        
+        }
 		int curr_range_start = hits[0].left();
 		int curr_range_end = numeric_limits<int>::max();
 		int next_range_start = -1;
@@ -476,13 +486,18 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			}
 		}
         
-        
         foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
         {
             ref_scaff->clear_hits();
         }
 	}
 	
+    
+    foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
+    {
+        ref_scaff->clear_hits();
+    }
+    
     if (bad_introns != NULL)
     {
         size_t alloced = 0;

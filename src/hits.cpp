@@ -76,6 +76,7 @@ void collapse_hits(const vector<MateHit>& hits,
 											   non_redundant.end(), 
 											   hits_equals);
 	non_redundant.erase(new_end, non_redundant.end());
+    non_redundant.resize(non_redundant.size());
 	
 	foreach(MateHit& hit, non_redundant)
 		hit.collapse_mass(0);
