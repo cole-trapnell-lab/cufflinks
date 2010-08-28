@@ -226,7 +226,7 @@ public:
             
             shared_ptr<EmpDist> frag_len_dist(new EmpDist);
             
-            inspect_map(*fac, map_mass, bad_introns, *frag_len_dist);
+            inspect_map(*fac, map_mass, NULL, *frag_len_dist);
             
             rg_props->frag_len_dist(frag_len_dist);
             rg_props->total_map_mass(map_mass);

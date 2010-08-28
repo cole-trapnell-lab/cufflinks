@@ -370,7 +370,7 @@ void identify_bad_splices(const HitBundle& bundle,
 template<class BundleFactoryType>
 void inspect_map(BundleFactoryType& bundle_factory,
                  long double& map_mass, 
-                 BadIntronTable& bad_introns,
+                 BadIntronTable* bad_introns,
                  EmpDist& frag_len_dist)
 {
 	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.\n");
@@ -400,7 +400,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
         fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
 //#endif
 		
-		identify_bad_splices(bundle, bad_introns);
+        if (bad_introns != NULL)
+        {
+            identify_bad_splices(bundle, *bad_introns);
+        }
         
         const vector<MateHit>& hits = bundle.non_redundant_hits();
 		if (hits.empty())
@@ -480,23 +483,26 @@ void inspect_map(BundleFactoryType& bundle_factory,
         }
 	}
 	
-    size_t alloced = 0;
-    size_t used = 0;
-    size_t num_introns = 0;
-    for (BadIntronTable::const_iterator itr = bad_introns.begin();
-         itr != bad_introns.end();
-         ++itr)
+    if (bad_introns != NULL)
     {
-        alloced += itr->second.capacity() * sizeof(AugmentedCuffOp);
-        used += itr->second.size() * sizeof(AugmentedCuffOp);
-        num_introns += itr->second.size();
-    }
+        size_t alloced = 0;
+        size_t used = 0;
+        size_t num_introns = 0;
+        for (BadIntronTable::const_iterator itr = bad_introns->begin();
+             itr != bad_introns->end();
+             ++itr)
+        {
+            alloced += itr->second.capacity() * sizeof(AugmentedCuffOp);
+            used += itr->second.size() * sizeof(AugmentedCuffOp);
+            num_introns += itr->second.size();
+        }
+        
+    #if ASM_VERBOSE
+        fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+    #endif
+        fprintf(stderr, "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
+    } 
     
-#if ASM_VERBOSE
-    fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
-#endif
-    fprintf(stderr, "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
-            
     long double tot_count = 0;
 	vector<double> frag_len_pdf(max_len+1, 0.0);
 	vector<double> frag_len_cdf(max_len+1, 0.0);
