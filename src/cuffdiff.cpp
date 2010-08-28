@@ -330,6 +330,10 @@ void quantitation_worker(const RefSequenceTable& rt,
 	
 	for (size_t i = 0; i < sample_bundles->size(); ++i)
 	{
+        foreach(shared_ptr<Scaffold>& ref_scaff, (*sample_bundles)[i]->ref_scaffolds())
+        {
+            ref_scaff->clear_hits();
+        }
 		delete (*sample_bundles)[i];
 	}
 	
@@ -806,11 +810,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 chr_name,
                 sample_bundles->front()->left(),
                 sample_bundles->front()->right());
-        if (sample_bundles->front()->left() == 146515370 &&
-            sample_bundles->front()->right() == 146645714)
-        {
-            int a= 4;
-        }	
+	
 			
 #if ENABLE_THREADS	
         if (non_empty_bundle)

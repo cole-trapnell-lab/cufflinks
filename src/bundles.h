@@ -472,14 +472,12 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				}
 			}
 		}
-        //		
-        //		for (size_t i = 0; i < bundle.hits().size(); ++i)
-        //		{
-        //			double mate_len = 0;
-        //			if (hits[i].left_alignment() || hits[i].right_alignment())
-        //				mate_len = 1.0;
-        //			map_mass += mate_len * (1.0 - hits[i].error_prob()); 
-        //		}
+        
+        
+        foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
+        {
+            ref_scaff->clear_hits();
+        }
 	}
 	
     size_t alloced = 0;
