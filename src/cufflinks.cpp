@@ -632,7 +632,7 @@ void assemble_bundle(const RefSequenceTable& rt,
             rt.get_name(bundle.ref_id()),
             bundle.left(),
             bundle.right());
-    
+
 #if ENABLE_THREADS
     bundle_label.reset(new string(bundle_label_buf));
 #else

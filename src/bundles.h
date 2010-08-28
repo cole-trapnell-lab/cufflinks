@@ -380,7 +380,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 {
 	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.\n");
     
-	HitBundle bundle;
     map_mass = 0.0;
     int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;
@@ -391,9 +390,20 @@ void inspect_map(BundleFactoryType& bundle_factory,
     size_t total_hits = 0;
     size_t total_non_redundant_hits = 0;
     
-	while(bundle_factory.next_bundle(bundle))
+	
+	while(true)
 	{
-//#if ASM_VERBOSE
+		HitBundle* bundle_ptr = new HitBundle();
+		
+		if (!bundle_factory.next_bundle(*bundle_ptr))
+		{
+			delete bundle_ptr;
+			break;
+		}
+		
+		HitBundle& bundle = *bundle_ptr;
+		
+		//#if ASM_VERBOSE
         const RefSequenceTable& rt = bundle_factory.ref_table();
         const char* chrom = rt.get_name(bundle.ref_id());
         char bundle_label_buf[2048];
@@ -485,18 +495,17 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				}
 			}
 		}
+		
+		foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
+		{
+			ref_scaff->clear_hits();
+		}
         
-        foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
-        {
-            ref_scaff->clear_hits();
-        }
+		delete bundle_ptr;
 	}
 	
     
-    foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
-    {
-        ref_scaff->clear_hits();
-    }
+
     
     if (bad_introns != NULL)
     {

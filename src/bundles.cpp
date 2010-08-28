@@ -524,10 +524,8 @@ shared_ptr<ReadHit> BundleFactory::next_valid_alignment()
 
 // This is my least favorite function in Cufflinks.  It should be banished to
 // Hell and re-written.  It is utterly loathesome.
-bool BundleFactory::next_bundle(HitBundle& bundle_out)
+bool BundleFactory::next_bundle(HitBundle& bundle)
 {
-	HitBundle bundle;
-	
 	//char bwt_buf[2048];
 	
     // The most recent RefID and position we've seen in the hit stream
@@ -852,9 +850,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle_out)
 	}
 	
 	assert (left_bundle_boundary != -1);
-	bundle_out = bundle;
-	bundle_out.finalize();
-    assert(bundle_out.right() != -1);
+	bundle.finalize();
+    assert(bundle.right() != -1);
 	//bundle_out.remove_hitless_scaffolds();
     
     return true;
