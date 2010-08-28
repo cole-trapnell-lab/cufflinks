@@ -280,13 +280,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>16</integer>
+									<integer>66</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 211}, {267, 840}}</string>
+							<string>{{0, 477}, {267, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -303,7 +303,7 @@
 							<real>267</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>254 279 1169 899 0 0 1920 1178 </string>
+						<string>532 279 1169 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cufflinks.cpp</string>
+								<string>scaffolds.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cufflinks.cpp</string>
+										<string>scaffolds.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDFE3862122974E800F24CD3</string>
+										<string>EDFE38721229832900F24CD3</string>
 										<key>history</key>
 										<array>
 											<string>ED1C0E0F11D8323B00CFD663</string>
@@ -362,12 +362,13 @@
 											<string>EDFE379E1228719000F24CD3</string>
 											<string>EDFE381A12295AE800F24CD3</string>
 											<string>EDFE383212296F4000F24CD3</string>
-											<string>EDFE385C122974E800F24CD3</string>
-											<string>EDFE385D122974E800F24CD3</string>
-											<string>EDFE385E122974E800F24CD3</string>
-											<string>EDFE385F122974E800F24CD3</string>
-											<string>EDFE3860122974E800F24CD3</string>
-											<string>EDFE3861122974E800F24CD3</string>
+											<string>EDFE38651229805A00F24CD3</string>
+											<string>EDFE38661229805A00F24CD3</string>
+											<string>EDFE38671229805A00F24CD3</string>
+											<string>EDFE38681229805A00F24CD3</string>
+											<string>EDFE38691229805A00F24CD3</string>
+											<string>EDFE386A1229805A00F24CD3</string>
+											<string>EDFE386B1229805A00F24CD3</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -383,7 +384,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {880, 606}}</string>
 								<key>RubberWindowFrame</key>
-								<string>254 279 1169 899 0 0 1920 1178 </string>
+								<string>532 279 1169 899 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -424,7 +425,7 @@
 										<key>Frame</key>
 										<string>{{10, 27}, {880, 220}}</string>
 										<key>RubberWindowFrame</key>
-										<string>254 279 1169 899 0 0 1920 1178 </string>
+										<string>532 279 1169 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -689,7 +690,7 @@
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>254 279 1169 899 0 0 1920 1178 </string>
+	<string>532 279 1169 899 0 0 1920 1178 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

@@ -1137,7 +1137,8 @@ int Scaffold::match_length(int left, int right) const
 
 void Scaffold::clear_hits()
 {
-	_mates_in_scaff.clear();
+	_mates_in_scaff = vector<const MateHit*>();
+    //_mates_in_scaff.clear();
 }
 
 bool Scaffold::add_hit(const MateHit* hit)
