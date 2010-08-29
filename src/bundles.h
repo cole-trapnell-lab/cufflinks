@@ -427,6 +427,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
             {
                 ref_scaff->clear_hits();
             }
+            delete bundle_ptr;
             continue;
         }
 		int curr_range_start = hits[0].left();
