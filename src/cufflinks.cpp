@@ -937,7 +937,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
 	hit_factory->reset();
     
-	//ref_gtf = fopen(string(output_dir + "/initial_est/transcripts.gtf").c_str(), "r");
+	//ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
 	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
     
 	BundleFactory bundle_factory2(*hit_factory);

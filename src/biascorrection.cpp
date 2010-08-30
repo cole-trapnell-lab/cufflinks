@@ -211,7 +211,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 	}
 	for (int j = 0; j < N; ++j)
 	{
-		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->fpkm() > 0)
+		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->fpkm() >= 1)
 			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
 	}
 }
@@ -446,6 +446,8 @@ void BiasLearner::normalizeParameters()
 			}
 
 		}
+	//ones(_startParams);
+	//ones(_endParams);
 	ones(_posParams);
 }
 
