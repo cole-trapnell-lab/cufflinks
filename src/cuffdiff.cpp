@@ -266,6 +266,30 @@ private:
 	vector<shared_ptr<BundleFactory> > _factories;
 };
 
+#if ENABLE_THREADS
+mutex locus_thread_pool_lock;
+int locus_curr_threads = 0;
+int locus_num_threads = 0;
+
+void decr_locus_pool_count()
+{
+	locus_thread_pool_lock.lock();
+	locus_curr_threads--;
+	locus_thread_pool_lock.unlock();	
+}
+#endif
+
+void next_bundle_worker(ReplicatedBundleFactory& fac,
+                        HitBundle& bundle,
+                        bool& non_empty)
+{
+#if ENABLE_THREADS
+	boost::this_thread::at_thread_exit(decr_locus_pool_count);
+#endif
+    
+    non_empty = fac.next_bundle(bundle);
+}
+
 // Gets the next set of bundles to process, advancing all sample factories
 // and all replicates within those factories by one set of overlapping 
 // transcripts
@@ -275,9 +299,40 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
     bool non_empty_sample_bundle = false;
 	for (size_t i = 0; i < bundle_factories.size(); ++i)
 	{
-		ReplicatedBundleFactory& fac = bundle_factories[i];
+        ReplicatedBundleFactory& fac = bundle_factories[i];
 		HitBundle* bundle = new HitBundle;
-		if (fac.next_bundle(*bundle))
+        bool non_empty = false;
+#if ENABLE_THREADS			
+        while(1)
+        {
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
+            {
+                locus_thread_pool_lock.unlock();
+                break;
+            }
+            
+            locus_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+
+        locus_thread_pool_lock.lock();
+        locus_curr_threads++;
+        locus_thread_pool_lock.unlock();
+        
+        thread next(next_bundle_worker,
+                    boost::ref(fac),
+                    boost::ref(*bundle),
+                    boost::ref(non_empty));  
+#else
+        next_bundle_worker(boost::ref(fac),
+                           boost::ref(*bundle),
+                           boost::ref(non_empty));     
+#endif
+        
+		if (non_empty)
         {
             non_empty_sample_bundle = true;
             //assert (!bundle->ref_scaffolds().empty());
@@ -303,19 +358,6 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
     
     return true;
 }	
-
-#if ENABLE_THREADS
-mutex locus_thread_pool_lock;
-int locus_curr_threads = 0;
-int locus_num_threads = 0;
-
-void decr_locus_pool_count()
-{
-	locus_thread_pool_lock.lock();
-	locus_curr_threads--;
-	locus_thread_pool_lock.unlock();	
-}
-#endif
 
 void quantitation_worker(const RefSequenceTable& rt,
 						 vector<HitBundle*>* sample_bundles,
@@ -681,23 +723,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	final_est_run = false;
 	while (fasta_dir != "") // Only run initial estimation if correcting bias
 	{
-#if ENABLE_THREADS			
-        while(1)
-        {
-            locus_thread_pool_lock.lock();
-            if (locus_curr_threads < locus_num_threads)
-            {
-                locus_thread_pool_lock.unlock();
-                break;
-            }
-            
-            locus_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
-#endif
-        
         vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
         
         // grab the alignments for this locus in each of the samples
@@ -725,56 +750,11 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 sample_bundles->front()->left(),
                 sample_bundles->front()->right());
         
-        
-#if ENABLE_THREADS			
-        if (non_empty_bundle)
-        {
-            locus_thread_pool_lock.lock();
-            locus_curr_threads++;
-            locus_thread_pool_lock.unlock();
-            
-            thread quantitate(quantitation_worker,
-                              boost::cref(rt), 
-                              sample_bundles, 
-                              boost::ref(tests),
-                              boost::ref(tracking));
-        }
-        else 
-        {
-            // if the whole bundle is empty, just deal with it in the 
-            // main thread and save the overhead, since we'll be done
-            // super quickly.
-            quantitation_worker(boost::cref(rt), 
-                                sample_bundles, 
-                                boost::ref(tests),
-                                boost::ref(tracking));
-        }
-
-#else
         quantitation_worker(boost::cref(rt), 
                             sample_bundles, 
                             boost::ref(tests),
                             boost::ref(tracking));
-#endif
-
 	}
-	
-	// wait for the workers to finish up before reporting everthing.
-#if ENABLE_THREADS	
-	while(1)
-	{
-		locus_thread_pool_lock.lock();
-		if (locus_curr_threads == 0)
-		{
-			locus_thread_pool_lock.unlock();
-			break;
-		}
-		
-		locus_thread_pool_lock.unlock();
-		//fprintf(stderr, "waiting to for all workers to finish\n");
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-	}
-#endif
 	
 	if (fasta_dir != "")
 	{
@@ -788,23 +768,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	final_est_run = true;
 	while (true)
 	{
-#if ENABLE_THREADS			
-        while(1)
-        {
-            locus_thread_pool_lock.lock();
-            if (locus_curr_threads < locus_num_threads)
-            {
-                locus_thread_pool_lock.unlock();
-                break;
-            }
-            
-            locus_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
-#endif
-        
         vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
         
         // grab the alignments for this locus in each of the samples
@@ -832,53 +795,11 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 sample_bundles->front()->left(),
                 sample_bundles->front()->right());
 	
-			
-#if ENABLE_THREADS	
-        if (non_empty_bundle)
-        {
-            locus_thread_pool_lock.lock();
-            locus_curr_threads++;
-            locus_thread_pool_lock.unlock();
-            
-            thread quantitate(quantitation_worker,
-                              boost::cref(rt), 
-                              sample_bundles, 
-                              boost::ref(tests),
-                              boost::ref(tracking));
-        }
-        else 
-        {
-            quantitation_worker(boost::cref(rt), 
-                                sample_bundles, 
-                                boost::ref(tests),
-                                boost::ref(tracking));
-        }
-#else
         quantitation_worker(boost::cref(rt), 
                             sample_bundles, 
                             boost::ref(tests),
                             boost::ref(tracking));
-#endif
-
 	}
-	
-	// wait for the workers to finish up before reporting everthing.
-#if ENABLE_THREADS	
-	while(1)
-	{
-		locus_thread_pool_lock.lock();
-		if (locus_curr_threads == 0)
-		{
-			locus_thread_pool_lock.unlock();
-			break;
-		}
-		
-		locus_thread_pool_lock.unlock();
-		//fprintf(stderr, "waiting to for all workers to finish\n");
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-	}
-#endif
-	
 	
 	//double FDR = 0.05;
 	int total_iso_de_tests = 0;
