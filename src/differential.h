@@ -22,13 +22,9 @@
 #include <boost/thread.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/vector_proxy.hpp>
-#include <boost/numeric/ublas/io.hpp>
 
 #include "abundances.h"
+#include "jensen_shannon.h"
 
 using namespace std;
 
@@ -76,14 +72,14 @@ typedef map<string, SampleDifference > SampleDiffs;
 
 struct Outfiles
 {
-	vector<vector<FILE*> > isoform_de_outfiles;
-	vector<vector<FILE*> > group_de_outfiles;
-	vector<vector<FILE*> > gene_de_outfiles;
-	vector<vector<FILE*> > cds_de_outfiles;
+	FILE* isoform_de_outfile;
+	FILE* group_de_outfile;
+	FILE* gene_de_outfile;
+	FILE* cds_de_outfile;
 	
-	vector<vector<FILE*> > diff_splicing_outfiles;
-	vector<vector<FILE*> > diff_promoter_outfiles;
-	vector<vector<FILE*> > diff_cds_outfiles;
+	FILE* diff_splicing_outfile;
+	FILE* diff_promoter_outfile;
+	FILE* diff_cds_outfile;
 	
 	FILE* isoform_fpkm_tracking_out;
 	FILE* tss_group_fpkm_tracking_out;
