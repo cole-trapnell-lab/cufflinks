@@ -563,6 +563,9 @@ void extract_sample_diffs(SampleDiffs& diff_map,
 	}
 }
 
+#if ENABLE_THREADS
+mutex inspect_lock;
+
 void inspect_map_worker(ReplicatedBundleFactory& fac,
                         int& tmp_min_frag_len, 
                         int& tmp_max_frag_len)
@@ -571,7 +574,19 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
 	boost::this_thread::at_thread_exit(decr_locus_pool_count);
 #endif
     
-    fac.inspect_replicate_maps(tmp_min_frag_len, tmp_max_frag_len);
+    int min_f = std::numeric_limits<int>::max();
+    int max_f = 0;
+    
+    fac.inspect_replicate_maps(min_f, max_f);
+    
+#if ENABLE_THREADS
+    inspect_lock.lock();
+#endif
+    min_f = min(min_f, tmp_min_frag_len);
+    max_f = min(max_f, tmp_max_frag_len);
+#if ENABLE_THREADS
+    inspect_lock.unlock();
+#endif
 }
 
 void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
