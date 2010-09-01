@@ -565,6 +565,7 @@ void extract_sample_diffs(SampleDiffs& diff_map,
 
 #if ENABLE_THREADS
 mutex inspect_lock;
+#endif
 
 void inspect_map_worker(ReplicatedBundleFactory& fac,
                         int& tmp_min_frag_len, 
