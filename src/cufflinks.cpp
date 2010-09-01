@@ -775,7 +775,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
     
 	//FILE* fstats = fopen("bundles.stats", "w");
 	FILE* ftrans_abundances = fopen(string(output_dir + "/" + "transcripts.expr").c_str(), "w");
-	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\n");
+	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tgc_content\n");
 	
 	FILE* fgene_abundances = fopen(string(output_dir + "/" + "genes.expr").c_str(), "w");
 	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\n");
