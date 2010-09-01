@@ -37,14 +37,16 @@ public:
 			double fraction = 0.0,
 			ConfidenceInterval ci = ConfidenceInterval(),
 			double cov = 0.0,
-			double fmi = 0.0) :
+			double fmi = 0.0,
+			AbundanceStatus status = NUMERIC_FAIL) :
 		_scaffold(s),
 		_FPKM(FPKM),
 		_eff_len(eff_len),
 		_fraction(fraction),
 		_confidence(ci),
 		_coverage(cov),
-		_FMI(fmi)
+		_FMI(fmi),
+		_status(status)
 	{
 		_id = get_next_isoform_id();
 		
@@ -71,10 +73,13 @@ public:
 	double effective_length() const { return _eff_len; } 
 	void   effective_length(double eff_len) { _eff_len = eff_len; }
 	
+	AbundanceStatus status() const { return _status; } 
+	void   status(AbundanceStatus status) { _status = status; }
+	
 	double fraction() const {return _fraction; }
 	void fraction(double f) { _fraction = f; }
 	
-ConfidenceInterval confidence() const { return _confidence; }
+	ConfidenceInterval confidence() const { return _confidence; }
 	void   confidence(ConfidenceInterval c) { _confidence = c; }
 	
 	double coverage() const { return _coverage; }
@@ -104,6 +109,7 @@ private:
 	int _id;
 	string _gene_id;
 	string _trans_id;
+	AbundanceStatus _status;
 };
 
 class Gene
@@ -111,10 +117,12 @@ class Gene
 public:
 	Gene(const vector<Isoform>& isoforms, 
 		 double FPKM = 0.0,
-		 const ConfidenceInterval& ci = ConfidenceInterval()) : 
+		 const ConfidenceInterval& ci = ConfidenceInterval(),
+		 AbundanceStatus status=NUMERIC_FAIL) : 
 		_isoforms(isoforms), 
 		_FPKM(FPKM),
-		_confidence(ci)
+		_confidence(ci),
+		_status(status)
 	{
 		_id = get_next_gene_id();
 		
@@ -137,6 +145,9 @@ public:
 	ConfidenceInterval confidence() const { return _confidence; }
 	void   confidence(ConfidenceInterval c) { _confidence = c; }
 	
+	AbundanceStatus status() const { return _status; }
+	void   status(AbundanceStatus status) { _status = status; }
+	
 	int ID() const { return _id; }
 	int left() const { return _left; }
 	int right() const { return _right; }
@@ -152,6 +163,7 @@ private:
 	int _left;
 	int _right;
 	string _gene_id;
+	AbundanceStatus _status;
 };
 
 #endif

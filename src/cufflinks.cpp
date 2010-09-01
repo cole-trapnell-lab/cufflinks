@@ -558,13 +558,14 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 											   iso_ab->gamma(),
 											   iso_ab->FPKM_conf(),
 											   density_per_bp, 
-											   density_score));
+											   density_score,
+											   iso_ab->status()));
 				}
 			}
 			
 			if (!isoforms.empty())
 			{
-				Gene g(isoforms, gene.FPKM(), gene.FPKM_conf());
+				Gene g(isoforms, gene.FPKM(), gene.FPKM_conf(), gene.status());
 				genes.push_back(g);	
 			}
 		}
@@ -705,7 +706,13 @@ void assemble_bundle(const RefSequenceTable& rt,
 			
 			fflush(ftranscripts);
 			
-			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\n", 
+			const char* status;
+			if (iso.status()) 
+				status = "ok";
+			else 
+				status = "fail";
+			
+			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%s\n", 
 					iso.trans_id().c_str(),
 					bundle.id(),
 					rt.get_name(bundle.ref_id()),
@@ -719,13 +726,20 @@ void assemble_bundle(const RefSequenceTable& rt,
 					iso.coverage(),
 					iso.scaffold().length(),
 					iso.effective_length(),
-					iso.scaffold().gc_content());
+					iso.scaffold().gc_content(),
+					status);
 			fflush(ftrans_abundances);
 			
 			num_scaffs_reported++;
 		}
 		
-		fprintf(fgene_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\n",
+		const char* status;
+		if (gene.status())
+			status = "OK";
+		else
+			status = "FAIL";
+
+		fprintf(fgene_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%s\n",
 				gene.gene_id().c_str(),
 				bundle.id(),
 				rt.get_name(bundle.ref_id()),
@@ -733,7 +747,8 @@ void assemble_bundle(const RefSequenceTable& rt,
 				gene.right(),
 				gene.FPKM(),
 				gene.confidence().low,
-				gene.confidence().high);
+				gene.confidence().high,
+				status);
 		fflush(fgene_abundances);
 	}
     
@@ -775,10 +790,10 @@ bool assemble_hits(BundleFactory& bundle_factory)
     
 	//FILE* fstats = fopen("bundles.stats", "w");
 	FILE* ftrans_abundances = fopen(string(output_dir + "/" + "transcripts.expr").c_str(), "w");
-	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tgc_content\n");
+	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tgc_content\tstatus\n");
 	
 	FILE* fgene_abundances = fopen(string(output_dir + "/" + "genes.expr").c_str(), "w");
-	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\n");
+	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tstatus\n");
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
     
 	while(true)
