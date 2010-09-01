@@ -33,12 +33,14 @@ public:
 			int gid,
 			int tid,
 			double FPKM = 0.0, 
+			double eff_len = 0.0,
 			double fraction = 0.0,
 			ConfidenceInterval ci = ConfidenceInterval(),
 			double cov = 0.0,
 			double fmi = 0.0) :
 		_scaffold(s),
 		_FPKM(FPKM),
+		_eff_len(eff_len),
 		_fraction(fraction),
 		_confidence(ci),
 		_coverage(cov),
@@ -66,6 +68,9 @@ public:
 	double FPKM() const { return _FPKM; } 
 	void   FPKM(double fpkm) { _FPKM = fpkm; }
 	
+	double effective_length() const { return _eff_len; } 
+	void   effective_length(double eff_len) { _eff_len = eff_len; }
+	
 	double fraction() const {return _fraction; }
 	void fraction(double f) { _fraction = f; }
 	
@@ -91,6 +96,7 @@ private:
 	
 	Scaffold _scaffold;
 	double _FPKM;
+	double _eff_len;
 	double _fraction;
 	ConfidenceInterval _confidence;
 	double _coverage;

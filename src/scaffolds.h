@@ -321,6 +321,22 @@ public:
  
 	const string& seq() const { return _seq; } 
 	void seq(const string& s) {	_seq = s; } 
+	
+	double gc_content() const
+	{
+		if (_seq != "")
+		{
+			int count = 0;
+			for(int i = 0; i < _seq.length(); ++i)
+			{
+				if (_seq[i] == 'G' or _seq[i] == 'g' or _seq[i] == 'C' or _seq[i] == 'c')
+					count ++;
+			}
+			return count/double(_seq.length());
+		}
+		return -1.0;
+	}
+	
 			
 	char nearest_ref_classcode() const { return _classcode; }
 	void nearest_ref_classcode(char cc) { _classcode = cc; }

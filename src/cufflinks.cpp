@@ -553,7 +553,8 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 					isoforms.push_back(Isoform(*transfrag,
 											   gene_id,
 											   (int)isoforms.size() + 1,
-											   FPKM, 
+											   FPKM,
+											   iso_ab->effective_length(),
 											   iso_ab->gamma(),
 											   iso_ab->FPKM_conf(),
 											   density_per_bp, 
@@ -704,7 +705,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 			
 			fflush(ftranscripts);
 			
-			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\n", 
+			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\n", 
 					iso.trans_id().c_str(),
 					bundle.id(),
 					rt.get_name(bundle.ref_id()),
@@ -716,7 +717,9 @@ void assemble_bundle(const RefSequenceTable& rt,
 					iso.confidence().low,
 					iso.confidence().high,
 					iso.coverage(),
-					iso.scaffold().length());
+					iso.scaffold().length(),
+					iso.effective_length(),
+					iso.scaffold().gc_content());
 			fflush(ftrans_abundances);
 			
 			num_scaffs_reported++;
