@@ -297,11 +297,13 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
                   vector<HitBundle*>& locus_bundles)
 {
     bool non_empty_sample_bundle = false;
+    vector<bool*> factory_status;
+    
 	for (size_t i = 0; i < bundle_factories.size(); ++i)
 	{
         ReplicatedBundleFactory& fac = bundle_factories[i];
 		HitBundle* bundle = new HitBundle;
-        bool non_empty = false;
+        bool* non_empty = new bool(false);
 #if ENABLE_THREADS			
         while(1)
         {
@@ -325,20 +327,43 @@ bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
         thread next(next_bundle_worker,
                     boost::ref(fac),
                     boost::ref(*bundle),
-                    boost::ref(non_empty));  
+                    boost::ref(*non_empty));  
 #else
         next_bundle_worker(boost::ref(fac),
                            boost::ref(*bundle),
-                           boost::ref(non_empty));     
+                           boost::ref(*non_empty));     
 #endif
         
-		if (non_empty)
+
+        locus_bundles.push_back(bundle);
+        factory_status.push_back(non_empty);
+	}
+    
+    // wait for the workers to finish up before reporting everthing.
+#if ENABLE_THREADS	
+	while(1)
+	{
+		locus_thread_pool_lock.lock();
+		if (locus_curr_threads == 0)
+		{
+			locus_thread_pool_lock.unlock();
+			break;
+		}
+		
+		locus_thread_pool_lock.unlock();
+		//fprintf(stderr, "waiting to for all workers to finish\n");
+		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+	}
+#endif
+    
+    foreach(bool* status, factory_status)
+    {
+        if (*status == true)
         {
             non_empty_sample_bundle = true;
             //assert (!bundle->ref_scaffolds().empty());
-        }
-        locus_bundles.push_back(bundle);
-	}
+        }   
+    }
     
     if (non_empty_sample_bundle == false)
     {
@@ -364,10 +389,6 @@ void quantitation_worker(const RefSequenceTable& rt,
 						 Tests& tests,
 						 Tracking& tracking)
 {
-#if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_locus_pool_count);
-#endif
-
 	char bundle_label_buf[2048];
     sprintf(bundle_label_buf, 
             "%s:%d-%d", 
