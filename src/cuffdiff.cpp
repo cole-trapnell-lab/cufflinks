@@ -174,104 +174,13 @@ int parse_options(int argc, char** argv)
 	return 0;
 }
 
-// This factory merges bundles in a requested locus from several replicates
-class ReplicatedBundleFactory
-{
-public:
-	ReplicatedBundleFactory(const vector<shared_ptr<BundleFactory> >& factories)
-        : _factories(factories) {}
-	
-	bool next_bundle(HitBundle& bundle_out)
-    {
-        bundle_out = HitBundle(); 
-        vector<HitBundle> bundles;
-       
-        bool non_empty_bundle = false;
-        foreach (shared_ptr<BundleFactory> fac, _factories)
-        {
-            bundles.push_back(HitBundle());
-            if (fac->next_bundle(bundles.back()))
-            {
-                non_empty_bundle = true;
-            }
-        }
-        
-        if (non_empty_bundle == false)
-        {
-            return false;
-        }
-        
-        for (size_t i = 1; i < bundles.size(); ++i)
-        {
-            const vector<shared_ptr<Scaffold> >& s1 = bundles[i].ref_scaffolds();
-            const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1].ref_scaffolds();
-            assert (s1.size() == s2.size());
-            for (size_t j = 0; j < s1.size(); ++j)
-            {
-                assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
-            }
-        }
-        
-        // Merge the replicates into a combined bundle of hits.
-        HitBundle::combine(bundles, bundle_out);
-        return true;
-    }
-	
-	void reset() 
-    {
-        foreach (shared_ptr<BundleFactory> fac, _factories)
-        {
-            fac->reset();
-        }
-    }
-    
-    void inspect_replicate_maps(int& min_len, int& max_len)
-    {
-        foreach (shared_ptr<BundleFactory> fac, _factories)
-        {
-            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
-            *rg_props = *global_read_properties;
-            
-            long double map_mass = 0.0;
-            BadIntronTable bad_introns;
-            
-            shared_ptr<EmpDist> frag_len_dist(new EmpDist);
-            
-            inspect_map(*fac, map_mass, NULL, *frag_len_dist);
-            
-            rg_props->frag_len_dist(frag_len_dist);
-            rg_props->total_map_mass(map_mass);
-			
-            fac->read_group_properties(rg_props);
-            
-			min_len = min(min_len, frag_len_dist->min());
-			max_len = max(max_len, frag_len_dist->max());
-        }
-		
-    }
-	
-	void learn_replicate_bias()
-    {
-        foreach (shared_ptr<BundleFactory> fac, _factories)
-        {
-			shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
-			BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
-			learn_bias(*fac, *bl);
-			rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
-			fac->reset();
-        }
-    }
-    
-private:
-	vector<shared_ptr<BundleFactory> > _factories;
-};
 
 #if ENABLE_THREADS
 mutex locus_thread_pool_lock;
 int locus_curr_threads = 0;
 int locus_num_threads = 0;
 
-void decr_locus_pool_count()
+void decr_pool_count()
 {
 	locus_thread_pool_lock.lock();
 	locus_curr_threads--;
@@ -279,138 +188,140 @@ void decr_locus_pool_count()
 }
 #endif
 
-void next_bundle_worker(ReplicatedBundleFactory& fac,
-                        HitBundle& bundle,
-                        bool& non_empty)
-{
-#if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_locus_pool_count);
-#endif
-    
-    non_empty = fac.next_bundle(bundle);
-}
+//void next_bundle_worker(ReplicatedBundleFactory& fac,
+//                        HitBundle& bundle,
+//                        bool& non_empty)
+//{
+//#if ENABLE_THREADS
+//	boost::this_thread::at_thread_exit(decr_pool_count);
+//#endif
+//    
+//    non_empty = fac.next_bundle(bundle);
+//}
+//
+//// Gets the next set of bundles to process, advancing all sample factories
+//// and all replicates within those factories by one set of overlapping 
+//// transcripts
+//bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
+//                  vector<HitBundle*>& locus_bundles)
+//{
+//    bool non_empty_sample_bundle = false;
+//    vector<bool*> factory_status;
+//    
+//	for (size_t i = 0; i < bundle_factories.size(); ++i)
+//	{
+//        ReplicatedBundleFactory& fac = bundle_factories[i];
+//		HitBundle* bundle = new HitBundle;
+//        bool* non_empty = new bool(false);
+//#if ENABLE_THREADS			
+//        while(1)
+//        {
+//            locus_thread_pool_lock.lock();
+//            if (locus_curr_threads < locus_num_threads)
+//            {
+//                locus_thread_pool_lock.unlock();
+//                break;
+//            }
+//            
+//            locus_thread_pool_lock.unlock();
+//            
+//            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+//            
+//        }
+//
+//        locus_thread_pool_lock.lock();
+//        locus_curr_threads++;
+//        locus_thread_pool_lock.unlock();
+//        
+//        thread next(next_bundle_worker,
+//                    boost::ref(fac),
+//                    boost::ref(*bundle),
+//                    boost::ref(*non_empty));  
+//#else
+//        next_bundle_worker(boost::ref(fac),
+//                           boost::ref(*bundle),
+//                           boost::ref(*non_empty));     
+//#endif
+//        
+//
+//        locus_bundles.push_back(bundle);
+//        factory_status.push_back(non_empty);
+//	}
+//    
+//    // wait for the workers to finish up before reporting everthing.
+//#if ENABLE_THREADS	
+//	while(1)
+//	{
+//		locus_thread_pool_lock.lock();
+//		if (locus_curr_threads == 0)
+//		{
+//			locus_thread_pool_lock.unlock();
+//			break;
+//		}
+//		
+//		locus_thread_pool_lock.unlock();
+//		//fprintf(stderr, "waiting to for all workers to finish\n");
+//		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+//	}
+//#endif
+//    
+//    foreach(bool* status, factory_status)
+//    {
+//        if (*status == true)
+//        {
+//            non_empty_sample_bundle = true;
+//            //assert (!bundle->ref_scaffolds().empty());
+//        } 
+//        
+//        delete status;
+//    }
+//    
+//    if (non_empty_sample_bundle == false)
+//    {
+//        return false;
+//    }
+//    
+//    for (size_t i = 1; i < locus_bundles.size(); ++i)
+//    {
+//        const vector<shared_ptr<Scaffold> >& s1 = locus_bundles[i]->ref_scaffolds();
+//        const vector<shared_ptr<Scaffold> >& s2 =  locus_bundles[i-1]->ref_scaffolds();
+//        assert (s1.size() == s2.size());
+//        for (size_t j = 0; j < s1.size(); ++j)
+//        {
+//            assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
+//        }
+//    }
+//    
+//    return true;
+//}	
 
-// Gets the next set of bundles to process, advancing all sample factories
-// and all replicates within those factories by one set of overlapping 
-// transcripts
-bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
-                  vector<HitBundle*>& locus_bundles)
-{
-    bool non_empty_sample_bundle = false;
-    vector<bool*> factory_status;
-    
-	for (size_t i = 0; i < bundle_factories.size(); ++i)
-	{
-        ReplicatedBundleFactory& fac = bundle_factories[i];
-		HitBundle* bundle = new HitBundle;
-        bool* non_empty = new bool(false);
-#if ENABLE_THREADS			
-        while(1)
-        {
-            locus_thread_pool_lock.lock();
-            if (locus_curr_threads < locus_num_threads)
-            {
-                locus_thread_pool_lock.unlock();
-                break;
-            }
-            
-            locus_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
-
-        locus_thread_pool_lock.lock();
-        locus_curr_threads++;
-        locus_thread_pool_lock.unlock();
-        
-        thread next(next_bundle_worker,
-                    boost::ref(fac),
-                    boost::ref(*bundle),
-                    boost::ref(*non_empty));  
-#else
-        next_bundle_worker(boost::ref(fac),
-                           boost::ref(*bundle),
-                           boost::ref(*non_empty));     
-#endif
-        
-
-        locus_bundles.push_back(bundle);
-        factory_status.push_back(non_empty);
-	}
-    
-    // wait for the workers to finish up before reporting everthing.
-#if ENABLE_THREADS	
-	while(1)
-	{
-		locus_thread_pool_lock.lock();
-		if (locus_curr_threads == 0)
-		{
-			locus_thread_pool_lock.unlock();
-			break;
-		}
-		
-		locus_thread_pool_lock.unlock();
-		//fprintf(stderr, "waiting to for all workers to finish\n");
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-	}
-#endif
-    
-    foreach(bool* status, factory_status)
-    {
-        if (*status == true)
-        {
-            non_empty_sample_bundle = true;
-            //assert (!bundle->ref_scaffolds().empty());
-        }   
-    }
-    
-    if (non_empty_sample_bundle == false)
-    {
-        return false;
-    }
-    
-    for (size_t i = 1; i < locus_bundles.size(); ++i)
-    {
-        const vector<shared_ptr<Scaffold> >& s1 = locus_bundles[i]->ref_scaffolds();
-        const vector<shared_ptr<Scaffold> >& s2 =  locus_bundles[i-1]->ref_scaffolds();
-        assert (s1.size() == s2.size());
-        for (size_t j = 0; j < s1.size(); ++j)
-        {
-            assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
-        }
-    }
-    
-    return true;
-}	
-
-void quantitation_worker(const RefSequenceTable& rt,
-						 vector<HitBundle*>* sample_bundles,
-						 Tests& tests,
-						 Tracking& tracking)
-{
-	char bundle_label_buf[2048];
-    sprintf(bundle_label_buf, 
-            "%s:%d-%d", 
-            rt.get_name(sample_bundles->front()->ref_id()),
-            sample_bundles->front()->left(),
-            sample_bundles->front()->right());
-    bundle_label.reset(new string(bundle_label_buf));
-	
-	
-	test_differential(rt, *sample_bundles, tests, tracking);
-	
-	for (size_t i = 0; i < sample_bundles->size(); ++i)
-	{
-        foreach(shared_ptr<Scaffold>& ref_scaff, (*sample_bundles)[i]->ref_scaffolds())
-        {
-            ref_scaff->clear_hits();
-        }
-		delete (*sample_bundles)[i];
-	}
-	
-	delete sample_bundles;
-}
+//void quantitation_worker(const RefSequenceTable& rt,
+//						 vector<HitBundle*>* sample_bundles,
+//						 Tests& tests,
+//						 Tracking& tracking)
+//{
+//	char bundle_label_buf[2048];
+//    sprintf(bundle_label_buf, 
+//            "%s:%d-%d", 
+//            rt.get_name(sample_bundles->front()->ref_id()),
+//            sample_bundles->front()->left(),
+//            sample_bundles->front()->right());
+//    bundle_label.reset(new string(bundle_label_buf));
+//	
+//	
+//	test_differential(rt, *sample_bundles, tests, tracking);
+//	
+//	for (size_t i = 0; i < sample_bundles->size(); ++i)
+//	{
+//        foreach(shared_ptr<Scaffold>& ref_scaff, (*sample_bundles)[i]->ref_scaffolds())
+//        {
+//            ref_scaff->clear_hits();
+//        }
+//		delete (*sample_bundles)[i];
+//	}
+//	
+//	delete sample_bundles;
+//}
 
 template<typename T>
 string cat_strings(const T& container)
@@ -593,7 +504,7 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
                         int& tmp_max_frag_len)
 {
 #if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_locus_pool_count);
+	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
     
     int min_f = std::numeric_limits<int>::max();
@@ -611,6 +522,81 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
 #endif
 }
 
+bool quantitate_next_locus(const RefSequenceTable& rt,
+                           vector<ReplicatedBundleFactory>& bundle_factories,
+                           vector<shared_ptr<SampleAbundances> >& abundances)
+{
+    vector<shared_ptr<bool> > non_empty_bundle_flags;
+    for (size_t i = 0; i < bundle_factories.size(); ++i)
+    {
+        shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
+        shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
+#if ENABLE_THREADS			
+        while(1)
+        {
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
+            {
+                locus_thread_pool_lock.unlock();
+                break;
+            }
+            
+            locus_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+        locus_thread_pool_lock.lock();
+        locus_curr_threads++;
+        locus_thread_pool_lock.unlock();
+        
+        thread quantitate(sample_worker,
+                          boost::ref(rt),
+                          boost::ref(bundle_factories[i]),
+                          s_ab,
+                          sample_non_empty);  
+#else
+        sample_worker(boost::ref(rt),
+                      boost::ref(bundle_factories[i]),
+                      s_ab,
+                      sample_non_empty);
+#endif
+        abundances.push_back(s_ab);
+        non_empty_bundle_flags.push_back(sample_non_empty);
+    }
+    
+    // wait for the workers to finish up before doing the cross-sample testing.
+#if ENABLE_THREADS	
+    while(1)
+    {
+        locus_thread_pool_lock.lock();
+        if (locus_curr_threads == 0)
+        {
+            locus_thread_pool_lock.unlock();
+            break;
+        }
+        
+        locus_thread_pool_lock.unlock();
+        //fprintf(stderr, "waiting to for all workers to finish\n");
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+#endif
+    
+    bool more_loci_remain = false;
+    foreach (shared_ptr<bool> sample_flag, non_empty_bundle_flags)
+    {
+        if (*sample_flag)
+        {
+            more_loci_remain = true;
+            break;
+        }
+    }
+    
+    // There's no more loci to be processed.
+    return more_loci_remain;
+
+}
+
 void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 	ReadTable it;
@@ -623,7 +609,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         return;
 	
 	vector<ReplicatedBundleFactory> bundle_factories;    
-    vector<HitFactory*> all_hit_factories;
+    vector<shared_ptr<HitFactory> > all_hit_factories;
     
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
@@ -664,11 +650,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         ReplicatedBundleFactory rep_factory(replicate_factories);
         bundle_factories.push_back(rep_factory);
 	}
-	
-//    if (bundle_factories.size() > num_threads)
-//    {
-//        locus_num_threads = 1;
-//    }
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
@@ -724,11 +705,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 	}
 #endif
-    
-#if ENABLE_THREADS
-    locus_num_threads = num_threads;
-#endif
-    
+
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	
@@ -760,37 +737,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	final_est_run = false;
 	while (fasta_dir != "") // Only run initial estimation if correcting bias
 	{
-        vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
+        vector<shared_ptr<SampleAbundances> > abundances;
+        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
         
-        // grab the alignments for this locus in each of the samples
-        if (next_bundles(bundle_factories, *sample_bundles) == false)
-        {
-            // No more reference transcripts.  We're done
+        if (!more_loci_remain)
             break;
-        }
-        bool non_empty_bundle = false;
-        for (size_t i = 0; i < sample_bundles->size(); ++i)
-        {
-            if (!(*sample_bundles)[i]->hits().empty())
-            {
-                non_empty_bundle = true;
-                break;
-            }
-        }
-
-        RefID bundle_chr_id = sample_bundles->front()->ref_id();
-        assert (bundle_chr_id != 0);
-        const char* chr_name = rt.get_name(bundle_chr_id);
-        assert (chr_name);
-        fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
-                chr_name,
-                sample_bundles->front()->left(),
-                sample_bundles->front()->right());
         
-        quantitation_worker(boost::cref(rt), 
-                            sample_bundles, 
-                            boost::ref(tests),
-                            boost::ref(tracking));
 	}
 	
 	if (fasta_dir != "")
@@ -805,42 +757,35 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	final_est_run = true;
 	while (true)
 	{
-        vector<HitBundle*>* sample_bundles = new vector<HitBundle*>();
+        vector<shared_ptr<SampleAbundances> > abundances;
+        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
         
-        // grab the alignments for this locus in each of the samples
-        if (next_bundles(bundle_factories, *sample_bundles) == false)
-        {
-            // No more reference transcripts.  We're done
-            foreach (HitBundle* bundle, *sample_bundles)
-            {
-                delete bundle;
-            }
-            delete sample_bundles;
+        if (!more_loci_remain)
             break;
-        }
-        bool non_empty_bundle = false;
-        for (size_t i = 0; i < sample_bundles->size(); ++i)
+        
+        // TODO: more asserts qhere to verify that transcripts tested are
+        // identical, etc.
+        for (size_t i = 1; i < abundances.size(); ++i)
         {
-            if (!(*sample_bundles)[i]->hits().empty())
+            const SampleAbundances& curr = *(abundances[i]);
+            const SampleAbundances& prev = *(abundances[i-1]);
+
+            assert (curr.locus_tag == prev.locus_tag);
+            
+            const AbundanceGroup& s1 = curr.transcripts;
+            const AbundanceGroup& s2 =  prev.transcripts;
+            
+            assert (s1.abundances().size() == s2.abundances().size());
+            
+            for (size_t j = 0; j < s1.abundances().size(); ++j)
             {
-                non_empty_bundle = true;
-                break;
+                assert (s1.abundances()[j]->description() == s1.abundances()[j]->description());
             }
         }
-
-        RefID bundle_chr_id = sample_bundles->front()->ref_id();
-        assert (bundle_chr_id != 0);
-        const char* chr_name = rt.get_name(bundle_chr_id);
-        assert (chr_name);
-        fprintf(stderr, "Quantitating samples in locus [ %s:%d-%d ] \n", 
-                chr_name,
-                sample_bundles->front()->left(),
-                sample_bundles->front()->right());
-	
-        quantitation_worker(boost::cref(rt), 
-                            sample_bundles, 
-                            boost::ref(tests),
-                            boost::ref(tracking));
+        
+        fprintf(stderr, "Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
+        
+        test_differential(abundances.front()->locus_tag, abundances, tests, tracking);
 	}
 	
 	//double FDR = 0.05;
@@ -1012,12 +957,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
 	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
 	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
-    
-    foreach (HitFactory* fac, all_hit_factories)
-    {
-        delete fac;
-    }
-    
 }
 
 int main(int argc, char** argv)

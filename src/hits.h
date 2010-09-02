@@ -321,6 +321,9 @@ public:
 	{
 		if (name.empty())
 			return 0;
+#if ENABLE_THREADS
+        table_lock.lock();
+#endif
 		uint32_t _id = hash_string(name.c_str());
 		pair<InvertedIDTable::iterator, bool> ret = 
 		_by_id.insert(make_pair(_id, SequenceInfo(_next_id, NULL, NULL)));
@@ -334,6 +337,9 @@ public:
 			++_next_id;
 		}
 		assert (_id);
+#if ENABLE_THREADS
+        table_lock.unlock();
+#endif
 		return _id;
 	}
 	
@@ -411,6 +417,9 @@ private:
 	RefID _next_id;
 	bool _keep_names;
 	InvertedIDTable _by_id;
+#if ENABLE_THREADS
+    static boost::mutex table_lock;
+#endif;
 };
 
 

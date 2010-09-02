@@ -135,12 +135,125 @@ struct Tracking
 	FPKMTrackingTable cds_fpkm_tracking;
 };
 
+// This factory merges bundles in a requested locus from several replicates
+class ReplicatedBundleFactory
+{
+public:
+	ReplicatedBundleFactory(const vector<shared_ptr<BundleFactory> >& factories)
+    : _factories(factories) {}
+	
+	bool next_bundle(HitBundle& bundle_out)
+    {
+        bundle_out = HitBundle(); 
+        vector<HitBundle> bundles;
+        
+        bool non_empty_bundle = false;
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            bundles.push_back(HitBundle());
+            if (fac->next_bundle(bundles.back()))
+            {
+                non_empty_bundle = true;
+            }
+        }
+        
+        if (non_empty_bundle == false)
+        {
+            return false;
+        }
+        
+        for (size_t i = 1; i < bundles.size(); ++i)
+        {
+            const vector<shared_ptr<Scaffold> >& s1 = bundles[i].ref_scaffolds();
+            const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1].ref_scaffolds();
+            assert (s1.size() == s2.size());
+            for (size_t j = 0; j < s1.size(); ++j)
+            {
+                assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
+            }
+        }
+        
+        // Merge the replicates into a combined bundle of hits.
+        HitBundle::combine(bundles, bundle_out);
+        return true;
+    }
+	
+	void reset() 
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            fac->reset();
+        }
+    }
+    
+    void inspect_replicate_maps(int& min_len, int& max_len)
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+            *rg_props = *global_read_properties;
+            
+            long double map_mass = 0.0;
+            BadIntronTable bad_introns;
+            
+            shared_ptr<EmpDist> frag_len_dist(new EmpDist);
+            
+            inspect_map(*fac, map_mass, NULL, *frag_len_dist);
+            
+            rg_props->frag_len_dist(frag_len_dist);
+            rg_props->total_map_mass(map_mass);
+			
+            fac->read_group_properties(rg_props);
+            
+			min_len = min(min_len, frag_len_dist->min());
+			max_len = max(max_len, frag_len_dist->max());
+        }
+		
+    }
+	
+	void learn_replicate_bias()
+    {
+        foreach (shared_ptr<BundleFactory> fac, _factories)
+        {
+			shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+			BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
+			learn_bias(*fac, *bl);
+			rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
+			fac->reset();
+        }
+    }
+    
+private:
+	vector<shared_ptr<BundleFactory> > _factories;
+};
+
+
+struct SampleAbundances
+{
+    string locus_tag;
+	AbundanceGroup transcripts;
+	vector<AbundanceGroup> primary_transcripts;
+	vector<AbundanceGroup> gene_primary_transcripts;
+	vector<AbundanceGroup> cds;
+	vector<AbundanceGroup> gene_cds;
+	vector<AbundanceGroup> genes;
+	double cluster_mass;
+};
+
 extern double min_read_count;
 
-void test_differential(const RefSequenceTable& rt, 
-					   const vector<HitBundle*>& sample_bundles,
+void sample_worker(const RefSequenceTable& rt,
+                   ReplicatedBundleFactory& sample_factory,
+                   shared_ptr<SampleAbundances> abundance,
+                   shared_ptr<bool> non_empty);
+
+void test_differential(const string& locus_tag,
+					   const vector<shared_ptr<SampleAbundances> >& samples,
 					   Tests& tests,
 					   Tracking& tracking);
 
+#if ENABLE_THREADS
+void decr_pool_count();
+#endif
 
 #endif

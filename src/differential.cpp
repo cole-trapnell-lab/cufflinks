@@ -402,33 +402,8 @@ string bundle_locus_tag(const RefSequenceTable& rt,
 	return string(locus_buf);
 }
 
-struct SampleAbundances
-{
-	AbundanceGroup transcripts;
-	vector<AbundanceGroup> primary_transcripts;
-	vector<AbundanceGroup> gene_primary_transcripts;
-	vector<AbundanceGroup> cds;
-	vector<AbundanceGroup> gene_cds;
-	vector<AbundanceGroup> genes;
-	double cluster_mass;
-};
-
 #if ENABLE_THREADS
 mutex test_storage_lock; // don't modify the above struct without locking here
-#endif
-
-
-#if ENABLE_THREADS
-mutex sample_thread_pool_lock;
-int sample_curr_threads = 0;
-int sample_num_threads = 0;
-
-void decr_sample_pool_count()
-{
-	sample_thread_pool_lock.lock();
-	sample_curr_threads--;
-	sample_thread_pool_lock.unlock();	
-}
 #endif
 
 void sample_abundance_worker(const string& locus_tag,
@@ -437,10 +412,6 @@ void sample_abundance_worker(const string& locus_tag,
                              bool perform_cds_analysis,
                              bool perform_tss_analysis)
 {
-#if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_sample_pool_count);
-#endif
-    
     vector<shared_ptr<Abundance> > abundances;
     
     foreach(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
@@ -573,95 +544,110 @@ void sample_abundance_worker(const string& locus_tag,
     }
 }
 
-void test_differential(const RefSequenceTable& rt, 
-					   const vector<HitBundle*>& sample_bundles,
+void sample_worker(const RefSequenceTable& rt,
+                   ReplicatedBundleFactory& sample_factory,
+                   shared_ptr<SampleAbundances> abundance,
+                   shared_ptr<bool> non_empty)
+{
+#if ENABLE_THREADS
+	boost::this_thread::at_thread_exit(decr_pool_count);
+#endif
+    
+    HitBundle bundle;
+    *non_empty = sample_factory.next_bundle(bundle);
+    if (!*non_empty)
+        return;
+    
+    char bundle_label_buf[2048];
+    sprintf(bundle_label_buf, 
+            "%s:%d-%d", 
+            rt.get_name(bundle.ref_id()),
+            bundle.left(),
+            bundle.right());
+    string locus_tag = bundle_label_buf;
+    abundance->locus_tag = locus_tag;
+    
+    bool perform_cds_analysis = true;
+    bool perform_tss_analysis = true;
+
+    foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+    {
+        if (s->annotated_tss_id() == "")
+        {
+            perform_tss_analysis = false;
+        }
+        if (s->annotated_protein_id() == "")
+        {
+            perform_cds_analysis = false;
+        }
+    }
+
+    sample_abundance_worker(boost::cref(locus_tag),
+                            boost::ref(*abundance),
+                            &bundle,
+                            perform_cds_analysis,
+                            perform_tss_analysis);
+
+    //bundle.clear_hits();
+    foreach (shared_ptr<Scaffold> ref_scaff, bundle.ref_scaffolds())
+    {
+        ref_scaff->clear_hits();
+    }
+    
+}
+
+void test_differential(const string& locus_tag,
+					   const vector<shared_ptr<SampleAbundances> >& samples,
 					   Tests& tests,
 					   Tracking& tracking)
 {
-	if (sample_bundles.empty())
+	if (samples.empty())
 		return;
 	
-#if ENABLE_THREADS
-    sample_num_threads = num_threads;
-#endif
-    
-	string locus_tag = bundle_locus_tag(rt, *(sample_bundles.front()));
-	
-	bool perform_cds_analysis = true;
-	bool perform_tss_analysis = true;
-	for (size_t i = 0; i < sample_bundles.size(); ++i)
-	{
-		foreach(shared_ptr<Scaffold> s, sample_bundles[i]->ref_scaffolds())
-		{
-			if (s->annotated_tss_id() == "")
-			{
-				perform_tss_analysis = false;
-			}
-			if (s->annotated_protein_id() == "")
-			{
-				perform_cds_analysis = false;
-			}
-		}
-	}
-	
-	vector<SampleAbundances> samples(sample_bundles.size());
-
-	// set up the transfrag abundance group for each samples
-	for (size_t i = 0; i < sample_bundles.size(); ++i)
-	{
-        samples[i].cluster_mass = sample_bundles[i]->hits().size();
-#if ENABLE_THREADS			
-        while(1)
-        {
-            sample_thread_pool_lock.lock();
-            if (sample_curr_threads < sample_num_threads)
-            {
-                sample_thread_pool_lock.unlock();
-                break;
-            }
-            
-            sample_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
-        
-        sample_thread_pool_lock.lock();
-        sample_curr_threads++;
-        sample_thread_pool_lock.unlock();
-        
-        thread quantitate(sample_abundance_worker,
-                          boost::cref(locus_tag),
-                          boost::ref(samples[i]),
-                          boost::ref(sample_bundles[i]),
-                          perform_cds_analysis,
-                          perform_tss_analysis);
-#else
-        sample_abundance_worker(boost::cref(locus_tag),
-                                boost::ref(samples[i]),
-                                boost::ref(sample_bundles[i]),
-                                perform_cds_analysis,
-                                perform_tss_analysis);
-#endif
-        
-	}
-    
-    // wait for the workers to finish up before reporting everthing.
-#if ENABLE_THREADS	
-	while(1)
-	{
-		sample_thread_pool_lock.lock();
-		if (sample_curr_threads == 0)
-		{
-			sample_thread_pool_lock.unlock();
-			break;
-		}
-		
-		sample_thread_pool_lock.unlock();
-		//fprintf(stderr, "waiting to for all workers to finish\n");
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-	}
-#endif
+  //  
+//	string locus_tag = bundle_locus_tag(rt, *(sample_bundles.front()));
+//	
+//	vector<SampleAbundances> samples(sample_bundles.size());
+//
+//	// set up the transfrag abundance group for each samples
+//	for (size_t i = 0; i < sample_bundles.size(); ++i)
+//	{
+//        samples[i].cluster_mass = sample_bundles[i]->hits().size();
+//#if ENABLE_THREADS			
+//        while(1)
+//        {
+//            sample_thread_pool_lock.lock();
+//            if (sample_curr_threads < sample_num_threads)
+//            {
+//                sample_thread_pool_lock.unlock();
+//                break;
+//            }
+//            
+//            sample_thread_pool_lock.unlock();
+//            
+//            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+//            
+//        }
+//        
+//        sample_thread_pool_lock.lock();
+//        sample_curr_threads++;
+//        sample_thread_pool_lock.unlock();
+//        
+//        thread quantitate(sample_abundance_worker,
+//                          boost::cref(locus_tag),
+//                          boost::ref(samples[i]),
+//                          boost::ref(sample_bundles[i]),
+//                          perform_cds_analysis,
+//                          perform_tss_analysis);
+//#else
+//        sample_abundance_worker(boost::cref(locus_tag),
+//                                boost::ref(samples[i]),
+//                                boost::ref(sample_bundles[i]),
+//                                perform_cds_analysis,
+//                                perform_tss_analysis);
+//#endif
+//        
+//	}
     
 #if ENABLE_THREADS
 	test_storage_lock.lock();
@@ -669,23 +655,23 @@ void test_differential(const RefSequenceTable& rt,
 	
 	for (size_t i = 0; i < samples.size(); ++i)
 	{
-		const AbundanceGroup& ab_group = samples[i].transcripts;
+		const AbundanceGroup& ab_group = samples[i]->transcripts;
 		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
 			add_to_tracking_table(i, *ab, tracking.isoform_fpkm_tracking);
 		}
 		
-		foreach (AbundanceGroup& ab, samples[i].cds)
+		foreach (AbundanceGroup& ab, samples[i]->cds)
 		{
 			add_to_tracking_table(i, ab, tracking.cds_fpkm_tracking);
 		}
 		
-		foreach (AbundanceGroup& ab, samples[i].primary_transcripts)
+		foreach (AbundanceGroup& ab, samples[i]->primary_transcripts)
 		{
 			add_to_tracking_table(i, ab, tracking.tss_group_fpkm_tracking);
 		}
 		
-		foreach (AbundanceGroup& ab, samples[i].genes)
+		foreach (AbundanceGroup& ab, samples[i]->genes)
 		{
 			add_to_tracking_table(i, ab, tracking.gene_fpkm_tracking);
 		}
@@ -693,18 +679,18 @@ void test_differential(const RefSequenceTable& rt,
 	
 	for (size_t i = 1; i < samples.size(); ++i)
 	{
-		bool multi_transcript_locus = samples[i].transcripts.abundances().size() > 1;
+		bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
 		
         for (size_t j = 0; j < i; ++j)
         {
             bool enough_reads = !(multi_transcript_locus &&
-                                  (samples[i].cluster_mass < min_read_count ||
-                                   samples[j].cluster_mass < min_read_count));
-            assert (samples[i].transcripts.abundances().size() == 
-                    samples[j].transcripts.abundances().size());
-            for (size_t k = 0; k < samples[i].transcripts.abundances().size(); ++k)
+                                  (samples[i]->cluster_mass < min_read_count ||
+                                   samples[j]->cluster_mass < min_read_count));
+            assert (samples[i]->transcripts.abundances().size() == 
+                    samples[j]->transcripts.abundances().size());
+            for (size_t k = 0; k < samples[i]->transcripts.abundances().size(); ++k)
             {
-                const Abundance& curr_abundance = *(samples[j].transcripts.abundances()[k]);
+                const Abundance& curr_abundance = *(samples[j]->transcripts.abundances()[k]);
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.isoform_fpkm_tracking.find(desc);
                 assert (itr != tracking.isoform_fpkm_tracking.end());
@@ -722,9 +708,9 @@ void test_differential(const RefSequenceTable& rt,
                 result.second->second.description = curr_abundance.description();
             }
             
-            for (size_t k = 0; k < samples[i].cds.size(); ++k)
+            for (size_t k = 0; k < samples[i]->cds.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j].cds[k];
+                const Abundance& curr_abundance = samples[j]->cds[k];
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.cds_fpkm_tracking.find(desc);
                 assert (itr != tracking.cds_fpkm_tracking.end());
@@ -742,9 +728,9 @@ void test_differential(const RefSequenceTable& rt,
                 result.second->second.description = curr_abundance.description();
             }
             
-            for (size_t k = 0; k < samples[i].primary_transcripts.size(); ++k)
+            for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j].primary_transcripts[k];
+                const Abundance& curr_abundance = samples[j]->primary_transcripts[k];
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.tss_group_fpkm_tracking.find(desc);
                 assert (itr != tracking.tss_group_fpkm_tracking.end());
@@ -762,9 +748,9 @@ void test_differential(const RefSequenceTable& rt,
                 result.second->second.description = curr_abundance.description();
             }
             
-            for (size_t k = 0; k < samples[i].genes.size(); ++k)
+            for (size_t k = 0; k < samples[i]->genes.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j].genes[k];
+                const Abundance& curr_abundance = samples[j]->genes[k];
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.gene_fpkm_tracking.find(desc);
                 assert (itr != tracking.gene_fpkm_tracking.end());
@@ -788,28 +774,28 @@ void test_differential(const RefSequenceTable& rt,
             // in the FPKMContexts to handle that case properly.
             
             // Differential promoter use
-            for (size_t k = 0; k < samples[i].gene_primary_transcripts.size(); ++k)
+            for (size_t k = 0; k < samples[i]->gene_primary_transcripts.size(); ++k)
             {
-                get_ds_tests(samples[j].gene_primary_transcripts[k], 
-                             samples[i].gene_primary_transcripts[k],
+                get_ds_tests(samples[j]->gene_primary_transcripts[k], 
+                             samples[i]->gene_primary_transcripts[k],
                              tests.diff_promoter_tests[i][j],
                              enough_reads);
             }
             
             // Differential coding sequence output
-            for (size_t k = 0; k < samples[i].gene_cds.size(); ++k)
+            for (size_t k = 0; k < samples[i]->gene_cds.size(); ++k)
             {
-                get_ds_tests(samples[j].gene_cds[k], 
-                             samples[i].gene_cds[k],
+                get_ds_tests(samples[j]->gene_cds[k], 
+                             samples[i]->gene_cds[k],
                              tests.diff_cds_tests[i][j],
                              enough_reads);
             }
             
             // Differential splicing of primary transcripts
-            for (size_t k = 0; k < samples[i].primary_transcripts.size(); ++k)
+            for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
-                get_ds_tests(samples[j].primary_transcripts[k], 
-                             samples[i].primary_transcripts[k],
+                get_ds_tests(samples[j]->primary_transcripts[k], 
+                             samples[i]->primary_transcripts[k],
                              tests.diff_splicing_tests[i][j],
                              enough_reads);
             }

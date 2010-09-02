@@ -139,6 +139,13 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         line_num++;
     }
     
+    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM");
+    for (size_t i = 0; i < sample_names.size(); ++i)
+    {
+        fprintf(spec_out, "\t%s", sample_names[i].c_str());
+    }
+    fprintf(spec_out, "\n");
+    
     while(fgets(buf, sizeof(buf), fpkm_file))
     {
         // Chomp the newline

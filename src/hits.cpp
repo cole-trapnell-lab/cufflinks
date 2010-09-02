@@ -24,6 +24,8 @@
 
 using namespace std;
 
+boost::mutex RefSequenceTable::table_lock;
+
 //static const int max_read_length = 1024;
 
 bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2)
