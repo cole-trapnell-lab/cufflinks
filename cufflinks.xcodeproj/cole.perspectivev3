@@ -280,7 +280,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>16</integer>
+									<integer>49</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cufflinks.cpp</string>
+								<string>cuffdiff.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cufflinks.cpp</string>
+										<string>cuffdiff.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED2913E1122FDEAF00C3703E</string>
+										<string>ED2913EE122FE14700C3703E</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -380,8 +380,8 @@
 											<string>ED2913CC122FDAFD00C3703E</string>
 											<string>ED2913D2122FDB9C00C3703E</string>
 											<string>ED2913D7122FDDC300C3703E</string>
-											<string>ED2913DF122FDEAF00C3703E</string>
-											<string>ED2913E0122FDEAF00C3703E</string>
+											<string>ED2913E9122FE13300C3703E</string>
+											<string>ED2913EA122FE13300C3703E</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -437,6 +437,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {906, 246}}</string>
+										<key>RubberWindowFrame</key>
+										<string>477 279 1195 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -475,8 +477,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {906, 246}}</string>
-										<key>RubberWindowFrame</key>
-										<string>477 279 1195 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>

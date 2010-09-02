@@ -633,10 +633,10 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         vector<shared_ptr<BundleFactory> > replicate_factories;
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
-            HitFactory* hs = NULL;
+            shared_ptr<HitFactory> hs;
             try
             {
-                hs = new BAMHitFactory(sam_hit_filenames[j], it, rt);
+                hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
             }
             catch (std::runtime_error& e) 
             {
@@ -644,7 +644,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 {
                     fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
                             sam_hit_filename_lists[i].c_str());
-                    hs = new SAMHitFactory(sam_hit_filenames[j], it, rt);
+                    hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
                 }
                 catch (std::runtime_error& e)
                 {
@@ -656,7 +656,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
             
             all_hit_factories.push_back(hs);
             
-            shared_ptr<BundleFactory> hf(new BundleFactory(shared_ptr<HitFactory>(hs)));
+            shared_ptr<BundleFactory> hf(new BundleFactory(hs));
             replicate_factories.push_back(hf);
             replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
