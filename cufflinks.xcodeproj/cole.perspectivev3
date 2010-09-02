@@ -280,13 +280,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>49</integer>
+									<integer>16</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 720}, {267, 840}}</string>
+							<string>{{0, 63}, {267, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cuffdiff.cpp</string>
+								<string>cufflinks.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cuffdiff.cpp</string>
+										<string>cufflinks.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED29137A122E830000C3703E</string>
+										<string>ED2913E1122FDEAF00C3703E</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -345,7 +345,6 @@
 											<string>EDBEA6BF11ED3DD100C661A7</string>
 											<string>ED70726B11F79D170028F305</string>
 											<string>EDC6AD8B1225906900CA79FA</string>
-											<string>EDC6ADCB1225F27D00CA79FA</string>
 											<string>EDC6ADCC1225F27D00CA79FA</string>
 											<string>EDFE370112269FAF00F24CD3</string>
 											<string>EDFE371012271FCE00F24CD3</string>
@@ -358,14 +357,10 @@
 											<string>EDFE393412299AE500F24CD3</string>
 											<string>EDFE393512299AE500F24CD3</string>
 											<string>EDFE393D12299B7B00F24CD3</string>
-											<string>EDFE3940122AAC0D00F24CD3</string>
-											<string>EDFE399D122AB22700F24CD3</string>
-											<string>EDFE39D8122BE6AD00F24CD3</string>
 											<string>EDFE39DD122BE6AD00F24CD3</string>
 											<string>EDFE3A0C122BE93000F24CD3</string>
 											<string>EDFE3A0D122BE93000F24CD3</string>
 											<string>EDFE3A0E122BE93000F24CD3</string>
-											<string>EDFE3A0F122BE93000F24CD3</string>
 											<string>EDFE3A11122BE93000F24CD3</string>
 											<string>EDFE3A13122BE93000F24CD3</string>
 											<string>EDFE3A25122BFB7B00F24CD3</string>
@@ -373,15 +368,20 @@
 											<string>EDFE3AA5122C9ED000F24CD3</string>
 											<string>EDFE3AA6122C9ED000F24CD3</string>
 											<string>EDFE3AA7122C9ED000F24CD3</string>
-											<string>ED29133B122CA37600C3703E</string>
 											<string>ED291362122D32B500C3703E</string>
 											<string>ED291363122D32B500C3703E</string>
-											<string>ED291367122E127E00C3703E</string>
 											<string>ED291368122E127E00C3703E</string>
-											<string>ED291369122E127E00C3703E</string>
-											<string>ED291374122E826A00C3703E</string>
-											<string>ED291375122E826A00C3703E</string>
-											<string>ED291376122E826A00C3703E</string>
+											<string>ED29139D122F60EE00C3703E</string>
+											<string>ED29139E122F60EE00C3703E</string>
+											<string>ED2913B5122F633B00C3703E</string>
+											<string>ED2913B6122F633B00C3703E</string>
+											<string>ED2913B9122FD89500C3703E</string>
+											<string>ED2913BD122FD92600C3703E</string>
+											<string>ED2913CC122FDAFD00C3703E</string>
+											<string>ED2913D2122FDB9C00C3703E</string>
+											<string>ED2913D7122FDDC300C3703E</string>
+											<string>ED2913DF122FDEAF00C3703E</string>
+											<string>ED2913E0122FDEAF00C3703E</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -420,7 +420,7 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {906, 193}}</string>
+										<string>{{10, 27}, {906, 246}}</string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -437,8 +437,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {906, 246}}</string>
-										<key>RubberWindowFrame</key>
-										<string>477 279 1195 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -477,6 +475,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {906, 246}}</string>
+										<key>RubberWindowFrame</key>
+										<string>477 279 1195 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>

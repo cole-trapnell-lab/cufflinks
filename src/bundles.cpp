@@ -453,11 +453,11 @@ shared_ptr<ReadHit> BundleFactory::next_valid_alignment()
     while (true)
     {
     
-        if (!_hit_fac.next_record(hit_buf, hit_buf_size))
+        if (!_hit_fac->next_record(hit_buf, hit_buf_size))
             break;
         
         ReadHit tmp;
-        if (!_hit_fac.get_hit_from_buf(hit_buf, tmp, false))
+        if (!_hit_fac->get_hit_from_buf(hit_buf, tmp, false))
             continue;
         
         if (tmp.error_prob() > max_phred_err_prob)
@@ -557,9 +557,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
             {
                 if (bh->ref_id() != (*next_ref_scaff)->ref_id())
                 {
-                    const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
-                    const char* ref_rna_chr_name = _hit_fac.ref_table().get_name((*next_ref_scaff)->ref_id());
-                    const char* last_bh_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
+                    const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
+                    const char* ref_rna_chr_name = _hit_fac->ref_table().get_name((*next_ref_scaff)->ref_id());
+                    const char* last_bh_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
                     
                     // if the BAM/SAM file isn't lexicographically sorted by chromosome, print an error
                     // and exit.
@@ -642,7 +642,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
             }
             else
             {
-                if (!_hit_fac.records_remain() && next_ref_scaff == ref_mRNAs.end())
+                if (!_hit_fac->records_remain() && next_ref_scaff == ref_mRNAs.end())
                 {
                     return false;
                 }
@@ -729,8 +729,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
         else
         {
             past_right_end = true;
-            const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
-            const char* last_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
+            const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
+            const char* last_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
             
             if (strcmp(last_chr_name, bh_chr_name) > 0)
             { 
@@ -746,8 +746,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 		{
 			if (bh->left() < last_hit_pos_seen)
 			{
-                const char* bh_chr_name = _hit_fac.ref_table().get_name(bh->ref_id());
-                const char* last_chr_name = _hit_fac.ref_table().get_name(last_hit_ref_id_seen);
+                const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
+                const char* last_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
 				print_sort_error(last_chr_name, 
                                  last_hit_pos_seen,
                                  bh_chr_name,
@@ -780,7 +780,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 		}
 		else if (past_right_end)
 		{
-			_hit_fac.undo_hit();
+			_hit_fac->undo_hit();
 			break;
 		}
 		

@@ -908,7 +908,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory bundle_factory(*hit_factory);
+	BundleFactory bundle_factory(hit_factory);
 	
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
@@ -958,7 +958,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	//ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
 	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
     
-	BundleFactory bundle_factory2(*hit_factory);
+	BundleFactory bundle_factory2(hit_factory);
     
     if (ref_gtf)
     {

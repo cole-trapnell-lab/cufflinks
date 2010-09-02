@@ -273,17 +273,17 @@ class BundleFactory
 {
 public:
     
-	BundleFactory(HitFactory& fac)
+	BundleFactory(shared_ptr<HitFactory> fac)
 	: _hit_fac(fac) {}
 
 	bool next_bundle(HitBundle& bundle_out);
     
-    RefSequenceTable& ref_table() { return _hit_fac.ref_table(); }
+    RefSequenceTable& ref_table() { return _hit_fac->ref_table(); }
     
 	void reset() 
 	{ 
 		//rewind(hit_file); 
-		_hit_fac.reset();
+		_hit_fac->reset();
 		next_ref_scaff = ref_mRNAs.begin(); 
         next_mask_scaff = mask_gtf_recs.begin();
         
@@ -350,7 +350,7 @@ public:
 	bool spans_bad_intron(const ReadHit& read);
 	
 private:
-	HitFactory& _hit_fac;
+	shared_ptr<HitFactory> _hit_fac;
     
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
 	//FILE* ref_mRNA_file;

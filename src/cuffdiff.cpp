@@ -656,7 +656,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
             
             all_hit_factories.push_back(hs);
             
-            shared_ptr<BundleFactory> hf(new BundleFactory(*hs));
+            shared_ptr<BundleFactory> hf(new BundleFactory(shared_ptr<HitFactory>(hs)));
             replicate_factories.push_back(hf);
             replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
@@ -726,7 +726,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 #endif
     
 #if ENABLE_THREADS
-    locus_num_threads = 1;
+    locus_num_threads = num_threads;
 #endif
     
 	min_frag_len = tmp_min_frag_len;
@@ -811,6 +811,11 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         if (next_bundles(bundle_factories, *sample_bundles) == false)
         {
             // No more reference transcripts.  We're done
+            foreach (HitBundle* bundle, *sample_bundles)
+            {
+                delete bundle;
+            }
+            delete sample_bundles;
             break;
         }
         bool non_empty_bundle = false;
