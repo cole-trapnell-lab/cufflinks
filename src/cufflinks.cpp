@@ -769,11 +769,6 @@ void assemble_bundle(const RefSequenceTable& rt,
 	out_file_lock.unlock();
 #endif
 
-    foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ptr->ref_scaffolds())
-    {
-        ref_scaff->clear_hits();
-    }
-    
 	delete bundle_ptr;
 }
 

@@ -96,7 +96,13 @@ public:
 	HitBundle() 
     : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _num_replicates(1) {}
     
-	~HitBundle() {}
+	~HitBundle() 
+	{
+		foreach(shared_ptr<Scaffold>& ref_scaff, _ref_scaffs)
+		{
+			ref_scaff->clear_hits();
+		}
+	}
 	
 	int left()   const { return _leftmost;  }
 	int right()  const { return _rightmost; }
@@ -389,7 +395,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
     size_t total_hits = 0;
     size_t total_non_redundant_hits = 0;
-    
 	
 	while(true)
 	{
@@ -423,13 +428,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
         const vector<MateHit>& hits = bundle.non_redundant_hits();
 		if (hits.empty())
         {
-            foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
-            {
-                ref_scaff->clear_hits();
-            }
             delete bundle_ptr;
             continue;
         }
+		
 		int curr_range_start = hits[0].left();
 		int curr_range_end = numeric_limits<int>::max();
 		int next_range_start = -1;
