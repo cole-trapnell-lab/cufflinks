@@ -842,10 +842,6 @@ void filter_junk_genes(vector<Gene>& genes)
 					good_gene = false;
 				}
 			}
-			if (all_isoforms[j].scaffold().annotated_trans_id()=="NM_003106")
-			{
-				fprintf(stderr,"Still here!");
-			}
 		}
 		if (good_gene)
         {
