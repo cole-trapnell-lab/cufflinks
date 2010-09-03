@@ -419,7 +419,7 @@ private:
 	InvertedIDTable _by_id;
 #if ENABLE_THREADS
     static boost::mutex table_lock;
-#endif;
+#endif
 };
 
 
