@@ -555,8 +555,11 @@ void sample_worker(const RefSequenceTable& rt,
     
     HitBundle bundle;
     *non_empty = sample_factory.next_bundle(bundle);
+    
     if (!*non_empty)
         return;
+    
+    abundance->cluster_mass = bundle.hits().size();
     
     char bundle_label_buf[2048];
     sprintf(bundle_label_buf, 

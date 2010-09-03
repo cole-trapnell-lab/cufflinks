@@ -403,7 +403,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		
 		HitBundle& bundle = *bundle_ptr;
 		
-		//#if ASM_VERBOSE
+#if ASM_VERBOSE
         const RefSequenceTable& rt = bundle_factory.ref_table();
         const char* chrom = rt.get_name(bundle.ref_id());
         char bundle_label_buf[2048];
@@ -413,7 +413,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
                 bundle.left(),
                 bundle.right());
         fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-//#endif
+#endif
 		
         if (bad_introns != NULL)
         {
@@ -505,7 +505,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		delete bundle_ptr;
 	}
 	
-    
+    fprintf(stderr, "Fragments range between %d and %d bp\n", min_len, max_len);
 
     
     if (bad_introns != NULL)
