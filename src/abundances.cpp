@@ -355,6 +355,10 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
         {
             _abundances[j]->FPKM(0);
         }
+		if (_abundance[j]->transfrag->annotated_trans_id()=="NM_003106")
+		{
+			fprintf(stderr,"Abundance %d\n",_abundances[j]->FPKM());
+		}
 
 	}
 }

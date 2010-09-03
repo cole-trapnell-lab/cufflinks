@@ -675,7 +675,8 @@ void assemble_bundle(const RefSequenceTable& rt,
     fprintf(stderr, "%s\tFiltering bundle assembly\n", bundle_label->c_str());
 #endif
     
-	filter_junk_genes(genes);
+	if (allow_junk_filtering)
+		filter_junk_genes(genes);
     
 #if ENABLE_THREADS	
 	out_file_lock.lock();
