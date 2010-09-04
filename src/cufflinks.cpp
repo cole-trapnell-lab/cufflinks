@@ -916,7 +916,10 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
         inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
-
+        foreach (shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
+        {
+            ref_scaff->clear_hits();
+        }
     }
     
     vector<shared_ptr<Scaffold> > mask_rnas;
