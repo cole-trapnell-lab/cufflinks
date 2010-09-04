@@ -507,7 +507,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		delete bundle_ptr;
 	}
 	
-    //fprintf(stderr, "Fragments range between %d and %d bp\n", min_len, max_len);
+    fprintf(stderr, "Fragments range between %d and %d bp\n", min_len, max_len);
+    fprintf(stderr, "%lu open ranges\n", open_ranges.size());
     //max_len = min(max_len, def_frag_len_mean + 3*def_frag_len_std_dev);
     
     if (bad_introns != NULL)

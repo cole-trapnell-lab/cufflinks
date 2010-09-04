@@ -590,13 +590,6 @@ void sample_worker(const RefSequenceTable& rt,
                             &bundle,
                             perform_cds_analysis,
                             perform_tss_analysis);
-
-    //bundle.clear_hits();
-    foreach (shared_ptr<Scaffold> ref_scaff, bundle.ref_scaffolds())
-    {
-        ref_scaff->clear_hits();
-    }
-    
 }
 
 void test_differential(const string& locus_tag,

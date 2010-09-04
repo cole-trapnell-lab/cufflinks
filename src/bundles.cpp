@@ -368,6 +368,8 @@ void HitBundle::finalize_open_mates()
 			add_hit(*mi);
 		}
 	}
+    
+    _open_mates.clear();
 }
 
 void HitBundle::remove_hitless_scaffolds()
@@ -393,6 +395,7 @@ void HitBundle::finalize(bool is_combined)
 												_ref_scaffs.end(),
 												StructurallyEqualScaffolds());
 		_ref_scaffs.erase(new_end, _ref_scaffs.end());
+        vector<shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
 	}
 	
 	for (size_t j = 0; j < _ref_scaffs.size(); ++j)

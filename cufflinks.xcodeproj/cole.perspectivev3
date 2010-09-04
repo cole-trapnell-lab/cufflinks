@@ -280,13 +280,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>34</integer>
+									<integer>50</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 55}, {267, 840}}</string>
+							<string>{{0, 462}, {267, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -303,7 +303,7 @@
 							<real>267</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>477 279 1195 899 0 0 1920 1178 </string>
+						<string>319 129 1195 899 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>hits.h</string>
+								<string>bundles.h</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>hits.h</string>
+										<string>bundles.h</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED2914D61230969100C3703E</string>
+										<string>ED29150F1231B2AB00C3703E</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -345,7 +345,6 @@
 											<string>EDBEA6BF11ED3DD100C661A7</string>
 											<string>ED70726B11F79D170028F305</string>
 											<string>EDC6AD8B1225906900CA79FA</string>
-											<string>EDC6ADCC1225F27D00CA79FA</string>
 											<string>EDFE370112269FAF00F24CD3</string>
 											<string>EDFE371012271FCE00F24CD3</string>
 											<string>EDFE371B1228361200F24CD3</string>
@@ -370,16 +369,18 @@
 											<string>ED291363122D32B500C3703E</string>
 											<string>ED291368122E127E00C3703E</string>
 											<string>ED2913B5122F633B00C3703E</string>
-											<string>ED2913B6122F633B00C3703E</string>
 											<string>ED2914481230760800C3703E</string>
 											<string>ED29145F1230771C00C3703E</string>
-											<string>ED29148112307C2B00C3703E</string>
-											<string>ED2914CB1230965600C3703E</string>
-											<string>ED2914CC1230965600C3703E</string>
-											<string>ED2914CE1230965600C3703E</string>
 											<string>ED2914CF1230965600C3703E</string>
-											<string>ED2914D31230968A00C3703E</string>
-											<string>ED2914D41230968A00C3703E</string>
+											<string>ED2914D812309E2600C3703E</string>
+											<string>ED2914DE1230B67B00C3703E</string>
+											<string>ED2914E01230B67B00C3703E</string>
+											<string>ED2914E41230B81D00C3703E</string>
+											<string>ED2914E9123128DB00C3703E</string>
+											<string>ED2914FD123129F000C3703E</string>
+											<string>ED2914FE123129F000C3703E</string>
+											<string>ED2914FF123129F000C3703E</string>
+											<string>ED29150E1231B29900C3703E</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -393,18 +394,18 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {906, 573}}</string>
+								<string>{{0, 0}, {906, 647}}</string>
 								<key>RubberWindowFrame</key>
-								<string>477 279 1195 899 0 0 1920 1178 </string>
+								<string>319 129 1195 899 0 0 1680 1028 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>573pt</string>
+							<string>647pt</string>
 						</dict>
 						<dict>
 							<key>Proportion</key>
-							<string>280pt</string>
+							<string>206pt</string>
 							<key>Tabs</key>
 							<array>
 								<dict>
@@ -418,7 +419,9 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {906, 253}}</string>
+										<string>{{10, 27}, {906, 179}}</string>
+										<key>RubberWindowFrame</key>
+										<string>319 129 1195 899 0 0 1680 1028 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -435,8 +438,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {906, 253}}</string>
-										<key>RubberWindowFrame</key>
-										<string>477 279 1195 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -696,13 +697,12 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>ED2914D21230965600C3703E</string>
 		<string>ED2914561230760800C3703E</string>
 		<string>ED2914571230760800C3703E</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>477 279 1195 899 0 0 1920 1178 </string>
+	<string>319 129 1195 899 0 0 1680 1028 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>
