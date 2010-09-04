@@ -24,7 +24,9 @@
 
 using namespace std;
 
+#if ENABLE_THREADS
 boost::mutex RefSequenceTable::table_lock;
+#endif
 
 //static const int max_read_length = 1024;
 
