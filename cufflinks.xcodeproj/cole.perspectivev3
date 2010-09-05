@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cufflinks.cpp</string>
+								<string>bundles.h</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cufflinks.cpp</string>
+										<string>bundles.h</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED291533123303E900C3703E</string>
+										<string>ED2915381233F7EF00C3703E</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -378,10 +378,10 @@
 											<string>ED2915181232FFFB00C3703E</string>
 											<string>ED2915191232FFFB00C3703E</string>
 											<string>ED2915201233002600C3703E</string>
-											<string>ED29152F123303E900C3703E</string>
 											<string>ED291530123303E900C3703E</string>
 											<string>ED291531123303E900C3703E</string>
-											<string>ED291532123303E900C3703E</string>
+											<string>ED2915361233F7EF00C3703E</string>
+											<string>ED2915371233F7EF00C3703E</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>

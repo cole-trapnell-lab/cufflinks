@@ -611,6 +611,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
     frag_len_dist.mean(mean);
     frag_len_dist.std_dev(std_dev);
     
+    fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
+    fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
+    
+    
     bundle_factory.reset();
     
    	return;

@@ -632,6 +632,9 @@
 			ED291531123303E900C3703E /* PBXTextBookmark */ = ED291531123303E900C3703E /* PBXTextBookmark */;
 			ED291532123303E900C3703E /* PBXTextBookmark */ = ED291532123303E900C3703E /* PBXTextBookmark */;
 			ED291533123303E900C3703E /* PBXTextBookmark */ = ED291533123303E900C3703E /* PBXTextBookmark */;
+			ED2915361233F7EF00C3703E /* PBXTextBookmark */ = ED2915361233F7EF00C3703E /* PBXTextBookmark */;
+			ED2915371233F7EF00C3703E /* PBXTextBookmark */ = ED2915371233F7EF00C3703E /* PBXTextBookmark */;
+			ED2915381233F7EF00C3703E /* PBXTextBookmark */ = ED2915381233F7EF00C3703E /* PBXTextBookmark */;
 			ED70726B11F79D170028F305 = ED70726B11F79D170028F305 /* PBXTextBookmark */;
 			EDBBA10211DA433F0015175B = EDBBA10211DA433F0015175B /* PBXTextBookmark */;
 			EDBBA3FA11DD8E140015175B = EDBBA3FA11DD8E140015175B /* PBXTextBookmark */;
@@ -4587,7 +4590,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 620";
 		rLen = 0;
-		rLoc = 17073;
+		rLoc = 17229;
 		rType = 0;
 		vrLen = 1011;
 		vrLoc = 8008;
@@ -4597,7 +4600,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 620";
 		rLen = 0;
-		rLoc = 17073;
+		rLoc = 17229;
 		rType = 0;
 		vrLen = 1256;
 		vrLoc = 8008;
@@ -4644,7 +4647,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 620";
 		rLen = 0;
-		rLoc = 17073;
+		rLoc = 17229;
 		rType = 0;
 		vrLen = 1242;
 		vrLoc = 8022;
@@ -5192,6 +5195,33 @@
 		vrLen = 1369;
 		vrLoc = 25817;
 	};
+	ED2915361233F7EF00C3703E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 918";
+		rLen = 11;
+		rLoc = 26217;
+		rType = 0;
+		vrLen = 1369;
+		vrLoc = 25817;
+	};
+	ED2915371233F7EF00C3703E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		rLen = 1;
+		rLoc = 381;
+		rType = 1;
+	};
+	ED2915381233F7EF00C3703E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 606";
+		rLen = 0;
+		rLoc = 16791;
+		rType = 0;
+		vrLen = 1514;
+		vrLoc = 10388;
+	};
 	ED3654B21224432400DDEAE8 /* differential.cpp:600 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
@@ -5617,9 +5647,9 @@
 	};
 	EDA5150B10C72963000A4F41 /* bundles.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {845, 8294}}";
-			sepNavSelRange = "{2828, 51}";
-			sepNavVisRange = "{2377, 1445}";
+			sepNavIntBoundsRect = "{{0, 0}, {845, 7878}}";
+			sepNavSelRange = "{16791, 0}";
+			sepNavVisRange = "{10388, 1514}";
 		};
 	};
 	EDA5150C10C72963000A4F41 /* codons.h */ = {
@@ -5781,7 +5811,7 @@
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {845, 13975}}";
-			sepNavSelRange = "{26384, 0}";
+			sepNavSelRange = "{26217, 11}";
 			sepNavVisRange = "{25817, 1369}";
 		};
 	};
