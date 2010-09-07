@@ -641,6 +641,7 @@ void GffReader::parseAll(GffRecFunc* gproc, bool keepAttr, bool noExonAttr, void
 
 
 void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
+    bool validation_errors = false;
   while (nextGffLine()!=NULL) {
     if (gffline->Parent==NULL) {//no parent, new GFF3-like record starting
         if (gffline->ID == NULL)
@@ -654,7 +655,8 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
         GffObj* f=gfoFind(gffline->ID, gffline->gseqname);
 
        if (f!=NULL) {
-            GError("Error: duplicate GFF ID '%s' encountered!\n",gffline->ID);
+            GMessage("Error: duplicate GFF ID '%s' encountered!\n",gffline->ID);
+           validation_errors = true;
             }
        gflst.Add(new GffObj(this, gffline, keepAttr, noExonAttr));
        }
@@ -662,14 +664,16 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
        GffObj* prevgfo=gfoFind(gffline->Parent, gffline->gseqname);
        if (prevgfo!=NULL) { //exon of a previously seen GffObj
                  if (gffline->strand!=prevgfo->strand) {
-                    GError("Error: duplicate GFF ID '%s' (exons found on different strands of %s)\n",
+                    GMessage("Error: duplicate GFF ID '%s' (exons found on different strands of %s)\n",
                        prevgfo->gffID, prevgfo->getGSeqName());
+                     validation_errors = true;
                     }
                  int gdist=(gffline->fstart>prevgfo->end) ? gffline->fstart-prevgfo->end :
                                      ((gffline->fend<prevgfo->start)? prevgfo->start-gffline->fend : 
                                         0 );
                  if (gdist>(int)GFF_MAX_LOCUS) { //too far apart, most likely this is a duplicate ID
-                   GError("Error: duplicate GFF ID '%s' (or exons too far apart)!\n",prevgfo->gffID);
+                   GMessage("Error: duplicate GFF ID '%s' (or exons too far apart)!\n",prevgfo->gffID);
+                     validation_errors = true;
                    }
                  prevgfo->addExon(gffline, !noExonAttr, noExonAttr);
                  }
@@ -689,6 +693,10 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
  // all gff records are now loaded in GList gflst
  // so we can free the hash
   phash.Clear();
+    if (validation_errors)
+    {
+        exit(1);
+    }
 }
 
 //this may be called prematurely if exon records are not grouped by parent!
