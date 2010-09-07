@@ -12,7 +12,7 @@ const uint GFF_MAX_INTRON= 1600000;
 const int gff_fid_mRNA=0;
 const int gff_fid_exon=1;
 const int gff_fid_CDS=2;
-bool gff_warns=true;
+//bool gff_warns=true;
 
 void gffnames_ref(GffNames* &n) {
   if (n==NULL) n=new GffNames();
@@ -615,10 +615,10 @@ GffObj* GffReader::gfoFind(const char* id, const char* ctg) {
 
 
 void GffReader::parseAll(GffRecFunc* gproc, bool keepAttr, bool noExonAttr, void* userptr1, void* userptr2) {
-  //WARNING: this is all messed up if the GFF lines are NOT grouped by parent feature
-  //!!! do not use this !!!
-  //iterates through all mappings in the input file
-  //calling gproc with each parsed mapping
+  //WARNING: !!! DO NOT USE THIS !!!
+  //WARNING: if fails hard if the GFF lines are NOT grouped by (and following) the parent feature
+  //-- This iterates through all parent mappings in the input file
+  //calling gproc with each parsed parent + its following subfeatures
     GffObj* gfo;
     while ((gfo=this->parse(keepAttr,noExonAttr))!=NULL) { //a valid gff record was parsed
         if (gfo->empty()) { //shouldn't happen!
@@ -644,21 +644,31 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
     bool validation_errors = false;
   while (nextGffLine()!=NULL) {
     if (gffline->Parent==NULL) {//no parent, new GFF3-like record starting
-        if (gffline->ID == NULL)
-        {
-            fprintf(stderr, "Warning: malformed GTF record encountered, no transcript_id.  Skipping...!\n");
+        if (gffline->ID == NULL)  {
+            GMessage("Warning: malformed GFF line encountered, no transcript_id.  Skipping..\n");
             delete gffline;
             gffline=NULL;
             continue;
-        }
-        //check for uniqueness of gffline->ID in phash !
-        GffObj* f=gfoFind(gffline->ID, gffline->gseqname);
-
+            }        
+        //check for uniqueness of gffline->ID in phash !        
+       GffObj* f=gfoFind(gffline->ID, gffline->gseqname);
        if (f!=NULL) {
             GMessage("Error: duplicate GFF ID '%s' encountered!\n",gffline->ID);
-           validation_errors = true;
+            validation_errors = true;
+            if (gff_warns) continue; 
+                      else exit(1);
             }
        gflst.Add(new GffObj(this, gffline, keepAttr, noExonAttr));
+       if (gff_warns) {
+         int* pcount=tids.Find(gffline->ID);
+         if (pcount!=NULL) {
+            GMessage("Warning: duplicate transcript ID: %s\n", gffline->ID);
+            (*pcount)++;
+            }
+          else {
+            tids.Add(gffline->ID,new int(1));
+            }
+         }
        }
     else { //--- it's a subfeature (exon/CDS/other):
        GffObj* prevgfo=gfoFind(gffline->Parent, gffline->gseqname);
@@ -673,11 +683,22 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
                                         0 );
                  if (gdist>(int)GFF_MAX_LOCUS) { //too far apart, most likely this is a duplicate ID
                    GMessage("Error: duplicate GFF ID '%s' (or exons too far apart)!\n",prevgfo->gffID);
-                     validation_errors = true;
+                   validation_errors = true;
+                   if (!gff_warns) exit(1);
                    }
                  prevgfo->addExon(gffline, !noExonAttr, noExonAttr);
                  }
             else {//new GTF-like record starting here with a subfeature
+                if (gff_warns) {
+                   int* pcount=tids.Find(gffline->Parent);
+                   if (pcount!=NULL) {
+                      GMessage("Warning: duplicate transcript ID: %s\n", gffline->Parent);
+                      (*pcount)++;
+                      }
+                    else {
+                      tids.Add(gffline->Parent,new int(1));
+                      }
+                   }
                  gflst.Add(new GffObj(this, gffline, keepAttr, noExonAttr));
                  //even those with errors will be added here!
                  }
@@ -693,8 +714,8 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
  // all gff records are now loaded in GList gflst
  // so we can free the hash
   phash.Clear();
-    if (validation_errors)
-    {
+  tids.Clear();
+  if (validation_errors) {
         exit(1);
     }
 }
