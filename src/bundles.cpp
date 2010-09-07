@@ -254,7 +254,7 @@ struct HitLessScaffold
 };
 
 void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
-                             shared_ptr<ReadHit> bh)
+                             shared_ptr<ReadHit const> bh)
 {
 	if (bh->partner_ref_id() == 0 
 		|| bh->partner_ref_id() != bh->ref_id() ||
@@ -367,8 +367,8 @@ void HitBundle::finalize_open_mates()
 		{
 			add_hit(*mi);
 		}
+        itr->second.clear();
 	}
-    
     _open_mates.clear();
 }
 
@@ -384,8 +384,11 @@ void HitBundle::finalize(bool is_combined)
 {
 	_final = true;
 	
-	finalize_open_mates();
-	
+    for (size_t j = 0; j < _ref_scaffs.size(); ++j)
+	{
+		_ref_scaffs[j]->clear_hits();
+	}
+    
 	if (!is_combined)
 	{
 		sort(_hits.begin(), _hits.end(), mate_hit_lt);
@@ -398,10 +401,9 @@ void HitBundle::finalize(bool is_combined)
         vector<shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
 	}
 	
-	for (size_t j = 0; j < _ref_scaffs.size(); ++j)
-	{
-		_ref_scaffs[j]->clear_hits();
-	}
+
+    
+    finalize_open_mates();
 	
 	for (size_t i = 0; i < _hits.size(); ++i)
 	{
@@ -447,11 +449,11 @@ void print_sort_error(const char* last_chr_name,
     fprintf(stderr, "You may be able to fix this by running:\n\t$ LC_ALL=\"C\" sort -k 3,3 -k 4,4n input.sam > fixed.sam\n");
 }
 
-shared_ptr<ReadHit> BundleFactory::next_valid_alignment()
+shared_ptr<ReadHit const> BundleFactory::next_valid_alignment()
 {
     const char* hit_buf;
 	size_t hit_buf_size = 0;
-    shared_ptr<ReadHit> bh;
+    shared_ptr<ReadHit const> bh;
     
     while (true)
     {
@@ -518,8 +520,7 @@ shared_ptr<ReadHit> BundleFactory::next_valid_alignment()
         
         if (hit_within_mask)
             continue;
-        bh = shared_ptr<ReadHit>(new ReadHit());
-        *bh = tmp;
+        bh = shared_ptr<ReadHit const>(new ReadHit(tmp));
         break;
     }
     return bh;
@@ -549,7 +550,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
     
 	while(true)
 	{
-        shared_ptr<ReadHit> bh = next_valid_alignment();
+        shared_ptr<ReadHit const> bh = next_valid_alignment();
         
 
 		// Initialize the bundle boundaries using the hit or the next 
@@ -623,7 +624,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                 }
 
             }
-            else if (!ref_mRNAs.empty())
+            else if (ref_gtf_filename != "")
             {
                 if (next_ref_scaff != ref_mRNAs.end())
                 {
@@ -663,7 +664,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
-        if (bh && ref_mRNAs.empty()
+        if (bh && ref_gtf_filename == ""
             && overlap_in_genome(bh->left(),bh->right(),left_bundle_boundary, right_bundle_boundary + olap_radius))
         {
             right_bundle_boundary = max(right_bundle_boundary, bh->right());

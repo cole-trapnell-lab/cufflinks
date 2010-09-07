@@ -98,10 +98,32 @@ public:
     
 	~HitBundle() 
 	{
-		foreach(shared_ptr<Scaffold>& ref_scaff, _ref_scaffs)
+        foreach(shared_ptr<Scaffold>& ref_scaff, _ref_scaffs)
 		{
 			ref_scaff->clear_hits();
 		}
+        _open_mates.clear();
+        
+        _non_redundant.clear();
+        //int a = 4;
+        
+//        foreach (MateHit& h, _hits)
+//        {
+//            if (h.left_alignment())
+//            {
+//                assert (h.left_alignment().unique());
+//            }
+//            if (h.right_alignment())
+//            {
+//                assert (h.right_alignment().unique());
+//            }
+//        }
+        
+        _hits.clear();
+        std::vector<MateHit>(_hits).swap(_hits);
+        
+        //size_t cap = _hits.capacity();
+        std::vector<MateHit>(_non_redundant).swap(_non_redundant);
 	}
 	
 	int left()   const { return _leftmost;  }
@@ -136,7 +158,7 @@ public:
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
 	void add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
-                      shared_ptr<ReadHit> bh);
+                      shared_ptr<ReadHit const> bh);
 	
 	// Commits any mates still open as singleton hits
 	void finalize_open_mates();
@@ -372,7 +394,7 @@ private:
     
     shared_ptr<ReadGroupProperties> _rg_props;
     
-    shared_ptr<ReadHit> next_valid_alignment();
+    shared_ptr<ReadHit const> next_valid_alignment();
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
@@ -619,6 +641,5 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
    	return;
 }
-
 
 #endif

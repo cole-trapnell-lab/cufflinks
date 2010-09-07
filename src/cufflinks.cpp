@@ -915,11 +915,6 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
         ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
-        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
-        foreach (shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
-        {
-            ref_scaff->clear_hits();
-        }
     }
     
     vector<shared_ptr<Scaffold> > mask_rnas;
@@ -927,11 +922,17 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
         ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
         bundle_factory.set_mask_rnas(mask_rnas);
-        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
-
     }
     
-	    
+    if (ref_gtf)
+    {
+        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
+    }
+    else 
+    {
+        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
+    }
+    
     shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
     *rg_props = *global_read_properties;
     

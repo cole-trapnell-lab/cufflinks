@@ -59,6 +59,8 @@ struct CigarOp
 typedef uint64_t InsertID;
 typedef uint32_t RefID;
 
+extern size_t num_deleted;
+
 /*  Stores the information from a single record of the bowtie map. A given read
     may have many of these.  Reads up to 255bp are supported. 
 */
@@ -119,7 +121,10 @@ struct ReadHit
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
 	}
-	
+	~ReadHit() 
+    {
+        num_deleted++;
+    }
 	int read_len() const
 	{
 		int len = 0;

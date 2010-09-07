@@ -28,6 +28,8 @@ using namespace std;
 boost::mutex RefSequenceTable::table_lock;
 #endif
 
+size_t num_deleted = 0;
+
 //static const int max_read_length = 1024;
 
 bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2)
