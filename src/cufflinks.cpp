@@ -708,12 +708,12 @@ void assemble_bundle(const RefSequenceTable& rt,
 			fflush(ftranscripts);
 			
 			const char* status;
-			if (iso.status()) 
-				status = "ok";
+			if (iso.status()==NUMERIC_OK) 
+				status = "OK";
 			else 
-				status = "fail";
+				status = "FAIL";
 			
-			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%s\n", 
+			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%s\n", 
 					iso.trans_id().c_str(),
 					bundle.id(),
 					rt.get_name(bundle.ref_id()),
@@ -727,7 +727,6 @@ void assemble_bundle(const RefSequenceTable& rt,
 					iso.coverage(),
 					iso.scaffold().length(),
 					iso.effective_length(),
-					iso.scaffold().gc_content(),
 					status);
 			fflush(ftrans_abundances);
 			
@@ -735,7 +734,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 		}
 		
 		const char* status;
-		if (gene.status())
+		if (gene.status()==NUMERIC_OK)
 			status = "OK";
 		else
 			status = "FAIL";
@@ -786,7 +785,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
     
 	//FILE* fstats = fopen("bundles.stats", "w");
 	FILE* ftrans_abundances = fopen(string(output_dir + "/" + "transcripts.expr").c_str(), "w");
-	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tgc_content\tstatus\n");
+	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tstatus\n");
 	
 	FILE* fgene_abundances = fopen(string(output_dir + "/" + "genes.expr").c_str(), "w");
 	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tstatus\n");
@@ -916,7 +915,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
     }
-    
+
     vector<shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
