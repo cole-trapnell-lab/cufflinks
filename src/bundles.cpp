@@ -557,7 +557,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
         // reference transcript, whichever is first in the stream
 		if (left_bundle_boundary == -1)
         {
-            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL) // We're not done
+            if (_ref_driven && next_ref_scaff != ref_mRNAs.end() && bh != NULL) // We're not done
             {
                 if (bh->ref_id() != (*next_ref_scaff)->ref_id())
                 {
@@ -624,7 +624,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                 }
 
             }
-            else if (ref_gtf_filename != "")
+            else if (_ref_driven)
             {
                 if (next_ref_scaff != ref_mRNAs.end())
                 {
@@ -664,7 +664,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 
         // if the hit here overlaps the current bundle interval,
         // we have to include it, and expand the bundle interval
-        if (bh && ref_gtf_filename == ""
+        if (bh && !_ref_driven
             && overlap_in_genome(bh->left(),bh->right(),left_bundle_boundary, right_bundle_boundary + olap_radius))
         {
             right_bundle_boundary = max(right_bundle_boundary, bh->right());
@@ -676,7 +676,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
         // current reference transcript in the GTF record stream.
 		bool hit_within_boundary = false;
 		bool olaps_reference = false;
-		if (!ref_mRNAs.empty())
+		if (_ref_driven)
 		{
             while(next_ref_scaff < ref_mRNAs.end())
             {
@@ -761,7 +761,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 			
             // We want to drive the bundling entirely by the ref_mRNAs, if they
             // are there.
-            if (ref_mRNAs.empty())
+            if (!_ref_driven)
             {
                 if (bh->right() + olap_radius - left_bundle_boundary < (int)max_gene_length)
                 {
@@ -798,7 +798,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
     
 	bundle.finalize_open_mates();
 	
-	if (!ref_mRNAs.empty())
+	if (_ref_driven)
 	{
 		vector<shared_ptr<Scaffold> >::iterator itr = next_ref_scaff;
 		while(itr < ref_mRNAs.end())

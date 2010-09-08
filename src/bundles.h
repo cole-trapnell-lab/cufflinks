@@ -302,7 +302,7 @@ class BundleFactory
 public:
     
 	BundleFactory(shared_ptr<HitFactory> fac)
-	: _hit_fac(fac) {}
+	: _hit_fac(fac), _ref_driven(false) {}
 
 	bool next_bundle(HitBundle& bundle_out);
     
@@ -342,6 +342,7 @@ public:
         }
         
         next_ref_scaff = ref_mRNAs.begin();
+        _ref_driven = true;
     }
     
     void set_mask_rnas(const vector<shared_ptr<Scaffold> >& masks)
@@ -395,6 +396,7 @@ private:
     shared_ptr<ReadGroupProperties> _rg_props;
     
     shared_ptr<ReadHit const> next_valid_alignment();
+    bool _ref_driven;
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
