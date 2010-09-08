@@ -936,6 +936,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         ref_scaff->clear_hits();
     }
     
+    //fprintf(stderr, "ReadHit delete count is %d\n", num_deleted);
     shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
     *rg_props = *global_read_properties;
     

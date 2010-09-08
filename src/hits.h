@@ -59,7 +59,7 @@ struct CigarOp
 typedef uint64_t InsertID;
 typedef uint32_t RefID;
 
-extern size_t num_deleted;
+extern int num_deleted;
 
 /*  Stores the information from a single record of the bowtie map. A given read
     may have many of these.  Reads up to 255bp are supported. 
@@ -70,7 +70,10 @@ struct ReadHit
 		_ref_id(0),
 		_insert_id(0),
 		_error_prob(1.0),
-		_edit_dist(0xFFFFFFFF){}
+		_edit_dist(0xFFFFFFFF)
+    {
+        //num_deleted++;
+    }
 	
 	ReadHit(RefID ref_id,
 			InsertID insert_id, 
@@ -95,8 +98,9 @@ struct ReadHit
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
+        //num_deleted++;
 	}
-	
+    
 	ReadHit(RefID ref_id,
 			InsertID insert_id, 
 			int left,  
@@ -120,10 +124,11 @@ struct ReadHit
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
+        //num_deleted++;
 	}
 	~ReadHit() 
     {
-        num_deleted++;
+        //num_deleted--;
     }
 	int read_len() const
 	{
@@ -723,7 +728,7 @@ public:
 	shared_ptr<ReadHit const> left_alignment() const {return _left_alignment;}
 	void left_alignment(shared_ptr<ReadHit const> left_alignment) 
 	{
-		_left_alignment = shared_ptr<ReadHit const>(left_alignment);
+		_left_alignment = left_alignment;
 	}
 	
 	shared_ptr<ReadHit const> right_alignment() const {return _right_alignment;}					
