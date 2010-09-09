@@ -692,7 +692,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     
                     // If the ref transcript is to the right of the bundle interval, 
                     // then we can leave this the ref transcript out for now
-                    if ((*next_ref_scaff)->left() > right_bundle_boundary)
+                    if ((*next_ref_scaff)->left() >= right_bundle_boundary)
                     {
                         // we've gone beyond the bundle and this hit, so we're 
                         // not going to expand the right boundary any further
