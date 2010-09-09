@@ -194,6 +194,27 @@
 			ED877B211238541C0025A050 /* PBXTextBookmark */ = ED877B211238541C0025A050 /* PBXTextBookmark */;
 			ED877B23123854310025A050 /* PBXTextBookmark */ = ED877B23123854310025A050 /* PBXTextBookmark */;
 			ED877B24123854330025A050 /* PBXTextBookmark */ = ED877B24123854330025A050 /* PBXTextBookmark */;
+			ED877B25123856C10025A050 /* PBXTextBookmark */ = ED877B25123856C10025A050 /* PBXTextBookmark */;
+			ED877B26123856C10025A050 /* PBXTextBookmark */ = ED877B26123856C10025A050 /* PBXTextBookmark */;
+			ED877B271238576B0025A050 /* PBXTextBookmark */ = ED877B271238576B0025A050 /* PBXTextBookmark */;
+			ED877B281238576B0025A050 /* PBXTextBookmark */ = ED877B281238576B0025A050 /* PBXTextBookmark */;
+			ED877B291238576B0025A050 /* PBXTextBookmark */ = ED877B291238576B0025A050 /* PBXTextBookmark */;
+			ED877B2A1238576C0025A050 /* PBXTextBookmark */ = ED877B2A1238576C0025A050 /* PBXTextBookmark */;
+			ED877B2B123857AC0025A050 /* PBXTextBookmark */ = ED877B2B123857AC0025A050 /* PBXTextBookmark */;
+			ED877B2C123857AC0025A050 /* PBXTextBookmark */ = ED877B2C123857AC0025A050 /* PBXTextBookmark */;
+			ED877B2D123858D90025A050 /* PBXTextBookmark */ = ED877B2D123858D90025A050 /* PBXTextBookmark */;
+			ED877B2E123858DF0025A050 /* PBXTextBookmark */ = ED877B2E123858DF0025A050 /* PBXTextBookmark */;
+			ED877B2F12390B820025A050 /* PBXTextBookmark */ = ED877B2F12390B820025A050 /* PBXTextBookmark */;
+			ED877B3012390B8F0025A050 /* PBXTextBookmark */ = ED877B3012390B8F0025A050 /* PBXTextBookmark */;
+			ED877B3112390B8F0025A050 /* PBXTextBookmark */ = ED877B3112390B8F0025A050 /* PBXTextBookmark */;
+			ED877B3212390B8F0025A050 /* PBXTextBookmark */ = ED877B3212390B8F0025A050 /* PBXTextBookmark */;
+			ED877B33123912980025A050 /* PBXTextBookmark */ = ED877B33123912980025A050 /* PBXTextBookmark */;
+			ED877B34123916AD0025A050 /* PBXTextBookmark */ = ED877B34123916AD0025A050 /* PBXTextBookmark */;
+			ED877B35123916AD0025A050 /* PBXTextBookmark */ = ED877B35123916AD0025A050 /* PBXTextBookmark */;
+			ED877B36123916AD0025A050 /* PBXTextBookmark */ = ED877B36123916AD0025A050 /* PBXTextBookmark */;
+			ED877B37123916AD0025A050 /* PBXTextBookmark */ = ED877B37123916AD0025A050 /* PBXTextBookmark */;
+			ED877B38123916AD0025A050 /* PBXTextBookmark */ = ED877B38123916AD0025A050 /* PBXTextBookmark */;
+			ED877B39123916AD0025A050 /* PBXTextBookmark */ = ED877B39123916AD0025A050 /* PBXTextBookmark */;
 			EDBBA10211DA433F0015175B = EDBBA10211DA433F0015175B /* PBXTextBookmark */;
 			EDBBA3FA11DD8E140015175B = EDBBA3FA11DD8E140015175B /* PBXTextBookmark */;
 			EDBCDC8B1235D2650050A8E4 = EDBCDC8B1235D2650050A8E4 /* PBXTextBookmark */;
@@ -772,7 +793,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 606";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1095;
 		vrLoc = 16134;
@@ -978,6 +999,216 @@
 		vrLen = 1087;
 		vrLoc = 25616;
 	};
+	ED877B25123856C10025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 292";
+		rLen = 0;
+		rLoc = 7265;
+		rType = 0;
+		vrLen = 657;
+		vrLoc = 6905;
+	};
+	ED877B26123856C10025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 918";
+		rLen = 1;
+		rLoc = 26188;
+		rType = 0;
+		vrLen = 773;
+		vrLoc = 25824;
+	};
+	ED877B271238576B0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 918";
+		rLen = 1;
+		rLoc = 26188;
+		rType = 0;
+		vrLen = 1087;
+		vrLoc = 25616;
+	};
+	ED877B281238576B0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 531";
+		rLen = 13;
+		rLoc = 13782;
+		rType = 0;
+		vrLen = 1121;
+		vrLoc = 13109;
+	};
+	ED877B291238576B0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 801";
+		rLen = 0;
+		rLoc = 24290;
+		rType = 0;
+		vrLen = 1064;
+		vrLoc = 24173;
+	};
+	ED877B2A1238576C0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 801";
+		rLen = 0;
+		rLoc = 24290;
+		rType = 0;
+		vrLen = 1064;
+		vrLoc = 24173;
+	};
+	ED877B2B123857AC0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 918";
+		rLen = 1;
+		rLoc = 26188;
+		rType = 0;
+		vrLen = 773;
+		vrLoc = 25824;
+	};
+	ED877B2C123857AC0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 801";
+		rLen = 0;
+		rLoc = 24290;
+		rType = 0;
+		vrLen = 706;
+		vrLoc = 24173;
+	};
+	ED877B2D123858D90025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 798";
+		rLen = 0;
+		rLoc = 24255;
+		rType = 0;
+		vrLen = 1064;
+		vrLoc = 24173;
+	};
+	ED877B2E123858DF0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 798";
+		rLen = 0;
+		rLoc = 24255;
+		rType = 0;
+		vrLen = 1126;
+		vrLoc = 24173;
+	};
+	ED877B2F12390B820025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 798";
+		rLen = 0;
+		rLoc = 24255;
+		rType = 0;
+		vrLen = 706;
+		vrLoc = 24173;
+	};
+	ED877B3012390B8F0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 798";
+		rLen = 0;
+		rLoc = 24255;
+		rType = 0;
+		vrLen = 1126;
+		vrLoc = 24173;
+	};
+	ED877B3112390B8F0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 918";
+		rLen = 1;
+		rLoc = 26188;
+		rType = 0;
+		vrLen = 1102;
+		vrLoc = 25606;
+	};
+	ED877B3212390B8F0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 918";
+		rLen = 1;
+		rLoc = 26188;
+		rType = 0;
+		vrLen = 1083;
+		vrLoc = 26977;
+	};
+	ED877B33123912980025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 939";
+		rLen = 0;
+		rLoc = 26707;
+		rType = 0;
+		vrLen = 1008;
+		vrLoc = 26401;
+	};
+	ED877B34123916AD0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151910C72963000A4F41 /* scaffolds.h */;
+		name = "scaffolds.h: 192";
+		rLen = 18;
+		rLoc = 4263;
+		rType = 0;
+		vrLen = 1031;
+		vrLoc = 2935;
+	};
+	ED877B35123916AD0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 798";
+		rLen = 0;
+		rLoc = 24255;
+		rType = 0;
+		vrLen = 846;
+		vrLoc = 4862;
+	};
+	ED877B36123916AD0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 157";
+		rLen = 0;
+		rLoc = 3081;
+		rType = 0;
+		vrLen = 992;
+		vrLoc = 1593;
+	};
+	ED877B37123916AD0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 318";
+		rLen = 0;
+		rLoc = 7879;
+		rType = 0;
+		vrLen = 1358;
+		vrLoc = 7834;
+	};
+	ED877B38123916AD0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 915";
+		rLen = 0;
+		rLoc = 26068;
+		rType = 0;
+		vrLen = 1166;
+		vrLoc = 25824;
+	};
+	ED877B39123916AD0025A050 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 938";
+		rLen = 0;
+		rLoc = 26707;
+		rType = 0;
+		vrLen = 1106;
+		vrLoc = 26504;
+	};
 	EDA5150010C72929000A4F41 /* Source Control */ = {
 		isa = PBXSourceControlManager;
 		fallbackIsa = XCSourceControlManager;
@@ -1008,9 +1239,9 @@
 	};
 	EDA5150B10C72963000A4F41 /* bundles.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1135, 8697}}";
-			sepNavSelRange = "{7265, 0}";
-			sepNavVisRange = "{6905, 657}";
+			sepNavIntBoundsRect = "{{0, 0}, {999, 8320}}";
+			sepNavSelRange = "{7879, 0}";
+			sepNavVisRange = "{7834, 1358}";
 		};
 	};
 	EDA5150C10C72963000A4F41 /* codons.h */ = {
@@ -1080,15 +1311,15 @@
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {846, 11739}}";
 			sepNavSelRange = "{3081, 0}";
-			sepNavVisRange = "{2727, 977}";
+			sepNavVisRange = "{1593, 992}";
 			sepNavWindowFrame = "{{15, 615}, {750, 558}}";
 		};
 	};
 	EDA5151910C72963000A4F41 /* scaffolds.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {846, 7475}}";
+			sepNavIntBoundsRect = "{{0, 0}, {846, 7553}}";
 			sepNavSelRange = "{4263, 18}";
-			sepNavVisRange = "{5836, 1234}";
+			sepNavVisRange = "{2935, 1031}";
 		};
 	};
 	EDA5151A10C72963000A4F41 /* tokenize.h */ = {
@@ -1136,9 +1367,9 @@
 	};
 	EDA5152010C72963000A4F41 /* bundles.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {887, 16809}}";
-			sepNavSelRange = "{13782, 13}";
-			sepNavVisRange = "{13095, 1136}";
+			sepNavIntBoundsRect = "{{0, 0}, {992, 16471}}";
+			sepNavSelRange = "{24255, 0}";
+			sepNavVisRange = "{4862, 846}";
 		};
 	};
 	EDA5152110C72963000A4F41 /* codons.cpp */ = {
@@ -1171,9 +1402,9 @@
 	};
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {846, 14092}}";
-			sepNavSelRange = "{26188, 1}";
-			sepNavVisRange = "{25616, 1087}";
+			sepNavIntBoundsRect = "{{0, 0}, {846, 13897}}";
+			sepNavSelRange = "{26707, 0}";
+			sepNavVisRange = "{26504, 1106}";
 		};
 	};
 	EDA5152610C72963000A4F41 /* filters.cpp */ = {
@@ -1384,7 +1615,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 504";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1574;
 		vrLoc = 13137;
@@ -1411,7 +1642,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 514";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1562;
 		vrLoc = 13149;
@@ -1565,7 +1796,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 387";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1573;
 		vrLoc = 13149;
@@ -1595,7 +1826,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 387";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 546;
 		vrLoc = 10052;
@@ -1622,7 +1853,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 387";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1573;
 		vrLoc = 13149;
@@ -1679,7 +1910,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 387";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 724;
 		vrLoc = 13243;
@@ -1709,7 +1940,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 387";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1310;
 		vrLoc = 9207;
@@ -1843,7 +2074,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 377";
 		rLen = 25;
-		rLoc = 10247;
+		rLoc = 10246;
 		rType = 0;
 		vrLen = 1266;
 		vrLoc = 9113;
@@ -1950,7 +2181,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 389";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 676;
 		vrLoc = 1996;
@@ -1970,7 +2201,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 389";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1057;
 		vrLoc = 1793;
@@ -2020,7 +2251,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 389";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1193;
 		vrLoc = 1637;
@@ -2498,7 +2729,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 392";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 616;
 		vrLoc = 1996;
@@ -2722,7 +2953,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1236;
 		vrLoc = 13460;
@@ -2732,7 +2963,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1283;
 		vrLoc = 13460;
@@ -2742,7 +2973,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1283;
 		vrLoc = 13460;
@@ -2752,7 +2983,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 857;
 		vrLoc = 12133;
@@ -2762,7 +2993,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1299;
 		vrLoc = 11331;
@@ -2782,7 +3013,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 857;
 		vrLoc = 12133;
@@ -2859,7 +3090,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 513";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1206;
 		vrLoc = 13576;
@@ -2869,7 +3100,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 513";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 694;
 		vrLoc = 13721;
@@ -2923,7 +3154,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1277;
 		vrLoc = 13466;
@@ -2943,7 +3174,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 583;
 		vrLoc = 10118;
@@ -2953,7 +3184,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1042;
 		vrLoc = 9901;
@@ -3013,7 +3244,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 381";
 		rLen = 0;
-		rLoc = 10271;
+		rLoc = 10270;
 		rType = 0;
 		vrLen = 1221;
 		vrLoc = 9201;
@@ -3097,7 +3328,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 513";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1291;
 		vrLoc = 13483;
@@ -3127,7 +3358,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1030;
 		vrLoc = 9948;
@@ -3167,7 +3398,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1030;
 		vrLoc = 9948;
@@ -3204,7 +3435,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 583;
 		vrLoc = 10130;
@@ -3351,7 +3582,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 393";
 		rLen = 0;
-		rLoc = 10417;
+		rLoc = 10416;
 		rType = 0;
 		vrLen = 1339;
 		vrLoc = 9819;
@@ -3361,7 +3592,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 652";
 		rLen = 0;
-		rLoc = 17923;
+		rLoc = 17922;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 17860;
@@ -3398,7 +3629,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 635";
 		rLen = 0;
-		rLoc = 17923;
+		rLoc = 17922;
 		rType = 0;
 		vrLen = 427;
 		vrLoc = 17433;
@@ -3408,7 +3639,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 635";
 		rLen = 0;
-		rLoc = 17923;
+		rLoc = 17922;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 17860;
@@ -3428,7 +3659,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 635";
 		rLen = 0;
-		rLoc = 17923;
+		rLoc = 17922;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 17860;
@@ -3468,7 +3699,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 752";
 		rLen = 0;
-		rLoc = 17923;
+		rLoc = 17922;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 17860;
@@ -3515,7 +3746,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 656";
 		rLen = 0;
-		rLoc = 17923;
+		rLoc = 17922;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 17860;
@@ -3525,7 +3756,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 385";
 		rLen = 0;
-		rLoc = 10415;
+		rLoc = 10414;
 		rType = 0;
 		vrLen = 1479;
 		vrLoc = 9156;
@@ -3545,7 +3776,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 385";
 		rLen = 0;
-		rLoc = 10415;
+		rLoc = 10414;
 		rType = 0;
 		vrLen = 1433;
 		vrLoc = 9154;
@@ -3602,7 +3833,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 529";
 		rLen = 0;
-		rLoc = 14562;
+		rLoc = 14561;
 		rType = 0;
 		vrLen = 1630;
 		vrLoc = 13853;
@@ -3612,7 +3843,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 529";
 		rLen = 0;
-		rLoc = 14562;
+		rLoc = 14561;
 		rType = 0;
 		vrLen = 1669;
 		vrLoc = 13814;
@@ -3649,7 +3880,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 529";
 		rLen = 0;
-		rLoc = 14562;
+		rLoc = 14561;
 		rType = 0;
 		vrLen = 836;
 		vrLoc = 14144;
@@ -3699,7 +3930,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 529";
 		rLen = 0;
-		rLoc = 14562;
+		rLoc = 14561;
 		rType = 0;
 		vrLen = 1676;
 		vrLoc = 13875;
@@ -3806,7 +4037,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 409";
 		rLen = 0;
-		rLoc = 10633;
+		rLoc = 10632;
 		rType = 0;
 		vrLen = 1225;
 		vrLoc = 10888;
@@ -3816,7 +4047,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 409";
 		rLen = 0;
-		rLoc = 10633;
+		rLoc = 10632;
 		rType = 0;
 		vrLen = 824;
 		vrLoc = 11288;
@@ -4435,7 +4666,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 331";
 		rLen = 4;
-		rLoc = 8342;
+		rLoc = 8341;
 		rType = 0;
 		vrLen = 1186;
 		vrLoc = 1555;

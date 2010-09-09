@@ -315,7 +315,7 @@ public:
 		next_ref_scaff = ref_mRNAs.begin(); 
         next_mask_scaff = mask_gtf_recs.begin();
         
-        foreach(shared_ptr<Scaffold>& ref_scaff, ref_mRNAs)
+        foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
         {
             ref_scaff->clear_hits();
         }
