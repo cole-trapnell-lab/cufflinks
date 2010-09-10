@@ -383,11 +383,6 @@ void HitBundle::remove_hitless_scaffolds()
 void HitBundle::finalize(bool is_combined)
 {
 	_final = true;
-	
-    for (size_t j = 0; j < _ref_scaffs.size(); ++j)
-	{
-		_ref_scaffs[j]->clear_hits();
-	}
     
 	if (!is_combined)
 	{
@@ -401,7 +396,10 @@ void HitBundle::finalize(bool is_combined)
         vector<shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
 	}
 	
-
+    for (size_t j = 0; j < _ref_scaffs.size(); ++j)
+	{
+		_ref_scaffs[j]->clear_hits();
+	}
     
     finalize_open_mates();
 	

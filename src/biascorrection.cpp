@@ -101,6 +101,10 @@ void map_frag_to_transcript(const Scaffold& transcript, const MateHit& hit, int&
 			frag_len = min(frag_len_dist->mode(), trans_len-start);
 	}
 	
+	assert(start <= trans_len);
+	assert(end <= trans_len);
+	assert(start >= 0);
+	assert(end >= 0);
 }
 
 void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
@@ -181,8 +185,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 		const MateHit& hit = nr_alignments[i];
 		if (!hit.left_alignment() && !hit.right_alignment())
 			continue;
-		
-		
+
 		double num_hits = nr_alignments[i].collapse_mass();
 		long double locus_fpkm = 0;
 		
@@ -209,16 +212,16 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 			endHists[*it][end] += num_hits*transcript.fpkm()/locus_fpkm;
 		}
 	}
-	for (int j = 0; j < N; ++j)
-	{
-		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->fpkm() >= 1)
-			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
-	}
+ 	for (int j = 0; j < N; ++j)
+ 	{
+ 		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->fpkm() >= 1)
+ 			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
+ 	}
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
 //const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,2,2,2,1,1,1}; //Length of connections at each position in the window
+const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
 const int BiasLearner::_M = 21; //Number of positions spanned by window

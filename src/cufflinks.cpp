@@ -713,7 +713,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 			else 
 				status = "FAIL";
 			
-			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%s\n", 
+			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%s\n", 
 					iso.trans_id().c_str(),
 					bundle.id(),
 					rt.get_name(bundle.ref_id()),
@@ -727,6 +727,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 					iso.coverage(),
 					iso.scaffold().length(),
 					iso.effective_length(),
+					iso.scaffold().gc_content(),
 					status);
 			fflush(ftrans_abundances);
 			

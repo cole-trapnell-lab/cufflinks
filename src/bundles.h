@@ -96,35 +96,6 @@ public:
 	HitBundle() 
     : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _num_replicates(1) {}
     
-	~HitBundle() 
-	{
-        foreach(shared_ptr<Scaffold>& ref_scaff, _ref_scaffs)
-		{
-			ref_scaff->clear_hits();
-		}
-        _open_mates.clear();
-        
-        _non_redundant.clear();
-        //int a = 4;
-        
-//        foreach (MateHit& h, _hits)
-//        {
-//            if (h.left_alignment())
-//            {
-//                assert (h.left_alignment().unique());
-//            }
-//            if (h.right_alignment())
-//            {
-//                assert (h.right_alignment().unique());
-//            }
-//        }
-        
-        _hits.clear();
-        std::vector<MateHit>(_hits).swap(_hits);
-        
-        //size_t cap = _hits.capacity();
-        std::vector<MateHit>(_non_redundant).swap(_non_redundant);
-	}
 	
 	int left()   const { return _leftmost;  }
 	int right()  const { return _rightmost; }
@@ -606,18 +577,21 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	
     double mean = 0.0;
     
+    //FILE* fhist = fopen(string(output_dir + "/frag_len_hist.csv").c_str(),"w");
+    //fprintf(fhist, "Length,Count\n");
 	// Convert histogram to pdf and cdf, calculate mean
 	int frag_len_mode = 0;
 	for(int i = 1; i < frag_len_hist.size(); i++)
 	{
 		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
 		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
-		//fprintf(stderr, "%f\n", frag_len_hist[i]);
+		//fprintf(fhist, "%d,%f\n", i, frag_len_hist[i]);
         
 		if (frag_len_pdf[i] > frag_len_pdf[frag_len_mode])
 			frag_len_mode = i;
         mean += frag_len_pdf[i] * i;
 	}
+	//fclose(fhist);
     
     double std_dev =  0.0;
     for(int i = 1; i < frag_len_hist.size(); i++)
