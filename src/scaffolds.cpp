@@ -1219,10 +1219,10 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                         {
                             known.add_hit(&m);
                         }
-                        }
+                    }
                     
                     complete.push_back(known);
-                    }
+                }
                     
 				last_unknown = i;
                 leftmost_known_op = -1;

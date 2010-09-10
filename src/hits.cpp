@@ -471,6 +471,23 @@ bool HitFactory::parse_header_string(const string& header_rec,
             }
         }
     }
+    else if (columns[0] == "@SQ")
+    {
+        for (size_t i = 1; i < columns.size(); ++i)
+        {
+            vector<string> fields;
+            tokenize(columns[i], ":", fields);
+            if (fields[0] == "SN")
+            {
+                // Populate the RefSequenceTable with the sequence dictionary, 
+                // to ensure that (for example) downstream GTF files are sorted
+                // in an order consistent with the header, and to enforce that
+                // BAM records appear in the order implied by the header
+                _ref_table.get_id(fields[1], NULL);                
+            }
+        }
+    }
+
     return true;
 }
 

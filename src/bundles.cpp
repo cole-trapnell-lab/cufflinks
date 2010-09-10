@@ -22,17 +22,47 @@
 using namespace std;
 using boost::math::binomial;
 
+//struct ScaffoldSorter
+//{
+//	ScaffoldSorter(RefSequenceTable& _rt) : rt(_rt) {} 
+//	bool operator()(shared_ptr<Scaffold const> lhs, shared_ptr<Scaffold const> rhs)
+//	{
+//        assert (lhs);
+//        assert (rhs);
+//		const char* lhs_name = rt.get_name(lhs->ref_id());
+//		const char* rhs_name = rt.get_name(rhs->ref_id());
+//		int c = strcmp(lhs_name, rhs_name);
+//		if (c != 0)
+//		{
+//			return c < 0;
+//		}
+//		if (lhs->left() != rhs->left())
+//		{
+//			return lhs->left() < rhs->left();
+//		}
+//        return false;
+//	}
+//	
+//	RefSequenceTable& rt;
+//};
+
 struct ScaffoldSorter
 {
 	ScaffoldSorter(RefSequenceTable& _rt) : rt(_rt) {} 
-	bool operator()(const shared_ptr<Scaffold>& lhs, const shared_ptr<Scaffold>& rhs)
+	bool operator()(shared_ptr<Scaffold const> lhs, shared_ptr<Scaffold const> rhs)
 	{
-		const char* lhs_name = rt.get_name(lhs->ref_id());
-		const char* rhs_name = rt.get_name(rhs->ref_id());
-		int c = strcmp(lhs_name, rhs_name);
-		if (c != 0)
+        //assert (lhs);
+        //assert (rhs);
+        if (!lhs || !rhs)
+            return false;
+		int lhs_order = rt.observation_order(lhs->ref_id());
+        assert (lhs_order != -1);
+		int rhs_order = rt.observation_order(rhs->ref_id());
+        assert (rhs_order != -1);
+
+		if (lhs_order != rhs_order)
 		{
-			return c < 0;
+			return lhs_order != rhs_order;
 		}
 		if (lhs->left() != rhs->left())
 		{
@@ -217,12 +247,22 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					ref_scaff.seq(rs);
 					GFREE(rna_seq);
 				}
-				
-				ref_mRNAs.push_back(shared_ptr<Scaffold>(new Scaffold(ref_scaff))); 
+                
+				shared_ptr<Scaffold> scaff(new Scaffold());
+                *scaff = ref_scaff;
+                assert (scaff);
+				ref_mRNAs.push_back(scaff); 
 			}
 		}
+        
+        foreach (shared_ptr<Scaffold> s, ref_mRNAs)
+        {
+            assert (s);
+        }
+        
 		ScaffoldSorter sorter(rt);
 		sort(ref_mRNAs.begin(), ref_mRNAs.end(), sorter);
+        
 	}
 	delete faseq;
 }
@@ -380,6 +420,111 @@ void HitBundle::remove_hitless_scaffolds()
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
 }
 
+void HitBundle::combine(const vector<HitBundle>& in_bundles,
+                               HitBundle& out_bundle)
+{
+    out_bundle._hits.clear();
+    out_bundle._non_redundant.clear();
+    out_bundle._ref_scaffs.clear();
+    
+    for (size_t i = 1; i < in_bundles.size(); ++i)
+    {
+        assert(in_bundles[i].ref_id() == in_bundles[i-1].ref_id());
+    }
+    
+    // Merge  hits
+    vector<int> indices(in_bundles.size(),0);
+    while(true)
+    {
+        int next_bundle = -1;
+        const MateHit* next_hit; 
+        for(int i = 0; i < in_bundles.size(); ++i)
+        {
+            const vector<MateHit>& curr_hits = in_bundles[i].hits();
+            
+            if (indices[i] == curr_hits.size())
+                continue;
+            
+            const MateHit* curr_hit = &curr_hits[indices[i]];
+            
+            if (next_bundle == -1 || mate_hit_lt(*curr_hit, *next_hit))
+            {
+                next_bundle = i;
+                next_hit = curr_hit;
+            }
+        }
+        
+        if(next_bundle==-1)
+            break;
+        
+        out_bundle._hits.push_back(*next_hit);
+        indices[next_bundle]++;
+    }
+    
+    // Merge collapsed hits
+    indices = vector<int>(in_bundles.size(), 0);
+    while(true)
+    {
+        int next_bundle = -1;
+        const MateHit* next_hit; 
+        for(int i = 0; i < in_bundles.size(); ++i)
+        {
+            const vector<MateHit>& curr_non_redundant_hits = in_bundles[i].non_redundant_hits();
+            
+            if (indices[i] == curr_non_redundant_hits.size())
+                continue;
+            
+            const MateHit* curr_hit = &curr_non_redundant_hits[indices[i]];
+            
+            if (next_bundle == -1 || mate_hit_lt(*curr_hit, *next_hit))
+            {
+                next_bundle = i;
+                next_hit = curr_hit;
+            }
+        }
+        
+        if(next_bundle==-1)
+            break;
+        
+        out_bundle._non_redundant.push_back(*next_hit);
+        indices[next_bundle]++;
+    }
+    
+    // Merge ref scaffolds
+    indices = vector<int>(in_bundles.size(), 0);
+    while(true)
+    {
+        int next_bundle = -1;
+        shared_ptr<Scaffold> next_scaff; 
+        for(int i = 0; i < in_bundles.size(); ++i)
+        {
+            const vector<shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]._ref_scaffs;
+            
+            if (indices[i] == curr_scaffs.size())
+                continue;
+            
+            shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
+            
+            if (next_bundle == -1 || scaff_lt_rt_oplt(*curr_scaff, *next_scaff))
+            {
+                next_bundle = i;
+                next_scaff = curr_scaff;
+            }
+        }
+        
+        if(next_bundle==-1)
+            break;
+        
+        if (out_bundle._ref_scaffs.size()==0 || out_bundle._ref_scaffs.back()->annotated_trans_id() != next_scaff->annotated_trans_id()) 
+            out_bundle._ref_scaffs.push_back(next_scaff);
+        indices[next_bundle]++;
+    }
+    
+    out_bundle.finalize(true); // true means everything is already sorted, etc.
+    out_bundle._num_replicates = (int)in_bundles.size();
+}
+
+
 void HitBundle::finalize(bool is_combined)
 {
 	_final = true;
@@ -423,7 +568,13 @@ void HitBundle::finalize(bool is_combined)
 			}
 		}
 	}
-		
+	
+	if (_ref_scaffs.size() > 0)
+    {
+        _leftmost = INT_MAX;
+        _rightmost = -1;
+    }
+    
 	for (size_t i = 0; i < _ref_scaffs.size(); ++i)
 	{
 		if (_ref_scaffs[i]->left() < _leftmost)
@@ -471,6 +622,27 @@ shared_ptr<ReadHit const> BundleFactory::next_valid_alignment()
         
         if (spans_bad_intron(tmp))
             continue;
+        
+        int order = _hit_fac->ref_table().observation_order(tmp.ref_id());
+        if (_prev_pos != 0)
+        {
+            int prev_order = _hit_fac->ref_table().observation_order(_prev_ref_id);
+            
+            if (prev_order > order || _prev_pos > tmp.left())
+            {
+                const char* bh_chr_name = _hit_fac->ref_table().get_name(tmp.ref_id());
+                const char* last_bh_chr_name = _hit_fac->ref_table().get_name(_prev_ref_id);
+                
+                print_sort_error(last_bh_chr_name, 
+                                 _prev_pos, 
+                                 bh_chr_name, 
+                                 tmp.left());
+                exit(1);
+            }
+        }
+        
+        _prev_ref_id = tmp.ref_id();
+        _prev_pos = tmp.left();
         
         bool hit_within_mask = false;
         
@@ -521,8 +693,344 @@ shared_ptr<ReadHit const> BundleFactory::next_valid_alignment()
         bh = shared_ptr<ReadHit const>(new ReadHit(tmp));
         break;
     }
+    
     return bh;
 }
+
+// This is my least favorite function in Cufflinks.  It should be banished to
+// Hell and re-written.  It is utterly loathesome.
+//bool BundleFactory::next_bundle(HitBundle& bundle)
+//{
+//	//char bwt_buf[2048];
+//	
+//    // The most recent RefID and position we've seen in the hit stream
+//	RefID last_hit_ref_id_seen = 0;
+//    int last_hit_pos_seen = 0;
+//    
+//    // The most recent RefID and position we've seen in the reference RNA stream
+//	RefID last_ref_rna_ref_id_seen = 0;
+//    int last_ref_rna_pos_seen = 0;
+//    
+//    // The first RefID we saw in either stream
+//	RefID first_ref_id_seen = 0;
+//
+//	
+//	int right_bundle_boundary = 0;
+//	int left_bundle_boundary = -1;
+//	
+//    
+//	while(true)
+//	{
+//        shared_ptr<ReadHit const> bh = next_valid_alignment();
+//        
+//
+//		// Initialize the bundle boundaries using the hit or the next 
+//        // reference transcript, whichever is first in the stream
+//		if (left_bundle_boundary == -1)
+//        {
+//            if (!ref_mRNAs.empty() && next_ref_scaff != ref_mRNAs.end() && bh != NULL) // We're not done
+//            {
+//                if (bh->ref_id() != (*next_ref_scaff)->ref_id())
+//                {
+//                    const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
+//                    const char* ref_rna_chr_name = _hit_fac->ref_table().get_name((*next_ref_scaff)->ref_id());
+//                    const char* last_bh_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
+//                    
+//                    // if the BAM/SAM file isn't lexicographically sorted by chromosome, print an error
+//                    // and exit.
+//                    if (last_bh_chr_name && strcmp(last_bh_chr_name, bh_chr_name) > 0)
+//                    { 
+//                        print_sort_error(last_bh_chr_name, 
+//                                         last_hit_pos_seen, 
+//                                         bh_chr_name, 
+//                                         bh->left());
+//                        exit(1);
+//                    }
+//                    
+//                    if (bh_chr_name && ref_rna_chr_name)
+//                    {
+//                        if (strcmp(bh_chr_name, ref_rna_chr_name) < 0)
+//                        {
+//                            // hit is lexicographically less than the reference,
+//                            // so skip the hit.
+//                            continue;
+//                        }
+//                        else 
+//                        {
+//                            // reference is lexicographically less than
+//                            // the hit, so wait on the hit and emit this bundle.
+//                            left_bundle_boundary = (*next_ref_scaff)->left();
+//                            right_bundle_boundary = (*next_ref_scaff)->right();
+//                            first_ref_id_seen = (*next_ref_scaff)->ref_id();
+//                            
+//                        }
+//
+//                    }
+//                    // Then these hits are on a chromosome not in the reference annotation, but which are lexicographically
+//                    // less than the next reference record, so just skip them
+//                    
+//                    continue;
+//                }
+//				
+//                if ((bh->ref_id() == (*next_ref_scaff)->ref_id() &&
+//                     bh->right() <= (*next_ref_scaff)->left()))
+//                {
+//                    // if this hit doesn't overlap the next ref transcript
+//                    // and falls to its left, we should skip it.  We need
+//                    // this to maintain synchronization of multiple
+//                    // streams driven by the same set of reference transcripts
+//                    
+//                    // if the hit stream disagrees with the reference transcript stream
+//                    // on which RefID is next, just skip the hit.
+//                    continue;
+//                    left_bundle_boundary = bh->left();
+//                    right_bundle_boundary = bh->left();
+//                    first_ref_id_seen = bh->ref_id();
+//                }
+//                else
+//                {
+//                    left_bundle_boundary = (*next_ref_scaff)->left();
+//                    right_bundle_boundary = (*next_ref_scaff)->right();
+//                    first_ref_id_seen = (*next_ref_scaff)->ref_id();
+//                }
+//
+//            }
+//            else if (ref_gtf_filename != "")
+//            {
+//                if (next_ref_scaff != ref_mRNAs.end())
+//                {
+//                    left_bundle_boundary = (*next_ref_scaff)->left();
+//                    right_bundle_boundary = (*next_ref_scaff)->right();
+//                    first_ref_id_seen = (*next_ref_scaff)->ref_id();
+//                }
+//                else 
+//                {
+//                    return false;
+//                }
+//
+//            }
+//            else if (bh != NULL)
+//            {
+//                left_bundle_boundary = bh->left();
+//                right_bundle_boundary = bh->right();
+//                first_ref_id_seen = bh->ref_id();
+//            }
+//            else
+//            {
+//                if (!_hit_fac->records_remain() && next_ref_scaff == ref_mRNAs.end())
+//                {
+//                    return false;
+//                }
+//                else 
+//                {
+//                    // if we get here, there are more records, but this one is
+//                    // null, and we've reached the end of the reference trancripts
+//                    // or there weren't any
+//                    continue;
+//                }
+//            }
+//        }
+//
+//        assert(left_bundle_boundary != -1);
+//
+//        // if the hit here overlaps the current bundle interval,
+//        // we have to include it, and expand the bundle interval
+//        if (bh && ref_gtf_filename == ""
+//            && overlap_in_genome(bh->left(),bh->right(),left_bundle_boundary, right_bundle_boundary + olap_radius))
+//        {
+//            right_bundle_boundary = max(right_bundle_boundary, bh->right());
+//        }
+//        
+//        // expand the bundle interval as far as needed to include the overlapping
+//        // chain of reference transcripts that also overlap the initial bundle
+//        // interval, whether the initial bundle interval came from a hit or the
+//        // current reference transcript in the GTF record stream.
+//		bool hit_within_boundary = false;
+//		bool olaps_reference = false;
+//		if (!ref_mRNAs.empty())
+//		{
+//            while(next_ref_scaff < ref_mRNAs.end())
+//            {
+//                if (first_ref_id_seen == (*next_ref_scaff)->ref_id())
+//                {
+//                    // if the ref_scaff here overlaps the current bundle interval,
+//                    // we have to include it, and expand the bundle interval
+//                    if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),left_bundle_boundary, right_bundle_boundary))
+//                    {
+//                        right_bundle_boundary = max(right_bundle_boundary, (*next_ref_scaff)->right());
+//                        olaps_reference = true;
+//                    }
+//                    
+//                    // If the ref transcript is to the right of the bundle interval, 
+//                    // then we can leave this the ref transcript out for now
+//                    if ((*next_ref_scaff)->left() > right_bundle_boundary)
+//                    {
+//                        // we've gone beyond the bundle and this hit, so we're 
+//                        // not going to expand the right boundary any further
+//                        // until we see more hits
+//                        break;
+//                    }
+//                }
+//                else 
+//                {
+//                    break;
+//                }
+//
+//                
+//                last_ref_rna_ref_id_seen = (*next_ref_scaff)->ref_id();
+//                last_ref_rna_pos_seen = (*next_ref_scaff)->left();
+//                
+//                next_ref_scaff++;
+//            }
+//		}
+//
+//        if (bh == NULL)
+//        {
+//            break;
+//        }
+//        
+//        bool past_right_end = false;
+//        if (last_hit_ref_id_seen == 0 || bh->ref_id() == first_ref_id_seen)
+//        {
+//            if (bh->left() >= left_bundle_boundary && bh->right() <= right_bundle_boundary)
+//            {
+//                hit_within_boundary = true;
+//            }
+//            else if (bh->left() >= right_bundle_boundary)
+//            {
+//                past_right_end = true;
+//            }
+//        }
+//        else
+//        {
+//            past_right_end = true;
+//            const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
+//            const char* last_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
+//            
+//            if (strcmp(last_chr_name, bh_chr_name) > 0)
+//            { 
+//                print_sort_error(last_chr_name, 
+//                                 last_hit_pos_seen, 
+//                                 bh_chr_name, 
+//                                 bh->left());
+//                exit(1);
+//            }
+//        }
+//        
+//		if (hit_within_boundary)
+//		{
+//			if (bh->left() < last_hit_pos_seen)
+//			{
+//                const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
+//                const char* last_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
+//				print_sort_error(last_chr_name, 
+//                                 last_hit_pos_seen,
+//                                 bh_chr_name,
+//                                 bh->left());
+//				exit(1);
+//			}
+//			
+//            // We want to drive the bundling entirely by the ref_mRNAs, if they
+//            // are there.
+//            if (ref_mRNAs.empty())
+//            {
+//                if (bh->right() + olap_radius - left_bundle_boundary < (int)max_gene_length)
+//                {
+//                    right_bundle_boundary = max(right_bundle_boundary, bh->right() + olap_radius);
+//                }
+//                
+//                bool singleton = (bh->partner_ref_id() == 0 
+//                                  || bh->partner_ref_id() != bh->ref_id() ||
+//                                  abs(bh->partner_pos() - bh->left()) > max_partner_dist);
+//                if (!singleton)
+//                {
+//                    if ((int)bh->partner_pos() + olap_radius - (int)bh->left() < (int)max_partner_dist)
+//                    {
+//                        right_bundle_boundary = max(right_bundle_boundary, bh->partner_pos() + olap_radius);
+//                    }
+//                }
+//            }
+//			
+//			bundle.add_open_hit(read_group_properties(), bh);
+//		}
+//		else if (past_right_end)
+//		{
+//			_hit_fac->undo_hit();
+//			break;
+//		}
+//		
+//		last_hit_ref_id_seen = bh->ref_id();
+//		last_hit_pos_seen = bh->left();
+//        
+//		//curr_pos = ftello(hit_file);
+//	}
+//	
+//    assert(left_bundle_boundary != -1);
+//    
+//	bundle.finalize_open_mates();
+//	
+//	if (!ref_mRNAs.empty())
+//	{
+//		vector<shared_ptr<Scaffold> >::iterator itr = next_ref_scaff;
+//		while(itr < ref_mRNAs.end())
+//		{
+//			if ((*itr)->ref_id() != last_ref_rna_ref_id_seen || (*itr)->left() >= right_bundle_boundary)
+//				break;
+//			itr++;
+//		}
+//		
+//		bool past_first_id = false;
+//		while(itr >= ref_mRNAs.begin())
+//		{
+//			if (itr < ref_mRNAs.end())
+//			{
+//				// if we haven't backed up to the scaffold we need to be on
+//				// keep scanning through the reference annotations
+//				if ((*itr)->ref_id() == last_ref_rna_ref_id_seen)
+//				{
+//					// Now we're on the right scaffold, gotta get to the right
+//					// coords
+//
+//					if (overlap_in_genome((*itr)->left(), 
+//                                          (*itr)->right(), 
+//                                          left_bundle_boundary, 
+//                                          right_bundle_boundary))
+//
+//					{	
+//						bundle.add_ref_scaffold(*itr);
+//					}
+//					else if ((*itr)->right() < left_bundle_boundary)
+//					{	
+//						// This reference record is now to the left of 
+//						// the bundle of alignments
+//						break;
+//					}
+//				}
+//				else if (past_first_id)
+//				{
+//					break;
+//				}
+//				
+//				// If this reference record is on the same scaffold as we were 
+//				// on when we first entered this routine, going back any further
+//				// will be unproductive, so it's safe to break out of the loop
+//				// as long as the bundle is on a different scaffold.
+//				if ((*itr)->ref_id() == first_ref_id_seen)
+//				{
+//					past_first_id = true;
+//				}
+//			}
+//			--itr;
+//		}
+//	}
+//	
+//	assert (left_bundle_boundary != -1);
+//	bundle.finalize();
+//    assert(bundle.right() != -1);
+//	//bundle_out.remove_hitless_scaffolds();
+//    
+//    return true;
+//}
 
 // This is my least favorite function in Cufflinks.  It should be banished to
 // Hell and re-written.  It is utterly loathesome.
@@ -563,9 +1071,13 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     const char* ref_rna_chr_name = _hit_fac->ref_table().get_name((*next_ref_scaff)->ref_id());
                     const char* last_bh_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
                     
+                    int bh_chr_order = _hit_fac->ref_table().observation_order(bh->ref_id());
+                    int ref_rna_chr_order = _hit_fac->ref_table().observation_order((*next_ref_scaff)->ref_id());
+                    int last_bh_chr_order = _hit_fac->ref_table().observation_order(last_hit_ref_id_seen);
+                    
                     // if the BAM/SAM file isn't lexicographically sorted by chromosome, print an error
                     // and exit.
-                    if (last_bh_chr_name && strcmp(last_bh_chr_name, bh_chr_name) > 0)
+                    if (last_bh_chr_name && last_bh_chr_order > bh_chr_order)
                     { 
                         print_sort_error(last_bh_chr_name, 
                                          last_hit_pos_seen, 
@@ -576,7 +1088,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     
                     if (bh_chr_name && ref_rna_chr_name)
                     {
-                        if (strcmp(bh_chr_name, ref_rna_chr_name) < 0)
+                        if (bh_chr_order < ref_rna_chr_order)
                         {
                             // hit is lexicographically less than the reference,
                             // so skip the hit.
@@ -610,9 +1122,6 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     // if the hit stream disagrees with the reference transcript stream
                     // on which RefID is next, just skip the hit.
                     continue;
-//                    left_bundle_boundary = bh->left();
-//                    right_bundle_boundary = bh->left();
-//                    first_ref_id_seen = bh->ref_id();
                 }
                 else
                 {
@@ -734,7 +1243,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
             const char* bh_chr_name = _hit_fac->ref_table().get_name(bh->ref_id());
             const char* last_chr_name = _hit_fac->ref_table().get_name(last_hit_ref_id_seen);
             
-            if (strcmp(last_chr_name, bh_chr_name) > 0)
+            int bh_chr_order = _hit_fac->ref_table().observation_order(bh->ref_id());
+            int last_chr_order = _hit_fac->ref_table().observation_order(last_hit_ref_id_seen);
+            
+            if (last_chr_order > bh_chr_order)
             { 
                 print_sort_error(last_chr_name, 
                                  last_hit_pos_seen, 
@@ -858,6 +1370,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
     
     return true;
 }
+
 
 struct IntronSpanCounter
 {

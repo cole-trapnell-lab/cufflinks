@@ -590,6 +590,11 @@ void sample_worker(const RefSequenceTable& rt,
                             &bundle,
                             perform_cds_analysis,
                             perform_tss_analysis);
+    
+    foreach(shared_ptr<Scaffold> ref_scaff,  bundle.ref_scaffolds())
+    {
+        ref_scaff->clear_hits();
+    }
 }
 
 void test_differential(const string& locus_tag,
@@ -599,51 +604,6 @@ void test_differential(const string& locus_tag,
 {
 	if (samples.empty())
 		return;
-	
-  //  
-//	string locus_tag = bundle_locus_tag(rt, *(sample_bundles.front()));
-//	
-//	vector<SampleAbundances> samples(sample_bundles.size());
-//
-//	// set up the transfrag abundance group for each samples
-//	for (size_t i = 0; i < sample_bundles.size(); ++i)
-//	{
-//        samples[i].cluster_mass = sample_bundles[i]->hits().size();
-//#if ENABLE_THREADS			
-//        while(1)
-//        {
-//            sample_thread_pool_lock.lock();
-//            if (sample_curr_threads < sample_num_threads)
-//            {
-//                sample_thread_pool_lock.unlock();
-//                break;
-//            }
-//            
-//            sample_thread_pool_lock.unlock();
-//            
-//            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-//            
-//        }
-//        
-//        sample_thread_pool_lock.lock();
-//        sample_curr_threads++;
-//        sample_thread_pool_lock.unlock();
-//        
-//        thread quantitate(sample_abundance_worker,
-//                          boost::cref(locus_tag),
-//                          boost::ref(samples[i]),
-//                          boost::ref(sample_bundles[i]),
-//                          perform_cds_analysis,
-//                          perform_tss_analysis);
-//#else
-//        sample_abundance_worker(boost::cref(locus_tag),
-//                                boost::ref(samples[i]),
-//                                boost::ref(sample_bundles[i]),
-//                                perform_cds_analysis,
-//                                perform_tss_analysis);
-//#endif
-//        
-//	}
     
 #if ENABLE_THREADS
 	test_storage_lock.lock();

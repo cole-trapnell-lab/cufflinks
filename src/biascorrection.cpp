@@ -101,6 +101,14 @@ void map_frag_to_transcript(const Scaffold& transcript, const MateHit& hit, int&
 			frag_len = min(frag_len_dist->mode(), trans_len-start);
 	}
 	
+    // NOTE: if frag_len is actually less than the min of the distribution, 
+    // it probably means the read has a small overhang into an intron, and
+    // that overhang should have been remapped across that intron.  We need
+    // to tolerate cases like this, and can't ever report that the frag_len
+    // is less than the min of the distribution, else we will get divide-by-zero
+    // exceptions down the line.
+    frag_len = max(frag_len_dist->min(), frag_len);
+    
 	assert(start <= trans_len);
 	assert(end <= trans_len);
 	assert(start >= 0);
@@ -624,6 +632,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 			end += end_bias[i+l-1];
 		}
 		double p_len = frag_len_dist->pdf(l);
+        assert(tot != 0);
 		tot_bias_for_len[l] = tot;
 		eff_len += tot * p_len;
 		mean_start_bias += start * p_len;
@@ -678,7 +687,9 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	cond_prob *= rgp->frag_len_dist()->pdf(frag_len);
 	
 	if (hit.is_pair())
+    {
 		cond_prob /= _tot_biases_for_len[i][frag_len];
+    }
 	else if (start==trans_len) // The hit is a singleton at the end of a fragment
 		cond_prob /= _mean_end_biases[i]*(trans_len - frag_len + 1);
 	else

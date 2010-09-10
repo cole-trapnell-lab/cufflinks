@@ -95,8 +95,22 @@ class HitBundle
 public:
 	HitBundle() 
     : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _num_replicates(1) {}
-    
 	
+    ~HitBundle()
+    {
+        vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
+        foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
+        {
+            if (ref_scaff.unique())
+            {
+                ref_scaff->clear_hits();
+            }
+            else 
+            {
+                //fprintf(stderr, "Warning: bundle shared reference scaffolds with others.  Possible soft memory leak.\n");
+            }
+        }   
+    }
 	int left()   const { return _leftmost;  }
 	int right()  const { return _rightmost; }
 	int length() const { return _rightmost - _leftmost; }
@@ -143,108 +157,7 @@ public:
     int num_replicates() const { return _num_replicates; }
     
     static void combine(const vector<HitBundle>& in_bundles,
-                        HitBundle& out_bundle)
-    {
-        out_bundle._hits.clear();
-		out_bundle._non_redundant.clear();
-        out_bundle._ref_scaffs.clear();
-        
-        for (size_t i = 1; i < in_bundles.size(); ++i)
-        {
-            assert(in_bundles[i].ref_id() == in_bundles[i-1].ref_id());
-        }
-
-		// Merge  hits
-		vector<int> indices(in_bundles.size(),0);
-		while(true)
-		{
-			int next_bundle = -1;
-			const MateHit* next_hit; 
-			for(int i = 0; i < in_bundles.size(); ++i)
-			{
-				const vector<MateHit>& curr_hits = in_bundles[i].hits();
-				
-				if (indices[i] == curr_hits.size())
-					continue;
-				
-				const MateHit* curr_hit = &curr_hits[indices[i]];
-				
-				if (next_bundle == -1 || mate_hit_lt(*curr_hit, *next_hit))
-				{
-					next_bundle = i;
-					next_hit = curr_hit;
-				}
-			}
-			
-			if(next_bundle==-1)
-				break;
-			
-			out_bundle._hits.push_back(*next_hit);
-			indices[next_bundle]++;
-		}
-		
-		// Merge collapsed hits
-		indices = vector<int>(in_bundles.size(), 0);
-		while(true)
-		{
-			int next_bundle = -1;
-			const MateHit* next_hit; 
-			for(int i = 0; i < in_bundles.size(); ++i)
-			{
-				const vector<MateHit>& curr_non_redundant_hits = in_bundles[i].non_redundant_hits();
-				
-				if (indices[i] == curr_non_redundant_hits.size())
-					continue;
-				
-				const MateHit* curr_hit = &curr_non_redundant_hits[indices[i]];
-				
-				if (next_bundle == -1 || mate_hit_lt(*curr_hit, *next_hit))
-				{
-					next_bundle = i;
-					next_hit = curr_hit;
-				}
-			}
-			
-			if(next_bundle==-1)
-				break;
-			
-			out_bundle._non_redundant.push_back(*next_hit);
-			indices[next_bundle]++;
-		}
-        
-		// Merge ref scaffolds
-		indices = vector<int>(in_bundles.size(), 0);
-		while(true)
-		{
-			int next_bundle = -1;
-			shared_ptr<Scaffold> next_scaff; 
-			for(int i = 0; i < in_bundles.size(); ++i)
-			{
-				const vector<shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]._ref_scaffs;
-				
-				if (indices[i] == curr_scaffs.size())
-					continue;
-				
-				shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
-				
-				if (next_bundle == -1 || scaff_lt_rt_oplt(*curr_scaff, *next_scaff))
-				{
-					next_bundle = i;
-					next_scaff = curr_scaff;
-				}
-			}
-			
-			if(next_bundle==-1)
-				break;
-			
-			if (out_bundle._ref_scaffs.size()==0 || out_bundle._ref_scaffs.back()->annotated_trans_id() != next_scaff->annotated_trans_id()) 
-				out_bundle._ref_scaffs.push_back(next_scaff);
-			indices[next_bundle]++;
-		}
-		        
-        out_bundle.finalize(true); // true means everything is already sorted, etc.
-        out_bundle._num_replicates = (int)in_bundles.size();
-    }
+                        HitBundle& out_bundle);
     
 private:
     int _leftmost;
@@ -273,7 +186,7 @@ class BundleFactory
 public:
     
 	BundleFactory(shared_ptr<HitFactory> fac)
-	: _hit_fac(fac), _ref_driven(false) {}
+	: _hit_fac(fac), _ref_driven(false), _prev_pos(0), _prev_ref_id(0) {}
 
 	bool next_bundle(HitBundle& bundle_out);
     
@@ -290,6 +203,9 @@ public:
         {
             ref_scaff->clear_hits();
         }
+        
+        _prev_pos = 0;
+        _prev_ref_id = 0;
 	}
 	
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
@@ -368,6 +284,8 @@ private:
     
     shared_ptr<ReadHit const> next_valid_alignment();
     bool _ref_driven;
+    int _prev_pos;
+    RefID _prev_ref_id;
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
@@ -502,8 +420,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		delete bundle_ptr;
 	}
 	
-    fprintf(stderr, "Fragments range between %d and %d bp\n", min_len, max_len);
-    fprintf(stderr, "%lu open ranges\n", open_ranges.size());
+    //fprintf(stderr, "Fragments range between %d and %d bp\n", min_len, max_len);
+    //fprintf(stderr, "%lu open ranges\n", open_ranges.size());
     //max_len = min(max_len, def_frag_len_mean + 3*def_frag_len_std_dev);
     
     if (bad_introns != NULL)
@@ -609,8 +527,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
     frag_len_dist.mean(mean);
     frag_len_dist.std_dev(std_dev);
     
-    fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
-    fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
+    //fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
+    //fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
     
     
     bundle_factory.reset();
