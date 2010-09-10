@@ -280,13 +280,12 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>43</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>84</integer>
+									<integer>83</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 0}, {267, 987}}</string>
+							<string>{{0, 677}, {267, 987}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -329,7 +328,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED068839123A815F00F78A2F</string>
+										<string>ED068879123AD8FB00F78A2F</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -382,12 +381,12 @@
 											<string>ED0687F2123A73F100F78A2F</string>
 											<string>ED0687F3123A73F100F78A2F</string>
 											<string>ED0687F4123A73F100F78A2F</string>
-											<string>ED0687F5123A73F100F78A2F</string>
 											<string>ED0687FC123A748700F78A2F</string>
 											<string>ED06880F123A772800F78A2F</string>
 											<string>ED06881F123A7A6100F78A2F</string>
 											<string>ED068820123A7A6100F78A2F</string>
-											<string>ED068821123A7A6100F78A2F</string>
+											<string>ED068874123AD8B300F78A2F</string>
+											<string>ED068873123AD8AC00F78A2F</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -424,7 +423,7 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {890, 299}}</string>
+										<string>{{10, 27}, {1145, 299}}</string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -551,6 +550,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXProjectModuleGUID</key>
@@ -706,7 +707,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>ED068834123A7F3F00F78A2F</string>
+		<string>ED06887A123AD8FB00F78A2F</string>
 		<string>ED068702123977D600F78A2F</string>
 		<string>ED068703123977D600F78A2F</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>

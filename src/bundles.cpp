@@ -62,7 +62,7 @@ struct ScaffoldSorter
 
 		if (lhs_order != rhs_order)
 		{
-			return lhs_order != rhs_order;
+			return lhs_order < rhs_order;
 		}
 		if (lhs->left() != rhs->left())
 		{
@@ -628,7 +628,7 @@ shared_ptr<ReadHit const> BundleFactory::next_valid_alignment()
         {
             int prev_order = _hit_fac->ref_table().observation_order(_prev_ref_id);
             
-            if (prev_order > order || _prev_pos > tmp.left())
+            if (prev_order > order || (prev_order == order && _prev_pos > tmp.left()))
             {
                 const char* bh_chr_name = _hit_fac->ref_table().get_name(tmp.ref_id());
                 const char* last_bh_chr_name = _hit_fac->ref_table().get_name(_prev_ref_id);
