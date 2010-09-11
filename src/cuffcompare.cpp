@@ -5,12 +5,6 @@
 #endif
 
 #include "GArgs.h"
-#include "GStr.h"
-#include "GHash.hh"
-#include "GList.hh"
-#include "GFaSeqGet.h"
-#include "GFastaIndex.h"
-#include "gff.h"
 #include <ctype.h>
 #include <errno.h>
 #include "gtf_tracking.h"
@@ -132,8 +126,6 @@ void processLoci(GSeqData& seqdata, GSeqData* refdata=NULL, GFaSeqGet* faseq=NUL
 
 void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
        GSeqData* seqdata=NULL, GSeqData* refdata=NULL);
-
-char* getGSeqName(int gid); //returns the name of a genomic sequence
 
 GSeqData* getQryData(int gid, GList<GSeqData>& qdata);
 void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** ftr, FILE** frs);
