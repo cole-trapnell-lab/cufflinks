@@ -15,8 +15,6 @@
 #include "common.h"
 #include "bundles.h"
 #include "scaffolds.h"
-#include "gff.h"
-#include "GStr.h"
 
 using namespace std;
 using boost::math::binomial;
@@ -73,10 +71,7 @@ struct ScaffoldSorter
 	RefSequenceTable& rt;
 };
 
-char* getGSeqName(int gseq_id)
-{
-	return GffObj::names->gseqs.getName(gseq_id);
-}
+/*
 char* getFastaFile(int gseq_id) 
 {
 	if (fasta_dir == "") return NULL;
@@ -94,6 +89,7 @@ char* getFastaFile(int gseq_id)
 		return NULL;
 	}
 }
+*/
 
 //FIXME: needs refactoring
 void load_ref_rnas(FILE* ref_mRNA_file, 
@@ -116,6 +112,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 	
 	int last_gseq_id = -1;
 	GFaSeqGet* faseq = NULL;
+	GFastaHandler gfasta(fasta_dir.c_str());
 	// Geo groups them by chr.
 	if (ref_rnas.Count()>0) //if any ref data was loaded
 	{
@@ -162,21 +159,9 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					delete faseq;
 					faseq = NULL;
 					last_gseq_id = rna.gseq_id;
-					char* sfile = getFastaFile(last_gseq_id);
-                    if (sfile != NULL) 
-                    {
-						if (verbose)
-							GMessage("Processing sequence from fasta file '%s'\n",sfile);
-						faseq = new GFaSeqGet(sfile, false);
-						faseq->loadall();
-						GFREE(sfile);
-                    }
-                    else 
-                    {
-						assert (false);
-                    }
-                }
-                
+					faseq = gfasta.fetch(last_gseq_id);
+				}
+
 				vector<AugmentedCuffOp> ops;
 				for (int e = 0; e < rna.exons.Count(); ++e)
 				{

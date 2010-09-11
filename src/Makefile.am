@@ -20,7 +20,7 @@ noinst_HEADERS = \
 	GBase.h \
 	gdna.h \
 	GFaSeqGet.h \
-	GFastaFile.h \
+	GFastaIndex.h \
 	gff.h \
 	GHash.hh \
 	GList.hh \
@@ -108,6 +108,7 @@ libgc_a_SOURCES = \
 	gdna.cpp \
 	GStr.cpp \
 	GFaSeqGet.cpp \
+	GFastaIndex.cpp \
 	gff.cpp \
 	gtf_tracking.cpp 
 

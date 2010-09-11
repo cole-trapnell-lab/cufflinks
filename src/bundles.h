@@ -17,7 +17,6 @@
 #include <numeric>
 #include "hits.h"
 #include "scaffolds.h"
-#include "GList.hh"
 #include "gtf_tracking.h"
 
 class EmpDist

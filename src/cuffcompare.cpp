@@ -2399,7 +2399,7 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
       printRefMap(frs, qcount, gseqtrack.rloci_f);
       printRefMap(frs, qcount, gseqtrack.rloci_r);
       }
-    if (faseq!=NULL) delete faseq;
+    delete faseq;
     }
   if (tmapFiles) {
    for (int q=0;q<qcount;q++) { fclose(ftr[q]); fclose(frs[q]); }

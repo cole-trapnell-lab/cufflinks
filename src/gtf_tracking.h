@@ -19,6 +19,7 @@
 #include "GFastaIndex.h"
 #include "GStr.h"
 
+
 #define MAX_QFILES 500
 extern const char* ATTR_GENE_NAME;
 
@@ -26,8 +27,7 @@ extern bool verbose;
 
 extern bool largeScale;
 //many input files, no accuracy stats are generated, no *.tmap
-// exon attributes are discarded
-
+// and exon attributes are discarded
 
 int cmpByPtr(const pointer p1, const pointer p2);
 
@@ -52,10 +52,13 @@ class GFastaHandler {
              return NULL;
              }
      }
-   GFastaHandler() {
+     
+   GFastaHandler(const char* fpath=NULL) {
      fastaPath=NULL;
      faIdx=NULL;
+     if (fpath!=NULL && fpath[0]!=0) init(fpath);
      }
+     
    void init(const char* fpath) {
      if (fpath==NULL) return;
      fastaPath=Gstrdup(fpath);
@@ -115,8 +118,8 @@ class GFastaHandler {
         {
          char* sfile=getFastaFile(gseq_id);
          if (sfile!=NULL) {
-            if (verbose)
-               GMessage("Processing sequence from fasta file '%s'\n",sfile);
+            //if (verbose)
+            //   GMessage("Processing sequence from fasta file '%s'\n",sfile);
             faseq=new GFaSeqGet(sfile,checkFasta);
             faseq->loadall();
             GFREE(sfile);
@@ -130,7 +133,6 @@ class GFastaHandler {
      delete faIdx;
      }
 };
-
 
 class GLocus;
 

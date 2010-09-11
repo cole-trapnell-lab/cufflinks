@@ -9,8 +9,6 @@
 
 #include <cstdlib>
 #include "gtf_tracking.h"
-#include "gff.h"
-#include "GStr.h"
 
 const char* ATTR_GENE_NAME=  "gene_name";
 
