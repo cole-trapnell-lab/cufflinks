@@ -75,7 +75,7 @@ extern double binomial_junc_filter_alpha;
 
 extern std::string library_type;
 
-#define ADAM_MODE 0
+#define ADAM_MODE 1
 #define ENABLE_THREADS 1
 
 #if ENABLE_THREADS

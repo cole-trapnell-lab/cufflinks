@@ -59,6 +59,7 @@ void get_compatibility_list(const vector<shared_ptr<Scaffold> >& transcripts,
 				&& transcripts[j]->contains(alignment_scaffs[i]) 
 				&& Scaffold::compatible(*transcripts[j],alignment_scaffs[i]))
 			{
+				double x = transcripts[j]->fpkm();
 				compatibilities[i].push_back(j);
 			}
 		}
