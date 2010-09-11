@@ -956,16 +956,21 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
 
 	if (fasta_dir != "") final_est_run = false;
-	
+#if ADAM_MODE
+	if (fasta_dir == "")  assemble_hits(bundle_factory);
+#else
 	assemble_hits(bundle_factory);
-
+#endif
     if (fasta_dir == "") return;
     
 	hit_factory->reset();
-    
-	//ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
+
+#if ADAM_MODE
+	ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
+#else	
 	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
-    
+#endif
+
 	BundleFactory bundle_factory2(hit_factory);
     
     if (ref_gtf)

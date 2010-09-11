@@ -164,7 +164,9 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		delete bundle_ptr;
 	}
 	bl.normalizeParameters();
-	//bl.output();
+#if ADAM_MODE
+	bl.output();
+#endif
 }
 
 void process_bundle(HitBundle& bundle, BiasLearner& bl)
