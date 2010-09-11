@@ -600,7 +600,8 @@ void sample_worker(const RefSequenceTable& rt,
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
 					   Tests& tests,
-					   Tracking& tracking)
+					   Tracking& tracking,
+                       bool samples_are_time_series)
 {
 	if (samples.empty())
 		return;
@@ -608,7 +609,11 @@ void test_differential(const string& locus_tag,
 #if ENABLE_THREADS
 	test_storage_lock.lock();
 #endif
-	
+    
+	// Add all the transcripts, CDS groups, TSS groups, and genes to their
+    // respective FPKM tracking table.  Whether this is a time series or an
+    // all pairs comparison, we should be calculating and reporting FPKMs for 
+    // all objects in all samples
 	for (size_t i = 0; i < samples.size(); ++i)
 	{
 		const AbundanceGroup& ab_group = samples[i]->transcripts;
@@ -633,11 +638,18 @@ void test_differential(const string& locus_tag,
 		}
 	}
 	
+    // Perform pairwise significance testing between samples. If this is a
+    // time series, only test between successive pairs of samples, as supplied 
+    // by the user.
 	for (size_t i = 1; i < samples.size(); ++i)
 	{
 		bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
 		
-        for (size_t j = 0; j < i; ++j)
+        int sample_to_start_test_against = 0;
+        if (samples_are_time_series)
+            sample_to_start_test_against = i - 1;
+        
+        for (size_t j = sample_to_start_test_against; j < i; ++j)
         {
             bool enough_reads = !(multi_transcript_locus &&
                                   (samples[i]->cluster_mass < min_read_count ||

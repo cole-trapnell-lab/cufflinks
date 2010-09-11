@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ActivePerspectiveName</key>
-	<string>Project</string>
+	<string>Debug</string>
 	<key>AllowedModules</key>
 	<array>
 		<dict>
@@ -280,13 +280,12 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>45</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>86</integer>
+									<integer>84</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 554}, {267, 840}}</string>
+							<string>{{0, 710}, {267, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -302,8 +301,6 @@
 							<string>MainColumn</string>
 							<real>267</real>
 						</array>
-						<key>RubberWindowFrame</key>
-						<string>724 279 1196 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -314,14 +311,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>bundles.cpp</string>
+								<string>cuffdiff.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +324,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>bundles.cpp</string>
+										<string>cuffdiff.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED877CCF123BDDAD0025A050</string>
+										<string>ED877D62123BF4030025A050</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -343,7 +338,6 @@
 											<string>EDBEA60511EA75CD00C661A7</string>
 											<string>EDBEA6BF11ED3DD100C661A7</string>
 											<string>ED70726B11F79D170028F305</string>
-											<string>EDC6AD8B1225906900CA79FA</string>
 											<string>EDFE370112269FAF00F24CD3</string>
 											<string>EDFE371B1228361200F24CD3</string>
 											<string>EDFE371E1228361200F24CD3</string>
@@ -355,12 +349,10 @@
 											<string>EDFE3A5B122C04D700F24CD3</string>
 											<string>EDFE3AA5122C9ED000F24CD3</string>
 											<string>EDFE3AA6122C9ED000F24CD3</string>
-											<string>EDFE3AA7122C9ED000F24CD3</string>
 											<string>ED291362122D32B500C3703E</string>
 											<string>ED291363122D32B500C3703E</string>
 											<string>ED291368122E127E00C3703E</string>
 											<string>ED2913B5122F633B00C3703E</string>
-											<string>ED2914CF1230965600C3703E</string>
 											<string>ED2914D812309E2600C3703E</string>
 											<string>ED2915191232FFFB00C3703E</string>
 											<string>EDBCDD4B1235E4090050A8E4</string>
@@ -377,18 +369,21 @@
 											<string>EDBCDF9212373B250050A8E4</string>
 											<string>EDBCDF9312373B250050A8E4</string>
 											<string>EDBCDFAC12373CA40050A8E4</string>
-											<string>ED877B36123916AD0025A050</string>
 											<string>ED877B37123916AD0025A050</string>
 											<string>ED877BA2123BD0530025A050</string>
 											<string>ED877BB1123BD0D00025A050</string>
 											<string>ED877BB2123BD0D00025A050</string>
 											<string>ED877C45123BD7EE0025A050</string>
-											<string>ED877C56123BD8690025A050</string>
 											<string>ED877CAB123BDC9A0025A050</string>
 											<string>ED877CAC123BDC9A0025A050</string>
-											<string>ED877CCC123BDDAD0025A050</string>
-											<string>ED877CCD123BDDAD0025A050</string>
-											<string>ED877CCE123BDDAD0025A050</string>
+											<string>ED877CD3123BE64A0025A050</string>
+											<string>ED877CDF123BE67F0025A050</string>
+											<string>ED877CEF123BE8A60025A050</string>
+											<string>ED877CF0123BE8A60025A050</string>
+											<string>ED877D0C123BEAED0025A050</string>
+											<string>ED877D0D123BEAED0025A050</string>
+											<string>ED877D28123BECFB0025A050</string>
+											<string>ED877D2C123BED370025A050</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -403,8 +398,6 @@
 							<dict>
 								<key>Frame</key>
 								<string>{{0, 0}, {907, 526}}</string>
-								<key>RubberWindowFrame</key>
-								<string>724 279 1196 899 0 0 1920 1178 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -444,8 +437,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {907, 300}}</string>
-										<key>RubberWindowFrame</key>
-										<string>724 279 1196 899 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -567,6 +558,8 @@
 					<dict>
 						<key>Frame</key>
 						<string>{{0, 0}, {1196, 128}}</string>
+						<key>RubberWindowFrame</key>
+						<string>724 279 1196 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugCLIModule</string>
@@ -641,7 +634,11 @@
 							</array>
 							<key>Frame</key>
 							<string>{{559, 0}, {637, 344}}</string>
+							<key>RubberWindowFrame</key>
+							<string>724 279 1196 899 0 0 1920 1178 </string>
 						</dict>
+						<key>RubberWindowFrame</key>
+						<string>724 279 1196 899 0 0 1920 1178 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXDebugSessionModule</string>
@@ -705,6 +702,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>ED877D63123BF4030025A050</string>
 		<string>ED877B8C123BCB940025A050</string>
 		<string>ED877B8D123BCB940025A050</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>

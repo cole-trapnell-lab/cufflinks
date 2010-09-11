@@ -46,13 +46,15 @@
 vector<string> sample_labels;
 
 double FDR = 0.05; 
+bool samples_are_time_series = false;
 using namespace std;
 using namespace boost;
 
+// We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:o:r:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:o:r:T";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:o:r:";
+const char *short_options = "m:s:F:c:I:j:Q:L:o:r:T";
 #endif
 
 
@@ -69,7 +71,8 @@ static struct option long_options[] = {
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"output-dir",			    required_argument,		 0,			 'o'},
-{"reference-seq-dir",		required_argument,		 0,			 'r'},	
+{"reference-seq-dir",		required_argument,		 0,			 'r'},
+{"time-series",             no_argument,             0,			 'T'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -86,18 +89,19 @@ void print_usage()
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-m/--frag-len-mean			  the average fragment length							[ default:    190 ]\n");
-	fprintf(stderr, "-s/--frag-len-std-dev        the fragment length standard deviation                [ default:     80 ]\n");
+    fprintf(stderr, "-T/--time-series             treat samples as a time-series                                           \n");
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "--FDR						  False discovery rate used in testing   [ default:   0.05 ]\n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias corr    [ default:   NULL ]\n");
+	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias correction                 \n");
     fprintf(stderr, "-L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
 	fprintf(stderr, "\nAdvanced Options:\n\n");
+    fprintf(stderr, "-m/--frag-len-mean			  the average fragment length (use with unpaired reads only)               \n");
+	fprintf(stderr, "-s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
 	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
 }
@@ -109,10 +113,16 @@ int parse_options(int argc, char** argv)
     string sample_label_list;
     
     do {
-        next_option = getopt_long(argc, argv, short_options, long_options, &option_index);
+        next_option = getopt_long_only(argc, argv, short_options, long_options, &option_index);
+        if (next_option == -1)     /* Done with options. */
+            break;
         switch (next_option) {
-			case -1:     /* Done with options. */
-				break;
+            case 0:
+                /* If this option set a flag, do nothing else now. */
+                if (long_options[option_index].flag != 0)
+                    break;
+                break;
+                
 			case 'm':
 				def_frag_len_mean = (uint32_t)parseInt(0, "-m/--frag-len-mean arg must be at least 0", print_usage);
 				break;
@@ -161,6 +171,13 @@ int parse_options(int argc, char** argv)
 				fasta_dir = optarg;
 				break;
             }    
+                
+            case 'T':
+			{
+                samples_are_time_series = true;
+				break;
+            } 
+
 			default:
 				print_usage();
 				return 1;
@@ -188,141 +205,6 @@ void decr_pool_count()
 }
 #endif
 
-//void next_bundle_worker(ReplicatedBundleFactory& fac,
-//                        HitBundle& bundle,
-//                        bool& non_empty)
-//{
-//#if ENABLE_THREADS
-//	boost::this_thread::at_thread_exit(decr_pool_count);
-//#endif
-//    
-//    non_empty = fac.next_bundle(bundle);
-//}
-//
-//// Gets the next set of bundles to process, advancing all sample factories
-//// and all replicates within those factories by one set of overlapping 
-//// transcripts
-//bool next_bundles(vector<ReplicatedBundleFactory>& bundle_factories,
-//                  vector<HitBundle*>& locus_bundles)
-//{
-//    bool non_empty_sample_bundle = false;
-//    vector<bool*> factory_status;
-//    
-//	for (size_t i = 0; i < bundle_factories.size(); ++i)
-//	{
-//        ReplicatedBundleFactory& fac = bundle_factories[i];
-//		HitBundle* bundle = new HitBundle;
-//        bool* non_empty = new bool(false);
-//#if ENABLE_THREADS			
-//        while(1)
-//        {
-//            locus_thread_pool_lock.lock();
-//            if (locus_curr_threads < locus_num_threads)
-//            {
-//                locus_thread_pool_lock.unlock();
-//                break;
-//            }
-//            
-//            locus_thread_pool_lock.unlock();
-//            
-//            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-//            
-//        }
-//
-//        locus_thread_pool_lock.lock();
-//        locus_curr_threads++;
-//        locus_thread_pool_lock.unlock();
-//        
-//        thread next(next_bundle_worker,
-//                    boost::ref(fac),
-//                    boost::ref(*bundle),
-//                    boost::ref(*non_empty));  
-//#else
-//        next_bundle_worker(boost::ref(fac),
-//                           boost::ref(*bundle),
-//                           boost::ref(*non_empty));     
-//#endif
-//        
-//
-//        locus_bundles.push_back(bundle);
-//        factory_status.push_back(non_empty);
-//	}
-//    
-//    // wait for the workers to finish up before reporting everthing.
-//#if ENABLE_THREADS	
-//	while(1)
-//	{
-//		locus_thread_pool_lock.lock();
-//		if (locus_curr_threads == 0)
-//		{
-//			locus_thread_pool_lock.unlock();
-//			break;
-//		}
-//		
-//		locus_thread_pool_lock.unlock();
-//		//fprintf(stderr, "waiting to for all workers to finish\n");
-//		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-//	}
-//#endif
-//    
-//    foreach(bool* status, factory_status)
-//    {
-//        if (*status == true)
-//        {
-//            non_empty_sample_bundle = true;
-//            //assert (!bundle->ref_scaffolds().empty());
-//        } 
-//        
-//        delete status;
-//    }
-//    
-//    if (non_empty_sample_bundle == false)
-//    {
-//        return false;
-//    }
-//    
-//    for (size_t i = 1; i < locus_bundles.size(); ++i)
-//    {
-//        const vector<shared_ptr<Scaffold> >& s1 = locus_bundles[i]->ref_scaffolds();
-//        const vector<shared_ptr<Scaffold> >& s2 =  locus_bundles[i-1]->ref_scaffolds();
-//        assert (s1.size() == s2.size());
-//        for (size_t j = 0; j < s1.size(); ++j)
-//        {
-//            assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
-//        }
-//    }
-//    
-//    return true;
-//}	
-
-//void quantitation_worker(const RefSequenceTable& rt,
-//						 vector<HitBundle*>* sample_bundles,
-//						 Tests& tests,
-//						 Tracking& tracking)
-//{
-//	char bundle_label_buf[2048];
-//    sprintf(bundle_label_buf, 
-//            "%s:%d-%d", 
-//            rt.get_name(sample_bundles->front()->ref_id()),
-//            sample_bundles->front()->left(),
-//            sample_bundles->front()->right());
-//    bundle_label.reset(new string(bundle_label_buf));
-//	
-//	
-//	test_differential(rt, *sample_bundles, tests, tracking);
-//	
-//	for (size_t i = 0; i < sample_bundles->size(); ++i)
-//	{
-//        foreach(shared_ptr<Scaffold>& ref_scaff, (*sample_bundles)[i]->ref_scaffolds())
-//        {
-//            ref_scaff->clear_hits();
-//        }
-//		delete (*sample_bundles)[i];
-//	}
-//	
-//	delete sample_bundles;
-//}
-
 template<typename T>
 string cat_strings(const T& container)
 {
@@ -345,12 +227,10 @@ string cat_strings(const T& container)
 }
 
 void print_tests(FILE* fout,
-				 const char* test_label,
                  const char* sample_1_label,
                  const char* sample_2_label,
 				 const SampleDiffs& de_tests)
 {
-	fprintf(fout, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\t%s\ttest_stat\tp_value\tsignificant\n", test_label);
 	for (SampleDiffs::const_iterator itr = de_tests.begin(); 
 		 itr != de_tests.end(); 
 		 ++itr)
@@ -790,7 +670,7 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
         
         fprintf(stderr, "Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
         
-        test_differential(abundances.front()->locus_tag, abundances, tests, tracking);
+        test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
 	}
 	
 	//double FDR = 0.05;
@@ -807,13 +687,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	}
 	int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
 	fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
+    fprintf(outfiles.isoform_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
 	for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.isoform_de_outfile;
-            assert (fout != NULL);
-            print_tests(fout, "log(fold_change)", sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
+            print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
         }
 	}
 	
@@ -830,12 +709,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	
 	int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
 	fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
+    fprintf(outfiles.group_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
 	for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.group_de_outfile;
-            print_tests(fout, "log(fold_change)", sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
+            print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
         }
 	}
 	
@@ -852,12 +731,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	
 	int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
 	fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
-	for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+	fprintf(outfiles.gene_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
+    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
 	{        
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.gene_de_outfile;
-            print_tests(fout, "log(fold_change)", sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
+            print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
         }
 	}	
 
@@ -873,12 +752,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	}
 	int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
 	fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
-	for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+	fprintf(outfiles.cds_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
+    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.cds_de_outfile;
-            print_tests(fout, "log(fold_change)", sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
+            print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
         }
 	}
 	
@@ -895,13 +774,13 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	
 	int splicing_tests = fdr_significance(FDR, splicing_diffs);
 	fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
-	for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+	fprintf(outfiles.diff_splicing_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tsignificant\n");
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.diff_splicing_outfile;
             const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
-            print_tests(fout, "sqrt(JS)", sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
+            print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
         }
 	}
 	
@@ -917,12 +796,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	}
 	int promoter_tests = fdr_significance(FDR, promoter_diffs);
 	fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
-	for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
+    fprintf(outfiles.diff_promoter_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tsignificant\n");
+    for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.diff_promoter_outfile;
-            print_tests(fout, "sqrt(JS)", sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
+            print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
         }
 	}
 
@@ -938,12 +817,12 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	}
 	int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
 	fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
-	for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+	fprintf(outfiles.diff_cds_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tsignificant\n");
+    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
         {
-            FILE* fout = outfiles.diff_cds_outfile;
-            print_tests(fout, "sqrt(JS)", sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
+            print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
         }
 	}
 	

@@ -260,7 +260,8 @@ void sample_worker(const RefSequenceTable& rt,
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
 					   Tests& tests,
-					   Tracking& tracking);
+					   Tracking& tracking,
+                       bool samples_are_time_series);
 
 #if ENABLE_THREADS
 void decr_pool_count();
