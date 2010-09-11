@@ -1041,13 +1041,11 @@ int Scaffold::genomic_to_transcript_coord(int g_coord) const
 	if(strand()==CUFF_REV)
 		s_coord = length() - 1 - s_coord;
 	
-	if (s_coord < 0 || s_coord >= length()) // This will handle overhangs
-		return length();
-	
 	return s_coord;
 }
 
 // start and end (first and second) are the first and final coordinates of the span
+// Does not handle overhangs (can return negative values)
 pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 {
 	int s_start;

@@ -59,7 +59,6 @@ void get_compatibility_list(const vector<shared_ptr<Scaffold> >& transcripts,
 				&& transcripts[j]->contains(alignment_scaffs[i]) 
 				&& Scaffold::compatible(*transcripts[j],alignment_scaffs[i]))
 			{
-				double x = transcripts[j]->fpkm();
 				compatibilities[i].push_back(j);
 			}
 		}
@@ -109,11 +108,11 @@ void map_frag_to_transcript(const Scaffold& transcript, const MateHit& hit, int&
     // is less than the min of the distribution, else we will get divide-by-zero
     // exceptions down the line.
     frag_len = max(frag_len_dist->min(), frag_len);
-    
-	assert(start <= trans_len);
-	assert(end <= trans_len);
-	assert(start >= 0);
-	assert(end >= 0);
+
+    if (start <= 0 || start > trans_len)
+		start = trans_len;
+	if (end <= 0 || end > trans_len)
+		end = trans_len;
 }
 
 void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)

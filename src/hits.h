@@ -719,7 +719,8 @@ public:
 	_refid(refid), 
 	_left_alignment(left_alignment),
 	_right_alignment(right_alignment),
-	_collapse_mass(0.0)
+	_collapse_mass(0.0),
+	_is_mapped(false)
 	{
 		//_expected_inner_dist = min(genomic_inner_dist(), _expected_inner_dist);
 	}
@@ -743,6 +744,9 @@ public:
 	{
 		_right_alignment = right_alignment;
 	}
+	
+	bool is_mapped() const {return _is_mapped;}					
+	void is_mapped(bool mapped) {_is_mapped = mapped;}
 	
 	bool is_pair() const
 	{
@@ -872,6 +876,7 @@ private:
 	shared_ptr<ReadHit const> _left_alignment;
 	shared_ptr<ReadHit const> _right_alignment;
 	double _collapse_mass;
+	bool _is_mapped;
 	//bool _closed;
 };
 

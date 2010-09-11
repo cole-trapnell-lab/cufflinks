@@ -269,13 +269,22 @@ bool HitBundle::add_hit(const MateHit& hit)
 	return true;
 }
 
-struct HitLessScaffold
+struct HitlessScaffold
 {
 	bool operator()(shared_ptr<Scaffold> x)
 	{
 		return x->mate_hits().empty();
 	}
 };
+
+struct UnmappedHit
+{
+	bool operator()(MateHit& x)
+	{
+		return !(x.is_mapped());
+	}
+};
+
 
 void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                              shared_ptr<ReadHit const> bh)
@@ -400,8 +409,21 @@ void HitBundle::remove_hitless_scaffolds()
 {
 	vector<shared_ptr<Scaffold> >::iterator new_end = remove_if(_ref_scaffs.begin(),
 												   _ref_scaffs.end(),
-												   HitLessScaffold());
+												   HitlessScaffold());
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
+}
+
+void HitBundle::remove_unmapped_hits()
+{
+	vector<MateHit>::iterator new_end = remove_if(_hits.begin(),
+												  _hits.end(),
+												  UnmappedHit());
+	_hits.erase(new_end, _hits.end());	
+	
+	new_end = remove_if(_non_redundant.begin(),
+						_non_redundant.end(),
+						UnmappedHit());
+	_non_redundant.erase(new_end, _non_redundant.end());
 }
 
 void HitBundle::combine(const vector<HitBundle>& in_bundles,
@@ -534,28 +556,28 @@ void HitBundle::finalize(bool is_combined)
     
 	for (size_t i = 0; i < _hits.size(); ++i)
 	{
-		const MateHit* hit = &(_hits[i]);
+		MateHit& hit = _hits[i];
 		
-		Scaffold hs(*hit);
+		Scaffold hs(hit);
 		
         if (i >= 1)
         {
-            assert (hit->ref_id() == _hits[i-1].ref_id());
+            assert (hit.ref_id() == _hits[i-1].ref_id());
         }
-        bool added_hit = false;
+		hit.is_mapped(false);
 		for (size_t j = 0; j < _ref_scaffs.size(); ++j)
 		{
 			// add hit only adds if the hit is structurally compatible
 			if (_ref_scaffs[j]->contains(hs))
 			{
-				bool added =  _ref_scaffs[j]->add_hit(hit);
+				bool added = _ref_scaffs[j]->add_hit(&hit);
                 if (added)
-                    added_hit = true;
+                    hit.is_mapped(true);
 			}
 		}
-        
-        assert (added_hit);
-    }
+	}
+	
+	remove_unmapped_hits();
     
 	if (_ref_scaffs.size() > 0)
     {

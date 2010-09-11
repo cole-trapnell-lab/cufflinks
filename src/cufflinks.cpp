@@ -959,7 +959,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 #if ADAM_MODE
 	if (fasta_dir == "")  assemble_hits(bundle_factory);
 #else
-	assemble_hits(bundle_factory);
+	//assemble_hits(bundle_factory);
 #endif
     if (fasta_dir == "") return;
     

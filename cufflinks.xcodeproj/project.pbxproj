@@ -157,6 +157,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
+		0A5D9A3F123B5BFE002BEFD5 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
 		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
 		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 				EDA5151710C72963000A4F41 /* gtf_tracking.h */,
 				EDA5151810C72963000A4F41 /* hits.h */,
 				EDE78BC511B716C3000F8846 /* matching_merge.h */,
+				0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */,
 				EDA5151910C72963000A4F41 /* scaffolds.h */,
 				EDE78A7811B6E912000F8846 /* scaffold_graph.h */,
 				EDA5151A10C72963000A4F41 /* tokenize.h */,
@@ -364,6 +367,7 @@
 				EDA5152A10C72963000A4F41 /* genes.cpp */,
 				EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */,
 				EDA5152C10C72963000A4F41 /* gff.cpp */,
+				0A5D9A3F123B5BFE002BEFD5 /* GFastaIndex.h */,
 				EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */,
 				EDA5152D10C72963000A4F41 /* GStr.cpp */,
 				EDA5152E10C72963000A4F41 /* gtf_reads.cpp */,
