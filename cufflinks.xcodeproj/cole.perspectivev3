@@ -280,8 +280,9 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>84</integer>
-									<integer>83</integer>
+									<integer>49</integer>
+									<integer>5</integer>
+									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -316,7 +317,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>biascorrection.cpp</string>
+								<string>hits.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -324,11 +325,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>biascorrection.cpp</string>
+										<string>hits.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED068879123AD8FB00F78A2F</string>
+										<string>ED0688EC123AE74B00F78A2F</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -366,8 +367,6 @@
 											<string>EDBCDF80123721790050A8E4</string>
 											<string>EDBCDF81123721790050A8E4</string>
 											<string>EDBCDF9312373B250050A8E4</string>
-											<string>EDBCDFAC12373CA40050A8E4</string>
-											<string>ED877B201238541C0025A050</string>
 											<string>ED068718123979A300F78A2F</string>
 											<string>ED06871A123979A300F78A2F</string>
 											<string>ED06871C123979A300F78A2F</string>
@@ -379,14 +378,16 @@
 											<string>ED0687AA1239858F00F78A2F</string>
 											<string>ED0687F1123A73F100F78A2F</string>
 											<string>ED0687F2123A73F100F78A2F</string>
-											<string>ED0687F3123A73F100F78A2F</string>
 											<string>ED0687F4123A73F100F78A2F</string>
-											<string>ED0687FC123A748700F78A2F</string>
-											<string>ED06880F123A772800F78A2F</string>
 											<string>ED06881F123A7A6100F78A2F</string>
 											<string>ED068820123A7A6100F78A2F</string>
-											<string>ED068874123AD8B300F78A2F</string>
-											<string>ED068873123AD8AC00F78A2F</string>
+											<string>ED068891123AE17600F78A2F</string>
+											<string>ED0688A5123AE38A00F78A2F</string>
+											<string>ED0688D0123AE68D00F78A2F</string>
+											<string>ED0688D2123AE68D00F78A2F</string>
+											<string>ED0688E6123AE73800F78A2F</string>
+											<string>ED0688E7123AE73800F78A2F</string>
+											<string>ED0688E8123AE73800F78A2F</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -550,8 +551,6 @@
 			<key>Layout</key>
 			<array>
 				<dict>
-					<key>BecomeActive</key>
-					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXProjectModuleGUID</key>
@@ -707,7 +706,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>ED06887A123AD8FB00F78A2F</string>
 		<string>ED068702123977D600F78A2F</string>
 		<string>ED068703123977D600F78A2F</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>

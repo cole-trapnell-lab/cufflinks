@@ -617,6 +617,8 @@ shared_ptr<ReadHit const> BundleFactory::next_valid_alignment()
                 const char* bh_chr_name = _hit_fac->ref_table().get_name(tmp.ref_id());
                 const char* last_bh_chr_name = _hit_fac->ref_table().get_name(_prev_ref_id);
                 
+                _hit_fac->ref_table().observation_order(_prev_ref_id);
+                
                 print_sort_error(last_bh_chr_name, 
                                  _prev_pos, 
                                  bh_chr_name, 

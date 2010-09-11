@@ -358,9 +358,14 @@ public:
 	{
 		InvertedIDTable::const_iterator itr = _by_id.find(ID);
 		if (itr != _by_id.end())
+        {
+            //const SequenceInfo& info = itr->second;
 			return itr->second.name;
+        }
 		else
+        {
 			return NULL;
+        }
 	}
 	
 	Sequence* get_seq(RefID ID) const
@@ -447,7 +452,8 @@ public:
 	HitFactory(ReadTable& insert_table, 
 			   RefSequenceTable& reference_table) : 
 		_insert_table(insert_table), 
-		_ref_table(reference_table) {}
+		_ref_table(reference_table),
+        _num_seq_header_recs(0) {}
 	
 	HitFactory& operator=(const HitFactory& rhs) 
 	{
@@ -520,6 +526,7 @@ private:
     
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
+    size_t _num_seq_header_recs;
 
 };
 

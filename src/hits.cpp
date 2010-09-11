@@ -445,6 +445,7 @@ bool HitFactory::parse_header_string(const string& header_rec,
 {
     vector<string> columns;
     tokenize(header_rec, "\t", columns); 
+    
     if (columns[0] == "@RG")
     {
         for (size_t i = 1; i < columns.size(); ++i)
@@ -473,6 +474,7 @@ bool HitFactory::parse_header_string(const string& header_rec,
     }
     else if (columns[0] == "@SQ")
     {
+        _num_seq_header_recs++;
         for (size_t i = 1; i < columns.size(); ++i)
         {
             vector<string> fields;
@@ -483,7 +485,15 @@ bool HitFactory::parse_header_string(const string& header_rec,
                 // to ensure that (for example) downstream GTF files are sorted
                 // in an order consistent with the header, and to enforce that
                 // BAM records appear in the order implied by the header
-                _ref_table.get_id(fields[1], NULL);                
+                RefID _id = _ref_table.get_id(fields[1], NULL);
+                
+                const RefSequenceTable::SequenceInfo* info = _ref_table.get_info(_id);
+
+                if (info->observation_order != _num_seq_header_recs)
+                {
+                    fprintf(stderr, "Error: sort order of reads in BAMs must be the same\n");
+                    exit(1);
+                }
             }
         }
     }

@@ -603,10 +603,6 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	RefSequenceTable rt(true, false);
     
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
-
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, fasta_dir!="", false);
-    if (ref_mRNAs.empty())
-        return;
 	
 	vector<ReplicatedBundleFactory> bundle_factories;    
     vector<shared_ptr<HitFactory> > all_hit_factories;
@@ -644,12 +640,21 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
             
             shared_ptr<BundleFactory> hf(new BundleFactory(hs));
             replicate_factories.push_back(hf);
-            replicate_factories.back()->set_ref_rnas(ref_mRNAs);
+            //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
         ReplicatedBundleFactory rep_factory(replicate_factories);
         bundle_factories.push_back(rep_factory);
 	}
+    
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, fasta_dir!="", false);
+    if (ref_mRNAs.empty())
+        return;
+    
+    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+    {
+        fac.set_ref_rnas(ref_mRNAs);
+    }
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;

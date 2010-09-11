@@ -223,6 +223,16 @@ public:
         }
     }
     
+    // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
+    // samples will clobber each other
+    void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
+    {
+        foreach(shared_ptr<BundleFactory> fac, _factories)
+        {
+            fac->set_ref_rnas(mRNAs);
+        }
+    }
+    
 private:
 	vector<shared_ptr<BundleFactory> > _factories;
 };
