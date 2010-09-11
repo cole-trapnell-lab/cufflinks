@@ -35,7 +35,7 @@ const char *short_options = "r:";
 #endif
 
 static struct option long_options[] = {
-{"reference-seq-dir",		required_argument,		 0,			 'r'},	
+{"reference-seq",		required_argument,		 0,			 'r'},	
 {0, 0, 0, 0} // terminator
 };
 
