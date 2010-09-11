@@ -28,12 +28,10 @@ void GError(const char* format,...){
     va_end(arguments);
     #ifdef DEBUG
      // modify here if you want a core dump
-     // abort();
+     abort();
     #endif
   #endif
-#if NDEBUG
     exit(1);
-#endif
   }
 // Warning routine (just print message without exiting)
 void GMessage(const char* format,...){
@@ -621,4 +619,48 @@ bool parseHex(char* &p, uint& i) {
  if (endptr!=p || i!=l) return false;
  return true;
 }
+
+//write a formatted fasta record, fasta formatted
+void writeFasta(FILE *fw, const char* seqid, const char* descr,
+        const char* seq, int linelen, int seqlen) {
+  fflush(fw);
+  // write header line only if given!
+  if (seqid!=NULL) {
+    if (descr==NULL || descr[0]==0)
+             fprintf(fw,">%s\n",seqid);
+        else fprintf(fw,">%s %s\n",seqid, descr);
+    }
+  fflush(fw);
+  if (seq==NULL || *seq==0) return; //nothing to print
+  if (linelen==0) { //unlimited line length: write the whole sequence on a line
+     if (seqlen>0)
+             fwrite((const void*)seq, 1, seqlen,fw);
+        else fprintf(fw,"%s",seq);
+     fprintf(fw,"\n");
+     fflush(fw);
+     return;
+     }
+  int ilen=0;
+  if (seqlen>0) { //seq length given, so we know when to stop
+    for (int i=0; i < seqlen; i++, ilen++) {
+            if (ilen == linelen) {
+                 fputc('\n', fw);
+                 ilen = 0;
+                 }
+            fputc(seq[i], fw);
+            }
+    fputc('\n', fw);
+    }
+  else { //seq length not given, stop when 0 encountered
+    for (int i=0; seq[i]!=0; i++, ilen++) {
+            if (ilen == linelen) {
+                 fputc('\n', fw);
+                 ilen = 0;
+                 }
+            fputc(seq[i], fw);
+            } //for
+    fputc('\n', fw);
+    }
+  fflush(fw);
+ }
 

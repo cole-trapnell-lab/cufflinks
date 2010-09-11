@@ -16,7 +16,6 @@
 #include "bundles.h"
 #include "scaffolds.h"
 #include "gff.h"
-#include "GFastaFile.h"
 #include "GStr.h"
 
 using namespace std;

@@ -483,7 +483,7 @@ public:
          }
       return false;
       }
-
+    
     int exonOverlapIdx(uint s, uint e, int* ovlen=NULL) {
       //return the exons' index for the overlapping exon
       //ovlen, if given, will return the overlap length
@@ -501,7 +501,7 @@ public:
       *ovlen=0;
       return -1;
       }
-
+     
     int exonOverlapLen(GffObj& m) {
       if (start>m.end || m.start>end) return 0;
       int i=0;
@@ -628,6 +628,9 @@ public:
    int addSeg(GffLine* gfline);
    int addSeg(int fnid, GffLine* gfline);
    void getCDSegs(GArray<GffCDSeg>& cds);
+
+   void updateExonPhase(); //for CDS-only features, updates GExon::phase
+
    void printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
                                 uint segstart, uint segend, int exidx, char phase, bool gff3);
    void printGxf(FILE* fout, GffPrintMode gffp=pgffExon, char* tlabel=NULL);

@@ -66,7 +66,7 @@ public:
   int Count() const { return fCount; }// the total number of entries in the table.
   // Insert a new entry into the table given key and mark.
   // If there is already an entry with that key, leave it unchanged,
-  const OBJ* Add(const char* ky, const OBJ* ptr, bool mrk=false);
+  const OBJ* Add(const char* ky, const OBJ* ptr=NULL, bool mrk=false);
   //same as Add, but the key pointer is stored directly, no string duplicate
   //is made (shared-key-Add)
   const OBJ* shkAdd(const char* ky, const OBJ* ptr, bool mrk=false);
@@ -78,9 +78,9 @@ public:
   // Remove a given key and its data
   OBJ* Remove(const char* ky);
   // Find data OBJ* given key.
-  OBJ* Find(const char* ky);
+  OBJ* Find(const char* ky, char** keyptr=NULL);
   bool hasKey(const char* ky);
-  const char* getLastKey() { return lastkeyptr; }
+  char* getLastKey() { return lastkeyptr; }
   OBJ* operator[](const char* ky) { return Find(ky); }
   void startIterate(); //iterator-like initialization
   char* NextKey(); //returns next valid key in the table (NULL if no more)
@@ -184,7 +184,7 @@ template <class OBJ> void GHash<OBJ>::Resize(int m){
     }
   }
 
-// add a new entry, leave it alone if already existing
+// add a new entry, or update it if it already exists
 template <class OBJ> const OBJ* GHash<OBJ>::Add(const char* ky,
                       const OBJ* pdata,bool mrk){
   register int p,i,x,h,n;
@@ -369,7 +369,7 @@ template <class OBJ> bool GHash<OBJ>::hasKey(const char* ky) {
   return false;
 }
 
-template <class OBJ> OBJ* GHash<OBJ>::Find(const char* ky){
+template <class OBJ> OBJ* GHash<OBJ>::Find(const char* ky, char** keyptr){
   register int p,x,h,n;
   if(!ky){ GError("GHash::find: NULL key argument.\n"); }
   if(0<fCount){
@@ -383,6 +383,7 @@ template <class OBJ> OBJ* GHash<OBJ>::Find(const char* ky){
     n=fCapacity;
     while(n && hash[p].hash!=-1){
       if(hash[p].hash==h && strcmp(hash[p].key,ky)==0){
+        if (keyptr!=NULL) *keyptr = hash[p].key;
         return (OBJ*)hash[p].data;
         }
       p=(p+x)%fCapacity;

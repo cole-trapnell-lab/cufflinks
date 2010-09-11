@@ -9,6 +9,7 @@
 #include "GHash.hh"
 #include "GList.hh"
 #include "GFaSeqGet.h"
+#include "GFastaIndex.h"
 #include "gff.h"
 #include <ctype.h>
 #include <errno.h>
@@ -50,9 +51,6 @@ Options:\n\
 \n\
 -V  (mildly) verbose processing mode\n\
 "
-
-//TODO make -s option to accept&use a multifasta file (instead of a dir) (Feature #169)
-
 bool debug=false;
 bool perContigStats=true;
 bool reduceRefs=false;
@@ -70,7 +68,7 @@ FILE* ffasta=NULL; //genomic seq file
 FILE *f_ref=NULL; //reference mRNA GFF, if provided
 FILE* f_in=NULL; //sequentially, each input GFF file
 FILE* f_out=NULL; //stdout if not provided
-const char* fastadir=NULL;
+GFastaHandler gfasta;
 int xlocnum=0;
 int tsscl_num=0; //for tss cluster IDs
 int protcl_num=0; //for "unique" protein IDs within TSS clusters
@@ -80,24 +78,6 @@ int total_xloci_alt=0;
 
 #define EQCHAIN_TAG     0x80000
 #define EQCHAIN_TAGMASK 0xFFFFF
-
-void printFasta(FILE* f, GStr& defline, char* seq, int seqlen=-1) {
- if (seq==NULL) return;
- int len=(seqlen>0)?seqlen:strlen(seq);
- if (len<=0) return;
- if (!defline.is_empty())
-     fprintf(f, ">%s\n",defline.chars());
- int ilen=0;
- for (int i=0; i < len; i++, ilen++) {
-   if (ilen == 70) {
-     fputc('\n', f);
-     ilen = 0;
-     }
-   putc(seq[i], f);
-   } //for
- fputc('\n', f);
-
-}
 
 void openfwrite(FILE* &f, GArgs& args, char opt) {
   GStr s=args.getOpt(opt);
@@ -110,57 +90,6 @@ void openfwrite(FILE* &f, GArgs& args, char opt) {
        }
      }
 }
-
-class GFastaPos {
- public:
-   off_t fpos;
-   uint seqlen;
- GFastaPos(off_t p=0, uint slen=0) {
-   fpos=p;
-   seqlen=slen;
-   }
-};
-
-/* TODO: finalize support for multi-fasta genomic files (duh)
-
-GHash<GFastaPos> fastapos;
-
-void add_fastakey(const char* seqname, off_t fileofs, uint seqlen, FILE* fwrite=NULL) {
- GFastaPos* p=fastapos.Find(seqname);
- if (p!=NULL) GError("Error: duplicate sequence ID (%s) found in fasta file!\n");
- fastapos.Add(seqname, new GFastaPos(fileofs,seqlen));
- if (fwrite!=NUIL) {
-  fprintf(fwrite, "%s\t%ll\t%d\n",seqname,(long long)fileofs,seqlen);
-  }
-}
-
-uint load_fasta_index(GLineReader& freader, GHash<GFastaPos>& hfa) {
-  //load fasta records' info into fastapos hash
- static char sbuf[1024];
- uint r=0;//number of fasta records in the index
- if (freader.getFpos()==0) freader.nextLine();
- sbuf[1023]=0;
- char* fline=NULL;
- while ((fline=freader.nextLine())!=NULL) {
-   strncpy(sbuf,fline,1023);
-   char* p=strchr(sbuf, '\t');
-   if (p==NULL) GError("Error parsing fasta index line:\n%s\n",fline);
-   *p=0;
-   p++;
-   //now the offset
-   char* p_ofs=p;
-   p=strchr(sbuf, '\t');
-   if (p==NULL) GError("Error parsing fasta index line:\n%s\n",fline);
-   *p=0;
-   p++;
-   char* p_len=p;
-   char* endptr;
-   long long fofs=strtoll(p_ofs, &endptr,10);
-   TODO//
-   }
- return r;
- }
-*/
 
 //-- structure to keep track of data from multiple qry input files for a single genomic seq
 class GSeqTrack {
@@ -190,7 +119,6 @@ class GSeqTrack {
      return (gseq_id<d.gseq_id);
      }
 };
-
 
 char* getFastaFile(int gseq_id);
 
@@ -279,16 +207,17 @@ int main(int argc, char * const argv[]) {
             }
           }
         numqryfiles=qryfiles.Count();
-        if (numqryfiles==0)
-    {
-      GError("cuffcompare v%s\n-----------------------------\n%s\n", PACKAGE_VERSION, USAGE);
-    }
-        if (numqryfiles>MAX_QFILES) {
+        if (numqryfiles==0) {
+         GError("cuffcompare v%s\n-----------------------------\n%s\n", PACKAGE_VERSION, USAGE);
+         }
+      if (numqryfiles>MAX_QFILES) {
            GMessage("Error: too many input files (limit set to %d at compile time)\n",MAX_QFILES);
            GMessage("(if you need to raise this limit set a new value for\nMAX_QFILES in gtf_tracking.h and recompile)\n");
            exit(0x5000);
            }
-  //if (s.is_empty()) GError("Error: required parameter -g missing!\n");
+
+  gfasta.init(args.getOpt('s'));
+   // determine if -s points to a multi-fasta file or a directory
   s=args.getOpt('c');
   if (!s.is_empty()) scoreThreshold=s.asReal();
   s=args.getOpt('p');
@@ -300,6 +229,7 @@ int main(int argc, char * const argv[]) {
   if (!s.is_empty()) {
      tssDist=s.asInt();
      }
+
   s=args.getOpt('n');
   if (!s.is_empty()) loadRefDescr(s.chars());
   s=args.getOpt('r');
@@ -336,8 +266,7 @@ int main(int argc, char * const argv[]) {
              f_qintr=fopen(s.chars(),"w");
              */
           }
-  fastadir=args.getOpt('s');
-        
+
   //bool reportLoci=(args.getOpt('L')!=NULL);
   openfwrite(f_out, args, 'o');
   if (f_out==NULL) f_out=stdout;
@@ -755,25 +684,6 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
 
   }//for each unlinked locus
 
-}
-
-char* getGSeqName(int gseq_id) {
- return GffObj::names->gseqs.getName(gseq_id);
-}
-
-char* getFastaFile(int gseq_id) {
- if (fastadir==NULL) return NULL;
- GStr s(fastadir);
- s.trimR('/');
- s.appendfmt("/%s",getGSeqName(gseq_id));
- GStr sbase=s;
- if (!fileExists(s.chars())) s.append(".fa");
- if (!fileExists(s.chars())) s.append("sta");
- if (fileExists(s.chars())) return Gstrdup(s.chars());
-     else {
-         GMessage("Warning: cannot find genomic sequence file %s{.fa,.fasta}\n",sbase.chars());
-         return NULL;
-         }
 }
 
 //look for qry data for a specific genomic sequence
@@ -2475,23 +2385,13 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
     //transcript accounting: for all those transcripts with 'u' or 0 class code
     // we have to check for polymerase runs 'p' or repeats 'r'
 
-    GFaSeqGet *faseq=NULL;
-    if (fastadir) {
-       char* sfile=getFastaFile(gseqtrack.gseq_id);
-       if (sfile!=NULL) {
-          if (verbose)
-             GMessage("Processing sequence from fasta file '%s'\n",sfile);
-          faseq=new GFaSeqGet(sfile,checkFasta);
-          faseq->loadall();
-          GFREE(sfile);
-          }
-       }
+    GFaSeqGet *faseq=gfasta.fetch(gseqtrack.gseq_id, checkFasta);
 
     umrnaReclass(qcount, gseqtrack, ftr, faseq);
 
     // print transcript tracking (ichain_tracking)
     //if (qcount>1)
-       for (int q=0;q<qcount;q++) {
+    for (int q=0;q<qcount;q++) {
          if (gseqtrack.qdata[q]==NULL) continue;
          printITrack(f_itrack, gseqtrack.qdata[q]->mrnas_f, qcount, cnum);
          printITrack(f_itrack, gseqtrack.qdata[q]->mrnas_r, qcount, cnum);

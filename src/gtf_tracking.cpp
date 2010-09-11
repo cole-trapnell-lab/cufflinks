@@ -19,10 +19,15 @@ bool largeScale=false; //many input Cufflinks files processed at once by cuffcom
 
 int GXConsensus::count=0;
 
+
+
 int cmpByPtr(const pointer p1, const pointer p2) {
   return (p1>p2) ? 1: ((p1==p2)? 0 : -1);
   }
 
+char* getGSeqName(int gseq_id) {
+ return GffObj::names->gseqs.getName(gseq_id);
+}
 
 GffObj* is_mRNADup(GffObj* m, GList<GffObj>& mrnas) {
  //mrnas MUST be sorted by start coordinate
@@ -454,7 +459,7 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 	GffReader* gffr=new GffReader(f, true);
     //          keepAttrs   mergeCloseExons   noExonAttrs
-	gffr->readAll(true,          true,        true);
+	gffr->readAll(true,          true,        false);
 	//                 is_ref?   check_for_dups,
 	parse_mRNAs(gffr->gflst, seqdata, false,    false);
     delete gffr;

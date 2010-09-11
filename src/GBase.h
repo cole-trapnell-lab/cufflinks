@@ -59,7 +59,7 @@ typedef uint64_t uint64;
 
 /****************************************************************************/
 #define ERR_ALLOC "Error allocating memory.\n"
-#if defined (__WIN32__) || defined (WIN32)
+#if defined (__WIN32__) || defined (WIN32) || defined (_WIN32)
   #define CHPATHSEP '\\'
   #include <io.h>
   #define ftello ftell
@@ -403,6 +403,10 @@ int fileExists(const char* fname);
 //        3 otherwise (?)
 
 off_t fileSize(const char* fpath);
+
+//write a formatted fasta record, fasta formatted
+void writeFasta(FILE *fw, const char* seqid, const char* descr,
+        const char* seq, int linelen=60, int seqlen=0);
 
 //parses the next number found in a string at the current position
 //until a non-digit (and not a '.', 'e','E','-','+') is encountered;

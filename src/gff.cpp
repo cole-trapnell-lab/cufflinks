@@ -94,7 +94,7 @@ GffLine::GffLine(GffReader* reader, const char* l) {
  strand=*t[6];
  if (strand!='+' && strand!='-' && strand!='.')
      GError("Error parsing strand (%c) from GFF line:\n%s\n",strand,l);
- phase=*t[7];
+ phase=*t[7]; // must be '.', '0', '1' or '2'
  ID=NULL;
  Parent=NULL;
  // exon/CDS/mrna filter
@@ -1136,7 +1136,7 @@ void GffObj::printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
      xattrs=exons[exidx]->attrs;
   }
   char* geneid=(gname!=NULL)? gname : gffID;
-  if (phase==0 || !iscds) phase='.';
+  if (phase==0) phase='.';
   const char* ftype=iscds ? "CDS" : getSubfName();
   if (gff3) {
     fprintf(fout,
@@ -1208,10 +1208,14 @@ void GffObj::printGxf(FILE* fout, GffPrintMode gffp, char* tlabel) {
    }// gff3 mRNA line
  if (showExon) {
    //print exons
-   for (int i=0;i<exons.Count();i++) {
-     printGxfLine(fout, tlabel, gseqname, isCDS, exons[i]->start, exons[i]->end, i, exons[i]->phase, gff3);
-     }
- }//printing exons
+    if (isCDS && exons.Count()>0 && 
+        ((strand=='-' && exons.Last()->phase<'0') || (strand=='+' && exons.Last()->phase<'0')))
+         updateExonPhase();
+
+    for (int i=0;i<exons.Count();i++) {
+      printGxfLine(fout, tlabel, gseqname, isCDS, exons[i]->start, exons[i]->end, i, exons[i]->phase, gff3);
+      }
+    }//printing exons
  if (showCDS && !isCDS && CDstart>0) {
     GArray<GffCDSeg> cds(true,true);
     getCDSegs(cds);
@@ -1219,6 +1223,26 @@ void GffObj::printGxf(FILE* fout, GffPrintMode gffp, char* tlabel) {
       printGxfLine(fout, tlabel, gseqname, true, cds[i].start, cds[i].end, -1, cds[i].phase, gff3);
       }
   } //showCDS
+}
+
+void GffObj::updateExonPhase() {
+  if (!isCDS) return;
+  int cdsacc=0;
+  if (CDphase=='1' || CDphase=='2') {
+      cdsacc+= 3-(CDphase-'0');
+      }
+  if (strand=='-') { //reverse strand
+     for (int i=exons.Count()-1;i>=0;i--) {
+         exons[i]->phase='0'+ (3-cdsacc%3)%3;
+         cdsacc+=exons[i]->end-exons[i]->start+1;
+         }
+     }
+    else { //forward strand
+     for (int i=0;i<exons.Count();i++) {
+         exons[i]->phase='0'+ (3-cdsacc%3)%3;
+         cdsacc+=exons[i]->end-exons[i]->start+1;
+         }
+     }
 }
 
 

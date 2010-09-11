@@ -2,11 +2,12 @@
 #include "gdna.h"
 #include <ctype.h>
 
-void GSubSeq::setup(uint sstart, int slen, int sovl, int qfrom, int qto) {
+void GSubSeq::setup(uint sstart, int slen, int sovl, int qfrom, int qto, uint maxseqlen) {
      if (sovl==0) {
        GFREE(sq);
        sqstart=sstart;
-       sqlen = (slen==0 ? MAX_FASUBSEQ : slen);
+       uint max_len=(maxseqlen>0) ? maxseqlen : MAX_FASUBSEQ;
+       sqlen = (slen==0 ? max_len : slen);
        GMALLOC(sq, sqlen);
        return;
        }
@@ -30,8 +31,27 @@ void GFaSeqGet::finit(const char* fn, off_t fofs, bool validate) {
  lastsub=new GSubSeq();
 }
 
+GFaSeqGet::GFaSeqGet(const char* faname, uint seqlen, off_t fseqofs, int l_len, int l_blen) {
+//for GFastaIndex use mostly -- the important difference is that
+//the file offset is to the sequence, not to the defline
+  fh=fopen(faname,"rb");
+  if (fh==NULL) {
+    GError("Error (GFaSeqGet) opening file '%s'\n",faname);
+    }
+  fname=Gstrdup(faname);
+  line_len=l_len;
+  line_blen=l_blen;
+  seq_len=seqlen;
+  if (line_blen<line_len)
+       GError("Error (GFaSeqGet): invalid line length info (len=%d, blen=%d)\n",
+              line_len, line_blen);
+  fseqstart=fseqofs;
+  lastsub=new GSubSeq();
+}
+
 GFaSeqGet::GFaSeqGet(FILE* f, off_t fofs, bool validate) {
  if (f==NULL) GError("Error (GFaSeqGet) : null file handle!\n");
+ seq_len=0;
  fh=f;
  initialParse(fofs, validate);
  lastsub=new GSubSeq();
@@ -51,22 +71,20 @@ void GFaSeqGet::initialParse(off_t fofs, bool checkall) {
    }
 
  if (c==EOF) GError(gfa_ERRPARSE);
- linelen=0;
- lendlen=0;
- lendch=0;
+ line_len=0;
+ int lendlen=0;
  while ((c=getc(fh))!=EOF) {
   if (c=='\n' || c=='\r') { //end of line encountered
-     if (linelen>0) { //end of the first "sequence" line
-        lendch=c;
+     if (line_len>0) { //end of the first "sequence" line
         lendlen++;
         break;
         }
-      else {// another eol char at the end of defline
+      else {// another EoL char at the end of defline
         fseqstart++;
         continue;
         }
      }// end-of-line characters
-  linelen++;
+  line_len++;
   }
  //we are at the end of first sequence line
  while ((c=getc(fh))!=EOF) {
@@ -76,6 +94,7 @@ void GFaSeqGet::initialParse(off_t fofs, bool checkall) {
        break;
        }
    }
+ line_blen=line_len+lendlen;
  if (c==EOF) return;
  // -- you don't need to check it all if you're sure it's safe
  if (checkall) { //validate the rest of the FASTA record
@@ -95,7 +114,7 @@ void GFaSeqGet::initialParse(off_t fofs, bool checkall) {
      if (c<=32) GError(gfa_ERRPARSE); //invalid character encountered
      //--- on a seq char here:
      if (waseol) {//beginning of a seq line
-       if (elen && (llen!=linelen || elen!=lendlen))
+       if (elen && (llen!=line_len || elen!=lendlen))
            //GError(gfa_ERRPARSE);
          GError("Error: invalid FASTA format for GFaSeqGet; make sure that\n\
   the sequence lines have the same length (except for the last line)");
@@ -111,13 +130,17 @@ void GFaSeqGet::initialParse(off_t fofs, bool checkall) {
 
 const char* GFaSeqGet::subseq(uint cstart, int& clen) {
   //cstart is 1-based genomic coordinate within current fasta sequence
-  if (clen>MAX_FASUBSEQ) {
-    unsigned int maxlen=MAX_FASUBSEQ;
+   int maxlen=(seq_len>0)?seq_len : MAX_FASUBSEQ;
+
+  if (clen>maxlen) {
     GMessage("Error (GFaSeqGet): subsequence cannot be larger than %d\n", maxlen);
     return NULL;
     }
+  if (seq_len>0 && clen+cstart-1>seq_len) {
+     GMessage("Error (GFaSeqGet): end coordinate (%d) cannot be larger than sequence length %d\n", clen+cstart-1, seq_len);
+     }
   if (lastsub->sq==NULL || lastsub->sqlen==0) {
-    lastsub->setup(cstart, clen);
+    lastsub->setup(cstart, clen, 0,0,0,seq_len);
     loadsubseq(cstart, clen);
     lastsub->sqlen=clen;
     return (const char*)lastsub->sq;
@@ -151,7 +174,7 @@ const char* GFaSeqGet::subseq(uint cstart, int& clen) {
          kovl=bend-bstart+1;
          czfrom=0;
          czto=bstart-cstart;
-         lastsub->setup(newstart, newlen, kovl, czfrom, czto); //this should realloc and copy the kovl subseq
+         lastsub->setup(newstart, newlen, kovl, czfrom, czto, seq_len); //this should realloc and copy the kovl subseq
          qlen=bstart-cstart;
          loadsubseq(newstart, qlen);
          qlen=newend-bend;
@@ -195,7 +218,7 @@ const char* GFaSeqGet::subseq(uint cstart, int& clen) {
       czto=0;
       }
     }
-  lastsub->setup(newstart, newlen, kovl, czfrom, czto); //this should realloc but copy any overlapping region
+  lastsub->setup(newstart, newlen, kovl, czfrom, czto, seq_len); //this should realloc but copy any overlapping region
   lastsub->sqlen-=qlen; //appending may result in a premature eof
   int toread=qlen;
   loadsubseq(qstart, qlen); //read the missing chunk, if any
@@ -225,20 +248,22 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
   //assumes enough lastsub->sq space allocated previously
   //only loads the requested clen chars from file, at offset &lastsub->sq[cstart-lastsub->sqstart]
   int sofs=cstart-lastsub->sqstart;
+  int lendlen=line_blen-line_len;
   char* seqp=lastsub->sq+sofs;
   //find the proper file offset and read the appropriate lines
   uint seqofs=cstart-1;
-  uint startlno = seqofs/linelen;
-  int lineofs = seqofs % linelen;
-  off_t fstart=fseqstart+startlno * (linelen+lendlen);
+  uint startlno = seqofs/line_len;
+  int lineofs = seqofs % line_len;
+  off_t fstart=fseqstart + (startlno*line_blen);
   fstart+=lineofs;
   fseek(fh, fstart, SEEK_SET);
   int toread=clen;
-  if (toread==0) toread=MAX_FASUBSEQ; //read max allowed, or to the end of file
+  int maxlen=(seq_len>0)? seq_len-cstart+1 : MAX_FASUBSEQ ;
+  if (toread==0) toread=maxlen; //read max allowed, or to the end of file
   int actualrlen=0;
   int sublen=0;
   if (lineofs>0) { //read the partial first line
-    int reqrlen=linelen-lineofs;
+    int reqrlen=line_len-lineofs;
     if (reqrlen>toread) reqrlen=toread; //in case we need to read just a few chars
     actualrlen=fread((void*)seqp, 1, reqrlen, fh);
     if (actualrlen<reqrlen) { //eof reached prematurely
@@ -253,10 +278,10 @@ const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
     fseek(fh, lendlen, SEEK_CUR);
     }
   //read the rest of the lines
-  while (toread>=linelen) {
+  while (toread>=line_len) {
     char* rseqp=&(seqp[sublen]);
-    actualrlen=fread((void*)rseqp, 1, linelen, fh);
-    if (actualrlen<linelen) {
+    actualrlen=fread((void*)rseqp, 1, line_len, fh);
+    if (actualrlen<line_len) {
       while (rseqp[actualrlen-1]=='\n' || rseqp[actualrlen-1]=='\r') actualrlen--;
       sublen+=actualrlen;
       clen=sublen;
