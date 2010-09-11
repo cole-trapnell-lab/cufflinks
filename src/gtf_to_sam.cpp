@@ -47,7 +47,7 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <transcripts.gtf> <out.sam\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias corr    [ default:   NULL ]\n");
+	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 }
 
 int parse_options(int argc, char** argv)

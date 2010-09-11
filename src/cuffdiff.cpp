@@ -71,7 +71,7 @@ static struct option long_options[] = {
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"output-dir",			    required_argument,		 0,			 'o'},
-{"reference-seq-dir",		required_argument,		 0,			 'r'},
+{"reference-seq",			required_argument,		 0,			 'r'},
 {"time-series",             no_argument,             0,			 'T'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
@@ -94,7 +94,7 @@ void print_usage()
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "--FDR						  False discovery rate used in testing   [ default:   0.05 ]\n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias correction                 \n");
+	fprintf(stderr, "-r/--reference-seq			  reference fasta file for bias correction                 \n");
     fprintf(stderr, "-L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
