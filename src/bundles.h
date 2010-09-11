@@ -321,7 +321,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		
 		HitBundle& bundle = *bundle_ptr;
 		
-//#if ASM_VERBOSE
+#if (ASM_VERBOSE || ADAM_MODE)
         const RefSequenceTable& rt = bundle_factory.ref_table();
         const char* chrom = rt.get_name(bundle.ref_id());
         char bundle_label_buf[2048];
@@ -331,7 +331,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
                 bundle.left(),
                 bundle.right());
         fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-//#endif
+#endif (ASM_VERBOSE || ADAM_MODE)
 		
         if (bad_introns != NULL)
         {
