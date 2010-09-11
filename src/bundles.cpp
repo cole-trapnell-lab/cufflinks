@@ -531,7 +531,7 @@ void HitBundle::finalize(bool is_combined)
 	}
     
     finalize_open_mates();
-	
+    
 	for (size_t i = 0; i < _hits.size(); ++i)
 	{
 		const MateHit* hit = &(_hits[i]);
@@ -542,17 +542,21 @@ void HitBundle::finalize(bool is_combined)
         {
             assert (hit->ref_id() == _hits[i-1].ref_id());
         }
-        
+        bool added_hit = false;
 		for (size_t j = 0; j < _ref_scaffs.size(); ++j)
 		{
 			// add hit only adds if the hit is structurally compatible
-			if (_ref_scaffs[j]->Scaffold::contains(hs))
+			if (_ref_scaffs[j]->contains(hs))
 			{
-				_ref_scaffs[j]->add_hit(hit);
+				bool added =  _ref_scaffs[j]->add_hit(hit);
+                if (added)
+                    added_hit = true;
 			}
 		}
-	}
-	
+        
+        assert (added_hit);
+    }
+    
 	if (_ref_scaffs.size() > 0)
     {
         _leftmost = INT_MAX;

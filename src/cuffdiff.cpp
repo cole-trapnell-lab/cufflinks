@@ -515,8 +515,8 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
 #if ENABLE_THREADS
     inspect_lock.lock();
 #endif
-    min_f = min(min_f, tmp_min_frag_len);
-    max_f = min(max_f, tmp_max_frag_len);
+    tmp_min_frag_len = min(min_f, tmp_min_frag_len);
+    tmp_max_frag_len = max(max_f, tmp_max_frag_len);
 #if ENABLE_THREADS
     inspect_lock.unlock();
 #endif
@@ -1031,6 +1031,7 @@ int main(int argc, char** argv)
 	// here
 	min_isoform_fraction = 0.0;
 	pre_mrna_fraction = 0.0;
+    olap_radius = 0;
 	
 	Outfiles outfiles;
 	
