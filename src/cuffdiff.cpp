@@ -92,9 +92,9 @@ void print_usage()
     fprintf(stderr, "-T/--time-series             treat samples as a time-series                                           \n");
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
-	fprintf(stderr, "--FDR						  False discovery rate used in testing   [ default:   0.05 ]\n");
+	fprintf(stderr, "--FDR						  False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq			  reference fasta file for bias correction                 \n");
+	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
     fprintf(stderr, "-L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");

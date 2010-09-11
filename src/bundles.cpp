@@ -552,8 +552,6 @@ void HitBundle::finalize(bool is_combined)
 		_ref_scaffs[j]->clear_hits();
 	}
     
-    finalize_open_mates();
-    
 	for (size_t i = 0; i < _hits.size(); ++i)
 	{
 		MateHit& hit = _hits[i];
@@ -577,6 +575,27 @@ void HitBundle::finalize(bool is_combined)
 		}
 	}
 	
+	for (size_t i = 0; i < _non_redundant.size(); ++i)
+	{
+		MateHit& hit = _non_redundant[i];
+		
+		Scaffold hs(hit);
+		
+        if (i >= 1)
+        {
+            assert (hit.ref_id() == _non_redundant[i-1].ref_id());
+        }
+		hit.is_mapped(false);
+		for (size_t j = 0; j < _ref_scaffs.size(); ++j)
+		{
+			// add hit only adds if the hit is structurally compatible
+			if (_ref_scaffs[j]->contains(hs))
+			{
+                    hit.is_mapped(true);
+			}
+		}
+	}
+
 	remove_unmapped_hits();
     
 	if (_ref_scaffs.size() > 0)
