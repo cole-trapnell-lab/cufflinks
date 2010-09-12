@@ -435,7 +435,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           boost::ref(bundle_factories[i]),
                           s_ab,
                           sample_non_empty);  
-        quantitate.detach();
+        //quantitate.detach();
 #else
         sample_worker(boost::ref(rt),
                       boost::ref(bundle_factories[i]),
@@ -568,7 +568,8 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                        boost::ref(fac),
                        boost::ref(tmp_min_frag_len),
                        boost::ref(tmp_max_frag_len));  
-        inspect.detach();
+        //inspect.detach();
+
 #else
         inspect_map_worker(boost::ref(fac),
                            boost::ref(tmp_min_frag_len),

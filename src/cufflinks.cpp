@@ -961,7 +961,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 #else
 	//assemble_hits(bundle_factory);
 #endif
-    if (fasta_dir == "") return;
+    if (fasta_dir == "") 
+    {
+        ref_mRNAs.clear();
+        return;
+    }
     
 	hit_factory->reset();
 
