@@ -217,7 +217,7 @@
 		EDBAC4C011FF5AD3002B7162 /* biascorrection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = biascorrection.h; path = src/biascorrection.h; sourceTree = "<group>"; };
 		EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transitive_reduction.h; path = src/transitive_reduction.h; sourceTree = "<group>"; };
 		EDD0CD9C10C72AC200AF308F /* cufflinks */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks; sourceTree = BUILT_PRODUCTS_DIR; };
-		EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD0CE2210C72F7D00AF308F /* cuffdiff */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cuffdiff; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6A7A0115562EE00D3F668 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Makefile.am; path = src/Makefile.am; sourceTree = "<group>"; };
 		EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6AA231159BA2E00D3F668 /* Boost Tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Boost Tests"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -389,7 +389,7 @@
 			isa = PBXGroup;
 			children = (
 				EDD0CD9C10C72AC200AF308F /* cufflinks */,
-				EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */,
+				EDD0CE2210C72F7D00AF308F /* cuffdiff */,
 				EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */,
 				EDD6AA231159BA2E00D3F668 /* Boost Tests */,
 				EDD94B671205C9E800AA1086 /* cufflinks_xcode */,
@@ -471,7 +471,7 @@
 			name = cuffdiff;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
-			productReference = EDD0CE2210C72F7D00AF308F /* cufflinks_xcode */;
+			productReference = EDD0CE2210C72F7D00AF308F /* cuffdiff */;
 			productType = "com.apple.product-type.tool";
 		};
 		EDD6A9BA11598AB900D3F668 /* cuffcompare */ = {
@@ -858,7 +858,7 @@
 					"\"$(SRCROOT)\"",
 					/usr/local/libIntel64,
 				);
-				PRODUCT_NAME = cufflinks_xcode;
+				PRODUCT_NAME = cuffdiff;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 			};
 			name = Debug;

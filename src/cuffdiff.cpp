@@ -407,34 +407,29 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                            vector<shared_ptr<SampleAbundances> >& abundances)
 {
     vector<shared_ptr<bool> > non_empty_bundle_flags;
+
+#if ENABLE_THREADS
+    boost::thread_group quantitate_thread_group;
+    vector<boost::thread*> thread_table;
+#endif
+    
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
         shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
         shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
 #if ENABLE_THREADS			
-        while(1)
-        {
-            locus_thread_pool_lock.lock();
-            if (locus_curr_threads < locus_num_threads)
-            {
-                locus_thread_pool_lock.unlock();
-                break;
-            }
-            
-            locus_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
+
         locus_thread_pool_lock.lock();
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread quantitate(sample_worker,
-                          boost::ref(rt),
-                          boost::ref(bundle_factories[i]),
-                          s_ab,
-                          sample_non_empty);  
+        thread* quantitate = new thread(sample_worker,
+                                        boost::ref(rt),
+                                        boost::ref(bundle_factories[i]),
+                                        s_ab,
+                                        sample_non_empty);  
+        quantitate_thread_group.add_thread(quantitate);
+        thread_table.push_back(quantitate);
         //quantitate.detach();
 #else
         sample_worker(boost::ref(rt),
@@ -448,19 +443,13 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     
     // wait for the workers to finish up before doing the cross-sample testing.
 #if ENABLE_THREADS	
-    while(1)
+    quantitate_thread_group.join_all();
+    foreach(thread*  quantitate, thread_table)
     {
-        locus_thread_pool_lock.lock();
-        if (locus_curr_threads == 0)
-        {
-            locus_thread_pool_lock.unlock();
-            break;
-        }
-        
-        locus_thread_pool_lock.unlock();
-        //fprintf(stderr, "waiting to for all workers to finish\n");
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    }
+        quantitate_thread_group.remove_thread( quantitate);
+        delete  quantitate;
+    }   
+    thread_table.clear();
 #endif
     
     bool more_loci_remain = false;
@@ -539,6 +528,8 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
+    boost::thread_group inspect_thread_group;
+    vector<boost::thread*> thread_table;
 #endif
     
 	int tmp_min_frag_len = numeric_limits<int>::max();
@@ -546,29 +537,16 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
 #if ENABLE_THREADS			
-        while(1)
-        {
-            locus_thread_pool_lock.lock();
-            if (locus_curr_threads < locus_num_threads)
-            {
-                locus_thread_pool_lock.unlock();
-                break;
-            }
-            
-            locus_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
         locus_thread_pool_lock.lock();
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread inspect(inspect_map_worker,
-                       boost::ref(fac),
-                       boost::ref(tmp_min_frag_len),
-                       boost::ref(tmp_max_frag_len));  
-        //inspect.detach();
+        thread* inspect = new thread(inspect_map_worker,
+                                              boost::ref(fac),
+                                              boost::ref(tmp_min_frag_len),
+                                              boost::ref(tmp_max_frag_len));  
+        inspect_thread_group.add_thread(inspect);
+        thread_table.push_back(inspect);
 
 #else
         inspect_map_worker(boost::ref(fac),
@@ -579,19 +557,13 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
     
     // wait for the workers to finish up before reporting everthing.
 #if ENABLE_THREADS	
-	while(1)
-	{
-		locus_thread_pool_lock.lock();
-		if (locus_curr_threads == 0)
-		{
-			locus_thread_pool_lock.unlock();
-			break;
-		}
-		
-		locus_thread_pool_lock.unlock();
-		//fprintf(stderr, "waiting to for all workers to finish\n");
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-	}
+    inspect_thread_group.join_all();
+    foreach(thread* inspect, thread_table)
+    {
+        inspect_thread_group.remove_thread(inspect);
+        delete inspect;
+    }   
+    thread_table.clear();
 #endif
 
 	min_frag_len = tmp_min_frag_len;

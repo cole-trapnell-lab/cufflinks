@@ -932,6 +932,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
     }
+    
     foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
     {
         ref_scaff->clear_hits();
