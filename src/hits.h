@@ -72,7 +72,7 @@ struct ReadHit
 		_error_prob(1.0),
 		_edit_dist(0xFFFFFFFF)
     {
-        //num_deleted++;
+        num_deleted++;
     }
 	
 	ReadHit(RefID ref_id,
@@ -98,7 +98,7 @@ struct ReadHit
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
-        //num_deleted++;
+        num_deleted++;
 	}
     
 	ReadHit(RefID ref_id,
@@ -124,12 +124,30 @@ struct ReadHit
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
-        //num_deleted++;
+        num_deleted++;
 	}
-	~ReadHit() 
+    
+    ReadHit(const ReadHit& other)
     {
-        //num_deleted--;
+        _ref_id = other._ref_id;
+		_insert_id = other._insert_id; 	
+		_left = other._left;
+		_partner_ref_id = other._partner_ref_id;
+		_partner_pos = other._partner_pos;
+		_cigar = other._cigar;
+		_source_strand = other._source_strand;
+		_antisense_aln = other._antisense_aln;
+		_error_prob = other._error_prob;
+		_edit_dist = other._edit_dist;
+        _right = get_right();
+        num_deleted++;
     }
+    
+    ~ReadHit()
+    {
+        --num_deleted;
+    }
+
 	int read_len() const
 	{
 		int len = 0;

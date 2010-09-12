@@ -416,6 +416,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		{
 			ref_scaff->clear_hits();
 		}
+        open_ranges.clear();
         
 		delete bundle_ptr;
 	}
