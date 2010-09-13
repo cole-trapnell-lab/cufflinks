@@ -491,6 +491,10 @@
 			ED483273123E8B8700642337 /* PBXTextBookmark */ = ED483273123E8B8700642337 /* PBXTextBookmark */;
 			ED483274123E8B8700642337 /* PBXTextBookmark */ = ED483274123E8B8700642337 /* PBXTextBookmark */;
 			ED483275123E8B8700642337 /* PBXTextBookmark */ = ED483275123E8B8700642337 /* PBXTextBookmark */;
+			ED483278123E8DC600642337 /* PBXTextBookmark */ = ED483278123E8DC600642337 /* PBXTextBookmark */;
+			ED483279123E8DC600642337 /* PBXTextBookmark */ = ED483279123E8DC600642337 /* PBXTextBookmark */;
+			ED48327A123E8DC600642337 /* PBXTextBookmark */ = ED48327A123E8DC600642337 /* PBXTextBookmark */;
+			ED48327B123E8DC600642337 /* PBXTextBookmark */ = ED48327B123E8DC600642337 /* PBXTextBookmark */;
 			ED70726B11F79D170028F305 = ED70726B11F79D170028F305 /* PBXTextBookmark */;
 			ED877AEA123842D40025A050 = ED877AEA123842D40025A050 /* PBXTextBookmark */;
 			ED877AFB123842D60025A050 = ED877AFB123842D60025A050 /* PBXTextBookmark */;
@@ -1580,7 +1584,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 177";
 		rLen = 7;
-		rLoc = 4420;
+		rLoc = 4575;
 		rType = 0;
 		vrLen = 1488;
 		vrLoc = 3673;
@@ -1834,7 +1838,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		rLen = 0;
-		rLoc = 205;
+		rLoc = 210;
 		rType = 1;
 	};
 	ED06875B12397F5C00F78A2F /* PBXTextBookmark */ = {
@@ -1842,7 +1846,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 201";
 		rLen = 0;
-		rLoc = 5204;
+		rLoc = 5359;
 		rType = 0;
 		vrLen = 851;
 		vrLoc = 4631;
@@ -1852,7 +1856,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 201";
 		rLen = 0;
-		rLoc = 5204;
+		rLoc = 5359;
 		rType = 0;
 		vrLen = 1353;
 		vrLoc = 4475;
@@ -1902,7 +1906,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4594;
+		rLoc = 4749;
 		rType = 0;
 		vrLen = 882;
 		vrLoc = 3886;
@@ -2431,7 +2435,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4594;
+		rLoc = 4749;
 		rType = 0;
 		vrLen = 882;
 		vrLoc = 3886;
@@ -2511,7 +2515,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 177";
 		rLen = 7;
-		rLoc = 4420;
+		rLoc = 4575;
 		rType = 0;
 		vrLen = 1400;
 		vrLoc = 3125;
@@ -2648,7 +2652,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4594;
+		rLoc = 4749;
 		rType = 0;
 		vrLen = 852;
 		vrLoc = 3673;
@@ -2815,7 +2819,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4594;
+		rLoc = 4749;
 		rType = 0;
 		vrLen = 1432;
 		vrLoc = 3163;
@@ -2922,7 +2926,7 @@
 		comments = "Expected initializer before ')' token";
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		rLen = 1;
-		rLoc = 173;
+		rLoc = 178;
 		rType = 1;
 	};
 	ED0687F9123A73F100F78A2F /* PBXTextBookmark */ = {
@@ -2930,7 +2934,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 175";
 		rLen = 0;
-		rLoc = 4336;
+		rLoc = 4491;
 		rType = 0;
 		vrLen = 1453;
 		vrLoc = 3559;
@@ -2940,7 +2944,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 175";
 		rLen = 0;
-		rLoc = 4336;
+		rLoc = 4491;
 		rType = 0;
 		vrLen = 1453;
 		vrLoc = 3559;
@@ -3899,7 +3903,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 232";
 		rLen = 0;
-		rLoc = 6230;
+		rLoc = 6385;
 		rType = 0;
 		vrLen = 1297;
 		vrLoc = 5436;
@@ -4091,7 +4095,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 177";
 		rLen = 7;
-		rLoc = 4420;
+		rLoc = 4575;
 		rType = 0;
 		vrLen = 1164;
 		vrLoc = 3361;
@@ -4350,7 +4354,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 176";
 		rLen = 7;
-		rLoc = 4420;
+		rLoc = 4575;
 		rType = 0;
 		vrLen = 1333;
 		vrLoc = 3167;
@@ -4510,7 +4514,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 176";
 		rLen = 7;
-		rLoc = 4420;
+		rLoc = 4575;
 		rType = 0;
 		vrLen = 1394;
 		vrLoc = 3166;
@@ -4520,7 +4524,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 180";
 		rLen = 0;
-		rLoc = 4583;
+		rLoc = 4738;
 		rType = 0;
 		vrLen = 1384;
 		vrLoc = 3283;
@@ -4530,7 +4534,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 180";
 		rLen = 0;
-		rLoc = 4553;
+		rLoc = 4708;
 		rType = 0;
 		vrLen = 1361;
 		vrLoc = 3283;
@@ -4554,6 +4558,46 @@
 		rType = 0;
 		vrLen = 1321;
 		vrLoc = 2413;
+	};
+	ED483278123E8DC600642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 144";
+		rLen = 0;
+		rLoc = 3527;
+		rType = 0;
+		vrLen = 1278;
+		vrLoc = 2996;
+	};
+	ED483279123E8DC600642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 434";
+		rLen = 62;
+		rLoc = 10291;
+		rType = 0;
+		vrLen = 1273;
+		vrLoc = 10051;
+	};
+	ED48327A123E8DC600642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDACE430114EFF5C009024DB /* differential.h */;
+		name = "differential.h: 176";
+		rLen = 7;
+		rLoc = 4575;
+		rType = 0;
+		vrLen = 1322;
+		vrLoc = 3392;
+	};
+	ED48327B123E8DC600642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDACE430114EFF5C009024DB /* differential.h */;
+		name = "differential.h: 165";
+		rLen = 0;
+		rLoc = 3987;
+		rType = 0;
+		vrLen = 1388;
+		vrLoc = 3361;
 	};
 	ED70726B11F79D170028F305 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -5205,7 +5249,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4594;
+		rLoc = 4749;
 		rType = 0;
 		vrLen = 857;
 		vrLoc = 4049;
@@ -6389,7 +6433,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 260";
 		rLen = 17;
-		rLoc = 6858;
+		rLoc = 7013;
 		rType = 0;
 		vrLen = 894;
 		vrLoc = 6113;
@@ -6991,7 +7035,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 232";
 		rLen = 12;
-		rLoc = 6211;
+		rLoc = 6366;
 		rType = 0;
 		vrLen = 1042;
 		vrLoc = 5445;
@@ -7844,9 +7888,9 @@
 	};
 	EDA5150B10C72963000A4F41 /* bundles.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1084, 7657}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1084, 7605}}";
 			sepNavSelRange = "{3527, 0}";
-			sepNavVisRange = "{2413, 1321}";
+			sepNavVisRange = "{2996, 1278}";
 		};
 	};
 	EDA5150C10C72963000A4F41 /* codons.h */ = {
@@ -7965,9 +8009,9 @@
 	};
 	EDA5152010C72963000A4F41 /* bundles.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1084, 20007}}";
-			sepNavSelRange = "{15971, 37}";
-			sepNavVisRange = "{18782, 1191}";
+			sepNavIntBoundsRect = "{{0, 0}, {1084, 19864}}";
+			sepNavSelRange = "{10291, 62}";
+			sepNavVisRange = "{10051, 1273}";
 		};
 	};
 	EDA5152110C72963000A4F41 /* codons.cpp */ = {
@@ -8091,9 +8135,9 @@
 	};
 	EDACE430114EFF5C009024DB /* differential.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1084, 3523}}";
-			sepNavSelRange = "{4553, 0}";
-			sepNavVisRange = "{3283, 1361}";
+			sepNavIntBoundsRect = "{{0, 0}, {1084, 3601}}";
+			sepNavSelRange = "{3987, 0}";
+			sepNavVisRange = "{3361, 1388}";
 		};
 	};
 	EDACE431114EFF5C009024DB /* differential.cpp */ = {

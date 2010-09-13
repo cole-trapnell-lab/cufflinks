@@ -158,6 +158,11 @@ public:
         
         if (non_empty_bundle == false)
         {
+            foreach (HitBundle* in_bundle, bundles)
+            {
+                in_bundle->clear_hits();
+                delete in_bundle;
+            }
             return false;
         }
         
