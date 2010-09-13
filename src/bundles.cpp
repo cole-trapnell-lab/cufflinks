@@ -793,6 +793,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                         {
                             // hit is lexicographically less than the reference,
                             // so skip the hit.
+                            delete bh;
                             continue;
                         }
                         else 
@@ -808,7 +809,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     }
                     // Then these hits are on a chromosome not in the reference annotation, but which are lexicographically
                     // less than the next reference record, so just skip them
-                    
+                    delete bh;
                     continue;
                 }
 				
@@ -822,6 +823,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     
                     // if the hit stream disagrees with the reference transcript stream
                     // on which RefID is next, just skip the hit.
+                    delete bh;
                     continue;
                 }
                 else
@@ -865,6 +867,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     // if we get here, there are more records, but this one is
                     // null, and we've reached the end of the reference trancripts
                     // or there weren't any
+                    delete bh;
                     continue;
                 }
             }
