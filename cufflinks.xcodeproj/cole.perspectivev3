@@ -330,7 +330,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED4832B8123ECF4E00642337</string>
+										<string>ED4832BB123ED0AE00642337</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -710,7 +710,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>ED4832B9123ECF4E00642337</string>
 		<string>ED48322A123E809A00642337</string>
 		<string>ED48322B123E809A00642337</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>

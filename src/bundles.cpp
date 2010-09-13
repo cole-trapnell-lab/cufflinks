@@ -996,6 +996,9 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                     }
                 }
             }
+            
+            last_hit_ref_id_seen = bh->ref_id();
+            last_hit_pos_seen = bh->left();
 			
 			bundle.add_open_hit(read_group_properties(), bh);
 		}
@@ -1007,13 +1010,13 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 		}
         else 
         {
+            // It's not within the bundle bounds, but it's also not past the 
+            // right end, so skip it.
+            last_hit_ref_id_seen = bh->ref_id();
+            last_hit_pos_seen = bh->left();
             delete bh;
         }
 
-		
-		last_hit_ref_id_seen = bh->ref_id();
-		last_hit_pos_seen = bh->left();
-        
 		//curr_pos = ftello(hit_file);
 	}
 	
