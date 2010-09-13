@@ -731,8 +731,8 @@ public:
     
 	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
             uint32_t refid, 
-			shared_ptr<ReadHit const> left_alignment, 
-			shared_ptr<ReadHit const> right_alignment) : 
+			const ReadHit* left_alignment, 
+			const ReadHit* right_alignment) : 
     _rg_props(rg_props),
 	_refid(refid), 
 	_left_alignment(left_alignment),
@@ -751,14 +751,14 @@ public:
 	
     shared_ptr<ReadGroupProperties const> read_group_props() const { return _rg_props; }
     
-	shared_ptr<ReadHit const> left_alignment() const {return _left_alignment;}
-	void left_alignment(shared_ptr<ReadHit const> left_alignment) 
+	const ReadHit* left_alignment() const {return _left_alignment;}
+	void left_alignment(const ReadHit* left_alignment) 
 	{
 		_left_alignment = left_alignment;
 	}
 	
-	shared_ptr<ReadHit const> right_alignment() const {return _right_alignment;}					
-	void right_alignment(shared_ptr<ReadHit const> right_alignment)  
+	const ReadHit* right_alignment() const {return _right_alignment;}					
+	void right_alignment(const ReadHit* right_alignment)  
 	{
 		_right_alignment = right_alignment;
 	}
@@ -891,8 +891,8 @@ private:
 	
     shared_ptr<ReadGroupProperties const> _rg_props;
 	RefID _refid;
-	shared_ptr<ReadHit const> _left_alignment;
-	shared_ptr<ReadHit const> _right_alignment;
+	const ReadHit* _left_alignment;
+	const ReadHit* _right_alignment;
 	double _collapse_mass;
 	bool _is_mapped;
 	//bool _closed;

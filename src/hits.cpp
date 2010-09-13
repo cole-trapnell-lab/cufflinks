@@ -51,9 +51,9 @@ bool hits_equals(const MateHit& lhs, const MateHit& rhs)
 	if (lhs.ref_id() != rhs.ref_id())
 		return false;
 	
-	if ((lhs.left_alignment().get() == NULL) != (rhs.left_alignment().get() == NULL))
+	if ((lhs.left_alignment() == NULL) != (rhs.left_alignment() == NULL))
 		return false;
-	if ((lhs.right_alignment().get() == NULL) != (rhs.right_alignment().get() == NULL))
+	if ((lhs.right_alignment() == NULL) != (rhs.right_alignment() == NULL))
 		return false;
 	if (lhs.left_alignment())
 	{
@@ -119,11 +119,11 @@ bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs)
 	assert ((lhs.right_alignment() == NULL) == (rhs.right_alignment() == NULL));
 	assert ((lhs.left_alignment() == NULL) == (rhs.left_alignment() == NULL));
 	
-	shared_ptr<const ReadHit> lhs_l = lhs.left_alignment();
-	shared_ptr<const ReadHit> lhs_r = lhs.right_alignment();
+	const ReadHit* lhs_l = lhs.left_alignment();
+	const ReadHit* lhs_r = lhs.right_alignment();
 	
-	shared_ptr<const ReadHit> rhs_l = rhs.left_alignment();
-	shared_ptr<const ReadHit> rhs_r = rhs.right_alignment();
+	const ReadHit* rhs_l = rhs.left_alignment();
+	const ReadHit* rhs_r = rhs.right_alignment();
 	
 	if (lhs_l && rhs_l)
 	{

@@ -189,7 +189,7 @@ public:
 	      _right(mate.right()),
 	      _classcode(0)
 	{
-		shared_ptr<ReadHit const> left_hit = mate.left_alignment();
+		const ReadHit* left_hit = mate.left_alignment();
 		//CuffAlign a;
 		_strand = mate.strand();
 		
@@ -201,7 +201,7 @@ public:
 			int g_left = left_hit->left();
 			cuff_ops_from_cigar(aug_ops, l_cig, g_left);
 			
-			shared_ptr<ReadHit const> right_hit = mate.right_alignment();
+			const ReadHit* right_hit = mate.right_alignment();
 			if (right_hit)
 			{
 				const vector<CigarOp>& r_cig = right_hit->cigar();

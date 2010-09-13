@@ -91,6 +91,8 @@ typedef map<RefID, vector<AugmentedCuffOp> > BadIntronTable;
  *******************************************************************************/
 class HitBundle
 {
+private:
+    HitBundle(const HitBundle& rhs) {} 
 public:
 	HitBundle() 
     : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _num_replicates(1) {}
@@ -109,6 +111,12 @@ public:
                 //fprintf(stderr, "Warning: bundle shared reference scaffolds with others.  Possible soft memory leak.\n");
             }
         }   
+        
+        foreach (MateHit& hit, _hits)
+        {
+            delete hit.left_alignment();
+            delete hit.right_alignment();
+        }
     }
 	int left()   const { return _leftmost;  }
 	int right()  const { return _rightmost; }
@@ -142,7 +150,7 @@ public:
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
 	void add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
-                      shared_ptr<ReadHit const> bh);
+                      const ReadHit* bh);
 	
 	// Commits any mates still open as singleton hits
 	void finalize_open_mates();
@@ -156,7 +164,7 @@ public:
 	
     int num_replicates() const { return _num_replicates; }
     
-    static void combine(const vector<HitBundle>& in_bundles,
+    static void combine(const vector<HitBundle*>& in_bundles,
                         HitBundle& out_bundle);
     
 private:
@@ -282,7 +290,7 @@ private:
     
     shared_ptr<ReadGroupProperties> _rg_props;
     
-    shared_ptr<ReadHit const> next_valid_alignment();
+    const ReadHit* next_valid_alignment();
     bool _ref_driven;
     int _prev_pos;
     RefID _prev_ref_id;

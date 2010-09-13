@@ -144,14 +144,13 @@ public:
 	
 	bool next_bundle(HitBundle& bundle_out)
     {
-        bundle_out = HitBundle(); 
-        vector<HitBundle> bundles;
+        vector<HitBundle*> bundles;
         
         bool non_empty_bundle = false;
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
-            bundles.push_back(HitBundle());
-            if (fac->next_bundle(bundles.back()))
+            bundles.push_back(new HitBundle());
+            if (fac->next_bundle(*(bundles.back())))
             {
                 non_empty_bundle = true;
             }
@@ -164,8 +163,8 @@ public:
         
         for (size_t i = 1; i < bundles.size(); ++i)
         {
-            const vector<shared_ptr<Scaffold> >& s1 = bundles[i].ref_scaffolds();
-            const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1].ref_scaffolds();
+            const vector<shared_ptr<Scaffold> >& s1 = bundles[i]->ref_scaffolds();
+            const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1]->ref_scaffolds();
             assert (s1.size() == s2.size());
             for (size_t j = 0; j < s1.size(); ++j)
             {
