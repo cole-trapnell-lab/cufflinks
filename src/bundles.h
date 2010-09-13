@@ -124,8 +124,27 @@ public:
 	
 	// Returns true if the hit was added successfully.
 	bool add_hit(const MateHit& hit);
+    
+    
+	void clear_hits() 
+    {
+        _hits.clear(); 
+        _non_redundant.clear();
+        vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
+        foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
+        {
+            if (ref_scaff.unique())
+            {
+                ref_scaff->clear_hits();
+            }
+            else 
+            {
+                //fprintf(stderr, "Warning: bundle shared reference scaffolds with others.  Possible soft memory leak.\n");
+            }
+        } 
+    }
 	
-	const std::vector<MateHit>& hits() const { return _hits; } 
+    const std::vector<MateHit>& hits() const { return _hits; } 
 	const std::vector<MateHit>& non_redundant_hits() const { return _non_redundant; } 
 	
 	RefID ref_id()  const

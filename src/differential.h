@@ -177,6 +177,7 @@ public:
         
         foreach (HitBundle* in_bundle, bundles)
         {
+            in_bundle->clear_hits();
             delete in_bundle;
         }
         return true;
