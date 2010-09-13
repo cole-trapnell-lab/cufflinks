@@ -972,6 +972,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                                  last_hit_pos_seen,
                                  bh_chr_name,
                                  bh->left());
+                delete bh;
 				exit(1);
 			}
 			
@@ -1004,6 +1005,11 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 			_hit_fac->undo_hit();
 			break;
 		}
+        else 
+        {
+            delete bh;
+        }
+
 		
 		last_hit_ref_id_seen = bh->ref_id();
 		last_hit_pos_seen = bh->left();

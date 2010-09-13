@@ -776,8 +776,6 @@ bool assemble_hits(BundleFactory& bundle_factory)
 {
 	srand(time(0));
 	
-	HitBundle bundle;
-	
 	int num_bundles = 0;
 	
 	RefSequenceTable& rt = bundle_factory.ref_table();
@@ -813,49 +811,47 @@ bool assemble_hits(BundleFactory& bundle_factory)
                     bundle.right());
 			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
-		//if (bundle.hits().size())
-		{
-			BundleStats stats;
-			num_bundles++;
+
+        BundleStats stats;
+        num_bundles++;
 #if ENABLE_THREADS			
-			while(1)
-			{
-				thread_pool_lock.lock();
-				if (curr_threads < num_threads)
-				{
-					thread_pool_lock.unlock();
-					break;
-				}
-				
-				thread_pool_lock.unlock();
-                
-				boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-				
-			}
+        while(1)
+        {
+            thread_pool_lock.lock();
+            if (curr_threads < num_threads)
+            {
+                thread_pool_lock.unlock();
+                break;
+            }
+            
+            thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
 #endif
-            
+        
 #if ENABLE_THREADS			
-			thread_pool_lock.lock();
-			curr_threads++;
-			thread_pool_lock.unlock();
-            
-			thread asmbl(assemble_bundle,
-						 boost::cref(rt), 
-						 bundle_ptr, 
-						 bundle_factory.read_group_properties()->total_map_mass(),
-						 ftranscripts, 
-						 fgene_abundances,
-						 ftrans_abundances);
+        thread_pool_lock.lock();
+        curr_threads++;
+        thread_pool_lock.unlock();
+        
+        thread asmbl(assemble_bundle,
+                     boost::cref(rt), 
+                     bundle_ptr, 
+                     bundle_factory.read_group_properties()->total_map_mass(),
+                     ftranscripts, 
+                     fgene_abundances,
+                     ftrans_abundances);
 #else
-			assemble_bundle(boost::cref(rt), 
-							bundle_ptr, 
-							bundle_factory.read_group_properties()->total_map_mass(),
-							ftranscripts,
-							fgene_abundances,
-							ftrans_abundances);
+        assemble_bundle(boost::cref(rt), 
+                        bundle_ptr, 
+                        bundle_factory.read_group_properties()->total_map_mass(),
+                        ftranscripts,
+                        fgene_abundances,
+                        ftrans_abundances);
 #endif			
             
-		}
 	}
     
 #if ENABLE_THREADS	
