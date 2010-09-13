@@ -769,6 +769,8 @@ void assemble_bundle(const RefSequenceTable& rt,
 	out_file_lock.unlock();
 #endif
 
+    genes.clear();
+    scaffolds.clear();
 	delete bundle_ptr;
 }
 
