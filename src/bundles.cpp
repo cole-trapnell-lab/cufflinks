@@ -596,12 +596,12 @@ void HitBundle::finalize(bool is_combined)
 			// add hit only adds if the hit is structurally compatible
 			if (_ref_scaffs[j]->contains(hs))
 			{
-                    hit.is_mapped(true);
+                hit.is_mapped(true);
 			}
 		}
 	}
 
-	remove_unmapped_hits();
+	//remove_unmapped_hits();
     
 	if (_ref_scaffs.size() > 0)
     {
