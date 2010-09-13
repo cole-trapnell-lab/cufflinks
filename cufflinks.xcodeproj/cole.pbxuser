@@ -3,8 +3,8 @@
 	08FB7793FE84155DC02AAC07 /* Project object */ = {
 		activeArchitecturePreference = x86_64;
 		activeBuildConfigurationName = Debug;
-		activeExecutable = EDD0CD9D10C72AC200AF308F /* cufflinks */;
-		activeTarget = 8DD76F620486A84900D96B5E /* cufflinks */;
+		activeExecutable = EDD0CE2310C72F7D00AF308F /* cuffdiff */;
+		activeTarget = EDD0CE0810C72F7D00AF308F /* cuffdiff */;
 		addToTargets = (
 			EDD0CE0810C72F7D00AF308F /* cuffdiff */,
 			8DD76F620486A84900D96B5E /* cufflinks */,
@@ -484,6 +484,10 @@
 			ED483258123E880600642337 /* PBXTextBookmark */ = ED483258123E880600642337 /* PBXTextBookmark */;
 			ED483259123E880600642337 /* PBXTextBookmark */ = ED483259123E880600642337 /* PBXTextBookmark */;
 			ED48325A123E880600642337 /* PBXTextBookmark */ = ED48325A123E880600642337 /* PBXTextBookmark */;
+			ED483269123E894000642337 /* PBXTextBookmark */ = ED483269123E894000642337 /* PBXTextBookmark */;
+			ED48326A123E894000642337 /* PBXTextBookmark */ = ED48326A123E894000642337 /* PBXTextBookmark */;
+			ED48326B123E894000642337 /* PBXTextBookmark */ = ED48326B123E894000642337 /* PBXTextBookmark */;
+			ED48326C123E894000642337 /* PBXTextBookmark */ = ED48326C123E894000642337 /* PBXTextBookmark */;
 			ED70726B11F79D170028F305 = ED70726B11F79D170028F305 /* PBXTextBookmark */;
 			ED877AEA123842D40025A050 = ED877AEA123842D40025A050 /* PBXTextBookmark */;
 			ED877AFB123842D60025A050 = ED877AFB123842D60025A050 /* PBXTextBookmark */;
@@ -1827,7 +1831,7 @@
 		isa = PBXTextBookmark;
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		rLen = 0;
-		rLoc = 199;
+		rLoc = 204;
 		rType = 1;
 	};
 	ED06875B12397F5C00F78A2F /* PBXTextBookmark */ = {
@@ -1835,7 +1839,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 201";
 		rLen = 0;
-		rLoc = 5060;
+		rLoc = 5167;
 		rType = 0;
 		vrLen = 851;
 		vrLoc = 4631;
@@ -1845,7 +1849,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 201";
 		rLen = 0;
-		rLoc = 5060;
+		rLoc = 5167;
 		rType = 0;
 		vrLen = 1353;
 		vrLoc = 4475;
@@ -1895,7 +1899,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4450;
+		rLoc = 4557;
 		rType = 0;
 		vrLen = 882;
 		vrLoc = 3886;
@@ -2424,7 +2428,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4450;
+		rLoc = 4557;
 		rType = 0;
 		vrLen = 882;
 		vrLoc = 3886;
@@ -2641,7 +2645,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4450;
+		rLoc = 4557;
 		rType = 0;
 		vrLen = 852;
 		vrLoc = 3673;
@@ -2808,7 +2812,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4450;
+		rLoc = 4557;
 		rType = 0;
 		vrLen = 1432;
 		vrLoc = 3163;
@@ -3892,7 +3896,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 232";
 		rLen = 0;
-		rLoc = 6086;
+		rLoc = 6193;
 		rType = 0;
 		vrLen = 1297;
 		vrLoc = 5436;
@@ -4477,6 +4481,46 @@
 		rType = 0;
 		vrLen = 1198;
 		vrLoc = 16761;
+	};
+	ED483269123E894000642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5151810C72963000A4F41 /* hits.h */;
+		name = "hits.h: 732";
+		rLen = 0;
+		rLoc = 17024;
+		rType = 0;
+		vrLen = 1198;
+		vrLoc = 16761;
+	};
+	ED48326A123E894000642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 635";
+		rLen = 37;
+		rLoc = 15971;
+		rType = 0;
+		vrLen = 1191;
+		vrLoc = 18782;
+	};
+	ED48326B123E894000642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDACE430114EFF5C009024DB /* differential.h */;
+		name = "differential.h: 176";
+		rLen = 7;
+		rLoc = 4420;
+		rType = 0;
+		vrLen = 1394;
+		vrLoc = 3166;
+	};
+	ED48326C123E894000642337 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDACE430114EFF5C009024DB /* differential.h */;
+		name = "differential.h: 180";
+		rLen = 0;
+		rLoc = 4546;
+		rType = 0;
+		vrLen = 1384;
+		vrLoc = 3283;
 	};
 	ED70726B11F79D170028F305 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -5128,7 +5172,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 178";
 		rLen = 0;
-		rLoc = 4450;
+		rLoc = 4557;
 		rType = 0;
 		vrLen = 857;
 		vrLoc = 4049;
@@ -6312,7 +6356,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 260";
 		rLen = 17;
-		rLoc = 6714;
+		rLoc = 6821;
 		rType = 0;
 		vrLen = 894;
 		vrLoc = 6113;
@@ -6914,7 +6958,7 @@
 		fRef = EDACE430114EFF5C009024DB /* differential.h */;
 		name = "differential.h: 232";
 		rLen = 12;
-		rLoc = 6067;
+		rLoc = 6174;
 		rType = 0;
 		vrLen = 1042;
 		vrLoc = 5445;
@@ -7888,9 +7932,9 @@
 	};
 	EDA5152010C72963000A4F41 /* bundles.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1084, 19994}}";
-			sepNavSelRange = "{10093, 0}";
-			sepNavVisRange = "{9120, 1114}";
+			sepNavIntBoundsRect = "{{0, 0}, {1084, 20007}}";
+			sepNavSelRange = "{15971, 37}";
+			sepNavVisRange = "{18782, 1191}";
 		};
 	};
 	EDA5152110C72963000A4F41 /* codons.cpp */ = {
@@ -8014,9 +8058,9 @@
 	};
 	EDACE430114EFF5C009024DB /* differential.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1084, 3419}}";
-			sepNavSelRange = "{4420, 7}";
-			sepNavVisRange = "{3167, 1393}";
+			sepNavIntBoundsRect = "{{0, 0}, {1084, 3510}}";
+			sepNavSelRange = "{4546, 0}";
+			sepNavVisRange = "{3283, 1384}";
 		};
 	};
 	EDACE431114EFF5C009024DB /* differential.cpp */ = {

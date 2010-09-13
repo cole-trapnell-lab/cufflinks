@@ -174,6 +174,11 @@ public:
         
         // Merge the replicates into a combined bundle of hits.
         HitBundle::combine(bundles, bundle_out);
+        
+        foreach (HitBundle* in_bundle, bundles)
+        {
+            delete in_bundle;
+        }
         return true;
     }
 	
