@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		ED1C0D7611D7F88B00CFD663 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
 		ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
+		ED48324B123E83D100642337 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
 		ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
 		ED5D1EEA114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
 		ED877B73123BCA3F0025A050 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED877B72123BCA3F0025A050 /* GFastaIndex.cpp */; };
@@ -679,6 +680,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ED48324B123E83D100642337 /* GFastaIndex.cpp in Sources */,
 				EDD94B481205C9E800AA1086 /* abundances.cpp in Sources */,
 				EDD94B491205C9E800AA1086 /* assemble.cpp in Sources */,
 				EDD94B4A1205C9E800AA1086 /* bundles.cpp in Sources */,

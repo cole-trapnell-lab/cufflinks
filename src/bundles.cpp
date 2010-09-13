@@ -418,6 +418,11 @@ void HitBundle::remove_unmapped_hits()
 	vector<MateHit>::iterator new_end = remove_if(_hits.begin(),
 												  _hits.end(),
 												  UnmappedHit());
+    for(vector<MateHit>::iterator hit_itr = new_end; hit_itr < _hits.end(); ++hit_itr)
+    {
+        delete hit_itr->left_alignment();
+        delete hit_itr->right_alignment();
+    }
 	_hits.erase(new_end, _hits.end());	
 	
 	new_end = remove_if(_non_redundant.begin(),
@@ -837,6 +842,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
                 }
                 else 
                 {
+                    delete bh;
                     return false;
                 }
 
@@ -851,6 +857,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
             {
                 if (!_hit_fac->records_remain() && next_ref_scaff == ref_mRNAs.end())
                 {
+                    delete bh;
                     return false;
                 }
                 else 
@@ -990,6 +997,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 		}
 		else if (past_right_end)
 		{
+            delete bh;
 			_hit_fac->undo_hit();
 			break;
 		}
