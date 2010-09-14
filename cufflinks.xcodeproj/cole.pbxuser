@@ -15,7 +15,7 @@
 			ED4832A5123ECEE500642337 /* bundles.cpp:1009 */,
 			ED4832AC123ECF0700642337 /* bundles.cpp:1019 */,
 			EDB0D127123EE5C7000F3B68 /* cufflinks.cpp:773 */,
-			EDB0D15B123EF122000F3B68 /* bundles.h:571 */,
+			EDB0D15B123EF122000F3B68 /* bundles.h:572 */,
 			EDB0D15F123EF130000F3B68 /* cufflinks.cpp:925 */,
 			EDB0D177123EF19D000F3B68 /* scaffolds.cpp:1138 */,
 			EDB0D180123EF230000F3B68 /* cufflinks.cpp:967 */,
@@ -204,6 +204,9 @@
 			ED16EDF3123F37F500350FC6 /* PBXTextBookmark */ = ED16EDF3123F37F500350FC6 /* PBXTextBookmark */;
 			ED16EDF4123F37F500350FC6 /* PBXTextBookmark */ = ED16EDF4123F37F500350FC6 /* PBXTextBookmark */;
 			ED16EDF5123F383300350FC6 /* PBXTextBookmark */ = ED16EDF5123F383300350FC6 /* PBXTextBookmark */;
+			ED16EDF8123F3B8500350FC6 /* PBXTextBookmark */ = ED16EDF8123F3B8500350FC6 /* PBXTextBookmark */;
+			ED16EDF9123F3B8500350FC6 /* PBXTextBookmark */ = ED16EDF9123F3B8500350FC6 /* PBXTextBookmark */;
+			ED16EDFA123F3B8500350FC6 /* PBXTextBookmark */ = ED16EDFA123F3B8500350FC6 /* PBXTextBookmark */;
 			ED291362122D32B500C3703E = ED291362122D32B500C3703E /* PBXTextBookmark */;
 			ED291363122D32B500C3703E = ED291363122D32B500C3703E /* PBXTextBookmark */;
 			ED291368122E127E00C3703E = ED291368122E127E00C3703E /* PBXTextBookmark */;
@@ -660,6 +663,33 @@
 		vrLen = 1303;
 		vrLoc = 2688;
 	};
+	ED16EDF8123F3B8500350FC6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152010C72963000A4F41 /* bundles.cpp */;
+		name = "bundles.cpp: 1057";
+		rLen = 16;
+		rLoc = 31606;
+		rType = 0;
+		vrLen = 1214;
+		vrLoc = 30970;
+	};
+	ED16EDF9123F3B8500350FC6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		rLen = 1;
+		rLoc = 164;
+		rType = 1;
+	};
+	ED16EDFA123F3B8500350FC6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 167";
+		rLen = 0;
+		rLoc = 4262;
+		rType = 0;
+		vrLen = 1261;
+		vrLoc = 3637;
+	};
 	ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {3064, 2860}}";
@@ -964,9 +994,9 @@
 	};
 	EDA5150B10C72963000A4F41 /* bundles.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1020, 7384}}";
-			sepNavSelRange = "{3781, 0}";
-			sepNavVisRange = "{2688, 1303}";
+			sepNavIntBoundsRect = "{{0, 0}, {1020, 7267}}";
+			sepNavSelRange = "{4262, 0}";
+			sepNavVisRange = "{3637, 1261}";
 		};
 	};
 	EDA5150C10C72963000A4F41 /* codons.h */ = {
@@ -1085,9 +1115,9 @@
 	};
 	EDA5152010C72963000A4F41 /* bundles.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {911, 20449}}";
-			sepNavSelRange = "{8093, 0}";
-			sepNavVisRange = "{7770, 1086}";
+			sepNavIntBoundsRect = "{{0, 0}, {992, 19188}}";
+			sepNavSelRange = "{31606, 16}";
+			sepNavVisRange = "{30970, 1214}";
 		};
 	};
 	EDA5152110C72963000A4F41 /* codons.cpp */ = {
@@ -1265,7 +1295,7 @@
 		vrLen = 1232;
 		vrLoc = 5233;
 	};
-	EDB0D15B123EF122000F3B68 /* bundles.h:571 */ = {
+	EDB0D15B123EF122000F3B68 /* bundles.h:572 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1277,7 +1307,7 @@
 		functionName = "inspect_map(BundleFactoryType& bundle_factory, long double& map_mass, BadIntronTable* bad_introns, EmpDist& frag_len_dist)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 571;
+		lineNumber = 572;
 		location = cufflinks;
 		modificationTime = 306132213.025902;
 		originalNumberOfMultipleMatches = 1;
@@ -1468,7 +1498,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 365";
 		rLen = 0;
-		rLoc = 10032;
+		rLoc = 10061;
 		rType = 0;
 		vrLen = 1533;
 		vrLoc = 11024;

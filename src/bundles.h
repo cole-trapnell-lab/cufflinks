@@ -164,6 +164,7 @@ public:
 	
 	void add_ref_scaffold(shared_ptr<Scaffold> scaff)
 	{
+        scaff->clear_hits();
 		_ref_scaffs.push_back(scaff);
 	}
 	
