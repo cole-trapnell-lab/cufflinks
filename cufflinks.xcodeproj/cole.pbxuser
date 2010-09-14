@@ -200,6 +200,9 @@
 			ED16EDEF123F350600350FC6 /* PBXTextBookmark */ = ED16EDEF123F350600350FC6 /* PBXTextBookmark */;
 			ED16EDF0123F350600350FC6 /* PBXTextBookmark */ = ED16EDF0123F350600350FC6 /* PBXTextBookmark */;
 			ED16EDF1123F350600350FC6 /* PBXTextBookmark */ = ED16EDF1123F350600350FC6 /* PBXTextBookmark */;
+			ED16EDF2123F37F500350FC6 /* PBXTextBookmark */ = ED16EDF2123F37F500350FC6 /* PBXTextBookmark */;
+			ED16EDF3123F37F500350FC6 /* PBXTextBookmark */ = ED16EDF3123F37F500350FC6 /* PBXTextBookmark */;
+			ED16EDF4123F37F500350FC6 /* PBXTextBookmark */ = ED16EDF4123F37F500350FC6 /* PBXTextBookmark */;
 			ED291362122D32B500C3703E = ED291362122D32B500C3703E /* PBXTextBookmark */;
 			ED291363122D32B500C3703E = ED291363122D32B500C3703E /* PBXTextBookmark */;
 			ED291368122E127E00C3703E = ED291368122E127E00C3703E /* PBXTextBookmark */;
@@ -616,6 +619,36 @@
 		vrLen = 973;
 		vrLoc = 27435;
 	};
+	ED16EDF2123F37F500350FC6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 967";
+		rLen = 0;
+		rLoc = 27871;
+		rType = 0;
+		vrLen = 1019;
+		vrLoc = 27056;
+	};
+	ED16EDF3123F37F500350FC6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 114";
+		rLen = 0;
+		rLoc = 2830;
+		rType = 0;
+		vrLen = 1313;
+		vrLoc = 2025;
+	};
+	ED16EDF4123F37F500350FC6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
+		name = "bundles.h: 145";
+		rLen = 0;
+		rLoc = 3653;
+		rType = 0;
+		vrLen = 1087;
+		vrLoc = 3159;
+	};
 	ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {3064, 2860}}";
@@ -920,9 +953,9 @@
 	};
 	EDA5150B10C72963000A4F41 /* bundles.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1020, 7436}}";
-			sepNavSelRange = "{2830, 0}";
-			sepNavVisRange = "{2033, 1273}";
+			sepNavIntBoundsRect = "{{0, 0}, {1020, 7332}}";
+			sepNavSelRange = "{3653, 0}";
+			sepNavVisRange = "{3159, 1087}";
 		};
 	};
 	EDA5150C10C72963000A4F41 /* codons.h */ = {
@@ -1076,9 +1109,9 @@
 	};
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1146, 14352}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1146, 14391}}";
 			sepNavSelRange = "{27871, 0}";
-			sepNavVisRange = "{27435, 973}";
+			sepNavVisRange = "{27056, 1019}";
 		};
 	};
 	EDA5152610C72963000A4F41 /* filters.cpp */ = {
@@ -1424,7 +1457,7 @@
 		fRef = EDA5150B10C72963000A4F41 /* bundles.h */;
 		name = "bundles.h: 365";
 		rLen = 0;
-		rLoc = 10011;
+		rLoc = 10009;
 		rType = 0;
 		vrLen = 1533;
 		vrLoc = 11024;
