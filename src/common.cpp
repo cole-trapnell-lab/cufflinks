@@ -207,6 +207,13 @@ void init_library_table()
     solid_fragment.strandedness(STRANDED_PROTOCOL);
     
     library_type_table["solid-fragment"] = solid_fragment;
+        
+    ReadGroupProperties solid_paired;
+    solid_paired.platform(SOLID);
+    solid_paired.std_mate_orientation(MATES_POINT_TOWARD);
+    solid_paired.strandedness(STRANDED_PROTOCOL);
+    
+    library_type_table["solid-fragment"] = solid_fragment;
     
     ReadGroupProperties illumina_fragment;
     illumina_fragment.platform(ILLUMINA);

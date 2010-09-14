@@ -245,7 +245,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 {
 	const bam1_t* hit_buf = (const bam1_t*)orig_bwt_buf;
 	
-	//int sam_flag = atoi(sam_flag_str);
+	uint32_t sam_flag = hit_buf->core.flag;
 	
 	int text_offset = hit_buf->core.pos;
 	int text_mate_pos = hit_buf->core.mpos;
@@ -382,6 +382,21 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
         // TODO: Illumina strand specific orientation inference here
     }
 	
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
+        _rg_props.std_mate_orientation() == MATES_POINT_TOWARD)
+    {
+        
+        if (antisense_aln)
+        {
+            source_strand = (sam_flag & BAM_FREAD1) ? CUFF_REV : CUFF_FWD;
+        }
+        else 
+        {
+            source_strand = (sam_flag & BAM_FREAD1) ? CUFF_FWD : CUFF_REV;
+        }
+        // TODO: Illumina strand specific orientation inference here
+    }
+    
 	if (!spliced_alignment)
 	{
 		
@@ -802,6 +817,21 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
         else 
         {
             source_strand = CUFF_FWD;
+        }
+        // TODO: Illumina strand specific orientation inference here
+    }
+    
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
+        _rg_props.std_mate_orientation() == MATES_POINT_TOWARD)
+    {
+        
+        if (antisense_aln)
+        {
+            source_strand = (sam_flag & BAM_FREAD1) ? CUFF_REV : CUFF_FWD;
+        }
+        else 
+        {
+            source_strand = (sam_flag & BAM_FREAD1) ? CUFF_FWD : CUFF_REV;
         }
         // TODO: Illumina strand specific orientation inference here
     }

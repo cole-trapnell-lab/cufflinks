@@ -102,7 +102,10 @@ public:
         vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
         foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
         {
-            if (ref_scaff.unique())
+            // This bundle and the factory that actually owns the ref_mRNAs
+            // are the only objects that should have access to these scaffolds
+            // so if the use count is 2, we can clear these guys.
+            if (ref_scaff.use_count() == 2)
             {
                 ref_scaff->clear_hits();
             }
@@ -133,7 +136,7 @@ public:
         vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
         foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
         {
-            if (ref_scaff.unique())
+            if (ref_scaff.use_count() == 2)
             {
                 ref_scaff->clear_hits();
             }

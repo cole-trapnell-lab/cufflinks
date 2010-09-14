@@ -257,7 +257,9 @@ int HitBundle::_next_id = 0;
 bool HitBundle::add_hit(const MateHit& hit)
 {
 	if (_final)
+    {
 		return false;
+    }
 	
 	// Update the bounds on the span
 	if (hit.left() < _leftmost)
@@ -999,7 +1001,7 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
             
             last_hit_ref_id_seen = bh->ref_id();
             last_hit_pos_seen = bh->left();
-			
+            
 			bundle.add_open_hit(read_group_properties(), bh);
 		}
 		else if (past_right_end)
