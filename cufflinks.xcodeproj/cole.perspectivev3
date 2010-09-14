@@ -233,6 +233,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -280,13 +282,11 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>52</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>86</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 728}, {267, 987}}</string>
+							<string>{{0, 576}, {267, 987}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -314,14 +314,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cuffdiff.cpp</string>
+								<string>abundances.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +327,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cuffdiff.cpp</string>
+										<string>abundances.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED48330B123FC58200642337</string>
+										<string>ED4833D712401A0300642337</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -360,12 +358,21 @@
 											<string>EDBCDDFB1235EEB60050A8E4</string>
 											<string>EDBCDDFC1235EEB60050A8E4</string>
 											<string>EDBCDF80123721790050A8E4</string>
-											<string>EDBCDF81123721790050A8E4</string>
-											<string>ED4832F2123FC4E100642337</string>
 											<string>ED4832F5123FC4E100642337</string>
 											<string>ED4832FB123FC4EE00642337</string>
-											<string>ED483309123FC58200642337</string>
-											<string>ED48330A123FC58200642337</string>
+											<string>ED483339123FCA8F00642337</string>
+											<string>ED48335412400A6600642337</string>
+											<string>ED48335C12400CB000642337</string>
+											<string>ED48337C12400D6900642337</string>
+											<string>ED48338812400E1D00642337</string>
+											<string>ED48339C12400ED100642337</string>
+											<string>ED48339D12400ED100642337</string>
+											<string>ED4833A312400F3A00642337</string>
+											<string>ED4833A412400F3A00642337</string>
+											<string>ED4833A512400F3A00642337</string>
+											<string>ED4833B112400FB800642337</string>
+											<string>ED4833D512401A0300642337</string>
+											<string>ED4833D612401A0300642337</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -460,7 +467,7 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {1145, 313}}</string>
+										<string>{{10, 27}, {1145, 320}}</string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>

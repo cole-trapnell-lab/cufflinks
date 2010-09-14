@@ -140,6 +140,8 @@ enum Platform
     SOLID
 };
 
+extern std::string default_library_type;
+
 class EmpDist;
 class BiasLearner;
 

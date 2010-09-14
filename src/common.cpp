@@ -193,7 +193,7 @@ out:
 }
     
 void init_library_table()
-	{
+{
     ReadGroupProperties std_illumina_paired;
     std_illumina_paired.platform(ILLUMINA);
     std_illumina_paired.std_mate_orientation(MATES_POINT_TOWARD);
@@ -222,7 +222,7 @@ void init_library_table()
     
     library_type_table["illumina-fragment"] = illumina_fragment;
     
-    global_read_properties = &(library_type_table.find(default_library_type)->second);
+    //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
 void print_library_table()

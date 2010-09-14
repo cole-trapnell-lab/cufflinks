@@ -942,7 +942,16 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     //fprintf(stderr, "ReadHit delete count is %d\n", num_deleted);
     shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
-    *rg_props = *global_read_properties;
+    
+    if (global_read_properties)
+    {
+        *rg_props = *global_read_properties;
+    }
+    else 
+    {
+        *rg_props = hit_factory->read_group_properties();
+    }
+
     
     rg_props->frag_len_dist(frag_len_dist);
     rg_props->total_map_mass(map_mass);

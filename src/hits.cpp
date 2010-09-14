@@ -521,7 +521,7 @@ void HitFactory::finalize_rg_props()
     if (_rg_props.platform() == SOLID)
     {
         _rg_props.strandedness(STRANDED_PROTOCOL);
-        _rg_props.std_mate_orientation(MATES_POINT_SAME);
+        _rg_props.std_mate_orientation(MATES_POINT_TOWARD);
     }
     else
     {

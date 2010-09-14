@@ -529,6 +529,11 @@ public:
 	
     virtual bool inspect_header() = 0;
     
+    const ReadGroupProperties& read_group_properties()
+    {
+        return _rg_props;
+    }
+    
 protected:
     
     bool parse_header_string(const string& header_rec,
