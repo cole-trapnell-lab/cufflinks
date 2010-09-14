@@ -142,7 +142,7 @@ public:
             }
             else 
             {
-                fprintf(stderr, "Warning: bundle shared reference scaffolds with others.  Possible soft memory leak.\n");
+                fprintf(stderr, "Warning: bundle %d-%d shared reference scaffolds with others.  Possible soft memory leak.\n", left(), right());
             }
         } 
     }
