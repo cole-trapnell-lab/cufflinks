@@ -160,6 +160,7 @@ public:
         {
             foreach (HitBundle* in_bundle, bundles)
             {
+                in_bundle->ref_scaffolds().clear();
                 in_bundle->clear_hits();
                 delete in_bundle;
             }
@@ -182,6 +183,7 @@ public:
         
         foreach (HitBundle* in_bundle, bundles)
         {
+            in_bundle->ref_scaffolds().clear();
             in_bundle->clear_hits();
             delete in_bundle;
         }

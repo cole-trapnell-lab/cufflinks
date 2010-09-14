@@ -109,7 +109,7 @@ public:
             {
                 ref_scaff->clear_hits();
             }
-            else 
+            else if (ref_scaff->mate_hits().size() > 0)
             {
                 fprintf(stderr, "Warning: bundle %d-%d shared reference scaffolds with others.  Possible soft memory leak.\n", left(), right());
             }
@@ -164,7 +164,7 @@ public:
 	
 	void add_ref_scaffold(shared_ptr<Scaffold> scaff)
 	{
-        scaff->clear_hits();
+        //scaff->clear_hits();
 		_ref_scaffs.push_back(scaff);
 	}
 	

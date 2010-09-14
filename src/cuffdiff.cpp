@@ -417,8 +417,22 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     {
         shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
         shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
-#if ENABLE_THREADS			
-
+#if ENABLE_THREADS					
+        while(1)
+        {
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
+            {
+                locus_thread_pool_lock.unlock();
+                break;
+            }
+            
+            locus_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+        
         locus_thread_pool_lock.lock();
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
@@ -536,7 +550,21 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	int tmp_max_frag_len = 0;
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
-#if ENABLE_THREADS			
+#if ENABLE_THREADS	
+        while(1)
+        {
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
+            {
+                locus_thread_pool_lock.unlock();
+                break;
+            }
+            
+            locus_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
         locus_thread_pool_lock.lock();
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();

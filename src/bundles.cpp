@@ -503,6 +503,14 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
         indices[next_bundle]++;
     }
     
+    for(int i = 0; i < in_bundles.size(); ++i)
+    {
+        for (size_t j = 0; j < in_bundles[i]->_ref_scaffs.size(); ++j)
+        {
+            in_bundles[i]->_ref_scaffs[j]->clear_hits();
+        }
+    }
+    
     // Merge ref scaffolds
     indices = vector<int>(in_bundles.size(), 0);
     while(true)
