@@ -280,13 +280,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>65</integer>
+									<integer>21</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 401}, {267, 987}}</string>
+							<string>{{0, 0}, {267, 987}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -321,7 +321,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cuffdiff.cpp</string>
+								<string>scaffolds.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cuffdiff.cpp</string>
+										<string>scaffolds.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED48351D12415CA300642337</string>
+										<string>ED48352A12416C6600642337</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -359,9 +359,7 @@
 											<string>EDBCDDFC1235EEB60050A8E4</string>
 											<string>EDBCDF80123721790050A8E4</string>
 											<string>ED4832F5123FC4E100642337</string>
-											<string>ED4832FB123FC4EE00642337</string>
 											<string>ED48335C12400CB000642337</string>
-											<string>ED48338812400E1D00642337</string>
 											<string>ED48339C12400ED100642337</string>
 											<string>ED48339D12400ED100642337</string>
 											<string>ED4833A312400F3A00642337</string>
@@ -375,7 +373,10 @@
 											<string>ED48351912415CA300642337</string>
 											<string>ED48351A12415CA300642337</string>
 											<string>ED48351B12415CA300642337</string>
-											<string>ED48351C12415CA300642337</string>
+											<string>ED48351E1241668D00642337</string>
+											<string>ED48351F1241668D00642337</string>
+											<string>ED48352812416C6600642337</string>
+											<string>ED48352912416C6600642337</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -431,8 +432,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {1145, 327}}</string>
-										<key>RubberWindowFrame</key>
-										<string>454 132 1434 1046 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXProjectFindModule</string>
@@ -471,6 +470,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {1145, 327}}</string>
+										<key>RubberWindowFrame</key>
+										<string>454 132 1434 1046 0 0 1920 1178 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>
