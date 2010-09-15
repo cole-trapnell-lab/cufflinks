@@ -522,6 +522,19 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
             all_hit_factories.push_back(hs);
             
             shared_ptr<BundleFactory> hf(new BundleFactory(hs));
+            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+            
+            if (global_read_properties)
+            {
+                *rg_props = *global_read_properties;
+            }
+            else 
+            {
+                *rg_props = hs->read_group_properties();
+            }
+            
+            hf->read_group_properties(rg_props);
+            
             replicate_factories.push_back(hf);
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }

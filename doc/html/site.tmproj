@@ -10,7 +10,7 @@
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2010-06-30T17:37:47Z</date>
+			<date>2010-09-14T14:38:15Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
@@ -120,6 +120,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<false/>
 	<key>windowFrame</key>
-	<string>{{106, 81}, {1461, 1097}}</string>
+	<string>{{106, 74}, {1461, 954}}</string>
 </dict>
 </plist>

@@ -951,7 +951,6 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
         *rg_props = hit_factory->read_group_properties();
     }
-
     
     rg_props->frag_len_dist(frag_len_dist);
     rg_props->total_map_mass(map_mass);

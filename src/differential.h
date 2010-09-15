@@ -202,8 +202,15 @@ public:
     {
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
-            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
-            *rg_props = *global_read_properties;
+//            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+//            if (global_read_properties)
+//            {
+//                *rg_props = *global_read_properties;
+//            }
+//            else 
+//            {
+//                *rg_props = *fac->read_group_properties();
+//            }
             
             long double map_mass = 0.0;
             BadIntronTable bad_introns;
@@ -212,6 +219,7 @@ public:
             
             inspect_map(*fac, map_mass, NULL, *frag_len_dist);
             
+            shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             rg_props->frag_len_dist(frag_len_dist);
             rg_props->total_map_mass(map_mass);
 			
