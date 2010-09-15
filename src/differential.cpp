@@ -118,23 +118,13 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 //										 SampleDifference())); 
     inserted = de_tests.insert(make_pair(description,
     									 SampleDifference())); 
+    
+    const FPKMContext& r1 = curr_abundance;
+    const FPKMContext& r2 = prev_abundance;
+    
 	if (curr_abundance.status == NUMERIC_OK && 
-		prev_abundance.status == NUMERIC_OK &&
-        curr_abundance.FPKM > 0 &&
-        prev_abundance.FPKM > 0)
+		prev_abundance.status == NUMERIC_OK)
 	{
-		
-        const FPKMContext& r1 = curr_abundance;
-        const FPKMContext& r2 = prev_abundance;
-        
-//		FPKMContext r1(curr_abundance.num_fragments(), 
-//					   curr_abundance.FPKM(), 
-//					   curr_abundance.FPKM_variance());
-//		
-//		FPKMContext r2(prev_abundance.num_fragments(), 
-//					   prev_abundance.FPKM(), 
-//					   prev_abundance.FPKM_variance());
-		
 		test.test_status = FAIL;
 
 		if (test_diffexp(r1, r2, test))
@@ -651,9 +641,8 @@ void test_differential(const string& locus_tag,
         
         for (size_t j = sample_to_start_test_against; j < i; ++j)
         {
-            bool enough_reads = !(multi_transcript_locus &&
-                                  (samples[i]->cluster_mass < min_read_count ||
-                                   samples[j]->cluster_mass < min_read_count));
+            bool enough_reads = (samples[i]->cluster_mass >= min_read_count ||
+                                 samples[j]->cluster_mass >= min_read_count);
             assert (samples[i]->transcripts.abundances().size() == 
                     samples[j]->transcripts.abundances().size());
             for (size_t k = 0; k < samples[i]->transcripts.abundances().size(); ++k)
