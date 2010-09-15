@@ -76,7 +76,7 @@ extern double binomial_junc_filter_alpha;
 extern std::string library_type;
 
 #define ADAM_MODE 1
-#define ENABLE_THREADS 0
+#define ENABLE_THREADS 1
 
 #if ENABLE_THREADS
 extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
