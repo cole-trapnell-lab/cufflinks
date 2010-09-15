@@ -455,7 +455,7 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 	GffReader* gffr=new GffReader(f, true);
     //          keepAttrs   mergeCloseExons   noExonAttrs
-	gffr->readAll(true,          true,        false);
+	gffr->readAll(true,          true,        true);
 	//                 is_ref?   check_for_dups,
 	parse_mRNAs(gffr->gflst, seqdata, false,    false);
     delete gffr;

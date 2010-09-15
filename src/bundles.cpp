@@ -108,6 +108,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 	if (ref_mRNA_file)
 	{
 		read_transcripts(ref_mRNA_file, ref_rnas);
+        //read_mRNAs(ref_mRNA_file, ref_rnas, &ref_rnas, true, -1, "", false);
 	}
 	
 	int last_gseq_id = -1;
