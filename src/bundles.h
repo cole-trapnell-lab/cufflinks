@@ -286,13 +286,18 @@ template<class BundleFactoryType>
 void inspect_map(BundleFactoryType& bundle_factory,
                  long double& map_mass, 
                  BadIntronTable* bad_introns,
-                 EmpDist& frag_len_dist)
+                 EmpDist& frag_len_dist,
+                 bool progress_bar = true)
 {
 
 #if ASM_VERBOSE
 	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.\n");
 #else
-	ProgressBar p_bar("Inspecting reads and determining empirical fragment length distribution.",bundle_factory.ref_table().size());
+	ProgressBar p_bar;
+	if (progress_bar)
+	{
+		p_bar = ProgressBar("Inspecting reads and determining empirical fragment length distribution.",bundle_factory.ref_table().size());
+	}
 	char last_chrom[100];
 #endif
     map_mass = 0.0;
@@ -325,9 +330,12 @@ void inspect_map(BundleFactoryType& bundle_factory,
 #if ASM_VERBOSE
 		fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
 #else
+	if (progress_bar)
+	{
 		int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
 		p_bar.update(bundle_label_buf, inc_amt);
 		strncpy(last_chrom, chrom, 100);
+	}
 #endif
 		
         if (bad_introns != NULL)
@@ -547,10 +555,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
     //fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
     //fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
 #if !ASM_VERBOSE
-	p_bar.complete();
+	if (progress_bar) p_bar.complete();
 #endif
-	if (!has_pairs)
-		fprintf(stderr,"Reads are single-end. Defaulting to Gaussian with mean %d and std dev %d.\n", def_frag_len_mean, def_frag_len_std_dev);
    	
    	bundle_factory.num_bundles(num_bundles);
     bundle_factory.reset(); 

@@ -52,9 +52,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:o:r:T";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:M:o:r:T";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:o:r:T";
+const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:T";
 #endif
 
 
@@ -70,6 +70,7 @@ static struct option long_options[] = {
 {"labels",					required_argument,		 0,			 'L'},
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
+{"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"reference-seq",			required_argument,		 0,			 'r'},
 {"time-series",             no_argument,             0,			 'T'},
@@ -93,6 +94,7 @@ void print_usage()
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "--FDR						  False discovery rate used in testing                  [ default:   0.05 ]\n");
+	fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file                     \n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
 	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
     fprintf(stderr, "-L/--labels                  comma-separated list of condition labels\n");
@@ -159,6 +161,11 @@ int parse_options(int argc, char** argv)
 				{
 					max_phred_err_prob = 1.0;
 				}
+				break;
+			}
+			case 'M':
+			{
+				mask_gtf_filename = optarg;
 				break;
 			}
             case 'o':
@@ -480,7 +487,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
 
 }
 
-void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
+void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
@@ -547,9 +554,16 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
     if (ref_mRNAs.empty())
         return;
     
+    vector<shared_ptr<Scaffold> > mask_rnas;
+    if (mask_gtf)
+    {
+        ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
+    }
+    
     foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
         fac.set_ref_rnas(ref_mRNAs);
+        if (mask_gtf) fac.set_mask_rnas(mask_rnas);
     }
     
 #if ENABLE_THREADS
@@ -558,7 +572,9 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
     
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
-    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+	
+	ProgressBar p_bar("Inspecting maps and determining empirical fragment lenth distributions.",0);
+	foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
 #if ENABLE_THREADS	
         while(1)
@@ -635,18 +651,26 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	Tracking tracking;
 	
 	final_est_run = false;
-	while (fasta_dir != "") // Only run initial estimation if correcting bias
+	
+	if (fasta_dir != "") 
 	{
-        vector<shared_ptr<SampleAbundances> > abundances;
-        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
-        
-        if (!more_loci_remain)
-            break;
-        
+		p_bar = ProgressBar("Calculating initial abundance estimates.",bundle_factories[0].num_bundles());
+		while (1) // Only run initial estimation if correcting bias
+		{
+			p_bar.update("",1);
+			vector<shared_ptr<SampleAbundances> > abundances;
+			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
+			
+			if (!more_loci_remain)
+				break;
+		}
+		p_bar.complete();
 	}
+		
 	
 	if (fasta_dir != "")
 	{
+		int samp_num = 0;
 		foreach (ReplicatedBundleFactory& fac, bundle_factories)
 		{
 			fac.reset();
@@ -655,6 +679,9 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
 	}
 	
 	final_est_run = true;
+#if !ASM_VERBOSE        
+        p_bar = ProgressBar("Testing for differential expression and regulation in locus.", bundle_factories[0].num_bundles());
+#endif
 	while (true)
 	{
         vector<shared_ptr<SampleAbundances> > abundances;
@@ -682,12 +709,20 @@ void driver(FILE* ref_gtf, vector<string>& sam_hit_filename_lists, Outfiles& out
                 assert (s1.abundances()[j]->description() == s1.abundances()[j]->description());
             }
         }
-        
+
+#if ASM_VERBOSE        
         fprintf(stderr, "Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
-        
-        test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
+#else
+		char locus_buf[50];
+		strncpy(locus_buf, abundances.front()->locus_tag.c_str(),49);
+		p_bar.update(locus_buf, 1);
+#endif
+		test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
 	}
 	
+#if !ASM_VERBOSE
+	p_bar.complete();
+#endif
 	//double FDR = 0.05;
 	int total_iso_de_tests = 0;
 	
@@ -913,8 +948,20 @@ int main(int argc, char** argv)
 		ref_gtf = fopen(ref_gtf_filename.c_str(), "r");
 		if (!ref_gtf)
 		{
-			fprintf(stderr, "Error: cannot open GTF file %s for reading\n",
+			fprintf(stderr, "Error: cannot open reference GTF file %s for reading\n",
 					ref_gtf_filename.c_str());
+			exit(1);
+		}
+	}
+	
+	FILE* mask_gtf = NULL;
+	if (mask_gtf_filename != "")
+	{
+		mask_gtf = fopen(mask_gtf_filename.c_str(), "r");
+		if (!mask_gtf)
+		{
+			fprintf(stderr, "Error: cannot open mask GTF file %s for reading\n",
+					mask_gtf_filename.c_str());
 			exit(1);
 		}
 	}
@@ -1068,7 +1115,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.gene_fpkm_tracking_out = gene_fpkm_out;
 	
-    driver(ref_gtf, sam_hit_filenames, outfiles);
+    driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
 	
 	return 0;
 }

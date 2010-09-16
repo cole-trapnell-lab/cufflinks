@@ -142,6 +142,8 @@ public:
 	ReplicatedBundleFactory(const vector<shared_ptr<BundleFactory> >& factories)
     : _factories(factories) {}
 	
+	int num_bundles() { return _factories[0]->num_bundles(); }
+	
 	bool next_bundle(HitBundle& bundle_out)
     {
         vector<HitBundle*> bundles;
@@ -200,6 +202,7 @@ public:
     
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
+        int rep_num = 0;
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
 //            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
@@ -211,13 +214,13 @@ public:
 //            {
 //                *rg_props = *fac->read_group_properties();
 //            }
-            
+
             long double map_mass = 0.0;
             BadIntronTable bad_introns;
             
             shared_ptr<EmpDist> frag_len_dist(new EmpDist);
             
-            inspect_map(*fac, map_mass, NULL, *frag_len_dist);
+            inspect_map(*fac, map_mass, NULL, *frag_len_dist, false);
             
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             rg_props->frag_len_dist(frag_len_dist);
@@ -233,6 +236,7 @@ public:
 	
 	void learn_replicate_bias()
     {
+    	int rep_num = 0;
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
 			shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
@@ -250,6 +254,14 @@ public:
         foreach(shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_ref_rnas(mRNAs);
+        }
+    }
+    
+    void set_mask_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
+    {
+        foreach(shared_ptr<BundleFactory> fac, _factories)
+        {
+            fac->set_mask_rnas(mRNAs);
         }
     }
     

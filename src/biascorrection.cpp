@@ -542,7 +542,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 		}
 		startBiases[i] = startBias;
 		endBiases[i] = endBias;
-		//posBiases[i] = posBias;
+		posBiases[i] = posBias;
 	}
 }
 	

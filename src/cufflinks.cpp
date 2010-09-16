@@ -1069,7 +1069,7 @@ int main(int argc, char** argv)
 		ref_gtf = fopen(ref_gtf_filename.c_str(), "r");
 		if (!ref_gtf)
 		{
-			fprintf(stderr, "Error: cannot open GTF file %s for reading\n",
+			fprintf(stderr, "Error: cannot open reference GTF file %s for reading\n",
 					ref_gtf_filename.c_str());
 			exit(1);
 		}
@@ -1081,7 +1081,7 @@ int main(int argc, char** argv)
 		mask_gtf = fopen(mask_gtf_filename.c_str(), "r");
 		if (!mask_gtf)
 		{
-			fprintf(stderr, "Error: cannot open GTF file %s for reading\n",
+			fprintf(stderr, "Error: cannot open mask GTF file %s for reading\n",
 					mask_gtf_filename.c_str());
 			exit(1);
 		}
