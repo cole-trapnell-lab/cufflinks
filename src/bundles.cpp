@@ -98,10 +98,10 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				   bool loadSeqs,
 				   bool loadFPKM) 
 {
+
+	
 	if (loadSeqs)
-		fprintf(stderr,"Loading reference annotation and sequence\n");
-	else
-		fprintf(stderr,"Loading reference annotation\n");
+		ProgressBar p_bar("Loading reference annotation and sequence",0);
     
 	GList<GSeqData> ref_rnas;
 	

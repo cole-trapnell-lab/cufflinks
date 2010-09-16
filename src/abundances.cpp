@@ -568,7 +568,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 #if ASM_VERBOSE
 	fprintf(stderr, "Tossing likely garbage isoforms\n");
-#endif
 	
 	for (size_t i = 0; i < gammas.size(); ++i)
 	{
@@ -577,7 +576,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
 		}
 	}
-	
+#endif	
 	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
 	vector<double> filtered_gammas = gammas;
 	filter_junk_isoforms(filtered_transcripts, filtered_gammas);
@@ -605,6 +604,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 			  nr_alignments,
 			  filtered_gammas);
 	
+
+#if ASM_VERBOSE
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
 	{
 		if (isnan(filtered_gammas[i]))
@@ -613,7 +614,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		}
 	}
 	
-#if ASM_VERBOSE
 	fprintf(stderr, "Importance sampling posterior distribution\n");
 #endif
 	
@@ -637,7 +637,9 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(gammas[i]))
 		{
+#if ASM_VERBOSE
 			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
+#endif
 			success = false;
 		}
 	}
@@ -964,10 +966,10 @@ double EM (int N, int M, vector<double> & newP,
 		//printf("%.3f %.3f %.3f\n", newP[6], newP[7], newP[8]);
 		iter++;
 	}
-	
+#if ASM_VERBOSE	
 	if (iter == max_mle_iterations)
 		fprintf(stderr, "Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
-	
+#endif	
 	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
 	return newEll;
 }

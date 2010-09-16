@@ -9,6 +9,7 @@
 
 #include "biascorrection.h"
 #include "abundances.h"
+#include "progressbar.h"
 
 #include <iostream>
 #include <fstream>
@@ -65,65 +66,14 @@ void get_compatibility_list(const vector<shared_ptr<Scaffold> >& transcripts,
 	}
 }
 
-void map_frag_to_transcript(const Scaffold& transcript, const MateHit& hit, int& start, int& end, int& frag_len)
-{
-	
-	int trans_len = transcript.length();
-	
-	// Defaults will cause them to be ignored when they are unknown
-	start = trans_len;
-	end = trans_len;
-	
-	shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
-	
-	if (hit.is_pair())
-	{
-		pair<int,int> g_span = hit.genomic_outer_span();
-		pair<int,int> t_span = transcript.genomic_to_transcript_span(g_span);
-		start = t_span.first;
-		end = t_span.second;
-		frag_len = abs(end-start)+1;		
-	}
-	else if (hit.left_alignment()->antisense_align() && transcript.strand() != CUFF_REV 
-			 || !(hit.left_alignment()->antisense_align()) && transcript.strand() == CUFF_REV)
-	{
-		int g_end  = (transcript.strand()!=CUFF_REV) ? hit.right()-1:hit.left();
-		end = transcript.genomic_to_transcript_coord(g_end);
-		frag_len = min(frag_len_dist->mode(), end);
-	}
-	else
-	{
-		int g_start = (transcript.strand()!=CUFF_REV) ? hit.left():hit.right()-1;
-		start = transcript.genomic_to_transcript_coord(g_start);
-		if (start == trans_len) // Overhang
-			frag_len = min(frag_len_dist->mode(), trans_len);
-		else
-			frag_len = min(frag_len_dist->mode(), trans_len-start);
-	}
-	
-    // NOTE: if frag_len is actually less than the min of the distribution, 
-    // it probably means the read has a small overhang into an intron, and
-    // that overhang should have been remapped across that intron.  We need
-    // to tolerate cases like this, and can't ever report that the frag_len
-    // is less than the min of the distribution, else we will get divide-by-zero
-    // exceptions down the line.
-    frag_len = max(frag_len_dist->min(), frag_len);
-
-    if (start <= 0 || start > trans_len)
-		start = trans_len;
-	if (end <= 0 || end > trans_len)
-		end = trans_len;
-}
-
 void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 {
-	//bundle_factory.load_ref_rnas(true, true);
-
 	HitBundle bundle;
-	
-	int num_bundles = 0;
-
 	RefSequenceTable& rt = bundle_factory.ref_table();
+
+#if !ASM_VERBOSE
+	ProgressBar p_bar("Learning bias parameters.", bundle_factory.num_bundles());
+#endif
 
 	while(true)
 	{
@@ -137,32 +87,28 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		
 		HitBundle& bundle = *bundle_ptr;
 		
-		if (bundle.right() - bundle.left() > 3000000)
-		{
-			fprintf(stderr, "Warning: large bundle encountered...\n");
-		}
 		if (bundle.hits().size())
 		{
-			num_bundles++;
-
-			fprintf(stderr, "Learning bias[ %s:%d-%d ] with %d non-redundant alignments\n", 
-					rt.get_name(bundle.ref_id()),
-					bundle.left(),
-					bundle.right(),
-					(int)bundle.non_redundant_hits().size());
-			
-				
 			if (bundle.non_redundant_hits().size()==0)
 			{
 				delete bundle_ptr;
 				continue;
 			}
 
+			char bundle_label_buf[2048];
+			sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
+#if !ASM_VERBOSE
+			p_bar.update(bundle_label_buf, 1);
+#endif
 			process_bundle(bundle, bl);
 			
 		}
 		delete bundle_ptr;
 	}
+	
+#if !ASM_VERBOSE
+	p_bar.complete();
+#endif
 	bl.normalizeParameters();
 #if ADAM_MODE
 	bl.output();
@@ -216,7 +162,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 			int end;
 			int frag_len;
 			
-			map_frag_to_transcript(transcript, hit, start, end, frag_len);
+			transcript.map_frag(hit, start, end, frag_len);
 			
 			startHists[*it][start] += num_hits*transcript.fpkm()/locus_fpkm;
 			endHists[*it][end] += num_hits*transcript.fpkm()/locus_fpkm;
@@ -596,7 +542,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 		}
 		startBiases[i] = startBias;
 		endBiases[i] = endBias;
-		posBiases[i] = posBias;
+		//posBiases[i] = posBias;
 	}
 }
 	
@@ -680,7 +626,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	int frag_len;
 	int trans_len = _transcript->length();
 	
-	map_frag_to_transcript(*_transcript, hit, start, end, frag_len);
+	_transcript->map_frag(hit, start, end, frag_len);
 	
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];

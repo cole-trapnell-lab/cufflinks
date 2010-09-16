@@ -1110,6 +1110,58 @@ pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 	return make_pair(s_start, s_end);
 }
 
+// Returns true only when both the start and end are found
+// We can't use EmpDist unless it is unpaired since we call this function in inspect_bundle
+bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len) const
+{
+	
+	int trans_len = length();
+	
+	// Defaults will cause them to be ignored when they are unknown
+	start = trans_len;
+	end = trans_len;
+	
+	
+	if (hit.is_pair())
+	{
+		pair<int,int> g_span = hit.genomic_outer_span();
+		pair<int,int> t_span = genomic_to_transcript_span(g_span);
+		start = t_span.first;
+		end = t_span.second;
+		frag_len = abs(end-start)+1;		
+	}
+	else
+	{
+		shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
+
+		if (hit.left_alignment()->antisense_align() && strand() != CUFF_REV 
+			|| !(hit.left_alignment()->antisense_align()) && strand() == CUFF_REV)
+		{
+			int g_end  = (strand()!=CUFF_REV) ? hit.right()-1:hit.left();
+			end = genomic_to_transcript_coord(g_end);
+			frag_len = min(frag_len_dist->mode(), end);
+		}
+		else
+		{
+			int g_start = (strand()!=CUFF_REV) ? hit.left():hit.right()-1;
+			start = genomic_to_transcript_coord(g_start);
+			if (start == trans_len) // Overhang
+				frag_len = min(frag_len_dist->mode(), trans_len);
+			else
+				frag_len = min(frag_len_dist->mode(), trans_len-start);
+		}
+		frag_len = max(frag_len_dist->min(), frag_len);
+	}
+
+
+    if (start <= 0 || start > trans_len)
+		start = trans_len;
+	if (end <= 0 || end > trans_len)
+		end = trans_len;
+		
+	return (start != trans_len && end != trans_len);
+}
+
 int Scaffold::match_length(int left, int right) const
 {
 	int len = 0;

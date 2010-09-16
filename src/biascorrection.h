@@ -24,13 +24,8 @@ using namespace std;
 void get_compatibility_list(const vector<Scaffold>& transcripts,
 							const vector<MateHit>& alignments,
 							vector<list<int> >& compatibilities);
-void map_frag_to_transcript(const Scaffold& transcript, 
-							const MateHit& hit, 
-							int& start, int& end, int& frag_len);
-
 
 class BiasLearner{
-	
 	static const int pow4[];
 	static const int paramTypes[];
 	static const int MAX_SLICE;

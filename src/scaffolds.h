@@ -408,6 +408,7 @@ public:
 	
 	pair<int,int> genomic_to_transcript_span(pair<int,int> g_span) const;
 	int genomic_to_transcript_coord(int g_coord) const;
+	bool map_frag(const MateHit& hit, int& start, int& end, int& frag_len) const;
 
 	
 	static bool g_left_lt(const AugmentedCuffOp& lhs,

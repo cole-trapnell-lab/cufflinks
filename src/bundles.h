@@ -18,52 +18,7 @@
 #include "hits.h"
 #include "scaffolds.h"
 #include "gtf_tracking.h"
-
-class EmpDist
-{
-	vector<double> _pdf;
-	vector<double> _cdf;
-	int _mode;
-	int _max;
-	int _min;
-    double _mean;
-    double _std_dev;
-	
-public:
-	
-	void pdf(vector<double>& pdf)	{ _pdf = pdf; }
-	double pdf(int l) const
-	{
-		if (l >= _pdf.size() || l < 0)
-			return 0;
-		return _pdf[l];
-	}
-	
-	void cdf(vector<double>& cdf)	{ _cdf = cdf; }
-	double cdf(int l) const
-	{
-		if (l >= _cdf.size())
-			return 1;
-        if (l < 0)
-            return 0;
-		return _cdf[l];
-	}
-	
-	void mode(int mode)				{ _mode = mode; }
-	int mode() const				{ return _mode; }
-	
-	void max(int max)				{ _max = max;  }
-	int max() const					{ return _max; }
-	
-	void min(int min)				{ _min = min;  }
-	int min() const					{ return _min; }
-    
-    void mean(double mean)				{ _mean = mean;  }
-	double mean() const					{ return _mean; }
-    
-    void std_dev(double std_dev)				{ _std_dev = std_dev;  }
-	double std_dev() const					{ return _std_dev; }
-};
+#include "progressbar.h"
 
 struct BundleStats
 {		
@@ -223,6 +178,10 @@ public:
     
     RefSequenceTable& ref_table() { return _hit_fac->ref_table(); }
     
+    // Not available until after inspect_bundle
+    int num_bundles() const { return _num_bundles; }
+    void num_bundles(int n) { _num_bundles = n; }
+    
 	void reset() 
 	{ 
 		//rewind(hit_file); 
@@ -317,6 +276,7 @@ private:
     bool _ref_driven;
     int _prev_pos;
     RefID _prev_ref_id;
+    int _num_bundles;
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
@@ -328,15 +288,20 @@ void inspect_map(BundleFactoryType& bundle_factory,
                  BadIntronTable* bad_introns,
                  EmpDist& frag_len_dist)
 {
+
+#if ASM_VERBOSE
 	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.\n");
-    
+#else
+	ProgressBar p_bar("Inspecting reads and determining empirical fragment length distribution.",bundle_factory.ref_table().size());
+	char last_chrom[100];
+#endif
     map_mass = 0.0;
     int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;
     vector<double> frag_len_hist(def_max_frag_len+1,0);
-	list<pair<int, int> > open_ranges;
     bool has_pairs = false;
     
+    int num_bundles = 0;
     size_t total_hits = 0;
     size_t total_non_redundant_hits = 0;
 	
@@ -349,19 +314,20 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			delete bundle_ptr;
 			break;
 		}
-		
+		num_bundles++;
+
 		HitBundle& bundle = *bundle_ptr;
-		
-#if (ASM_VERBOSE || ADAM_MODE)
-        const RefSequenceTable& rt = bundle_factory.ref_table();
-        const char* chrom = rt.get_name(bundle.ref_id());
-        char bundle_label_buf[2048];
-        sprintf(bundle_label_buf, 
-                "%s:%d-%d",
-                chrom,
-                bundle.left(),
-                bundle.right());
-        fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
+
+		const RefSequenceTable& rt = bundle_factory.ref_table();
+		const char* chrom = rt.get_name(bundle.ref_id());	
+		char bundle_label_buf[2048];
+		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
+#if ASM_VERBOSE
+		fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
+#else
+		int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
+		p_bar.update(bundle_label_buf, inc_amt);
+		strncpy(last_chrom, chrom, 100);
 #endif
 		
         if (bad_introns != NULL)
@@ -376,9 +342,11 @@ void inspect_map(BundleFactoryType& bundle_factory,
             continue;
         }
 		
+		list<pair<int, int> > open_ranges;
 		int curr_range_start = hits[0].left();
 		int curr_range_end = numeric_limits<int>::max();
 		int next_range_start = -1;
+		
 		
         total_non_redundant_hits += bundle.non_redundant_hits().size();
         total_hits += bundle.hits().size();
@@ -386,36 +354,49 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		// This first loop calclates the map mass and finds ranges with no introns
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
-  			map_mass += hits[i].collapse_mass(); 
+			map_mass += hits[i].collapse_mass(); 
             
+            assert(hits[i].left_alignment());
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())
 				min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
             
-			
-			if (hits[i].left() > curr_range_end)
+			if (bundle.ref_scaffolds().size()==1 && hits[i].is_pair()) // Annotation provided and single isoform gene.
 			{
-				if (curr_range_end - curr_range_start > max_len)
-					open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
-				curr_range_start = next_range_start;
-				curr_range_end = numeric_limits<int>::max();
+				int start, end, mate_length;
+				shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
+				if (scaff->map_frag(hits[i], start, end, mate_length))
+				{
+					if (mate_length < max_len)
+						frag_len_hist[mate_length] += hits[i].collapse_mass();
+				}
 			}
-			if (hits[i].left_alignment()->contains_splice())
+			else
 			{
-				if (hits[i].left() - curr_range_start > max_len)
-					open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
-				curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
-			}
-			if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
-			{
-				has_pairs = true;
-				assert(hits[i].right_alignment()->left() > hits[i].left());
-				curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
-				next_range_start = max(next_range_start, hits[i].right());
+				if (hits[i].left() > curr_range_end)
+				{
+					if (curr_range_end - curr_range_start > max_len)
+						open_ranges.push_back(make_pair(curr_range_start, curr_range_end));
+					curr_range_start = next_range_start;
+					curr_range_end = numeric_limits<int>::max();
+				}
+				if (hits[i].left_alignment()->contains_splice())
+				{
+					if (hits[i].left() - curr_range_start > max_len)
+						open_ranges.push_back(make_pair(curr_range_start, hits[i].left()-1));
+					curr_range_start = max(next_range_start, hits[i].left_alignment()->right());
+				}
+				if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
+				{
+					has_pairs = true;
+					assert(hits[i].right_alignment()->left() > hits[i].left());
+					curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
+					next_range_start = max(next_range_start, hits[i].right());
+				}
 			}
 		}
         
-        if (has_pairs)
+        if (bundle.ref_scaffolds().empty() && has_pairs) // No annotation provided
 		{
 			pair<int, int> curr_range(-1,-1);
 			
@@ -437,8 +418,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 					int mate_len = hits[i].right()-hits[i].left();
 					if (mate_len < max_len)
 						frag_len_hist[mate_len] += hits[i].collapse_mass();
-					min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
-					min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
 				}
 			}
 		}
@@ -567,10 +546,14 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
     //fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
     //fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
-    
-    
-    bundle_factory.reset();
-    
+#if !ASM_VERBOSE
+	p_bar.complete();
+#endif
+	if (!has_pairs)
+		fprintf(stderr,"Reads are single-end. Defaulting to Gaussian with mean %d and std dev %d.\n", def_frag_len_mean, def_frag_len_std_dev);
+   	
+   	bundle_factory.num_bundles(num_bundles);
+    bundle_factory.reset(); 
    	return;
 }
 

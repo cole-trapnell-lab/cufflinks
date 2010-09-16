@@ -453,6 +453,7 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 }
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
+	rewind(f);
 	GffReader* gffr=new GffReader(f, true);
     //          keepAttrs   mergeCloseExons   noExonAttrs
 	gffr->readAll(true,          true,        true);

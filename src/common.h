@@ -9,6 +9,8 @@
  *
  */
 
+using namespace std;
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -75,7 +77,7 @@ extern double binomial_junc_filter_alpha;
 
 extern std::string library_type;
 
-#define ADAM_MODE 1
+#define ADAM_MODE 0
 #define ENABLE_THREADS 1
 
 #if ENABLE_THREADS
@@ -140,9 +142,52 @@ enum Platform
     SOLID
 };
 
-extern std::string default_library_type;
+class EmpDist
+{
+	vector<double> _pdf;
+	vector<double> _cdf;
+	int _mode;
+	int _max;
+	int _min;
+    double _mean;
+    double _std_dev;
+	
+public:
+	
+	void pdf(vector<double>& pdf)	{ _pdf = pdf; }
+	double pdf(int l) const
+	{
+		if (l >= _pdf.size() || l < 0)
+			return 0;
+		return _pdf[l];
+	}
+	
+	void cdf(vector<double>& cdf)	{ _cdf = cdf; }
+	double cdf(int l) const
+	{
+		if (l >= _cdf.size())
+			return 1;
+        if (l < 0)
+            return 0;
+		return _cdf[l];
+	}
+	
+	void mode(int mode)				{ _mode = mode; }
+	int mode() const				{ return _mode; }
+	
+	void max(int max)				{ _max = max;  }
+	int max() const					{ return _max; }
+	
+	void min(int min)				{ _min = min;  }
+	int min() const					{ return _min; }
+    
+    void mean(double mean)				{ _mean = mean;  }
+	double mean() const					{ return _mean; }
+    
+    void std_dev(double std_dev)				{ _std_dev = std_dev;  }
+	double std_dev() const					{ return _std_dev; }
+};
 
-class EmpDist;
 class BiasLearner;
 
 class ReadGroupProperties

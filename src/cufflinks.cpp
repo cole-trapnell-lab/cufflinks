@@ -640,11 +640,13 @@ void assemble_bundle(const RefSequenceTable& rt,
 #else
     bundle_label = shared_ptr<string>(new string(bundle_label_buf));
 #endif
-    
+
+#if ASM_VERBOSE
     fprintf(stderr, "%s\tProcessing new bundle with %d alignments\n", 
             bundle_label->c_str(),
             (int)bundle.hits().size());
-    
+#endif
+
 #if ENABLE_THREADS	
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
@@ -792,6 +794,16 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tstatus\n");
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
     
+#if !ASM_VERBOSE
+	string process;
+	if (ref_gtf_filename != "" && fasta_dir != "" && final_est_run)
+		process = "Re-estimating abundances with bias correction.";
+	else if (ref_gtf_filename != "")
+		process = "Calculating estimated abundances.";
+	else
+		process = "Assembling transcripts and estimating abundances.";
+	ProgressBar p_bar(process, bundle_factory.num_bundles());
+#endif
 	while(true)
 	{
 		HitBundle* bundle_ptr = new HitBundle();
@@ -804,58 +816,68 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		
 		HitBundle& bundle = *bundle_ptr;
 
+		char bundle_label_buf[2048];
+		sprintf(bundle_label_buf, 
+				"%s:%d-%d", 
+				rt.get_name(bundle.ref_id()),
+				bundle.left(),
+				bundle.right());
+
+#if ASM_VERBOSE				
 		if (bundle.right() - bundle.left() > 3000000)
 		{
-            char bundle_label_buf[2048];
-            sprintf(bundle_label_buf, 
-                    "%d-%d", 
-                    bundle.left(),
-                    bundle.right());
 			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
-
-        BundleStats stats;
-        num_bundles++;
-#if ENABLE_THREADS			
-        while(1)
-        {
-            thread_pool_lock.lock();
-            if (curr_threads < num_threads)
-            {
-                thread_pool_lock.unlock();
-                break;
-            }
-            
-            thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
 #endif
-        
+		BundleStats stats;
+		num_bundles++;
 #if ENABLE_THREADS			
-        thread_pool_lock.lock();
-        curr_threads++;
-        thread_pool_lock.unlock();
-        
-        thread asmbl(assemble_bundle,
-                     boost::cref(rt), 
-                     bundle_ptr, 
-                     bundle_factory.read_group_properties()->total_map_mass(),
-                     ftranscripts, 
-                     fgene_abundances,
-                     ftrans_abundances);
+		while(1)
+		{
+			thread_pool_lock.lock();
+			if (curr_threads < num_threads)
+			{
+				thread_pool_lock.unlock();
+				break;
+			}
+
+			thread_pool_lock.unlock();
+			
+			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+			
+		}
+#endif
+	
+#if ENABLE_THREADS			
+		thread_pool_lock.lock();
+		curr_threads++;
+
+#if !ASM_VERBOSE
+		p_bar.update(bundle_label_buf, 1);	
+#endif
+		thread_pool_lock.unlock();
+		
+		thread asmbl(assemble_bundle,
+					 boost::cref(rt), 
+					 bundle_ptr, 
+					 bundle_factory.read_group_properties()->total_map_mass(),
+					 ftranscripts, 
+					 fgene_abundances,
+					 ftrans_abundances);
 #else
-        assemble_bundle(boost::cref(rt), 
-                        bundle_ptr, 
-                        bundle_factory.read_group_properties()->total_map_mass(),
-                        ftranscripts,
-                        fgene_abundances,
-                        ftrans_abundances);
+#if !ASM_VERBOSE
+		p_bar.update(bundle_label_buf, 1);	
+#endif
+		assemble_bundle(boost::cref(rt), 
+						bundle_ptr, 
+						bundle_factory.read_group_properties()->total_map_mass(),
+						ftranscripts,
+						fgene_abundances,
+						ftrans_abundances);
 #endif			
-            
+		
 	}
-    
+
 #if ENABLE_THREADS	
 	while(1)
 	{
@@ -871,7 +893,10 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 	}
 #endif
-    
+	
+#if !ASM_VERBOSE
+	p_bar.complete();
+#endif
 	return true;
 }
 	
@@ -902,7 +927,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory bundle_factory(hit_factory);
+	BundleFactory* bf_pointer = new BundleFactory(hit_factory);
+	BundleFactory& bundle_factory = *bf_pointer;
 	
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
@@ -979,6 +1005,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     }
     
 	hit_factory->reset();
+	int num_bundles = bundle_factory.num_bundles();
+	delete bf_pointer;
+	bf_pointer = new BundleFactory(hit_factory);
+	bundle_factory = *bf_pointer;
+	bundle_factory.num_bundles(num_bundles);
 
 #if ADAM_MODE
 	ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
@@ -986,37 +1017,30 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
 #endif
 
-	BundleFactory bundle_factory2(hit_factory);
-    
     if (ref_gtf)
     {
         ref_mRNAs.clear();
-        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, true, true);
-        bundle_factory2.set_ref_rnas(ref_mRNAs);
+        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, true, true);
+        bundle_factory.set_ref_rnas(ref_mRNAs);
     }
     
     if (mask_gtf)
     {
         mask_rnas.clear();
-        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
-        bundle_factory2.set_mask_rnas(mask_rnas);
+        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
+        bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    bundle_factory2.read_group_properties(rg_props);
+    bundle_factory.read_group_properties(rg_props);
     
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
-	learn_bias(bundle_factory2, *bl);
+	learn_bias(bundle_factory, *bl);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
 	
-	bundle_factory2.reset();
-	
-//#if ENABLE_THREADS
-//	boost::thread asm_requant_thread(assemble_hits, bundle_factory2, &bl);
-//	asm_requant_thread.join();
-//#else	
+	bundle_factory.reset();
+
 	final_est_run = true;
-	assemble_hits(bundle_factory2);
-//#endif
+	assemble_hits(bundle_factory);
 }
 
 int main(int argc, char** argv)
