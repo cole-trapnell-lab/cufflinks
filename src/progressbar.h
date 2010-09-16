@@ -13,6 +13,7 @@ class ProgressBar
 	string _process;
 	int _num_complete;
 	int _tot_num;
+	int _num_updates;
 public:
 	ProgressBar() {}
 	
@@ -41,6 +42,7 @@ public:
 	void update(char* bundle_label_buf, int inc_amt)
 	{
 		_num_complete += inc_amt;
+		_num_updates ++;
 		int percent = (_num_complete * 100)/_tot_num;	
 		int last_bar = percent/(100/(BAR_BUF_SIZE-3));
 		for (int i=1; i <= last_bar; ++i)
@@ -48,7 +50,7 @@ public:
 		
 		char line_buf[81];
 		bundle_label_buf[28] = '\0';
-		sprintf(line_buf, "\r> Processing Locus %-28s %s %3d%%", bundle_label_buf, _bar_buf, percent);
+		snprintf(line_buf, 81, "\r> Processing Locus %-27s %s %3d%%", bundle_label_buf, _bar_buf, percent);
 		fprintf(stderr,"%s",line_buf);
 	}
 	
@@ -56,7 +58,9 @@ public:
 	{
 		for (int i=1; i < BAR_BUF_SIZE-2; ++i)
 			_bar_buf[i] = SYMBOL;
-		fprintf(stderr, "\r> %-45s %s %3d%%\n", "Completed", _bar_buf, 100);
+		char complete_buf[46];
+		snprintf(complete_buf, 46, "Processed %d loci.", _num_updates); 
+		fprintf(stderr, "\r> %-44s %s %3d%%\n", complete_buf, _bar_buf, 100);
 	}
 };
 
