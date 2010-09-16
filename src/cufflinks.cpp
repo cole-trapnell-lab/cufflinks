@@ -968,7 +968,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	
 	max_frag_len = frag_len_dist->max();
 	min_frag_len = frag_len_dist->min();
-	asm_printf(stderr, "\tTotal map density: %Lf\n", map_mass);
+	asm_printf("\tTotal map density: %Lf\n", map_mass);
 
 	if (fasta_dir != "") final_est_run = false;
 #if ADAM_MODE
