@@ -558,25 +558,22 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	vector<double> gammas;
 	
-#if ASM_VERBOSE
-	fprintf(stderr, "Calculating intial MLE\n");
-#endif	
+	asm_printf( "Calculating intial MLE\n");
 	
 	gamma_mle(mapped_transcripts,
 			  nr_alignments,
 			  gammas);
 	
-#if ASM_VERBOSE
-	fprintf(stderr, "Tossing likely garbage isoforms\n");
+	asm_printf( "Tossing likely garbage isoforms\n");
 	
 	for (size_t i = 0; i < gammas.size(); ++i)
 	{
 		if (isnan(gammas[i]))
 		{
-			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
+			asm_printf( "Warning: isoform abundance is NaN!\n");
 		}
 	}
-#endif	
+	
 	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
 	vector<double> filtered_gammas = gammas;
 	filter_junk_isoforms(filtered_transcripts, filtered_gammas);
@@ -595,30 +592,25 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	filtered_gammas.clear();
 	
-
-#if ASM_VERBOSE
-	fprintf(stderr, "Revising MLE\n");
-#endif
+	asm_printf( "Revising MLE\n");
 	
 	gamma_mle(filtered_transcripts,
 			  nr_alignments,
 			  filtered_gammas);
 	
 
-#if ASM_VERBOSE
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
 	{
 		if (isnan(filtered_gammas[i]))
 		{
-			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
+			asm_printf("Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
-	fprintf(stderr, "Importance sampling posterior distribution\n");
-#endif
+	asm_printf( "Importance sampling posterior distribution\n");
 	
 	bool success = true;
-	int N = transcripts.size();
+	size_t N = transcripts.size();
 	
 	if (final_est_run) // Only on last estimation run.
 	{
@@ -637,9 +629,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(gammas[i]))
 		{
-#if ASM_VERBOSE
-			fprintf(stderr, "Warning: isoform abundance is NaN!\n");
-#endif
+			asm_printf( "Warning: isoform abundance is NaN!\n");
 			success = false;
 		}
 	}
@@ -966,10 +956,8 @@ double EM (int N, int M, vector<double> & newP,
 		//printf("%.3f %.3f %.3f\n", newP[6], newP[7], newP[8]);
 		iter++;
 	}
-#if ASM_VERBOSE	
 	if (iter == max_mle_iterations)
-		fprintf(stderr, "Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
-#endif	
+		asm_printf( "Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
 	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
 	return newEll;
 }
@@ -1890,9 +1878,6 @@ double major_isoform_intron_doc(map<pair<int, int>, int>& intron_doc)
 		
 		if (heaviest)
 		{
-#if ASM_VERBOSE
-			//fprintf (stderr, "[%d-%d]: %d might be a major isoform intron\n", itr->first.first, itr->first.second, itr->second);
-#endif
 			major_isoform_intron_doc += itr->second;
 			num_major_introns++;
 		}
@@ -1975,7 +1960,6 @@ double get_intron_doc(const Scaffold& s,
 			pair<int,int> op_intron(op.g_left(), op.g_right());
 			map<pair<int, int>, int >::const_iterator itr = intron_depth_of_coverage.find(op_intron);
 			//			assert (itr != intron_depth_of_coverage.end());
-#if ASM_VERBOSE
 			if (itr == intron_depth_of_coverage.end())
 			{
 				map<pair<int, int>, int >::const_iterator zi;
@@ -1983,10 +1967,10 @@ double get_intron_doc(const Scaffold& s,
 					 zi != intron_depth_of_coverage.end();
 					 ++zi)
 				{
-					fprintf(stderr, "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
+					asm_printf( "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
 				}
 			}
-#endif
+
 			doc += itr->second;
 		}
 	}	

@@ -327,7 +327,7 @@ public:
 		if (_seq != "")
 		{
 			int count = 0;
-			for(int i = 0; i < _seq.length(); ++i)
+			for(size_t i = 0; i < _seq.length(); ++i)
 			{
 				if (_seq[i] == 'G' or _seq[i] == 'g' or _seq[i] == 'C' or _seq[i] == 'c')
 					count ++;

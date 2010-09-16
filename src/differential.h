@@ -202,7 +202,6 @@ public:
     
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
-        int rep_num = 0;
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
 //            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
@@ -236,8 +235,7 @@ public:
 	
 	void learn_replicate_bias()
     {
-    	int rep_num = 0;
-        foreach (shared_ptr<BundleFactory> fac, _factories)
+    	foreach (shared_ptr<BundleFactory> fac, _factories)
         {
 			shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
 			BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());

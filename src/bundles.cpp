@@ -1231,8 +1231,7 @@ void minor_introns(int bundle_length,
 											itr->first);
 				if (!exists)
 				{
-#if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads based on overlap with much more abundant intron: %d-%d spanned by %lu reads\n", 
+					asm_printf("Filtering intron %d-%d spanned by %lu reads based on overlap with much more abundant intron: %d-%d spanned by %lu reads\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads,
@@ -1240,7 +1239,6 @@ void minor_introns(int bundle_length,
 							itr2->first.g_right(), 
 							itr2->second.total_reads);
 					
-#endif
 					bad_introns.push_back(itr->first);
 					sort(bad_introns.begin(), bad_introns.end());
 				}
@@ -1291,14 +1289,12 @@ void multimapping_introns(int bundle_length,
 										itr->first);
 			if (!exists)
 			{
-	#if ASM_VERBOSE
-				fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads because %lg percent are multireads.\n", 
+				asm_printf("Filtering intron %d-%d spanned by %lu reads because %lg percent are multireads.\n", 
 						itr->first.g_left(), 
 						itr->first.g_right(), 
 						itr->second.total_reads,
 						multi_fraction * 100);
 				
-	#endif
 				bad_introns.push_back(itr->first);
 				sort(bad_introns.begin(), bad_introns.end());
 			}
@@ -1371,9 +1367,8 @@ void identify_bad_splices(const HitBundle& bundle,
 			}
 			
 			double left_side_p = 0;
-#if ASM_VERBOSE
 			double expected = success * spans.total_reads;
-#endif
+
             //double excess = spans.little_reads - expected;
 			
 			// left_side_p describes the chance that we'd observe this few or
@@ -1405,8 +1400,7 @@ void identify_bad_splices(const HitBundle& bundle,
 				double overhang_ratio = counter.little_reads / (double) counter.total_reads;
 				if (counter.total_reads < 100 || overhang_ratio >= 0.50)
 				{
-#if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+					asm_printf("Filtering intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads, 
@@ -1414,8 +1408,6 @@ void identify_bad_splices(const HitBundle& bundle,
 							expected,
 							left_side_p,
 							right_side_p);
-					
-#endif
 					filtered = true;
 					
 					bool exists = binary_search(bad_introns.begin(), 
@@ -1436,8 +1428,7 @@ void identify_bad_splices(const HitBundle& bundle,
 				size_t median = (size_t)floor(hist.size() / 2);
 				if (median <= hist.size() && hist[median] == 0)
 				{
-#if ASM_VERBOSE
-					fprintf(stderr, "Filtering intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+					asm_printf("Filtering intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 							itr->first.g_left(), 
 							itr->first.g_right(), 
 							itr->second.total_reads, 
@@ -1446,7 +1437,6 @@ void identify_bad_splices(const HitBundle& bundle,
 							left_side_p,
 							right_side_p);
 					
-#endif
 					filtered = true;
 					
 					bool exists = binary_search(bad_introns.begin(), 
@@ -1462,8 +1452,7 @@ void identify_bad_splices(const HitBundle& bundle,
 			
 			if (!filtered)
 			{
-#if ASM_VERBOSE
-				fprintf(stderr, "Accepting intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
+				asm_printf("Accepting intron %d-%d spanned by %lu reads (%lu low overhang, %lg expected) left P = %lg, right P = %lg\n", 
 						itr->first.g_left(), 
 						itr->first.g_right(), 
 						itr->second.total_reads, 
@@ -1471,7 +1460,6 @@ void identify_bad_splices(const HitBundle& bundle,
 						expected,
 						left_side_p,
 						right_side_p);
-#endif
 				
 			}
 		}

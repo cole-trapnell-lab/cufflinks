@@ -71,9 +71,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 	HitBundle bundle;
 	RefSequenceTable& rt = bundle_factory.ref_table();
 
-#if !ASM_VERBOSE
 	ProgressBar p_bar("Learning bias parameters.", bundle_factory.num_bundles());
-#endif
 
 	while(true)
 	{
@@ -97,18 +95,14 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 
 			char bundle_label_buf[2048];
 			sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
-#if !ASM_VERBOSE
 			p_bar.update(bundle_label_buf, 1);
-#endif
 			process_bundle(bundle, bl);
 			
 		}
 		delete bundle_ptr;
 	}
 	
-#if !ASM_VERBOSE
 	p_bar.complete();
-#endif
 	bl.normalizeParameters();
 #if ADAM_MODE
 	bl.output();

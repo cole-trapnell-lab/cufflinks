@@ -387,13 +387,9 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	}
 	
 	{
-#if ASM_VERBOSE
-		fprintf (stderr, "%s\tFiltering forward strand\n", bundle_label->c_str());
-#endif
+		asm_printf ("%s\tFiltering forward strand\n", bundle_label->c_str());
 		filter_hits(bundle.length(), bundle.left(), fwd_hits);
-#if ASM_VERBOSE
-		fprintf (stderr, "%s\tFiltering reverse strand\n", bundle_label->c_str());
-#endif
+		asm_printf ("%s\tFiltering reverse strand\n", bundle_label->c_str());
 		filter_hits(bundle.length(), bundle.left(), rev_hits);
 	}
     
@@ -614,9 +610,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	{
 		quantitate_transcript_cluster(cluster, total_map_mass, genes);
 	}
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tBundle quantitation complete\n", bundle_label->c_str());
-#endif
+    asm_printf( "%s\tBundle quantitation complete\n", bundle_label->c_str());
 }
 
 void assemble_bundle(const RefSequenceTable& rt,
@@ -641,11 +635,9 @@ void assemble_bundle(const RefSequenceTable& rt,
     bundle_label = shared_ptr<string>(new string(bundle_label_buf));
 #endif
 
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tProcessing new bundle with %d alignments\n", 
+    asm_printf( "%s\tProcessing new bundle with %d alignments\n", 
             bundle_label->c_str(),
             (int)bundle.hits().size());
-#endif
 
 #if ENABLE_THREADS	
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -673,9 +665,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 								   map_mass,
 								   genes);
     
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tFiltering bundle assembly\n", bundle_label->c_str());
-#endif
+    asm_printf( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
     
 	if (allow_junk_filtering)
 		filter_junk_genes(genes);
@@ -763,9 +753,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 		exit(1);
 	}
 	
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tBundle complete\n", bundle_label->c_str());
-#endif
+    asm_printf( "%s\tBundle complete\n", bundle_label->c_str());
     
 #if ENABLE_THREADS
 	out_file_lock.unlock();
@@ -794,7 +782,6 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tstatus\n");
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
     
-#if !ASM_VERBOSE
 	string process;
 	if (ref_gtf_filename != "" && fasta_dir != "" && final_est_run)
 		process = "Re-estimating abundances with bias correction.";
@@ -803,7 +790,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	else
 		process = "Assembling transcripts and estimating abundances.";
 	ProgressBar p_bar(process, bundle_factory.num_bundles());
-#endif
+
 	while(true)
 	{
 		HitBundle* bundle_ptr = new HitBundle();
@@ -823,12 +810,11 @@ bool assemble_hits(BundleFactory& bundle_factory)
 				bundle.left(),
 				bundle.right());
 
-#if ASM_VERBOSE				
 		if (bundle.right() - bundle.left() > 3000000)
 		{
-			fprintf(stderr, "%s\tWarning: large bundle encountered\n", bundle_label_buf);
+			asm_printf( "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
-#endif
+
 		BundleStats stats;
 		num_bundles++;
 #if ENABLE_THREADS			
@@ -848,13 +834,11 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		}
 #endif
 	
+		p_bar.update(bundle_label_buf, 1);	
+
 #if ENABLE_THREADS			
 		thread_pool_lock.lock();
 		curr_threads++;
-
-#if !ASM_VERBOSE
-		p_bar.update(bundle_label_buf, 1);	
-#endif
 		thread_pool_lock.unlock();
 		
 		thread asmbl(assemble_bundle,
@@ -865,9 +849,6 @@ bool assemble_hits(BundleFactory& bundle_factory)
 					 fgene_abundances,
 					 ftrans_abundances);
 #else
-#if !ASM_VERBOSE
-		p_bar.update(bundle_label_buf, 1);	
-#endif
 		assemble_bundle(boost::cref(rt), 
 						bundle_ptr, 
 						bundle_factory.read_group_properties()->total_map_mass(),
@@ -894,9 +875,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	}
 #endif
 	
-#if !ASM_VERBOSE
 	p_bar.complete();
-#endif
 	return true;
 }
 	
@@ -927,8 +906,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory* bf_pointer = new BundleFactory(hit_factory);
-	BundleFactory& bundle_factory = *bf_pointer;
+	BundleFactory* bf_ptr = new BundleFactory(hit_factory);
+	BundleFactory& bundle_factory = *bf_ptr;
 	
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
@@ -957,9 +936,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
     }
     
-    fprintf(stderr, "%d ReadHits still live\n", num_deleted);
-    
-    fprintf(stderr, "Found %lu reference contigs\n", rt.size());
+    asm_printf("%d ReadHits still live\n", num_deleted);
+    asm_printf("Found %lu reference contigs\n", rt.size());
     
     foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
     {
@@ -990,7 +968,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	
 	max_frag_len = frag_len_dist->max();
 	min_frag_len = frag_len_dist->min();
-	fprintf(stderr, "\tTotal map density: %Lf\n", map_mass);
+	asm_printf(stderr, "\tTotal map density: %Lf\n", map_mass);
 
 	if (fasta_dir != "") final_est_run = false;
 #if ADAM_MODE
@@ -1006,9 +984,9 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
 	hit_factory->reset();
 	int num_bundles = bundle_factory.num_bundles();
-	delete bf_pointer;
-	bf_pointer = new BundleFactory(hit_factory);
-	bundle_factory = *bf_pointer;
+	//delete bf_ptr;
+	bf_ptr = new BundleFactory(hit_factory);
+	bundle_factory = *bf_ptr;
 	bundle_factory.num_bundles(num_bundles);
 
 #if ADAM_MODE

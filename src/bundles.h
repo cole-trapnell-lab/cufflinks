@@ -15,6 +15,7 @@
 #include <boost/bind.hpp>
 #include <vector>
 #include <numeric>
+#include "common.h"
 #include "hits.h"
 #include "scaffolds.h"
 #include "gtf_tracking.h"
@@ -290,16 +291,13 @@ void inspect_map(BundleFactoryType& bundle_factory,
                  bool progress_bar = true)
 {
 
-#if ASM_VERBOSE
-	fprintf(stderr, "Inspecting reads and determining empirical fragment length distribution.\n");
-#else
 	ProgressBar p_bar;
 	if (progress_bar)
 	{
-		p_bar = ProgressBar("Inspecting reads and determining empirical fragment length distribution.",bundle_factory.ref_table().size());
+		p_bar = ProgressBar("Inspecting reads determining fragment length distribution.",bundle_factory.ref_table().size());
 	}
+
 	char last_chrom[100];
-#endif
     map_mass = 0.0;
     int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;
@@ -327,16 +325,15 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		const char* chrom = rt.get_name(bundle.ref_id());	
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
-#if ASM_VERBOSE
-		fprintf(stderr, "Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-#else
-	if (progress_bar)
-	{
-		int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
-		p_bar.update(bundle_label_buf, inc_amt);
-		strncpy(last_chrom, chrom, 100);
-	}
-#endif
+
+		asm_printf("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
+
+		if (progress_bar)
+		{
+			int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
+			p_bar.update(bundle_label_buf, inc_amt);
+			strncpy(last_chrom, chrom, 100);
+		}
 		
         if (bad_introns != NULL)
         {
@@ -457,10 +454,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
             num_introns += itr->second.size();
         }
         
-    #if ASM_VERBOSE
-        fprintf(stderr, "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
-    #endif
-        fprintf(stderr, "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
+        asm_printf( "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+    	asm_printf( "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
     } 
     
     long double tot_count = 0;
@@ -483,8 +478,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	else 
 	{	
 		double curr_total = 0;
-		int last_nonzero = min_len-1;
-		for(int i = 1; i < frag_len_hist.size(); i++)
+		size_t last_nonzero = min_len-1;
+		for(size_t i = 1; i < frag_len_hist.size(); i++)
 		{
 			if (frag_len_hist[i] > 0)
 			{
@@ -492,7 +487,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				{
 					double b = frag_len_hist[last_nonzero];
 					double m = (frag_len_hist[i] - b)/(i-last_nonzero);
-					for (int x = 1; x < i - last_nonzero; x++)
+					for (size_t x = 1; x < i - last_nonzero; x++)
 					{
 						frag_len_hist[last_nonzero+x] = m * x + b;
 						tot_count += frag_len_hist[last_nonzero+x];
@@ -526,7 +521,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 
 	// Convert histogram to pdf and cdf, calculate mean
 	int frag_len_mode = 0;
-	for(int i = 1; i < frag_len_hist.size(); i++)
+	for(size_t i = 1; i < frag_len_hist.size(); i++)
 	{
 		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
 		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
@@ -537,7 +532,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	}
     
     double std_dev =  0.0;
-    for(int i = 1; i < frag_len_hist.size(); i++)
+    for(size_t i = 1; i < frag_len_hist.size(); i++)
     {
         std_dev += frag_len_pdf[i] * ((i - mean) * (i - mean));
     }
@@ -554,9 +549,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
     //fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
     //fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
-#if !ASM_VERBOSE
 	if (progress_bar) p_bar.complete();
-#endif
    	
    	bundle_factory.num_bundles(num_bundles);
     bundle_factory.reset(); 

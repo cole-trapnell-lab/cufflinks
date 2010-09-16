@@ -573,7 +573,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
 	
-	ProgressBar p_bar("Inspecting maps and determining empirical fragment lenth distributions.",0);
+	ProgressBar p_bar("Inspecting maps and determining fragment lenth distributions.",0);
 	foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
 #if ENABLE_THREADS	
@@ -670,7 +670,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	if (fasta_dir != "")
 	{
-		int samp_num = 0;
 		foreach (ReplicatedBundleFactory& fac, bundle_factories)
 		{
 			fac.reset();
@@ -713,9 +712,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 #if ASM_VERBOSE        
         fprintf(stderr, "Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
 #else
-		char locus_buf[50];
-		strncpy(locus_buf, abundances.front()->locus_tag.c_str(),49);
-		p_bar.update(locus_buf, 1);
+		p_bar.update(abundances.front()->locus_tag.c_str(), 1);
 #endif
 		test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
 	}

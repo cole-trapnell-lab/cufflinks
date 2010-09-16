@@ -15,6 +15,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <stdarg.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -98,11 +99,23 @@ bool gaurd_assembly()
 	return ref_gtf_filename == "";
 }
 
+void asm_printf(const char* fmt,...)
+{
+#if !ASM_VERBOSE
+	return;
+#endif
+	va_list argp;
+	va_start(argp, fmt);
+	vfprintf(stderr, fmt, argp);
+	va_end(argp);
+}
+
 /**
  * Parse an int out of optarg and enforce that it be at least 'lower';
  * if it is less than 'lower', than output the given error message and
  * exit with an error and a usage message.
  */
+ 
 
 int parseInt(int lower, const char *errmsg, void (*print_usage)()) {
     long l;
@@ -193,7 +206,7 @@ out:
 }
     
 void init_library_table()
-{
+	{
     ReadGroupProperties std_illumina_paired;
     std_illumina_paired.platform(ILLUMINA);
     std_illumina_paired.std_mate_orientation(MATES_POINT_TOWARD);
@@ -207,13 +220,6 @@ void init_library_table()
     solid_fragment.strandedness(STRANDED_PROTOCOL);
     
     library_type_table["solid-fragment"] = solid_fragment;
-        
-    ReadGroupProperties solid_paired;
-    solid_paired.platform(SOLID);
-    solid_paired.std_mate_orientation(MATES_POINT_TOWARD);
-    solid_paired.strandedness(STRANDED_PROTOCOL);
-    
-    library_type_table["solid-fragment"] = solid_fragment;
     
     ReadGroupProperties illumina_fragment;
     illumina_fragment.platform(ILLUMINA);
@@ -222,7 +228,7 @@ void init_library_table()
     
     library_type_table["illumina-fragment"] = illumina_fragment;
     
-    //global_read_properties = &(library_type_table.find(default_library_type)->second);
+    global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
 void print_library_table()

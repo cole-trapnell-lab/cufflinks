@@ -732,9 +732,9 @@ class MateHit
 public:
     MateHit() : 
     _refid(0), 
-	_collapse_mass(0.0),
     _left_alignment(NULL),
-    _right_alignment(NULL) {}
+    _right_alignment(NULL),
+    _collapse_mass(0.0){}
     
 	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
             uint32_t refid, 

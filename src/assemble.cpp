@@ -365,9 +365,8 @@ void holdout_transitivity_hazards(vector<Scaffold>& hits,
 		}
 	}
 	
-#if ASM_VERBOSE
-	fprintf(stderr, "%s\tHeld out %lu scaffolds as transitivity hazards\n", bundle_label->c_str(), hazards.size());
-#endif
+	asm_printf( "%s\tHeld out %lu scaffolds as transitivity hazards\n", bundle_label->c_str(), hazards.size());
+	
 	hits = filtered_hits;
 }
 
@@ -390,17 +389,14 @@ bool make_scaffolds(int bundle_left,
 	
 	if (!intron_hits)
 	{
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tNo introns in bundle, collapsing all hits to single transcript\n", bundle_label->c_str());
-#endif
+
+		asm_printf( "%s\tNo introns in bundle, collapsing all hits to single transcript\n", bundle_label->c_str());
 		scaffolds.push_back(Scaffold(hits));
 		fill_gaps(scaffolds, 2 * olap_radius);
 	}
 	else
 	{
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tBundle has %d spliced reads\n", bundle_label->c_str(), intron_hits);
-#endif
+		asm_printf( "%s\tBundle has %d spliced reads\n", bundle_label->c_str(), intron_hits);
 
 		vector<Scaffold> hazards;
 		holdout_transitivity_hazards(hits, hazards);
@@ -421,10 +417,8 @@ bool make_scaffolds(int bundle_left,
 
         compress_fragments(hits);
 
-#if ASM_VERBOSE
-        fprintf(stderr, "%s\tAssembling bundle with %lu hits\n", bundle_label->c_str(), hits.size());
-#endif
-        
+        asm_printf( "%s\tAssembling bundle with %lu hits\n", bundle_label->c_str(), hits.size());
+       
 		vector<int> depth_of_coverage(bundle_length,0);
 		map<pair<int,int>, int> intron_depth_of_coverage;
 		compute_doc(bundle_left, 
@@ -448,18 +442,15 @@ bool make_scaffolds(int bundle_left,
 			
 			if (hits.empty())
 				return true;
-#if ASM_VERBOSE
-			fprintf(stderr, "%s\tCalculating scaffold densities\n", bundle_label->c_str());
-#endif
+			asm_printf( "%s\tCalculating scaffold densities\n", bundle_label->c_str());
 			vector<double> scaff_doc;
 			record_doc_for_scaffolds(bundle_left, 
 									 hits, 
 									 depth_of_coverage, 
 									 intron_depth_of_coverage,
 									 scaff_doc);
-#if ASM_VERBOSE
-			fprintf(stderr, "%s\tCreating compatibility graph\n", bundle_label->c_str());
-#endif
+			asm_printf( "%s\tCreating compatibility graph\n", bundle_label->c_str());
+			
 			if (!create_overlap_dag(hits, bundle_dag))
 			{			
 				break;
@@ -471,9 +462,7 @@ bool make_scaffolds(int bundle_left,
             
             if (hits.size() >= MAX_BUNDLE_ALIGNMENTS)
 			{
-#if ASM_VERBOSE
-				fprintf(stderr, "%s\tWarning: bundle too large, skipping assembly\n", bundle_label->c_str());
-#endif
+				asm_printf( "%s\tWarning: bundle too large, skipping assembly\n", bundle_label->c_str());
 				return false;
 			}
             
@@ -482,9 +471,9 @@ bool make_scaffolds(int bundle_left,
             DAGNode sink = terminal.second;
             
 			ReachGraph bp;
-#if ASM_VERBOSE
-			fprintf(stderr, "%s\tConstructing reachability graph\n", bundle_label->c_str());
-#endif
+			
+			asm_printf( "%s\tConstructing reachability graph\n", bundle_label->c_str());
+			
 			vector<ReachGraph::BNode> b_to_a;
 			adjacency_list<> TC;
 			
@@ -499,9 +488,8 @@ bool make_scaffolds(int bundle_left,
 			ReachGraph::UEdgeMap<long long> cov_weights(bp);
 			add_weights_to_reachability_bp_graph(bp, hits_for_node, orig_hits, hits, cov_weights);				
 
-#if ASM_VERBOSE
-            fprintf(stderr, "%s\tPerforming weighted matching\n", bundle_label->c_str());
-#endif
+            asm_printf( "%s\tPerforming weighted matching\n", bundle_label->c_str());
+
             typedef lemon::MinCostMaxBipartiteMatching<ReachGraph,ReachGraph::UEdgeMap<long long> > Matcher;
             Matcher matcher(bp, cov_weights);
             matcher.run();
@@ -509,20 +497,17 @@ bool make_scaffolds(int bundle_left,
             vector<vector<DAGNode> > chains;
             make_chains_from_matching<Matcher>(bp, matcher, chains);
 			
-#if ASM_VERBOSE
-			fprintf(stderr, "%s\tFound %d distinct chains\n", bundle_label->c_str(), (int)chains.size());
-#endif		
+			asm_printf( "%s\tFound %d distinct chains\n", bundle_label->c_str(), (int)chains.size());
+			
 			vector<vector<DAGNode> > paths;
 			extend_chains_to_paths(bundle_dag, chains, TC, source, sink, paths);
 
-#if ASM_VERBOSE
-			fprintf(stderr, "%s\tCreating scaffolds for %d paths\n", bundle_label->c_str(), (int)paths.size());
-#endif
+			asm_printf( "%s\tCreating scaffolds for %d paths\n", bundle_label->c_str(), (int)paths.size());
+			
 			vector<Scaffold> new_scaffs;
 			make_scaffolds_from_paths(bundle_dag, paths, new_scaffs);
-#if ASM_VERBOSE
-			fprintf(stderr, "%s\tCollapsing scaffolds\n", bundle_label->c_str());
-#endif
+			
+			asm_printf( "%s\tCollapsing scaffolds\n", bundle_label->c_str());
            
 			collapse_contained_transfrags(new_scaffs);
 			hits = new_scaffs;
@@ -532,9 +517,8 @@ bool make_scaffolds(int bundle_left,
 		
 		// One last collapse attempt...
 		vector<Scaffold> new_scaffs = scaffolds;
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tPerforming final collapse round\n", bundle_label->c_str());
-#endif
+		
+		asm_printf( "%s\tPerforming final collapse round\n", bundle_label->c_str());
 		
 		fill_gaps(new_scaffs, 2 * olap_radius);
         
@@ -550,9 +534,7 @@ bool make_scaffolds(int bundle_left,
             completes.insert(completes.end(), c.begin(), c.end()); 
         } 
         
-#if ASM_VERBOSE
-        fprintf(stderr, "Extracted %lu contiguous transfrags from %lu scaffolds\n", completes.size(), scaffolds.size());
-#endif
+        asm_printf( "Extracted %lu contiguous transfrags from %lu scaffolds\n", completes.size(), scaffolds.size());
         
         new_scaffs = completes;
         sort(new_scaffs.begin(), new_scaffs.end(), scaff_lt);

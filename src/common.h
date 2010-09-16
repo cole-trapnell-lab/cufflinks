@@ -78,6 +78,7 @@ extern double binomial_junc_filter_alpha;
 extern std::string library_type;
 
 #define ADAM_MODE 0
+#define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
 
 #if ENABLE_THREADS
@@ -86,9 +87,10 @@ extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, 
 extern boost::shared_ptr<std::string> bundle_label;
 #endif
 
-#define ASM_VERBOSE 0
 
 bool gaurd_assembly();
+
+void asm_printf(const char* fmt,...);
 
 int parseInt(int lower, 
 			 const char *errmsg, 
