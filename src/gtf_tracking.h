@@ -9,11 +9,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include "GList.hh"
 #include "gff.h"
 #include "GFaSeqGet.h"
 #include "GFastaIndex.h"
@@ -23,9 +18,9 @@
 #define MAX_QFILES 500
 extern const char* ATTR_GENE_NAME;
 
-extern bool verbose;
+extern bool gtf_tracking_verbose;
 
-extern bool largeScale;
+extern bool gtf_tracking_largeScale;
 //many input files, no accuracy stats are generated, no *.tmap
 // and exon attributes are discarded
 
@@ -118,7 +113,7 @@ class GFastaHandler {
         {
          char* sfile=getFastaFile(gseq_id);
          if (sfile!=NULL) {
-            //if (verbose)
+            //if (gtf_tracking_verbose)
             //   GMessage("Processing sequence from fasta file '%s'\n",sfile);
             faseq=new GFaSeqGet(sfile,checkFasta);
             faseq->loadall();

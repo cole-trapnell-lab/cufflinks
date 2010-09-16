@@ -1,6 +1,6 @@
+#include "GBase.h"
 #include <stdarg.h>
 #include <ctype.h>
-#include "GBase.h"
 #include <sys/stat.h>
 
 static char msg[4069];

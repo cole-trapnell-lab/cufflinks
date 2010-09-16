@@ -2,10 +2,10 @@
 #ifndef GSTR_H
 #define GSTR_H
 //---------------------------------------------------------------------------
+#include "GBase.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "GBase.h"
 
 // This class uses reference counting and copy-on-write semantics
 

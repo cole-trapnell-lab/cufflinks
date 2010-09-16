@@ -1,15 +1,18 @@
 /*
-**
 GArgs is a quick'n'dirty object oriented replacement for the standard 
-   getopts library call avialable on many unix platforms. 
-   it accepts dash style options and = style options
-   -<letter>[ ][<value>] 
-   <string>=<value>
+   getopts library call available on many unix platforms;
+   it accepts the regular single dash style options 
+     -<letter>[ ][<value>] 
+   but also attr=value style options:
+     <optname>=<value>
 */
-   
+
 #ifndef G_ARGS_DEFINED
 #define G_ARGS_DEFINED
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 
 class GArgs {

@@ -1,11 +1,9 @@
-#include <stdlib.h>
-#include <string.h>
+#include "GBase.h"
 #include "GArgs.h"
 #include <ctype.h>
 
 #define TRACE 1
 
-#include "GBase.h"
 
 //GArgs::is_opt="1"; //just to have a non-NULL value for switch testing
 

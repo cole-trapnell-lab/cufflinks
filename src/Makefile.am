@@ -34,8 +34,9 @@ noinst_HEADERS = \
 	abundances.h \
 	genes.h \
 	transitive_closure.h \
-    transitive_reduction.h \
+	transitive_reduction.h \
 	gtf_tracking.h \
+	progressbar.h \
 	bundles.h \
     scaffold_graph.h \
     matching_merge.h \

@@ -1,10 +1,6 @@
 #ifndef GFF_H
 #define GFF_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include "GBase.h"
 #include "gdna.h"
 #include "codons.h"

@@ -8,7 +8,6 @@
 #ifndef GFAIDX_H_
 #define GFAIDX_H_
 
-#include "GBase.h"
 #include "GHash.hh"
 #include "GList.hh"
 

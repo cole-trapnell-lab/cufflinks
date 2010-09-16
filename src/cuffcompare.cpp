@@ -164,7 +164,7 @@ int main(int argc, char * const argv[]) {
   multiexon_only=(args.getOpt('M')!=NULL);
   perContigStats=(args.getOpt('G')==NULL);
   checkFasta=(args.getOpt('K')!=NULL);
-  verbose=((args.getOpt('V')!=NULL) || debug);
+  gtf_tracking_verbose=((args.getOpt('V')!=NULL) || debug);
   FILE* finlst=NULL;
   GStr s=args.getOpt('i');
   if (!s.is_empty()) {
@@ -186,7 +186,7 @@ int main(int argc, char * const argv[]) {
             }
           delete lr;
           //if (qryfiles.Count()>10) 
-             largeScale=true;
+             gtf_tracking_largeScale=true;
           }
          else {
           numqryfiles=args.startNonOpt();
@@ -229,11 +229,11 @@ int main(int argc, char * const argv[]) {
     f_ref=fopen(s,"r");
     if (f_ref==NULL) GError("Error opening reference gff: %s\n",s.chars());
     haveRefs=true;
-    if (verbose) GMessage("Loading reference transcripts..\n");
+    if (gtf_tracking_verbose) GMessage("Loading reference transcripts..\n");
     read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), checkseq);
     haveRefs=(ref_data.Count()>0);
     reduceRefs=(args.getOpt('R')!=NULL);
-    if (verbose) GMessage("..ref data loaded\n");
+    if (gtf_tracking_verbose) GMessage("..ref data loaded\n");
   }
 
   s=args.getOpt('o');
@@ -276,11 +276,11 @@ int main(int argc, char * const argv[]) {
       GMALLOC(rtfiles, numqryfiles*sizeof(FILE*));
       }
   //char* infile=NULL;
-        if (verbose) GMessage(" Number of query files to process: %d\n",numqryfiles);
+        if (gtf_tracking_verbose) GMessage(" Number of query files to process: %d\n",numqryfiles);
   for (int fi=0;fi<qryfiles.Count();fi++) {
   //while ((infile=args.nextNonOpt())!=NULL) {
     GStr infname(qryfiles[fi]->chars());
-    if (debug || (verbose && !largeScale)) GMessage("Processing qfile #%d: %s\n",fi, infname.chars());
+    if (debug || (gtf_tracking_verbose && !gtf_tracking_largeScale)) GMessage("Processing qfile #%d: %s\n",fi, infname.chars());
     if (debugExit) continue;
     if (infname=="-") { f_in=stdin; infname="stdin"; }
       else {
@@ -309,14 +309,14 @@ int main(int argc, char * const argv[]) {
 
       GList<GSeqData>* pdata=new GList<GSeqData>(true,true,true);
       qrysdata[fi]=pdata;
-      if (verbose) GMessage("Loading transcripts from %s..\n",infname.chars());
+      if (gtf_tracking_verbose) GMessage("Loading transcripts from %s..\n",infname.chars());
       read_mRNAs(f_in, *pdata, &ref_data, true, fi, infname.chars(), checkseq);
       GSuperLocus gstats;
       GFaSeqGet *faseq=NULL;
       for (int g=0;g<pdata->Count();g++) { //for each seqdata related to a genomic sequence
         int gsid=pdata->Get(g)->gseq_id;
         GSeqData* refdata=getRefData(gsid, ref_data);//ref data for this contig
-        if (!largeScale)
+        if (!gtf_tracking_largeScale)
           processLoci(*(pdata->Get(g)), refdata, faseq, fi);
         GSeqTrack* seqtrack=findGSeqTrack(gsid); //this will add a gseqtrack if it doesn't exist
         // for gsid
@@ -326,13 +326,13 @@ int main(int argc, char * const argv[]) {
         }
         seqtrack->qdata[fi]=pdata->Get(g);
         //will only gather data into stats if perContig==false
-        if (!largeScale) reportStats(f_out, getGSeqName(gsid), gstats,
+        if (!gtf_tracking_largeScale) reportStats(f_out, getGSeqName(gsid), gstats,
               pdata->Get(g), refdata);
         if (faseq!=NULL) delete faseq;
       } //for each genomic sequence data
       //there could be genomic sequences with no qry transcripts
       //but with reference transcripts
-      if (haveRefs && !reduceRefs && !largeScale) {
+      if (haveRefs && !reduceRefs && !gtf_tracking_largeScale) {
         for (int r=0;r<ref_data.Count();r++) {
           GSeqData* refdata=ref_data[r];
           int gsid=refdata->gseq_id;
@@ -342,14 +342,14 @@ int main(int argc, char * const argv[]) {
         }
       }
       //now report the summary:
-      if (!largeScale) reportStats(f_out, infname.chars(), gstats);
+      if (!gtf_tracking_largeScale) reportStats(f_out, infname.chars(), gstats);
       if (f_in!=stdin) fclose(f_in);
       //qfileno++;
   }//for each input file
         if (f_mintr!=NULL) fclose(f_mintr);
   if (debugExit) exit(0x200);
   if (qtracking) {
-    if (verbose) GMessage("Tracking transcripts across %d query files..\n", numqryfiles);
+    if (gtf_tracking_verbose) GMessage("Tracking transcripts across %d query files..\n", numqryfiles);
     trackGData(numqryfiles, gseqtracks, fbasename, tfiles, rtfiles);
     fprintf(f_out, "\n Total union super-loci across all input datasets: %d \n", xlocnum);
     if (numqryfiles>1) {
@@ -357,7 +357,7 @@ int main(int argc, char * const argv[]) {
              total_xloci_alt, ((double)(GXConsensus::count))/xlocnum);
         }
     }
-  if (verbose) GMessage("Cleaning up..\n");
+  if (gtf_tracking_verbose) GMessage("Cleaning up..\n");
   GFREE(cprefix);
   // clean up
   for (int i=0;i<numqryfiles;i++) {
@@ -371,7 +371,7 @@ int main(int argc, char * const argv[]) {
   gseqtracks.Clear();
   FRCLOSE(f_ref);
   FWCLOSE(f_out);
-  if (verbose) GMessage("Done.\n");
+  if (gtf_tracking_verbose) GMessage("Done.\n");
   ref_data.Clear();
   //getchar();
 } //main ends here
@@ -1118,7 +1118,7 @@ void processLoci(GSeqData& seqdata, GSeqData* refdata, GFaSeqGet* faseq, int qfi
     //GList<GSeqLoci>& glstloci, GList<GSeqCmpRegs>& cmpdata)
 
   if (refdata!=NULL) {
-     //if (verbose) GMessage(" ..comparing to reference loci..\n") ;
+     //if (gtf_tracking_verbose) GMessage(" ..comparing to reference loci..\n") ;
      compareLoci2R(seqdata.loci_f, seqdata.gstats_f, refdata->loci_f, qfidx);
      compareLoci2R(seqdata.loci_r, seqdata.gstats_r, refdata->loci_r, qfidx);
      // -- report
