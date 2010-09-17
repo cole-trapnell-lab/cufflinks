@@ -461,13 +461,13 @@ void inspect_map(BundleFactoryType& bundle_factory,
     long double tot_count = 0;
 	vector<double> frag_len_pdf(max_len+1, 0.0);
 	vector<double> frag_len_cdf(max_len+1, 0.0);
-	normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
         
     tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
     
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
 	if (!has_pairs || tot_count == 0)
 	{
+		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
 		max_len = def_frag_len_mean + 3*def_frag_len_std_dev;
 		for(int i = min_len; i < max_len; i++)
 		{
@@ -479,7 +479,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	{	
 		double curr_total = 0;
 		size_t last_nonzero = min_len-1;
-		for(size_t i = 1; i < frag_len_hist.size(); i++)
+		for(size_t i = last_nonzero+1; i < frag_len_hist.size(); i++)
 		{
 			if (frag_len_hist[i] > 0)
 			{
