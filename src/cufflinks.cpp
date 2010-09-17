@@ -55,7 +55,7 @@ static struct option long_options[] = {
 {"GTF",					    required_argument,		 0,			 'G'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
-{"reference-seq-dir",		required_argument,		 0,			 'r'},	
+{"reference-seq",			required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -89,7 +89,7 @@ void print_usage()
 	fprintf(stderr, "-G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file                     \n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq-dir       directory of genomic ref fasta files for bias corr    [ default:   NULL ]\n");
+	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
 #endif
@@ -906,8 +906,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory* bf_ptr = new BundleFactory(hit_factory);
-	BundleFactory& bundle_factory = *bf_ptr;
+	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory));
 	
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
@@ -984,10 +983,9 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
 	hit_factory->reset();
 	int num_bundles = bundle_factory.num_bundles();
-	//delete bf_ptr;
-	bf_ptr = new BundleFactory(hit_factory);
-	bundle_factory = *bf_ptr;
-	bundle_factory.num_bundles(num_bundles);
+	delete &bundle_factory;
+	BundleFactory bundle_factory2(hit_factory);
+	bundle_factory2.num_bundles(num_bundles);
 
 #if ADAM_MODE
 	ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
@@ -998,27 +996,27 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     if (ref_gtf)
     {
         ref_mRNAs.clear();
-        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, true, true);
-        bundle_factory.set_ref_rnas(ref_mRNAs);
+        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, true, true);
+        bundle_factory2.set_ref_rnas(ref_mRNAs);
     }
     
     if (mask_gtf)
     {
         mask_rnas.clear();
-        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
-        bundle_factory.set_mask_rnas(mask_rnas);
+        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
+        bundle_factory2.set_mask_rnas(mask_rnas);
     }
     
-    bundle_factory.read_group_properties(rg_props);
+    bundle_factory2.read_group_properties(rg_props);
     
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
-	learn_bias(bundle_factory, *bl);
+	learn_bias(bundle_factory2, *bl);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
 	
-	bundle_factory.reset();
+	bundle_factory2.reset();
 
 	final_est_run = true;
-	assemble_hits(bundle_factory);
+	assemble_hits(bundle_factory2);
 }
 
 int main(int argc, char** argv)

@@ -47,6 +47,9 @@ public:
 		_num_complete += inc_amt;
 		_num_updates ++;
 		
+#if ASM_VERBOSE
+		return;
+#endif
 		char bundle_buf[28];
 		strncpy(bundle_buf, bundle_label_buf, 27);
 		
@@ -57,9 +60,7 @@ public:
 		
 		char line_buf[82];
 		snprintf(line_buf, 81, "\r> Processing Locus %-27s %s %3d%%", bundle_buf, _bar_buf, percent);
-#if ASM_VERBOSE
-		return;
-#endif
+
 		fprintf(stderr,"%s",line_buf);
 	}
 	

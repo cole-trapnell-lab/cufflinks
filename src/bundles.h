@@ -294,7 +294,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	ProgressBar p_bar;
 	if (progress_bar)
 	{
-		p_bar = ProgressBar("Inspecting reads determining fragment length distribution.",bundle_factory.ref_table().size());
+		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
 	}
 
 	char last_chrom[100];
