@@ -678,9 +678,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	
 	final_est_run = true;
-#if !ASM_VERBOSE        
-        p_bar = ProgressBar("Testing for differential expression and regulation in locus.", bundle_factories[0].num_bundles());
-#endif
+	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", bundle_factories[0].num_bundles());
 	while (true)
 	{
         vector<shared_ptr<SampleAbundances> > abundances;
@@ -709,17 +707,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             }
         }
 
-#if ASM_VERBOSE        
-        fprintf(stderr, "Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
-#else
+        asm_printf("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
 		p_bar.update(abundances.front()->locus_tag.c_str(), 1);
-#endif
 		test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
 	}
 	
-#if !ASM_VERBOSE
 	p_bar.complete();
-#endif
+
 	//double FDR = 0.05;
 	int total_iso_de_tests = 0;
 	

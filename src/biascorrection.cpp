@@ -85,20 +85,19 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		
 		HitBundle& bundle = *bundle_ptr;
 		
-		if (bundle.hits().size())
-		{
-			if (bundle.non_redundant_hits().size()==0)
-			{
-				delete bundle_ptr;
-				continue;
-			}
+		char bundle_label_buf[2048];
+		sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
+		p_bar.update(bundle_label_buf, 1);
+		
 
-			char bundle_label_buf[2048];
-			sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
-			p_bar.update(bundle_label_buf, 1);
-			process_bundle(bundle, bl);
-			
+		if (bundle.non_redundant_hits().size()==0)
+		{
+			delete bundle_ptr;
+			continue;
 		}
+
+		process_bundle(bundle, bl);
+			
 		delete bundle_ptr;
 	}
 	

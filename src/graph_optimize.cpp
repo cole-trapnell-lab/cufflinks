@@ -198,9 +198,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 		}
 	}
     
-#if ASM_VERBOSE
-	fprintf(stderr, "%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
-#endif
+	asm_printf("%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
     
     vector<AugmentedCuffOp> ops;
     collect_non_redundant_ops(scaffolds, ops);
@@ -241,9 +239,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 	while (max_rounds--)
 	{
 		
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tStarting new collapse round\n", bundle_label->c_str());
-#endif
+		asm_printf("%s\tStarting new collapse round\n", bundle_label->c_str());
         
 		ContainmentGraph containment;
 		
@@ -294,16 +290,12 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 		
 		lemon::MaxBipartiteMatching<ContainmentGraph>  matcher(containment);
         
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tContainment graph has %d nodes, %d edges\n", bundle_label->c_str(), containment.aNodeNum(), containment.uEdgeNum());
-		fprintf(stderr, "%s\tFinding a maximum matching to collapse scaffolds\n", bundle_label->c_str());
-#endif
+		asm_printf("%s\tContainment graph has %d nodes, %d edges\n", bundle_label->c_str(), containment.aNodeNum(), containment.uEdgeNum());
+		asm_printf("%s\tFinding a maximum matching to collapse scaffolds\n", bundle_label->c_str());
         
 		matcher.run();
         
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tWill collapse %d scaffolds\n", bundle_label->c_str(), matcher.matchingSize());
-#endif
+		asm_printf( "%s\tWill collapse %d scaffolds\n", bundle_label->c_str(), matcher.matchingSize());
 		
 		ContainmentGraph::UEdgeMap<bool> matched_edges(containment);
 		
@@ -397,19 +389,14 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 			 smaller_idx_array.end(), 
 			 FragIndexSortSmallerLR(fragments));
 		
-#if ASM_VERBOSE
-		fprintf(stderr, "%s\tStarting new collapse round\n", bundle_label->c_str());
-#endif
-#if ASM_VERBOSE
-        fprintf(stderr, "%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
-#endif
+		asm_printf("%s\tStarting new collapse round\n", bundle_label->c_str());
+        asm_printf("%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
+
         bool will_perform_collapse = false;
 		
-#if ASM_VERBOSE
-        fprintf(stderr, "%s\tAssessing overlaps between %lu fragments for identical conflict sets\n", 
+        asm_printf( "%s\tAssessing overlaps between %lu fragments for identical conflict sets\n", 
                 bundle_label->c_str(), 
                 fragments.size());
-#endif
         vector<size_t> replacements;
         for (size_t i = 0; i < fragments.size(); ++i)
         {
@@ -493,14 +480,12 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 
 						if (c_scaff.augmented_ops() == lhs_scaff.augmented_ops())
 						{
-#if ASM_VERBOSE
 							if (num_merges % 100 == 0)
 							{
-								fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+								asm_printf("%s\tCollapsing frag # %d\n", 
 										bundle_label->c_str(), 
 										num_merges);
 							}
-#endif
 							vector<Scaffold> s;
 							s.push_back(c_scaff);
 							s.push_back(lhs_scaff);
@@ -568,14 +553,12 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 							continue;
 					
 						// merge
-#if ASM_VERBOSE
 						if (num_merges % 100 == 0)
 						{
-							fprintf(stderr, "%s\tCollapsing frag # %d\n", 
+							asm_printf("%s\tCollapsing frag # %d\n", 
 									bundle_label->c_str(), 
 									num_merges);
 						}
-#endif
 						
 						vector<Scaffold> s;
 						s.push_back(c_scaff);
@@ -628,9 +611,7 @@ void compress_consitutive(vector<Scaffold>& hits)
 {
     vector<bool> scaffold_mask;
     
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tBuilding constitutivity mask\n", bundle_label->c_str()); 
-#endif
+    asm_printf("%s\tBuilding constitutivity mask\n", bundle_label->c_str()); 
     
     scaffold_mask = vector<bool>(hits.size(), false);
     add_non_constitutive_to_scaffold_mask(hits, scaffold_mask);
@@ -646,9 +627,7 @@ void compress_consitutive(vector<Scaffold>& hits)
             non_constitutive.push_back(hits[i]);
     }
     
-#if ASM_VERBOSE
     size_t pre_compress = hits.size();
-#endif
     hits.clear();
     if (!constitutive.empty())
     {
@@ -662,17 +641,14 @@ void compress_consitutive(vector<Scaffold>& hits)
     
     hits.insert(hits.end(), non_constitutive.begin(), non_constitutive.end());
     sort(hits.begin(), hits.end(), scaff_lt);
-#if ASM_VERBOSE
     size_t post_compress = hits.size();
     size_t delta = pre_compress - post_compress;
     double collapse_ratio = delta / (double) pre_compress; 
-    fprintf(stderr, 
-            "%s\tCompressed %lu of %lu constitutive fragments (%lf percent)\n", 
+    asm_printf("%s\tCompressed %lu of %lu constitutive fragments (%lf percent)\n", 
             bundle_label->c_str(),
             delta, 
             pre_compress, 
             collapse_ratio);
-#endif
 }
 
 
@@ -688,10 +664,6 @@ void compress_redundant(vector<Scaffold>& fragments)
         leftmost = std::min((long)fragments[i].left(), leftmost);
         rightmost = std::max((long)fragments[i].right(), rightmost);
     }
-     
-#if ASM_VERBOSE
-    //long bundle_length = rightmost - leftmost;
-#endif
     
     while (true)
     {
@@ -712,10 +684,8 @@ void compress_redundant(vector<Scaffold>& fragments)
 
 void compress_fragments(vector<Scaffold>& fragments)
 {
-#if ASM_VERBOSE
-    fprintf(stderr,"%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
+    asm_printf("%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
-#endif
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 	
     fill_unambiguous_unknowns(fragments);
@@ -724,10 +694,8 @@ void compress_fragments(vector<Scaffold>& fragments)
 	
 	compress_redundant(fragments);
     
-#if ASM_VERBOSE
     size_t post_hit_collapse_size = fragments.size();
-    fprintf(stderr,"%s\tIgnoring %lu strictly contained fragments\n", bundle_label->c_str(), pre_hit_collapse_size - post_hit_collapse_size);
-#endif   
+    asm_printf("%s\tIgnoring %lu strictly contained fragments\n", bundle_label->c_str(), pre_hit_collapse_size - post_hit_collapse_size);
 }
 
 void compress_overlap_dag_paths(DAG& bundle_dag,
@@ -760,21 +728,18 @@ void compress_overlap_dag_paths(DAG& bundle_dag,
         if (!compressed_paths[i].empty())
         {
             Scaffold s(compressed_paths[i]);
-#if ASM_VERBOSE
-            fprintf(stderr, "Path over %d-%d has %lu fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
-#endif
+            asm_printf("Path over %d-%d has %lu fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
             new_scaffs.push_back(s);
         }
     }
     //hits = new_scaffs;
 	
-#if ASM_VERBOSE
-    fprintf(stderr, "%s\tCompressed overlap graph from %lu to %lu fragments (%f percent)\n",
+    asm_printf("%s\tCompressed overlap graph from %lu to %lu fragments (%f percent)\n",
             bundle_label->c_str(), 
             hits.size(), 
             new_scaffs.size(), 
             (hits.size() - new_scaffs.size())/(double)hits.size());
-#endif
+
     hits = new_scaffs;
     sort(hits.begin(), hits.end(), scaff_lt);
     create_overlap_dag(hits, bundle_dag);
