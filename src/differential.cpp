@@ -17,7 +17,7 @@
 
 using namespace std;
 
-double min_read_count = 500;
+double min_read_count = 1000;
 
 // This performs a between-group test on an isoform or TSS grouping, on two 
 // different samples.
