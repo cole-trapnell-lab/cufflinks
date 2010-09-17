@@ -17,7 +17,7 @@
 
 using namespace std;
 
-double min_read_count = 1000;
+double min_read_count = 500;
 
 // This performs a between-group test on an isoform or TSS grouping, on two 
 // different samples.
@@ -549,7 +549,7 @@ void sample_worker(const RefSequenceTable& rt,
     if (!*non_empty)
         return;
     
-    abundance->cluster_mass = bundle.hits().size();
+    abundance->cluster_mass = bundle.mass();
     
     char bundle_label_buf[2048];
     sprintf(bundle_label_buf, 

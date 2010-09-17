@@ -143,6 +143,16 @@ public:
 	
     int num_replicates() const { return _num_replicates; }
     
+	double mass() const
+	{
+		double mass = 0;
+		for(size_t i = 0; i < _non_redundant.size(); i++)
+		{
+			mass += _non_redundant[i].collapse_mass();
+		}
+		return mass;
+	}
+	
     static void combine(const vector<HitBundle*>& in_bundles,
                         HitBundle& out_bundle);
     
@@ -357,6 +367,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
         total_hits += bundle.hits().size();
 
 		// This first loop calclates the map mass and finds ranges with no introns
+		// Note that we are actually looking at non-redundant hits, which is why we use collapse_mass
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
 			map_mass += hits[i].collapse_mass(); 

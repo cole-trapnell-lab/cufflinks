@@ -393,6 +393,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 	}
 }
 
+
 void HitBundle::finalize_open_mates()
 {
 	for (OpenMates::iterator itr = _open_mates.begin(); 
