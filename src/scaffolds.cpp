@@ -1150,9 +1150,7 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 			else
 				frag_len = min(frag_len_dist->mode(), trans_len-start);
 		}
-		frag_len = max(frag_len_dist->min(), frag_len);
 	}
-
 
     if (start <= 0 || start > trans_len)
 		start = trans_len;

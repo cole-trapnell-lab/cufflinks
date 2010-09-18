@@ -383,7 +383,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
 				if (scaff->map_frag(hits[i], start, end, mate_length))
 				{
-					if (mate_length < max_len)
+					if (mate_length >= min_len && mate_length <= max_len)
 						frag_len_hist[mate_length] += hits[i].collapse_mass();
 				}
 			}
@@ -432,7 +432,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				if (hits[i].left() >= curr_range.first && hits[i].right() <= curr_range.second && hits[i].is_pair())
 				{
 					int mate_len = hits[i].right()-hits[i].left();
-					if (mate_len < max_len)
+					if (mate_len <= max_len)
 						frag_len_hist[mate_len] += hits[i].collapse_mass();
 				}
 			}
