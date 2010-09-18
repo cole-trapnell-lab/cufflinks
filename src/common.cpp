@@ -228,7 +228,7 @@ void init_library_table()
     
     library_type_table["illumina-fragment"] = illumina_fragment;
     
-    global_read_properties = &(library_type_table.find(default_library_type)->second);
+    //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
 void print_library_table()
