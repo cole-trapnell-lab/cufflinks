@@ -53,7 +53,9 @@ public:
 		char bundle_buf[28];
 		strncpy(bundle_buf, bundle_label_buf, 27);
 		
-		int percent = (_num_complete * 100)/_tot_num;	
+		int percent = (_num_complete * 100)/_tot_num;
+		percent = min(percent, 100);
+		
 		int last_bar = percent/(100/(BAR_BUF_SIZE-3));
 		for (int i=1; i <= last_bar; ++i)
 			_bar_buf[i] = SYMBOL;

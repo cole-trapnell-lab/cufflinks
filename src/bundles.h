@@ -318,6 +318,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
     size_t total_hits = 0;
     size_t total_non_redundant_hits = 0;
 	
+	vector<long double> mass_dist; //To be used for quartile normalization
+	
 	while(true)
 	{
 		HitBundle* bundle_ptr = new HitBundle();
@@ -368,9 +370,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
 
 		// This first loop calclates the map mass and finds ranges with no introns
 		// Note that we are actually looking at non-redundant hits, which is why we use collapse_mass
+		double bundle_mass = 0;
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
-			map_mass += hits[i].collapse_mass(); 
+			bundle_mass += hits[i].collapse_mass();
             
             assert(hits[i].left_alignment());
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
@@ -438,6 +441,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			}
 		}
 		
+		map_mass += bundle_mass;
+		if (use_quartile_norm && bundle_mass > 0) mass_dist.push_back(bundle_mass);
+		
 		foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
 		{
 			ref_scaff->clear_hits();
@@ -447,10 +453,16 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		delete bundle_ptr;
 	}
 	
-    //fprintf(stderr, "Fragments range between %d and %d bp\n", min_len, max_len);
-    //fprintf(stderr, "%lu open ranges\n", open_ranges.size());
-    //max_len = min(max_len, def_frag_len_mean + 3*def_frag_len_std_dev);
-    
+	if (use_quartile_norm)
+	{
+		sort(mass_dist.begin(),mass_dist.end());
+		int num_included = mass_dist.size() * 0.75;
+		fprintf(stderr,"%Lf\n",map_mass);
+		map_mass = accumulate(mass_dist.begin(), mass_dist.begin()+num_included, 0.0);
+		fprintf(stderr,"%Lf\n",map_mass);
+
+	}
+
     if (bad_introns != NULL)
     {
         size_t alloced = 0;
@@ -475,9 +487,12 @@ void inspect_map(BundleFactoryType& bundle_factory,
         
     tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
     
+    
+    string distr_type;
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
 	if (!has_pairs || tot_count == 0)
 	{
+		distr_type  = "Gaussian (default)";
 		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
 		max_len = def_frag_len_mean + 3*def_frag_len_std_dev;
 		for(int i = min_len; i < max_len; i++)
@@ -488,6 +503,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	}
 	else 
 	{	
+		distr_type = "Empirical (learned)";
 		double curr_total = 0;
 		size_t last_nonzero = min_len-1;
 		for(size_t i = last_nonzero+1; i < frag_len_hist.size(); i++)
@@ -558,9 +574,17 @@ void inspect_map(BundleFactoryType& bundle_factory,
     frag_len_dist.mean(mean);
     frag_len_dist.std_dev(std_dev);
     
-    //fprintf(stderr, "CDF has capacity: %lu\n", frag_len_cdf.capacity());
-    //fprintf(stderr, "PDF has capacity: %lu\n", frag_len_pdf.capacity());
-	if (progress_bar) p_bar.complete();
+   	if (progress_bar)
+   	{
+   		p_bar.complete();
+		fprintf(stderr, "> Map Properties:\n");
+		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+		string type = (has_pairs) ? "paired-end" : "single-end";
+		fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
+		fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
+		fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
+		fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
+   	}
    	
    	bundle_factory.num_bundles(num_bundles);
     bundle_factory.reset(); 

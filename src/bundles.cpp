@@ -161,6 +161,10 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					faseq = NULL;
 					last_gseq_id = rna.gseq_id;
 					faseq = gfasta.fetch(last_gseq_id);
+					if (faseq==NULL)
+					{
+						fprintf(stderr,"This contig will not be bias corrected.\n");
+					}
 				}
 
 				vector<AugmentedCuffOp> ops;
@@ -180,8 +184,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				
 				char* rna_seq;
 				int seqlen=0;
-				if (loadSeqs){ 
-					assert (faseq);
+				if (loadSeqs && faseq){ 
 					rna_seq = rna.getSpliced(faseq, false, &seqlen);
 				}
                 
@@ -227,7 +230,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				
 				if (loadSeqs)
                 {
-					string rs = rna_seq;
+					string rs = (rna_seq) ? rna_seq:"";
 					std::transform(rs.begin(), rs.end(), rs.begin(), (int (*)(int))std::toupper);
 					ref_scaff.seq(rs);
 					GFREE(rna_seq);
@@ -427,6 +430,8 @@ void HitBundle::remove_unmapped_hits()
         delete hit_itr->left_alignment();
         delete hit_itr->right_alignment();
     }
+    
+    
 	_hits.erase(new_end, _hits.end());	
 	
 	new_end = remove_if(_non_redundant.begin(),

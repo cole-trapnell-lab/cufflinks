@@ -144,6 +144,7 @@ public:
 	
 	int num_bundles() { return _factories[0]->num_bundles(); }
 	
+	
 	bool next_bundle(HitBundle& bundle_out)
     {
         vector<HitBundle*> bundles;
@@ -224,7 +225,6 @@ public:
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             rg_props->frag_len_dist(frag_len_dist);
             rg_props->total_map_mass(map_mass);
-			
             fac->read_group_properties(rg_props);
             
 			min_len = min(min_len, frag_len_dist->min());

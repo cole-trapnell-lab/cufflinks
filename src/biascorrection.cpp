@@ -163,7 +163,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 	}
  	for (int j = 0; j < N; ++j)
  	{
- 		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->fpkm() >= 1)
+ 		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->seq()!="" && transcripts[j]->fpkm() >= 1)
  			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
  	}
 }
@@ -449,6 +449,9 @@ void BiasLearner::output()
 
 void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases, vector<double>& posBiases) const
 {
+	if (transcript.seq()=="")
+		return;
+		
 	int seqLen = transcript.length();
 	
 	char seq[seqLen];

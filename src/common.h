@@ -68,6 +68,8 @@ extern bool perform_full_collapse;
 
 extern bool allow_junk_filtering;
 
+extern bool use_quartile_norm;
+
 extern int max_mle_iterations;
 extern int num_importance_samples;
 

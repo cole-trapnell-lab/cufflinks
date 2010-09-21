@@ -52,9 +52,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:M:o:r:T";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:M:o:r:T:N";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:T";
+const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:T:N";
 #endif
 
 
@@ -74,6 +74,7 @@ static struct option long_options[] = {
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"reference-seq",			required_argument,		 0,			 'r'},
 {"time-series",             no_argument,             0,			 'T'},
+{"quartile-normalization",  no_argument,	 		 0,	         'N'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -90,19 +91,20 @@ void print_usage()
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
 	fprintf(stderr, "Options:\n\n");
-    fprintf(stderr, "-T/--time-series             treat samples as a time-series                                           \n");
+    fprintf(stderr, "-T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
+   	fprintf(stderr, "-N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
 	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
-	fprintf(stderr, "--FDR						  False discovery rate used in testing                  [ default:   0.05 ]\n");
-	fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file                     \n");
+	fprintf(stderr, "--FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
+	fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+	fprintf(stderr, "-r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
     fprintf(stderr, "-L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
 	fprintf(stderr, "\nAdvanced Options:\n\n");
-    fprintf(stderr, "-m/--frag-len-mean			  the average fragment length (use with unpaired reads only)               \n");
+    fprintf(stderr, "-m/--frag-len-mean           the average fragment length (use with unpaired reads only)               \n");
 	fprintf(stderr, "-s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
 	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
@@ -183,7 +185,12 @@ int parse_options(int argc, char** argv)
 			{
                 samples_are_time_series = true;
 				break;
-            } 
+            }
+            case 'N':
+            {
+            	use_quartile_norm = true;
+            	break;
+            }
 
 			default:
 				print_usage();
@@ -450,6 +457,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                       s_ab,
                       sample_non_empty);
 #endif
+		
         abundances.push_back(s_ab);
         non_empty_bundle_flags.push_back(sample_non_empty);
     }
@@ -573,7 +581,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
 	
-	ProgressBar p_bar("Inspecting maps and determining fragment lenth distributions.",0);
+	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
 	foreach (ReplicatedBundleFactory& fac, bundle_factories)
     {
 #if ENABLE_THREADS	
@@ -652,10 +660,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	final_est_run = false;
 	
-	if (fasta_dir != "") 
+	int num_bundles = bundle_factories[0].num_bundles();
+	
+	if (fasta_dir != "") // Only run initial estimation if correcting bias
 	{
-		p_bar = ProgressBar("Calculating initial abundance estimates.",bundle_factories[0].num_bundles());
-		while (1) // Only run initial estimation if correcting bias
+		p_bar = ProgressBar("Calculating initial abundance estimates.", num_bundles);
+		
+		while (1) 
 		{
 			p_bar.update("",1);
 			vector<shared_ptr<SampleAbundances> > abundances;
@@ -678,7 +689,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	
 	final_est_run = true;
-	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", bundle_factories[0].num_bundles());
+	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
 	while (true)
 	{
         vector<shared_ptr<SampleAbundances> > abundances;
@@ -689,6 +700,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         
         // TODO: more asserts qhere to verify that transcripts tested are
         // identical, etc.
+        
         for (size_t i = 1; i < abundances.size(); ++i)
         {
             const SampleAbundances& curr = *(abundances[i]);
