@@ -78,8 +78,8 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "  -m/--frag-len-mean			  the average fragment length							[ default:     200 ]\n");
-	fprintf(stderr, "  -s/--frag-len-std-dev		  the fragment length standard deviation                [ default:     80 ]\n");
+	fprintf(stderr, "  -m/--frag-len-mean           the average fragment length                           [ default:    200 ]\n");
+	fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation                [ default:     80 ]\n");
 	fprintf(stderr, "  -c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
 	fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
 	fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
