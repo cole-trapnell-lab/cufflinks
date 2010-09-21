@@ -38,7 +38,7 @@ uint32_t min_intron_length = 50;
 uint32_t max_intron_length = 300000;
 //uint32_t min_exon_length = 100; 
 
-uint32_t max_gene_length = 3000000;
+uint32_t max_gene_length = 3500000;
 int max_partner_dist = 50000;
 int def_frag_len_mean = 200;
 int def_frag_len_std_dev = 80;

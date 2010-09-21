@@ -323,10 +323,7 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 			g_min = ops[i].g_left();
 		if ((size_t)ops[i].g_right() > g_max)
 			g_max = ops[i].g_right();
-        if (ops[i].g_right() - ops[i].g_left() > max_intron_length)
-        {
-            int a = 3;
-        }
+
 		switch(ops[i].opcode)
 		{
 			case CUFF_MATCH:
