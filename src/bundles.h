@@ -72,10 +72,11 @@ public:
         }   
         
         foreach (MateHit& hit, _hits)
-        {
-            delete hit.left_alignment();
-            delete hit.right_alignment();
-        }
+		{
+			delete hit.left_alignment();
+			delete hit.right_alignment();
+		} 
+		
     }
 	int left()   const { return _leftmost;  }
 	int right()  const { return _rightmost; }

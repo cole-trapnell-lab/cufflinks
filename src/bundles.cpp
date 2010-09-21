@@ -283,13 +283,10 @@ struct HitlessScaffold
 	}
 };
 
-struct UnmappedHit
+bool unmapped_hit(const MateHit& x)
 {
-	bool operator()(MateHit& x)
-	{
-		return !(x.is_mapped());
-	}
-};
+	return !(x.is_mapped());
+}
 
 
 void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
@@ -422,21 +419,25 @@ void HitBundle::remove_hitless_scaffolds()
 
 void HitBundle::remove_unmapped_hits()
 {
+	
+	foreach (MateHit& hit, _hits)
+	{
+		if (unmapped_hit(hit))
+		{
+			delete hit.left_alignment();
+			delete hit.right_alignment();
+		} 
+	}
+	
 	vector<MateHit>::iterator new_end = remove_if(_hits.begin(),
 												  _hits.end(),
-												  UnmappedHit());
-    for(vector<MateHit>::iterator hit_itr = new_end; hit_itr < _hits.end(); ++hit_itr)
-    {
-        delete hit_itr->left_alignment();
-        delete hit_itr->right_alignment();
-    }
-    
-    
+												  unmapped_hit);
+
 	_hits.erase(new_end, _hits.end());	
-	
+
 	new_end = remove_if(_non_redundant.begin(),
 						_non_redundant.end(),
-						UnmappedHit());
+						unmapped_hit);
 	_non_redundant.erase(new_end, _non_redundant.end());
 }
 
@@ -618,7 +619,7 @@ void HitBundle::finalize(bool is_combined)
 		}
 	}
 
-	//remove_unmapped_hits();
+	remove_unmapped_hits();
     
 	if (_ref_scaffs.size() > 0)
     {

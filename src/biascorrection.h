@@ -6,7 +6,7 @@
  *  cufflinks
  *
  *  Created by Adam Roberts on 5/20/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
+ *  Copyright 2010 Adam Roberts. All rights reserved.
  *
  */
 
