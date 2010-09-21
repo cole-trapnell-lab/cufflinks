@@ -98,8 +98,6 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				   bool loadSeqs,
 				   bool loadFPKM) 
 {
-
-	
 	if (loadSeqs)
 		ProgressBar p_bar("Loading reference annotation and sequence",0);
     
@@ -394,6 +392,37 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 }
 
 
+void HitBundle::collapse_hits()
+{
+	copy(_hits.begin(), _hits.end(), back_inserter(_non_redundant));
+	vector<MateHit>::iterator new_end = unique(_non_redundant.begin(), 
+											   _non_redundant.end(), 
+											   hits_equals);
+	_non_redundant.erase(new_end, _non_redundant.end());
+    _non_redundant.resize(_non_redundant.size());
+	
+	foreach(MateHit& hit, _non_redundant)
+		hit.collapse_mass(0);
+	
+	size_t curr_aln = 0;
+	size_t curr_unique_aln = 0;
+	while (curr_aln < _hits.size())
+	{
+		if (hits_equals(_non_redundant[curr_unique_aln], _hits[curr_aln]) || hits_equals(_non_redundant[++curr_unique_aln], _hits[curr_aln]))
+		{
+			MateHit& unique_aln = _non_redundant[curr_unique_aln];
+			unique_aln.incr_collapse_mass(_hits[curr_aln].mass());
+			_hits[curr_aln].collapsed_to(&unique_aln);
+		}
+		else
+			assert(false);
+		
+		++curr_aln;
+	}
+	
+	//_non_redundant.erase(remove_if(_non_redundant.begin(),_non_redundant.end(),has_no_collapse_mass), _non_redundant.end()); 
+}
+
 void HitBundle::finalize_open_mates()
 {
 	for (OpenMates::iterator itr = _open_mates.begin(); 
@@ -434,11 +463,12 @@ void HitBundle::remove_unmapped_hits()
 												  unmapped_hit);
 
 	_hits.erase(new_end, _hits.end());	
-
+	
 	new_end = remove_if(_non_redundant.begin(),
 						_non_redundant.end(),
 						unmapped_hit);
 	_non_redundant.erase(new_end, _non_redundant.end());
+
 }
 
 void HitBundle::combine(const vector<HitBundle*>& in_bundles,
@@ -561,7 +591,7 @@ void HitBundle::finalize(bool is_combined)
 	if (!is_combined)
 	{
 		sort(_hits.begin(), _hits.end(), mate_hit_lt);
-		collapse_hits(_hits, _non_redundant);
+		collapse_hits();
 		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt_sp);
 		vector<shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
 												_ref_scaffs.end(),
@@ -594,27 +624,6 @@ void HitBundle::finalize(bool is_combined)
 				bool added = _ref_scaffs[j]->add_hit(&hit);
                 if (added)
                     hit.is_mapped(true);
-			}
-		}
-	}
-	
-	for (size_t i = 0; i < _non_redundant.size(); ++i)
-	{
-		MateHit& hit = _non_redundant[i];
-		
-		Scaffold hs(hit);
-		
-        if (i >= 1)
-        {
-            assert (hit.ref_id() == _non_redundant[i-1].ref_id());
-        }
-		hit.is_mapped(false);
-		for (size_t j = 0; j < _ref_scaffs.size(); ++j)
-		{
-			// add hit only adds if the hit is structurally compatible
-			if (_ref_scaffs[j]->contains(hs))
-			{
-                hit.is_mapped(true);
 			}
 		}
 	}

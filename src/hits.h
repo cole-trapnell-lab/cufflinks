@@ -734,7 +734,9 @@ public:
     _refid(0), 
     _left_alignment(NULL),
     _right_alignment(NULL),
-    _collapse_mass(0.0){}
+    _collapse_mass(0.0),
+    _is_mapped(false),
+    _collapsed_to(NULL){}
     
 	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
             uint32_t refid, 
@@ -745,7 +747,8 @@ public:
 	_left_alignment(left_alignment),
 	_right_alignment(right_alignment),
 	_collapse_mass(0.0),
-	_is_mapped(false)
+	_is_mapped(false),
+	_collapsed_to(NULL)
 	{
 		//_expected_inner_dist = min(genomic_inner_dist(), _expected_inner_dist);
 	}
@@ -771,7 +774,15 @@ public:
 	}
 	
 	bool is_mapped() const {return _is_mapped;}					
-	void is_mapped(bool mapped) {_is_mapped = mapped;}
+	void is_mapped(bool mapped) 
+	{ 
+		_is_mapped = mapped; 
+		if (_collapsed_to)
+			_collapsed_to->is_mapped(mapped);
+	}
+	
+	MateHit* collapsed_to() const { return _collapsed_to; }
+	void collapsed_to(MateHit* hit) { _collapsed_to = hit; }
 	
 	bool is_pair() const
 	{
@@ -902,6 +913,7 @@ private:
 	const ReadHit* _right_alignment;
 	double _collapse_mass;
 	bool _is_mapped;
+	MateHit* _collapsed_to;
 	//bool _closed;
 };
 
@@ -910,6 +922,8 @@ bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs);
 bool hits_eq_mod_id(const ReadHit& lhs, const ReadHit& rhs);
 
 bool hits_equals(const MateHit& lhs, const MateHit& rhs);
+
+bool has_no_collapse_mass(const MateHit& hit);
 
 // Assumes hits are sorted by mate_hit_lt
 void collapse_hits(const vector<MateHit>& hits,

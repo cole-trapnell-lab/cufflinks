@@ -141,6 +141,7 @@ public:
 	
 	void remove_hitless_scaffolds();
 	void remove_unmapped_hits();
+	void collapse_hits();
 	
     int num_replicates() const { return _num_replicates; }
     
@@ -380,7 +381,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())
 				min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
-            
+
 			if (bundle.ref_scaffolds().size()==1 && hits[i].is_pair()) // Annotation provided and single isoform gene.
 			{
 				int start, end, mate_length;
