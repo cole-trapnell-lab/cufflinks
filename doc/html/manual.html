@@ -161,7 +161,10 @@
 	  binaries or build Cufflinks from the source code.
 	  If you wish to build Cufflinks yourself, you will need to install the
 	  <a href="http://www.boost.org">Boost C++ libraries</a>.  See <a href="tutorial.html#boost">
-	  Installing Boost</a>, on the getting started page. 
+	  Installing Boost</a>, on the getting started page. You will also need to build and install the
+	  <a href="http://samtools.sourceforge.net">SAM tools</a>, but you should take a look at the getting 
+	  started page for detailed instructions, because the headers and <tt>libbam</tt> must be accessible 
+	  to the Cufflinks build scripts.
   	  </p>
  	  <br/>
   	  <h2 id="cufflinks">Running Cufflinks</h2><br/>
@@ -808,7 +811,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		in transcript expression, splicing, and promoter use.  From the command line, run <tt>cuffdiff</tt> as follows:
 		<p>
 		<blockquote>
-		cuffdiff [options]* &lt;transcripts.gtf&gt; &lt;sample1.sam&gt; &lt;sample2.sam&gt;... [sampleN.sam]
+		cuffdiff [options]* &lt;transcripts.gtf&gt; &lt;sample1_replicate1.sam[,...,sample1_replicateM]&gt; &lt;sample2_replicate1.sam[,...,sample2_replicateM.sam]&gt;... [sampleN.sam_replicate1.sam[,...,sample2_replicateM.sam]]
 		</blockquote>
 		
 		<br/>
@@ -822,6 +825,10 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		transcripts of each gene.  Tracking the former allows one to see changes in 
 		splicing, and the latter lets one see changes in relative promoter use 
 		within a gene.
+		
+		If you have more than one replicate for a sample, supply the SAM files for 
+		the sample as a single <b>comma-separated</b> list.  It is not necessary to 
+		have the same number of replicates for each sample.
 		
 		Cuffdiff requires that transcripts in the input GTF be annotated with 
 		certain attributes in order to look for changes in primary transcript
