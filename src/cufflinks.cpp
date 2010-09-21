@@ -34,9 +34,9 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:V";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:V";
 #endif
 
 static struct option long_options[] = {
@@ -55,6 +55,7 @@ static struct option long_options[] = {
 {"GTF",					    required_argument,		 0,			 'G'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
+{"verbose",			    required_argument,		 0,			 'V'},
 {"reference-seq",			required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
@@ -72,35 +73,36 @@ static struct option long_options[] = {
 
 void print_usage()
 {
-	//NOTE: SPACES ONLY, bozo
-	fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
+    //NOTE: SPACES ONLY, bozo (I agree -- everywhere else in the code too, please don't use tabs)
+    fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
     fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
-	fprintf(stderr, "-----------------------------\n"); 
+    fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
-	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "  -m/--frag-len-mean           the average fragment length                           [ default:    200 ]\n");
-	fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation                [ default:     80 ]\n");
-	fprintf(stderr, "  -c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
-	fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
-	fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
-	fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
-	fprintf(stderr, "  -A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
-	fprintf(stderr, "  -j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
-	fprintf(stderr, "  -I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
-	fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
-	fprintf(stderr, "  -L/--label                   all transcripts have this prefix in their IDs         [ default:   CUFF ]\n");
-	fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
+    fprintf(stderr, "Options:\n\n");
+    fprintf(stderr, "  -m/--frag-len-mean           the average fragment length                           [ default:    200 ]\n");
+    fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation                [ default:     80 ]\n");
+    fprintf(stderr, "  -c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
+    fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
+    fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
+    fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
+    fprintf(stderr, "  -A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
+    fprintf(stderr, "  -j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
+    fprintf(stderr, "  -I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
+    fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
+    fprintf(stderr, "  -L/--label                   all transcripts have this prefix in their IDs         [ default:   CUFF ]\n");
+    fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
-	fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "  -r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+    fprintf(stderr, "  -V/--verbose                 verbose processing \n");
+    fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
+    fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 #if ENABLE_THREADS
-	fprintf(stderr, "  -p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
+    fprintf(stderr, "  -p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
 #endif
-	fprintf(stderr, "\nAdvanced Options:\n\n");
-    fprintf(stderr, "  --min-frags-per-transfrag    minimum number of fragments needed for new transfrags [ default:      10 ]\n");
+    fprintf(stderr, "\nAdvanced Options:\n\n");
+    fprintf(stderr, "  --min-frags-per-transfrag    minimum number of fragments needed for new transfrags [ default:     10 ]\n");
     fprintf(stderr, "  --overhang-tolerance         number of terminal exon bp to tolerate in introns     [ default:      8 ]\n");
-	fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
-	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+    fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  --max-bundle-length          maximum genomic length allowed for a given bundle     [ default:3500000 ]\n");
     
@@ -186,6 +188,11 @@ int parse_options(int argc, char** argv)
             case 'M':
 			{
 				mask_gtf_filename = optarg;
+				break;
+			}
+            case 'V':
+			{
+				cuff_verbose = true;
 				break;
 			}
             case 'o':
@@ -828,7 +835,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 
 		if (bundle.right() - bundle.left() > 3000000)
 		{
-			asm_printf( "%s\tWarning: large bundle encountered\n", bundle_label_buf);
+			asm_warn( "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
 
 		BundleStats stats;
@@ -849,8 +856,8 @@ bool assemble_hits(BundleFactory& bundle_factory)
 			
 		}
 #endif
-	
-		p_bar.update(bundle_label_buf, 1);	
+		if (cuff_verbose)
+			p_bar.update(bundle_label_buf, 1);	
 
 #if ENABLE_THREADS			
 		thread_pool_lock.lock();
@@ -944,11 +951,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     if (ref_gtf)
     {
-        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
+        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist, cuff_verbose);
     }
     else 
     {
-        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
+        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist, cuff_verbose);
     }
     
     asm_printf("%d ReadHits still live\n", num_deleted);

@@ -71,26 +71,6 @@ struct ScaffoldSorter
 	RefSequenceTable& rt;
 };
 
-/*
-char* getFastaFile(int gseq_id) 
-{
-	if (fasta_dir == "") return NULL;
-	GStr s(fasta_dir.c_str());
-	s.trimR('/');
-	s.appendfmt("/%s",getGSeqName(gseq_id));
-	GStr sbase=s;
-	if (!fileExists(s.chars())) 
-		s.append(".fa");
-	if (!fileExists(s.chars())) s.append("sta");
-	if (fileExists(s.chars())) return Gstrdup(s.chars());
-	else
-	{
-		GMessage("Warning: cannot find genomic sequence file %s{.fa,.fasta}\n",sbase.chars());
-		return NULL;
-	}
-}
-*/
-
 //FIXME: needs refactoring
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,

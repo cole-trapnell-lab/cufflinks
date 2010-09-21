@@ -72,6 +72,8 @@ int microexon_length = 25;
 
 bool perform_full_collapse = true;
 
+bool cuff_verbose = false;
+
 bool allow_junk_filtering = true;
 
 bool use_quartile_norm = false;
@@ -108,11 +110,21 @@ void asm_printf(const char* fmt,...)
 #if !ASM_VERBOSE
 	return;
 #endif
-	va_list argp;
-	va_start(argp, fmt);
-	vfprintf(stderr, fmt, argp);
-	va_end(argp);
+  if (cuff_verbose) {
+     va_list argp;
+     va_start(argp, fmt);
+     vfprintf(stderr, fmt, argp);
+     va_end(argp);
+     }
 }
+
+void asm_warn(const char* fmt,...) {
+   va_list argp;
+   va_start(argp, fmt);
+   vfprintf(stderr, fmt, argp);
+   va_end(argp);
+}
+
 
 /**
  * Parse an int out of optarg and enforce that it be at least 'lower';

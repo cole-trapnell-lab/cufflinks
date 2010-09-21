@@ -570,7 +570,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(gammas[i]))
 		{
-			asm_printf("Warning: isoform abundance is NaN!\n");
+			asm_warn("Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
@@ -603,7 +603,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(filtered_gammas[i]))
 		{
-			asm_printf("Warning: isoform abundance is NaN!\n");
+			asm_warn("Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
@@ -629,7 +629,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(gammas[i]))
 		{
-			asm_printf( "Warning: isoform abundance is NaN!\n");
+			asm_warn( "Warning: isoform abundance is NaN!\n");
 			success = false;
 		}
 	}
@@ -957,7 +957,7 @@ double EM (int N, int M, vector<double> & newP,
 		iter++;
 	}
 	if (iter == max_mle_iterations)
-		asm_printf( "Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
+		asm_warn("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
 	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
 	return newEll;
 }
@@ -1426,7 +1426,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	double ch = cholesky_factorize(fisher_chol);
 	if (ch != 0.0)
 	{
-		asm_printf("Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		asm_warn("Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1450,7 +1450,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	ch = cholesky_factorize(test_fisher);
 	if (ch != 0.0 || !invertible)
 	{
-		asm_printf("Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		asm_warn("Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1475,7 +1475,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (ch != 0.0)
 	{
-		asm_printf("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
+		asm_warn("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1529,7 +1529,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (samples.size() < 100)
 	{
-		asm_printf("Warning: not-enough samples for MAP re-estimation\n");
+		asm_warn("Warning: not-enough samples for MAP re-estimation\n");
 		return false;
 	}
 	
@@ -1553,7 +1553,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (!invertible)
 	{
-		asm_printf("Warning: covariance matrix is not invertible, probability interval is not available\n");
+		asm_warn("Warning: covariance matrix is not invertible, probability interval is not available\n");
 		return false;
 	}
 	
@@ -1585,7 +1585,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (log_total_weight == 0 || sample_weights.size() < 100)
 	{
-		asm_printf("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
+		asm_warn("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
 		return false;
 	}
 	
@@ -1600,7 +1600,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		if (isinf(expectation(e)) || isnan(expectation(e)))
 		{
-			asm_printf("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
+			asm_warn("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
 			return false;
 		}
 	}
@@ -1620,7 +1620,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (m == 0 || isinf(m) || isnan(m))
 	{
-		asm_printf("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
+		asm_warn("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
 		return false;
 	}
 	

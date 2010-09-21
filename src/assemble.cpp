@@ -462,7 +462,7 @@ bool make_scaffolds(int bundle_left,
             
             if (hits.size() >= MAX_BUNDLE_ALIGNMENTS)
 			{
-				asm_printf( "%s\tWarning: bundle too large, skipping assembly\n", bundle_label->c_str());
+				asm_warn( "%s\tWarning: bundle too large, skipping assembly\n", bundle_label->c_str());
 				return false;
 			}
             
