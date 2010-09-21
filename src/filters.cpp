@@ -767,6 +767,9 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 		if ((scaff->strand() == CUFF_REV ||  scaff->strand() == CUFF_STRAND_UNKNOWN) &&
 			(abundances[t] / max_rev_ab) < min_isoform_fraction)
 			too_rare[t] = true;
+        
+        if ((transcripts[t]->num_fragments() < min_frags_per_transfrag))
+            chaff[t] = true;
 		
 	}
 	
@@ -774,7 +777,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	vector<double> non_junk_abundances;
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		if (!repeats[t] && !pre_mrna_junk[t] && !too_rare[t])
+		if (!repeats[t] && !pre_mrna_junk[t] && !too_rare[t] && !chaff[t])
 		{
 			non_junk_transcripts.push_back(transcripts[t]);
 			non_junk_abundances.push_back(abundances[t]);

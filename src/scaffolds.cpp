@@ -323,6 +323,10 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 			g_min = ops[i].g_left();
 		if ((size_t)ops[i].g_right() > g_max)
 			g_max = ops[i].g_right();
+        if (ops[i].g_right() - ops[i].g_left() > max_intron_length)
+        {
+            int a = 3;
+        }
 		switch(ops[i].opcode)
 		{
 			case CUFF_MATCH:
@@ -337,6 +341,7 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
                 
 			case CUFF_UNKNOWN:
 			{
+                
 			}break;
                 
 			default:
@@ -349,12 +354,12 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 	int merged_length = (int)g_max - (int)g_min + 1;
 	if (merged_length < 0)
     {
-        fprintf(stderr, "Error: nonsense gene merge - negative length product, exiting\n");
+        fprintf(stderr, "Error: nonsense gene merge - negative length product\n");
 		exit(1);
     }
     if (gaurd_assembly() && merged_length > (int)max_gene_length)
 	{
-		fprintf(stderr, "Error: nonsense gene merge - product > max_gene_length, exiting\n");
+		fprintf(stderr, "Warning: nonsense gene merge - product > max_gene_length\n");
 		exit(1);
 	}
 	

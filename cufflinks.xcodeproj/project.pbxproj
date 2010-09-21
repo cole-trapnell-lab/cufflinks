@@ -167,6 +167,7 @@
 		ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_check_zlib.m4; sourceTree = "<group>"; };
 		ED1C0D7511D7F88B00CFD663 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = /usr/local/libIntel64/libbam.a; sourceTree = "<absolute>"; };
 		ED1C0D7911D7F94900CFD663 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		ED4835D81249057500642337 /* progressbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = progressbar.h; path = src/progressbar.h; sourceTree = "<group>"; };
 		ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_thread-xgcc40-mt-1_41.a"; path = "/usr/local/lib/libboost_thread-xgcc40-mt-1_41.a"; sourceTree = "<absolute>"; };
 		ED877B71123BCA3E0025A050 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
 		ED877B72123BCA3F0025A050 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
@@ -347,6 +348,7 @@
 				EDA5151810C72963000A4F41 /* hits.h */,
 				EDE78BC511B716C3000F8846 /* matching_merge.h */,
 				0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */,
+				ED4835D81249057500642337 /* progressbar.h */,
 				EDA5151910C72963000A4F41 /* scaffolds.h */,
 				EDE78A7811B6E912000F8846 /* scaffold_graph.h */,
 				EDA5151A10C72963000A4F41 /* tokenize.h */,

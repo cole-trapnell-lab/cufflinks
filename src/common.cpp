@@ -85,6 +85,8 @@ double binomial_junc_filter_alpha = 0.001;
 string default_library_type = "illumina-unstranded-paired-end";
 string library_type = "";
 
+int min_frags_per_transfrag = 10;
+
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 

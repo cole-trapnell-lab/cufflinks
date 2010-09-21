@@ -62,8 +62,11 @@ static struct option long_options[] = {
 {"overhang-tolerance",      required_argument,		 0,			 OPT_OVERHANG_TOLERANCE},
 
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
-{"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
-{"library-type",		 required_argument,		     0,			 OPT_LIBRARY_TYPE},
+{"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
+{"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
+{"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
+{"min-frags-per-transfrags",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
+
 {0, 0, 0, 0} // terminator
 };
 
@@ -75,29 +78,31 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-m/--frag-len-mean			  the average fragment length							[ default:     200 ]\n");
-	fprintf(stderr, "-s/--frag-len-std-dev		  the fragment length standard deviation                [ default:     80 ]\n");
-	fprintf(stderr, "-c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
-	fprintf(stderr, "-F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
-	fprintf(stderr, "-f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
-	fprintf(stderr, "-a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
-	fprintf(stderr, "-A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
-	fprintf(stderr, "-j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
-	fprintf(stderr, "-I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
-	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
-	fprintf(stderr, "-L/--label                   all transcripts have this prefix in their IDs         [ default:   CUFF ]\n");
-	fprintf(stderr, "-G/--GTF                     quantitate against reference transcript annotations                      \n");
-    fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file                     \n");
-	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+	fprintf(stderr, "  -m/--frag-len-mean			  the average fragment length							[ default:     200 ]\n");
+	fprintf(stderr, "  -s/--frag-len-std-dev		  the fragment length standard deviation                [ default:     80 ]\n");
+	fprintf(stderr, "  -c/--collapse-rounds         rounds of pre-assembly alignment collapse             [ default:      1 ]\n");
+	fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
+	fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
+	fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
+	fprintf(stderr, "  -A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
+	fprintf(stderr, "  -j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
+	fprintf(stderr, "  -I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
+	fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
+	fprintf(stderr, "  -L/--label                   all transcripts have this prefix in their IDs         [ default:   CUFF ]\n");
+	fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
+    fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
+	fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
+	fprintf(stderr, "  -r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 #if ENABLE_THREADS
-	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
+	fprintf(stderr, "  -p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
 #endif
 	fprintf(stderr, "\nAdvanced Options:\n\n");
-    fprintf(stderr, "--overhang-tolerance         number of terminal exon bp to tolerate in introns     [ default:      8 ]\n");
-	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
-	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "--library-type               Library prep used for input reads                     [ default:  below ]\n");
+    fprintf(stderr, "  --min-frags-per-transfrag    minimum number of fragments needed for new transfrags [ default:      10 ]\n");
+    fprintf(stderr, "  --overhang-tolerance         number of terminal exon bp to tolerate in introns     [ default:      8 ]\n");
+	fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
+    fprintf(stderr, "  --max-bundle-length          maximum genomic length allowed for a given bundle     [ default:3500000 ]\n");
     
     print_library_table();
 }
@@ -196,6 +201,17 @@ int parse_options(int argc, char** argv)
             case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
+				break;
+			}
+            case OPT_MAX_BUNDLE_LENGTH:
+			{
+				max_gene_length = parseInt(1, "--max-bundle-length must be at least 1", print_usage);;
+				break;
+			}
+            
+            case OPT_MIN_FRAGS_PER_TRANSFRAG:
+			{
+				min_frags_per_transfrag = parseInt(1, "--min-frags-per-transfrag must be at least 0", print_usage);;
 				break;
 			}
                 

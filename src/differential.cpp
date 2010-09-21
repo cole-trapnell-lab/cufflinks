@@ -148,7 +148,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 		test.test_stat = 0;
 		test.test_stat = 1.0;
 		test.differential = 0.0;
-		test.test_status = NOTEST;
+		test.test_status = FAIL;
 	}
 	
 	inserted.first->second = test;

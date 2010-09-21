@@ -91,23 +91,23 @@ void print_usage()
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
 	fprintf(stderr, "Options:\n\n");
-    fprintf(stderr, "-T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
-   	fprintf(stderr, "-N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
-	fprintf(stderr, "-Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
-	fprintf(stderr, "-c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
-	fprintf(stderr, "--FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
-	fprintf(stderr, "-M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
-	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "-r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
-    fprintf(stderr, "-L/--labels                  comma-separated list of condition labels\n");
+    fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
+   	fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
+	fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
+	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
+	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
+	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
+	fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
+	fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+    fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
-	fprintf(stderr, "-p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
+	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
 	fprintf(stderr, "\nAdvanced Options:\n\n");
-    fprintf(stderr, "-m/--frag-len-mean           the average fragment length (use with unpaired reads only)               \n");
-	fprintf(stderr, "-s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
-	fprintf(stderr, "--num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
-	fprintf(stderr, "--max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "  -m/--frag-len-mean           the average fragment length (use with unpaired reads only)               \n");
+	fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
+	fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
 }
 
 int parse_options(int argc, char** argv)

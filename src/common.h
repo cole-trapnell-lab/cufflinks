@@ -36,6 +36,7 @@ extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;
 
 extern uint32_t max_gene_length;
+
 extern int max_partner_dist;
 extern int def_frag_len_mean;
 extern int def_frag_len_std_dev;
@@ -78,6 +79,8 @@ extern double small_anchor_fraction;
 extern double binomial_junc_filter_alpha;
 
 extern std::string library_type;
+
+extern int min_frags_per_transfrag;
 
 #define ADAM_MODE 0
 #define ASM_VERBOSE 0
@@ -244,5 +247,7 @@ void init_library_table();
 #define OPT_FDR					262
 #define OPT_LIBRARY_TYPE        263
 #define OPT_OVERHANG_TOLERANCE  264
+#define OPT_MAX_BUNDLE_LENGTH   265
+#define OPT_MIN_FRAGS_PER_TRANSFRAG 266
 
 #endif
