@@ -150,38 +150,53 @@ int Gstrcmp(char* a, char* b);
 int Gstricmp(const char* a, const char* b);
 
 inline void swap(int &arg1, int &arg2){
- arg1 ^= arg2 ^= arg1 ^= arg2;
+ //arg1 ^= arg2;
+ //arg2 ^= arg1;
+ //arg1 ^= arg2;
+ register int swp=arg1;
+ arg1=arg2; arg2=swp;
  }
 
-inline void swap(char* &arg1, char* &arg2){
+inline void swap(char* &arg1, char* &arg2){ //swap pointers!
  register char* swp=arg1;
  arg1=arg2; arg2=swp;
  }
 
-inline void swap(unsigned int &arg1, unsigned int &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
+inline void swap(uint &arg1, uint &arg2) {
+  register uint swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
-inline void swap(short &arg1, short &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
+inline void swap(short &arg1, short &arg2) {
+  register short swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
-inline void swap(unsigned short &arg1, unsigned short &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
+inline void swap(unsigned short &arg1, unsigned short &arg2) {
+  register unsigned short swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
-inline void swap(long &arg1, long &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
+inline void swap(long &arg1, long &arg2) {
+  register long swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
-inline void swap(unsigned long &arg1, unsigned long &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
+inline void swap(unsigned long &arg1, unsigned long &arg2) {
+  register unsigned long swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
-inline void swap(char &arg1, char &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
 
-inline void swap(unsigned char &arg1, unsigned char &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
+inline void swap(char &arg1, char &arg2) {
+  register char swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
-inline void swap(bool &arg1, bool &arg2)
-{ arg1 ^= arg2 ^= arg1 ^= arg2; }
-
+inline void swap(unsigned char &arg1, unsigned char &arg2) {
+  register unsigned char swp=arg1;
+  arg1=arg2; arg2=swp;
+  }
 
 /**************** Memory management ***************************/
 
