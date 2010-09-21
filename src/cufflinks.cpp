@@ -55,7 +55,7 @@ static struct option long_options[] = {
 {"GTF",					    required_argument,		 0,			 'G'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
-{"verbose",			    required_argument,		 0,			 'V'},
+{"verbose",			    	no_argument,		 	0,			 'V'},
 {"reference-seq",			required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
@@ -856,8 +856,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 			
 		}
 #endif
-		if (cuff_verbose)
-			p_bar.update(bundle_label_buf, 1);	
+		p_bar.update(bundle_label_buf, 1);	
 
 #if ENABLE_THREADS			
 		thread_pool_lock.lock();
@@ -951,11 +950,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     if (ref_gtf)
     {
-        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist, cuff_verbose);
+        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
     }
     else 
     {
-        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist, cuff_verbose);
+        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
     }
     
     asm_printf("%d ReadHits still live\n", num_deleted);

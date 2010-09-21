@@ -608,7 +608,7 @@ void HitBundle::finalize(bool is_combined)
 		}
 	}
 
-	//remove_unmapped_hits();
+	remove_unmapped_hits();
     
 	if (_ref_scaffs.size() > 0)
     {

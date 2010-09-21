@@ -303,7 +303,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
                  bool progress_bar = true)
 {
 
-    ProgressBar p_bar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
+	if (progress_bar)
+    	ProgressBar p_bar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
     char last_chrom[100];
     map_mass = 0.0;
     int min_len = numeric_limits<int>::max();
@@ -572,15 +573,15 @@ void inspect_map(BundleFactoryType& bundle_factory,
     frag_len_dist.std_dev(std_dev);
     
     if (progress_bar) {
-            p_bar.complete();
-            fprintf(stderr, "> Map Properties:\n");
-            fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-            string type = (has_pairs) ? "paired-end" : "single-end";
-            fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
-            fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
-            fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
-            fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
-            }
+		p_bar.complete();
+		fprintf(stderr, "> Map Properties:\n");
+		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+		string type = (has_pairs) ? "paired-end" : "single-end";
+		fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
+		fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
+		fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
+		fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
+	}
     bundle_factory.num_bundles(num_bundles);
     bundle_factory.reset(); 
     return;

@@ -1,6 +1,7 @@
 #ifndef PROGRESS_H
 #define PROGRESS_H
 
+#include "common.h"
 #include "time.h"
 using namespace std;
 
@@ -47,6 +48,7 @@ public:
 		_num_complete += inc_amt;
 		_num_updates ++;
 		
+		if (!cuff_verbose) return;
 #if ASM_VERBOSE
 		return;
 #endif
