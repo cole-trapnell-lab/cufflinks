@@ -768,7 +768,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 			(abundances[t] / max_rev_ab) < min_isoform_fraction)
 			too_rare[t] = true;
         
-        if ((transcripts[t]->num_fragments() < min_frags_per_transfrag))
+        if ((scaff->mate_hits().size() < min_frags_per_transfrag))
             chaff[t] = true;
 		
 	}
