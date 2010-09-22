@@ -377,8 +377,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
             assert(hits[i].left_alignment());
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())
+			{
 				min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
-
+				has_pairs = true;
+			}
 			if (bundle.ref_scaffolds().size()==1 && hits[i].is_pair()) // Annotation provided and single isoform gene.
 			{
 				int start, end, mate_length;
@@ -406,7 +408,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				}
 				if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
 				{
-					has_pairs = true;
 					assert(hits[i].right_alignment()->left() > hits[i].left());
 					curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
 					next_range_start = max(next_range_start, hits[i].right());
@@ -442,7 +443,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		
 		map_mass += bundle_mass;
 		if (use_quartile_norm && bundle_mass > 0) mass_dist.push_back(bundle_mass);
-		
+
 		foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
 		{
 			ref_scaff->clear_hits();
@@ -456,9 +457,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	{
 		sort(mass_dist.begin(),mass_dist.end());
 		int num_included = mass_dist.size() * 0.75;
-		fprintf(stderr,"%Lf\n",map_mass);
 		map_mass = accumulate(mass_dist.begin(), mass_dist.begin()+num_included, 0.0);
-		fprintf(stderr,"%Lf\n",map_mass);
 
 	}
 
@@ -485,7 +484,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	vector<double> frag_len_cdf(max_len+1, 0.0);
         
     tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
-    
     
     string distr_type;
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
@@ -576,7 +574,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
     if (progress_bar) {
 		p_bar.complete();
 		fprintf(stderr, "> Map Properties:\n");
-		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+		if (use_quartile_norm)
+			fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
+		else
+			fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
 		string type = (has_pairs) ? "paired-end" : "single-end";
 		fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
 		fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());

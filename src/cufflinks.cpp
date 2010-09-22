@@ -34,9 +34,9 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:V";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:N:V";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:V";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:N:V";
 #endif
 
 static struct option long_options[] = {
@@ -55,6 +55,7 @@ static struct option long_options[] = {
 {"GTF",					    required_argument,		 0,			 'G'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
+{"quartile-normalization",  no_argument,	 		 0,	         'N'},
 {"verbose",			    	no_argument,		 	0,			 'V'},
 {"reference-seq",			required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
@@ -92,6 +93,7 @@ void print_usage()
     fprintf(stderr, "  -L/--label                   all transcripts have this prefix in their IDs         [ default:   CUFF ]\n");
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
+    fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  -V/--verbose                 verbose processing \n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
     fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
@@ -195,6 +197,12 @@ int parse_options(int argc, char** argv)
 				cuff_verbose = true;
 				break;
 			}
+			case 'N':
+            {
+            	use_quartile_norm = true;
+            	break;
+            }
+
             case 'o':
 			{
 				output_dir = optarg;
