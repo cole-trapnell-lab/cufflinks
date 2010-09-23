@@ -607,8 +607,6 @@ void HitBundle::finalize(bool is_combined)
 			}
 		}
 	}
-
-	remove_unmapped_hits();
     
 	if (_ref_scaffs.size() > 0)
     {
@@ -1089,6 +1087,10 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 	assert (left_bundle_boundary != -1);
 	bundle.finalize();
     assert(bundle.right() != -1);
+    
+	if (_ref_driven) // Must be done after finalize -- only remove unampped if using reference
+		bundle.remove_unmapped_hits(); 
+	
 	//bundle_out.remove_hitless_scaffolds();
     
     return true;
