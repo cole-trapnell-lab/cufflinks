@@ -127,22 +127,28 @@
 		<h2>0.9.0 release - 9/XXX/2010</h2>
 	      <p>This release includes significant bug fixes as well as some major new features.  Enhancements include:
 		<ul>
-			<li>Thanks to the work of Adam Roberts, Cufflinks now learns certain properties of each RNA-Seq 
+			<li>Thanks to the work of Adam Roberts, Cufflinks now automatically learns certain properties of each RNA-Seq 
 				library you analyze with it, including sequence specific biases.  Transcript and gene abundance estimates
 				are significantly more accurate when run with our (optional) new bias correction technology.  
 				A manuscript describing these changes is in preparation. </li>
+			<li>Due to Adam's changes, we do <b>not</b> recommend that you supply the mean and standard deviations 
+				of the fragment length distribution for your library.  Cufflinks now learns these automatically.
 			<li>Cuffdiff now allows you to supply reads from multiple technical or biological replicates, 
 				and adjusts transcript and gene abundance estimates and their confidence intervals accordingly.</li>
 			<li>Cuffdiff will by default report testing results between all pairs of samples, rather than treating 
 				samples as a time series.  Time series analysis is still supported via the <tt>--time-series</tt> option.</li>
+			<li>Cufflinks and Cuffdiff now offer improved compatibility with reads aligned with Life Technology's BioScope aligner.  
+				Strand specificity SOLiD RNA-Seq runs are fully supported.</li>
 			<li>Cufflinks and Cuffdiff support quantile normalization of FPKM.</li>
 			<li>Cufflinks and Cuffdiff now support both BAM and SAM files.  Both file types require that the chromosome names in
 				 header <tt>@SQ</tt> records, if present, <b>must</b> be sorted in the same order as the reads.</li>
+			<li>Cufflinks and Cuffdiff are much less verbose in their output by default, but each supports a "verbose" 
+				mode with a text progress bar for users that want to keep an eye on their runs</li>
 			<li>In response to user requests, FPKM values are now provided by Cufflinks and Cuffdiff, 
 				even if their expression levels are zero, in an effort to make downstream analysis of Cuffdiff easier.</li>
 			<li>There are a number of new command line options that users may wish to set under certain circumstances.</li>
 		</ul>
-		<p>Note that building Cufflinks from source requires the <a href="http://samtools.sourceforge.net">SAM tools</a>.  
+		<p>Note that building Cufflinks from source now requires the <a href="http://samtools.sourceforge.net">SAM tools</a>.  
 		See the installation instructions for more details. </p>
 		  <br/>
 	

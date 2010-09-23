@@ -3,34 +3,34 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>index.html</string>
+	<string>tutorial.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2010-09-14T14:38:15Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2010-09-21T01:58:37Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2010-06-30T17:06:50Z</date>
+			<date>2010-09-21T01:06:12Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>manual.html</string>
 			<key>lastUsed</key>
-			<date>2010-06-30T17:37:47Z</date>
+			<date>2010-09-21T01:59:08Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2010-06-30T17:29:13Z</date>
+			<date>2010-09-21T01:59:08Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -56,57 +56,57 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>100</integer>
 				<key>line</key>
-				<integer>0</integer>
+				<integer>134</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>110</integer>
 		</dict>
 		<key>manual.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>52</integer>
+				<integer>34</integer>
 				<key>line</key>
-				<integer>872</integer>
+				<integer>166</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>852</integer>
+			<integer>269</integer>
 		</dict>
 		<key>tutorial.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>7</integer>
 				<key>line</key>
-				<integer>42</integer>
+				<integer>3</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>4</integer>
+			<integer>0</integer>
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>10</integer>
+				<integer>71</integer>
 				<key>line</key>
-				<integer>58</integer>
+				<integer>3</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>7</integer>
 				<key>line</key>
-				<integer>42</integer>
+				<integer>3</integer>
 			</dict>
 		</dict>
 	</dict>
@@ -120,6 +120,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<false/>
 	<key>windowFrame</key>
-	<string>{{106, 74}, {1461, 954}}</string>
+	<string>{{222, 224}, {1461, 954}}</string>
 </dict>
 </plist>

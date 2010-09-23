@@ -222,14 +222,28 @@ out:
 }
     
 void init_library_table()
-	{
-    ReadGroupProperties std_illumina_paired;
-    std_illumina_paired.platform(ILLUMINA);
-    std_illumina_paired.std_mate_orientation(MATES_POINT_TOWARD);
-    std_illumina_paired.strandedness(UNSTRANDED_PROTOCOL);
+{
+    ReadGroupProperties std_illumina_unstranded_paired;
+    std_illumina_unstranded_paired.platform(ILLUMINA);
+    std_illumina_unstranded_paired.std_mate_orientation(MATES_POINT_TOWARD);
+    std_illumina_unstranded_paired.strandedness(UNSTRANDED_PROTOCOL);
     
-    library_type_table["illumina-unstranded-paired-end"] = std_illumina_paired;
+    library_type_table["illumina-unstranded-paired-end"] = std_illumina_unstranded_paired;
+        
+    ReadGroupProperties std_illumina_stranded_paired;
+    std_illumina_stranded_paired.platform(ILLUMINA);
+    std_illumina_stranded_paired.std_mate_orientation(MATES_POINT_TOWARD);
+    std_illumina_stranded_paired.strandedness(STRANDED_PROTOCOL);
+    
+    library_type_table["illumina-stranded-paired-end"] = std_illumina_stranded_paired;
    
+    ReadGroupProperties solid_paired;
+    solid_paired.platform(SOLID);
+    solid_paired.std_mate_orientation(MATES_POINT_TOWARD);
+    solid_paired.strandedness(STRANDED_PROTOCOL);
+    
+    library_type_table["solid-paired-end"] = solid_paired;
+        
     ReadGroupProperties solid_fragment;
     solid_fragment.platform(SOLID);
     solid_fragment.std_mate_orientation(UNPAIRED);
