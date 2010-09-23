@@ -819,15 +819,15 @@ void filter_junk_genes(vector<Gene>& genes)
 				{
 					good_gene = false;
 				}
-                if (allow_junk_filtering)
-                {
-                    if (g.FPKM() == 0)
-                    {
-                        good_gene = false;
-                    }
-                }
 			}
 		}
+        if (allow_junk_filtering)
+        {
+            if (g.FPKM() == 0)
+            {
+                good_gene = false;
+            }
+        }
 		if (good_gene)
         {
 			good_genes.push_back(g);
