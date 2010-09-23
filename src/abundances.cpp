@@ -346,7 +346,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
 		_abundances[j]->num_fragments(_abundances[j]->gamma() * avg_X_g);
         double j_avg_mass_fraction = _abundances[j]->gamma() * avg_mass_fraction;
         _abundances[j]->mass_fraction(j_avg_mass_fraction);
-        if (j_avg_mass_fraction && N==1)
+        if (j_avg_mass_fraction)
         {
             double FPKM = j_avg_mass_fraction * 1000000000/ _abundances[j]->effective_length();
             _abundances[j]->FPKM(FPKM);
