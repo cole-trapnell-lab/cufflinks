@@ -74,7 +74,8 @@ public:
 			_bar_buf[i] = SYMBOL;
 		char complete_buf[45];
 		snprintf(complete_buf, 44, "Processed %d loci.", _num_updates); 
-		fprintf(stderr, "\r> %-44s %s %3d%%\n", complete_buf, _bar_buf, 100);
+		if (cuff_verbose) fprintf(stderr, "\r> %-44s %s %3d%%\n", complete_buf, _bar_buf, 100);
+		             else fprintf(stderr, " %s\n",complete_buf);
 	}
 };
 

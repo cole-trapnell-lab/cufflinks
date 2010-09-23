@@ -100,7 +100,6 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 			
 		delete bundle_ptr;
 	}
-	
 	p_bar.complete();
 	bl.normalizeParameters();
 #if ADAM_MODE

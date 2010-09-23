@@ -468,7 +468,7 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
     while(true)
     {
         int next_bundle = -1;
-        const MateHit* next_hit; 
+        const MateHit* next_hit=NULL; 
         for(int i = 0; i < in_bundles.size(); ++i)
         {
             const vector<MateHit>& curr_hits = in_bundles[i]->hits();

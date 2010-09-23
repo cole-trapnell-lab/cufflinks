@@ -1024,7 +1024,7 @@ int Scaffold::genomic_to_transcript_coord(int g_coord) const
 {
 	int s_coord = 0;
 	size_t curr_op = 0;
-	const AugmentedCuffOp* op;
+	const AugmentedCuffOp* op=NULL;
 
 	while (curr_op != _augmented_ops.size())
 	{

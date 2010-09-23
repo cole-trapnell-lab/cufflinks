@@ -305,17 +305,17 @@ void inspect_map(BundleFactoryType& bundle_factory,
 
 	ProgressBar p_bar;
 	if (progress_bar)
-    	p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
-    char last_chrom[100];
-    map_mass = 0.0;
-    int min_len = numeric_limits<int>::max();
+		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
+	char last_chrom[100];
+	map_mass = 0.0;
+	int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;
-    vector<double> frag_len_hist(def_max_frag_len+1,0);
-    bool has_pairs = false;
-    
-    int num_bundles = 0;
-    size_t total_hits = 0;
-    size_t total_non_redundant_hits = 0;
+	vector<double> frag_len_hist(def_max_frag_len+1,0);
+	bool has_pairs = false;
+
+	int num_bundles = 0;
+	size_t total_hits = 0;
+	size_t total_non_redundant_hits = 0;
 	
 	vector<long double> mass_dist; //To be used for quartile normalization
 	
@@ -329,34 +329,29 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			break;
 		}
 		num_bundles++;
-
 		HitBundle& bundle = *bundle_ptr;
-
 		const RefSequenceTable& rt = bundle_factory.ref_table();
 		const char* chrom = rt.get_name(bundle.ref_id());	
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
-
 		asm_printf("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-
-		if (progress_bar)
-		{
+		if (progress_bar) {
 			int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
 			p_bar.update(bundle_label_buf, inc_amt);
 			strncpy(last_chrom, chrom, 100);
-		}
+			}
 		
-        if (bad_introns != NULL)
-        {
-            identify_bad_splices(bundle, *bad_introns);
-        }
+		if (bad_introns != NULL)
+		{
+			identify_bad_splices(bundle, *bad_introns);
+		}
         
-        const vector<MateHit>& hits = bundle.non_redundant_hits();
+		const vector<MateHit>& hits = bundle.non_redundant_hits();
 		if (hits.empty())
-        {
-            delete bundle_ptr;
-            continue;
-        }
+		{
+			delete bundle_ptr;
+			continue;
+		}
 		
 		list<pair<int, int> > open_ranges;
 		int curr_range_start = hits[0].left();
@@ -364,8 +359,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		int next_range_start = -1;
 		
 		
-        total_non_redundant_hits += bundle.non_redundant_hits().size();
-        total_hits += bundle.hits().size();
+		total_non_redundant_hits += bundle.non_redundant_hits().size();
+		total_hits += bundle.hits().size();
 
 		// This first loop calclates the map mass and finds ranges with no introns
 		// Note that we are actually looking at non-redundant hits, which is why we use collapse_mass
@@ -373,8 +368,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
 			bundle_mass += hits[i].collapse_mass();
-            
-            assert(hits[i].left_alignment());
+			assert(hits[i].left_alignment());
 			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
 			if (hits[i].right_alignment())
 			{
@@ -568,25 +562,26 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	frag_len_dist.mode(frag_len_mode);
 	frag_len_dist.max(max_len);
 	frag_len_dist.min(min_len);
-    frag_len_dist.mean(mean);
-    frag_len_dist.std_dev(std_dev);
-    
-    if (progress_bar) {
-		p_bar.complete();
-		fprintf(stderr, "> Map Properties:\n");
-		if (use_quartile_norm)
-			fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
-		else
-			fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-		string type = (has_pairs) ? "paired-end" : "single-end";
-		fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
-		fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
-		fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
-		fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
-	}
-    bundle_factory.num_bundles(num_bundles);
-    bundle_factory.reset(); 
-    return;
+	frag_len_dist.mean(mean);
+	frag_len_dist.std_dev(std_dev);
+	if (progress_bar) {
+			p_bar.complete();
+			//if (cuff_verbose) {
+				fprintf(stderr, "> Map Properties:\n");
+				if (use_quartile_norm)
+					fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
+				else
+					fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+				string type = (has_pairs) ? "paired-end" : "single-end";
+				fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
+				fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
+				fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
+				fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
+			//	}
+		}
+	bundle_factory.num_bundles(num_bundles);
+	bundle_factory.reset(); 
+	return;
 }
 
 #endif
