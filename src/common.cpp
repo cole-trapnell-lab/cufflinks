@@ -73,6 +73,7 @@ int microexon_length = 25;
 bool perform_full_collapse = true;
 
 bool cuff_verbose = false;
+bool cuff_quiet = false;
 
 bool allow_junk_filtering = true;
 
@@ -105,20 +106,22 @@ bool gaurd_assembly()
 	return ref_gtf_filename == "";
 }
 
-void asm_printf(const char* fmt,...)
+void asm_verbose(const char* fmt,...)
 {
 #if !ASM_VERBOSE
 	return;
 #endif
-  if (cuff_verbose) {
      va_list argp;
      va_start(argp, fmt);
      vfprintf(stderr, fmt, argp);
      va_end(argp);
-     }
 }
 
-void asm_warn(const char* fmt,...) {
+void verbose_msg(const char* fmt,...) {
+
+	if (!cuff_verbose)
+		return;
+	
    va_list argp;
    va_start(argp, fmt);
    vfprintf(stderr, fmt, argp);

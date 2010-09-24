@@ -65,6 +65,7 @@ extern std::string fasta_dir;
 extern int collapse_thresh;
 extern int microexon_length;
 extern bool cuff_verbose;
+extern bool cuff_quiet;
 extern bool perform_full_collapse;
 
 extern bool allow_junk_filtering;
@@ -95,10 +96,8 @@ extern boost::shared_ptr<std::string> bundle_label;
 
 bool gaurd_assembly();
 
-void asm_printf(const char* fmt,...);
-
-//bypass the cuff_verbose check, print anyway:
-void asm_warn(const char* fmt,...); 
+void asm_verbose(const char* fmt,...);
+void verbose_msg(const char* fmt,...); 
 
 int parseInt(int lower, 
 			 const char *errmsg, 

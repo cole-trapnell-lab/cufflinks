@@ -52,9 +52,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:M:o:r:T:N:V";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:M:o:r:TNqv";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:T:N:V";
+const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:TNqv";
 #endif
 
 
@@ -72,7 +72,8 @@ static struct option long_options[] = {
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
-{"verbose",			    	no_argument,			 0,			 'V'},
+{"verbose",			    	no_argument,			 0,			 'v'},
+{"quiet",			    	no_argument,			 0,			 'q'},
 {"reference-seq",			required_argument,		 0,			 'r'},
 {"time-series",             no_argument,             0,			 'T'},
 {"quartile-normalization",  no_argument,	 		 0,	         'N'},
@@ -98,7 +99,8 @@ void print_usage()
 	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
-	fprintf(stderr, "  -V/--verbose                 verbose processing \n");
+    fprintf(stderr, "  -v/--verbose                 verbose processing                                    [ default:  FALSE ]\n");
+	fprintf(stderr, "  -q/--quiet                   quiet processing (no progress bar)                    [ default:  FALSE ]\n");
 	fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
 	fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
     fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
@@ -172,9 +174,24 @@ int parse_options(int argc, char** argv)
 				mask_gtf_filename = optarg;
 				break;
 			}
-			case 'V':
+			case 'v':
 			{
+				if (cuff_quiet)
+				{
+					fprintf(stderr, "Warning: Can't be both verbose and quiet!  Setting verbose only.\n");
+				}
+				cuff_quiet = false;
 				cuff_verbose = true;
+				break;
+			}
+			case 'q':
+			{
+				if (cuff_verbose)
+				{
+					fprintf(stderr, "Warning: Can't be both verbose and quiet!  Setting quiet only.\n");
+				}
+				cuff_verbose = false;
+				cuff_quiet = true;
 				break;
 			}
             case 'o':
@@ -726,7 +743,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             }
         }
 
-        asm_printf("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
+        verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
 		p_bar.update(abundances.front()->locus_tag.c_str(), 1);
 		test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
 	}

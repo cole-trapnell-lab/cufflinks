@@ -334,7 +334,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		const char* chrom = rt.get_name(bundle.ref_id());	
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
-		asm_printf("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
+		verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
 		if (progress_bar) {
 			int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
 			p_bar.update(bundle_label_buf, inc_amt);
@@ -436,6 +436,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		}
 		
 		map_mass += bundle_mass;
+		fprintf(stderr,"%f\n",bundle_mass);
 		if (use_quartile_norm && bundle_mass > 0) mass_dist.push_back(bundle_mass);
 
 		foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
@@ -469,8 +470,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
             num_introns += itr->second.size();
         }
         
-        asm_printf( "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
-    	asm_printf( "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
+        asm_verbose( "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+    	asm_verbose( "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
     } 
     
     long double tot_count = 0;
@@ -566,18 +567,16 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	frag_len_dist.std_dev(std_dev);
 	if (progress_bar) {
 			p_bar.complete();
-			//if (cuff_verbose) {
-				fprintf(stderr, "> Map Properties:\n");
-				if (use_quartile_norm)
-					fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
-				else
-					fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-				string type = (has_pairs) ? "paired-end" : "single-end";
-				fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
-				fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
-				fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
-				fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
-			//	}
+			fprintf(stderr, "> Map Properties:\n");
+			if (use_quartile_norm)
+				fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
+			else
+				fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+			string type = (has_pairs) ? "paired-end" : "single-end";
+			fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
+			fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
+			fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
+			fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
 		}
 	bundle_factory.num_bundles(num_bundles);
 	bundle_factory.reset(); 

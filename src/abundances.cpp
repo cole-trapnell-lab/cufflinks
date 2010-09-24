@@ -558,19 +558,19 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	vector<double> gammas;
 	
-	asm_printf( "Calculating intial MLE\n");
+	asm_verbose( "Calculating intial MLE\n");
 	
 	gamma_mle(mapped_transcripts,
 			  nr_alignments,
 			  gammas);
 	
-	asm_printf( "Tossing likely garbage isoforms\n");
+	asm_verbose( "Tossing likely garbage isoforms\n");
 	
 	for (size_t i = 0; i < gammas.size(); ++i)
 	{
 		if (isnan(gammas[i]))
 		{
-			asm_warn("Warning: isoform abundance is NaN!\n");
+			verbose_msg("Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
@@ -592,7 +592,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	filtered_gammas.clear();
 	
-	asm_printf( "Revising MLE\n");
+	asm_verbose( "Revising MLE\n");
 	
 	gamma_mle(filtered_transcripts,
 			  nr_alignments,
@@ -603,11 +603,11 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(filtered_gammas[i]))
 		{
-			asm_warn("Warning: isoform abundance is NaN!\n");
+			verbose_msg("Warning: isoform abundance is NaN!\n");
 		}
 	}
 	
-	asm_printf( "Importance sampling posterior distribution\n");
+	asm_verbose( "Importance sampling posterior distribution\n");
 	
 	bool success = true;
 	size_t N = transcripts.size();
@@ -629,7 +629,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		if (isnan(gammas[i]))
 		{
-			asm_warn( "Warning: isoform abundance is NaN!\n");
+			verbose_msg( "Warning: isoform abundance is NaN!\n");
 			success = false;
 		}
 	}
@@ -957,7 +957,7 @@ double EM (int N, int M, vector<double> & newP,
 		iter++;
 	}
 	if (iter == max_mle_iterations)
-		asm_warn("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
+		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
 	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
 	return newEll;
 }
@@ -1426,7 +1426,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	double ch = cholesky_factorize(fisher_chol);
 	if (ch != 0.0)
 	{
-		asm_warn("Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		verbose_msg("Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1450,7 +1450,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	ch = cholesky_factorize(test_fisher);
 	if (ch != 0.0 || !invertible)
 	{
-		asm_warn("Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		verbose_msg("Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1475,7 +1475,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (ch != 0.0)
 	{
-		asm_warn("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
+		verbose_msg("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
 		return false;
 	}
 	
@@ -1529,7 +1529,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (samples.size() < 100)
 	{
-		asm_warn("Warning: not-enough samples for MAP re-estimation\n");
+		verbose_msg("Warning: not-enough samples for MAP re-estimation\n");
 		return false;
 	}
 	
@@ -1553,7 +1553,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (!invertible)
 	{
-		asm_warn("Warning: covariance matrix is not invertible, probability interval is not available\n");
+		verbose_msg("Warning: covariance matrix is not invertible, probability interval is not available\n");
 		return false;
 	}
 	
@@ -1585,7 +1585,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (log_total_weight == 0 || sample_weights.size() < 100)
 	{
-		asm_warn("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
+		verbose_msg("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
 		return false;
 	}
 	
@@ -1600,7 +1600,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		if (isinf(expectation(e)) || isnan(expectation(e)))
 		{
-			asm_warn("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
+			verbose_msg("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
 			return false;
 		}
 	}
@@ -1620,7 +1620,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (m == 0 || isinf(m) || isnan(m))
 	{
-		asm_warn("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
+		verbose_msg("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
 		return false;
 	}
 	
@@ -1967,7 +1967,7 @@ double get_intron_doc(const Scaffold& s,
 					 zi != intron_depth_of_coverage.end();
 					 ++zi)
 				{
-					asm_printf( "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
+					asm_verbose( "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
 				}
 			}
 

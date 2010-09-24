@@ -34,9 +34,9 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:N:V";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:Nqv";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:N:V";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:Nqv";
 #endif
 
 static struct option long_options[] = {
@@ -56,7 +56,8 @@ static struct option long_options[] = {
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"quartile-normalization",  no_argument,	 		 0,	         'N'},
-{"verbose",			    	no_argument,		 	0,			 'V'},
+{"verbose",			    	no_argument,		 	0,			 'v'},
+{"quiet",			    	no_argument,		 	0,			 'q'},
 {"reference-seq",			required_argument,		 0,			 'r'},	
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
@@ -94,7 +95,8 @@ void print_usage()
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
     fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  -V/--verbose                 verbose processing \n");
+    fprintf(stderr, "  -v/--verbose                 verbose processing                                    [ default:  FALSE ]\n");
+	fprintf(stderr, "  -q/--quiet                   quiet processing (no progress bar)                    [ default:  FALSE ]\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
     fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 #if ENABLE_THREADS
@@ -192,9 +194,24 @@ int parse_options(int argc, char** argv)
 				mask_gtf_filename = optarg;
 				break;
 			}
-            case 'V':
+			case 'v':
 			{
+				if (cuff_quiet)
+				{
+					fprintf(stderr, "Warning: Can't be both verbose and quiet!  Setting verbose only.\n");
+				}
+				cuff_quiet = false;
 				cuff_verbose = true;
+				break;
+			}
+			case 'q':
+			{
+				if (cuff_verbose)
+				{
+					fprintf(stderr, "Warning: Can't be both verbose and quiet!  Setting quiet only.\n");
+				}
+				cuff_verbose = false;
+				cuff_quiet = true;
 				break;
 			}
 			case 'N':
@@ -418,9 +435,9 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	}
 	
 	{
-		asm_printf ("%s\tFiltering forward strand\n", bundle_label->c_str());
+		asm_verbose ("%s\tFiltering forward strand\n", bundle_label->c_str());
 		filter_hits(bundle.length(), bundle.left(), fwd_hits);
-		asm_printf ("%s\tFiltering reverse strand\n", bundle_label->c_str());
+		asm_verbose ("%s\tFiltering reverse strand\n", bundle_label->c_str());
 		filter_hits(bundle.length(), bundle.left(), rev_hits);
 	}
     
@@ -641,7 +658,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	{
 		quantitate_transcript_cluster(cluster, total_map_mass, genes);
 	}
-    asm_printf( "%s\tBundle quantitation complete\n", bundle_label->c_str());
+    asm_verbose( "%s\tBundle quantitation complete\n", bundle_label->c_str());
 }
 
 void assemble_bundle(const RefSequenceTable& rt,
@@ -666,7 +683,7 @@ void assemble_bundle(const RefSequenceTable& rt,
     bundle_label = shared_ptr<string>(new string(bundle_label_buf));
 #endif
 
-    asm_printf( "%s\tProcessing new bundle with %d alignments\n", 
+    verbose_msg( "%s\tProcessing new bundle with %d alignments\n", 
             bundle_label->c_str(),
             (int)bundle.hits().size());
 
@@ -696,7 +713,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 								   map_mass,
 								   genes);
     
-    asm_printf( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
+    asm_verbose( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
     
 	if (allow_junk_filtering)
 		filter_junk_genes(genes);
@@ -736,7 +753,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 			else 
 				status = "FAIL";
 			
-			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%s\n", 
+			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%s\n", 
 					iso.trans_id().c_str(),
 					bundle.id(),
 					rt.get_name(bundle.ref_id()),
@@ -750,7 +767,6 @@ void assemble_bundle(const RefSequenceTable& rt,
 					iso.coverage(),
 					iso.scaffold().length(),
 					iso.effective_length(),
-					iso.scaffold().gc_content(),
 					status);
 			fflush(ftrans_abundances);
 			
@@ -784,7 +800,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 		exit(1);
 	}
 	
-    asm_printf( "%s\tBundle complete\n", bundle_label->c_str());
+    asm_verbose( "%s\tBundle complete\n", bundle_label->c_str());
     
 #if ENABLE_THREADS
 	out_file_lock.unlock();
@@ -843,7 +859,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 
 		if (bundle.right() - bundle.left() > 3000000)
 		{
-			asm_warn( "%s\tWarning: large bundle encountered\n", bundle_label_buf);
+			verbose_msg( "%s\tWarning: large bundle encountered\n", bundle_label_buf);
 		}
 
 		BundleStats stats;
@@ -965,8 +981,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
     }
     
-    asm_printf("%d ReadHits still live\n", num_deleted);
-    asm_printf("Found %lu reference contigs\n", rt.size());
+    asm_verbose("%d ReadHits still live\n", num_deleted);
+    asm_verbose("Found %lu reference contigs\n", rt.size());
     
     foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
     {
@@ -997,7 +1013,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	
 	max_frag_len = frag_len_dist->max();
 	min_frag_len = frag_len_dist->min();
-	asm_printf("\tTotal map density: %Lf\n", map_mass);
+	verbose_msg("\tTotal map density: %Lf\n", map_mass);
 
 	if (fasta_dir != "") final_est_run = false;
 #if ADAM_MODE

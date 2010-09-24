@@ -48,10 +48,8 @@ public:
 		_num_complete += inc_amt;
 		_num_updates ++;
 		
-		if (!cuff_verbose) return;
-#if ASM_VERBOSE
-		return;
-#endif
+		if (cuff_verbose||cuff_quiet) return;
+
 		char bundle_buf[28];
 		strncpy(bundle_buf, bundle_label_buf, 27);
 		
@@ -74,8 +72,10 @@ public:
 			_bar_buf[i] = SYMBOL;
 		char complete_buf[45];
 		snprintf(complete_buf, 44, "Processed %d loci.", _num_updates); 
-		if (cuff_verbose) fprintf(stderr, "\r> %-44s %s %3d%%\n", complete_buf, _bar_buf, 100);
-		             else fprintf(stderr, " %s\n",complete_buf);
+		if (cuff_verbose||cuff_quiet)
+			fprintf(stderr, "%-44s", complete_buf);
+		else
+			fprintf(stderr, "\r> %-44s %s %3d%%\n", complete_buf, _bar_buf, 100);
 	}
 };
 
