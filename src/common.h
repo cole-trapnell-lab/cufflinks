@@ -83,7 +83,7 @@ extern std::string library_type;
 
 extern int min_frags_per_transfrag;
 
-#define ADAM_MODE 0
+#define ADAM_MODE 1
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
 
@@ -169,6 +169,18 @@ public:
 		if (l >= _pdf.size() || l < 0)
 			return 0;
 		return _pdf[l];
+	}
+	
+	// pdf renomalized over the lengths <= r
+	double npdf(int l, int r) const
+ 	{
+		if (l >= _pdf.size() || l < 0)
+			return 0;
+		
+		if (r > _max)
+			return pdf(l);
+		
+		return pdf(l)/cdf(r);
 	}
 	
 	void cdf(vector<double>& cdf)	{ _cdf = cdf; }

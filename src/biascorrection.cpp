@@ -550,8 +550,6 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	vector<double> start_bias(trans_len+1, 1.0);
 	vector<double> end_bias(trans_len+1, 1.0);
 	vector<double> pos_bias(trans_len+1, 1.0);
-	double mean_start_bias = 1.0;
-	double mean_end_bias = 1.0;
 	double eff_len = 0.0;
 	
 	if (rgp->bias_learner()!=NULL && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
@@ -562,24 +560,32 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	shared_ptr<EmpDist const> frag_len_dist = rgp->frag_len_dist();
 	
 	vector<double> tot_bias_for_len(trans_len+1, 0);
+	vector<double> start_bias_for_len(trans_len+1, 0);
+	vector<double> end_bias_for_len(trans_len+1, 0);
+
 	tot_bias_for_len[trans_len] = trans_len;
+	start_bias_for_len[trans_len] = trans_len;
+	end_bias_for_len[trans_len] = trans_len;
+
+	
 	for(int l = rgp->frag_len_dist()->min(); l <= trans_len; l++)
 	{
-		double tot = 0;
-		double start = 0;
-		double end = 0;
+		//double tot = 0;
+		//double start = 0;
+		//double end = 0;
 		for(int i = 0; i <= trans_len - l; i++)
 		{
-			tot += start_bias[i]*pos_bias[i]*end_bias[i+l-1];
-			start += start_bias[i]*pos_bias[i];
-			end += end_bias[i+l-1];
+			double tot_bias = start_bias[i]*pos_bias[i]*end_bias[i+l-1];
+			tot_bias_for_len[l] += tot_bias;
+			start_bias_for_len[l] += start_bias[i]*pos_bias[i];
+			end_bias_for_len[l] += end_bias[i+l-1];
+			eff_len += tot_bias * frag_len_dist->npdf(l, trans_len - i);
 		}
-		double p_len = frag_len_dist->pdf(l);
-        assert(tot != 0);
-		tot_bias_for_len[l] = tot;
-		eff_len += tot * p_len;
-		mean_start_bias += start * p_len;
-		mean_end_bias += end * p_len; 
+        //assert(tot != 0);
+		//tot_bias_for_len[l] = tot;
+		//eff_len += tot * p_len;
+		//mean_start_bias += start * p_len;
+		//mean_end_bias += end * p_len; 
 	}
 	
 	_start_biases.push_back(start_bias);
@@ -587,8 +593,8 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	_pos_biases.push_back(pos_bias);
 	_tot_biases_for_len.push_back(tot_bias_for_len);
 	_eff_lens.push_back(eff_len);
-	_mean_start_biases.push_back(mean_start_bias);
-	_mean_end_biases.push_back(mean_end_bias);
+	_start_biases_for_len.push_back(start_bias_for_len);
+	_end_biases_for_len.push_back(end_bias_for_len);
 	_rg_masses.push_back(0.0);
 	
 	return _size++; // Index of new element
@@ -639,9 +645,9 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 		cond_prob /= _tot_biases_for_len[i][frag_len];
     }
 	else if (start==trans_len) // The hit is a singleton at the end of a fragment
-		cond_prob /= _mean_end_biases[i]*(trans_len - frag_len + 1);
-	else
-		cond_prob /= _mean_start_biases[i]*(trans_len - frag_len + 1);
+		cond_prob /= _start_biases_for_len[i][frag_len];
+	else // The hit is a singleton at the start of a fragment
+		cond_prob /= _end_biases_for_len[i][frag_len];
 	
 	if (cond_prob > 0 && hit.collapse_mass() > 0)
 	{
@@ -674,8 +680,6 @@ double BiasCorrectionHelper::get_effective_length()
 		double rg_eff_len = _eff_lens[i];
 		eff_len += rg_eff_len * (_rg_masses[i]/tot_mass);
 	}
-	
-	
 	
 	assert(eff_len>0);
 	assert(!isnan(eff_len));

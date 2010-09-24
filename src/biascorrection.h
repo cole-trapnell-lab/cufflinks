@@ -74,9 +74,10 @@ class BiasCorrectionHelper{
 	vector<vector<double> > _end_biases;
 	vector<vector<double> > _pos_biases;
 	vector<vector<double> > _tot_biases_for_len;
+	vector<vector<double> > _start_biases_for_len;
+	vector<vector<double> > _end_biases_for_len;
+	
 	vector<double> _eff_lens;
-	vector<double> _mean_start_biases;
-	vector<double> _mean_end_biases;
 	vector<double> _rg_masses;
 	
 	int add_read_group(shared_ptr<ReadGroupProperties const> rgp);	
