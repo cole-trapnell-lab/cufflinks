@@ -436,7 +436,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		}
 		
 		map_mass += bundle_mass;
-		fprintf(stderr,"%f\n",bundle_mass);
+
 		if (use_quartile_norm && bundle_mass > 0) mass_dist.push_back(bundle_mass);
 
 		foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
