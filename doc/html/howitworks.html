@@ -91,6 +91,7 @@
 		  <div class="box">
 		    <ul>
 		      <li><a href="http://www.cs.umd.edu/~cole/">Cole Trapnell</a></li>
+		      <li><a href="http://www.cs.berkeley.edu/~adarob/">Adam Roberts</a></li>
 			  <li>Geo Pertea</li>
 			  <li>Brian Williams</li>
 			  <li><a href="http://wormlab.caltech.edu/members/">Ali Mortazavi</a></li>
@@ -238,6 +239,43 @@
 	  either using a known "reference" annotation, 	or after an ab-initio 
 		assembly of the transcripts using only the reference genome.
       </p>
+	  <br/>
+	
+	  <h2 id="hqua">How does Cufflinks handle sequence bias?</h2><br/>
+	  <p>
+	  Often in RNA-Seq experiments, a sequence-specific bias is introduced during the 
+	  library preparation.  For example, a sequence-specific bias caused by the use of 
+	  random hexamers was identified in:
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>Kasper D. Hansen, Steven E. Brenner, Sandrine Dudoit,
+			<a href="http://nar.oxfordjournals.org/cgi/content/abstract/38/12/e131">http://nar.oxfordjournals.org/cgi/content/abstract/38/12/e131</a>
+			Nucleic Acids Research, Volume 38, Issue 12 (2010)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  	Because this bias is usually caused by primers used either in PCR or reverse transcription, it appears near 
+	  	the ends of the sequenced fragments.  We have developed a method to correct this bias by “learning” what sequences 
+	  	are being selected for (or ignored) in a given experiment, and including these measurements in the abundance 
+	  	estimation.  
+	  </p>
+  
+	  <p>The first step in the process is to generate an initial abundance estimation without using bias correction.  
+	  Since different transcripts will have different sequences appear in them, we use this approximate abundance to 
+	  weight reads by the expression level of the transcript from which they arise.  This helps us avoid over-counting 
+	  sequences that may be common in the mapping data due to high expression rather than bias.</p>
+	  
+	  <p>We next revisit each fragment in the map and apply the abundance weighting as we “learn” features of the 
+	  sequence in a window surrounding the 5’ and 3’ end of the transcript using a graphical model of the statistical dependencies 
+	  between bases in the window.  We keep a separate model for each end of the read since the biases in the first 
+	  and second strand synthesis of the fragment are not always the same.</p>
+	  
+	  <p>Finally, we re-estimate the abundances using a new likelihood function that has been adjusted to take the sequence 
+	  bias into account, based on the parameters of the graphical model we computed in the previous step.  The result is a 
+	  new set of FPKMs that are less affected by sequence-specific bias.</p>
 	  <br/>
 	
 	<h2 id="hass">How does Cuffdiff test for differential expression and regulation?</h2><br/>
