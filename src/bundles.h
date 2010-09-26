@@ -482,12 +482,12 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
     string distr_type;
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
-	if (!has_pairs || tot_count == 0)
+	if (!has_pairs || tot_count < 10000)
 	{
 		distr_type  = "Gaussian (default)";
 		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
 		max_len = def_frag_len_mean + 3*def_frag_len_std_dev;
-		for(int i = min_len; i < max_len; i++)
+		for(int i = min_len; i <= max_len; i++)
 		{
 			frag_len_hist[i] = cdf(frag_len_norm, i+0.5)-cdf(frag_len_norm, i-0.5);
 			tot_count += frag_len_hist[i];
@@ -518,9 +518,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			
 			curr_total += frag_len_hist[i];
 			
-			if (curr_total/tot_count > .9999)
+			if (curr_total/tot_count > 0.9999)
 			{
 				max_len = i; 
+				tot_count = curr_total;
 				break;
 			}
 		}
@@ -540,7 +541,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 
 	// Convert histogram to pdf and cdf, calculate mean
 	int frag_len_mode = 0;
-	for(size_t i = 1; i < frag_len_hist.size(); i++)
+	for(size_t i = min_len; i <= max_len; i++)
 	{
 		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
 		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];
@@ -575,8 +576,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			string type = (has_pairs) ? "paired-end" : "single-end";
 			fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
 			fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
-			fprintf(stderr, ">\t                        Mean: %.2f\n", mean);
-			fprintf(stderr, ">\t                     Std Dev: %.2f\n", std_dev);
+			fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
+			fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
 		}
 	bundle_factory.num_bundles(num_bundles);
 	bundle_factory.reset(); 

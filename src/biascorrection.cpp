@@ -630,15 +630,15 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	_transcript->map_frag(hit, start, end, frag_len);
 
 	shared_ptr<const EmpDist> fld = rgp->frag_len_dist();
-
-	if (frag_len < fld->min() or frag_len > fld->max())
-		return 0;
 	
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];
 	cond_prob *= _end_biases[i][end];
 	cond_prob *= _pos_biases[i][start];
-	cond_prob *= fld->pdf(frag_len);
+	cond_prob *= fld->npdf(frag_len, trans_len-start); //defaults to pdf if trans_len==start
+	
+	if (cond_prob==0.0)
+		return 0.0;
 	
 	if (hit.is_pair())
     {

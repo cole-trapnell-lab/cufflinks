@@ -95,8 +95,8 @@ void print_usage()
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
     fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  -v/--verbose                 verbose processing                                    [ default:  FALSE ]\n");
-	fprintf(stderr, "  -q/--quiet                   quiet processing (no progress bar)                    [ default:  FALSE ]\n");
+    fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
+	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
     fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 #if ENABLE_THREADS

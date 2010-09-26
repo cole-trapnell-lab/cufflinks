@@ -153,6 +153,7 @@ enum Platform
 
 class EmpDist
 {
+	//Vectors only valid between min and max!
 	vector<double> _pdf;
 	vector<double> _cdf;
 	int _mode;
@@ -166,18 +167,18 @@ public:
 	void pdf(vector<double>& pdf)	{ _pdf = pdf; }
 	double pdf(int l) const
 	{
-		if (l >= _pdf.size() || l < 0)
-			return 0;
+		if (l > _max || l < _min)
+			return 0.0;
 		return _pdf[l];
 	}
 	
 	// pdf renomalized over the lengths <= r
 	double npdf(int l, int r) const
  	{
-		if (l >= _pdf.size() || l < 0)
-			return 0;
+		if (l > _max || l < 0)
+			return 0.0;
 		
-		if (r > _max)
+		if (r > _max || r == 0)
 			return pdf(l);
 		
 		return pdf(l)/cdf(r);
@@ -186,10 +187,10 @@ public:
 	void cdf(vector<double>& cdf)	{ _cdf = cdf; }
 	double cdf(int l) const
 	{
-		if (l >= _cdf.size())
-			return 1;
+		if (l > _max)
+			return 1.0;
         if (l < 0)
-            return 0;
+            return 0.0;
 		return _cdf[l];
 	}
 	
