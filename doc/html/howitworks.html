@@ -241,11 +241,36 @@
       </p>
 	  <br/>
 	
-	  <h2 id="hqua">How does Cufflinks handle sequence bias?</h2><br/>
+	  <h2 id="hqua">How does Cufflinks estimate the fragment length distribution?</h2><br/>
+	  <p>
+	  The probability distribution on the length of fragments plays an important role in assembly, abundance
+	  estimation, and bias correction.  The accuracy of this distribution will have a great impact on the 
+	  accuracy of our results.  Because of this, we now attempt to "learn" this distribution from the input
+	  data instead of relying on an approximate Gaussian distribution, whenever possible.
+	  </p>
+	  <ul><li>
+	  	If only single-end reads are provided, there is no way to estimate the empirical distribution,
+	  	so Cufflinks must use an approximate Gaussian distribution with either default or user-provided
+	  	parameters (see the manual for more details).  
+	  </li></ul>
+  
+	  <ul><li>If the alignment file contains paired-end reads and an asssembly is provided, Cufflinks is able to learn the distribution
+	  from reads that map to single-isoform genes. Because the assembly provides the splicing structure, introns can be removed from
+	  between the paired reads, providing the most accurate estimation.</ul></li>
+	  
+	  
+	  <ul><li>If given paired end reads and no assembly, Cufflinks will search for large "open ranges" where the alignments contain no splices within
+	  the reads. Within these ranges, Cufflinks uses the genomic length of the paired-end reads to estimate the distribution. If not enough reads can 
+	  be found within these ranges, Cufflinks will default to the Gaussian approximation as in the single-end case. To ensure an empirical distribution
+	  will be used, one can first assemble with the Gaussian and then supply the output GTF assembly in a second run of Cufflinks.</li></ul>
+
+	  <br/>
+	  
+	<h2 id="hqua">How does Cufflinks handle sequence bias?</h2><br/>
 	  <p>
 	  Often in RNA-Seq experiments, a sequence-specific bias is introduced during the 
 	  library preparation.  For example, a sequence-specific bias caused by the use of 
-	  random hexamers was identified in:
+	  random hexamers was identified in
 	  </p>
 		<br/>
 	 
@@ -268,7 +293,7 @@
 	  weight reads by the expression level of the transcript from which they arise.  This helps us avoid over-counting 
 	  sequences that may be common in the mapping data due to high expression rather than bias.</p>
 	  
-	  <p>We next revisit each fragment in the map and apply the abundance weighting as we “learn” features of the 
+	  <p>We next revisit each fragment in the alignment file and apply the abundance weighting as we “learn” features of the 
 	  sequence in a window surrounding the 5’ and 3’ end of the transcript using a graphical model of the statistical dependencies 
 	  between bases in the window.  We keep a separate model for each end of the read since the biases in the first 
 	  and second strand synthesis of the fragment are not always the same.</p>
@@ -276,6 +301,27 @@
 	  <p>Finally, we re-estimate the abundances using a new likelihood function that has been adjusted to take the sequence 
 	  bias into account, based on the parameters of the graphical model we computed in the previous step.  The result is a 
 	  new set of FPKMs that are less affected by sequence-specific bias.</p>
+	  <br/>
+	  
+	  <h2 id="hqua">How does upper-quartile normalization work?</h2><br/>
+	  <p>
+	  It has been demonstrated that in differential expression analyses, low-count isoforms can be biased. Upper-quartile normalization
+	  was shown to be a good method for increasing sensitivity for these isoforms in
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>James H. Bullard, Elizabeth Purdom, Kasper D. Hansen, and Sandrine Dudoit,
+			<a href="http://www.biomedcentral.com/1471-2105/11/94">Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments</a>
+			BMC Bioinformatics, Volume 11, Issue 94 (2010)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  This correction is implemented in Cufflinks and Cuffdiff as a command-line option. If requested, Cufflinks/Cuffdiff will only use those reads
+	  that are in the lowest 75% of loci sorted by read count to calculate the "map mass".
+	  </p>
+  
 	  <br/>
 	
 	<h2 id="hass">How does Cuffdiff test for differential expression and regulation?</h2><br/>
