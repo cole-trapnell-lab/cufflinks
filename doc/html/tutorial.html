@@ -158,8 +158,9 @@
 			<li>Build the SAM tools by typing <tt>make</tt> at the command line.</li>
 			<li>Choose a directory into which you wish to copy the SAM tools binary, the included library 
 				<tt>libbam.a</tt>, and the library headers.  A common choice is <tt>/usr/local/</tt>.</lt>
-			<li>Copy libbam.h to the <tt>lib/</tt> directory in the folder you've chosen above (e.g. <tt>/usr/local/lib/</tt>)</li>
-			<li>Copy the headers (files ending in .h) to the <tt>include/</tt> directory you've chosen above (e.g. <tt>/usr/local/include/</tt>)
+			<li>Copy libbam.a to the <tt>lib/</tt> directory in the folder you've chosen above (e.g. <tt>/usr/local/lib/</tt>)</li>
+			<li>Create a directory called "<tt>bam</tt>" in the <tt>include/</tt> directory (e.g. /usr/local/include/bam)  
+			<li>Copy the headers (files ending in .h) to the <tt>include/bam</tt> directory you've created above (e.g. <tt>/usr/local/include/bam</tt>)
 			<li>Copy the samtools binary to some directory in your PATH.</li>
 			</ol>
 		<br/>
@@ -179,7 +180,7 @@
 				you specified via <tt>--with-boost</tt> contains the boost 
 				header files and libraries.  See the Boost <a href="">Getting started</a> page for more details.  
 				If you copied the SAM tools binaries to someplace other than <tt>/usr/local/</tt>, 
-				you may need to supply the <tt>--with-bam</tt> configuration option.  
+				you may need to supply the <tt>--with-bam</tt> configuration option. 
 				<li>Finally, make and install Cufflinks.  
 				<blockquote>make</blockquote>
 				<blockquote>make install</blockquote>

@@ -80,6 +80,7 @@ static struct option long_options[] = {
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
+{"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {0, 0, 0, 0} // terminator
@@ -92,7 +93,8 @@ void print_usage()
 	
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
-	fprintf(stderr, "Options:\n\n");
+	fprintf(stderr, "   Supply replicate SAMs as comma separated lists for each condition: sample1_rep1.sam,sample1_rep2.sam,...sample1_repM.sam\n");
+    fprintf(stderr, "Options:\n\n");
     fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
    	fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
 	fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
@@ -108,10 +110,12 @@ void print_usage()
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
 	fprintf(stderr, "\nAdvanced Options:\n\n");
+    fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           the average fragment length (use with unpaired reads only)               \n");
 	fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
 	fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    print_library_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -215,6 +219,11 @@ int parse_options(int argc, char** argv)
             	use_quartile_norm = true;
             	break;
             }
+            case OPT_LIBRARY_TYPE:
+			{
+				library_type = optarg;
+				break;
+			}
 
 			default:
 				print_usage();

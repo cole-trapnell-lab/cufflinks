@@ -62,7 +62,6 @@ extern std::string mask_gtf_filename;
 extern std::string output_dir;
 extern std::string fasta_dir;
 
-extern int collapse_thresh;
 extern int microexon_length;
 extern bool cuff_verbose;
 extern bool cuff_quiet;

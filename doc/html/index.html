@@ -147,6 +147,10 @@
 				mode with a text progress bar for users that want to keep an eye on their runs</li>
 			<li>In response to user requests, FPKM values are now provided by Cufflinks and Cuffdiff, 
 				even if their expression levels are zero, in an effort to make downstream analysis of Cuffdiff easier.</li>
+			<li>The new "mask" GTF option allows you to supply Cufflinks with regions of the 
+				genome that it should ignore during assembly and quantification. Cuffdiff also supports mask GTF files for convenience.</li>
+			<li>Significant assembler fixes and improvements.</li>
+			<li>Some of the output files produced by Cuffdiff have updated and simplified formats.</li>
 			<li>There are a number of new command line options that users may wish to set under certain circumstances.</li>
 		</ul>
 		<p>Note that building Cufflinks from source now requires the <a href="http://samtools.sourceforge.net">SAM tools</a>.  

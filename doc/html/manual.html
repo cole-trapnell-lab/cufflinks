@@ -202,23 +202,33 @@
 	  Prints the help message and exits   
 	  </td></tr> 
 	  <tr><td VALIGN=top nowrap>
+	  <tt>-q/--quiet</tt>
+	  </td><td VALIGN=top>
+	  Suppress messages other than serious warnings and errors.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-v/--verbose</tt>
+	  </td><td VALIGN=top>
+	  Print lots of status updates and other diagnostic information.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
 	  <tt>-o/--output-dir &lt;string&gt;</tt>
 	  </td><td VALIGN=top>
 	  Sets the name of the directory in which Cufflinks will write all of its 
 	  output.  The default is "./".
 	  </td></tr>
-	  <tr><td VALIGN=top nowrap>	
-	  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-L/--label</tt>
 	  </td><td VALIGN=top>
-	  This is the expected (mean) inner distance between mate pairs.  For, 
-	  example, for paired end runs with fragments selected at 300bp, where each
-	  end is 50bp, you should set -r to be 200.  The default is 45bp.
+	  Cufflinks will report transfrags in GTF format, with a prefix given by 
+	  this option.  The default prefix is "CUFF".
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
+	  <tt>-G/--GTF &lt;reference_annotation.gtf&gt;</tt>
 	  </td><td VALIGN=top>
-	  The standard deviation for the distribution on inner distances between
-	  mate pairs.  The default is 20bp.
+	  Tells Cufflinks to use the supplied reference annotation to estimate 
+	  isoform expression.  It will not assemble novel transcripts, and the program
+	  will ignore alignments not structurally compatible with any reference transcript.  
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-I/--max-intron-length &lt;int&gt;</tt>
@@ -262,22 +272,50 @@
 	  than this number.  The default is 0.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-L/--label</tt>
+	  <tt>-M/--mask-file &lt;mask.gtf&gt;</tt>
 	  </td><td VALIGN=top>
-	  Cufflinks will report transfrags in GTF format, with a prefix given by 
-	  this option.  The default prefix is "CUFF".
+	  Tells Cufflinks to ignore all reads that could have come from transcripts in this GTF 
+	  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant
+	  transcripts you wish to ignore in your analysis in this file.  Due to variable efficiency
+	  of mRNA enrichment methods and rRNA depletion kits, masking these transcripts often 
+	  improves the overall robustness of transcript abundance estimates. 
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-G/--GTF</tt>
+	  <tt>-r/--reference-seq &lt;genome.fa&gt;</tt>
 	  </td><td VALIGN=top>
-	  Tells Cufflinks to use the supplied reference annotation to estimate 
-	  isoform expression.  It will not assemble novel transcripts, and the program
-	  will ignore alignments not structurally compatible with any reference transcript.  
+	  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
+	  bias detection and correction algorithm which can significantly improve accuracy of 
+	  transcript abundance estimates.  
 	  </td></tr>
 	  <tr><td VALIGN=top>
 	  <b>Advanced Options:</b>
 	  </td><td VALIGN=top>
 	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-N/--quartile-normalization</tt>
+	  </td><td VALIGN=top>
+	  With this option, Cufflinks excludes the contribution of the top 25 percent most highly expressed genes from 
+	  the number of mapped fragments used in the FPKM denominator.  This can improve robustness 
+	  of differential expression calls for less abundant genes and transcripts.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-a/--junc-alpha &lt;0.0-1.0&gt; </tt>
+	  </td><td VALIGN=top>
+	  The alpha value for the binomial test used during false positive spliced alignment 
+	  filtration. Default: 0.01
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-A/--small-anchor-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  Spliced reads with less than this percent of their length on each side of the junction
+	  are considered suspicious and are candidates for filtering prior to assembly.  Default: 0.12.  
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--min-frags-per-transfrag &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Assembled transfrags supported by fewer than this many aligned RNA-Seq fragments are 
+	  not reported.  Default: 10.
+	  </t></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>--num-importance-samples &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
@@ -287,6 +325,31 @@
 	  <tt>--max-mle-iterations &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
 	  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>	
+	  <tt>--library-type</tt>
+	  </td><td VALIGN=top>
+	  In cases where Cufflinks cannot determine the platform and protocol used to generate 
+	  input reads, you can supply this information manually, which will allow Cufflinks to 
+	  infer source strand information with certain protocols.  Run Cufflinks with <tt>-h</tt> 
+	  to see a list of supported library types.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>	
+	  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  This is the expected (mean) inner distance between mate pairs.  For, 
+	  example, for paired end runs with fragments selected at 300bp, where each
+	  end is 50bp, you should set -r to be 200.  The default is 45bp. <br/><b>Note: 
+	  Cufflinks now learns the fragment length mean for each SAM file, so using this option is
+	  no longer recommended</b>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The standard deviation for the distribution on inner distances between
+	  mate pairs.  The default is 20bp. <br/><b>Note: 
+	  Cufflinks now learns the fragment length standard deviation for each SAM file, so using this option is
+	  no longer recommended</b>
 	  </td></tr>
 	  </table><br/>
 	
@@ -874,9 +937,8 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tt>&lt;sample1.sam&gt;</tt>
 		  </td><td VALIGN=top>
 		  A SAM file of aligned RNA-Seq reads. If more than two are provided,
-		  <b>they are analyzed as a timeseries</b>.  That is, sample 1 is 
-		  compared to sample 2, sample 2 is compared to sample 3, etc.  Cuffdiff
-		  currently does not perform an all-pairs comparison. 
+		  Cuffdiff tests for differential expression and regulation between all pairs of 
+		  samples. 
 		  </td></tr>
 		  <tr><td VALIGN=top>
 		  <b>Options:</b>
@@ -887,6 +949,16 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  Prints the help message and exits   
 		  </td></tr> 
+	 	  <tr><td VALIGN=top nowrap>
+		  <tt>-q/--quiet</tt>
+		  </td><td VALIGN=top>
+		  Suppress messages other than serious warnings and errors.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-v/--verbose</tt>
+		  </td><td VALIGN=top>
+		  Print lots of status updates and other diagnostic information.
+		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-o/--output-dir &lt;string&gt;</tt>
 		  </td><td VALIGN=top>
@@ -894,22 +966,36 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  output.  The default is "./".
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
+		  <tt>-L/--labels &lt;label1,label2,...,labelN&gt;</tt>
 		  </td><td VALIGN=top>
-		  This is the expected (mean) inner distance between mate pairs.  For, 
-		  example, for paired end runs with fragments selected at 300bp, where each
-		  end is 50bp, you should set -r to be 200.  The default is 45bp.
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>
-		  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
-		  </td><td VALIGN=top>
-		  The standard deviation for the distribution on inner distances between
-		  mate pairs.  The default is 20bp.
+		  Specify a label for each sample, which will be included in various output files 
+		  produced by Cuffdiff.
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-p/--num-threads &lt;int&gt;</tt>
 		  </td><td VALIGN=top>
 		  Use this many threads to align reads. The default is 1.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-T/--time-series</tt>
+		  </td><td VALIGN=top>
+		  Instructs Cuffdiff to analyze the provided samples as a time series, rather than 
+		  testing for differences between all pairs of samples.  Samples should be provided in
+		  increasing time order at the command line (e.g first time point SAM, second timepoint SAM, etc.) 
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-N/--quartile-normalization</tt>
+		  </td><td VALIGN=top>
+		  With this option, Cufflinks excludes the contribution of the top 25 percent most highly expressed genes from 
+		  the number of mapped fragments used in the FPKM denominator.  This can improve robustness 
+		  of differential expression calls for less abundant genes and transcripts.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-r/--reference-seq &lt;genome.fa&gt;</tt>
+		  </td><td VALIGN=top>
+		  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
+		  bias detection and correction algorithm which can significantly improve accuracy of 
+		  transcript abundance estimates.  
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-Q/--min-mapqual &lt;int&gt;</tt>
@@ -924,7 +1010,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  significance testing on changes in that locus observed between samples.  
 		  If no testing is performed, changes in the locus are deemed not signficant, 
 		  and the locus' observed changes don't contribute to correction for 
-		  multiple testing. The default is 1,000 fragment alignments (up to 2,000 paired reads). 
+		  multiple testing. The default is 500 fragment alignments (up to 1,000 paired reads). 
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>--FDR &lt;float&gt;</tt>
@@ -934,6 +1020,31 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr><td VALIGN=top>
 		  <b>Advanced Options:</b>
 		  </td><td VALIGN=top>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>	
+		  <tt>--library-type</tt>
+		  </td><td VALIGN=top>
+		  In cases where Cufflinks cannot determine the platform and protocol used to generate 
+		  input reads, you can supply this information manually, which will allow Cufflinks to 
+		  infer source strand information with certain protocols.  Run Cufflinks with <tt>-h</tt> 
+		  to see a list of supported library types.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>	
+		  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  This is the expected (mean) inner distance between mate pairs.  For, 
+		  example, for paired end runs with fragments selected at 300bp, where each
+		  end is 50bp, you should set -r to be 200.  The default is 45bp. <br/><b>Note: 
+		  Cufflinks now learns the fragment length mean for each SAM file, so using this option is
+		  no longer recommended</b>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
+		  </td><td VALIGN=top>
+		  The standard deviation for the distribution on inner distances between
+		  mate pairs.  The default is 20bp. <br/><b>Note: 
+		  Cufflinks now learns the fragment length standard deviation for each SAM file, so using this option is
+		  no longer recommended</b>
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>--num-importance-samples &lt;int&gt;</tt>
@@ -947,14 +1058,6 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td></tr>
 		  </table><br/>
 	  <h2 id="cuffdiff_output">Cuffdiff Output</h2><br/>
-		<p>
-	      Cuffdiff produces many several output files for each pair of samples
-		  provided by the user.  File names are prefixed with "&lt;x&gt;_&lt;y&gt;_",
-		  where <tt>x</tt> and <tt>y</tt> are numbers starting at zero.  Thus, if 
-		  you gave Cuffdiff two input files, it would produce a set of files 
-		  with names that start "0_1_".  Many of these have essentially the same
-		  format.
-		</p>
 		<br/>
 		<ol>
 		<h2 id="fpkm_track">1) FPKM tracking files</h2>
@@ -1042,27 +1145,27 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		<h2 id="gene_exp_diff">2) Differential expression tests</h2>
 		<p>
 		This tab delimited file lists the results of differential
-		expression testing between sample numbers x and y for spliced transcripts, 
+		expression testing between samples for spliced transcripts, 
 		primary transcripts, genes, and coding sequences.
 		
 		For each pair of samples <em>x</em> and <em>y</em>, four files are created
 		<table>
 		  <tr>
-			<td VALIGN=top><tt>x_y_isoform_exp.diff</tt></td><td VALIGN=top>Transcript differential FPKM. </td>
+			<td VALIGN=top><tt>isoform_exp.diff</tt></td><td VALIGN=top>Transcript differential FPKM. </td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top><tt>x_y_gene_exp.diff</tt></td><td VALIGN=top>Gene differential FPKM.  Tests difference sin the summed FPKM of transcripts sharing each <tt>gene_id</tt></td>
+			<td VALIGN=top><tt>gene_exp.diff</tt></td><td VALIGN=top>Gene differential FPKM.  Tests difference sin the summed FPKM of transcripts sharing each <tt>gene_id</tt></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top><tt>x_y_tss_group_exp.diff</tt></td><td VALIGN=top>Primary transcript differential FPKM.  Tests differences in the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
+			<td VALIGN=top><tt>tss_group_exp.diff</tt></td><td VALIGN=top>Primary transcript differential FPKM.  Tests differences in the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top><tt>x_y_cds_exp.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence differential FPKM. Tests differences in the summed FPKM of transcripts sharing each <tt>p_id</tt> independent of <tt>tss_id</tt></td>
+			<td VALIGN=top><tt>cds_exp.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence differential FPKM. Tests differences in the summed FPKM of transcripts sharing each <tt>p_id</tt> independent of <tt>tss_id</tt></td>
 		  </tr>
 		</table>
 		
 		Each of the above files has the following format:
-		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<!-- test_id	gene	locus	sample_1	sample_2 status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
 		<table CELLSPACING=15>
 		  <tr>
 			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
@@ -1076,36 +1179,42 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr>
 			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:4797771-4835363</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
 		  </tr>
-		  <tr>
-			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>NOTEST</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+	      <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>sample 1</td><td VALIGN=top><tt>Liver</tt></td><td VALIGN=top>Label (or number if no labels provided) of the first sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>5</td><td VALIGN=top>FPKM<sub><em>x</em></sub></td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the gene in sample <em>x</em></td>
+			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>FPKM<sub><em>y</em></sub></td><td VALIGN=top><tt>8.551545</tt></td><td VALIGN=top>FPKM of the gene in sample <em>y</em></td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>NOTEST</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>7</td><td VALIGN=top>ln(FPKM<sub><em>y</em></sub>/FPKM<sub><em>x</em></sub>)</td><td VALIGN=top><tt>0.06531</tt></td><td VALIGN=top>The natural log of the fold change <em>y</em>/<em>x</em><td>
+			<td VALIGN=top>7</td><td VALIGN=top>FPKM<sub><em>x</em></sub></td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the gene in sample <em>x</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.860902</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed change in FPKM</td>
+			<td VALIGN=top>8</td><td VALIGN=top>FPKM<sub><em>y</em></sub></td><td VALIGN=top><tt>8.551545</tt></td><td VALIGN=top>FPKM of the gene in sample <em>y</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.389292</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+			<td VALIGN=top>9</td><td VALIGN=top>ln(FPKM<sub><em>y</em></sub>/FPKM<sub><em>x</em></sub>)</td><td VALIGN=top><tt>0.06531</tt></td><td VALIGN=top>The natural log of the fold change <em>y</em>/<em>x</em><td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>10</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.860902</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed change in FPKM</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.389292</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		
-		<h2 id="splicing_diff">3) Differential splicing tests (&lt;x&gt;_&lt;y&gt;_splicing.diff)</h2>
+		<h2 id="splicing_diff">3) Differential splicing tests - splicing.diff</h2>
 		<p>
 		This tab delimited file lists, for each primary transcript, the amount of overloading
 		detected among its isoforms, i.e. how much differential splicing exists between
 		isoforms processed from a single primary transcript.  Only primary 
 		transcripts from which two or more isoforms are spliced are listed in this file.
-		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<!-- test_id	gene	locus	sample_1 sample_2 status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
 		<table CELLSPACING=15>
 		  <tr>
 			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
@@ -1120,36 +1229,42 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr6:83087311-83102572</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>4</td><td VALIGN=top>sample 1</td><td VALIGN=top><tt>Liver</tt></td><td VALIGN=top>Label (or number if no labels provided) of the first sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>5</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>7</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.22115</tt></td><td VALIGN=top>The splice overloading of the primary transcript, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the splice variants<td>
+			<td VALIGN=top>7</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.22115</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+			<td VALIGN=top>8</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.000174982</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic.</td>
+			<td VALIGN=top>9</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.22115</tt></td><td VALIGN=top>The splice overloading of the primary transcript, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the splice variants<td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>10</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.22115</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.000174982</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		
-		<h2 id="cds_diff">4) (&lt;x&gt;_&lt;y&gt;_cds.diff)</h2>
+		<h2 id="cds_diff">4) Differential coding output - cds.diff</h2>
 		<p>
 		This tab delimited file lists, for each gene, the amount of overloading
 		detected among its primary transcripts, i.e. how much differential 
 		promoter use exists between samples.  Only genes producing two or more
 		distinct primary transcripts (i.e. multi-promoter genes) are listed here.
 		
-		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<!-- test_id	gene	locus	sample_1 sample_2 status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
 		<table CELLSPACING=15>
 		  <tr>
 			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
@@ -1164,29 +1279,35 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:5073200-5152501</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>4</td><td VALIGN=top>sample 1</td><td VALIGN=top><tt>Liver</tt></td><td VALIGN=top>Label (or number if no labels provided) of the first sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>5</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>7</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.0686517</tt></td><td VALIGN=top>The CDS overloading of the gene, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the coding sequences<td>
+			<td VALIGN=top>7</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.0686517</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+			<td VALIGN=top>8</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.00546783</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+			<td VALIGN=top>9</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.0686517</tt></td><td VALIGN=top>The CDS overloading of the gene, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the coding sequences<td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>10</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.0686517</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.00546783</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		
-		<h2 id="promoter_diff">5) (&lt;x&gt;_&lt;y&gt;_promoters.diff)</h2>
+		<h2 id="promoter_diff">5) Differential promoter use - promoters.diff</h2>
 		<p>
 		This tab delimited file lists, for each gene, the amount of overloading
 		detected among its coding sequences, i.e. how much differential 
@@ -1208,25 +1329,31 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>3</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:16651657-16668357</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>4</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>4</td><td VALIGN=top>sample 1</td><td VALIGN=top><tt>Liver</tt></td><td VALIGN=top>Label (or number if no labels provided) of the first sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>5</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>7</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.0124768</tt></td><td VALIGN=top>The promoter overloading of the gene, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the primary transcripts<td>
+			<td VALIGN=top>7</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>8</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.0124768</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+			<td VALIGN=top>8</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>9</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.394327</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+			<td VALIGN=top>9</td><td VALIGN=top>&radic;JS(x,y)</td><td VALIGN=top><tt>0.0124768</tt></td><td VALIGN=top>The promoter overloading of the gene, as measured by the square root of the Jensen-Shannon divergence computed on the relative abundances of the primary transcripts<td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>10</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>10</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.0124768</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed overloading, equal to &radic;JS(x,y)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.394327</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		

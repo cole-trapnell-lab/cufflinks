@@ -1060,7 +1060,7 @@ pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 	
 	int s_coord = 0;
 	size_t curr_op = 0;
-	const AugmentedCuffOp* op;
+	const AugmentedCuffOp* op = NULL;
 	// First, find start
 	while (curr_op != _augmented_ops.size())
 	{

@@ -66,8 +66,6 @@ std::string mask_gtf_filename = "";
 std::string output_dir = "./";
 std::string fasta_dir;
 
-int collapse_thresh = 10;
-
 int microexon_length = 25;
 
 bool perform_full_collapse = true;
