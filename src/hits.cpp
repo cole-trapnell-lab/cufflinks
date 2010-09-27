@@ -320,8 +320,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 				//fprintf (stderr, "SAM error on line %d: invalid CIGAR operation\n", _line_num);
 				return false;
 		}
-		
-		cigar.push_back(CigarOp(opcode, length));
+		if (opcode != HARD_CLIP)
+			cigar.push_back(CigarOp(opcode, length));
 	}
 	
 	string mrnm;
@@ -734,7 +734,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		}
 		p_cig = t + 1;
 		//i += length;
-		cigar.push_back(CigarOp(opcode, length));
+		if (opcode != HARD_CLIP)
+			cigar.push_back(CigarOp(opcode, length));
 	}
 	if (*p_cig)
 	{
