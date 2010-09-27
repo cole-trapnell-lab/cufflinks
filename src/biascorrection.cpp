@@ -168,8 +168,8 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
-//const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
+const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+//const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
 const int BiasLearner::_M = 21; //Number of positions spanned by window
@@ -238,7 +238,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 	}
 	
 	int currBin = 0;
-	int binCutoff = positionBins[currBin]*seqLen;
+	double binCutoff = positionBins[currBin]*seqLen;
 		
 	for (int i=0; i < seqLen; i++)
 	{
@@ -247,7 +247,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 		if (i > binCutoff)
 			binCutoff=positionBins[++currBin]*seqLen;
 		_posParams(currBin, lenClass) += startHist[i]/fpkm;
-		_posExp(currBin, lenClass) += _frag_len_dist->cdf(seqLen-i);
+		_posExp(currBin, lenClass) += !(_frag_len_dist->too_short(seqLen-i));
 		
 		
 		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
@@ -268,7 +268,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 				if (v >= 0)
 				{
 					_startParams(j,v) += startHist[i]/fpkm;
-					_startExp(j,v) += _frag_len_dist->cdf(seqLen-i);
+					_startExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -277,7 +277,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
 						_startParams(j,*it) += startHist[i]/(fpkm * (double)nList.size());
-						_startExp(j,*it) += _frag_len_dist->cdf(seqLen-i)/nList.size();
+						_startExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i));
 					}
 				}
 			}
@@ -290,7 +290,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 				if (v >= 0)
 				{
 					_endParams(j,v) += endHist[i]/fpkm;
-					_endExp(j,v) += _frag_len_dist->cdf(i+1);
+					_endExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -299,7 +299,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
 						_endParams(j,*it) += endHist[i]/(fpkm * (double)nList.size());
-						_endExp(j,*it) += _frag_len_dist->cdf(i+1)/nList.size();
+						_endExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i));
 					}
 				}
 			}
@@ -407,15 +407,15 @@ void BiasLearner::output()
 	ofstream myfile1;
 	ofstream myfile2;
 	ofstream myfile3;
-	//ofstream myfile4;
+	ofstream myfile4;
 	string startfile = output_dir + "/startBias.csv";
 	myfile1.open (startfile.c_str());
 	string endfile = output_dir + "/endBias.csv";
 	myfile2.open (endfile.c_str());
 	string posfile = output_dir + "/posBias.csv";
 	myfile3.open (posfile.c_str());
-	//string posfile2 = output_dir + "/posExp.csv";
-	//myfile4.open (posfile2.c_str());
+	string posfile2 = output_dir + "/posExp.csv";
+	myfile4.open (posfile2.c_str());
 
 
 	for (int i = 0; i < _N; ++i)
@@ -434,16 +434,16 @@ void BiasLearner::output()
 		for(int j = 0; j < _posParams.size1(); ++j)
 		{
 			myfile3 << _posParams(j,i) <<",";
-			//myfile4 << _posExp(j,i) <<",";
+			myfile4 << _posExp(j,i) <<",";
 		}
 		myfile3 <<endl;
-		//myfile4 <<endl;
+		myfile4 <<endl;
 	}
 	
 	myfile1.close();
 	myfile2.close();
 	myfile3.close();
-//	myfile4.close();
+	myfile4.close();
 }
 
 void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases, vector<double>& posBiases) const

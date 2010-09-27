@@ -167,7 +167,7 @@ public:
 	void pdf(vector<double>& pdf)	{ _pdf = pdf; }
 	double pdf(int l) const
 	{
-		if (l > _max || l < _min)
+		if (!valid_len(l))
 			return 0.0;
 		return _pdf[l];
 	}
@@ -175,7 +175,7 @@ public:
 	// pdf renomalized over the lengths <= r
 	double npdf(int l, int r) const
  	{
-		if (l > _max || l < 0)
+		if (!valid_len(l))
 			return 0.0;
 		
 		if (r > _max || r == 0)
@@ -193,6 +193,9 @@ public:
             return 0.0;
 		return _cdf[l];
 	}
+	
+	bool valid_len(int l) const { return (l >= _min && l <= _max); }
+	bool too_short(int l) const { return (l < _min); }
 	
 	void mode(int mode)				{ _mode = mode; }
 	int mode() const				{ return _mode; }
