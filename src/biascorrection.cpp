@@ -168,8 +168,8 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
-const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-//const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
+//const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
 const int BiasLearner::_M = 21; //Number of positions spanned by window
@@ -277,7 +277,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
 						_startParams(j,*it) += startHist[i]/(fpkm * (double)nList.size());
-						_startExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i));
+						_startExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
 					}
 				}
 			}
@@ -299,7 +299,7 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
 						_endParams(j,*it) += endHist[i]/(fpkm * (double)nList.size());
-						_endExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i));
+						_endExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
 					}
 				}
 			}
