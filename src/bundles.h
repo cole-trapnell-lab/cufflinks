@@ -502,7 +502,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		{
 			if (frag_len_hist[i] > 0)
 			{
-				if (last_nonzero > 0 && last_nonzero != i-1)
+				if (last_nonzero != i-1)
 				{
 					double b = frag_len_hist[last_nonzero];
 					double m = (frag_len_hist[i] - b)/(i-last_nonzero);

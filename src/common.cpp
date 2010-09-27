@@ -72,7 +72,12 @@ int microexon_length = 25;
 
 bool perform_full_collapse = true;
 
+#if ASM_VERBOSE
+bool cuff_verbose = true;
+#else
 bool cuff_verbose = false;
+#endif
+
 bool cuff_quiet = false;
 
 bool allow_junk_filtering = true;
