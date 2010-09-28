@@ -233,6 +233,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -280,13 +282,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>71</integer>
+									<integer>53</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 490}, {267, 840}}</string>
+							<string>{{0, 266}, {267, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -314,14 +316,12 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>scaffolds.cpp</string>
+								<string>cuffdiff.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +329,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>scaffolds.cpp</string>
+										<string>cuffdiff.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDF26463124FE11D005122EB</string>
+										<string>EDF2646B12518544005122EB</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -359,10 +359,14 @@
 											<string>EDF26443124FCC8E005122EB</string>
 											<string>EDF26444124FCC8E005122EB</string>
 											<string>EDF26445124FCC8E005122EB</string>
-											<string>EDF2644C124FD90E005122EB</string>
 											<string>EDF26456124FDFFC005122EB</string>
-											<string>EDF26461124FE11D005122EB</string>
-											<string>EDF26462124FE11D005122EB</string>
+											<string>EDF2646412518544005122EB</string>
+											<string>EDF2646512518544005122EB</string>
+											<string>EDF2646612518544005122EB</string>
+											<string>EDF2646712518544005122EB</string>
+											<string>EDF2646812518544005122EB</string>
+											<string>EDF2646912518544005122EB</string>
+											<string>EDF2646A12518544005122EB</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>

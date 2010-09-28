@@ -66,7 +66,7 @@
 		  <div class="box">
 		    <ul>
 		      <table width="100%">
-				<tr><td>version 0.9.0 (BETA)</td> <td align="right">9/XXX/2010</td></tr>
+				<tr><td>version 0.9.0 (BETA)</td> <td align="right">9/27/2010</td></tr>
 				<tr>
 		      		<td><a href="./downloads/cufflinks-0.9.0.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
 		      	</tr>
@@ -124,8 +124,12 @@
 
     </div> <!-- End of "rightside" -->
     <div id="leftside">
-	
-		<h2>0.9.0 release - 9/XXX/2010</h2>
+		<h2>New developer - Adam Roberts</h2>
+		<p>The Cufflinks team has been joined by Adam Roberts, a Ph.D. student from the UC Berkeley Department of Computer 
+			Science.  Adam has made many improvements to Cufflinks (see the announcement below), and we are very fortunate
+			to benefit from his talents and expertise.</p>
+			<br/> 
+		<h2>0.9.0 release - 9/27/2010</h2>
 	      <p>This release includes significant bug fixes as well as some major new features.  Enhancements include:
 		<ul>
 			<li>Thanks to the work of Adam Roberts, Cufflinks now automatically learns certain properties of each RNA-Seq 
@@ -134,12 +138,12 @@
 				A manuscript describing these changes is in preparation. </li>
 			<li>Due to Adam's changes, we do <b>not</b> recommend that you supply the mean and standard deviations 
 				of the fragment length distribution for your library.  Cufflinks now learns these automatically.
-			<li>Cuffdiff now allows you to supply reads from multiple technical or biological replicates, 
+			<li>Cuffdiff now allows you to supply reads from multiple technical or biological <b>replicates</b>, 
 				and adjusts transcript and gene abundance estimates and their confidence intervals accordingly.</li>
 			<li>Cuffdiff will by default report testing results between all pairs of samples, rather than treating 
 				samples as a time series.  Time series analysis is still supported via the <tt>--time-series</tt> option.</li>
 			<li>Cufflinks and Cuffdiff now offer improved compatibility with reads aligned with Life Technology's BioScope aligner.  
-				Strand specificity SOLiD RNA-Seq runs are fully supported.</li>
+				Strand specific SOLiD RNA-Seq runs are fully supported.</li>
 			<li>Cufflinks and Cuffdiff support quantile normalization of FPKM.</li>
 			<li>Cufflinks and Cuffdiff now support both BAM and SAM files.  Both file types require that the chromosome names in
 				 header <tt>@SQ</tt> records, if present, <b>must</b> be sorted in the same order as the reads.</li>
