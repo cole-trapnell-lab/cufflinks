@@ -48,7 +48,7 @@ public:
 		_num_complete += inc_amt;
 		_num_updates ++;
 		
-		if (cuff_verbose||cuff_quiet) return;
+		if (cuff_verbose||cuff_quiet||_tot_num==0) return;
 
 		char bundle_buf[28];
 		strncpy(bundle_buf, bundle_label_buf, 27);
