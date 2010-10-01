@@ -969,14 +969,19 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
+    
     if (ref_gtf)
     {
+        // For backwards compatibility with TopHat
+        rt.order_recs_lexicographically();
         inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
     }
     else 
     {
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
     }
+    
+
     
     asm_verbose("%d ReadHits still live\n", num_deleted);
     asm_verbose("Found %lu reference contigs\n", rt.size());

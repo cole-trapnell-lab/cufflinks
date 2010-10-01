@@ -417,6 +417,24 @@ public:
 		else
 			return -1;
 	}
+    
+    void order_recs_lexicographically() 
+    {
+        map<string, RefID> str_to_id;
+        
+        for (InvertedIDTable::iterator i = _by_id.begin(); i != _by_id.end(); ++i)
+        {
+            str_to_id[i->second.name] = i->first;
+            //fprintf(stderr, "%d: %s\n", i->second.observation_order, i->second.name);
+        }
+        
+        size_t new_order = 1;
+        for (map<string, RefID>::iterator i = str_to_id.begin(); i != str_to_id.end(); ++i, ++new_order)
+        {
+            _by_id.find(get_id(i->first, NULL))->second.observation_order = new_order;
+            asm_verbose( "%lu: %s\n", new_order, i->first.c_str());
+        }
+    }
 	
 	iterator begin() { return _by_id.begin(); }
 	iterator end() { return _by_id.end(); }
