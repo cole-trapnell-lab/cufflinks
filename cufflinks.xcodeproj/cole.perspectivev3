@@ -280,13 +280,14 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>54</integer>
+									<integer>13</integer>
+									<integer>9</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 539}, {267, 990}}</string>
+							<string>{{0, 0}, {267, 990}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -321,7 +322,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>cufflinks.cpp</string>
+								<string>configure.ac</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +330,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>cufflinks.cpp</string>
+										<string>configure.ac</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED30F2101259358000DF9A3A</string>
+										<string>ED30F2131259437700DF9A3A</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -369,7 +370,6 @@
 											<string>ED01A7AD12493E5C00CCEB84</string>
 											<string>ED01A7AF12493E5C00CCEB84</string>
 											<string>ED01A7B012493E5C00CCEB84</string>
-											<string>ED01A9561252633D00CCEB84</string>
 											<string>ED30F15E12560C0200DF9A3A</string>
 											<string>ED30F16812560C9400DF9A3A</string>
 											<string>ED30F18C125620C300DF9A3A</string>
@@ -380,7 +380,8 @@
 											<string>ED30F1C31258CB2900DF9A3A</string>
 											<string>ED30F20D1259358000DF9A3A</string>
 											<string>ED30F20E1259358000DF9A3A</string>
-											<string>ED30F20F1259358000DF9A3A</string>
+											<string>ED30F2111259437700DF9A3A</string>
+											<string>ED30F2121259437700DF9A3A</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>

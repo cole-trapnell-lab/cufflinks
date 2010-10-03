@@ -305,6 +305,9 @@
 			ED30F20E1259358000DF9A3A /* PBXTextBookmark */ = ED30F20E1259358000DF9A3A /* PBXTextBookmark */;
 			ED30F20F1259358000DF9A3A /* PBXTextBookmark */ = ED30F20F1259358000DF9A3A /* PBXTextBookmark */;
 			ED30F2101259358000DF9A3A /* PBXTextBookmark */ = ED30F2101259358000DF9A3A /* PBXTextBookmark */;
+			ED30F2111259437700DF9A3A /* PBXTextBookmark */ = ED30F2111259437700DF9A3A /* PBXTextBookmark */;
+			ED30F2121259437700DF9A3A /* PBXTextBookmark */ = ED30F2121259437700DF9A3A /* PBXTextBookmark */;
+			ED30F2131259437700DF9A3A /* PBXTextBookmark */ = ED30F2131259437700DF9A3A /* PBXTextBookmark */;
 			ED4832F5123FC4E100642337 = ED4832F5123FC4E100642337 /* PBXTextBookmark */;
 			ED48335C12400CB000642337 = ED48335C12400CB000642337 /* PBXTextBookmark */;
 			ED48339D12400ED100642337 = ED48339D12400ED100642337 /* PBXTextBookmark */;
@@ -1663,6 +1666,36 @@
 		vrLen = 1130;
 		vrLoc = 9349;
 	};
+	ED30F2111259437700DF9A3A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDA5152510C72963000A4F41 /* cufflinks.cpp */;
+		name = "cufflinks.cpp: 105";
+		rLen = 0;
+		rLoc = 4862;
+		rType = 0;
+		vrLen = 3797;
+		vrLoc = 3237;
+	};
+	ED30F2121259437700DF9A3A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDEBCDF8112DFD7600E2479E /* configure.ac */;
+		name = "configure.ac: 8";
+		rLen = 0;
+		rLoc = 249;
+		rType = 0;
+		vrLen = 1092;
+		vrLoc = 0;
+	};
+	ED30F2131259437700DF9A3A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDEBCDF8112DFD7600E2479E /* configure.ac */;
+		name = "configure.ac: 7";
+		rLen = 0;
+		rLoc = 213;
+		rType = 0;
+		vrLen = 1092;
+		vrLoc = 0;
+	};
 	ED483286123E9B6F00642337 /* bundles.cpp:438 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
@@ -2561,9 +2594,9 @@
 	};
 	EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {999, 15080}}";
-			sepNavSelRange = "{10009, 0}";
-			sepNavVisRange = "{9349, 1130}";
+			sepNavIntBoundsRect = "{{0, 0}, {999, 13533}}";
+			sepNavSelRange = "{4862, 0}";
+			sepNavVisRange = "{3237, 3797}";
 		};
 	};
 	EDA5152610C72963000A4F41 /* filters.cpp */ = {
@@ -3531,9 +3564,9 @@
 	};
 	EDEBCDF8112DFD7600E2479E /* configure.ac */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {654, 1937}}";
-			sepNavSelRange = "{249, 0}";
-			sepNavVisRange = "{0, 977}";
+			sepNavIntBoundsRect = "{{0, 0}, {666, 1924}}";
+			sepNavSelRange = "{213, 0}";
+			sepNavVisRange = "{0, 1092}";
 		};
 	};
 	EDF26433124FB1FC005122EB /* PBXBookmark */ = {

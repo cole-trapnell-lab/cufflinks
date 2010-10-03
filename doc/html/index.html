@@ -124,6 +124,16 @@
 
     </div> <!-- End of "rightside" -->
     <div id="leftside">
+		<h2>0.9.1 release - 10/3/2010</h2>
+	      <p>This release includes two bug fixes and some enhancements for strand-specific RNA-Seq libraries:
+		  <ul>
+			<li>SAM files without headers, such as those produced by TopHat 1.0.14 and earlier, were being erroneously reported as unsorted during GTF-based quantification, causing Cufflinks and Cuffdiff to exit.  This has been fixed, so that SAM files are now correctly handled, restoring compatibility with output from TopHat 1.0.14 and earlier.</li>
+			<li>Cufflinks and Cuffdiff were sometimes producing different FPKM values for minor isoforms when run on the same sample.  They are now consistent, and should agree on isoform abundance calls.
+			<li>Strand-specific, single end libraries are now supported.  Some library type names have changed to reflect the expanded list of supported protocols.</li>
+			</ul>
+			</p>
+			
+		  <br/>
 		<h2>Update - fix for 0.9.0</h2>
 			<p>The binaries and source have been updated to address a floating point exception when using a SAM file with 
 				no header and without a GTF</p>
