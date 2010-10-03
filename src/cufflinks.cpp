@@ -954,7 +954,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
 	BadIntronTable bad_introns;
-	
+    
     vector<shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
@@ -969,11 +969,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    
     if (ref_gtf)
     {
-        // For backwards compatibility with TopHat
-        rt.order_recs_lexicographically();
         inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
     }
     else 

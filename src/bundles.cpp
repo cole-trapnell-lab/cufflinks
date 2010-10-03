@@ -83,6 +83,15 @@ void load_ref_rnas(FILE* ref_mRNA_file,
     
 	GList<GSeqData> ref_rnas;
 	
+    // If the RefSequenceTable already has entries, we will sort the GTF records
+    // according to their observation order.  Otherwise, we will sort the 
+    // RefSequenceTable's records lexicographically.
+    bool reorder_GTF_recs_lexicographically = false;
+    if (rt.size() == 0)
+    {
+        reorder_GTF_recs_lexicographically = true;
+    }
+    
 	if (ref_mRNA_file)
 	{
 		read_transcripts(ref_mRNA_file, ref_rnas);
@@ -224,6 +233,11 @@ void load_ref_rnas(FILE* ref_mRNA_file,
         foreach (shared_ptr<Scaffold> s, ref_mRNAs)
         {
             assert (s);
+        }
+        
+        if (reorder_GTF_recs_lexicographically)
+        {
+            rt.order_recs_lexicographically();
         }
         
 		ScaffoldSorter sorter(rt);
@@ -628,13 +642,13 @@ void print_sort_error(const char* last_chr_name,
                       const char* bh_name, 
                       int bh_pos)
 {
-    fprintf(stderr, "Error: this SAM file doesn't appear to be correctly sorted!\n");
+    fprintf(stderr, "\nError: this SAM file doesn't appear to be correctly sorted!\n");
     fprintf(stderr, "\tcurrent hit is at %s:%d, last one was at %s:%d\n", 
             bh_name,
             bh_pos,
             last_chr_name,
             last_chr_pos);
-    fprintf(stderr, "You may be able to fix this by running:\n\t$ LC_ALL=\"C\" sort -k 3,3 -k 4,4n input.sam > fixed.sam\n");
+    fprintf(stderr, "Cufflinks requires that if your file has SQ records in\nthe SAM header that they appear in the same order as the chromosomes names \nin the alignments.\nIf there are no SQ records in the header, or if the header is missing,\nthe alignments must be sorted lexicographically by chromsome\nname and by position.\n \n");
 }
 
 const ReadHit* BundleFactory::next_valid_alignment()
