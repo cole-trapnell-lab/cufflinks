@@ -65,6 +65,7 @@ std::string ref_gtf_filename = "";
 std::string mask_gtf_filename = "";
 std::string output_dir = "./";
 std::string fasta_dir;
+std::string bias_mode = "vlmm";
 
 int microexon_length = 25;
 
@@ -88,7 +89,7 @@ int num_importance_samples = 1000;
 double small_anchor_fraction = 7 / 75.0;
 double binomial_junc_filter_alpha = 0.001;
 
-string default_library_type = "illumina-unstranded-paired-end";
+string default_library_type = "illumina-unstranded";
 string library_type = "";
 
 int min_frags_per_transfrag = 10;

@@ -14,26 +14,50 @@
 #include <iostream>
 #include <fstream>
 
-void colSums(const ublas::matrix<long double>& A, vector<long double>& sums)
+void output_vector(vector<double>& v, char* fname)
 {
-	sums = vector<long double>(A.size2(),0.0);
-	for (int i = 0; i < A.size1(); ++i)
-		for (int j = 0; j < A.size2(); ++j)
-			sums[j] += A(i,j);
+	ofstream myfile1;
+	string filename = output_dir + "/" + fname;
+	myfile1.open (filename.c_str());
+	
+	for (size_t i = 0; i < v.size(); ++i)
+		myfile1 << v[i] <<",";
+	myfile1 << endl;
+	
+	myfile1.close();
 }
 
-void fourSums(const ublas::matrix<long double>& A, ublas::matrix<long double>& sums)
+double colSums(const ublas::matrix<long double>& A, vector<long double>& sums)
 {
+	long double total = 0.0;
+	sums = vector<long double>(A.size2(),0.0);
+	for (size_t i = 0; i < A.size1(); ++i)
+		for (size_t j = 0; j < A.size2(); ++j)
+		{
+			sums[j] += A(i,j);
+			total += A(i,j);
+		}
+	return total;
+}
+
+double fourSums(const ublas::matrix<long double>& A, ublas::matrix<long double>& sums)
+{
+	long double total = 0.0;
 	sums = ublas::zero_matrix<long double>(A.size1(), A.size2()/4);
-	for (int i = 0; i < A.size1(); ++i)
-		for (int j = 0; j < A.size2(); ++j)
+	for (size_t i = 0; i < A.size1(); ++i)
+		for (size_t j = 0; j < A.size2(); ++j)
+		{
 			sums(i,j/4) += A(i,j);
+			total += A(i,j);
+		}
+	
+	return total;
 }
 
 void ones(ublas::matrix<long double>& A)
 {
-	for (int i = 0; i < A.size1(); ++i)
-		for (int j = 0; j < A.size2(); ++j)
+	for (size_t i = 0; i < A.size1(); ++i)
+		for (size_t j = 0; j < A.size2(); ++j)
 			A(i,j) = 1;
 }
 
@@ -118,8 +142,8 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 	vector<list<int> > compatibilities(M,list<int>());
 	get_compatibility_list(transcripts, nr_alignments, compatibilities);	
 	
-	vector<vector<long double> > startHists(N+1, vector<long double>()); // +1 to catch overhangs
-	vector<vector<long double> > endHists(N+1, vector<long double>());
+	vector<vector<double> > startHists(N+1, vector<double>()); // +1 to catch overhangs
+	vector<vector<double> > endHists(N+1, vector<double>());
 
 	for (int j = 0; j < N; ++j)
 	{
@@ -175,18 +199,20 @@ const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in r
 const int BiasLearner::_M = 21; //Number of positions spanned by window
 const int BiasLearner::_N = 64; //Length of maximum connection in VLMM
 const int BiasLearner::lengthBins[] = {791,1265,1707,2433}; //Quantiles derived from human mRNA length distribution in UCSC genome browser
-const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.25,.3,.35,.4,.5,.6,.7,.75,.8,.85,.9,.95,1};
+const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.3,.4,.5,.6,.7,.8,.85,.9,.92,.94,.96,.98,1};
 //const double BiasLearner::positionBins[] = {0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19,0.20,0.21,0.22,0.23,0.24,0.25,0.26,0.27,0.28,0.29,0.30,0.31,0.32,0.33,0.34,0.35,0.36,0.37,0.38,0.39,0.40,0.41,0.42,0.43,0.44,0.45,0.46,0.47,0.48,0.49,0.50,0.51,0.52,0.53,0.54,0.55,0.56,0.57,0.58,0.59,0.60,0.61,0.62,0.63,0.64,0.65,0.66,0.67,0.68,0.69,0.70,0.71,0.72,0.73,0.74,0.75,0.76,0.77,0.78,0.79,0.80,0.81,0.82,0.83,0.84,0.85,0.86,0.87,0.88,0.89,0.90,0.91,0.92,0.93,0.94,0.95,0.96,0.97,0.98,0.99,1};
 
 BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 {
 	_frag_len_dist = frag_len_dist;
-	_startParams = ublas::zero_matrix<long double>(_M,_N);
-	_startExp = ublas::zero_matrix<long double>(_M,_N);
-	_endParams = ublas::zero_matrix<long double>(_M,_N);
-	_endExp = ublas::zero_matrix<long double>(_M,_N);
-	_posParams = ublas::zero_matrix<long double>(20,5);
-	_posExp = ublas::zero_matrix<long double>(20,5);
+	_startSeqParams = ublas::zero_matrix<long double>(_M,_N);
+	_startSeqExp = ublas::zero_matrix<long double>(_M,_N);
+	_endSeqParams = ublas::zero_matrix<long double>(_M,_N);
+	_endSeqExp = ublas::zero_matrix<long double>(_M,_N);
+	_startPosParams = ublas::zero_matrix<long double>(20,5);
+	_startPosExp = ublas::zero_matrix<long double>(20,5);
+	_endPosParams = ublas::zero_matrix<long double>(20,5);
+	_endPosExp = ublas::zero_matrix<long double>(20,5);
 }
 
 
@@ -220,7 +246,7 @@ inline void BiasLearner::getSlice(const char* seq, char* slice, int start, int e
 }
 
 
-void BiasLearner::processTranscript(const std::vector<long double>& startHist, const std::vector<long double>& endHist, const Scaffold& transcript)
+void BiasLearner::processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript)
 {
 	double fpkm = transcript.fpkm();
 	int seqLen = transcript.length();
@@ -237,18 +263,27 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 		lenClass++;
 	}
 	
-	int currBin = 0;
-	double binCutoff = positionBins[currBin]*seqLen;
+	// We want to only use the portion of the transcript where fragments can start/end
+	int min_frag_len = _frag_len_dist->min();
+	int currStartBin = 0;
+	int startBinCutoff = positionBins[currStartBin]*(seqLen - min_frag_len);
+	int currEndBin = 0;
+	int endBinCutoff = positionBins[currStartBin]*(seqLen - min_frag_len);
 		
 	for (int i=0; i < seqLen; i++)
 	{
 		
 		//Position Bias
-		if (i > binCutoff)
-			binCutoff=positionBins[++currBin]*seqLen;
-		_posParams(currBin, lenClass) += startHist[i]/fpkm;
-		_posExp(currBin, lenClass) += !(_frag_len_dist->too_short(seqLen-i));
-		
+		if (i > startBinCutoff && currStartBin < _startPosParams.size1()-1)
+			startBinCutoff=positionBins[++currStartBin]*(seqLen - min_frag_len);
+		if (i - min_frag_len > endBinCutoff)
+			endBinCutoff = positionBins[++currEndBin]*(seqLen - min_frag_len);
+			
+		_startPosParams(currStartBin, lenClass) += startHist[i]/fpkm;
+		_startPosExp(currStartBin, lenClass) += !(_frag_len_dist->too_short(seqLen-i));
+		_endPosParams(currEndBin, lenClass) += endHist[i]/fpkm;
+		_endPosExp(currEndBin, lenClass) += !(_frag_len_dist->too_short(i+1));
+
 		
 		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
 		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen;
@@ -267,8 +302,8 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 				int v = seqToInt(seqSlice,paramTypes[j]);
 				if (v >= 0)
 				{
-					_startParams(j,v) += startHist[i]/fpkm;
-					_startExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
+					_startSeqParams(j,v) += startHist[i]/fpkm;
+					_startSeqExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -276,8 +311,8 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					genNList(seqSlice, 0, paramTypes[j],nList);
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
-						_startParams(j,*it) += startHist[i]/(fpkm * (double)nList.size());
-						_startExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
+						_startSeqParams(j,*it) += startHist[i]/(fpkm * (double)nList.size());
+						_startSeqExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
 					}
 				}
 			}
@@ -289,8 +324,8 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 				int v = seqToInt(seqSlice, paramTypes[j]);
 				if (v >= 0)
 				{
-					_endParams(j,v) += endHist[i]/fpkm;
-					_endExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
+					_endSeqParams(j,v) += endHist[i]/fpkm;
+					_endSeqExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -298,8 +333,8 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 					genNList(seqSlice, 0, paramTypes[j], nList);
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
-						_endParams(j,*it) += endHist[i]/(fpkm * (double)nList.size());
-						_endExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
+						_endSeqParams(j,*it) += endHist[i]/(fpkm * (double)nList.size());
+						_endSeqExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
 					}
 				}
 			}
@@ -307,6 +342,103 @@ void BiasLearner::processTranscript(const std::vector<long double>& startHist, c
 	}
 }
 
+void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases) const
+{
+	if (transcript.seq()=="")
+		return;
+		
+	int seqLen = transcript.length();
+	
+	char seq[seqLen];
+	char c_seq[seqLen];
+	encode_seq(transcript.seq(), seq, c_seq);
+	
+	char seqSlice[MAX_SLICE];
+	
+	int lenClass=0;
+	while (seqLen > lengthBins[lenClass] && lenClass < 4)
+	{
+		lenClass++;
+	}
+	
+	int min_frag_len = _frag_len_dist->min();
+	int currStartBin = 0;
+	int startBinCutoff = positionBins[currStartBin]*(seqLen - min_frag_len);
+	int currEndBin = 0;
+	int endBinCutoff = positionBins[currEndBin]*(seqLen - min_frag_len);
+	
+	for (int i=0; i < seqLen; i++)
+	{
+		//Position Bias
+		if (i > startBinCutoff && currStartBin < _startPosParams.size1()-1)
+			startBinCutoff=positionBins[++currStartBin]*(seqLen - min_frag_len);
+		if (i - min_frag_len > endBinCutoff)
+			endBinCutoff = positionBins[++currEndBin]*(seqLen - min_frag_len);
+
+		double startBias = _startPosParams(currStartBin, lenClass);
+		double endBias = _endPosParams(currEndBin,lenClass);
+		
+		//Sequence Bias
+		
+		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
+		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen;
+		
+		if (start_in_bounds || end_in_bounds) // Make sure we are in bounds of the sequence
+		{
+			for(int j=0; j < _M; j++)
+			{
+				// Start Bias
+				if (start_in_bounds) // Make sure we are in bounds of the sequence
+				{
+					int k = i+j-CENTER;
+					getSlice(seq, seqSlice, k-(paramTypes[j]-1), k);
+					int v = seqToInt(seqSlice, paramTypes[j]);
+					if (v >= 0)
+					{
+						startBias *= _startSeqParams(j,v);
+					}
+					else // There is an N.  Average over all possible values of N
+					{
+						list<int> nList(1,0);
+						double tot = 0;
+						genNList(seqSlice, 0, paramTypes[j],nList);
+
+						for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
+						{
+							tot += _startSeqParams(j,*it);
+						}
+						startBias *= tot/nList.size();
+					}
+				}
+				
+				// End Bias
+				if (end_in_bounds) // Make sure we are in bounds of the sequence
+				{
+					int k = i+CENTER-j;
+					getSlice(c_seq, seqSlice, k+(paramTypes[j]-1), k);
+					int v = seqToInt(seqSlice,paramTypes[j]);
+					if (v >= 0)
+					{
+						endBias *= _endSeqParams(j,v);
+					}
+					else // There is an N.  Average over all possible values of N
+					{
+						list<int> nList(1,0);
+						double tot = 0;
+						genNList(seqSlice, 0, paramTypes[j],nList);
+						for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
+						{
+							tot += _endSeqParams(j,*it);
+						}
+						endBias *= tot/nList.size();
+					}
+				}
+			}
+		}
+		startBiases[i] = startBias;
+		endBiases[i] = endBias;
+	}
+}
 
 void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nList) const
 {
@@ -344,62 +476,95 @@ void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nL
 void BiasLearner::normalizeParameters()
 {
 	//Normalize position parameters	
-	vector<long double> posParam_sums;
-	vector<long double> posExp_sums;
-	colSums(_posParams, posParam_sums); // Total starts for each length class
-	colSums(_posExp, posExp_sums); // Total FPKM for each length class
+	vector<long double> startPosParam_sums;
+	vector<long double> startPosExp_sums;
+	double start_tot = colSums(_startPosParams, startPosParam_sums); // Total starts for each length class
+	colSums(_startPosExp, startPosExp_sums); // Total FPKM for each length class
 	
-	for(int i=0; i < _posParams.size1(); i++)
+	vector<long double> endPosParam_sums;
+	vector<long double> endPosExp_sums;
+	double end_tot = colSums(_endPosParams, endPosParam_sums); // Total starts for each length class
+	colSums(_endPosExp, endPosExp_sums); // Total FPKM for each length class
+
+	for(size_t i=0; i < _startPosParams.size1(); i++)
 	{
-		for(int j=0; j < _posParams.size2(); j++)
+		for(size_t j=0; j < _startPosParams.size2(); j++)
 		{
-			_posParams(i,j) /= posParam_sums[j];
-			_posExp(i,j) /= posExp_sums[j];
-			if (_posExp(i,j) == 0)
-				_posParams(i,j) = numeric_limits<long double>::max();
+			_startPosParams(i,j) /= startPosParam_sums[j];
+			_startPosExp(i,j) /= startPosExp_sums[j];
+			if (_startPosExp(i,j) == 0)
+				_startPosParams(i,j) = numeric_limits<long double>::max();
 			else
-				_posParams(i,j) /= _posExp(i,j);
+				_startPosParams(i,j) /= _startPosExp(i,j);
+			
+			_endPosParams(i,j) /= endPosParam_sums[j];
+			_endPosExp(i,j) /= endPosExp_sums[j];
+			if (_endPosExp(i,j) == 0)
+				_endPosParams(i,j) = numeric_limits<long double>::max();
+			else
+				_endPosParams(i,j) /= _endPosExp(i,j);
 		}
 	}
-	ublas::matrix<long double> startExp_sums;
-	ublas::matrix<long double> startParam_sums;
-	fourSums(_startParams, startParam_sums);
-	fourSums(_startExp, startExp_sums);
 	
-	ublas::matrix<long double> endExp_sums;
+	if (start_tot == 0.0)
+		ones(_startPosParams);
+	if (end_tot == 0.0)
+		ones(_endPosParams);
+	
+	ublas::matrix<long double> startSeqExp_sums;
+	ublas::matrix<long double> startParam_sums;
+	start_tot = fourSums(_startSeqParams, startParam_sums);
+	fourSums(_startSeqExp, startSeqExp_sums);
+	
+	ublas::matrix<long double> endSeqExp_sums;
 	ublas::matrix<long double> endParam_sums;
-	fourSums(_endParams, endParam_sums);
-	fourSums(_endExp, endExp_sums); 
+	end_tot = fourSums(_endSeqParams, endParam_sums);
+	fourSums(_endSeqExp, endSeqExp_sums); 
 	
 	//Normalize sequence parameters
 	for(int i=0; i < _M; i++)
+	{
 		for(int j=0; j < pow4[paramTypes[i]]; j++)
 		{
 			if (startParam_sums(i,j/4)==0)
 			{
-				_startParams(i,j) = 1;
+				_startSeqParams(i,j) = 1;
 			}
 			else 
 			{
-				_startParams(i,j) /= startParam_sums(i,j/4);
-				_startExp(i,j) /= startExp_sums(i,j/4);
-				_startParams(i,j) /= _startExp(i,j);
+				_startSeqParams(i,j) /= startParam_sums(i,j/4);
+				_startSeqExp(i,j) /= startSeqExp_sums(i,j/4);
+				_startSeqParams(i,j) /= _startSeqExp(i,j);
 			}
 			if (endParam_sums(i,j/4)==0)
 			{
-				_endParams(i,j) = 1;
+				_endSeqParams(i,j) = 1;
 			}
 			else 
 			{
-				_endParams(i,j) /= endParam_sums(i,j/4);
-				_endExp(i,j) /= endExp_sums(i,j/4);
-				_endParams(i,j) /= _endExp(i,j);
+				_endSeqParams(i,j) /= endParam_sums(i,j/4);
+				_endSeqExp(i,j) /= endSeqExp_sums(i,j/4);
+				_endSeqParams(i,j) /= _endSeqExp(i,j);
 			}
 
 		}
-	//ones(_startParams);
-	//ones(_endParams);
-	ones(_posParams);
+	}
+	
+	if (start_tot==0.0)
+		ones(_startSeqParams);
+	if (end_tot==0.0)
+		ones(_endSeqParams);
+	
+	if (bias_mode=="vlmm" || bias_mode=="site")
+	{
+		ones(_startPosParams);
+		ones(_endPosParams);
+	}
+	else if (bias_mode =="pos")	
+	{
+		ones(_startSeqParams);
+		ones(_endSeqParams);
+	}
 }
 
 void BiasLearner::output()
@@ -408,13 +573,13 @@ void BiasLearner::output()
 	ofstream myfile2;
 	ofstream myfile3;
 	ofstream myfile4;
-	string startfile = output_dir + "/startBias.csv";
+	string startfile = output_dir + "/startSeqBias.csv";
 	myfile1.open (startfile.c_str());
-	string endfile = output_dir + "/endBias.csv";
+	string endfile = output_dir + "/endSeqBias.csv";
 	myfile2.open (endfile.c_str());
-	string posfile = output_dir + "/posBias.csv";
+	string posfile = output_dir + "/startPosBias.csv";
 	myfile3.open (posfile.c_str());
-	string posfile2 = output_dir + "/posExp.csv";
+	string posfile2 = output_dir + "/endPosBias.csv";
 	myfile4.open (posfile2.c_str());
 
 
@@ -422,19 +587,19 @@ void BiasLearner::output()
 	{
 		for(int j = 0; j < _M; ++j)
 		{
-			myfile1 << _startParams(j,i) <<",";
-			myfile2 << _endParams(j,i) << ",";
+			myfile1 << _startSeqParams(j,i) <<",";
+			myfile2 << _endSeqParams(j,i) << ",";
 		}
 		myfile1 << endl;
 		myfile2 << endl;
 	}
 	
-	for (int i = 0; i < _posParams.size2(); ++i)
+	for (size_t i = 0; i < _startPosParams.size2(); ++i)
 	{
-		for(int j = 0; j < _posParams.size1(); ++j)
+		for(size_t j = 0; j < _startPosParams.size1(); ++j)
 		{
-			myfile3 << _posParams(j,i) <<",";
-			myfile4 << _posExp(j,i) <<",";
+			myfile3 << _startPosParams(j,i) <<",";
+			myfile4 << _endPosParams(j,i) <<",";
 		}
 		myfile3 <<endl;
 		myfile4 <<endl;
@@ -446,101 +611,8 @@ void BiasLearner::output()
 	myfile4.close();
 }
 
-void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases, vector<double>& posBiases) const
-{
-	if (transcript.seq()=="")
-		return;
-		
-	int seqLen = transcript.length();
-	
-	char seq[seqLen];
-	char c_seq[seqLen];
-	encode_seq(transcript.seq(), seq, c_seq);
-	
-	char seqSlice[MAX_SLICE];
-	
-	int lenClass=0;
-	while (seqLen > lengthBins[lenClass] && lenClass < 4)
-	{
-		lenClass++;
-	}
-	
-	int currBin = 0;
-	int binCutoff = positionBins[currBin]*seqLen;
-	
-	for (int i=0; i < seqLen; i++)
-	{
-		//Position Bias
-		if (i > binCutoff)
-			binCutoff= positionBins[++currBin]*seqLen;
-		double posBias = _posParams(currBin, lenClass);
-		
-		
-		//Sequence Bias
-		double startBias = 1;
-		double endBias = 1;
-		
-		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
-		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen;
-		
-		if (start_in_bounds || end_in_bounds) // Make sure we are in bounds of the sequence
-		{
-			for(int j=0; j < _M; j++)
-			{
-				// Start Bias
-				if (start_in_bounds) // Make sure we are in bounds of the sequence
-				{
-					int k = i+j-CENTER;
-					getSlice(seq, seqSlice, k-(paramTypes[j]-1), k);
-					int v = seqToInt(seqSlice, paramTypes[j]);
-					if (v >= 0)
-					{
-						startBias *= _startParams(j,v);
-					}
-					else // There is an N.  Average over all possible values of N
-					{
-						list<int> nList(1,0);
-						double tot = 0;
-						genNList(seqSlice, 0, paramTypes[j],nList);
 
-						for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
-						{
-							tot += _startParams(j,*it);
-						}
-						startBias *= tot/nList.size();
-					}
-				}
-				
-				// End Bias
-				if (end_in_bounds) // Make sure we are in bounds of the sequence
-				{
-					int k = i+CENTER-j;
-					getSlice(c_seq, seqSlice, k+(paramTypes[j]-1), k);
-					int v = seqToInt(seqSlice,paramTypes[j]);
-					if (v >= 0)
-					{
-						endBias *= _endParams(j,v);
-					}
-					else // There is an N.  Average over all possible values of N
-					{
-						list<int> nList(1,0);
-						double tot = 0;
-						genNList(seqSlice, 0, paramTypes[j],nList);
-						for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
-						{
-							tot += _endParams(j,*it);
-						}
-						endBias *= tot/nList.size();
-					}
-				}
-			}
-		}
-		startBiases[i] = startBias;
-		endBiases[i] = endBias;
-		posBiases[i] = posBias;
-	}
-}
-	
+
 int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> rgp)
 {
 	int trans_len = _transcript->length();
@@ -549,12 +621,11 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	// Defaults are values for a run not using bias correction
 	vector<double> start_bias(trans_len+1, 1.0);
 	vector<double> end_bias(trans_len+1, 1.0);
-	vector<double> pos_bias(trans_len+1, 1.0);
 	double eff_len = 0.0;
 	
 	if (rgp->bias_learner()!=NULL && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
 	{
-		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias, pos_bias);
+		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias);
 	}
 	
 	shared_ptr<EmpDist const> frag_len_dist = rgp->frag_len_dist();
@@ -575,9 +646,9 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 		//double end = 0;
 		for(int i = 0; i <= trans_len - l; i++)
 		{
-			double tot_bias = start_bias[i]*pos_bias[i]*end_bias[i+l-1];
+			double tot_bias = start_bias[i]*end_bias[i+l-1];
 			tot_bias_for_len[l] += tot_bias;
-			start_bias_for_len[l] += start_bias[i]*pos_bias[i];
+			start_bias_for_len[l] += start_bias[i];
 			end_bias_for_len[l] += end_bias[i+l-1];
 			eff_len += tot_bias * frag_len_dist->npdf(l, trans_len - i);
 		}
@@ -590,7 +661,6 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	
 	_start_biases.push_back(start_bias);
 	_end_biases.push_back(end_bias);
-	_pos_biases.push_back(pos_bias);
 	_tot_biases_for_len.push_back(tot_bias_for_len);
 	_eff_lens.push_back(eff_len);
 	_start_biases_for_len.push_back(start_bias_for_len);
@@ -634,7 +704,6 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];
 	cond_prob *= _end_biases[i][end];
-	cond_prob *= _pos_biases[i][start];
 	cond_prob *= fld->npdf(frag_len, trans_len-start); //defaults to pdf if trans_len==start
 	
 	if (cond_prob==0.0)
@@ -686,6 +755,6 @@ double BiasCorrectionHelper::get_effective_length()
 	return eff_len;
 }
 																		
-																		
-																		
+									
+
 																		

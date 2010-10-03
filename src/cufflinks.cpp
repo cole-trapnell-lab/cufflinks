@@ -69,6 +69,9 @@ static struct option long_options[] = {
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
 {"min-frags-per-transfrags",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
+#if ADAM_MODE
+{"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
+#endif
 
 {0, 0, 0, 0} // terminator
 };
@@ -164,6 +167,10 @@ int parse_options(int argc, char** argv)
 				break;
 			case OPT_MLE_MAX_ITER:
 				max_mle_iterations = parseInt(1, "--max-mle-iterations must be at least 1", print_usage);
+				break;
+			case OPT_BIAS_MODE:
+				bias_mode = optarg;
+				output_dir = optarg;
 				break;
 			case 'Q':
 			{

@@ -61,6 +61,7 @@ extern std::string ref_gtf_filename;
 extern std::string mask_gtf_filename;
 extern std::string output_dir;
 extern std::string fasta_dir;
+extern std::string bias_mode;
 
 extern int microexon_length;
 extern bool cuff_verbose;
@@ -266,5 +267,6 @@ void init_library_table();
 #define OPT_OVERHANG_TOLERANCE  264
 #define OPT_MAX_BUNDLE_LENGTH   265
 #define OPT_MIN_FRAGS_PER_TRANSFRAG 266
+#define OPT_BIAS_MODE 267
 
 #endif

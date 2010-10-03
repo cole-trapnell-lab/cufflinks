@@ -37,12 +37,14 @@ class BiasLearner{
 	static const double positionBins[];
 	
 	shared_ptr<EmpDist const> _frag_len_dist;
-	ublas::matrix<long double> _startParams;
-	ublas::matrix<long double> _startExp;
-	ublas::matrix<long double> _endParams;
-	ublas::matrix<long double> _endExp;
-	ublas::matrix<long double> _posParams;
-	ublas::matrix<long double> _posExp;
+	ublas::matrix<long double> _startSeqParams;
+	ublas::matrix<long double> _startSeqExp;
+	ublas::matrix<long double> _endSeqParams;
+	ublas::matrix<long double> _endSeqExp;
+	ublas::matrix<long double> _startPosParams;
+	ublas::matrix<long double> _startPosExp;
+	ublas::matrix<long double> _endPosParams;
+	ublas::matrix<long double> _endPosExp;
 
 	int seqToInt(const char* seqSlice, int n) const;
 	void getSlice(const char* seq, char* slice, int start, int end) const;
@@ -51,11 +53,11 @@ class BiasLearner{
 public:
 	
 	BiasLearner(shared_ptr<EmpDist const> frag_len_dist);
-	void processTranscript(const vector<long double>& startHist, const vector<long double>& endHist, const Scaffold& transcript);
+	void processTranscript(const vector<double>& startHist, const vector<double>& endHist, const Scaffold& transcript);
 	void normalizeParameters();
 	void output();
 	
-	void getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases, vector<double>& posBiases) const;
+	void getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases) const;
 
 };
 
@@ -99,7 +101,5 @@ public:
 	bool is_mapped() { return _mapped; }
 
 };
-
-
 
 #endif
