@@ -187,8 +187,6 @@ int parse_options(int argc, char** argv)
 			case 'G':
 			{
 				ref_gtf_filename = optarg;
-				if (!F_set)
-					min_isoform_fraction = 0.0;
 				break;
 			}
             case 'M':
@@ -258,6 +256,10 @@ int parse_options(int argc, char** argv)
     
 	if (ref_gtf_filename != "")
 	{
+        if (!F_set)
+        {
+            min_isoform_fraction = 0.0;
+        }
 		allow_junk_filtering = false;	
 	}
 	
