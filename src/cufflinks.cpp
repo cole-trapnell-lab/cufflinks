@@ -117,6 +117,8 @@ int parse_options(int argc, char** argv)
 {
     int option_index = 0;
     int next_option;
+	bool F_set = false;
+	
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, &option_index);
         switch (next_option) {
@@ -136,6 +138,7 @@ int parse_options(int argc, char** argv)
 				break;
 			case 'F':
 				min_isoform_fraction = parseFloat(0, 1.0, "-F/--min-isoform-fraction must be between 0 and 1.0", print_usage);
+				F_set = true;
 				break;
 			case 'f':
 				min_isoform_fraction = parseFloat(0, 1.0, "-f/--min-intron-fraction must be between 0 and 1.0", print_usage);
@@ -184,6 +187,8 @@ int parse_options(int argc, char** argv)
 			case 'G':
 			{
 				ref_gtf_filename = optarg;
+				if (!F_set)
+					min_isoform_fraction = 0.0;
 				break;
 			}
             case 'M':
