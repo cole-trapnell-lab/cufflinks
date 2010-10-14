@@ -151,6 +151,7 @@
 				<li><a href="#cds_diff">Differential coding sequence output</a></li>
 			</ul>
  	    </ul>
+		<li><a href="#library">Library Types</a></li>
 
   	    </ul><br/>
   	  </div>
@@ -329,10 +330,7 @@
 	  <tr><td VALIGN=top nowrap>	
 	  <tt>--library-type</tt>
 	  </td><td VALIGN=top>
-	  In cases where Cufflinks cannot determine the platform and protocol used to generate 
-	  input reads, you can supply this information manually, which will allow Cufflinks to 
-	  infer source strand information with certain protocols.  Run Cufflinks with <tt>-h</tt> 
-	  to see a list of supported library types.
+	  See <a href="#library">Library Types</a>
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>	
 	  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
@@ -869,6 +867,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </table>
 		
 		<br/>
+		</ol>
 		<h2 id="cuffdiff">Running Cuffdiff</h2><br/>
 		<p>
 		Cufflinks includes a program, "Cuffdiff", that you can use to find significant changes 
@@ -1024,10 +1023,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr><td VALIGN=top nowrap>	
 		  <tt>--library-type</tt>
 		  </td><td VALIGN=top>
-		  In cases where Cufflinks cannot determine the platform and protocol used to generate 
-		  input reads, you can supply this information manually, which will allow Cufflinks to 
-		  infer source strand information with certain protocols.  Run Cufflinks with <tt>-h</tt> 
-		  to see a list of supported library types.
+		  See <a href="#library">Library Types</a>
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>	
 		  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
@@ -1312,7 +1308,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		This tab delimited file lists, for each gene, the amount of overloading
 		detected among its coding sequences, i.e. how much differential 
 		CDS output exists between samples.  Only genes producing two or more
-		distinct CDS (i.e. multi-protein genes) are listed here.
+		distinct CDS (i.e. multi-protein genes) are listed here.</p>
 
 		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
 		<table CELLSPACING=15>
@@ -1359,6 +1355,27 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		
 	</div>
   </div>
+  </ol>
+  <h2 id="library">Library Types</h2><br/>
+  <p>
+  In cases where Cufflinks cannot determine the platform and protocol used to generate 
+  input reads, you can supply this information manually, which will allow Cufflinks to 
+  infer source strand information with certain protocols. The available options are listed below.
+  For paired-end data, we currently only support protocols where reads are point towards each other.
+  </p>
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top nowrap><strong>Library Type</strong></td><td VALIGN=top nowrap><strong>Examples</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr><td VALIGN=top nowrap>fr-unstranded</td><td VALIGN=top nowrap><tt>Standard Illumina</tt></td><td VALIGN=top>Reads from the left-most end of the fragment (in transcript coordinates) map to the transcript strand, and the right-most end maps to the opposite strand.</td></tr>
+		  <tr><td VALIGN=top nowrap>fr-firststrand</td><td VALIGN=top nowrap><tt>dUTP, NSR, NNSR</tt></td><td VALIGN=top>Same as above except we enforce the rule that the right-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads).  Equivalently, it is assumed that only the strand generated during first strand synthesis is sequenced.</td></tr>
+		  <tr><td VALIGN=top nowrap>fr-secondstrand</td><td VALIGN=top nowrap><tt>Illumina Ligation</tt></td><td VALIGN=top>Same as above except we enforce the rule that the left-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads).  Equivalently, it is assumed that only the strand generated during second strand synthesis is sequenced.</td></tr>
+		  <tr><td VALIGN=top nowrap>ff-stranded</td><td VALIGN=top nowrap><tt>Standard SOLiD</tt></td><td VALIGN=top>Both reads map to the transcript strand.</td></tr>
+		  </table>
+  <p>
+  Please contact <a href="http://cs.berkeley.edu/~adarob">Adam Roberts</a> to request support for a new protocol.
+  </p>
+  <br />
   <div id="footer">
   	<table width="100%" cellspacing=15><tr><td>
     This research was supported in part by NIH grants R01-LM06845 and R01-GM083873, NSF grant CCF-0347992 and the Miller Institute for Basic

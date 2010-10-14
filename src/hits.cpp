@@ -237,6 +237,39 @@ bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 	return true;
 }
 
+CuffStrand use_stranded_protocol(uint32_t sam_flag, bool antisense_aln, MateStrandMapping msm)
+{
+	if (((sam_flag & BAM_FPAIRED) && (sam_flag & BAM_FREAD1)) || !(sam_flag & BAM_FPAIRED)) // left-most read or single-end
+	{
+		switch(msm)
+		{
+			case FF:
+			case FR:
+				return (antisense_aln) ? CUFF_REV : CUFF_FWD;
+				break;
+			case RF:
+			case RR:
+				return (antisense_aln) ? CUFF_FWD : CUFF_REV;
+				break;
+		}
+	}
+	else // right-most read
+	{
+		switch (msm)
+		{
+			case FF:
+			case RF:
+				return (antisense_aln) ? CUFF_REV : CUFF_FWD;
+				break;
+			case FR:
+			case RR:
+				return (antisense_aln) ? CUFF_FWD : CUFF_REV;
+				break;
+		}
+	}
+}
+
+
 bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf, 
 									 ReadHit& bh,
 									 bool strip_slash,
@@ -368,46 +401,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 
     bool antisense_aln = bam1_strand(hit_buf);
     
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
-        _rg_props.std_mate_orientation() == UNPAIRED)
-    {
-		switch(_rg_props.platform())
-		{
-			case ILLUMINA:
-				source_strand = (antisense_aln) ? CUFF_FWD:CUFF_REV;
-				break;
-			case SOLID:
-				source_strand = (antisense_aln) ? CUFF_REV:CUFF_FWD;
-				break;
-			default:
-				assert(false);
-		}
-
-        // TODO: Illumina strand specific orientation inference here
-    }
-	
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
-        _rg_props.std_mate_orientation() == MATES_POINT_TOWARD)
-    {
-		switch(_rg_props.platform())
-		{
-			case ILLUMINA:
-				if (antisense_aln)
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_FWD : CUFF_REV;
-				else 
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_REV : CUFF_FWD;
-				break;
-			case SOLID:
-				if (antisense_aln)
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_REV : CUFF_FWD;
-				else 
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_FWD : CUFF_REV;
-				break;
-			default:
-				assert(false);
-		}
-        // TODO: Illumina strand specific orientation inference here
-    }
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
     
 	if (!spliced_alignment)
 	{
@@ -449,6 +444,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	
 	return true;
 }
+
+
 
 Platform str_to_platform(const string pl_str)
 {
@@ -820,47 +817,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
     
     bool antisense_aln = sam_flag & 0x0010;
     
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
-        _rg_props.std_mate_orientation() == UNPAIRED)
-    {
-		switch(_rg_props.platform())
-		{
-			case ILLUMINA:
-				source_strand = (antisense_aln) ? CUFF_FWD:CUFF_REV;
-				break;
-			case SOLID:
-				source_strand = (antisense_aln) ? CUFF_REV:CUFF_FWD;
-				break;
-			default:
-				assert(false);
-		}
-		
-        // TODO: Illumina strand specific orientation inference here
-    }
-    
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL &&
-        _rg_props.std_mate_orientation() == MATES_POINT_TOWARD)
-    {
-		switch(_rg_props.platform())
-		{
-			case ILLUMINA:
-				if (antisense_aln)
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_FWD : CUFF_REV;
-				else 
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_REV : CUFF_FWD;
-				break;
-			case SOLID:
-				if (antisense_aln)
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_REV : CUFF_FWD;
-				else 
-					source_strand = (sam_flag & BAM_FREAD1) ? CUFF_FWD : CUFF_REV;
-				break;
-			default:
-				assert(false);
-		}
-        // TODO: Illumina strand specific orientation inference here
-    }
-    
+	if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
 	
 	if (!spliced_alignment)
 	{

@@ -142,9 +142,10 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 	vector<list<int> > compatibilities(M,list<int>());
 	get_compatibility_list(transcripts, nr_alignments, compatibilities);	
 	
-	vector<vector<double> > startHists(N+1, vector<double>()); // +1 to catch overhangs
-	vector<vector<double> > endHists(N+1, vector<double>());
-
+	vector<vector<double> > startHists(N, vector<double>());
+	vector<vector<double> > endHists(N, vector<double>());
+	vector<double> useable_mass (N, 0.0);
+	
 	for (int j = 0; j < N; ++j)
 	{
 		int size = transcripts[j]->length();
@@ -178,15 +179,23 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
 			int end;
 			int frag_len;
 			
+			double mass_fraction = num_hits*transcript.fpkm()/locus_fpkm;
+			
 			transcript.map_frag(hit, start, end, frag_len);
 			
-			startHists[*it][start] += num_hits*transcript.fpkm()/locus_fpkm;
-			endHists[*it][end] += num_hits*transcript.fpkm()/locus_fpkm;
+			if (start != transcript.length() || end != transcript.length())
+				useable_mass[*it] += mass_fraction;
+			
+			startHists[*it][start] += mass_fraction;
+			endHists[*it][end] += mass_fraction;
 		}
 	}
  	for (int j = 0; j < N; ++j)
  	{
- 		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && transcripts[j]->seq()!="" && transcripts[j]->fpkm() >= 1)
+ 		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && 
+			transcripts[j]->seq()!="" &&  
+			useable_mass[j]/transcripts[j]->length() >= 0.1 &&
+			transcripts[j]->fpkm() >= 1)
  			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
  	}
 }
@@ -381,7 +390,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 		//Sequence Bias
 		
 		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
-		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen;
+		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen - _frag_len_dist->mean(); // don't count bias near end since we're over-counting these fragments
 		
 		if (start_in_bounds || end_in_bounds) // Make sure we are in bounds of the sequence
 		{
@@ -710,14 +719,14 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 		return 0.0;
 	
 	if (hit.is_pair())
-    {
 		cond_prob /= _tot_biases_for_len[i][frag_len];
-    }
-	else if (start==trans_len) // The hit is a singleton at the end of a fragment
+	else if (start!=trans_len && end==trans_len) // The hit is a singleton at the start of a fragment
 		cond_prob /= _start_biases_for_len[i][frag_len];
-	else // The hit is a singleton at the start of a fragment
+	else if (start==trans_len && end!=trans_len) // The hit is a singleton at the end of a fragment
 		cond_prob /= _end_biases_for_len[i][frag_len];
-	
+	else // Single-end read w/ library type FF or RR
+		cond_prob /= trans_len-frag_len;
+
 	if (cond_prob > 0 && hit.collapse_mass() > 0)
 	{
 		_rg_masses[i] += hit.collapse_mass();

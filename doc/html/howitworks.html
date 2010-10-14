@@ -122,8 +122,12 @@
 		<ul>
   	      <li><a href="#hass">How does Cufflinks assemble transcripts?</a></li>
   	  	  <li><a href="#hqua">How does Cufflinks calculate transcript abundances?</a></li>
-  	  	  <li><a href="#hqua">How does Cuffdiff test for differential expression and differential regulation?</a></li>
- 	    </ul>
+  	  	  <li><a href="#hdis">How does Cufflinks estimate the fragment length distribution?</a></li>
+  	  	  <li><a href="#hsbi">How does Cufflinks handle sequence bias?</a></li>
+  	  	  <li><a href="#hdif">How does Cuffdiff test for differential expression and differential regulation?</a></li>
+ 	   	  <li><a href="#huqn">How does upper-quartile normalization work?</a></li>
+
+ 	   </ul>
 
   	    </ul><br/>
   	  </div>
@@ -241,7 +245,7 @@
       </p>
 	  <br/>
 	
-	  <h2 id="hqua">How does Cufflinks estimate the fragment length distribution?</h2><br/>
+	  <h2 id="hdis">How does Cufflinks estimate the fragment length distribution?</h2><br/>
 	  <p>
 	  The probability distribution on the length of fragments plays an important role in assembly, abundance
 	  estimation, and bias correction.  The accuracy of this distribution will have a great impact on the 
@@ -263,10 +267,9 @@
 	  the reads. Within these ranges, Cufflinks uses the genomic length of the paired-end reads to estimate the distribution. If not enough reads can 
 	  be found within these ranges, Cufflinks will default to the Gaussian approximation as in the single-end case. To ensure an empirical distribution
 	  will be used, one can first assemble with the Gaussian and then supply the output GTF assembly in a second run of Cufflinks.</li></ul>
-
 	  <br/>
 	  
-	<h2 id="hqua">How does Cufflinks handle sequence bias?</h2><br/>
+	<h2 id="hsbi">How does Cufflinks handle sequence bias?</h2><br/>
 	  <p>
 	  Often in RNA-Seq experiments, a sequence-specific bias is introduced during the 
 	  library preparation that challenges the assumption of uniform coverage. For example, 
@@ -301,30 +304,13 @@
 	  <p>Finally, we re-estimate the abundances using a new likelihood function that has been adjusted to take the sequence 
 	  bias into account, based on the parameters of the graphical model we computed in the previous step.  The result is a 
 	  new set of FPKMs that are less affected by sequence-specific bias.</p>
-	  <br/>
 	  
-	  <h2 id="hqua">How does upper-quartile normalization work?</h2><br/>
-	  <p>
-	  It has been demonstrated that in differential expression analyses, low-count isoforms can be biased. Upper-quartile normalization
-	  was shown to be a good method for increasing sensitivity for these isoforms in
+	  <p> Note that since it must know which ends of reads are fragment ends, Cufflinks will not bias correct reads mapping to transcripts
+	  with unknown strandedness or single-end reads generated from an FF protocol (such as SOLiD's).
 	  </p>
-		<br/>
-	 
-	  <ul>
-		<li>James H. Bullard, Elizabeth Purdom, Kasper D. Hansen, and Sandrine Dudoit,
-			<a href="http://www.biomedcentral.com/1471-2105/11/94">Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments</a>
-			BMC Bioinformatics, Volume 11, Issue 94 (2010)
-	  </ul>
 	  <br/>
-	  
-	  <p>
-	  This correction is implemented in Cufflinks and Cuffdiff as a command-line option. If requested, Cufflinks/Cuffdiff will only use those reads
-	  that are in the lowest 75% of loci sorted by read count to calculate the "map mass".
-	  </p>
-  
-	  <br/>
-	
-	<h2 id="hass">How does Cuffdiff test for differential expression and regulation?</h2><br/>
+	  	
+	<h2 id="hdif">How does Cuffdiff test for differential expression and regulation?</h2><br/>
 		Cuffdiff takes a GTF file of transcripts as input, along with two or more 
 		SAM files containing the fragment alignments for two or more samples. 
 		It produces a number of output files that contain test results for 
@@ -416,10 +402,32 @@
 		<p style="text-align: center;"> 
 		<img border=0 src="images/JS.png"></img>
 		</p>
-		That is, the JS diverence is the entropy of the average distribution 
+		<p>That is, the JS diverence is the entropy of the average distribution 
 		minus the average of the individual entropies.  Cuffdiff uses the square root of this divergence
 		to measure the "distance" between the relative abundances of a group of 
-		transcripts in two difference conditions. Cuffdiff assigns <em>p</em>-values to the observed changes based on the JS divergence.  
+		transcripts in two difference conditions. Cuffdiff assigns <em>p</em>-values to the observed changes based on the JS divergence.  </p>
+		
+		<br/>
+	  <h2 id="huqn">How does upper-quartile normalization work?</h2><br/>
+	  <p>
+	  It has been demonstrated that in differential expression analyses, low-count isoforms can be biased. Upper-quartile normalization
+	  was shown to be a good method for increasing sensitivity for these isoforms in
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>James H. Bullard, Elizabeth Purdom, Kasper D. Hansen, and Sandrine Dudoit,
+			<a href="http://www.biomedcentral.com/1471-2105/11/94">Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments</a>
+			BMC Bioinformatics, Volume 11, Issue 94 (2010)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  This correction is implemented in Cufflinks and Cuffdiff as a command-line option. If requested, Cufflinks/Cuffdiff will only use those reads
+	  that are in the lowest 75% of loci sorted by read count to calculate the "map mass".
+	  </p>
+  
+	  <br/>
 
 
 		

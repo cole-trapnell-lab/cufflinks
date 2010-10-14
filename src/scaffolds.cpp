@@ -1132,6 +1132,11 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 		end = t_span.second;
 		frag_len = abs(end-start)+1;		
 	}
+	else if (hit.read_group_props()->mate_strand_mapping()==FF)
+	{
+		shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
+		frag_len = min(frag_len_dist->mode(), trans_len);
+	}
 	else
 	{
 		shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();

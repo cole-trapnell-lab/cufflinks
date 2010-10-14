@@ -131,7 +131,7 @@ OutputIterator copy_if(InputIterator begin,
 enum Strandedness 
 {
     UNKNOWN_STRANDEDNESS,
-    STRANDED_PROTOCOL,
+	STRANDED_PROTOCOL,
     UNSTRANDED_PROTOCOL
 };
 
@@ -142,6 +142,14 @@ enum StandardMateOrientation
     MATES_POINT_SAME,
     MATES_POINT_AWAY,
     UNPAIRED,
+};
+
+enum MateStrandMapping
+{
+	FF,
+	FR,
+	RF, // This is really FR with first-strandedness
+	RR // This is really FF with first-strandedness
 };
 
 enum Platform
@@ -231,6 +239,9 @@ public:
     StandardMateOrientation std_mate_orientation() const { return _std_mate_orient; }
     void std_mate_orientation(StandardMateOrientation so)  { _std_mate_orient = so; }
     
+	MateStrandMapping mate_strand_mapping() const { return _mate_strand_mapping; }
+	void mate_strand_mapping(MateStrandMapping msm) { _mate_strand_mapping = msm; }
+	
     Platform platform() const { return _platform; }
     void platform(Platform p)  { _platform = p; }   
     
@@ -247,6 +258,7 @@ private:
     
     Strandedness _strandedness;
     StandardMateOrientation _std_mate_orient;
+	MateStrandMapping _mate_strand_mapping;
     Platform _platform;
     long double _total_map_mass;
     boost::shared_ptr<EmpDist const> _frag_len_dist;

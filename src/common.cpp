@@ -89,7 +89,7 @@ int num_importance_samples = 1000;
 double small_anchor_fraction = 7 / 75.0;
 double binomial_junc_filter_alpha = 0.001;
 
-string default_library_type = "illumina-unstranded";
+string default_library_type = "fr-unstranded";
 string library_type = "";
 
 int min_frags_per_transfrag = 10;
@@ -230,41 +230,38 @@ out:
     
 void init_library_table()
 {
-    ReadGroupProperties std_illumina_unstranded;
-    std_illumina_unstranded.platform(ILLUMINA);
-    std_illumina_unstranded.std_mate_orientation(MATES_POINT_TOWARD);
-    std_illumina_unstranded.strandedness(UNSTRANDED_PROTOCOL);
+    ReadGroupProperties fr_unstranded;
+    fr_unstranded.platform(UNKNOWN_PLATFORM);
+	fr_unstranded.mate_strand_mapping(FR);
+    fr_unstranded.std_mate_orientation(MATES_POINT_TOWARD);
+    fr_unstranded.strandedness(UNSTRANDED_PROTOCOL);
     
-    library_type_table["illumina-unstranded"] = std_illumina_unstranded;
-        
-    ReadGroupProperties std_illumina_stranded_paired;
-    std_illumina_stranded_paired.platform(ILLUMINA);
-    std_illumina_stranded_paired.std_mate_orientation(MATES_POINT_TOWARD);
-    std_illumina_stranded_paired.strandedness(STRANDED_PROTOCOL);
-    
-    library_type_table["illumina-stranded-paired-end"] = std_illumina_stranded_paired;
-   
-	ReadGroupProperties illumina_stranded_unpaired;
-    illumina_stranded_unpaired.platform(ILLUMINA);
-    illumina_stranded_unpaired.std_mate_orientation(UNPAIRED);
-    illumina_stranded_unpaired.strandedness(STRANDED_PROTOCOL);
-    
-    library_type_table["illumina-stranded-single-end"] = illumina_stranded_unpaired;
+    library_type_table["fr-unstranded"] = fr_unstranded;
+        	
+	ReadGroupProperties fr_firststrand;
+    fr_firststrand.platform(UNKNOWN_PLATFORM);
+	fr_firststrand.mate_strand_mapping(RF);
+    fr_firststrand.std_mate_orientation(MATES_POINT_TOWARD);
+    fr_firststrand.strandedness(STRANDED_PROTOCOL);
 	
-    ReadGroupProperties solid_paired;
-    solid_paired.platform(SOLID);
-    solid_paired.std_mate_orientation(MATES_POINT_TOWARD);
-    solid_paired.strandedness(STRANDED_PROTOCOL);
+    library_type_table["fr-firststrand"] = fr_firststrand;
+
+	ReadGroupProperties fr_secondstrand;
+    fr_secondstrand.platform(UNKNOWN_PLATFORM);
+	fr_secondstrand.mate_strand_mapping(FR);
+    fr_secondstrand.std_mate_orientation(MATES_POINT_TOWARD);
+    fr_secondstrand.strandedness(STRANDED_PROTOCOL);
 	
-    library_type_table["solid-paired-end"] = solid_paired;
-        
-    ReadGroupProperties solid_unpaired;
-    solid_unpaired.platform(SOLID);
-    solid_unpaired.std_mate_orientation(UNPAIRED);
-    solid_unpaired.strandedness(STRANDED_PROTOCOL);
-    
-    library_type_table["solid-single-end"] = solid_unpaired;
-    
+    library_type_table["fr-secondstrand"] = fr_secondstrand;
+	
+	ReadGroupProperties ff_stranded;
+    ff_stranded.platform(UNKNOWN_PLATFORM);
+	ff_stranded.mate_strand_mapping(FF);
+    ff_stranded.std_mate_orientation(MATES_POINT_TOWARD);
+    ff_stranded.strandedness(STRANDED_PROTOCOL);
+	
+    library_type_table["ff-stranded"] = ff_stranded;
+	
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
