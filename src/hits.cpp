@@ -546,9 +546,22 @@ static const int MAX_HEADER_LEN = 4 * 1024 * 1024; // 4 MB
 bool BAMHitFactory::inspect_header()
 {
     bam_header_t* header = _hit_file->header;
+    
+    if (header == NULL)
+    {
+        fprintf(stderr, "Warning: No BAM header\n");
+        return false;
+    }
+    
     if (header->l_text >= MAX_HEADER_LEN)
     {
         fprintf(stderr, "Warning: BAM header too large\n");
+        return false;
+    }
+    
+    if (header->text == NULL || header->l_text == 0)
+    {
+        fprintf(stderr, "Warning: header is empty\n");
         return false;
     }
     
