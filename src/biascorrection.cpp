@@ -194,7 +194,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl)
  	{
  		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && 
 			transcripts[j]->seq()!="" &&  
-			useable_mass[j]/transcripts[j]->length() >= 0.1 &&
+//			useable_mass[j]/transcripts[j]->length() >= 0.1 &&
 			transcripts[j]->fpkm() >= 1)
  			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
  	}

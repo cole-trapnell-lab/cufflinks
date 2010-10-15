@@ -484,6 +484,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
 	if (!has_pairs || tot_count < 10000)
 	{
+		tot_count = 0;
 		distr_type  = "Gaussian (default)";
 		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
 		max_len = def_frag_len_mean + 3*def_frag_len_std_dev;

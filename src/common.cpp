@@ -90,7 +90,7 @@ double small_anchor_fraction = 7 / 75.0;
 double binomial_junc_filter_alpha = 0.001;
 
 string default_library_type = "fr-unstranded";
-string library_type = "";
+string library_type = default_library_type;
 
 int min_frags_per_transfrag = 10;
 
@@ -254,13 +254,29 @@ void init_library_table()
 	
     library_type_table["fr-secondstrand"] = fr_secondstrand;
 	
-	ReadGroupProperties ff_stranded;
-    ff_stranded.platform(UNKNOWN_PLATFORM);
-	ff_stranded.mate_strand_mapping(FF);
-    ff_stranded.std_mate_orientation(MATES_POINT_TOWARD);
-    ff_stranded.strandedness(STRANDED_PROTOCOL);
+	ReadGroupProperties ff_unstranded;
+    ff_unstranded.platform(UNKNOWN_PLATFORM);
+	ff_unstranded.mate_strand_mapping(FF);
+    ff_unstranded.std_mate_orientation(MATES_POINT_TOWARD);
+    ff_unstranded.strandedness(UNSTRANDED_PROTOCOL);
+    
+    library_type_table["ff-unstranded"] = ff_unstranded;
 	
-    library_type_table["ff-stranded"] = ff_stranded;
+	ReadGroupProperties ff_firststrand;
+    ff_firststrand.platform(UNKNOWN_PLATFORM);
+	ff_firststrand.mate_strand_mapping(FF);
+    ff_firststrand.std_mate_orientation(MATES_POINT_TOWARD);
+    ff_firststrand.strandedness(STRANDED_PROTOCOL);
+	
+    library_type_table["ff-firststrand"] = ff_firststrand;
+	
+	ReadGroupProperties ff_secondstrand;
+    ff_secondstrand.platform(UNKNOWN_PLATFORM);
+	ff_secondstrand.mate_strand_mapping(RR);
+    ff_secondstrand.std_mate_orientation(MATES_POINT_TOWARD);
+    ff_secondstrand.strandedness(STRANDED_PROTOCOL);
+	
+    library_type_table["ff-secondstrand"] = ff_secondstrand;
 	
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }

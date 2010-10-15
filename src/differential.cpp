@@ -55,15 +55,7 @@ bool test_diffexp(const FPKMContext& curr,
 		double tail_1 = cdf(norm, t1);
 		double tail_2 = cdf(norm, t2);
 		
-		double differential;
-		if (curr.FPKM == 0.0 && prev.FPKM != 0.0)
-		{
-			differential = numeric_limits<double>::max();;
-		}
-		else
-		{
-			differential = log(curr.FPKM) - log(prev.FPKM);
-		}
+		double differential = log(curr.FPKM) - log(prev.FPKM);
 		
 		double p_value = 1.0 - (tail_1 - tail_2);
 		
@@ -82,7 +74,8 @@ bool test_diffexp(const FPKMContext& curr,
 		{
 			//test = SampleDifference(sample1, sample2, 0, curr.FPKM, DBL_MAX, 0, transcript_group_id); 
 			test.p_value = 0;
-			test.test_stat = numeric_limits<double>::max();;
+			test.differential = numeric_limits<double>::max();;
+			test.test_stat = numeric_limits<double>::max();
 			test.value_1 = 0;
 			test.value_2 = curr.FPKM;
 			performed_test = true;
@@ -91,7 +84,8 @@ bool test_diffexp(const FPKMContext& curr,
 		{
 			//test = SampleDifference(sample1, sample2, prev.FPKM, 0, -DBL_MAX, 0, transcript_group_id); 
 			test.p_value = 0;
-			test.test_stat = numeric_limits<double>::min();
+			test.differential = -numeric_limits<double>::max();;
+			test.test_stat = -numeric_limits<double>::max();
 			test.value_1 = prev.FPKM;
 			test.value_2 = 0;
 			performed_test = true;
