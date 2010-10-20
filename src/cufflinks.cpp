@@ -170,7 +170,6 @@ int parse_options(int argc, char** argv)
 				break;
 			case OPT_BIAS_MODE:
 				bias_mode = optarg;
-				output_dir = optarg;
 				break;
 			case 'Q':
 			{
@@ -284,7 +283,12 @@ int parse_options(int argc, char** argv)
             global_read_properties = &lib_itr->second;
         }
     }
-
+	
+#if ADAM_MODE
+	if (fasta_dir != "")
+		output_dir = output_dir + "/" + bias_mode;
+#endif
+	
     
     //inner_dist_norm = normal(0, inner_dist_std_dev);
 	return 0;

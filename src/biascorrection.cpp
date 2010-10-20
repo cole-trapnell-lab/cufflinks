@@ -724,6 +724,8 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 		cond_prob /= _start_biases_for_len[i][frag_len];
 	else if (start==trans_len && end!=trans_len) // The hit is a singleton at the end of a fragment
 		cond_prob /= _end_biases_for_len[i][frag_len];
+	else if (frag_len==trans_len)  // We don't actually know where we start or end and can't subtract off the frag_len or we'll get inf
+		cond_prob /= trans_len;
 	else // Single-end read w/ library type FF or RR
 		cond_prob /= trans_len-frag_len;
 
@@ -733,6 +735,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 		_mapped = true;
 	}
 	
+	assert(!isinf(cond_prob));
 	assert(!isnan(cond_prob));
 	return cond_prob;
 }

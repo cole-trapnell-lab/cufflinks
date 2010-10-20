@@ -267,6 +267,7 @@ CuffStrand use_stranded_protocol(uint32_t sam_flag, bool antisense_aln, MateStra
 				break;
 		}
 	}
+	assert(false);
 }
 
 
