@@ -215,8 +215,19 @@ struct ReadHit
 					gaps_out.push_back(make_pair(pos, pos + op.length - 1));
 					pos += op.length;
 					break;
+                case SOFT_CLIP:
+                    pos += op.length;
+                    break;
+                case HARD_CLIP:
+                    break;
 				case MATCH:
 					pos += op.length;
+					break;
+                case INS:
+                    pos -= op.length;
+					break;
+                case DEL:
+                    pos += op.length;
 					break;
 				default:
 					break;
@@ -249,9 +260,12 @@ private:
 			{
 				case MATCH:
 				case REF_SKIP:
+                case SOFT_CLIP:
 				case DEL:
 					r += op.length;
 					break;
+                case INS:
+                case HARD_CLIP:
 				default:
 					break;
 			}
@@ -432,7 +446,15 @@ public:
         for (map<string, RefID>::iterator i = str_to_id.begin(); i != str_to_id.end(); ++i, ++new_order)
         {
             _by_id.find(get_id(i->first, NULL))->second.observation_order = new_order;
-            asm_verbose( "%lu: %s\n", new_order, i->first.c_str());
+            verbose_msg( "%lu: %s\n", new_order, i->first.c_str());
+        }
+    }
+    
+    void print_rec_ordering()
+    {
+        for (InvertedIDTable::iterator i = _by_id.begin(); i != _by_id.end(); ++i)
+        {
+            verbose_msg( "%lu: %s\n", i->second.observation_order, i->second.name);
         }
     }
 	

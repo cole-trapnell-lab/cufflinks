@@ -1196,6 +1196,12 @@ void count_introns_in_read(const ReadHit& read,
 				break;
             case HARD_CLIP:
 				break;
+            case INS:
+                g_left -= cig[i].length;
+                break;
+            case DEL:
+                g_left += cig[i].length;
+                break;
 			default:
 				assert(false);
 				break;
@@ -1537,6 +1543,12 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
                 
             case HARD_CLIP:
 				break;
+            case INS:
+                g_left -= cig[i].length;
+                break;
+            case DEL:
+                g_left += cig[i].length;
+                break;
 			default:
 				assert(false);
 				break;

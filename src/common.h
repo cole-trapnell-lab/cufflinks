@@ -272,13 +272,14 @@ extern const ReadGroupProperties* global_read_properties;
 void print_library_table();
 void init_library_table();
 
-#define OPT_NUM_IMP_SAMPLES		260
-#define OPT_MLE_MAX_ITER		261
-#define OPT_FDR					262
-#define OPT_LIBRARY_TYPE        263
-#define OPT_OVERHANG_TOLERANCE  264
-#define OPT_MAX_BUNDLE_LENGTH   265
+#define OPT_NUM_IMP_SAMPLES         260
+#define OPT_MLE_MAX_ITER            261
+#define OPT_FDR                     262
+#define OPT_LIBRARY_TYPE            263
+#define OPT_OVERHANG_TOLERANCE      264
+#define OPT_MAX_BUNDLE_LENGTH       265
 #define OPT_MIN_FRAGS_PER_TRANSFRAG 266
-#define OPT_BIAS_MODE 267
+#define OPT_BIAS_MODE               267
+#define OPT_MIN_INTRON_LENGTH       268
 
 #endif

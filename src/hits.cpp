@@ -268,6 +268,7 @@ CuffStrand use_stranded_protocol(uint32_t sam_flag, bool antisense_aln, MateStra
 		}
 	}
 	assert(false);
+    return CUFF_STRAND_UNKNOWN;
 }
 
 
@@ -328,7 +329,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		int length = bam1_cigar(hit_buf)[i] >> BAM_CIGAR_SHIFT;
 		if (length <= 0)
 		{
-			//fprintf (stderr, "SAM error on line %d: CIGAR op has zero length\n", _line_num);
+			fprintf (stderr, "BAM error: CIGAR op has zero length\n");
 			return false;
 		}
 		
@@ -411,8 +412,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(bam1_qname(hit_buf),
 						text_name,
-						text_offset, // BAM files are 0-indexed
-						cigar[0].length,
+						text_offset,  // BAM files are 0-indexed
+						cigar,
 						antisense_aln,
 						source_strand,
 						mrnm,
@@ -560,32 +561,29 @@ bool BAMHitFactory::inspect_header()
         return false;
     }
     
-    if (header->text == NULL || header->l_text == 0)
+    if (header->text != NULL)
     {
-        fprintf(stderr, "Warning: header is empty\n");
-        return false;
-    }
-    
-    char* h_text = strdup(header->text);
-    char* pBuf = h_text;
-    while(pBuf - h_text < header->l_text)
-    {
-        char* nl = strchr(pBuf, '\n');
-        if (nl) 
+        char* h_text = strdup(header->text);
+        char* pBuf = h_text;
+        while(pBuf - h_text < header->l_text)
         {
-            *nl = 0; 
-            parse_header_string(pBuf, _rg_props);
-            pBuf = ++nl;
+            char* nl = strchr(pBuf, '\n');
+            if (nl) 
+            {
+                *nl = 0; 
+                parse_header_string(pBuf, _rg_props);
+                pBuf = ++nl;
+            }
+            else 
+            {
+                pBuf = h_text + header->l_text;
+            }
         }
-        else 
-        {
-            pBuf = h_text + header->l_text;
-        }
+        
+        free(h_text);
     }
     
     finalize_rg_props();
-    
-    free(h_text);
     return true;
 }
 
@@ -736,7 +734,10 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 			opcode = MATCH;
 		}
 		else if (op_char == 'I') opcode = INS;
-		else if (op_char == 'D') opcode = DEL;
+		else if (op_char == 'D') 
+        {
+            opcode = DEL;
+        }
 		else if (op_char == 'N')
 		{
 			opcode = REF_SKIP;
@@ -840,8 +841,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(name,
 						text_name,
-						text_offset - 1, // SAM files are 1-indexed
-						cigar[0].length,
+						text_offset - 1,
+						cigar,
 						antisense_aln,
 						source_strand,
 						mrnm,

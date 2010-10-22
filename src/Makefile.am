@@ -116,7 +116,7 @@ libgc_a_SOURCES = \
 
 cufflinks_SOURCES = cufflinks.cpp  
 cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 
-cufflinks_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS)
+cufflinks_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS) 
 
 cuffcompare_SOURCES = cuffcompare.cpp
 cuffcompare_LDADD = libgc.a

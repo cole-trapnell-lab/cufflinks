@@ -69,6 +69,8 @@ static struct option long_options[] = {
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
 {"min-frags-per-transfrags",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
+{"min-intron-length",required_argument,		         0,			 OPT_MIN_INTRON_LENGTH},
+
 #if ADAM_MODE
 {"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
 #endif
@@ -112,6 +114,7 @@ void print_usage()
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  --max-bundle-length          maximum genomic length allowed for a given bundle     [ default:3500000 ]\n");
+    fprintf(stderr, "  --min-intron-length          minimum intron size allowed in genome                 [ default:     50 ]\n");
     
     print_library_table();
 }
@@ -249,7 +252,12 @@ int parse_options(int argc, char** argv)
             
             case OPT_MIN_FRAGS_PER_TRANSFRAG:
 			{
-				min_frags_per_transfrag = parseInt(1, "--min-frags-per-transfrag must be at least 0", print_usage);;
+				min_frags_per_transfrag = parseInt(0, "--min-frags-per-transfrag must be at least 0", print_usage);;
+				break;
+			}
+            case OPT_MIN_INTRON_LENGTH:
+			{
+				min_intron_length = parseInt(0, "--min-intron-length must be at least 0", print_usage);
 				break;
 			}
                 
@@ -636,22 +644,23 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 									long double total_map_mass,
 									vector<Gene>& genes)
 {	
-	vector<shared_ptr<Scaffold> > partials;
-	vector<shared_ptr<Scaffold> > completes;
-	
-	for (size_t i = 0; i < scaffolds.size(); ++i)
-	{
-		if (scaffolds[i]->has_unknown())
-		{
-			partials.push_back(scaffolds[i]);
-		}
-		else
-		{
-			completes.push_back(scaffolds[i]);
-		}
-	}
-	
-	scaffolds = completes;
+	//vector<shared_ptr<Scaffold> > partials;
+	//vector<shared_ptr<Scaffold> > completes;
+    
+    vector<shared_ptr<Scaffold> > split_partials;
+    // Cleave the partials at their unknowns to minimize FPKM dilation on  
+    // the low end of the expression profile. 
+    for (size_t i = 0; i < scaffolds.size(); ++i) 
+    { 
+        vector<Scaffold> c; 
+        scaffolds[i]->get_complete_subscaffolds(c); 
+        foreach (Scaffold& s, c)
+        {
+            split_partials.push_back(shared_ptr<Scaffold>(new Scaffold(s))); 
+        }
+    } 
+    
+    scaffolds = split_partials;
 	
 	vector<shared_ptr<Abundance> > abundances;
 	foreach(shared_ptr<Scaffold> s, scaffolds)
@@ -973,13 +982,15 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	long double map_mass = 0.0;
 	BadIntronTable bad_introns;
     
+    rt.print_rec_ordering();
+    
     vector<shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
         ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
     }
-
+    rt.print_rec_ordering();
     vector<shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
@@ -995,8 +1006,6 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
     }
-    
-
     
     asm_verbose("%d ReadHits still live\n", num_deleted);
     asm_verbose("Found %lu reference contigs\n", rt.size());

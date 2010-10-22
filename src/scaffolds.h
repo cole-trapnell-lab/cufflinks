@@ -167,10 +167,19 @@ class Scaffold
                 case HARD_CLIP:
 					//g_left += cig[i].length;
 					break;
+                case INS:
+                    //ops.back().genomic_length -= cig[i].length;
+                    //g_left -= cig[i].length;
+					break;
+                case DEL:
+                    ops.back().genomic_length += cig[i].length;
+                    g_left += cig[i].length;
+					break;
 				default:
 					assert(false);
 					break;
 			}
+            assert (ops.empty() || ops.back().genomic_length >= 1);
 		}
 	}
 
@@ -234,7 +243,14 @@ public:
 		}
 		_mates_in_scaff.push_back(&mate);
 		sort(aug_ops.begin(), aug_ops.end(), AugmentedCuffOp::g_left_lt);
+        
+        foreach(AugmentedCuffOp& op, aug_ops)
+        {
+            assert (op.genomic_length >= 1);
+        }
+        
         AugmentedCuffOp::merge_ops(aug_ops, _augmented_ops, false);
+        
 		_right = _augmented_ops.back().g_right();
 		_left = _augmented_ops.front().g_left();
 		
