@@ -205,7 +205,7 @@ public:
     if (f==NULL) return -1;
     return f->idx;
     }
- int removeName(const char* tname) {
+ int removeName() {
    GError("Error: removing names from GffNameList not allowed!\n");
    return -1;
    }

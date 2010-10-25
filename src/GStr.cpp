@@ -643,7 +643,7 @@ GStr GStr::substr(int idx, int len) const {
         idx += length();
 
     // A length of -1 specifies the rest of the string.
-    if (len == -1 || len>length()-idx)
+    if (len < 0  || len>length()-idx)
         len = length() - idx;
     
     if (idx<0 || idx>=length() || len<0 )
@@ -975,20 +975,28 @@ int GStr::index(char c, int start_index) const {
         return idx - chars();
 }
 
-int GStr::rindex(char c) const {   
-    if (c == '\0' || length()==0)
-        return -1;
-    char* idx= rstrchr((char*)chars(), c);
-    if (idx==NULL) return -1;
-                else return idx-chars();
+int GStr::rindex(char c, int end_index) const {   
+    if (c == 0 || length()==0 || end_index>=length()) return -1;
+    if (end_index<0) end_index=my_data->length-1; 
+    for (int i=end_index;i>=0;i--) {
+      if (my_data->chars[i]==c) return i;
+      }
+    return -1;
 }
 
-int GStr::rindex(const char* str) const {
-    if (str==NULL || *str == '\0' || length()==0)
+int GStr::rindex(const char* str, int end_index) const {
+    if (str==NULL || *str == '\0' || length()==0 || end_index>=length())
         return -1;
-    char* idx= rstrfind((char*)chars(), str);
-    if (idx==NULL) return -1;
-                else return idx-chars();
+    int slen=strlen(str);
+    if (end_index<0) end_index=my_data->length-1;
+    //end_index is the index of the right-side boundary 
+    //the scanning starts at the end
+    if (end_index>=0 && end_index<slen-1) return -1;
+    for (int i=end_index-slen+1;i>=0;i--) {
+       if (memcmp((void*)(my_data->chars+i),(void*)str, slen)==0)
+           return i;
+       }
+    return -1;
 }
 
 GStr GStr::split(const char* delim) {

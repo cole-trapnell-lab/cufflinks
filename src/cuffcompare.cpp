@@ -33,6 +33,8 @@ Options:\n\
 \n\
 -R  for -r option, reduce the set of reference transcripts to \n\
     only those found to overlap any of the input loci\n\
+-M  discard (ignore) single-exon transfrags and reference transcripts\n\
+-N  discard (ignore) single-exon reference transcripts\n\
 \n\
 -s  <seq_path> can be a multi-fasta file with all the genomic sequences or \n\
     a directory containing multiple single-fasta files (one file per contig);\n\
@@ -52,6 +54,7 @@ bool checkFasta=false;
 bool tmapFiles=true;
 bool qtracking=true;
 bool debugExit=false;
+bool only_spliced_refs=false;
 int debugCounter=0;
 
 int polyrun_range=2000; //polymerase run range 2KB
@@ -136,6 +139,7 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
 FILE* f_mintr=NULL; //missed ref introns
 
 bool multiexon_only=false;
+bool multiexonrefs_only=false;
 
 GHash<GStr> refdescr;
 void loadRefDescr(const char* fname);
@@ -147,7 +151,7 @@ GList<GSeqTrack> gseqtracks(true,true,true);
 GSeqTrack* findGSeqTrack(int gsid);
 
 int main(int argc, char * const argv[]) {
-  GArgs args(argc, argv, "XDTMVGCKRLhp:c:d:s:i:n:r:o:");
+  GArgs args(argc, argv, "XDTMNVGCKRLhp:c:d:s:i:n:r:o:");
   int e;
   if ((e=args.isError())>0)
     GError("%s\nInvalid argument: %s\n", USAGE, argv[e]);
@@ -162,6 +166,7 @@ int main(int argc, char * const argv[]) {
   tmapFiles=(args.getOpt('T')==NULL);
   bool checkseq=(args.getOpt('s')!=NULL);
   multiexon_only=(args.getOpt('M')!=NULL);
+  multiexonrefs_only=(args.getOpt('N')!=NULL); 
   perContigStats=(args.getOpt('G')==NULL);
   checkFasta=(args.getOpt('K')!=NULL);
   gtf_tracking_verbose=((args.getOpt('V')!=NULL) || debug);
@@ -230,18 +235,22 @@ int main(int argc, char * const argv[]) {
     if (f_ref==NULL) GError("Error opening reference gff: %s\n",s.chars());
     haveRefs=true;
     if (gtf_tracking_verbose) GMessage("Loading reference transcripts..\n");
-    read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), checkseq);
+    read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), checkseq, (multiexonrefs_only || multiexon_only));
     haveRefs=(ref_data.Count()>0);
     reduceRefs=(args.getOpt('R')!=NULL);
     if (gtf_tracking_verbose) GMessage("..ref data loaded\n");
   }
 
-  s=args.getOpt('o');
+  s=args.getOpt('o'); //if a full pathname is given
+   //the other common output files will still be created in the current directory
   if (s.is_empty()) s="stdout";
   else {
+    int sp=s.rindex(CHPATHSEP);
+    if (sp>=0) s.cut(0,sp+1);
+    //if (di>0) s.cut(di);
     int di=s.rindex('.');
-    if (di>0) s.cut(di);
-  }
+    if (di>0 && di>s.length()-5) s.cut(di); // meh, not really needed/wanted?
+    }
   GStr fbasename=s;
   if (debug) { //create a few more files potentially useful for debugging
              s.append(".missed_introns.gtf");
@@ -290,9 +299,8 @@ int main(int argc, char * const argv[]) {
     //f_in is the opened gff file to process
     if (qtracking && tmapFiles) {
         s=infname;
-        int di=s.rindex('.');
-        if (di>0) s.cut(di);
-        //now s is the base name of the qryfile
+        int di=s.rindex(CHPATHSEP);
+        if (di>=0) s.cut(0,di+1);
         GStr sbase(s);
         s.append(".tmap");
         tfiles[fi]=fopen(s.chars(),"w");
@@ -310,7 +318,7 @@ int main(int argc, char * const argv[]) {
       GList<GSeqData>* pdata=new GList<GSeqData>(true,true,true);
       qrysdata[fi]=pdata;
       if (gtf_tracking_verbose) GMessage("Loading transcripts from %s..\n",infname.chars());
-      read_mRNAs(f_in, *pdata, &ref_data, true, fi, infname.chars(), checkseq);
+      read_mRNAs(f_in, *pdata, &ref_data, true, fi, infname.chars(), checkseq, multiexon_only);
       GSuperLocus gstats;
       GFaSeqGet *faseq=NULL;
       for (int g=0;g<pdata->Count();g++) { //for each seqdata related to a genomic sequence

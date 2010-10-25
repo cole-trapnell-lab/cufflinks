@@ -125,7 +125,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 				 GList<GSeqData>& glstdata,
 				 bool is_ref_set,
 				 bool check_for_dups,
-				 int qfidx) {
+				 int qfidx, bool only_multiexon) {
     int refdiscarded=0; //ref duplicates discarded
     int tredundant=0; //cufflinks redundant transcripts discarded
     int mrna_deleted=0;
@@ -135,7 +135,11 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		GSeqData f(m->gseq_id);
 		GSeqData* gdata=NULL;
 		uint tlen=m->end-m->start+1;
-
+		if (only_multiexon && m->exons.Count()<2) {
+			delete m;
+			mrnas.Forget(k);
+			continue;
+			}
 		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
 			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
 			delete m;
@@ -155,7 +159,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		double conf_lo=0;
 		if (is_ref_set) {
 		  if (check_for_dups) {
-          //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
+		 //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
 		  GffObj* rp= (m->strand=='+') ? is_mRNADup(m, gdata->mrnas_f) :
 		                                 is_mRNADup(m, gdata->mrnas_r);
 		  if (rp!=NULL) {
@@ -165,6 +169,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		     char* pgname=rp->getAttr(ATTR_GENE_NAME);
 		     if (pgname==NULL && gname!=NULL)
 		         rp->addAttr(ATTR_GENE_NAME, gname);
+			 //GMessage("--------->  ref %s as a duplicate of %s\n",m->getID(), rp->getID());
 		     delete m;
 		     mrnas.Forget(k);
 		     mrna_deleted++;
@@ -464,7 +469,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 
 
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
-	         bool check_for_dups, int qfidx, const char* fname, bool checkseq) {
+	         bool check_for_dups, int qfidx, const char* fname, bool checkseq, bool only_multiexon) {
 	//>>>>> read all the mRNAs from a file
 	GffReader* gffr=new GffReader(f, true);
 	//int imrna_counter=0;
@@ -475,7 +480,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	gffr->readAll(true,          true,        isRefData || gtf_tracking_largeScale);
 	//so it will read exon attributes if low number of Cufflinks files
 	
-	int d=parse_mRNAs(gffr->gflst, seqdata, isRefData, check_for_dups, qfidx);
+	int d=parse_mRNAs(gffr->gflst, seqdata, isRefData, check_for_dups, qfidx,only_multiexon);
 	if (gtf_tracking_verbose && d>0) {
 	  if (isRefData) GMessage(" %d duplicate reference transcripts discarded.\n",d);
 	             else GMessage(" %d redundant cufflinks transfrags discarded.\n",d);

@@ -37,6 +37,19 @@ typedef unsigned char byte;
 #ifndef MAXUINT
 #define MAXUINT ((unsigned int)-1)
 #endif
+
+#ifndef MAXINT
+#define MAXINT INT_MAX
+#endif
+
+#ifndef MAX_UINT
+#define MAX_UINT ((unsigned int)-1)
+#endif
+
+#ifndef MAX_INT
+#define MAX_INT INT_MAX
+#endif
+
 /*
 #if defined(_NATIVE_64) || defined(_LP64) || defined(__LP64__)
  typedef long int64;
@@ -124,20 +137,20 @@ typedef void GFreeProc(pointer item); //usually just delete,
                                      GError(ERR_ALLOC)
 #define GFREE(ptr)       GFree((pointer*)(&ptr))
 
-inline char* min(char *arg1, char *arg2) {
+inline char* strMin(char *arg1, char *arg2) {
     return (strcmp(arg1, arg2) < 0)? arg1 : arg2;
 }
+
+inline char* strMax(char *arg1, char *arg2) {
+    return (strcmp(arg2, arg1) < 0)? arg1 : arg2;
+}
+
 
 inline int iround(double x) {
    return (int)floor(x + 0.5);
 }
 
-
 /****************************************************************************/
-
-inline char* max(char *arg1, char *arg2) {
-    return (strcmp(arg2, arg1) < 0)? arg1 : arg2;
-}
 
 inline int Gintcmp(int a, int b) {
  //return (a>b)? 1 : ((a==b)?0:-1);
@@ -289,20 +302,24 @@ class GSeg {
   //check for overlap with other segment
   uint len() { return end-start+1; }
   bool overlap(GSeg* d) {
-     return start<d->start ? (d->start<=end) : (start<=d->end);
+     //return start<d->start ? (d->start<=end) : (start<=d->end);
+     return (start<=d->end && end>=d->start);
      }
 
   bool overlap(GSeg& d) {
-     return start<d.start ? (d.start<=end) : (start<=d.end);
+     //return start<d.start ? (d.start<=end) : (start<=d.end);
+     return (start<=d.end && end>=d.start);
      }
 
   bool overlap(GSeg& d, int fuzz) {
-     return start<d.start ? (d.start<=end+fuzz) : (start<=d.end+fuzz);
+     //return start<d.start ? (d.start<=end+fuzz) : (start<=d.end+fuzz);
+     return (start<=d.end+fuzz && end+fuzz>=d.start);
      }
 
   bool overlap(uint s, uint e) {
-    if (s>e) { swap(s,e); }
-     return start<s ? (s<=end) : (start<=e);
+     if (s>e) { swap(s,e); }
+     //return start<s ? (s<=end) : (start<=e);
+     return (start<=e && end>=s);
      }
 
   //return the length of overlap between two segments
@@ -354,6 +371,7 @@ class GSeg {
 
 //GLineReader -- text line reading/buffering class
 class GLineReader {
+   bool closeFile;
    int len;
    int allocated;
    char* buf;
@@ -383,7 +401,17 @@ class GLineReader {
                            // the given file position
    void pushBack() { if (lcount>0) pushed=true; } // "undo" the last getLine request
             // so the next call will in fact return the same line
+   GLineReader(const char* fname) {
+      FILE* f=fopen(fname, "rb");
+      if (f==NULL) GError("Error opening file '%s'!\n",fname);
+      closeFile=true;
+      init(f);
+      }
    GLineReader(FILE* stream=NULL, off_t fpos=0) {
+     closeFile=false;
+     init(stream,fpos);
+     }
+   void init(FILE* stream, off_t fpos=0) {
      len=0;
      isEOF=false;
      allocated=1024;
@@ -396,6 +424,7 @@ class GLineReader {
      }
    ~GLineReader() {
      GFREE(buf);
+     if (closeFile) fclose(file);
      }
 };
 

@@ -1130,11 +1130,12 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 				 GList<GSeqData>& glstdata,
 				 bool is_ref_set=true,
 				 bool check_for_dups=false,
-				 int qfidx=-1);
+				 int qfidx=-1, bool only_multiexon=false);
 
 //reading a mRNAs from a gff file and grouping them into loci
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NULL, 
-              bool check_for_dups=false, int qfidx=-1, const char* fname=NULL, bool checkseq=false);
+              bool check_for_dups=false, int qfidx=-1, const char* fname=NULL, 
+              bool checkseq=false, bool only_multiexon=false);
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata);
 

@@ -107,8 +107,8 @@ class GStr {
         int index(const GStr& s, int start_index = 0) const;
         int index(const char* s, int start_index = 0) const;
         int index(char c, int start_index = 0) const;
-        int rindex(char c) const;
-        int rindex(const char* str) const;
+        int rindex(char c, int end_index = -1) const;
+        int rindex(const char* str, int end_index = -1) const;
         bool contains(const GStr& s) const;
         bool contains(const char* s) const;
         bool contains(char c) const;
@@ -147,9 +147,6 @@ class GStr {
         size_t read(FILE* stream, const char* delimiter="\n", size_t bufsize=4096);
           //read next token from stream, using the given string as
           //a marker where the block should stop
-
-        static const int max_token_size = 200;
-        static const int max_line_size = 600;
         const char* chars() const;
         const char* text() const;
     protected:

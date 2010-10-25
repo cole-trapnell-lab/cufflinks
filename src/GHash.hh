@@ -7,11 +7,9 @@
 #include "GBase.h"
 /**
 * This class maintains a fast-access hash table of entities
-* indexed by a character string.
-* It is typically used to map strings to pointers; however, overloading
-* the createData() and deleteData() members allows any type of data to
-* be indexed by strings.
+* indexed by a character string (essentially, maps strings to pointers)
 */
+
 typedef struct {
      char*   key;              // Key string
      bool    keyalloc;         //shared key flag (to not free the key chars)
