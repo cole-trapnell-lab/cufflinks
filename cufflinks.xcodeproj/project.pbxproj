@@ -9,6 +9,33 @@
 /* Begin PBXBuildFile section */
 		ED1C0D7611D7F88B00CFD663 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
 		ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
+		ED41B818127602C60000B5A2 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
+		ED41B819127602C60000B5A2 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
+		ED41B81A127602C60000B5A2 /* assemble.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151F10C72963000A4F41 /* assemble.cpp */; };
+		ED41B81B127602C60000B5A2 /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
+		ED41B81C127602C60000B5A2 /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
+		ED41B81D127602C60000B5A2 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152210C72963000A4F41 /* common.cpp */; };
+		ED41B81E127602C60000B5A2 /* filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152610C72963000A4F41 /* filters.cpp */; };
+		ED41B81F127602C60000B5A2 /* GArgs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152710C72963000A4F41 /* GArgs.cpp */; };
+		ED41B820127602C60000B5A2 /* GBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152810C72963000A4F41 /* GBase.cpp */; };
+		ED41B821127602C60000B5A2 /* gdna.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152910C72963000A4F41 /* gdna.cpp */; };
+		ED41B822127602C60000B5A2 /* genes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152A10C72963000A4F41 /* genes.cpp */; };
+		ED41B823127602C60000B5A2 /* GFaSeqGet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */; };
+		ED41B824127602C60000B5A2 /* gff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152C10C72963000A4F41 /* gff.cpp */; };
+		ED41B825127602C60000B5A2 /* GStr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152D10C72963000A4F41 /* GStr.cpp */; };
+		ED41B826127602C60000B5A2 /* gtf_tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */; };
+		ED41B828127602C60000B5A2 /* hits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153010C72963000A4F41 /* hits.cpp */; };
+		ED41B829127602C60000B5A2 /* scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */; };
+		ED41B82A127602C60000B5A2 /* tokenize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153210C72963000A4F41 /* tokenize.cpp */; };
+		ED41B82B127602C60000B5A2 /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
+		ED41B82C127602C60000B5A2 /* graph_optimize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */; };
+		ED41B82D127602C60000B5A2 /* scaffold_graph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A7911B6E912000F8846 /* scaffold_graph.cpp */; };
+		ED41B82E127602C60000B5A2 /* matching_merge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78BC411B716C3000F8846 /* matching_merge.cpp */; };
+		ED41B82F127602C60000B5A2 /* biascorrection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */; };
+		ED41B831127602C60000B5A2 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
+		ED41B832127602C60000B5A2 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
+		ED41B833127602C60000B5A2 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
+		ED41B83E127603A20000B5A2 /* gtf_reads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152E10C72963000A4F41 /* gtf_reads.cpp */; };
 		ED48324B123E83D100642337 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
 		ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
 		ED5D1EEA114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */; };
@@ -119,6 +146,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		ED41B834127602C60000B5A2 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		EDD0CE1E10C72F7D00AF308F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 8;
@@ -167,6 +203,7 @@
 		ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_check_zlib.m4; sourceTree = "<group>"; };
 		ED1C0D7511D7F88B00CFD663 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = /usr/local/libIntel64/libbam.a; sourceTree = "<absolute>"; };
 		ED1C0D7911D7F94900CFD663 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		ED41B838127602C60000B5A2 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED4835D81249057500642337 /* progressbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = progressbar.h; path = src/progressbar.h; sourceTree = "<group>"; };
 		ED5D1EE8114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_thread-xgcc40-mt-1_41.a"; path = "/usr/local/lib/libboost_thread-xgcc40-mt-1_41.a"; sourceTree = "<absolute>"; };
 		ED877B71123BCA3E0025A050 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
@@ -251,6 +288,16 @@
 				ED5D1EE9114B490C00A2AF02 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */,
 				ED1C0D7611D7F88B00CFD663 /* libbam.a in Frameworks */,
 				ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ED41B830127602C60000B5A2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED41B831127602C60000B5A2 /* libboost_thread-xgcc40-mt-1_41.a in Frameworks */,
+				ED41B832127602C60000B5A2 /* libbam.a in Frameworks */,
+				ED41B833127602C60000B5A2 /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -399,6 +446,7 @@
 				EDD6AA231159BA2E00D3F668 /* Boost Tests */,
 				EDD94B671205C9E800AA1086 /* cufflinks_xcode */,
 				EDFE39CE122BE65600F24CD3 /* cufflinks_xcode */,
+				ED41B838127602C60000B5A2 /* cufflinks_xcode */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -459,6 +507,24 @@
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
 			productReference = EDD0CD9C10C72AC200AF308F /* cufflinks */;
+			productType = "com.apple.product-type.tool";
+		};
+		ED41B816127602C60000B5A2 /* gtf_reads */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ED41B835127602C60000B5A2 /* Build configuration list for PBXNativeTarget "gtf_reads" */;
+			buildPhases = (
+				ED41B817127602C60000B5A2 /* Sources */,
+				ED41B830127602C60000B5A2 /* Frameworks */,
+				ED41B834127602C60000B5A2 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = gtf_reads;
+			productInstallPath = "$(HOME)/bin";
+			productName = cufflinks_xcode;
+			productReference = ED41B838127602C60000B5A2 /* cufflinks_xcode */;
 			productType = "com.apple.product-type.tool";
 		};
 		EDD0CE0810C72F7D00AF308F /* cuffdiff */ = {
@@ -571,6 +637,7 @@
 				EDD6AA221159BA2E00D3F668 /* Unit Tests */,
 				EDD94B461205C9E800AA1086 /* gtf_to_sam */,
 				EDFE39B0122BE65600F24CD3 /* sorting_hat */,
+				ED41B816127602C60000B5A2 /* gtf_reads */,
 			);
 		};
 /* End PBXProject section */
@@ -621,6 +688,37 @@
 				EDE78BC611B716C3000F8846 /* matching_merge.cpp in Sources */,
 				EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 				ED877B74123BCA3F0025A050 /* GFastaIndex.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ED41B817127602C60000B5A2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED41B83E127603A20000B5A2 /* gtf_reads.cpp in Sources */,
+				ED41B818127602C60000B5A2 /* GFastaIndex.cpp in Sources */,
+				ED41B819127602C60000B5A2 /* abundances.cpp in Sources */,
+				ED41B81A127602C60000B5A2 /* assemble.cpp in Sources */,
+				ED41B81B127602C60000B5A2 /* bundles.cpp in Sources */,
+				ED41B81C127602C60000B5A2 /* codons.cpp in Sources */,
+				ED41B81D127602C60000B5A2 /* common.cpp in Sources */,
+				ED41B81E127602C60000B5A2 /* filters.cpp in Sources */,
+				ED41B81F127602C60000B5A2 /* GArgs.cpp in Sources */,
+				ED41B820127602C60000B5A2 /* GBase.cpp in Sources */,
+				ED41B821127602C60000B5A2 /* gdna.cpp in Sources */,
+				ED41B822127602C60000B5A2 /* genes.cpp in Sources */,
+				ED41B823127602C60000B5A2 /* GFaSeqGet.cpp in Sources */,
+				ED41B824127602C60000B5A2 /* gff.cpp in Sources */,
+				ED41B825127602C60000B5A2 /* GStr.cpp in Sources */,
+				ED41B826127602C60000B5A2 /* gtf_tracking.cpp in Sources */,
+				ED41B828127602C60000B5A2 /* hits.cpp in Sources */,
+				ED41B829127602C60000B5A2 /* scaffolds.cpp in Sources */,
+				ED41B82A127602C60000B5A2 /* tokenize.cpp in Sources */,
+				ED41B82B127602C60000B5A2 /* clustering.cpp in Sources */,
+				ED41B82C127602C60000B5A2 /* graph_optimize.cpp in Sources */,
+				ED41B82D127602C60000B5A2 /* scaffold_graph.cpp in Sources */,
+				ED41B82E127602C60000B5A2 /* matching_merge.cpp in Sources */,
+				ED41B82F127602C60000B5A2 /* biascorrection.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -834,6 +932,85 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+		ED41B836127602C60000B5A2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_AUTO_VECTORIZATION = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_SSE3_EXTENSIONS = NO;
+				GCC_ENABLE_SSE41_EXTENSIONS = NO;
+				GCC_ENABLE_SSE42_EXTENSIONS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					HAVE_BAM,
+					DEBUG,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
+				GCC_WARN_SHADOW = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = YES;
+				GENERATE_PROFILING_CODE = NO;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\\\\\\\"$(SRCROOT)\\\\\\\"",
+					/usr/local/libIntel64,
+				);
+				PRODUCT_NAME = cufflinks_xcode;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
+			};
+			name = Debug;
+		};
+		ED41B837127602C60000B5A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_DEBUGGING_SYMBOLS = used;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_ENABLE_SSE41_EXTENSIONS = YES;
+				GCC_ENABLE_SSE42_EXTENSIONS = YES;
+				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
+				GCC_ENABLE_TRIGRAPHS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_UNROLL_LOOPS = YES;
+				HEADER_SEARCH_PATHS = (
+					./src,
+					"/usr/local/include/boost-1_41",
+				);
+				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+					"\\\\\\\"$(SRCROOT)\\\\\\\"",
+					/usr/local/libIntel64,
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = cufflinks;
 			};
 			name = Release;
 		};
@@ -1166,6 +1343,15 @@
 			buildConfigurations = (
 				1DEB923608733DC60010E9CD /* Debug */,
 				1DEB923708733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ED41B835127602C60000B5A2 /* Build configuration list for PBXNativeTarget "gtf_reads" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED41B836127602C60000B5A2 /* Debug */,
+				ED41B837127602C60000B5A2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -403,7 +403,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 
     bool antisense_aln = bam1_strand(hit_buf);
     
-    if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+    if (_rg_props.strandedness() == STRANDED_PROTOCOL && source_strand == CUFF_STRAND_UNKNOWN)
 		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
     
 	if (!spliced_alignment)
@@ -621,7 +621,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		return false;
 	char name[2048];
 	strncpy(name, _name, 2047); 
-	
+    
 	const char* sam_flag_str = strsep((char**)&buf,"\t");
 	if (!sam_flag_str)
 		return false;
@@ -832,7 +832,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
     
     bool antisense_aln = sam_flag & 0x0010;
     
-	if (_rg_props.strandedness() == STRANDED_PROTOCOL)
+    // Don't let the protocol setting override explicit XS tags
+	if (_rg_props.strandedness() == STRANDED_PROTOCOL && source_strand == CUFF_STRAND_UNKNOWN)
 		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
 	
 	if (!spliced_alignment)
