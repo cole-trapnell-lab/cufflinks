@@ -126,9 +126,9 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 				 bool is_ref_set,
 				 bool check_for_dups,
 				 int qfidx, bool only_multiexon) {
-    int refdiscarded=0; //ref duplicates discarded
-    int tredundant=0; //cufflinks redundant transcripts discarded
-    int mrna_deleted=0;
+	int refdiscarded=0; //ref duplicates discarded
+	int tredundant=0; //cufflinks redundant transcripts discarded
+	int mrna_deleted=0;
 	for (int k=0;k<mrnas.Count();k++) {
 		GffObj* m=mrnas[k];
 		int i=-1;
@@ -139,6 +139,17 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 			delete m;
 			mrnas.Forget(k);
 			continue;
+			}
+		if (is_ref_set) {
+			if (m->monoFeature() && m->exons.Count()<2  && strcmp(m->getFeatureName(),"gene")==0) {
+				//GMessage("Warning: discarding %s GFF gene entry %s\n",m->getID());
+				mrnas.freeItem(k);
+				continue;
+				}
+			if (m->exons.Count()==0) {
+				//GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
+				m->addExon(m->start,m->end);
+				}
 			}
 		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
 			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
@@ -470,12 +481,13 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	         bool check_for_dups, int qfidx, const char* fname, bool checkseq, bool only_multiexon) {
-	//>>>>> read all the mRNAs from a file
-	GffReader* gffr=new GffReader(f, true);
+	//>>>>> read all transcripts/features from a GTF/GFF3 file
 	//int imrna_counter=0;
 	int loci_counter=0;
 	if (ref_data==NULL) ref_data=&seqdata;
 	bool isRefData=(&seqdata==ref_data);
+	//GffReader* gffr=new GffReader(f, true); //(file, mRNA_only)
+	GffReader* gffr=new GffReader(f, !isRefData); //also consider non-mRNA annotations
 	//           keepAttrs   mergeCloseExons   noExonAttrs
 	gffr->readAll(true,          true,        isRefData || gtf_tracking_largeScale);
 	//so it will read exon attributes if low number of Cufflinks files
