@@ -347,11 +347,11 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		}
         
 		const vector<MateHit>& hits = bundle.non_redundant_hits();
-		//if (hits.empty())
-		//{
+		if (hits.empty())
+		{
 			delete bundle_ptr;
 			continue;
-		//}
+		}
 		
 		list<pair<int, int> > open_ranges;
 		int curr_range_start = hits[0].left();
