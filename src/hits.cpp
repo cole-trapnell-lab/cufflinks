@@ -560,7 +560,14 @@ bool BAMHitFactory::inspect_header()
         fprintf(stderr, "Warning: BAM header too large\n");
         return false;
     }
-    
+
+	if (header->l_text == 0)
+	{
+		fprintf(stderr, "Warning: BAM header has 0 length or is corrupted.  Try using 'samtools reheader'.\n");
+        return false;
+	}
+	
+	
     if (header->text != NULL)
     {
         char* h_text = strdup(header->text);
