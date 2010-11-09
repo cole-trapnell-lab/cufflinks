@@ -253,7 +253,7 @@ void decr_pool_count()
 #endif
 
 template<typename T>
-string cat_strings(const T& container)
+string cat_strings(const T& container, const char* delimiter=",")
 {
 	string cat;
 	if (container.empty())
@@ -263,10 +263,13 @@ string cat_strings(const T& container)
 	else
 	{
 		typename T::const_iterator itr = container.begin();
-		cat = *(itr);
-		for (++itr; itr != container.end(); ++itr)
+		//cat = *(itr);
+		for (; itr != container.end(); itr++)
 		{
-			cat += "," + *itr;
+			if (!(*itr).empty()) {
+				if (!cat.empty()) cat += delimiter;
+				cat += *itr; 
+				}
 		}
 	}
 

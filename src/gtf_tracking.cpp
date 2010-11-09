@@ -140,17 +140,16 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 			mrnas.Forget(k);
 			continue;
 			}
-		if (is_ref_set) {
-			if (m->monoFeature() && m->exons.Count()<2  && strcmp(m->getFeatureName(),"gene")==0) {
+		if (m->exons.Count()==0) {
+				//GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
+				m->addExon(m->start,m->end);
+				}
+		if (m->monoFeature() && m->exons.Count()<2  && strcmp(m->getFeatureName(),"gene")==0) {
+		//discard spurious "gene" features with no other detailed subfeatures
 				//GMessage("Warning: discarding %s GFF gene entry %s\n",m->getID());
 				mrnas.freeItem(k);
 				continue;
 				}
-			if (m->exons.Count()==0) {
-				//GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
-				m->addExon(m->start,m->end);
-				}
-			}
 		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
 			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
 			delete m;
@@ -247,13 +246,13 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		   else {
 			 if (m->strand=='-') gdata->mrnas_r.Add(m);
 			 else { //unknown strand, unoriented mRNA
-				if (is_ref_set) {// discard these from reference
+				 if (is_ref_set) {// discard these from reference
 					delete m; //just free
 					mrnas.Forget(k);
 					mrna_deleted++;
 					continue;
 					}
-				else {//store them in the unknown strand pile, to be analyzed later
+				else {//store them in the unknown strand pile, to be analyzed later */
 					m->strand=0;
 					gdata->umrnas.Add(m);
 					}
@@ -262,16 +261,12 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		CTData* mdata=new CTData(m);
 		mdata->qset=qfidx;
 		gdata->tdata.Add(mdata);
-		//if (!is_ref_set) { //Cufflinks - attributes parsing
+		// Cufflinks - attributes parsing
 		mdata->FPKM=fpkm;
 		mdata->cov=cov;
 		mdata->conf_hi=conf_hi;
 		mdata->conf_lo=conf_lo;
-		//} //cufflinks transcripts
-		/* for (int ex=0;ex<m->exons.Count();ex++) {
-		 delete m->exons[ex]->attrs; //just free this extra memory here
-		 m->exons[ex]->attrs=NULL;
-		 } */
+		//
 	}//for each mrna read
  if (mrna_deleted>0) {
    mrnas.Pack();
@@ -470,12 +465,12 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 	rewind(f);
-	GffReader* gffr=new GffReader(f, true);
-    //          keepAttrs   mergeCloseExons   noExonAttrs
+	GffReader* gffr=new GffReader(f, false); //allow loading of non-mRNA transcripts also
+	//          keepAttrs   mergeCloseExons   noExonAttrs
 	gffr->readAll(true,          true,        true);
-	//                 is_ref?   check_for_dups,
-	parse_mRNAs(gffr->gflst, seqdata, false,    false);
-    delete gffr;
+	//                               is_ref?    check_for_dups,
+	parse_mRNAs(gffr->gflst, seqdata, false,       false);
+	delete gffr;
 }
 
 
@@ -490,7 +485,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	GffReader* gffr=new GffReader(f, !isRefData); //also consider non-mRNA annotations
 	//           keepAttrs   mergeCloseExons   noExonAttrs
 	gffr->readAll(true,          true,        isRefData || gtf_tracking_largeScale);
-	//so it will read exon attributes if low number of Cufflinks files
+	//so it will read exon attributes only for low number of Cufflinks files
 	
 	int d=parse_mRNAs(gffr->gflst, seqdata, isRefData, check_for_dups, qfidx,only_multiexon);
 	if (gtf_tracking_verbose && d>0) {

@@ -43,9 +43,9 @@ void print_usage()
 {
 	//NOTE: SPACES ONLY, bozo
 	fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
-    fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
+	fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
 	fprintf(stderr, "-----------------------------\n"); 
-    fprintf(stderr, "Usage:   cufflinks [options] <transcripts.gtf> <out.sam\n");
+	fprintf(stderr, "Usage:   cufflinks [options] <transcripts.gtf> <out.sam\n");
 	fprintf(stderr, "Options:\n\n");
 	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 }
@@ -169,15 +169,15 @@ void driver(FILE* ref_gtf, FILE* sam_out)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
-    
-    vector<shared_ptr<Scaffold> > ref_mRNAs;
-    
+	
+	vector<shared_ptr<Scaffold> > ref_mRNAs;
+	
 	::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, false);
-    
-    for (size_t i = 0; i < ref_mRNAs.size(); ++i)
-    {
-        print_scaff_as_sam(sam_out, rt, *ref_mRNAs[i]);
-    }
+	
+	for (size_t i = 0; i < ref_mRNAs.size(); ++i)
+	{
+	    print_scaff_as_sam(sam_out, rt, *ref_mRNAs[i]);
+	}
 }
 
 int main(int argc, char** argv)
