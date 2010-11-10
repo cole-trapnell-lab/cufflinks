@@ -1102,8 +1102,8 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 	bundle.finalize();
     assert(bundle.right() != -1);
     
-	if (_ref_driven) // Must be done after finalize -- only remove unampped if using reference
-		bundle.remove_unmapped_hits(); 
+	//if (_ref_driven) // Must be done after finalize -- only remove unampped if using reference
+	//	bundle.remove_unmapped_hits(); 
 	
 	//bundle_out.remove_hitless_scaffolds();
     
