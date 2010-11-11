@@ -277,6 +277,14 @@ void init_library_table()
     ff_secondstrand.strandedness(STRANDED_PROTOCOL);
 	
     library_type_table["ff-secondstrand"] = ff_secondstrand;
+    
+    ReadGroupProperties transfrags;
+    fr_unstranded.platform(UNKNOWN_PLATFORM);
+	fr_unstranded.mate_strand_mapping(FR);
+    fr_unstranded.std_mate_orientation(MATES_POINT_TOWARD);
+    fr_unstranded.strandedness(UNSTRANDED_PROTOCOL);
+	
+    library_type_table["transfrags"] = transfrags;
 	
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }

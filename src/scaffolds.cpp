@@ -272,18 +272,18 @@ void AugmentedCuffOp::fill_interstices(vector<AugmentedCuffOp>& to_fill,
     
 	sort(filled.begin(), filled.end(), g_left_lt);
     
-    for (size_t i = 0; i < filled.size(); ++i)
-    {
-        if (filled[i].opcode == CUFF_INTRON)
-        {
-            assert (i > 0);
-            assert (i < filled.size() -1);
-            assert (filled[i-1].opcode == CUFF_MATCH);
-            assert (filled[i+1].opcode == CUFF_MATCH);
-            assert (filled[i-1].g_right() == filled[i].g_left());
-            assert (filled[i+1].g_left() == filled[i].g_right());
-        }
-    }
+//    for (size_t i = 0; i < filled.size(); ++i)
+//    {
+//        if (filled[i].opcode == CUFF_INTRON)
+//        {
+//            assert (i > 0);
+//            assert (i < filled.size() -1);
+//            assert (filled[i-1].opcode == CUFF_MATCH);
+//            assert (filled[i+1].opcode == CUFF_MATCH);
+//            assert (filled[i-1].g_right() == filled[i].g_left());
+//            assert (filled[i+1].g_left() == filled[i].g_right());
+//        }
+//    }
     
 	to_fill = filled;
 }
@@ -386,22 +386,22 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 		if (!gaps.empty())
 			fill_interstices(merged, unknowns, false); 
 	}
-	
-	//FIXME: put these back
-	assert (merged.front().opcode == CUFF_MATCH);
-	assert (merged.back().opcode == CUFF_MATCH);
-    
-    for (size_t i = 1; i < merged.size(); ++i)
-    {
-        if (merged[i].opcode == CUFF_INTRON)
-        {
-            assert (merged[i-1].opcode == CUFF_MATCH);
-        }
-        else if (merged[i].opcode == CUFF_UNKNOWN)
-        {
-            assert (merged[i-1].opcode != CUFF_INTRON);
-        }
-    }
+
+    //FIXME: put these back
+//    assert (merged.front().opcode == CUFF_MATCH);
+//    assert (merged.back().opcode == CUFF_MATCH);
+//    
+//    for (size_t i = 1; i < merged.size(); ++i)
+//    {
+//        if (merged[i].opcode == CUFF_INTRON)
+//        {
+//            assert (merged[i-1].opcode == CUFF_MATCH);
+//        }
+//        else if (merged[i].opcode == CUFF_UNKNOWN)
+//        {
+//            assert (merged[i-1].opcode != CUFF_INTRON);
+//        }
+//    }
 }
     
 

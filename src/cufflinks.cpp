@@ -288,6 +288,10 @@ int parse_options(int argc, char** argv)
         }
         else 
         {
+            if (library_type == "transfrags")
+            {
+                allow_junk_filtering = false;
+            }
             global_read_properties = &lib_itr->second;
         }
     }
@@ -733,14 +737,17 @@ void assemble_bundle(const RefSequenceTable& rt,
 	
 	vector<Gene> genes;
     
-	quantitate_transcript_clusters(scaffolds, 
-								   map_mass,
-								   genes);
+    // FIXME: this routine does more than just quantitation, and should be 
+    // renamed or refactored.
+    quantitate_transcript_clusters(scaffolds, 
+                                   map_mass,
+                                   genes);
     
     asm_verbose( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
     
-	if (allow_junk_filtering)
-		filter_junk_genes(genes);
+    if (allow_junk_filtering)
+        filter_junk_genes(genes);
+
     
 #if ENABLE_THREADS	
 	out_file_lock.lock();
