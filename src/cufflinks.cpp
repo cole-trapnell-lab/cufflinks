@@ -575,8 +575,11 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
     if (hits_in_cluster.size())
         avg_read_length /= hits_in_cluster.size();
 	
-	transfrag_cluster.calculate_abundance(hits_in_cluster);
-	
+    if (library_type != "transfrags")
+    {
+        transfrag_cluster.calculate_abundance(hits_in_cluster);
+	}
+    
 	vector<AbundanceGroup> transfrags_by_strand;
 	cluster_transcripts<ConnectByStrand>(transfrag_cluster,
 										 transfrags_by_strand);

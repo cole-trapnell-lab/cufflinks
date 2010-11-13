@@ -682,7 +682,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 int num_adds = 0;
 int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
 {
-	map<shared_ptr<ReadGroupProperties const>, int>::iterator iter;
+    boost::unordered_map<shared_ptr<ReadGroupProperties const>, int>::iterator iter;
 	iter = _rg_index.find(rgp);
 	
 	if (iter==_rg_index.end()) //This rg is not yet in the index, so add it.
@@ -753,7 +753,7 @@ double BiasCorrectionHelper::get_effective_length()
 	if (tot_mass==0)
 		return _transcript->length();
 	
-    for (map<shared_ptr<ReadGroupProperties const>, int>::iterator itr = _rg_index.begin();
+    for (boost::unordered_map<shared_ptr<ReadGroupProperties const>, int>::iterator itr = _rg_index.begin();
          itr != _rg_index.end();
          ++itr)
 	{

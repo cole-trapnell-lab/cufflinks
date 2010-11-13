@@ -203,7 +203,7 @@
 		ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_check_zlib.m4; sourceTree = "<group>"; };
 		ED1C0D7511D7F88B00CFD663 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = /usr/local/lib/libbam.a; sourceTree = "<absolute>"; };
 		ED1C0D7911D7F94900CFD663 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		ED41B838127602C60000B5A2 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		ED41B838127602C60000B5A2 /* cufflinks */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED4835D81249057500642337 /* progressbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = progressbar.h; path = src/progressbar.h; sourceTree = "<group>"; };
 		ED5D1EE8114B490C00A2AF02 /* libboost_thread.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_thread.a; path = /usr/local/lib/libboost_thread.a; sourceTree = "<absolute>"; };
 		ED877B71123BCA3E0025A050 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
@@ -259,12 +259,12 @@
 		EDD0CD9C10C72AC200AF308F /* cufflinks */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD0CE2210C72F7D00AF308F /* cuffdiff */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cuffdiff; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6A7A0115562EE00D3F668 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Makefile.am; path = src/Makefile.am; sourceTree = "<group>"; };
-		EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD6A9D511598ABA00D3F668 /* cufflinks */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6AA231159BA2E00D3F668 /* Boost Tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Boost Tests"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6AA461159BE6500D3F668 /* test_abundances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_abundances.cpp; sourceTree = "<group>"; };
 		EDD6AA471159BE6500D3F668 /* test_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_main.cpp; sourceTree = "<group>"; };
 		EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.12.1.dylib"; path = "/usr/local/lib/libcppunit-1.12.1.dylib"; sourceTree = "<absolute>"; };
-		EDD94B671205C9E800AA1086 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDD94B671205C9E800AA1086 /* cufflinks */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD94B711205CAF400AA1086 /* gtf_to_sam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_to_sam.cpp; path = src/gtf_to_sam.cpp; sourceTree = "<group>"; };
 		EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graph_optimize.h; path = src/graph_optimize.h; sourceTree = "<group>"; };
 		EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graph_optimize.cpp; path = src/graph_optimize.cpp; sourceTree = "<group>"; };
@@ -275,7 +275,7 @@
 		EDEBCDF8112DFD7600E2479E /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
 		EDEBCEBB112E316400E2479E /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sorting_hat.cpp; path = src/sorting_hat.cpp; sourceTree = "<group>"; };
-		EDFE39CE122BE65600F24CD3 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDFE39CE122BE65600F24CD3 /* sorting_hat */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sorting_hat; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jensen_shannon.cpp; path = src/jensen_shannon.cpp; sourceTree = "<group>"; };
 		EDFE39FD122BE7CB00F24CD3 /* jensen_shannon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jensen_shannon.h; path = src/jensen_shannon.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -442,11 +442,11 @@
 			children = (
 				EDD0CD9C10C72AC200AF308F /* cufflinks */,
 				EDD0CE2210C72F7D00AF308F /* cuffdiff */,
-				EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */,
+				EDD6A9D511598ABA00D3F668 /* cufflinks */,
 				EDD6AA231159BA2E00D3F668 /* Boost Tests */,
-				EDD94B671205C9E800AA1086 /* cufflinks_xcode */,
-				EDFE39CE122BE65600F24CD3 /* cufflinks_xcode */,
-				ED41B838127602C60000B5A2 /* cufflinks_xcode */,
+				EDD94B671205C9E800AA1086 /* cufflinks */,
+				EDFE39CE122BE65600F24CD3 /* sorting_hat */,
+				ED41B838127602C60000B5A2 /* cufflinks */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -524,7 +524,7 @@
 			name = gtf_reads;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
-			productReference = ED41B838127602C60000B5A2 /* cufflinks_xcode */;
+			productReference = ED41B838127602C60000B5A2 /* cufflinks */;
 			productType = "com.apple.product-type.tool";
 		};
 		EDD0CE0810C72F7D00AF308F /* cuffdiff */ = {
@@ -560,7 +560,7 @@
 			name = cuffcompare;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
-			productReference = EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */;
+			productReference = EDD6A9D511598ABA00D3F668 /* cufflinks */;
 			productType = "com.apple.product-type.tool";
 		};
 		EDD6AA221159BA2E00D3F668 /* Unit Tests */ = {
@@ -595,7 +595,7 @@
 			name = gtf_to_sam;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
-			productReference = EDD94B671205C9E800AA1086 /* cufflinks_xcode */;
+			productReference = EDD94B671205C9E800AA1086 /* cufflinks */;
 			productType = "com.apple.product-type.tool";
 		};
 		EDFE39B0122BE65600F24CD3 /* sorting_hat */ = {
@@ -613,7 +613,7 @@
 			name = sorting_hat;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
-			productReference = EDFE39CE122BE65600F24CD3 /* cufflinks_xcode */;
+			productReference = EDFE39CE122BE65600F24CD3 /* sorting_hat */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */

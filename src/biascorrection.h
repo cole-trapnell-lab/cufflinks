@@ -16,7 +16,7 @@
 #include <vector>
 #include <list>
 #include <string>
-
+#include <boost/tr1/unordered_map.hpp>
 
 namespace ublas = boost::numeric::ublas;
 using namespace std;
@@ -68,7 +68,7 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl);
 class BiasCorrectionHelper{
 	
 	shared_ptr<Scaffold> _transcript;
-	map<shared_ptr<ReadGroupProperties const>, int> _rg_index;
+    boost::unordered_map<shared_ptr<ReadGroupProperties const>, int> _rg_index;
 	int _size;
 	bool _mapped;
 	
