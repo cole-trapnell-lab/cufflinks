@@ -43,6 +43,10 @@ struct Codon {
  char translate();
  };
 
+//simple 1st frame forward translation of a given DNA string
+//will allocated memory for the translation --  the caller is
+// responsible for freeing the returned string!
+char* translateDNA(const char* dnastr, int& aalen, int dnalen=0);
 
 
 bool codonTableInit();

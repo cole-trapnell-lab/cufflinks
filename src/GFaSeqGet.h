@@ -90,10 +90,10 @@ class GFaSeqGet {
   char* copyRange(uint cstart, uint cend, bool revCmpl=false, bool upCase=false);
   //caller is responsible for deallocating the return string
 
-  void loadall() {
+  void loadall(uint32 max_len=0) {
     //TODO: must read the whole sequence differently here - line by line
-    //so when EOF or another '>' line is found the reading stops
-    int clen=(seq_len>0) ? seq_len : MAX_FASUBSEQ;
+    //so when EOF or another '>' line is found, the reading stops!
+    int clen=(seq_len>0) ? seq_len : ((max_len>0) ? max_len : MAX_FASUBSEQ);
     subseq(1, clen);
     }
   void load(uint cstart, uint cend) {

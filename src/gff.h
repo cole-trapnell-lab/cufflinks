@@ -16,11 +16,12 @@ const byte exMskMinSpliceR = 0x08;
 const byte exMskTag = 0x80;
 */
 
-//reserved Gffnames::feats entries
+//reserved Gffnames::feats entries -- basic feature types
 extern const int gff_fid_mRNA;
 extern const int gff_fid_exon;
-extern const int gff_fid_CDS;
-//extern bool gff_warns; //show parser warnings - now in GffReader
+extern const int gff_fid_CDS; //never really used, except for display only
+                              //use gff_fid_exon instead
+//extern bool gff_warns; //show parser warnings - now GffReader member
 
 extern const uint GFF_MAX_LOCUS;
 extern const uint GFF_MAX_EXON;
@@ -32,7 +33,8 @@ extern const uint GFF_MAX_INTRON;
 
 enum GffExonType {
   exgffNone=0,
-  exgffStop, //from "stop_codon" feature
+  exgffStart, //from "start_codon" feature (within CDS)
+  exgffStop, //from "stop_codon" feature (may be outside CDS)
   exgffCDS,  //from "CDS" feature
   exgffUTR,  //from "UTR" feature
   exgffExon, //from "exon" feature
@@ -792,7 +794,6 @@ class GffReader {
       names=NULL;
       gffline=NULL;
       mrnaOnly=justmrna;
-      //sortbyloc=sort;
       fpos=0;
       fname=NULL;
       fh=f;

@@ -12,8 +12,15 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#if defined __WIN32__ || defined _WIN32
+#if defined __WIN32__ || defined WIN32 || defined _WIN32
   #include <windows.h>
+  #include <io.h>
+  #define CHPATHSEP '\\'
+  #define fseeko fseek
+  #define ftello ftell
+ #else
+  #define CHPATHSEP '/'
+  #include <unistd.h>
 #endif
 
 #include <stdint.h>
@@ -27,12 +34,6 @@ typedef uint32_t uint32;
 
 typedef unsigned char uchar;
 typedef unsigned char byte;
-
-// If long is natively 64 bit, use the regular fseek and ftell
-#ifdef _NATIVE_64
- #define ftello ftell
- #define fseeko fseek
-#endif
 
 #ifndef MAXUINT
 #define MAXUINT ((unsigned int)-1)
@@ -50,17 +51,6 @@ typedef unsigned char byte;
 #define MAX_INT INT_MAX
 #endif
 
-/*
-#if defined(_NATIVE_64) || defined(_LP64) || defined(__LP64__)
- typedef long int64;
- typedef unsigned long uint64;
-#else
- //assume 32bit environment with long long for int64 stuff
- typedef long long int64;
- typedef unsigned long long uint64;
-#endif
-*/
-
 typedef int64_t int64;
 typedef uint64_t uint64;
 
@@ -76,15 +66,6 @@ typedef uint64_t uint64;
 
 /****************************************************************************/
 #define ERR_ALLOC "Error allocating memory.\n"
-#if defined (__WIN32__) || defined (WIN32) || defined (_WIN32)
-  #define CHPATHSEP '\\'
-  #include <io.h>
-  #define ftello ftell
-  #define fseeko fseek
- #else
-  #define CHPATHSEP '/'
-  #include <unistd.h>
-#endif
 
 //-------------------
 
@@ -450,7 +431,7 @@ int fileExists(const char* fname);
 //        2 if it's a regular file
 //        3 otherwise (?)
 
-off_t fileSize(const char* fpath);
+int64 fileSize(const char* fpath);
 
 //write a formatted fasta record, fasta formatted
 void writeFasta(FILE *fw, const char* seqid, const char* descr,

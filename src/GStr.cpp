@@ -372,13 +372,13 @@ GStr& GStr::appendfmt(const char *fmt,...) {
 GStr& GStr::trim(char c) {
  register int istart;
  register int iend;
- for (istart=0; istart<length() && chars()[istart]==c;istart++);
+ for (istart=0; istart<length() && chars()[istart]==c;istart++) ;
  if (istart==length()) {
        make_unique(); //edit operation ahead
        replace_data(0); //string was entirely trimmed
        return *this;
        }
- for (iend=length()-1; iend>istart && chars()[iend]==c;iend--);
+ for (iend=length()-1; iend>istart && chars()[iend]==c;iend--) ;
  int newlen=iend-istart+1;
  if (newlen==length())  //nothing to trim
            return *this; 
@@ -392,12 +392,12 @@ GStr& GStr::trim(char c) {
 GStr& GStr::trim(const char* c) {
  register int istart;
  register int iend;
- for (istart=0; istart<length() && strchr(c, chars()[istart])!=NULL ;istart++);
+ for (istart=0; istart<length() && strchr(c, chars()[istart])!=NULL ;istart++) ;
  if (istart==length()) {
         replace_data(0); //string was entirely trimmed
         return *this;
         }
- for (iend=length()-1; iend>istart && strchr(c, chars()[iend])!=NULL;iend--);
+ for (iend=length()-1; iend>istart && strchr(c, chars()[iend])!=NULL;iend--) ;
  int newlen=iend-istart+1;
  if (newlen==length())  //nothing to trim
            return *this; 
@@ -412,7 +412,7 @@ GStr& GStr::trimR(char c) {
  //only trim the right end
  //register int istart;
  register int iend;
- for (iend=length()-1; iend>=0 && chars()[iend]==c;iend--);
+ for (iend=length()-1; iend>=0 && chars()[iend]==c;iend--) ;
  if (iend==-1) {
        replace_data(0); //string was entirely trimmed
        return *this;
@@ -430,7 +430,7 @@ GStr& GStr::trimR(char c) {
 
 GStr& GStr::trimR(const char* c) {
  register int iend;
- for (iend=length()-1; iend>=0 && strchr(c,chars()[iend])!=NULL;iend--);
+ for (iend=length()-1; iend>=0 && strchr(c,chars()[iend])!=NULL;iend--) ;
  if (iend==-1) {
        replace_data(0); //string was entirely trimmed
        return *this;
@@ -471,7 +471,7 @@ GStr& GStr::chomp(const char* cstr) {
 
 GStr& GStr::trimL(char c) {
  register int istart;
- for (istart=0; istart<length() && chars()[istart]==c;istart++);
+ for (istart=0; istart<length() && chars()[istart]==c;istart++) ;
  if (istart==length()) {
        replace_data(0); //string was entirely trimmed
        return *this;
@@ -488,7 +488,7 @@ GStr& GStr::trimL(char c) {
 
 GStr& GStr::trimL(const char* c) {
  register int istart;
- for (istart=0; istart<length() && strchr(c,chars()[istart])!=NULL;istart++);
+ for (istart=0; istart<length() && strchr(c,chars()[istart])!=NULL;istart++) ;
  if (istart==length()) {
        replace_data(0); //string was entirely trimmed
        return *this;

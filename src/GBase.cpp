@@ -399,7 +399,7 @@ char* rstrfind(char* str, const char* substr) {
    //rightmost position that could match
 
  while (p>=str) {
-    for (i=0; i<l && *(p+i) == *(substr+i); i++);
+    for (i=0; i<l && *(p+i) == *(substr+i); i++) ;
     if (i==l) return p; //found!
     p--;
     }
@@ -417,7 +417,7 @@ char* strifind(char* str,  const char* substr) {
   //rightmost position that could match
   char* p=str;
   while (p<=smax) {
-     for (i=0; i<l && tolower(*(p+i))==tolower(*(substr+i)); i++);
+     for (i=0; i<l && tolower(*(p+i))==tolower(*(substr+i)); i++) ;
      if (i==l) return p; //found!
      p++;
      }
@@ -527,14 +527,14 @@ int fileExists(const char* fname) {
   return true;
 }
 */
-off_t fileSize(const char* fpath) {
+int64 fileSize(const char* fpath) {
   struct stat results;
   if (stat(fpath, &results) == 0)
       // The size of the file in bytes is in
-      return results.st_size;
+      return (int64)results.st_size;
   else
       // An error occurred
-    //GError("Error at stat(%s)!\n", fpath)
+    //GMessage("Error at stat(%s)!\n", fpath);
     return 0;
 }
 

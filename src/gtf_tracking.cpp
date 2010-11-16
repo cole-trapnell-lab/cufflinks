@@ -252,7 +252,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 					mrna_deleted++;
 					continue;
 					}
-				else {//store them in the unknown strand pile, to be analyzed later */
+				else {//store them in the unknown strand pile, to be analyzed later
 					m->strand=0;
 					gdata->umrnas.Add(m);
 					}
@@ -467,6 +467,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 	rewind(f);
 	GffReader* gffr=new GffReader(f, false); //allow loading of non-mRNA transcripts also
 	//          keepAttrs   mergeCloseExons   noExonAttrs
+    gffr->showWarnings();
 	gffr->readAll(true,          true,        true);
 	//                               is_ref?    check_for_dups,
 	parse_mRNAs(gffr->gflst, seqdata, false,       false);
