@@ -437,7 +437,8 @@ public:
      return names->feats.getName(sid);
      }
    bool monoFeature() {
-     return (subftype_id==ftype_id);
+     return (exons.Count()==0 || 
+          (exons.Count()==1 && subftype_id==ftype_id));
      }
    const char* getFeatureName() {
      return names->feats.getName(ftype_id);

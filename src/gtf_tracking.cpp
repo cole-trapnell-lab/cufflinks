@@ -134,29 +134,31 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		int i=-1;
 		GSeqData f(m->gseq_id);
 		GSeqData* gdata=NULL;
-		uint tlen=m->end-m->start+1;
+		uint tlen=m->len();
+		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
+			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
+			mrnas.freeItem(k);
+			mrna_deleted++;
+			continue;
+			}
 		if (only_multiexon && m->exons.Count()<2) {
-			delete m;
-			mrnas.Forget(k);
+			mrnas.freeItem(k);
+            mrna_deleted++;
+			continue;
+			}
+		GStr feature(m->getFeatureName());
+		feature.lower();
+		if (m->monoFeature() && (feature=="gene" || feature.index("loc")>=0)) {
+			//discard generic "gene" or "locus" features with no other detailed subfeatures
+			//GMessage("Warning: discarding %s GFF generic gene/locus container %s\n",m->getID());
+			mrnas.freeItem(k);
+            mrna_deleted++;
 			continue;
 			}
 		if (m->exons.Count()==0) {
 				//GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
 				m->addExon(m->start,m->end);
 				}
-		if (m->monoFeature() && m->exons.Count()<2  && strcmp(m->getFeatureName(),"gene")==0) {
-		//discard spurious "gene" features with no other detailed subfeatures
-				//GMessage("Warning: discarding %s GFF gene entry %s\n",m->getID());
-				mrnas.freeItem(k);
-				continue;
-				}
-		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
-			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
-			delete m;
-			mrnas.Forget(k);
-			mrna_deleted++;
-			continue;
-		}
 		if (glstdata.Found(&f,i)) gdata=glstdata[i];
 		else {
 			gdata=new GSeqData(m->gseq_id);
@@ -180,8 +182,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		     if (pgname==NULL && gname!=NULL)
 		         rp->addAttr(ATTR_GENE_NAME, gname);
 			 //GMessage("--------->  ref %s as a duplicate of %s\n",m->getID(), rp->getID());
-		     delete m;
-		     mrnas.Forget(k);
+		     mrnas.freeItem(k);
 		     mrna_deleted++;
 		     refdiscarded++;
 		     continue;
@@ -197,8 +198,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 				//always discard the "shorter" transcript of the redundant pair
 				if (ckmrnas->Get(cidx)->covlen>m->covlen) {
 				//new transcript is shorter, discard it
-					delete m;
-					mrnas.Forget(k);
+					mrnas.freeItem(k);
 					mrna_deleted++;
 					continue;
 				} else {
@@ -247,8 +247,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 			 if (m->strand=='-') gdata->mrnas_r.Add(m);
 			 else { //unknown strand, unoriented mRNA
 				 if (is_ref_set) {// discard these from reference
-					delete m; //just free
-					mrnas.Forget(k);
+					mrnas.freeItem(k);
 					mrna_deleted++;
 					continue;
 					}
