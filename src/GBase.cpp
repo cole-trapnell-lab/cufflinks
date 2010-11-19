@@ -4,6 +4,20 @@
 #include <sys/stat.h>
 
 static char msg[4069];
+/*
+#ifdef _DEFINE_WIN32_FSEEKO
+ int fseeko(FILE *stream, off_t offset, int whence) {
+   
+   }
+#endif
+
+#ifdef _DEFINE_WIN32_FTELLO
+ off_t ftello(FILE *stream) {
+  
+  }
+#endif
+*/
+
 //************************* Debug helpers **************************
 // Assert failed routine
 void GAssert(const char* expression, const char* filename, unsigned int lineno){

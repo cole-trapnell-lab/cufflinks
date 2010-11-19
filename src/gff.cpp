@@ -89,7 +89,7 @@ GffLine::GffLine(GffReader* reader, const char* l) {
  p=t[4];
  if (!parseUInt(p,fend))
    GError("Error parsing end coordinate from GFF line:\n%s\n",l);
- if (fend<fstart) swap(fend,fstart);
+ if (fend<fstart) swap(fend,fstart); //make sure fstart>=fend, always
  p=t[5];
  if (p[0]=='.' && p[1]==0) {
   score=0;
@@ -124,9 +124,8 @@ GffLine::GffLine(GffReader* reader, const char* l) {
   else if (strstr(fnamelc, "stop") && 
       ((strstr(fnamelc, "codon")!=NULL) || strstr(fnamelc, "cds")!=NULL)){
    exontype=exgffStop;
-   is_cds=true;
+   is_cds=true; //though some place it outside the last CDS segment
    }
-  // start_codon features are already part of the CDS segments
   else if (strstr(fnamelc, "start") && 
       ((strstr(fnamelc, "codon")!=NULL) || strstr(fnamelc, "cds")!=NULL)){
    exontype=exgffStart;
@@ -341,8 +340,8 @@ int GffObj::addExon(GffReader* reader, GffLine* gl, bool keepAttr, bool noExonAt
          } //incoming subfeature is of different type
        } //new subfeature type
     } //non-mRNA parent
-  if (gl->exontype==exgffUTR || gl->exontype==exgffStop) 
-      udata=1;//merge 0-distance segments
+  //if (gl->exontype==exgffUTR || gl->exontype==exgffStop) 
+  //    udata=1; //merge 0-distance segments
   int eidx=addExon(gl->fstart, gl->fend, gl->score, gl->phase,
          gl->qstart,gl->qend, gl->is_cds, gl->exontype);
   if (eidx<0) return eidx; //this should never happen
@@ -366,7 +365,20 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
          subftype_id = (ftype_id==gff_fid_mRNA) ? gff_fid_exon : ftype_id;
          }
       }
-  if (iscds) { //update CDS anchors:
+  //special treatment of start/stop codon features, they might be broken/split between exons 
+  //but some providers give the wrong end coordinate as start+2 (e.g. in UCSC GTF)
+  //so we should not trust the end coordinate for such features
+  if (exontype==exgffStart || exontype==exgffStop) {
+     if (strand=='-') segstart=segend;
+                else  segend=segstart;
+     if (exontype==exgffStart) {
+           if (CDstart==0 || segstart<CDstart) CDstart=segstart;
+           }
+         else {
+           if (segstart>CDend) CDend=segstart;
+           }
+     }
+    else if (iscds) { //update CDS anchors:
      if (CDstart==0 || segstart<CDstart)  {
            CDstart=segstart;
            if (exontype==exgffCDS && strand=='+') CDphase=fr;
@@ -376,14 +388,14 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
            CDend=segend;
            }
      }
-   else { // !iscds
+   else { // not a CDS/start/stop 
      isCDS=false;
      }
   if (qs || qe) {
     if (qs>qe) swap(qs,qe);
     if (qs==0) qs=1;
     }
-  if (exontype>0) { //check for overlaps only if it's an exon-type subfeature
+  if (exontype>0) { //check for overlaps between exon-type segments
       int ovlen=0;
       int oi=exonOverlapIdx(segstart, segend, &ovlen);
       if (oi>=0) { //overlap existing segment
@@ -409,18 +421,17 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
               }
         //there is also the special case of "ribosomal slippage exception" (programmed frameshift)
         //where two CDS segments may actually overlap for 1 or 2 bases, but there should be only one encompassing exon
-        if (ovlen>2) {  // || exons[oi]->exontype!=exgffCDS || exontype!=exgffCDS) {
-           GMessage("GFF Warning: discarded overlapping feature segment (%d-%d vs %d-%d (%s)) for GFF ID %s\n", 
-               segstart, segend, exons[oi]->start, exons[oi]->end, getSubfName(), gffID);
+        //if (ovlen>2 || exons[oi]->exontype!=exgffCDS || exontype!=exgffCDS) {
+        // --> had to relax this because of some weird UCSC annotations with exons partially overlapping the CDS segments
+        if (ovlen>2) {
+           //important structural warning:
+           GMessage("Warning: discarding overlapping feature segment (%d-%d) (vs %d-%d (%s)) for GFF ID %s on %s\n", 
+               segstart, segend, exons[oi]->start, exons[oi]->end, getSubfName(), gffID, getGSeqName());
            hasErrors=true;
            return false; //segment NOT added
            }
-         /* -- 
-         else {
-           // else add the segment if the overlap is small and between two CDS segments
-           //we might want to add an attribute here with the slippage coordinate and size?
-           } 
-         */
+          // else add the segment if the overlap is small and between two CDS segments
+          //we might want to add an attribute here with the slippage coordinate and size?
         }//overlap of existing segment
        } //check for overlap
    // --- no overlap, or accepted micro-overlap (ribosomal slippage)
@@ -470,6 +481,12 @@ void GffObj::expandExon(int oi, uint segstart, uint segend, char exontype, doubl
   while (ni<exons.Count() && segend>=exons[ni]->start) { // next segment overlaps new enlarged segment
      //only allow this if next segment is fully included, and a subordinate
      if (exons[ni]->exontype<exontype && exons[ni]->end<=segend) {
+     // should we relax this due to stupid UCSC hg18 files having a start_codon sticking out?
+/*
+chr1	hg18_knownGene	start_codon	69806911	69806913	0.000000	+	.
+chr1	hg18_knownGene	CDS	69806911	69806912	0.000000	+	0
+chr1	hg18_knownGene	exon	69805456	69806912	0.000000	+	.     
+*/
          if (exons[ni]->qstart<exons[oi]->qstart) exons[oi]->qstart=exons[ni]->qstart;
          if (exons[ni]->qend>exons[oi]->qend) exons[oi]->qend=exons[ni]->qend;
          exons.Delete(ni);
@@ -545,8 +562,8 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
     //GTF style -- subfeature given directly
     //(also possible orphan GFF line)
     if (gffline->exontype!=0 || gffline->is_mrna) {
-       ftype_id=gff_fid_mRNA; //a mRNA record starting
-       subftype_id=gff_fid_exon;
+       ftype_id=gff_fid_mRNA; //a new mRNA record starting here
+       subftype_id=gff_fid_exon; //subfeatures MUST be exons-kind
        }
      else {
        //group of other subfeatures of type ftype:
@@ -784,11 +801,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
     delete gffline;
     gffline=NULL;
     }//while
-  for (int i=0;i<gflst.Count();i++) {
-    gflst[i]->finalize(mergeCloseExons); //finalize the parsing - also merge close exons/features if so requested
-    }
-  gflst.finalize(); //force sorting by locus if so constructed
-  //if (gflst.Sorted()) gflst.Sort(); //force re-sort, for scattered GTF records
+  gflst.finalize(this, mergeCloseExons); //force sorting by locus if so constructed
  // all gff records are now loaded in GList gflst
  // so we can free the hash
   phash.Clear();
@@ -798,8 +811,9 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
     }
 }
 
-//this may be called prematurely if exon records are not grouped by parent!
-GffObj* GffObj::finalize(bool mergeCloseExons) {
+GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons) {
+ //merge adjacent or overlapping segments anyway
+ //but if mergeCloseExons then merge even when distance is up to 5 bases
  udata=0;
  uptr=NULL;
  if (ftype_id==gff_fid_mRNA) {
@@ -809,7 +823,13 @@ GffObj* GffObj::finalize(bool mergeCloseExons) {
      uint mend=exons[i]->end;
      while (ni<exons.Count()) {
        int dist=(int)(exons[ni]->start-mend);
-       if (dist<0 || dist>mindist) break; //no merging with next segment
+       if (dist>mindist) break; //no merging with next segment
+       //if (dist<0 || dist>mindist) break;
+       //if (dist<=1 && gfr->gff_warns) { //overlapping or adjacent exons
+       if (gfr!=NULL && gfr->gff_warns) {
+          GMessage("GFF warning: merging adjacent/overlapping segments of %s on %s (%d-%d, %d-%d)\n",
+               gffID, getGSeqName(), exons[i]->start, exons[i]->end,exons[ni]->start, exons[ni]->end);
+          }
        mend=exons[ni]->end;
        covlen-=exons[i]->len();
        exons[i]->end=mend;

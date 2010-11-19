@@ -55,12 +55,22 @@ class GFastaHandler {
      }
      
    void init(const char* fpath) {
-     if (fpath==NULL) return;
+     if (fpath==NULL || fpath[0]==0) return;
+     if (!fileExists(fpath))
+       GError("Error: file/directory %s does not exist!\n",fpath);
      fastaPath=Gstrdup(fpath);
      if (fastaPath!=NULL) {
          if (fileExists(fastaPath)>1) { //exists and it's not a directory
             GStr fainame(fastaPath);
-            fainame.append(".fai");
+            //the .fai name might have been given directly
+            if (fainame.rindex(".fai")==fainame.length()-4) {
+               //.fai index file given directly
+               fastaPath[fainame.length()-4]=0;
+               if (!fileExists(fastaPath))
+                  GError("Error: cannot find fasta file for index %s !\n", fastaPath);
+               }
+              else fainame.append(".fai");
+            //fainame.append(".fai");
             faIdx=new GFastaIndex(fastaPath,fainame.chars());
             GStr fainamecwd(fainame);
             int ip=-1;

@@ -672,7 +672,10 @@ const ReadHit* BundleFactory::next_valid_alignment()
         
         if (tmp.ref_id() == 84696373) // corresponds to SAM "*" under FNV hash. unaligned read record  
             continue;
-        
+
+        if (_hit_fac->ref_table().get_name(tmp.ref_id())==NULL) // unaligned read record (!?)
+            continue;
+            
         if (spans_bad_intron(tmp))
             continue;
         

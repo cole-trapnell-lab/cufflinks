@@ -1,10 +1,12 @@
 #ifndef G_BASE_DEFINED
 #define G_BASE_DEFINED
-
+#ifndef _POSIX_SOURCE
+//mostly for MinGW
+#define _POSIX_SOURCE
+#endif
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,18 +14,40 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#if defined __WIN32__ || defined WIN32 || defined _WIN32
+#include <stdint.h>
+
+#if defined __WIN32__ || defined WIN32 || defined _WIN32 || defined _WIN32_
+  #ifndef __WIN32__
+    #define __WIN32__
+  #endif
   #include <windows.h>
   #include <io.h>
   #define CHPATHSEP '\\'
-  #define fseeko fseek
-  #define ftello ftell
+  #undef off_t
+  #define off_t int64_t
+  #ifdef _fseeki64
+    #define fseeko(stream, offset, origin) _fseeki64(stream, offset, origin)
+  #else
+    /*
+    #define _DEFINE_WIN32_FSEEKO
+    int fseeko(FILE *stream, off_t offset, int whence);
+    */
+    #define fseeko fseek
+  #endif
+  #ifdef _ftelli64
+    #define ftello(stream) _ftelli64(stream)
+  #else
+    /*
+    #define _DEFINE_WIN32_FTELLO
+    off_t ftello(FILE *stream);
+    */
+    #define ftello ftell
+  #endif
  #else
   #define CHPATHSEP '/'
   #include <unistd.h>
 #endif
 
-#include <stdint.h>
 
 #ifdef DEBUG
 #undef NDEBUG

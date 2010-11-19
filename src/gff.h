@@ -429,7 +429,7 @@ public:
        gffnames_unref(names);
        }
    //--------------
-   GffObj* finalize(bool mergeCloseExons=false); //finalize parsing: must be called in order to merge adjacent/close proximity subfeatures
+   GffObj* finalize(GffReader* gfr, bool mergeCloseExons=false); //finalize parsing: must be called in order to merge adjacent/close proximity subfeatures
    void parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr=false);
    const char* getSubfName() { //returns the generic feature type of the entries in exons array
      int sid=subftype_id;
@@ -726,13 +726,15 @@ class GfList: public GList<GffObj> {
    GfList(bool sortbyloc=false):GList<GffObj>(false,false,false) {
     mustSort=sortbyloc;
     }
-   void finalize() { //if set, enforce sort by locus
-     if (mustSort) {
+   void finalize(GffReader* gfr, bool mergeCloseExons) { //if set, enforce sort by locus
+     if (mustSort) { //force (re-)sorting
         this->setSorted(false);
         this->setSorted((GCompareProc*)gfo_cmpByLoc);
         }
-     //if (this->Sorted()) Sort(); //force re-sorting
-     //         else this->setSorted((GCompareProc*)gfo_cmpByLoc);
+     for (int i=0;i<Count();i++) {
+       fList[i]->finalize(gfr, mergeCloseExons); 
+       //finalize the parsing for this GffObj -- this might also merge close exons/features if requested
+       }
      }
 };
 

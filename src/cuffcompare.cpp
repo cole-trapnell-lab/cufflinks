@@ -164,7 +164,7 @@ int main(int argc, char * const argv[]) {
   debugExit=(args.getOpt('X')!=NULL);
   debug=(args.getOpt('D')!=NULL || debugExit);
   tmapFiles=(args.getOpt('T')==NULL);
-  bool checkseq=(args.getOpt('s')!=NULL);
+  bool useFastaSeq=(args.getOpt('s')!=NULL);
   multiexon_only=(args.getOpt('M')!=NULL);
   multiexonrefs_only=(args.getOpt('N')!=NULL); 
   perContigStats=(args.getOpt('G')==NULL);
@@ -235,7 +235,7 @@ int main(int argc, char * const argv[]) {
     if (f_ref==NULL) GError("Error opening reference gff: %s\n",s.chars());
     haveRefs=true;
     if (gtf_tracking_verbose) GMessage("Loading reference transcripts..\n");
-    read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), checkseq, (multiexonrefs_only || multiexon_only));
+    read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), useFastaSeq, (multiexonrefs_only || multiexon_only));
     haveRefs=(ref_data.Count()>0);
     reduceRefs=(args.getOpt('R')!=NULL);
     if (gtf_tracking_verbose) GMessage("..ref data loaded\n");
@@ -318,7 +318,7 @@ int main(int argc, char * const argv[]) {
       GList<GSeqData>* pdata=new GList<GSeqData>(true,true,true);
       qrysdata[fi]=pdata;
       if (gtf_tracking_verbose) GMessage("Loading transcripts from %s..\n",infname.chars());
-      read_mRNAs(f_in, *pdata, &ref_data, true, fi, infname.chars(), checkseq, multiexon_only);
+      read_mRNAs(f_in, *pdata, &ref_data, true, fi, infname.chars(), useFastaSeq, multiexon_only);
       GSuperLocus gstats;
       GFaSeqGet *faseq=NULL;
       for (int g=0;g<pdata->Count();g++) { //for each seqdata related to a genomic sequence
