@@ -308,7 +308,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	{
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(bam1_qname(hit_buf),
-						"",
+						"*",
 						0, // SAM files are 1-indexed
 						0,
 						false,

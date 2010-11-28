@@ -1771,19 +1771,23 @@ double compute_doc(int bundle_origin,
 {
 	vector<bool> intronic(depth_of_coverage.size(), false);
 	depth_of_coverage = vector<int>(depth_of_coverage.size(), 0);
+		
+	set<const MateHit*> hits_in_gene_set;
+	
+	for (size_t i = 0; i < scaffolds.size(); ++i)
+	{
+		hits_in_gene_set.insert(scaffolds[i].mate_hits().begin(),
+								scaffolds[i].mate_hits().end());
+	}
 	
 	vector<Scaffold> hits;
 	
-        for (size_t i = 0; i < scaffolds.size(); ++i)
-        {
-            const vector<const MateHit*>& scaff_hits = scaffolds[i].mate_hits(); 
-            for (vector<const MateHit*>::const_iterator itr = scaff_hits.begin();
-                 itr != scaff_hits.end();
-                 ++itr)
-            {
-                hits.push_back(Scaffold(**itr));
-            }
-        }
+	for(set<const MateHit*>::iterator itr = hits_in_gene_set.begin();
+		itr != hits_in_gene_set.end();
+		++itr)
+	{
+		hits.push_back(Scaffold(**itr));
+	}
 	
 	for (size_t i = 0; i < hits.size(); ++i)
 	{
