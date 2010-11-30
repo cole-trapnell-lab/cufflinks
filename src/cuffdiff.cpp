@@ -83,6 +83,9 @@ static struct option long_options[] = {
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
+#if ADAM_MODE
+{"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
+#endif
 {0, 0, 0, 0} // terminator
 };
 
@@ -159,6 +162,9 @@ int parse_options(int argc, char** argv)
 			case OPT_MLE_MAX_ITER:
 				max_mle_iterations = parseInt(1, "--max-mle-iterations must be at least 1", print_usage);
 				break;
+			case OPT_BIAS_MODE:
+				bias_mode = optarg;
+				break;
 			case 'Q':
 			{
 				int min_map_qual = parseInt(0, "-Q/--min-map-qual must be at least 0", print_usage);
@@ -206,6 +212,7 @@ int parse_options(int argc, char** argv)
 			case 'r':
 			{
 				fasta_dir = optarg;
+				corr_bias = true;
 				break;
             }    
                 
@@ -452,6 +459,18 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
 #endif
 }
 
+void learn_bias_worker(shared_ptr<BundleFactory> fac)
+{
+#if ENABLE_THREADS
+	boost::this_thread::at_thread_exit(decr_pool_count);
+#endif
+	shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
+	learn_bias(*fac, *bl, false);
+	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
+	fac->reset();
+}
+
 bool quantitate_next_locus(const RefSequenceTable& rt,
                            vector<ReplicatedBundleFactory>& bundle_factories,
                            vector<shared_ptr<SampleAbundances> >& abundances)
@@ -594,7 +613,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         bundle_factories.push_back(rep_factory);
 	}
     
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, fasta_dir!="", false);
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
     if (ref_mRNAs.empty())
         return;
     
@@ -669,6 +688,74 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	
+	final_est_run = false;
+	
+	int num_bundles = bundle_factories[0].num_bundles();
+	
+	if (corr_bias) // Only run initial estimation if correcting bias
+	{
+		p_bar = ProgressBar("Calculating initial abundance estimates.", num_bundles);
+		
+		while (1) 
+		{
+			p_bar.update("",1);
+			vector<shared_ptr<SampleAbundances> > abundances;
+			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
+			
+			if (!more_loci_remain)
+				break;
+		}
+		p_bar.complete();
+	
+		p_bar = ProgressBar("Learning bias parameters.", 0);
+		foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
+		{
+			rep_fac.reset();
+			foreach (shared_ptr<BundleFactory> fac, rep_fac.factories())
+			{
+#if ENABLE_THREADS	
+				while(1)
+				{
+					locus_thread_pool_lock.lock();
+					if (locus_curr_threads < locus_num_threads)
+					{
+						locus_thread_pool_lock.unlock();
+						break;
+					}
+					
+					locus_thread_pool_lock.unlock();
+					
+					boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+				}
+				locus_thread_pool_lock.lock();
+				locus_curr_threads++;
+				locus_thread_pool_lock.unlock();
+				
+				thread bias(learn_bias_worker, fac);
+#else
+				learn_bias_worker(fac);
+#endif
+			}
+    	}
+    
+    // wait for the workers to finish up before reporting everthing.
+#if ENABLE_THREADS	
+		while(1)
+		{
+			locus_thread_pool_lock.lock();
+			if (locus_curr_threads == 0)
+			{
+				locus_thread_pool_lock.unlock();
+				break;
+			}
+			
+			locus_thread_pool_lock.unlock();
+			
+			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+		}
+#endif
+	}
+	
 	Tests tests;
     
     int N = (int)sam_hit_filename_lists.size();
@@ -693,36 +780,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     }
 
 	Tracking tracking;
-	
-	final_est_run = false;
-	
-	int num_bundles = bundle_factories[0].num_bundles();
-	
-	if (fasta_dir != "") // Only run initial estimation if correcting bias
-	{
-		p_bar = ProgressBar("Calculating initial abundance estimates.", num_bundles);
-		
-		while (1) 
-		{
-			p_bar.update("",1);
-			vector<shared_ptr<SampleAbundances> > abundances;
-			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
-			
-			if (!more_loci_remain)
-				break;
-		}
-		p_bar.complete();
-	}
-		
-	
-	if (fasta_dir != "")
-	{
-		foreach (ReplicatedBundleFactory& fac, bundle_factories)
-		{
-			fac.reset();
-			fac.learn_replicate_bias();
-		}
-	}
 	
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);

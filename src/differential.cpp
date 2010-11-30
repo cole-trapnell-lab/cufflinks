@@ -542,6 +542,8 @@ void sample_worker(const RefSequenceTable& rt,
     
     if (!*non_empty)
         return;
+    if (!final_est_run && bundle.ref_scaffolds().size() != 1) // Only learn on single isoforms
+    	return;
     
     abundance->cluster_mass = bundle.mass();
     
@@ -554,8 +556,8 @@ void sample_worker(const RefSequenceTable& rt,
     string locus_tag = bundle_label_buf;
     abundance->locus_tag = locus_tag;
     
-    bool perform_cds_analysis = true;
-    bool perform_tss_analysis = true;
+    bool perform_cds_analysis = final_est_run;
+    bool perform_tss_analysis = final_est_run;
 
     foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
     {

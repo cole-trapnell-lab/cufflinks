@@ -17,6 +17,7 @@
 #include <list>
 #include <string>
 #include <boost/tr1/unordered_map.hpp>
+#include <boost/thread.hpp>
 
 namespace ublas = boost::numeric::ublas;
 using namespace std;
@@ -27,7 +28,6 @@ void get_compatibility_list(const vector<Scaffold>& transcripts,
 
 class BiasLearner{
 	static const int pow4[];
-	static const int paramTypes[];
 	static const int MAX_SLICE;
 	static const int CENTER;
 	static const int _M;
@@ -35,7 +35,10 @@ class BiasLearner{
 	
 	static const int lengthBins[];
 	static const double positionBins[];
+	static const int siteSpec[];
+	static const int vlmmSpec[];
 	
+	const int* paramTypes;
 	shared_ptr<EmpDist const> _frag_len_dist;
 	ublas::matrix<long double> _startSeqParams;
 	ublas::matrix<long double> _startSeqExp;
@@ -49,10 +52,16 @@ class BiasLearner{
 	int seqToInt(const char* seqSlice, int n) const;
 	void getSlice(const char* seq, char* slice, int start, int end) const;
 	void genNList(const char* seqSlice, int start, int n, list<int>& nList) const;
+
+#if ENABLE_THREADS	
+	boost::mutex _bl_lock;
+#endif
 	
 public:
 	
 	BiasLearner(shared_ptr<EmpDist const> frag_len_dist);
+	void preProcessTranscript(const Scaffold& transcript);
+	
 	void processTranscript(const vector<double>& startHist, const vector<double>& endHist, const Scaffold& transcript);
 	void normalizeParameters();
 	void output();
@@ -61,7 +70,7 @@ public:
 
 };
 
-void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl);
+void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_bar = true);
 void process_bundle(HitBundle& bundle, BiasLearner& bl);
 
 // Helps with the complexities of bias correction with replicates in cond_probs and eff_lens

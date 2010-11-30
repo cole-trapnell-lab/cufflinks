@@ -196,6 +196,7 @@ int parse_options(int argc, char** argv)
 			case 'G':
 			{
 				ref_gtf_filename = optarg;
+				ref_driven = true;
 				break;
 			}
             case 'M':
@@ -237,6 +238,7 @@ int parse_options(int argc, char** argv)
             case 'r':
 			{
 				fasta_dir = optarg;
+				corr_bias = true;
 				break;
             }    
             case OPT_LIBRARY_TYPE:
@@ -297,7 +299,7 @@ int parse_options(int argc, char** argv)
     }
 	
 #if ADAM_MODE
-	if (fasta_dir != "")
+	if (corr_bias)
 		output_dir = output_dir + "/" + bias_mode;
 #endif
 	
@@ -694,6 +696,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
+					 BiasLearner* bl_ptr,
 					 long double map_mass,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
@@ -724,9 +727,14 @@ void assemble_bundle(const RefSequenceTable& rt,
 	
 	vector<shared_ptr<Scaffold> > scaffolds;
 	
-	if (ref_gtf_filename != "")
+	if (ref_driven)
 	{
 		scaffolds = bundle.ref_scaffolds();
+		if (!final_est_run && scaffolds.size() != 1) // Only learn bias on single isoforms
+		{
+			delete bundle_ptr;
+			return;
+		}
 	}
 	else 
 	{
@@ -751,7 +759,18 @@ void assemble_bundle(const RefSequenceTable& rt,
     if (allow_junk_filtering)
         filter_junk_genes(genes);
 
-    
+	
+	if (!final_est_run && ref_driven) // Bias needs to be learned
+	{
+		for (size_t i = 0; i < genes.size(); ++i)
+		{
+			if (genes[i].isoforms().size() == 1)
+			{
+				bl_ptr -> preProcessTranscript(genes[i].isoforms()[0].scaffold()); 
+			}
+		}
+	}
+	
 #if ENABLE_THREADS	
 	out_file_lock.lock();
 #endif
@@ -760,7 +779,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	for (size_t i = 0; i < genes.size(); ++i)
 	{
 		const Gene& gene = genes[i];
-		const vector<Isoform>& isoforms = genes[i].isoforms();
+		const vector<Isoform>& isoforms = gene.isoforms();
 		for (size_t j = 0; j < isoforms.size(); ++j)
 		{
 			const Isoform& iso = isoforms[j];
@@ -828,7 +847,7 @@ void assemble_bundle(const RefSequenceTable& rt,
     
 	//fprintf(fbundle_tracking, "CLOSE %d\n", bundle.id());
 	
-	if (ref_gtf_filename != "" && num_scaffs_reported > bundle.ref_scaffolds().size())
+	if (ref_driven && num_scaffs_reported > bundle.ref_scaffolds().size())
     {
 		fprintf(stderr, "Error: reported more isoforms than in reference!\n");
 		exit(1);
@@ -845,7 +864,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	delete bundle_ptr;
 }
 
-bool assemble_hits(BundleFactory& bundle_factory)
+bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 {
 	srand(time(0));
 	
@@ -864,12 +883,15 @@ bool assemble_hits(BundleFactory& bundle_factory)
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
     
 	string process;
-	if (ref_gtf_filename != "" && fasta_dir != "" && final_est_run)
+	if (corr_bias && final_est_run)
 		process = "Re-estimating abundances with bias correction.";
-	else if (ref_gtf_filename != "")
-		process = "Calculating estimated abundances.";
+	else if (ref_driven && final_est_run)
+		process = "Estimating transcript abundances."; 
+	else if (ref_driven && corr_bias)
+		process = "Learning bias parameters.";
 	else
 		process = "Assembling transcripts and estimating abundances.";
+		
 	ProgressBar p_bar(process, bundle_factory.num_bundles());
 
 	while(true)
@@ -924,6 +946,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 		thread asmbl(assemble_bundle,
 					 boost::cref(rt), 
 					 bundle_ptr, 
+					 bl_ptr,
 					 bundle_factory.read_group_properties()->total_map_mass(),
 					 ftranscripts, 
 					 fgene_abundances,
@@ -931,6 +954,7 @@ bool assemble_hits(BundleFactory& bundle_factory)
 #else
 		assemble_bundle(boost::cref(rt), 
 						bundle_ptr, 
+						bl_ptr,
 						bundle_factory.read_group_properties()->total_map_mass(),
 						ftranscripts,
 						fgene_abundances,
@@ -956,6 +980,14 @@ bool assemble_hits(BundleFactory& bundle_factory)
 #endif
 	
 	p_bar.complete();
+	
+	if(!final_est_run && ref_driven) // We are learning bias
+	{
+		bl_ptr->normalizeParameters();
+#if ADAM_MODE
+		bl_ptr->output();
+#endif
+	}
 	return true;
 }
 	
@@ -997,7 +1029,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     vector<shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
-        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
+        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, corr_bias, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();
@@ -1008,14 +1040,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    if (ref_gtf)
-    {
+    if (ref_driven)
         inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
-    }
     else 
-    {
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
-    }
+    
     
     asm_verbose("%d ReadHits still live\n", num_deleted);
     asm_verbose("Found %lu reference contigs\n", rt.size());
@@ -1039,25 +1068,21 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     rg_props->frag_len_dist(frag_len_dist);
     rg_props->total_map_mass(map_mass);
-    
+	BiasLearner* bl_ptr = new BiasLearner(rg_props->frag_len_dist());
     bundle_factory.read_group_properties(rg_props);
 
-	if (ref_gtf_filename == "")
-	{
+	if (ref_driven)
 		bundle_factory.bad_intron_table(bad_introns);
-	}
 	
 	max_frag_len = frag_len_dist->max();
 	min_frag_len = frag_len_dist->min();
 	verbose_msg("\tTotal map density: %Lf\n", map_mass);
 
-	if (fasta_dir != "") final_est_run = false;
-#if ADAM_MODE
-	if (fasta_dir == "")  assemble_hits(bundle_factory);
-#else
-	assemble_hits(bundle_factory);
-#endif
-    if (fasta_dir == "") 
+	if (corr_bias) final_est_run = false;
+
+	assemble_hits(bundle_factory, bl_ptr);
+    
+	if (final_est_run) 
     {
         ref_mRNAs.clear();
         return;
@@ -1067,38 +1092,34 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	int num_bundles = bundle_factory.num_bundles();
 	delete &bundle_factory;
 	BundleFactory bundle_factory2(hit_factory);
+	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
 	bundle_factory2.num_bundles(num_bundles);
 
-#if ADAM_MODE
-	ref_gtf = fopen(string(output_dir + "/../init/transcripts.gtf").c_str(), "r");
-#else	
-	ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
-#endif
-
-    if (ref_gtf)
+    if (!ref_gtf)
     {
+		ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
         ref_mRNAs.clear();
         ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, true, true);
-        bundle_factory2.set_ref_rnas(ref_mRNAs);
-    }
-    
+    }    
+	bundle_factory2.set_ref_rnas(ref_mRNAs);
     if (mask_gtf)
     {
         mask_rnas.clear();
         ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
         bundle_factory2.set_mask_rnas(mask_rnas);
-    }
-    
+    }    
     bundle_factory2.read_group_properties(rg_props);
-    
-	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
-	learn_bias(bundle_factory2, *bl);
-	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
-	
 	bundle_factory2.reset();
+	
+	if(!ref_driven) // We still need to learn the bias since we didn't have the sequences before assembly
+	{
+		learn_bias(bundle_factory2, *bl_ptr);
+		bundle_factory2.reset();
+	}
 
 	final_est_run = true;
-	assemble_hits(bundle_factory2);
+	assemble_hits(bundle_factory2, bl_ptr);
+	ref_mRNAs.clear();
 }
 
 int main(int argc, char** argv)

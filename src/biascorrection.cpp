@@ -90,12 +90,14 @@ void get_compatibility_list(const vector<shared_ptr<Scaffold> >& transcripts,
 	}
 }
 
-void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
+void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_bar)
 {
 	HitBundle bundle;
 	RefSequenceTable& rt = bundle_factory.ref_table();
 
-	ProgressBar p_bar("Learning bias parameters.", bundle_factory.num_bundles());
+	ProgressBar p_bar;
+	if (progress_bar)
+		ProgressBar p_bar("Learning bias parameters.", bundle_factory.num_bundles());
 
 	while(true)
 	{
@@ -111,98 +113,101 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl)
 		
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
-		p_bar.update(bundle_label_buf, 1);
+		if (progress_bar)
+			p_bar.update(bundle_label_buf, 1);
 		
-
-		if (bundle.non_redundant_hits().size()==0)
+		if (bundle.non_redundant_hits().size()==0 || bundle.ref_scaffolds().size() != 1)
 		{
 			delete bundle_ptr;
 			continue;
 		}
 
-		process_bundle(bundle, bl);
+		bl.preProcessTranscript(*(bundle.ref_scaffolds()[0]));
 			
 		delete bundle_ptr;
 	}
-	p_bar.complete();
+	
+	if (progress_bar)
+		p_bar.complete();
+		
 	bl.normalizeParameters();
 #if ADAM_MODE
 	bl.output();
 #endif
 }
 
-void process_bundle(HitBundle& bundle, BiasLearner& bl)
-{
-	const vector<shared_ptr<Scaffold> >& transcripts = bundle.ref_scaffolds();
-	const vector<MateHit>& nr_alignments = bundle.non_redundant_hits();
-	
-	int M = nr_alignments.size();
-	int N = transcripts.size();
-	
-	vector<list<int> > compatibilities(M,list<int>());
-	get_compatibility_list(transcripts, nr_alignments, compatibilities);	
-	
-	vector<vector<double> > startHists(N, vector<double>());
-	vector<vector<double> > endHists(N, vector<double>());
-	vector<double> useable_mass (N, 0.0);
-	
-	for (int j = 0; j < N; ++j)
-	{
-		int size = transcripts[j]->length();
-		startHists[j].resize(size+1); // +1 catches overhangs
-		endHists[j].resize(size+1);
-	}
-	
-	for (int i = 0; i < M; ++i)
-	{
-		const MateHit& hit = nr_alignments[i];
-		if (!hit.left_alignment() && !hit.right_alignment())
-			continue;
-
-		double num_hits = nr_alignments[i].collapse_mass();
-		long double locus_fpkm = 0;
-		
-		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
-		{
-			locus_fpkm += transcripts[*it]->fpkm(); 
-		}
-		
-		if (locus_fpkm==0)
-			continue;
-		
-		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
-		{	
-			const Scaffold& transcript = *transcripts[*it];
-			assert(transcript.strand()!=CUFF_STRAND_UNKNOWN); //Filtered in compatibility list
-			
-			int start;
-			int end;
-			int frag_len;
-			
-			double mass_fraction = num_hits*transcript.fpkm()/locus_fpkm;
-			
-			transcript.map_frag(hit, start, end, frag_len);
-			
-			if (start != transcript.length() || end != transcript.length())
-				useable_mass[*it] += mass_fraction;
-			
-			startHists[*it][start] += mass_fraction;
-			endHists[*it][end] += mass_fraction;
-		}
-	}
- 	for (int j = 0; j < N; ++j)
- 	{
- 		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && 
-			transcripts[j]->seq()!="" &&  
-//			useable_mass[j]/transcripts[j]->length() >= 0.1 &&
-			transcripts[j]->fpkm() >= 1)
- 			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
- 	}
-}
+// void process_bundle(HitBundle& bundle, BiasLearner& bl)
+// {
+// 	const vector<shared_ptr<Scaffold> >& transcripts = bundle.ref_scaffolds();
+// 	const vector<MateHit>& nr_alignments = bundle.non_redundant_hits();
+// 	
+// 	int M = nr_alignments.size();
+// 	int N = transcripts.size();
+// 	
+// 	vector<list<int> > compatibilities(M,list<int>());
+// 	get_compatibility_list(transcripts, nr_alignments, compatibilities);	
+// 	
+// 	vector<vector<double> > startHists(N, vector<double>());
+// 	vector<vector<double> > endHists(N, vector<double>());
+// 	vector<double> useable_mass (N, 0.0);
+// 	
+// 	for (int j = 0; j < N; ++j)
+// 	{
+// 		int size = transcripts[j]->length();
+// 		startHists[j].resize(size+1); // +1 catches overhangs
+// 		endHists[j].resize(size+1);
+// 	}
+// 	
+// 	for (int i = 0; i < M; ++i)
+// 	{
+// 		const MateHit& hit = nr_alignments[i];
+// 		if (!hit.left_alignment() && !hit.right_alignment())
+// 			continue;
+// 
+// 		double num_hits = nr_alignments[i].collapse_mass();
+// 		long double locus_fpkm = 0;
+// 		
+// 		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
+// 		{
+// 			locus_fpkm += transcripts[*it]->fpkm(); 
+// 		}
+// 		
+// 		if (locus_fpkm==0)
+// 			continue;
+// 		
+// 		for (list<int>::iterator it=compatibilities[i].begin(); it!=compatibilities[i].end(); ++it)
+// 		{	
+// 			const Scaffold& transcript = *transcripts[*it];
+// 			assert(transcript.strand()!=CUFF_STRAND_UNKNOWN); //Filtered in compatibility list
+// 			
+// 			int start;
+// 			int end;
+// 			int frag_len;
+// 			
+// 			double mass_fraction = num_hits*transcript.fpkm()/locus_fpkm;
+// 			
+// 			transcript.map_frag(hit, start, end, frag_len);
+// 			
+// 			if (start != transcript.length() || end != transcript.length())
+// 				useable_mass[*it] += mass_fraction;
+// 			
+// 			startHists[*it][start] += mass_fraction;
+// 			endHists[*it][end] += mass_fraction;
+// 		}
+// 	}
+//  	for (int j = 0; j < N; ++j)
+//  	{
+//  		if (transcripts[j]->strand()!=CUFF_STRAND_UNKNOWN && 
+// 			transcripts[j]->seq()!="" &&  
+// //			useable_mass[j]/transcripts[j]->length() >= 0.1 &&
+// 			transcripts[j]->fpkm() >= 1)
+//  			bl.processTranscript(startHists[j], endHists[j], *transcripts[j]);
+//  	}
+// }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
-//const int BiasLearner::paramTypes[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-const int BiasLearner::paramTypes[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
+const int BiasLearner::siteSpec[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+const int BiasLearner::vlmmSpec[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
 const int BiasLearner::_M = 21; //Number of positions spanned by window
@@ -213,6 +218,11 @@ const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.3,.4,.5,
 
 BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 {
+	paramTypes = vlmmSpec;
+	if (bias_mode=="site")
+	{
+		paramTypes = siteSpec;
+	}
 	_frag_len_dist = frag_len_dist;
 	_startSeqParams = ublas::zero_matrix<long double>(_M,_N);
 	_startSeqExp = ublas::zero_matrix<long double>(_M,_N);
@@ -254,6 +264,33 @@ inline void BiasLearner::getSlice(const char* seq, char* slice, int start, int e
 	}
 }
 
+void BiasLearner::preProcessTranscript(const Scaffold& transcript)
+{
+	if (transcript.strand()==CUFF_STRAND_UNKNOWN || transcript.fpkm() < 1 || transcript.seq()=="")
+		return;
+		
+	vector<double> startHist(transcript.length()+1, 0.0); // +1 catches overhangs
+	vector<double> endHist(transcript.length()+1, 0.0);
+
+	foreach (const MateHit* hit_p, transcript.mate_hits())
+	{
+		const MateHit& hit = *hit_p;
+		if (!hit.left_alignment() && !hit.right_alignment())
+			continue;
+		
+		double mass = hit.mass();
+		
+		int start;
+		int end;
+		int frag_len;
+		
+		transcript.map_frag(hit, start, end, frag_len);
+		startHist[start] += mass;
+		endHist[end] += mass;
+	}
+	processTranscript(startHist, endHist, transcript);
+}
+
 
 void BiasLearner::processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript)
 {
@@ -263,7 +300,7 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 	char seq[seqLen];
 	char c_seq[seqLen];
 	encode_seq(transcript.seq(), seq, c_seq);
-	
+		
 	char seqSlice[MAX_SLICE];
 	
 	int lenClass=0;
@@ -278,6 +315,10 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 	int startBinCutoff = positionBins[currStartBin]*(seqLen - min_frag_len);
 	int currEndBin = 0;
 	int endBinCutoff = positionBins[currStartBin]*(seqLen - min_frag_len);
+
+#if ENABLE_THREADS
+	boost::mutex::scoped_lock lock(_bl_lock);
+#endif	
 		
 	for (int i=0; i < seqLen; i++)
 	{
@@ -579,45 +620,45 @@ void BiasLearner::normalizeParameters()
 void BiasLearner::output()
 {
 	ofstream myfile1;
-	ofstream myfile2;
-	ofstream myfile3;
-	ofstream myfile4;
-	string startfile = output_dir + "/startSeqBias.csv";
-	myfile1.open (startfile.c_str());
-	string endfile = output_dir + "/endSeqBias.csv";
-	myfile2.open (endfile.c_str());
-	string posfile = output_dir + "/startPosBias.csv";
-	myfile3.open (posfile.c_str());
-	string posfile2 = output_dir + "/endPosBias.csv";
-	myfile4.open (posfile2.c_str());
-
-
+	string filename = output_dir + "/biasParams.csv";
+	myfile1.open (filename.c_str());
+	
+	// StartSeq
 	for (int i = 0; i < _N; ++i)
 	{
 		for(int j = 0; j < _M; ++j)
-		{
 			myfile1 << _startSeqParams(j,i) <<",";
-			myfile2 << _endSeqParams(j,i) << ",";
-		}
 		myfile1 << endl;
-		myfile2 << endl;
 	}
+	myfile1 << endl;
 	
+	// EndSeq
+	for (int i = 0; i < _N; ++i)
+	{
+		for(int j = 0; j < _M; ++j)
+			myfile1 << _endSeqParams(j,i) <<",";
+		myfile1 << endl;
+	}
+	myfile1 << endl;
+	
+	// Start Pos
 	for (size_t i = 0; i < _startPosParams.size2(); ++i)
 	{
 		for(size_t j = 0; j < _startPosParams.size1(); ++j)
-		{
-			myfile3 << _startPosParams(j,i) <<",";
-			myfile4 << _endPosParams(j,i) <<",";
-		}
-		myfile3 <<endl;
-		myfile4 <<endl;
+			myfile1 << _startPosParams(j,i) <<",";
+		myfile1 <<endl;
+	}
+	myfile1 << endl;	
+	
+	// End Pos
+	for (size_t i = 0; i < _endPosParams.size2(); ++i)
+	{
+		for(size_t j = 0; j < _endPosParams.size1(); ++j)
+			myfile1 << _endPosParams(j,i) <<",";
+		myfile1 <<endl;
 	}
 	
 	myfile1.close();
-	myfile2.close();
-	myfile3.close();
-	myfile4.close();
 }
 
 

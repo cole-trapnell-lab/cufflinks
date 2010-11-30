@@ -31,6 +31,8 @@ using boost::math::normal;
 #include <boost/shared_ptr.hpp>
 
 extern bool final_est_run;
+extern bool corr_bias;
+extern bool ref_driven;
 
 extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;

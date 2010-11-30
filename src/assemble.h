@@ -28,7 +28,7 @@
 #include "biascorrection.h"
 
 
-bool assemble_hits(BundleFactory& bundle_factory);
+bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr);
 
 //bool intron_compatible(const MateHit& lhs, const MateHit& rhs);
 bool read_hits_overlap(const ReadHit* lhs, const ReadHit* rhs);

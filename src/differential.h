@@ -143,7 +143,7 @@ public:
     : _factories(factories) {}
 	
 	int num_bundles() { return _factories[0]->num_bundles(); }
-	
+	vector<shared_ptr<BundleFactory> > factories() { return _factories; }
 	
 	bool next_bundle(HitBundle& bundle_out)
     {
@@ -233,17 +233,6 @@ public:
 		
     }
 	
-	void learn_replicate_bias()
-    {
-    	foreach (shared_ptr<BundleFactory> fac, _factories)
-        {
-			shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
-			BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
-			learn_bias(*fac, *bl);
-			rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
-			fac->reset();
-        }
-    }
     
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
     // samples will clobber each other

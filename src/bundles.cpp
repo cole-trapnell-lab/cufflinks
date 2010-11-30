@@ -79,7 +79,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				   bool loadFPKM) 
 {
 	if (loadSeqs)
-		ProgressBar p_bar("Loading reference annotation and sequence",0);
+		ProgressBar p_bar("Loading reference and sequence.",0);
     
 	GList<GSeqData> ref_rnas;
 	
