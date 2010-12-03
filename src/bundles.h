@@ -320,6 +320,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	
 	vector<long double> mass_dist; //To be used for quartile normalization
 	
+	// Store the maximum read length for "left" and "right" reads to report to user.
+	int max_left = 0;
+	int max_right = 0;
+	
 	while(true)
 	{
 		HitBundle* bundle_ptr = new HitBundle();
@@ -370,10 +374,16 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		{
 			bundle_mass += hits[i].collapse_mass();
 			assert(hits[i].left_alignment());
-			min_len = min(min_len, hits[i].left_alignment()->right()-hits[i].left_alignment()->left());
+			int left_len = hits[i].left_alignment()->right()-hits[i].left_alignment()->left();
+			min_len = min(min_len, left_len);
+			if (!hits[i].left_alignment()->contains_splice())
+				max_left = max(max_left, left_len);
 			if (hits[i].right_alignment())
 			{
-				min_len = min(min_len, hits[i].right_alignment()->right()-hits[i].right_alignment()->left());
+				int right_len = hits[i].right_alignment()->right()-hits[i].right_alignment()->left();
+				min_len = min(min_len, right_len);
+				if (!hits[i].right_alignment()->contains_splice())
+					max_right = max(max_right, right_len);
 				has_pairs = true;
 			}
 			if (bundle.ref_scaffolds().size()==1 && hits[i].is_pair()) // Annotation provided and single isoform gene.
@@ -481,12 +491,11 @@ void inspect_map(BundleFactoryType& bundle_factory,
         
     tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
     
-    string distr_type;
+    bool empirical = false;
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
 	if (!has_pairs || tot_count < 10000)
 	{
 		tot_count = 0;
-		distr_type  = "Gaussian (default)";
 		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
 		max_len = def_frag_len_mean + 3*def_frag_len_std_dev;
 		for(int i = min_len; i <= max_len; i++)
@@ -497,7 +506,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	}
 	else 
 	{	
-		distr_type = "Empirical (learned)";
+		empirical = true;
 		double curr_total = 0;
 		size_t last_nonzero = min_len-1;
 		for(size_t i = last_nonzero+1; i < frag_len_hist.size(); i++)
@@ -575,11 +584,25 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
 			else
 				fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-			string type = (has_pairs) ? "paired-end" : "single-end";
-			fprintf(stderr, ">\tRead Type: %dbp %s\n", min_len, type.c_str());
-			fprintf(stderr, ">\tFragment Length Distribution: %s\n", distr_type.c_str());
-			fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
-			fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
+		
+			if (has_pairs)
+				fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_left, max_right);
+			else
+				fprintf(stderr, ">\tRead Type: %dbp single-end\n", max_left);
+		
+			if (empirical)
+			{
+				fprintf(stderr, ">\tFragment Length Distribution: Empirical (learned)\n");
+				fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
+				fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
+			}
+			else
+			{
+				fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (default)\n");
+				fprintf(stderr, ">\t              Default Mean: %d\n", def_frag_len_mean);
+				fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
+			}
+
 		}
 	bundle_factory.num_bundles(num_bundles);
 	bundle_factory.reset(); 
