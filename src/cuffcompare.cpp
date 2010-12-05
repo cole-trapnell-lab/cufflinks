@@ -1603,13 +1603,15 @@ char getRefOvl(GffObj& m, GLocus& rloc, GffObj*& rovl, int& ovlen) {
   rovl=NULL;
   ovlen=0;
   if (m.start>rloc.end || m.end<rloc.start) {
-     //see if it's a polymerase run
+     //see if it's a polymerase run ?
+     /*
        if ((m.strand=='+' && m.end<=rloc.end+polyrun_range) ||
          (m.strand=='-' && m.start>=rloc.start-polyrun_range)) {
             rovl=rloc.mrna_maxcov;
             ((CTData*)m.uptr)->addOvl('p',rloc.mrna_maxcov);
             return 'p';
             }
+     */
      return 0; //unknown -> intergenic space
      }
   for (int i=0;i<rloc.mrnas.Count();i++) {
@@ -1838,19 +1840,51 @@ void findTRMatch(GTrackLocus& loctrack, int qcount, GLocus& rloc) {
 
 
 bool inPolyRun(char strand, GffObj& m, GList<GLocus>* rloci, int& rlocidx) {
- if (rloci==NULL || rloci->Count()==0) return false;
- if (rlocidx<0 || abs((int)(rloci->Get(rlocidx)->start-m.start))>40000){
+ //we are only here if there is no actual overlap between m and any locus in rloci
+ if (rloci==NULL || rloci->Count()==0) return false; // || m.exons.Count()>1
+  /*
+ if (rlocidx<0) { //always
      GLocus floc;
      floc.start=m.start;
      floc.end=m.end;
-     rloci->Found(&floc,rlocidx);
+     rloci->Found(&floc,rlocidx); //find closest locus
      if (rlocidx>=rloci->Count() || rlocidx<0) rlocidx=rloci->Count()-1;
      }
+  */   
+  if (strand=='-') {
+        rlocidx=qsearch_loci(m.end, *rloci);
+        //returns index of locus starting just ABOVE m.end
+        // or -1 if last locus start <= m.end
+        GLocus* rloc=NULL;
+        if (rlocidx<0) return false;
+        while (rlocidx<rloci->Count()) {
+           rloc=rloci->Get(rlocidx);
+           if (rloc->start>m.end+polyrun_range) break;
+           if (rloc->start+6>m.end) return true;
+           rlocidx++;
+           }
+        }
+      else { // strand == '+' (or '.' ?)
+        rlocidx=qsearch_loci(m.end, *rloci);
+        GLocus* rloc=NULL;
+        //returns index of closest locus starting ABOVE m.end
+        // or -1 if last locus start <= m.end
+        if (rlocidx<0) rlocidx=rloci->Count(); //this may actually start below m.end
+        while ((--rlocidx)>=0) {
+          rloc=rloci->Get(rlocidx);
+          if (m.start>rloc->start+GFF_MAX_LOCUS) break;
+          if (m.start+6>rloc->end && m.start<rloc->end+polyrun_range) return true;
+          }
+        }
+  return false;
+ /*
  GLocus* rloc=rloci->Get(rlocidx);
  //make sure rloc is the closest upstream locus
  if (strand=='+') {
-    while ((int)(m.start-rloc->end)<-4) { //reposition rlocidx if needed
-          if (rlocidx==0) return false;
+    //make sure rloc ends before m starts
+    while ((int)(m.start-rloc->end)<-4) { 
+          //reposition rlocidx if needed
+          if (rlocidx==0 || (int)(m.start-rloci->Get(rlocidx)->start)) return false;
           rlocidx--;
           rloc=rloci->Get(rlocidx);
           }
@@ -1888,6 +1922,7 @@ bool inPolyRun(char strand, GffObj& m, GList<GLocus>* rloci, int& rlocidx) {
        }
     return (m.start<rloc->start && m.end+polyrun_range>rloc->start);
     }
+ */
 }
 
 CTData* getBestOvl(GffObj& m) {
@@ -1898,13 +1933,54 @@ CTData* getBestOvl(GffObj& m) {
   return NULL;
 }
 
+/*
+//Debug stats:
+class CCodeCount {
+ public:
+   char ovlcode;
+   int count;
+ CCodeCount(char o=0, int c=0) {
+   ovlcode=o;
+   count=c;
+   }
+};
+
+GVec<CCodeCount> codenums;
+
+
+void incCodeCount(char ovlcode) {
+  for (int i=0;i<codenums.Count();i++) {
+    if (codenums[i].ovlcode==ovlcode) {
+        codenums[i].count++;
+        return;
+        }
+    }
+  CCodeCount cc(ovlcode);
+  codenums.Add(cc);
+  }
+
+int getCodeCount(char ovlcode) {
+  for (int i=0;i<codenums.Count();i++) {
+    if (codenums[i].ovlcode==ovlcode) {
+        return codenums[i].count;
+        }
+    }
+  return 0;
+  }
+*/
+
 void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
+  //checking for relationship with ref transcripts on opposite strand
   if (rloci==NULL or rloci->Count()<1) return;
   int j=0;//current rloci index
   for (int i=0;i<mrnas.Count();i++) {
      GffObj& m=*mrnas[i];
      char ovlcode=((CTData*)m.uptr)->getBestCode();
-     if (ovlcode=='u' || ovlcode<47) { //look for overlaps between mrnas and rloci
+     if (ovlcode>47 && strchr("=cjeo",ovlcode)!=NULL) continue;
+     //if (ovlcode<47 || strchr("uirp",ovlcode)!=NULL)
+     //if (ovlcode<47 || strchr("=cjeo",ovlcode)==NULL)
+        {
+         //incCodeCount(ovlcode);
          GLocus* rloc=rloci->Get(j);
         CHECK_RLOC:
          if (rloc->start>m.end) continue; //check next transfrag
@@ -1954,7 +2030,7 @@ void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
            bool xcode=true;
            if (is_shadow) { ((CTData*)m.uptr)->addOvl('s', sovl); xcode=false; }
                  // else
-           if (is_intraintron) { ((CTData*)m.uptr)->addOvl('i', iovl); xcode=false; }
+           if (ovlcode!='i' && is_intraintron) { ((CTData*)m.uptr)->addOvl('i', iovl); xcode=false; }
            if (xcode) {
                    // just plain overlap, find the overlapping mrna in rloc
                    GffObj* maxovl=NULL;
@@ -1970,7 +2046,7 @@ void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
                    } //'x'
            jm++;
            } while (j+jm<rloci->Count() && rloci->Get(j+jm)->overlap(m));
-         } // 'u' code testing
+        } // code testing across strands
      } //for each transfrag
 }
 
@@ -1982,7 +2058,7 @@ void reclass_mRNAs(char strand, GList<GffObj>& mrnas, GList<GLocus>* rloci, GFaS
     //if (ovlcode=='u' || ovlcode=='i' || ovlcode==0) {
     if (ovlcode=='u' || ovlcode<47) {
       //check for overlaps with ref transcripts on the other strand
-      if (inPolyRun(strand, m, rloci, rlocidx)) {
+      if (m.exons.Count()==1 && inPolyRun(strand, m, rloci, rlocidx)) {
          ((CTData*)m.uptr)->addOvl('p',rloci->Get(rlocidx)->mrna_maxcov);
          }
       else { //check for repeat content
@@ -2409,6 +2485,15 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
       }
     delete faseq;
     }
+  /* --- debug stats:
+  GMessage("XStrand processing stats:\n");
+  for (int i=0;i<codenums.Count();i++) {
+     char ovlcode=codenums[i].ovlcode;
+     if (ovlcode==0) ovlcode='-';
+     GMessage("code '%c':\t%d\n",ovlcode,codenums[i].count);
+     }
+  */
+  // ^^^^ debug only ^^^^
   if (tmapFiles) {
    for (int q=0;q<qcount;q++) { fclose(ftr[q]); fclose(frs[q]); }
    }

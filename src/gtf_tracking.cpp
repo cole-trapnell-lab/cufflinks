@@ -578,26 +578,26 @@ int qsearch_mrnas(uint x, GList<GffObj>& mrnas) {
  return (idx>maxh) ? -1 : idx;
 }
 
-int qsearch_segs(uint x, GList<GSeg>& segs) {
+int qsearch_loci(uint x, GList<GLocus>& loci) {
  // same as above, but for GSeg lists
   //binary search
   //do the simplest tests first:
-  if (segs[0]->start>x) return 0;
-  if (segs.Last()->start<x) return -1;
+  if (loci[0]->start>x) return 0;
+  if (loci.Last()->start<x) return -1;
   uint istart=0;
   int i=0;
   int idx=-1;
-  int maxh=segs.Count()-1;
+  int maxh=loci.Count()-1;
   int l=0;
   int h = maxh;
   while (l <= h) {
      i = (l + h) >> 1;
-     istart=segs[i]->start;
+     istart=loci[i]->start;
      if (istart < x) l=i+1;
                 else {
                    if (istart == x) { //found matching coordinate here
                         idx=i;
-                        while (idx<=maxh && segs[idx]->start==x) {
+                        while (idx<=maxh && loci[idx]->start==x) {
                            idx++;
                            }
                         return (idx>maxh) ? -1 : idx;
@@ -606,7 +606,7 @@ int qsearch_segs(uint x, GList<GSeg>& segs) {
                    }
      } //while
  idx = l;
- while (idx<=maxh && segs[idx]->start<=x) {
+ while (idx<=maxh && loci[idx]->start<=x) {
     idx++;
     }
  return (idx>maxh) ? -1 : idx;

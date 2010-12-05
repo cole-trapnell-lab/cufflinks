@@ -143,22 +143,22 @@ class GLocus;
 
 class COvLink {
 public:
-    static int coderank(char c) {
+	static int coderank(char c) {
 		switch (c) {
 			case '=': return 0; //ichain match
-			case 'c': return 2; //containment (chain fragment)
-			case 'e': return 4; // overlap exon+intron of unspliced pre-mRNA
-			case 'j': return 6; // overlap with at least a junction match
-			case 'o': return 8; // overlap (exon)
-			case 'r': return 14; //repeats
-			case 'i': return 16; // intra-intron
-            case 'x': return 18; // plain exon overlap on opposite strand
-			case 'p': return 20; //polymerase run
-			case 'u': return 90; //intergenic
-            case 's': return 94; //"shadow" - at least one (fuzzy) intron overlap on the opposite strand
+			case 'c': return 2; //containment (ichain fragment)
+			case 'j': return 4; // overlap with at least a junction match
+			case 'e': return 6; // single exon transfrag overlapping an intron of reference (possible pre-mRNA)
+			case 'o': return 8; // generic exon overlap
+			case 's': return 16; //"shadow" - an intron overlaps with a ref intron on the opposite strand
+			case 'x': return 18; // exon overlap on opposite strand (usually wrong strand mapping)
+			case 'i': return 20; // intra-intron
+			case 'p': return 90; //polymerase run
+			case 'r': return 92; //repeats
+			case 'u': return 94; //intergenic
 			case  0 : return 100;
 			default: return 96;
-        }
+			}
 	}
     char code;
     int rank;
@@ -1151,12 +1151,12 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata);
 
 bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl=false);
 
-//"position" a given coordinate x within a list of transcripts sorted by their start (lowest)
-//coordinate, using quick-search; the returned int is the list index of the closest *higher*
-//GffObj - i.e. starting right *ABOVE* the given coordinate
-//Convention: returns -1 if there is no such GffObj (i.e. last GffObj starts below x)
+//use qsearch to "position" a given coordinate x within a list of transcripts sorted 
+//by their start (lowest) coordinate; the returned int is the list index of the 
+//closest GffObj starting just *ABOVE* coordinate x
+//Convention: returns -1 if there is no such GffObj (i.e. last GffObj start <= x)
 int qsearch_mrnas(uint x, GList<GffObj>& mrnas);
-int qsearch_segs(uint x, GList<GSeg>& segs); // same as above, but for GSeg lists
+int qsearch_loci(uint x, GList<GLocus>& segs); // same as above, but for GSeg lists
 
 GSeqData* getRefData(int gid, GList<GSeqData>& ref_data); //returns reference GSeqData for a specific genomic sequence
 
