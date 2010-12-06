@@ -57,15 +57,15 @@
 		  <div class="box">
 		    <ul>
 		      <table width="100%">
-				<tr><td>version 0.9.2 (BETA)</td> <td align="right">10/26/2010</td></tr>
+				<tr><td>version 0.9.3 (BETA)</td> <td align="right">11/30/2010</td></tr>
 				<tr>
-		      		<td><a href="./downloads/cufflinks-0.9.2.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+		      		<td><a href="./downloads/cufflinks-0.9.3.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
 		      	</tr>
 				<tr>
-					<td><a href="./downloads/cufflinks-0.9.2.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+					<td><a href="./downloads/cufflinks-0.9.3.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
 				</tr>
 				<tr>
-					<td><a href="./downloads/cufflinks-0.9.2.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+					<td><a href="./downloads/cufflinks-0.9.3.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
 				</tr>
 			  </table>
 		    </ul>
@@ -720,7 +720,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		<td VALIGN=top>3</td>
 		<td VALIGN=top>Class code</td>
 		<td VALIGN=top><tt>c</tt></td>
-		<td VALIGN=top>The type of match between the Cufflinks transcripts in column  4 and the reference transcript.  One of either 'c' for partial match, or '=' for full match.</td>
+		<td VALIGN=top>The type of relationship between the Cufflinks transcripts in column  4 and the reference transcript (as described in the <b>Class Codes</b> section below)</td>
 	  </tr>
 	  <tr>
 		<td VALIGN=top>4</td>
@@ -791,7 +791,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr>
 			<td VALIGN=top>1</td>
 			<td VALIGN=top><tt>=</tt></td>
-			<td VALIGN=top>Match</td>
+			<td VALIGN=top>Complete match of intron chain</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>2</td>
@@ -802,13 +802,13 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr>
 			<td VALIGN=top>3</td>
 			<td VALIGN=top><tt>j</tt></td>
-			<td VALIGN=top>New isoform</td>
+			<td VALIGN=top>Potentially novel isoform (fragment): at least one splice junction is shared with a reference transcript</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>4</td>
 			<td VALIGN=top><tt>e</tt></td>
-			<td VALIGN=top>A single exon transcript overlapping a reference 
+			<td VALIGN=top>Single exon transfrag overlapping a reference 
 				exon and at least 10 bp of a reference intron, indicating a 
 				possible pre-mRNA fragment.</td>
 			<td VALIGN=top></td>
@@ -816,46 +816,46 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr>
 			<td VALIGN=top>5</td>
 			<td VALIGN=top><tt>i</tt></td>
-			<td VALIGN=top>A single exon transcript falling entirely within a 
+			<td VALIGN=top>A transfrag falling entirely within a 
 				reference intron</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>6</td>
-			<td VALIGN=top><tt>r</tt></td>
-			<td VALIGN=top>Repeat. Currently determined by looking at the reference
-				sequence and applied to transcripts where at least 50% of the 
-				bases are lower case</td>
+			<td VALIGN=top><tt>o</tt></td>
+			<td VALIGN=top>Generic exonic overlap with a reference transcript</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>7</td>
 			<td VALIGN=top><tt>p</tt></td>
-			<td VALIGN=top>Possible polymerase run-on fragment</td>
+			<td VALIGN=top>Possible polymerase run-on fragment (within 2Kbases of a reference transcript)</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>8</td>
+			<td VALIGN=top><tt>r</tt></td>
+			<td VALIGN=top>Repeat. Currently determined by looking at the soft-masked reference
+				sequence and applied to transcripts where at least 50% of the 
+				bases are lower case</td>
+			<td VALIGN=top></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td>
 			<td VALIGN=top><tt>u</tt></td>
 			<td VALIGN=top>Unknown, intergenic transcript</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>9</td>
-			<td VALIGN=top><tt>o</tt></td>
-			<td VALIGN=top>Unknown, generic overlap with reference</td>
-			<td VALIGN=top></td>
-		  </tr>
-		  <tr>
 			<td VALIGN=top>10</td>
 			<td VALIGN=top><tt>x</tt></td>
-			<td VALIGN=top>exonic overlap with reference on the opposite strand</td>
+			<td VALIGN=top>Exonic overlap with reference on the opposite strand</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>11</td>
 			<td VALIGN=top><tt>s</tt></td>
-			<td VALIGN=top>intronic overlap with reference on the opposite strand (likely due to read mapping errors)</td>
+			<td VALIGN=top>An intron of the transfrag overlaps a reference intron on the opposite strand (likely due to read mapping errors)</td>
 			<td VALIGN=top></td>
 		  </tr>
 		  <tr>
