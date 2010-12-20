@@ -791,9 +791,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         if (!more_loci_remain)
             break;
         
-        // TODO: more asserts qhere to verify that transcripts tested are
-        // identical, etc.
-        
         for (size_t i = 1; i < abundances.size(); ++i)
         {
             const SampleAbundances& curr = *(abundances[i]);

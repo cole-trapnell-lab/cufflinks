@@ -307,7 +307,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	ProgressBar p_bar;
 	if (progress_bar)
 		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
-	char last_chrom[100];
+	char last_chrom[100]; last_chrom[0] = 0;
 	map_mass = 0.0;
 	int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;

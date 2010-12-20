@@ -52,7 +52,7 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
 	
 	//NOTE: SPACES ONLY, bozo
-    fprintf(stderr, "Usage:   cuffdiff [options] <input.fpkm_tracking>\n");
+    fprintf(stderr, "Usage:   cuffdiff [options] <input.fpkm_tracking> <output.shout>\n");
 	fprintf(stderr, "Options:\n\n");
 	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");    
 #if ENABLE_THREADS
@@ -139,7 +139,7 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         line_num++;
     }
     
-    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM");
+    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi");
     for (size_t i = 0; i < sample_names.size(); ++i)
     {
         fprintf(spec_out, "\t%s", sample_names[i].c_str());
@@ -170,21 +170,36 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         static const size_t first_sample_idx = 6;
         
         vector<double> FPKMs;
-        for (size_t i = first_sample_idx; i < tokens.size(); i += 3)
+        vector<double> FPKM_conf_los;
+        vector<double> FPKM_conf_his;
+        for (size_t i = first_sample_idx; i < tokens.size() - 2; i += 3)
         {
             string FPKM_string = tokens[i];
             double fpkm = atof(FPKM_string.c_str());
+            
+            string FPKM_conf_lo_string = tokens[i+1];
+            double fpkm_conf_lo = atof(FPKM_conf_lo_string.c_str());
+            
+            string FPKM_conf_hi_string = tokens[i+2];
+            double fpkm_conf_hi = atof(FPKM_conf_hi_string.c_str());
+            
             if (isnan(fpkm))
             {
                 fprintf (stderr, "Warning: gene %s (%s) on line %d has FPKM = NaN\n", 
                          tracking_id.c_str(), gene_short_name.c_str(), line_num); 
                 fpkm = 0.0;
+                fpkm_conf_lo = 0;
+                fpkm_conf_hi = 0;
             }
             
             FPKMs.push_back(fpkm);
+            FPKM_conf_los.push_back(fpkm_conf_lo);
+            FPKM_conf_his.push_back(fpkm_conf_hi);
         }
         
         double total_FPKM = accumulate(FPKMs.begin(), FPKMs.end(), 0.0);
+        double total_FPKM_lo = accumulate(FPKM_conf_los.begin(), FPKM_conf_los.end(), 0.0);
+        double total_FPKM_hi = accumulate(FPKM_conf_his.begin(), FPKM_conf_his.end(), 0.0);
         
         assert (!isnan(total_FPKM) && !isinf(total_FPKM));
         
@@ -201,7 +216,6 @@ void driver(FILE* fpkm_file, FILE* spec_out)
             {
                 FPKM_dist(i) = FPKMs[i] / total_FPKM;
             }
-        
         
             //cerr << tracking_id << FPKM_dist<< endl;
             
@@ -225,14 +239,16 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         }
 
         fprintf(spec_out, 
-                "%s\t%s\t%s\t%s\t%s\t%s\t%g",
+                "%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g",
                 tracking_id.c_str(),
                 class_code.c_str(),
                 nearest_ref_id.c_str(),
                 gene_short_name.c_str(),
                 tss_id.c_str(),
                 locus.c_str(), 
-                total_FPKM);
+                total_FPKM,
+                total_FPKM_lo,
+                total_FPKM_hi);
         
         for (size_t i = 0; i < specificity_js.size(); ++i)
         {

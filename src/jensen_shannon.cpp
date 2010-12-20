@@ -72,6 +72,7 @@ double jensen_shannon_div(vector<ublas::vector<double> >& sample_kappas)
 	double entropy_avg = entropy(avg_kappas);
 	
 	double js = entropy_avg - avg_entropy;
+
 	return sqrt(js);
 }
 
