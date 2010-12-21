@@ -32,14 +32,24 @@
 using namespace std;
 using namespace boost;
 
+bool compute_row_matrix = false;
+bool log_transform_fpkm = false;
+bool output_row_density = false;
+
+string row_matrix_out_filename = "";
+string row_density_out_filename = "";
+
 #if ENABLE_THREADS
-const char *short_options = "o:p:";
+const char *short_options = "o:p:d:P:";
 #else
-const char *short_options = "o:";
+const char *short_options = "o:d";
 #endif
 
 static struct option long_options[] = {
     {"output-dir",			    required_argument,		 0,			 'o'},
+    {"row-matrix",			    required_argument,       0,			 'd'},
+    {"row-densities",			required_argument,       0,			 'P'},
+    {"log-fpkm",			    no_argument,             0,			 'l'},
 #if ENABLE_THREADS
     {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -54,7 +64,9 @@ void print_usage()
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <input.fpkm_tracking> <output.shout>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");    
+	fprintf(stderr, "-o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");  
+    fprintf(stderr, "-d/--row-matrix              compute row distance matrix                           [ default:     off ]\n");
+    fprintf(stderr, "-l/--log-fpkm                JS on log(fpkm+1) instead of                          [ default:     off ]\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "-p/--num-threads             number of threads used during assembly                [ default:      1 ]\n");
 #endif
@@ -70,6 +82,25 @@ int parse_options(int argc, char** argv)
 			case -1:     /* Done with options. */
 				break;
 
+            case 'd':
+			{
+				compute_row_matrix = true;
+                row_matrix_out_filename = optarg;
+				break;
+			}
+                
+            case 'P':
+			{
+				output_row_density = true;
+                row_density_out_filename = optarg;
+				break;
+			}
+                
+            case 'l':
+			{
+				compute_row_matrix = true;
+				break;
+			}
             case 'o':
 			{
 				output_dir = optarg;
@@ -87,7 +118,7 @@ int parse_options(int argc, char** argv)
 	return 0;
 }
 
-void driver(FILE* fpkm_file, FILE* spec_out)
+void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_density_out)
 {
     char buf[10 * 1024];
     
@@ -139,12 +170,22 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         line_num++;
     }
     
-    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi");
+    if (log_transform_fpkm)
+    {
+        fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\t1og10_total_FPKM\t1og10_total_FPKM_lo\t1og10_total_FPKM_hi");   
+    }
+    else 
+    {
+        fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi");
+    }
+
     for (size_t i = 0; i < sample_names.size(); ++i)
     {
         fprintf(spec_out, "\t%s", sample_names[i].c_str());
     }
     fprintf(spec_out, "\n");
+    
+    vector<ublas::vector<double> > fpkm_dists;
     
     while(fgets(buf, sizeof(buf), fpkm_file))
     {
@@ -192,9 +233,19 @@ void driver(FILE* fpkm_file, FILE* spec_out)
                 fpkm_conf_hi = 0;
             }
             
-            FPKMs.push_back(fpkm);
-            FPKM_conf_los.push_back(fpkm_conf_lo);
-            FPKM_conf_his.push_back(fpkm_conf_hi);
+            if (!log_transform_fpkm)
+            {
+                FPKMs.push_back(fpkm);
+                FPKM_conf_los.push_back(fpkm_conf_lo);
+                FPKM_conf_his.push_back(fpkm_conf_hi);
+            }
+            else 
+            {
+                FPKMs.push_back(log10(fpkm + 1.0));
+                FPKM_conf_los.push_back(log10(fpkm_conf_lo + 1.0));
+                FPKM_conf_his.push_back(log10(fpkm_conf_hi + 1.0));
+            }
+
         }
         
         double total_FPKM = accumulate(FPKMs.begin(), FPKMs.end(), 0.0);
@@ -214,9 +265,18 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         {
             for (size_t i = 0; i < FPKM_dist.size(); ++i)
             {
-                FPKM_dist(i) = FPKMs[i] / total_FPKM;
+                if (log_transform_fpkm)
+                {
+                    FPKM_dist(i) = log10(FPKMs[i]) / total_FPKM;
+                }
+                else
+                {
+                    FPKM_dist(i) = FPKMs[i] / total_FPKM;
+                }
             }
         
+            fpkm_dists.push_back(FPKM_dist);
+            
             //cerr << tracking_id << FPKM_dist<< endl;
             
             const size_t N = sample_names.size();
@@ -227,7 +287,6 @@ void driver(FILE* fpkm_file, FILE* spec_out)
             kappas.push_back(FPKM_dist);
             kappas.push_back(ublas::zero_vector<double>(sample_names.size()));
             
-           
             for (size_t i = 0; i < sample_names.size(); ++i)
             {
                 ublas::vector<double> specific_vec = ublas::unit_vector<double>(N, i);
@@ -258,6 +317,56 @@ void driver(FILE* fpkm_file, FILE* spec_out)
         fprintf(spec_out, "\n");
         
         line_num++;
+    }
+    
+    if (row_matrix_out)
+    {
+         for (size_t i = 0; i < fpkm_dists.size(); ++i)
+         {
+             const ublas::vector<double>& i_vec = fpkm_dists[i];
+             vector<ublas::vector<double> > kappas;
+             kappas.push_back(i_vec);
+             kappas.push_back(ublas::zero_vector<double>(i_vec.size()));
+             if (i % 100 == 0)
+             {
+                 fprintf(stderr, "%lu of %lu (%g percent)\n", i, fpkm_dists.size(), (double)i/(double)fpkm_dists.size()); 
+             }
+             
+             for(size_t j = 0; j < fpkm_dists.size(); ++j)
+             {
+                 const ublas::vector<double>& j_vec = fpkm_dists[j];
+                 kappas[1] = j_vec;
+                 double i_j_js = jensen_shannon_div(kappas);
+                 if (j == fpkm_dists.size() - 1)
+                 {
+                     fprintf(row_matrix_out, "%g\n", i_j_js);
+                 }
+                 else 
+                 {
+                     fprintf(row_matrix_out, "%g\t", i_j_js);
+                 }
+
+             }
+         }
+    }
+    
+    if (row_density_out)
+    {
+        for (size_t i = 0; i < fpkm_dists.size(); ++i)
+        {
+            const ublas::vector<double>& i_vec = fpkm_dists[i];
+            for (size_t j = 0; j < i_vec.size(); ++j)
+            {
+                if (j == i_vec.size() - 1)
+                {
+                    fprintf(row_density_out, "%g\n", i_vec(j));
+                }
+                else 
+                {
+                    fprintf(row_density_out, "%g\t", i_vec(j));
+                }
+            }
+        }
     }
 }
 
@@ -300,7 +409,31 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    driver(fpkm_file, spec_out_file);
+    FILE* row_matrix_out = NULL;
+    if (compute_row_matrix)
+    {
+        row_matrix_out = fopen(row_matrix_out_filename.c_str(), "w");
+        if (!row_matrix_out)
+        {
+            fprintf(stderr, "Error: cannot open output file %s for writing\n",
+                    row_matrix_out_filename.c_str());
+            exit(1);
+        }
+    }
+    
+    FILE* row_density_out = NULL;
+    if (output_row_density)
+    {
+        row_density_out = fopen(row_density_out_filename.c_str(), "w");
+        if (!row_density_out)
+        {
+            fprintf(stderr, "Error: cannot open output file %s for writing\n",
+                    row_density_out_filename.c_str());
+            exit(1);
+        }
+    }
+    
+    driver(fpkm_file, spec_out_file, row_matrix_out, row_density_out);
 	
 	return 0;
 }
