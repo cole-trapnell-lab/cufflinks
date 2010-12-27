@@ -20,11 +20,10 @@
 #include <boost/thread.hpp>
 
 namespace ublas = boost::numeric::ublas;
-using namespace std;
 
-void get_compatibility_list(const vector<Scaffold>& transcripts,
-							const vector<MateHit>& alignments,
-							vector<list<int> >& compatibilities);
+void get_compatibility_list(const std::vector<Scaffold>& transcripts,
+							const std::vector<MateHit>& alignments,
+							std::vector<std::list<int> >& compatibilities);
 
 class BiasLearner{
 	static const int pow4[];
@@ -62,11 +61,11 @@ public:
 	BiasLearner(shared_ptr<EmpDist const> frag_len_dist);
 	void preProcessTranscript(const Scaffold& transcript);
 	
-	void processTranscript(const vector<double>& startHist, const vector<double>& endHist, const Scaffold& transcript);
+	void processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript);
 	void normalizeParameters();
 	void output();
 	
-	void getBias(const Scaffold& transcript, vector<double>& startBiases, vector<double>& endBiases) const;
+	void getBias(const Scaffold& transcript, std::vector<double>& startBiases, std::vector<double>& endBiases) const;
 
 };
 
@@ -81,15 +80,15 @@ class BiasCorrectionHelper{
 	int _size;
 	bool _mapped;
 	
-	vector<vector<double> > _start_biases;
-	vector<vector<double> > _end_biases;
-	vector<vector<double> > _pos_biases;
-	vector<vector<double> > _tot_biases_for_len;
-	vector<vector<double> > _start_biases_for_len;
-	vector<vector<double> > _end_biases_for_len;
+	std::vector<std::vector<double> > _start_biases;
+	std::vector<std::vector<double> > _end_biases;
+	std::vector<std::vector<double> > _pos_biases;
+	std::vector<std::vector<double> > _tot_biases_for_len;
+	std::vector<std::vector<double> > _start_biases_for_len;
+	std::vector<std::vector<double> > _end_biases_for_len;
 	
-	vector<double> _eff_lens;
-	vector<double> _rg_masses;
+	std::vector<double> _eff_lens;
+	std::vector<double> _rg_masses;
 	
 	int add_read_group(shared_ptr<ReadGroupProperties const> rgp);	
 	int get_index(shared_ptr<ReadGroupProperties const> rgp);

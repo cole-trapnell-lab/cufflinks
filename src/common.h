@@ -9,8 +9,6 @@
  *
  */
 
-using namespace std;
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -87,7 +85,7 @@ extern int min_frags_per_transfrag;
 
 #define ADAM_MODE 0
 #define ASM_VERBOSE 0
-#define ENABLE_THREADS 0
+#define ENABLE_THREADS 1
 
 #if ENABLE_THREADS
 extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, traceable logging
@@ -164,8 +162,8 @@ enum Platform
 class EmpDist
 {
 	//Vectors only valid between min and max!
-	vector<double> _pdf;
-	vector<double> _cdf;
+	std::vector<double> _pdf;
+	std::vector<double> _cdf;
 	int _mode;
 	int _max;
 	int _min;
@@ -174,7 +172,7 @@ class EmpDist
 	
 public:
 	
-	void pdf(vector<double>& pdf)	{ _pdf = pdf; }
+	void pdf(std::vector<double>& pdf)	{ _pdf = pdf; }
 	double pdf(int l) const
 	{
 		if (!valid_len(l))
@@ -194,7 +192,7 @@ public:
 		return pdf(l)/cdf(r);
 	}
 	
-	void cdf(vector<double>& cdf)	{ _cdf = cdf; }
+	void cdf(std::vector<double>& cdf)	{ _cdf = cdf; }
 	double cdf(int l) const
 	{
 		if (l > _max)
