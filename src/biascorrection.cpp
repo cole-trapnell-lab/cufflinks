@@ -173,7 +173,7 @@ inline int BiasLearner::seqToInt(const char* seqSlice, int n) const
 	for(int i = 0; i < n; i++)
 	{	
 		if (seqSlice[i] == 4) return -1;//N
-		c += (seqSlice[i])*pow4[i];
+		c += (seqSlice[i])*pow4[n-i-1];
 	}
 	return c;
 }
