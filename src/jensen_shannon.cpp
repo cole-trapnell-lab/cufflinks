@@ -40,7 +40,7 @@ double jensen_shannon_div(vector<ublas::vector<double> >& sample_kappas)
 									  sample_kappas[i].end(), 0.0);
 		if (abs(kappa_sum - 1.0) > 1e-10)
 		{
-			cerr << kappa_sum << " " << sample_kappas[i] << endl;
+			//cerr << kappa_sum << " " << sample_kappas[i] << endl;
 		}
 		assert (abs(kappa_sum - 1.0) < 1e-10);
 	}
