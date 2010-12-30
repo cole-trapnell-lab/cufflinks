@@ -810,24 +810,26 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
 //         }
 //    }
 //    
-//    if (row_density_out)
-//    {
-//        for (size_t i = 0; i < fpkm_dists.size(); ++i)
-//        {
-//            const ublas::vector<double>& i_vec = fpkm_dists[i];
-//            for (size_t j = 0; j < i_vec.size(); ++j)
-//            {
-//                if (j == i_vec.size() - 1)
-//                {
-//                    fprintf(row_density_out, "%g\n", i_vec(j));
-//                }
-//                else 
-//                {
-//                    fprintf(row_density_out, "%g\t", i_vec(j));
-//                }
-//            }
-//        }
-//    }
+    if (row_density_out)
+    {
+        for (size_t i = 0; i < expr_records.size(); ++i)
+        {
+            const ExprRecord& rec = expr_records[i];
+            const ublas::vector<double>& i_vec = rec.cond_density;
+            fprintf(spec_out, "%s\t", rec.tracking_id.c_str());                    
+            for (size_t j = 0; j < i_vec.size(); ++j)
+            {
+                if (j == i_vec.size() - 1)
+                {
+                    fprintf(row_density_out, "%g\n", i_vec(j));
+                }
+                else 
+                {
+                    fprintf(row_density_out, "%g\t", i_vec(j));
+                }
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv)
