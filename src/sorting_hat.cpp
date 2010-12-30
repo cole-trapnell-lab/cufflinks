@@ -816,7 +816,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         {
             const ExprRecord& rec = expr_records[i];
             const ublas::vector<double>& i_vec = rec.cond_density;
-            fprintf(spec_out, "%s\t", rec.tracking_id.c_str());                    
+            fprintf(row_density_out, "%s\t", rec.tracking_id.c_str());                    
             for (size_t j = 0; j < i_vec.size(); ++j)
             {
                 if (j == i_vec.size() - 1)

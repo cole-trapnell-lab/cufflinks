@@ -245,6 +245,8 @@
 			ED0E3FDD12CBBFCE00074D2E /* PBXTextBookmark */ = ED0E3FDD12CBBFCE00074D2E /* PBXTextBookmark */;
 			ED0E3FE012CCD7D500074D2E /* PBXTextBookmark */ = ED0E3FE012CCD7D500074D2E /* PBXTextBookmark */;
 			ED0E3FE312CCD87400074D2E /* PBXTextBookmark */ = ED0E3FE312CCD87400074D2E /* PBXTextBookmark */;
+			ED0E3FE612CCD94800074D2E /* PBXTextBookmark */ = ED0E3FE612CCD94800074D2E /* PBXTextBookmark */;
+			ED0E3FE912CCD97F00074D2E /* PBXTextBookmark */ = ED0E3FE912CCD97F00074D2E /* PBXTextBookmark */;
 			ED291363122D32B500C3703E = ED291363122D32B500C3703E /* PBXTextBookmark */;
 			ED48339D12400ED100642337 = ED48339D12400ED100642337 /* PBXTextBookmark */;
 			ED48351812415CA300642337 = ED48351812415CA300642337 /* PBXTextBookmark */;
@@ -807,7 +809,7 @@
 		ignoreCount = 0;
 		lineNumber = 725;
 		location = cufflinks_xcode;
-		modificationTime = 315342796.445861;
+		modificationTime = 315414853.895192;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -825,7 +827,7 @@
 		ignoreCount = 0;
 		lineNumber = 735;
 		location = cufflinks_xcode;
-		modificationTime = 315342796.446674;
+		modificationTime = 315414853.895649;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -1210,10 +1212,30 @@
 		fRef = EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */;
 		name = "sorting_hat.cpp: 819";
 		rLen = 0;
-		rLoc = 25045;
+		rLoc = 25052;
 		rType = 0;
 		vrLen = 1144;
 		vrLoc = 24390;
+	};
+	ED0E3FE612CCD94800074D2E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */;
+		name = "sorting_hat.cpp: 819";
+		rLen = 0;
+		rLoc = 25052;
+		rType = 0;
+		vrLen = 1585;
+		vrLoc = 1013;
+	};
+	ED0E3FE912CCD97F00074D2E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */;
+		name = "sorting_hat.cpp: 819";
+		rLen = 0;
+		rLoc = 25042;
+		rType = 0;
+		vrLen = 1002;
+		vrLoc = 24635;
 	};
 	ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {
 		uiCtxt = {
@@ -2715,9 +2737,9 @@
 	};
 	EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {880, 12116}}";
-			sepNavSelRange = "{25045, 0}";
-			sepNavVisRange = "{24390, 1144}";
+			sepNavIntBoundsRect = "{{0, 0}, {880, 12142}}";
+			sepNavSelRange = "{25042, 0}";
+			sepNavVisRange = "{24635, 1002}";
 		};
 	};
 	EDFE39B0122BE65600F24CD3 /* sorting_hat */ = {
@@ -2734,6 +2756,7 @@
 			YES,
 			YES,
 			YES,
+			YES,
 			NO,
 			NO,
 		);
@@ -2741,6 +2764,7 @@
 			"--log-fpkm",
 			"--max-iterations 150",
 			"-k 3",
+			"--row-densities 2cond.densities",
 			2cond.fpkm_tracking,
 			2cond.sorting_hat_out,
 			xxx.fpkm_tracking,
