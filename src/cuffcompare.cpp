@@ -42,6 +42,7 @@ Options:\n\
 \n\
 -p  the name prefix to use for consensus transcripts in the \n\
     <stats>.combined.gtf file (default: 'TCONS')\n\
+-C  include the \"contained\" transcripts in the .combined.gtf file\n\
 \n\
 -T  do not generate .tmap and .refmap files for each query file\n\
 \n\
@@ -49,6 +50,7 @@ Options:\n\
 "
 bool debug=false;
 bool perContigStats=true;
+bool showContained=false; // -C option
 bool reduceRefs=false;
 bool checkFasta=false;
 bool tmapFiles=true;
@@ -162,6 +164,7 @@ int main(int argc, char * const argv[]) {
                 exit(1);
   }
   debugExit=(args.getOpt('X')!=NULL);
+  showContained=(args.getOpt('C')!=NULL);
   debug=(args.getOpt('D')!=NULL || debugExit);
   tmapFiles=(args.getOpt('T')==NULL);
   bool useFastaSeq=(args.getOpt('s')!=NULL);
@@ -212,7 +215,7 @@ int main(int argc, char * const argv[]) {
            GMessage("(if you need to raise this limit set a new value for\nMAX_QFILES in gtf_tracking.h and recompile)\n");
            exit(0x5000);
            }
-
+  
   gfasta.init(args.getOpt('s'));
    // determine if -s points to a multi-fasta file or a directory
   s=args.getOpt('c');
@@ -912,28 +915,24 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
  //CTData* mdata=((CTData*)m->uptr);
  for (int i=0;i<xc->tcons->exons.Count();i++) {
    fprintf(fc,
-    "%s\t%s\texon\t%d\t%d\t.\t%c\t.\tgene_id \"XLOC_%06d\"; transcript_id \"%s_%08d\"; exon_number \"%d\";",
+     "%s\t%s\texon\t%d\t%d\t.\t%c\t.\tgene_id \"XLOC_%06d\"; transcript_id \"%s_%08d\"; exon_number \"%d\";",
      xc->tcons->getGSeqName(),xc->tcons->getTrackName(),xc->tcons->exons[i]->start, xc->tcons->exons[i]->end, xc->tcons->strand,
        xlocnum, cprefix, xc->id, i+1);
-   //if (i==0) {
-         if (xc->ref!=NULL) 
-     { 
+    //if (i==0) {
+   if (xc->ref!=NULL) {
        const char* s = xc->ref->getAttr(ATTR_GENE_NAME);
-       if (s != NULL)
-       {
-         fprintf (fc, " gene_name \"%s\";",s); 
+       if (s != NULL) fprintf (fc, " gene_name \"%s\";",s); 
        }
+   fprintf(fc, " oId \"%s\";",xc->tcons->getID());
+   if (xc->contained!=NULL) {
+     fprintf(fc, " contained_in \"%s_%08d\";", cprefix, xc->contained->id);
      }
-         fprintf(fc, " oId \"%s\";",xc->tcons->getID());
-   if (xc->ref)
-   {
+   if (xc->ref) {
      fprintf(fc, " nearest_ref \"%s\";",xc->ref->getID());
-   }
+     }
    fprintf(fc, " class_code \"%c\";",xc->refcode ? xc->refcode: '.');
-         if (xc->tss_id>0)
-           fprintf(fc, " tss_id \"TSS%d\";",xc->tss_id);
-         if (xc->p_id>0)
-           fprintf(fc, " p_id \"P%d\";",xc->p_id);
+   if (xc->tss_id>0) fprintf(fc, " tss_id \"TSS%d\";",xc->tss_id);
+   if (xc->p_id>0) fprintf(fc, " p_id \"P%d\";",xc->p_id);
    //      }
    fprintf(fc,"\n");
    }
@@ -1032,7 +1031,8 @@ void printXLoci(FILE* f, FILE* fc, int qcount, GList<GXLocus>& xloci, GFaSeqGet 
     tssCluster(xloc, faseq);//cluster and assign tss_id and cds_id to each xconsensus in xloc
     protCluster(xloc,faseq);
     for (int c=0;c<xloc.tcons.Count();c++) {
-       printConsGTF(fc,xloc.tcons[c],xloc.id);
+       if (showContained || xloc.tcons[c]->contained==NULL)
+         printConsGTF(fc,xloc.tcons[c],xloc.id);
        }
     fprintf(f,"XLOC_%06d\t%s[%c]%d-%d\t", xloc.id,
         xloc.qloci[0]->mrna_maxcov->getGSeqName(),
@@ -1452,7 +1452,9 @@ GffObj* findRefMatch(GffObj& m, GLocus& rloc, int& ovlen) {
 
 void addXCons(GXLocus* xloc, GffObj* ref, char ovlcode, GffObj* tcons, GList<GffObj>& ts) {
  GXConsensus* c=new GXConsensus(tcons,ts, ref, ovlcode);
- xloc->tcons.Add(c);
+ //xloc->tcons.Add(c);
+ //this will also check c against the other tcons for containment:
+ xloc->addXCons(c); 
 }
 
 
@@ -1729,7 +1731,8 @@ void printITrack(FILE* ft, GList<GffObj>& mrnas, int qcount, int& cnum) {
         GError("Error: no XLocus created for transcript %s (file %s) [%d, %d], on %s%c:%d-%d\n", qt.getID(),
                            qryfiles[qtdata->locus->qfidx]->chars(), qtdata->locus->qfidx, fidx, qt.getGSeqName(), qt.strand, qt.start, qt.end);
         }
-     addXCons(xloc, ref, ovlcode, &qt, eqchain); //store for now; print later
+     //addXCons(xloc, ref, ovlcode, &qt, eqchain); //store for now; print later
+     addXCons(xloc, ref, ovlcode, tcons, eqchain);
      } // if chain head or uniq entry (not part of a chain)
    if (ft==NULL) { eqchain.Clear(); continue; }
    if (chainHead) {

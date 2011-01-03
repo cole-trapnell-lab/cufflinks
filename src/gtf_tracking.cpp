@@ -102,6 +102,18 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
  return true;
 }
 
+bool t_contains(GffObj& a, GffObj& b) {
+ if (b.exons.Count()>=a.exons.Count()) return false;
+ if (b.exons.Count()==1) {
+    //check if b is contained in any of a's exons:
+    for (int i=0;i<a.exons.Count();i++) {
+       if (b.start>=a.exons[i]->start && b.end<=a.exons[i]->end) return true;
+       }
+    return false;
+    }
+ return intronRedundant(a,b);
+ }
+
 int is_Redundant(GffObj*m, GList<GffObj>* mrnas) {
  //first locate the list index of the mrna starting just ABOVE
  //the end of this mrna

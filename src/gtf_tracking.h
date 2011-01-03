@@ -26,6 +26,9 @@ extern bool gtf_tracking_largeScale;
 
 int cmpByPtr(const pointer p1, const pointer p2);
 
+bool t_contains(GffObj& a, GffObj& b); 
+//returns true only IF b has fewer exons than a AND a "contains" b
+
 char* getGSeqName(int gseq_id);
 
 //genomic fasta sequence handling
@@ -958,11 +961,12 @@ class GXConsensus:public GSeg {
    int id; //XConsensus ID
    int tss_id; //group id for those xconsensi with shared first exon
    int p_id; //group id for those xconsensi with "similar" protein
-   GffObj* tcons; //chosen (longest) transcript to define the "consensus"
+   GffObj* tcons; //longest transcript to represent the combined "consensus" structure
    GffObj* ref; //overlapping reference transcript 
    char refcode; // the code for ref relationship (like in the tracking file)
    char* aa;
    int aalen;
+   GXConsensus* contained; //if contained into another GXConsensus 
    //list of ichain-matching query (cufflinks) transcripts that contributed to this consensus
    GList<GffObj> qchain;
    GXConsensus(GffObj* c, GList<GffObj> qlst, GffObj* r=NULL, char rcode=0)
@@ -979,6 +983,7 @@ class GXConsensus:public GSeg {
       aa=NULL;
       start=tcons->start;
       end=tcons->end;
+      contained=NULL;
       }
    ~GXConsensus() {
      if (aa!=NULL) GFREE(aa);
@@ -1131,8 +1136,45 @@ class GXLocus:public GSeg {
          rloci.Add(oxloc.rloci[i]);
          oxloc.rloci[i]->xlocus=this;
          }
+  } //::addMerge()
+ 
+ int checkXConsContain(GffObj* a, GffObj* b) {
+  // returns  1 if a is the container of b
+  //         -1 if a is contained in b
+  //          0 if no 
+  if (a->end<b->start || b->end<a->start) return 0;
+  if (a->exons.Count()==b->exons.Count()) {
+     if (a->exons.Count()>1) return 0; //same number of exons - no containment possible
+                                       //and equivalence was already tested
+           else { //single exon containment testing
+             if (a->start<=b->start+10 && a->end+10>=b->end) return 1;
+               else { if (b->start<=a->start+10 && b->end+10>=a->end) return -1;
+                       else return 0;
+                     }
+             }
+     }
+   //different number of exons:
+   if (a->exons.Count()>b->exons.Count()) return t_contains(*a, *b) ? 1:0;
+                     else return t_contains(*b, *a) ? -1 : 0;
   }
-};
+  
+ void addXCons(GXConsensus* t) {
+  for (int i=0;i<tcons.Count();i++) {
+     if (tcons[i]->contained!=NULL) continue; //will check the container anyway
+     int c_status=checkXConsContain(t->tcons, tcons[i]->tcons);
+     if (c_status==0) continue; //no containment relationship between t and tcons[i]
+     if (c_status>0) { //t is a container for tcons[i]
+          tcons[i]->contained=t;
+          }
+       else { //contained into exising XCons
+          t->contained=tcons[i];
+          break;
+          }
+     }
+  tcons.Add(t);
+  }
+  
+}; //GXLocus
 
 
 
