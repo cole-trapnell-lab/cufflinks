@@ -233,8 +233,6 @@
 			<key>Layout</key>
 			<array>
 				<dict>
-					<key>BecomeActive</key>
-					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -282,13 +280,14 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>73</integer>
+									<integer>14</integer>
+									<integer>9</integer>
 									<integer>5</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 962}, {267, 840}}</string>
+							<string>{{0, 0}, {267, 840}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -316,12 +315,14 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>EDA514FA10C72929000A4F41</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>sorting_hat.cpp</string>
+								<string>Makefile.am</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -329,11 +330,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>EDA514FB10C72929000A4F41</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>sorting_hat.cpp</string>
+										<string>Makefile.am</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDDBF70512D29D9900130D8A</string>
+										<string>EDDBF71812D2BD4400130D8A</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -373,14 +374,14 @@
 											<string>EDFDE77312BEA9100044EDD0</string>
 											<string>EDFDE77412BEA9100044EDD0</string>
 											<string>EDFDE78F12BEACA20044EDD0</string>
-											<string>EDFDE7A312BEB3880044EDD0</string>
-											<string>EDFDE7A412BEB3880044EDD0</string>
 											<string>ED503F9712C3FA11001CE4CC</string>
 											<string>ED503F9812C3FA11001CE4CC</string>
 											<string>ED0E3EF212CB949000074D2E</string>
 											<string>ED0E3F0712CB97B000074D2E</string>
-											<string>ED0E3F4512CBA8B600074D2E</string>
-											<string>EDDBF70412D29D9900130D8A</string>
+											<string>EDDBF71412D2BD4400130D8A</string>
+											<string>EDDBF71512D2BD4400130D8A</string>
+											<string>EDDBF71612D2BD4400130D8A</string>
+											<string>EDDBF71712D2BD4400130D8A</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -656,14 +657,14 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>ED0E3E5512C9175C00074D2E</string>
+				<string>EDDBF71912D2BD4400130D8A</string>
 				<string>1CCC7628064C1048000F2A68</string>
 				<string>1CCC7629064C1048000F2A68</string>
-				<string>ED0E3E5612C9175C00074D2E</string>
-				<string>ED0E3E5712C9175C00074D2E</string>
-				<string>ED0E3E5812C9175C00074D2E</string>
-				<string>ED0E3E5912C9175C00074D2E</string>
-				<string>EDA514FA10C72929000A4F41</string>
+				<string>EDDBF71A12D2BD4400130D8A</string>
+				<string>EDDBF71B12D2BD4400130D8A</string>
+				<string>EDDBF71C12D2BD4400130D8A</string>
+				<string>EDDBF71D12D2BD4400130D8A</string>
+				<string>EDDBF71E12D2BD4400130D8A</string>
 			</array>
 			<key>ToolbarConfigUserDefaultsMinorVersion</key>
 			<string>2</string>
@@ -697,6 +698,8 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>EDDBF71F12D2BD4400130D8A</string>
+		<string>EDDBF72012D2BD4400130D8A</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
