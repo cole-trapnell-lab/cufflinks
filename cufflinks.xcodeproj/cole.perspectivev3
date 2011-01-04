@@ -233,6 +233,8 @@
 			<key>Layout</key>
 			<array>
 				<dict>
+					<key>BecomeActive</key>
+					<true/>
 					<key>ContentConfiguration</key>
 					<dict>
 						<key>PBXBottomSmartGroupGIDs</key>
@@ -280,8 +282,9 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>95</integer>
-									<integer>89</integer>
+									<integer>73</integer>
+									<integer>5</integer>
+									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -313,8 +316,6 @@
 					<key>Dock</key>
 					<array>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -332,7 +333,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>ED0E3FE912CCD97F00074D2E</string>
+										<string>EDDBF70512D29D9900130D8A</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -379,7 +380,7 @@
 											<string>ED0E3EF212CB949000074D2E</string>
 											<string>ED0E3F0712CB97B000074D2E</string>
 											<string>ED0E3F4512CBA8B600074D2E</string>
-											<string>ED0E3FDA12CBBFC500074D2E</string>
+											<string>EDDBF70412D29D9900130D8A</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -393,18 +394,18 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {789, 524}}</string>
+								<string>{{0, 0}, {789, 516}}</string>
 								<key>RubberWindowFrame</key>
 								<string>254 129 1078 899 0 0 1680 1028 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>524pt</string>
+							<string>516pt</string>
 						</dict>
 						<dict>
 							<key>Proportion</key>
-							<string>329pt</string>
+							<string>337pt</string>
 							<key>Tabs</key>
 							<array>
 								<dict>
@@ -418,7 +419,7 @@
 									<key>GeometryConfiguration</key>
 									<dict>
 										<key>Frame</key>
-										<string>{{10, 27}, {789, 302}}</string>
+										<string>{{10, 27}, {789, 310}}</string>
 										<key>RubberWindowFrame</key>
 										<string>254 129 1078 899 0 0 1680 1028 </string>
 									</dict>
@@ -502,11 +503,11 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>ED0E3E5212C9175C00074D2E</string>
+				<string>EDDBF70612D29D9900130D8A</string>
 				<string>1CA23ED40692098700951B8B</string>
-				<string>ED0E3E5312C9175C00074D2E</string>
+				<string>EDDBF70712D29D9900130D8A</string>
 				<string>EDA514FA10C72929000A4F41</string>
-				<string>ED0E3E5412C9175C00074D2E</string>
+				<string>EDDBF70812D29D9900130D8A</string>
 				<string>1CA23EDF0692099D00951B8B</string>
 				<string>1CA23EE00692099D00951B8B</string>
 				<string>1CA23EE10692099D00951B8B</string>
@@ -696,8 +697,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>ED0E3E6C12C91FE000074D2E</string>
-		<string>ED0E3E6D12C91FE000074D2E</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>

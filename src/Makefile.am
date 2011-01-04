@@ -9,7 +9,7 @@ bin_PROGRAMS = \
 	cuffcompare \
 	cuffdiff \
     gtf_to_sam \
-    sorting_hat
+    cuffcluster 
 #	gtf_reads
 
 noinst_HEADERS = \
@@ -129,9 +129,9 @@ gtf_to_sam_SOURCES = gtf_to_sam.cpp
 gtf_to_sam_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
 gtf_to_sam_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
-sorting_hat_SOURCES = sorting_hat.cpp
-sorting_hat_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
-sorting_hat_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+cuffcluster_SOURCES = cuffcluster
+cuffcluster_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
+cuffcluster_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 #gtf_reads_SOURCES = gtf_reads.cpp
 #gtf_reads_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 

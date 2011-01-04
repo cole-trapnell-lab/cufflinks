@@ -121,6 +121,7 @@
 		EDD94B611205C9E800AA1086 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
 		EDD94B621205C9E800AA1086 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		EDD94B741205CB1700AA1086 /* gtf_to_sam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD94B711205CAF400AA1086 /* gtf_to_sam.cpp */; };
+		EDDBF70A12D29DF000130D8A /* cuffcluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDDBF70912D29DF000130D8A /* cuffcluster.cpp */; };
 		EDE107E611E37CCC005F1F4B /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
 		EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		EDE78A2D11B5F4F0000F8846 /* graph_optimize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */; };
@@ -131,7 +132,6 @@
 		EDFE39C7122BE65600F24CD3 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7511D7F88B00CFD663 /* libbam.a */; };
 		EDFE39C8122BE65600F24CD3 /* libboost_thread.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED5D1EE8114B490C00A2AF02 /* libboost_thread.a */; };
 		EDFE39C9122BE65600F24CD3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
-		EDFE39D0122BE67A00F24CD3 /* sorting_hat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */; };
 		EDFE39FB122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */; };
 		EDFE39FC122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */; };
 /* End PBXBuildFile section */
@@ -266,6 +266,7 @@
 		EDD6AA8D1159C5CD00D3F668 /* libcppunit-1.12.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.12.1.dylib"; path = "/usr/local/lib/libcppunit-1.12.1.dylib"; sourceTree = "<absolute>"; };
 		EDD94B671205C9E800AA1086 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD94B711205CAF400AA1086 /* gtf_to_sam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_to_sam.cpp; path = src/gtf_to_sam.cpp; sourceTree = "<group>"; };
+		EDDBF70912D29DF000130D8A /* cuffcluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cuffcluster.cpp; path = src/cuffcluster.cpp; sourceTree = "<group>"; };
 		EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graph_optimize.h; path = src/graph_optimize.h; sourceTree = "<group>"; };
 		EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graph_optimize.cpp; path = src/graph_optimize.cpp; sourceTree = "<group>"; };
 		EDE78A7811B6E912000F8846 /* scaffold_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scaffold_graph.h; path = src/scaffold_graph.h; sourceTree = "<group>"; };
@@ -274,7 +275,6 @@
 		EDE78BC511B716C3000F8846 /* matching_merge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = matching_merge.h; path = src/matching_merge.h; sourceTree = "<group>"; };
 		EDEBCDF8112DFD7600E2479E /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
 		EDEBCEBB112E316400E2479E /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sorting_hat.cpp; path = src/sorting_hat.cpp; sourceTree = "<group>"; };
 		EDFE39CE122BE65600F24CD3 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jensen_shannon.cpp; path = src/jensen_shannon.cpp; sourceTree = "<group>"; };
 		EDFE39FD122BE7CB00F24CD3 /* jensen_shannon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jensen_shannon.h; path = src/jensen_shannon.h; sourceTree = "<group>"; };
@@ -429,10 +429,10 @@
 				EDE78BC411B716C3000F8846 /* matching_merge.cpp */,
 				EDA5153110C72963000A4F41 /* scaffolds.cpp */,
 				EDE78A7911B6E912000F8846 /* scaffold_graph.cpp */,
-				EDFE39AF122BE4F400F24CD3 /* sorting_hat.cpp */,
 				EDA5153210C72963000A4F41 /* tokenize.cpp */,
 				EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */,
 				EDFE39FD122BE7CB00F24CD3 /* jensen_shannon.h */,
+				EDDBF70912D29DF000130D8A /* cuffcluster.cpp */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -598,9 +598,9 @@
 			productReference = EDD94B671205C9E800AA1086 /* cufflinks_xcode */;
 			productType = "com.apple.product-type.tool";
 		};
-		EDFE39B0122BE65600F24CD3 /* sorting_hat */ = {
+		EDFE39B0122BE65600F24CD3 /* cuffcluster */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EDFE39CB122BE65600F24CD3 /* Build configuration list for PBXNativeTarget "sorting_hat" */;
+			buildConfigurationList = EDFE39CB122BE65600F24CD3 /* Build configuration list for PBXNativeTarget "cuffcluster" */;
 			buildPhases = (
 				EDFE39B1122BE65600F24CD3 /* Sources */,
 				EDFE39C6122BE65600F24CD3 /* Frameworks */,
@@ -610,7 +610,7 @@
 			);
 			dependencies = (
 			);
-			name = sorting_hat;
+			name = cuffcluster;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
 			productReference = EDFE39CE122BE65600F24CD3 /* cufflinks_xcode */;
@@ -643,7 +643,7 @@
 				EDD6A9BA11598AB900D3F668 /* cuffcompare */,
 				EDD6AA221159BA2E00D3F668 /* Unit Tests */,
 				EDD94B461205C9E800AA1086 /* gtf_to_sam */,
-				EDFE39B0122BE65600F24CD3 /* sorting_hat */,
+				EDFE39B0122BE65600F24CD3 /* cuffcluster */,
 				ED41B816127602C60000B5A2 /* gtf_reads */,
 			);
 		};
@@ -820,10 +820,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EDFE39D0122BE67A00F24CD3 /* sorting_hat.cpp in Sources */,
 				EDFE39B6122BE65600F24CD3 /* common.cpp in Sources */,
 				EDFE39C2122BE65600F24CD3 /* tokenize.cpp in Sources */,
 				EDFE39FB122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */,
+				EDDBF70A12D29DF000130D8A /* cuffcluster.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1399,7 +1399,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EDFE39CB122BE65600F24CD3 /* Build configuration list for PBXNativeTarget "sorting_hat" */ = {
+		EDFE39CB122BE65600F24CD3 /* Build configuration list for PBXNativeTarget "cuffcluster" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EDFE39CC122BE65600F24CD3 /* Debug */,

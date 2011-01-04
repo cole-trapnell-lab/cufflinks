@@ -637,6 +637,16 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         
         static const size_t first_sample_idx = 6;
         
+        size_t num_samples = sample_names.size();
+        ublas::vector<double> u1 = ublas::unit_vector<double>(sample_names.size(), 0);
+        ublas::vector<double> u2 = ublas::unit_vector<double>(sample_names.size(), 1);
+        
+        vector<ublas::vector<double> > norm_kappas;
+        norm_kappas.push_back(u1);
+        norm_kappas.push_back(u2);
+        
+        double norm_js = jensen_shannon_div(norm_kappas);
+        
         for (size_t i = first_sample_idx; i < tokens.size() - 2; i += 3)
         {
             string FPKM_string = tokens[i];
@@ -728,7 +738,9 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
                 kappas[1] = specific_vec;
                 
                 double js = jensen_shannon_div(kappas);
-                rec.cond_specificities[i] = js;
+                js /= norm_js;
+                
+                rec.cond_specificities[i] = 1.0 - js;
             }
         }
         
