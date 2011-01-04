@@ -127,7 +127,7 @@ bool haveRefs=false;  //if a reference is given => full metrics generated
 GList<GSeqData> ref_data(true,true,true); //list of reference mRNAs and loci data for each genomic seq
               //each locus will keep track of any superloci which includes it, formed during the analysis
 
-void processLoci(GSeqData& seqdata, GSeqData* refdata=NULL, GFaSeqGet* faseq=NULL, int qfidx=0);
+void processLoci(GSeqData& seqdata, GSeqData* refdata=NULL, int qfidx=0);
 
 void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
        GSeqData* seqdata=NULL, GSeqData* refdata=NULL);
@@ -328,7 +328,7 @@ int main(int argc, char * const argv[]) {
         int gsid=pdata->Get(g)->gseq_id;
         GSeqData* refdata=getRefData(gsid, ref_data);//ref data for this contig
         if (!gtf_tracking_largeScale)
-          processLoci(*(pdata->Get(g)), refdata, faseq, fi);
+          processLoci(*(pdata->Get(g)), refdata, fi);
         GSeqTrack* seqtrack=findGSeqTrack(gsid); //this will add a gseqtrack if it doesn't exist
         // for gsid
         if (refdata!=NULL) {
@@ -927,10 +927,11 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
    if (xc->contained!=NULL) {
      fprintf(fc, " contained_in \"%s_%08d\";", cprefix, xc->contained->id);
      }
-   if (xc->ref) {
-     fprintf(fc, " nearest_ref \"%s\";",xc->ref->getID());
+   if (haveRefs) {
+     if (xc->ref)
+       fprintf(fc, " nearest_ref \"%s\";",xc->ref->getID());
+     fprintf(fc, " class_code \"%c\";",xc->refcode ? xc->refcode: '.');
      }
-   fprintf(fc, " class_code \"%c\";",xc->refcode ? xc->refcode: '.');
    if (xc->tss_id>0) fprintf(fc, " tss_id \"TSS%d\";",xc->tss_id);
    if (xc->p_id>0) fprintf(fc, " p_id \"P%d\";",xc->p_id);
    //      }
@@ -938,7 +939,7 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
    }
 }
 
-void tssCluster(GXLocus& xloc, GFaSeqGet *faseq) {
+void tssCluster(GXLocus& xloc) {
   GList<GTssCl> xpcls(true,true,false);
   for (int i=0;i<xloc.tcons.Count();i++) {
     GXConsensus* c=xloc.tcons[i];
@@ -1028,7 +1029,7 @@ void printXLoci(FILE* f, FILE* fc, int qcount, GList<GXLocus>& xloci, GFaSeqGet 
   for (int l=0;l<xloci.Count();l++) {
     if (xloci[l]->qloci.Count()==0) continue;
     GXLocus& xloc=*(xloci[l]);
-    tssCluster(xloc, faseq);//cluster and assign tss_id and cds_id to each xconsensus in xloc
+    tssCluster(xloc);//cluster and assign tss_id and cds_id to each xconsensus in xloc
     protCluster(xloc,faseq);
     for (int c=0;c<xloc.tcons.Count();c++) {
        if (showContained || xloc.tcons[c]->contained==NULL)
@@ -1122,7 +1123,7 @@ void reportMIntrons(FILE* fm, FILE* fn, FILE* fq, char strand,
 }
 
 
-void processLoci(GSeqData& seqdata, GSeqData* refdata, GFaSeqGet* faseq, int qfidx) {
+void processLoci(GSeqData& seqdata, GSeqData* refdata, int qfidx) {
     //GList<GSeqLoci>& glstloci, GList<GSeqCmpRegs>& cmpdata)
 
   if (refdata!=NULL) {
@@ -1210,7 +1211,7 @@ void printLocus(FILE* f, GLocus& loc, const char* gseqname) {
     }
 }
 
-void collectRNOvl(GSuperLocus& stats, GList<GLocus>& loci, const char* gseqname) {
+void collectRNOvl(GSuperLocus& stats, GList<GLocus>& loci) { //, const char* gseqname) {
   for (int l=0;l<loci.Count();l++) {
     if (loci[l]->cmpovl.Count()==0) {
       stats.m_loci++; //missed ref loci
@@ -1222,7 +1223,7 @@ void collectRNOvl(GSuperLocus& stats, GList<GLocus>& loci, const char* gseqname)
 }
 
 
-void collectCmpData(GSuperLocus& stats, GList<GSuperLocus>& cmpdata, const char* gseqname) {
+void collectCmpData(GSuperLocus& stats, GList<GSuperLocus>& cmpdata) { //, const char* gseqname) {
  for (int c=0;c<cmpdata.Count();c++) {
    stats.addStats(*cmpdata[c]);
    /*
@@ -1263,16 +1264,16 @@ void collectStats(GSuperLocus& stats, GSeqData* seqdata, GSeqData* refdata) {
     }
  */
  //collect data for overlapping superloci (already in seqdata->gstats_f/_r)
- char* gseqname=getGSeqName(seqdata->gseq_id);
- collectCmpData(stats, seqdata->gstats_f, gseqname);
- collectCmpData(stats, seqdata->gstats_r, gseqname);
+ //char* gseqname=getGSeqName(seqdata->gseq_id);
+ collectCmpData(stats, seqdata->gstats_f);
+ collectCmpData(stats, seqdata->gstats_r);
  //for non-overlapping qry loci, always add them as false positives FP
  collectQNOvl(stats, seqdata->loci_f, seqdata->nloci_f);
  collectQNOvl(stats, seqdata->loci_r, seqdata->nloci_r);
  collectQU(stats, seqdata->nloci_u);
  if (!reduceRefs) { //find ref loci with empty cmpovl and add them
-  collectRNOvl(stats, refdata->loci_f, gseqname);
-  collectRNOvl(stats, refdata->loci_r, gseqname);
+  collectRNOvl(stats, refdata->loci_f);
+  collectRNOvl(stats, refdata->loci_r);
   }
 }
 
@@ -2253,7 +2254,7 @@ void recheckUmrnas(GSeqData* gseqdata, GList<GffObj>& mrnas,
    }
 }
 
-void umrnasXStrand(GList<GXLocus>& xloci, int qcount, GSeqTrack& gtrack) {
+void umrnasXStrand(GList<GXLocus>& xloci, GSeqTrack& gtrack) {
   //try to determine the strand of unoriented transfrags based on possible overlaps
   //with other, oriented transfrags
  for (int x=0;x<xloci.Count();x++) {
@@ -2291,7 +2292,7 @@ void umrnasXStrand(GList<GXLocus>& xloci, int qcount, GSeqTrack& gtrack) {
 }
 
 //cluster loci across all datasets
-void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl) {
+void xclusterLoci(int qcount, char strand, GSeqTrack& gtrack) {
   //gtrack holds data for all input qry datasets for a chromosome/contig
   //cluster QLoci
   GList<GTrackLocus> loctracks(true,true,false);
@@ -2357,7 +2358,6 @@ void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl
  for (int i=0;i<loctracks.Count();i++) {
    if (!loctracks[i]->hasQloci) continue; //we really don't care here about reference-only clusters
    GTrackLocus& loctrack=*loctracks[i];
-   //fprintf(fl,"-      \t%s:%d-%d(%c)", getGSeqName(gsid), loctrack.start,loctrack.end,strand);
    findTMatches(loctrack, qcount); //find matching transfrags in this xcluster
    for (int rl=0; rl < loctrack.rloci.Count(); rl++) {
       findTRMatch(loctrack, qcount, *(loctrack.rloci[rl]));
@@ -2366,7 +2366,7 @@ void xclusterLoci(int qcount, int gsid, char strand, GSeqTrack& gtrack, FILE* fl
     GList<GXLocus> xloci(false,false,false);
     buildXLoci(loctrack, qcount, gtrack, strand, &xloci);
     //the newly created xloci are in xloci
-    umrnasXStrand(xloci,qcount,gtrack);
+    umrnasXStrand(xloci, gtrack);
     //also merge these xloci into the global list of xloci
     for (int l=0; l < xloci.Count(); l++) {
        if (xloci[l]->strand=='+') {
@@ -2454,8 +2454,8 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
   for (int g=0;g<gtracks.Count();g++) { //for each genomic sequence
     GSeqTrack& gseqtrack=*gtracks[g];
 
-    xclusterLoci(qcount, gseqtrack.gseq_id, '+', gseqtrack, f_ltrack);
-    xclusterLoci(qcount, gseqtrack.gseq_id, '-', gseqtrack, f_ltrack);
+    xclusterLoci(qcount,  '+', gseqtrack);
+    xclusterLoci(qcount,  '-', gseqtrack);
 
     //count XLoci, setting their id
     numXLoci(gseqtrack.xloci_f, xlocnum);

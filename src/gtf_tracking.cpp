@@ -114,13 +114,39 @@ bool t_contains(GffObj& a, GffObj& b) {
  return intronRedundant(a,b);
  }
 
-int is_Redundant(GffObj*m, GList<GffObj>* mrnas) {
+
+ int checkRedundancy(GffObj* a, GffObj* b) {
+  // returns  1 if a is the container of b
+  //         -1 if a is contained in b
+  //          0 if no 
+  if (a->end<b->start || b->end<a->start) return 0;
+  if (a->exons.Count()==b->exons.Count()) {
+     if (a->exons.Count()>1) {
+                //same number of exons - possible equivalence?
+                bool r=intronRedundant(*a,*b); 
+                if (r) { return (a->covlen>b->covlen) ? 1 : -1; }
+                return 0;
+                }
+           else { //single exon containment testing
+             if (a->start<=b->start+10 && a->end+10>=b->end) return 1;
+               else { if (b->start<=a->start+10 && b->end+10>=a->end) return -1;
+                       else return 0;
+                     }
+             }
+     }
+   //different number of exons:
+   if (a->exons.Count()>b->exons.Count()) return t_contains(*a, *b) ? 1:0;
+                     else return t_contains(*b, *a) ? -1 : 0;
+  }
+
+int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool& m_smaller) {
  //first locate the list index of the mrna starting just ABOVE
  //the end of this mrna
  if (mrnas->Count()==0) return -1;
  int nidx=qsearch_mrnas(m->end, *mrnas);
  if (nidx==0) return -1;
  if (nidx==-1) nidx=mrnas->Count();//all can overlap
+ m_smaller=true;
  for (int i=nidx-1;i>=0;i--) {
      GffObj& omrna=*mrnas->Get(i);
      if (m->start>omrna.end) {
@@ -128,7 +154,15 @@ int is_Redundant(GffObj*m, GList<GffObj>* mrnas) {
           continue;
           }
      if (omrna.start>m->end) continue; //this should never be the case if nidx was found correctly
+     
      if (intronRedundant(*m, omrna)) return i;
+     /*
+     int r=checkRedundancy(m, &omrna);
+     if (r!=0) {
+         m_smaller=(r<0);
+         return i;
+         }
+     */
      }
  return -1;
 }
@@ -176,11 +210,15 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 			gdata=new GSeqData(m->gseq_id);
 			glstdata.Add(gdata);
 		}
-
 		double fpkm=0;
 		double cov=0;
 		double conf_hi=0;
 		double conf_lo=0;
+		
+		GList<GffObj>* target_mrnas;
+		if (m->strand=='+') { target_mrnas = &(gdata->mrnas_f); }
+			  else if (m->strand=='-') { target_mrnas=&(gdata->mrnas_r); }
+			     else { m->strand='.'; target_mrnas=&(gdata->umrnas); }
 		if (is_ref_set) {
 		  if (check_for_dups) {
 		 //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
@@ -201,28 +239,28 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		     }
 		   } //suppress ref dups
 		} //is ref 
-		else { // Cufflinks gtf
-		if (m->strand!='.' && check_for_dups) { //oriented transfrag
+		else { // query transfrags
+		if (check_for_dups) { //check for redundancy
 			// check if there is a redundancy between this and another already loaded Cufflinks transcript
-			GList<GffObj>* ckmrnas=(m->strand=='+') ? &(gdata->mrnas_f) : &(gdata->mrnas_r);
-			int cidx =  is_Redundant(m, ckmrnas);
+			bool m_smaller=false;
+			int cidx =  is_Redundant(m, target_mrnas, m_smaller);
 			if (cidx>=0) {
 				//always discard the "shorter" transcript of the redundant pair
-				if (ckmrnas->Get(cidx)->covlen>m->covlen) {
+				if (target_mrnas->Get(cidx)->covlen>m->covlen) {
+				//if (m_smaller) {
 				//new transcript is shorter, discard it
 					mrnas.freeItem(k);
 					mrna_deleted++;
 					continue;
 				} else {
 					//new transcript is longer, discard the older one
-					((CTData*)(ckmrnas->Get(cidx)->uptr))->mrna=NULL;
-					ckmrnas->Delete(cidx);
-				//the uptr (CTData) pointer will still be kept in gdata->ctdata and freed accordindly at the end
+					((CTData*)(target_mrnas->Get(cidx)->uptr))->mrna=NULL;
+					target_mrnas->Delete(cidx);
+					//the uptr (CTData) pointer will still be kept in gdata->ctdata and freed accordindly at the end
 					}
 				tredundant++;
 				}
-			// ^^^ redundant transcript check
-			} //oriented transfrag
+			} // ^^^ redundant transcript check
 		if (m->gscore==0.0)   
 		   m->gscore=m->exons[0]->score; //Cufflinks exon score = isoform abundance
 		//for Cufflinks file, parse expr attribute from the 1st exon (the lowest coordinate exon)
@@ -254,21 +292,15 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 			}
 		} //Cufflinks transfrags
 
-		if (m->strand=='+') gdata->mrnas_f.Add(m);
-		   else {
-			 if (m->strand=='-') gdata->mrnas_r.Add(m);
-			 else { //unknown strand, unoriented mRNA
-				 if (is_ref_set) {// discard these from reference
-					mrnas.freeItem(k);
-					mrna_deleted++;
-					continue;
-					}
-				else {//store them in the unknown strand pile, to be analyzed later
-					m->strand=0;
-					gdata->umrnas.Add(m);
-					}
-				} //unknown strand
-			} //- or unknown strand
+		if (is_ref_set && m->strand=='.') {
+		 //unknown strand - discard from reference set (!)
+		   mrnas.freeItem(k);
+		   mrna_deleted++;
+		   continue;
+		   }
+		 else {
+		   target_mrnas->Add(m);
+		   }
 		CTData* mdata=new CTData(m);
 		mdata->qset=qfidx;
 		gdata->tdata.Add(mdata);
@@ -374,7 +406,7 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 		for (int i=0;i<rdata->mrnas_f.Count();i++) {
 			for (int j=0;j<seqdata.umrnas.Count();j++) {
 				if (rdata->mrnas_f[i]->gseq_id!=seqdata.umrnas[j]->gseq_id) continue;
-				if (seqdata.umrnas[j]->strand>0) continue;
+				if (seqdata.umrnas[j]->strand!='.') continue;
 				uint ustart=seqdata.umrnas[j]->exons.First()->start;
 				uint uend=seqdata.umrnas[j]->exons.Last()->end;
 				uint rstart=rdata->mrnas_f[i]->exons.First()->start;

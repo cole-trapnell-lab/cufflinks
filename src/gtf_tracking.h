@@ -1062,7 +1062,7 @@ class GXLocus:public GSeg {
           j++; //check the next locus.mexon
         }//while mexons
       if (ovlexons.Count()==0) return false;
-      if (strand=='.' && loc->mrna_maxcov->strand>0)
+      if (strand=='.' && loc->mrna_maxcov->strand!='.')
              strand=loc->mrna_maxcov->strand;
       //have exon overlap:
       //-- add the rest of the non-overlapping mexons:
