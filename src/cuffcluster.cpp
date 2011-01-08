@@ -147,9 +147,11 @@ struct ExprRecord
         total_FPKM(0.0),
         total_FPKM_conf_hi(0.0),
         total_FPKM_conf_lo(0.0),
+        max_FPKM(0.0),
         total_log_FPKM(std::numeric_limits<double>::infinity()),
         total_log_FPKM_conf_hi(std::numeric_limits<double>::infinity()),
         total_log_FPKM_conf_lo(std::numeric_limits<double>::infinity()),
+        max_log_FPKM(std::numeric_limits<double>::infinity()),
         cluster_id(-1) {} 
     
     string tracking_id;
@@ -170,10 +172,12 @@ struct ExprRecord
     double total_FPKM;
     double total_FPKM_conf_hi;
     double total_FPKM_conf_lo;
+    double max_FPKM;
     
     double total_log_FPKM;
     double total_log_FPKM_conf_hi;
     double total_log_FPKM_conf_lo;
+    double max_log_FPKM;
     
     ublas::vector<double> cond_density;
     vector<double> cond_specificities;
@@ -601,7 +605,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         line_num++;
     }
     
-    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi\tcluster_id");
+    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi\tmax_FPKM\tcluster_id");
 
     for (size_t i = 0; i < sample_names.size(); ++i)
     {
@@ -646,6 +650,8 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         norm_kappas.push_back(u2);
         
         double norm_js = jensen_shannon_div(norm_kappas);
+        double max_FPKM = -1;
+        double max_log_FPKM = -1;
         
         for (size_t i = first_sample_idx; i < tokens.size() - 2; i += 3)
         {
@@ -674,6 +680,18 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
                 log_fpkm_conf_lo = std::numeric_limits<double>::infinity();
                 log_fpkm_conf_hi = std::numeric_limits<double>::infinity();
             }
+            else
+            {
+                if (log_fpkm > max_log_FPKM)
+                {
+                    max_log_FPKM = log_fpkm;
+                }
+                
+                if (fpkm > max_FPKM)
+                {
+                    max_FPKM = fpkm;
+                }
+            }
             
             rec.FPKMs.push_back(fpkm);
             rec.FPKM_conf_los.push_back(fpkm_conf_lo);
@@ -687,11 +705,12 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         rec.total_FPKM = accumulate(rec.FPKMs.begin(), rec.FPKMs.end(), 0.0);
         rec.total_FPKM_conf_lo = accumulate(rec.FPKM_conf_los.begin(), rec.FPKM_conf_los.end(), 0.0);
         rec.total_FPKM_conf_hi = accumulate(rec.FPKM_conf_his.begin(), rec.FPKM_conf_his.end(), 0.0);
+        rec.max_FPKM = max_FPKM;
         
         rec.total_log_FPKM = accumulate(rec.log_FPKMs.begin(), rec.log_FPKMs.end(), 0.0);
         rec.total_log_FPKM_conf_lo = accumulate(rec.log_FPKM_conf_los.begin(), rec.log_FPKM_conf_los.end(), 0.0);
         rec.total_log_FPKM_conf_hi = accumulate(rec.log_FPKM_conf_his.begin(), rec.log_FPKM_conf_his.end(), 0.0);
-        
+        rec.max_log_FPKM = max_log_FPKM;
         
         assert (!isnan(rec.total_FPKM) && !isinf(rec.total_FPKM));
         
@@ -771,7 +790,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         }
         
         fprintf(spec_out, 
-                "%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%s",
+                "%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%s\t%lg",
                 rec.tracking_id.c_str(),
                 rec.class_code.c_str(),
                 rec.nearest_ref_id.c_str(),
@@ -781,6 +800,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
                 rec.total_FPKM,
                 rec.total_FPKM_conf_lo,
                 rec.total_FPKM_conf_hi,
+                rec.max_FPKM,
                 cluster_str);
         
         for (size_t i = 0; i < rec.cond_density.size(); ++i)
