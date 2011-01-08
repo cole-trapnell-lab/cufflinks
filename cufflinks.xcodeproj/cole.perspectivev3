@@ -280,9 +280,8 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>76</integer>
-									<integer>5</integer>
-									<integer>0</integer>
+									<integer>95</integer>
+									<integer>89</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -333,7 +332,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDDA432212D7EDDC0012959C</string>
+										<string>EDDA432B12D7FEF80012959C</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -656,14 +655,14 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>EDDBF71912D2BD4400130D8A</string>
+				<string>EDDA432C12D7FEF80012959C</string>
 				<string>1CCC7628064C1048000F2A68</string>
 				<string>1CCC7629064C1048000F2A68</string>
-				<string>EDDBF71A12D2BD4400130D8A</string>
-				<string>EDDBF71B12D2BD4400130D8A</string>
-				<string>EDDBF71C12D2BD4400130D8A</string>
-				<string>EDDBF71D12D2BD4400130D8A</string>
-				<string>EDDBF71E12D2BD4400130D8A</string>
+				<string>EDDA432D12D7FEF80012959C</string>
+				<string>EDDA432E12D7FEF80012959C</string>
+				<string>EDDA432F12D7FEF80012959C</string>
+				<string>EDDA433012D7FEF80012959C</string>
+				<string>EDDA433112D7FEF80012959C</string>
 			</array>
 			<key>ToolbarConfigUserDefaultsMinorVersion</key>
 			<string>2</string>
@@ -697,6 +696,8 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>EDDA433212D7FEF80012959C</string>
+		<string>EDDA433312D7FEF80012959C</string>
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>

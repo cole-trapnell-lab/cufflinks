@@ -53,7 +53,7 @@
 				PBXFileTableDataSourceColumnWidthsKey = (
 					22,
 					300,
-					438,
+					372,
 				);
 				PBXFileTableDataSourceColumnsKey = (
 					PBXExecutablesDataSource_ActiveFlagID,
@@ -198,6 +198,7 @@
 			EDDA431D12D3F9F10012959C /* PBXTextBookmark */ = EDDA431D12D3F9F10012959C /* PBXTextBookmark */;
 			EDDA432112D7ED2E0012959C /* PBXTextBookmark */ = EDDA432112D7ED2E0012959C /* PBXTextBookmark */;
 			EDDA432212D7EDDC0012959C /* PBXTextBookmark */ = EDDA432212D7EDDC0012959C /* PBXTextBookmark */;
+			EDDA432B12D7FEF80012959C /* PBXTextBookmark */ = EDDA432B12D7FEF80012959C /* PBXTextBookmark */;
 			EDDBF71412D2BD4400130D8A = EDDBF71412D2BD4400130D8A /* PBXTextBookmark */;
 			EDDBF71512D2BD4400130D8A = EDDBF71512D2BD4400130D8A /* PBXTextBookmark */;
 			EDDBF72912D2C31500130D8A = EDDBF72912D2C31500130D8A /* PBXTextBookmark */;
@@ -277,7 +278,7 @@
 		ignoreCount = 0;
 		lineNumber = 725;
 		location = cufflinks_xcode;
-		modificationTime = 315800239.703098;
+		modificationTime = 316141480.227973;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -295,7 +296,7 @@
 		ignoreCount = 0;
 		lineNumber = 735;
 		location = cufflinks_xcode;
-		modificationTime = 315800239.70351;
+		modificationTime = 316141480.228453;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -366,6 +367,7 @@
 		dataTipSortType = 0;
 		debuggerPlugin = GDBDebugging;
 		disassemblyDisplayState = 0;
+		dylibVariantSuffix = "";
 		enableDebugStr = 1;
 		environmentEntries = (
 		);
@@ -1670,11 +1672,21 @@
 		vrLen = 2036;
 		vrLoc = 18943;
 	};
+	EDDA432B12D7FEF80012959C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = EDDBF70912D29DF000130D8A /* cuffcluster.cpp */;
+		name = "cuffcluster.cpp: 793";
+		rLen = 0;
+		rLoc = 24115;
+		rType = 0;
+		vrLen = 1432;
+		vrLoc = 23577;
+	};
 	EDDBF70912D29DF000130D8A /* cuffcluster.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1048, 11869}}";
-			sepNavSelRange = "{20605, 0}";
-			sepNavVisRange = "{18943, 2036}";
+			sepNavIntBoundsRect = "{{0, 0}, {1090, 11999}}";
+			sepNavSelRange = "{24115, 0}";
+			sepNavVisRange = "{23577, 1432}";
 		};
 	};
 	EDDBF71412D2BD4400130D8A /* PBXTextBookmark */ = {

@@ -790,7 +790,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         }
         
         fprintf(spec_out, 
-                "%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%s\t%lg",
+                "%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%lg\t%s",
                 rec.tracking_id.c_str(),
                 rec.class_code.c_str(),
                 rec.nearest_ref_id.c_str(),
