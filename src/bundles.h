@@ -51,7 +51,7 @@ private:
     HitBundle(const HitBundle& rhs) {} 
 public:
 	HitBundle() 
-    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _num_replicates(1) {}
+    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _raw_mass(0.0), _num_replicates(1) {}
 	
     ~HitBundle()
     {
@@ -86,6 +86,12 @@ public:
 	// Returns true if the hit was added successfully.
 	bool add_hit(const MateHit& hit);
     
+	// This is to keep track of mass of all hits, including
+	// thosethat are not added to any bundle
+	// but are skipped during the creation of this bundle
+	void add_raw_mass(double rm) { _raw_mass += rm; }
+	void rem_raw_mass(double rm) { _raw_mass -= rm; }
+	double raw_mass() { return _raw_mass; }
     
 	void clear_hits() 
     {
@@ -112,6 +118,8 @@ public:
 	{
 		if (!_hits.empty())
 			return _hits.front().ref_id();
+		else if (!_open_mates.empty())
+			return _open_mates.begin()->second.front().ref_id();
 		else if (!_ref_scaffs.empty())
 			return _ref_scaffs.front()->ref_id();
 		else
@@ -122,7 +130,10 @@ public:
 	
 	void add_ref_scaffold(shared_ptr<Scaffold> scaff)
 	{
-        //scaff->clear_hits();
+		if (scaff->left() < _leftmost)
+			_leftmost = scaff->left();
+		if (scaff->right() > _rightmost)
+			_rightmost = scaff->right();
 		_ref_scaffs.push_back(scaff);
 	}
 	
@@ -131,7 +142,8 @@ public:
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
 	void add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
-                      const ReadHit* bh);
+                      const ReadHit* bh,
+					  bool expand_by = true);
 	
 	// Commits any mates still open as singleton hits
 	void finalize_open_mates();
@@ -167,6 +179,8 @@ private:
 	std::vector<shared_ptr<Scaffold> > _ref_scaffs; // user-supplied reference annotations overlapping the bundle
 	bool _final;
 	int _id;
+	double _raw_mass;
+
 	
 	static int _next_id;
 	
@@ -185,10 +199,14 @@ class BundleFactory
 {
 public:
     
-	BundleFactory(shared_ptr<HitFactory> fac)
-	: _hit_fac(fac), _ref_driven(false), _prev_pos(0), _prev_ref_id(0) {}
+	BundleFactory(shared_ptr<HitFactory> fac, BundleMode bm)
+	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0) {}
 
 	bool next_bundle(HitBundle& bundle_out);
+	bool next_bundle_hit_driven(HitBundle& bundle_out);
+	bool next_bundle_ref_driven(HitBundle& bundle_out);
+	bool next_bundle_ref_guided(HitBundle& bundle_out);
+
     
     RefSequenceTable& ref_table() { return _hit_fac->ref_table(); }
     
@@ -233,7 +251,6 @@ public:
         }
         
         next_ref_scaff = ref_mRNAs.begin();
-        _ref_driven = true;
     }
     
     void set_mask_rnas(const vector<shared_ptr<Scaffold> >& masks)
@@ -270,6 +287,10 @@ public:
 	bool spans_bad_intron(const ReadHit& read);
 	
 private:
+	
+	bool _expand_by_hits(HitBundle& bundle);
+	bool _expand_by_refs(HitBundle& bundle);
+	
 	shared_ptr<HitFactory> _hit_fac;
     
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
@@ -286,8 +307,15 @@ private:
     
     shared_ptr<ReadGroupProperties> _rg_props;
     
-    const ReadHit* next_valid_alignment();
-    bool _ref_driven;
+	// Sets nva to point to the next valid alignment
+	// Returns the mass of any alignments that are seen, valid or not
+    double next_valid_alignment(const ReadHit*& nva);
+	
+	// Backs up the factory to before the last valid alignment
+	// and returns the mass of that alignment (rh)
+	double rewind_hit(const ReadHit* rh);
+
+    BundleMode _bundle_mode;
     int _prev_pos;
     RefID _prev_ref_id;
     int _num_bundles;
@@ -328,13 +356,21 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	{
 		HitBundle* bundle_ptr = new HitBundle();
 		
-		if (!bundle_factory.next_bundle(*bundle_ptr))
+		bool valid_bundle = bundle_factory.next_bundle(*bundle_ptr);
+		HitBundle& bundle = *bundle_ptr;
+
+		// Take raw mass even if bundle is "empty", since we could be out of refs
+		// with remaining hits
+		map_mass += bundle.raw_mass();
+		if (use_quartile_norm && bundle.raw_mass() > 0) mass_dist.push_back(bundle.raw_mass());
+		
+		if (!valid_bundle)
 		{
 			delete bundle_ptr;
 			break;
 		}
 		num_bundles++;
-		HitBundle& bundle = *bundle_ptr;
+
 		const RefSequenceTable& rt = bundle_factory.ref_table();
 		const char* chrom = rt.get_name(bundle.ref_id());	
 		char bundle_label_buf[2048];
@@ -350,7 +386,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		{
 			identify_bad_splices(bundle, *bad_introns);
 		}
-        
+		
 		const vector<MateHit>& hits = bundle.non_redundant_hits();
 		if (hits.empty())
 		{
@@ -366,13 +402,11 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		
 		total_non_redundant_hits += bundle.non_redundant_hits().size();
 		total_hits += bundle.hits().size();
-
+		
 		// This first loop calclates the map mass and finds ranges with no introns
 		// Note that we are actually looking at non-redundant hits, which is why we use collapse_mass
-		double bundle_mass = 0;
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
-			bundle_mass += hits[i].collapse_mass();
 			assert(hits[i].left_alignment());
 			int left_len = hits[i].left_alignment()->right()-hits[i].left_alignment()->left();
 			min_len = min(min_len, left_len);
@@ -446,14 +480,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			}
 		}
 		
-		map_mass += bundle_mass;
-
-		if (use_quartile_norm && bundle_mass > 0) mass_dist.push_back(bundle_mass);
-
-		foreach(shared_ptr<Scaffold>& ref_scaff, bundle.ref_scaffolds())
-		{
-			ref_scaff->clear_hits();
-		}
         open_ranges.clear();
         
 		delete bundle_ptr;
@@ -464,7 +490,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		sort(mass_dist.begin(),mass_dist.end());
 		int num_included = mass_dist.size() * 0.75;
 		map_mass = accumulate(mass_dist.begin(), mass_dist.begin()+num_included, 0.0);
-
 	}
 
     if (bad_introns != NULL)
@@ -485,16 +510,30 @@ void inspect_map(BundleFactoryType& bundle_factory,
     	asm_verbose( "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
     } 
     
+	if (progress_bar)
+		p_bar.complete();
+
+	
     long double tot_count = 0;
 	vector<double> frag_len_pdf(max_len+1, 0.0);
 	vector<double> frag_len_cdf(max_len+1, 0.0);
         
     tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
-    
+    	
     bool empirical = false;
 	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
+	
+	if (user_provided_fld && has_pairs && tot_count >= 10000)
+	{
+		fprintf(stderr, "Warning: Overriding empirical fragment length distribution with user-specified parameters is not recommended.\n");
+	}
+	
 	if (!has_pairs || tot_count < 10000)
 	{
+		if (!user_provided_fld)
+		{
+			fprintf(stderr, "Warning: Using default Gaussian distribution due to insufficient paired-end reads in open ranges.  It is recommended that correct paramaters (--frag-len-mean and --frag-len-std-dev) be provided.\n");
+		}
 		tot_count = 0;
 		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
 		max_len = def_frag_len_mean + 3*def_frag_len_std_dev;
@@ -504,6 +543,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			tot_count += frag_len_hist[i];
 		}
 	}
+		
 	else 
 	{	
 		empirical = true;
@@ -577,33 +617,34 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	frag_len_dist.min(min_len);
 	frag_len_dist.mean(mean);
 	frag_len_dist.std_dev(std_dev);
-	if (progress_bar) {
-			p_bar.complete();
-			fprintf(stderr, "> Map Properties:\n");
-			if (use_quartile_norm)
-				fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
-			else
-				fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-		
-			if (has_pairs)
-				fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_left, max_right);
-			else
-				fprintf(stderr, ">\tRead Type: %dbp single-end\n", max_left);
-		
-			if (empirical)
-			{
-				fprintf(stderr, ">\tFragment Length Distribution: Empirical (learned)\n");
-				fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
-				fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
-			}
-			else
-			{
-				fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (default)\n");
-				fprintf(stderr, ">\t              Default Mean: %d\n", def_frag_len_mean);
-				fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
-			}
 
-		}
+	fprintf(stderr, "> Map Properties:\n");
+	if (use_quartile_norm)
+		fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
+	else
+		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+
+	if (has_pairs)
+		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_left, max_right);
+	else
+		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max_left);
+
+	if (empirical)
+	{
+		fprintf(stderr, ">\tFragment Length Distribution: Empirical (learned)\n");
+		fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
+		fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
+	}
+	else
+	{
+		if (user_provided_fld)
+			fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (user-specified)\n");
+		else
+			fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (default)\n");
+		fprintf(stderr, ">\t              Default Mean: %d\n", def_frag_len_mean);
+		fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
+	}
+
 	bundle_factory.num_bundles(num_bundles);
 	bundle_factory.reset(); 
 	return;

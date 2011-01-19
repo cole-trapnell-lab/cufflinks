@@ -310,7 +310,6 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
 		}
 		if (mapped)
         {
-			//X_g += (1.0 - alignments[i].error_prob());
             shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
             //assert (parent != NULL);
             pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
@@ -1542,7 +1541,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//assert (det);
 	if (s == 0.0)
 	{
-		fprintf(stderr, "Error: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
+		fprintf(stderr, "\nError: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
 		//cerr << covariance << endl;
 		return false;
 	}

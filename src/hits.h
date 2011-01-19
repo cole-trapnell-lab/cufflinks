@@ -171,8 +171,19 @@ struct ReadHit
 	
 	bool contains_splice() const
 	{
-                // FIXME: This won't be true once we start supporting INDEL operators in CIGAR strings. See Ticket #183
-		return (_cigar.size() > 1);
+		for (size_t i = 0; i < _cigar.size(); ++i)
+		{
+				if (_cigar[i].opcode == REF_SKIP)
+					return true;
+		}
+		return false;
+	}
+	
+	bool is_singleton() const
+	{ 
+		return (partner_ref_id() == 0 ||
+				partner_ref_id() != ref_id() ||
+				abs(partner_pos() - left()) > max_partner_dist);
 	}
 	
 	bool operator==(const ReadHit& rhs) const
@@ -196,8 +207,15 @@ struct ReadHit
 	int right() const					{ return _right;			}
 	CuffStrand source_strand()	const	{ return _source_strand; }
 	bool antisense_align() const		{ return _antisense_aln;	}
-		
+	
 	double error_prob() const			{ return _error_prob;		}
+	
+	double mass() const 
+	{
+		if (is_singleton())
+			return 1.0 - error_prob();
+		return (1.0 - error_prob())/2.0;
+	}
 	
 	// For convenience, if you just want a copy of the gap intervals
 	// for this hit.
@@ -921,13 +939,14 @@ public:
 		return make_pair(-1,-1);
 	}
 	
-	double error_prob() const
+	double mass() const
 	{
+		double mass = 0.0;
 		if (_left_alignment)
-			return _left_alignment->error_prob();
-		else if (_right_alignment)
-			return _right_alignment->error_prob();
-		return 1.0;
+			mass += _left_alignment->mass();
+		if (_right_alignment) 
+			mass += _right_alignment->mass();
+		return mass;
 	}
 	
 	unsigned int  edit_dist() const
@@ -940,7 +959,6 @@ public:
 		return edits;
 	}
 	
-	double mass() const { return (1.0 - error_prob()); }
 	double collapse_mass() const { return _collapse_mass; }
 	void collapse_mass(double m) { _collapse_mass = m; }
 	void incr_collapse_mass(double incr) { _collapse_mass += incr; }

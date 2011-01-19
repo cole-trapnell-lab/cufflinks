@@ -89,7 +89,7 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
             exit(1);
         }
 	}
-	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory));
+	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
     
     vector<shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)

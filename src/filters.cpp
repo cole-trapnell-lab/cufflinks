@@ -752,7 +752,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 				 itr != hits.end();
 				 ++itr)
 			{
-				double e = (*itr)->error_prob();
+				double e = 1-(*itr)->mass();
 				if (e >= low_qual_err_prob)
 					low_qual_hits += 1.0;
 			}

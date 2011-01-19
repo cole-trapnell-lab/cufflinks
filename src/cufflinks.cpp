@@ -22,6 +22,7 @@
 
 #include <boost/thread.hpp>
 
+#include "update_check.h"
 #include "clustering.h"
 #include "abundances.h"
 #include "bundles.h"
@@ -34,14 +35,14 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:Nqv";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:g:f:o:M:r:a:A:Nqv";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:f:o:M:r:a:A:Nqv";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:g:f:o:M:r:a:A:Nqv";
 #endif
 
 static struct option long_options[] = {
-{"inner-dist-mean",			required_argument,       0,          'm'},
-{"inner-dist-stddev",		required_argument,       0,          's'},
+{"frag-len-mean",			required_argument,       0,          'm'},
+{"frag-len-std-dev",			required_argument,       0,          's'},
 {"transcript-score-thresh", required_argument,       0,          't'},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
 {"min-intron-fraction",     required_argument,       0,          'f'},
@@ -53,6 +54,7 @@ static struct option long_options[] = {
 {"label",					required_argument,		 0,			 'L'},
 {"collapse-thresh",         required_argument,		 0,			 'c'},
 {"GTF",					    required_argument,		 0,			 'G'},
+{"GTF-guide",			    required_argument,		 0,			 'g'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"quartile-normalization",  no_argument,	 		 0,	         'N'},
@@ -92,6 +94,7 @@ void print_usage()
     
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
+	fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotations to guide assembly                   \n");
     fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
     fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
     fprintf(stderr, "  -j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
@@ -131,9 +134,11 @@ int parse_options(int argc, char** argv)
 			case -1:     /* Done with options. */
 				break;
 			case 'm':
+				user_provided_fld = true;
 				def_frag_len_mean = (uint32_t)parseInt(0, "-m/--frag-len-mean arg must be at least 0", print_usage);
 				break;
 			case 's':
+				user_provided_fld = true;
 				def_frag_len_std_dev = (uint32_t)parseInt(0, "-s/--frag-len-std-dev arg must be at least 0", print_usage);
 				break;
 			case 't':
@@ -172,7 +177,21 @@ int parse_options(int argc, char** argv)
 				max_mle_iterations = parseInt(1, "--max-mle-iterations must be at least 1", print_usage);
 				break;
 			case OPT_BIAS_MODE:
-				bias_mode = optarg;
+				if (optarg == "site")
+						bias_mode = SITE;
+				else if (optarg == "pos")
+					bias_mode = POS;
+				else if (optarg == "pos_vlmm")
+						bias_mode = POS_VLMM;
+				else if (optarg == "vlmm")
+					bias_mode = VLMM;
+				else
+				{
+					fprintf(stderr, "Unknown bias mode.\n");
+					exit(1);
+				}
+
+				
 				break;
 			case 'Q':
 			{
@@ -196,7 +215,13 @@ int parse_options(int argc, char** argv)
 			case 'G':
 			{
 				ref_gtf_filename = optarg;
-				ref_driven = true;
+				bundle_mode = REF_DRIVEN;
+				break;
+			}
+			case 'g':
+			{
+				ref_gtf_filename = optarg;
+				bundle_mode = REF_GUIDED;
 				break;
 			}
             case 'M':
@@ -276,7 +301,11 @@ int parse_options(int argc, char** argv)
         {
             min_isoform_fraction = 0.0;
         }
-		allow_junk_filtering = false;	
+	}
+	
+	if (bundle_mode == REF_DRIVEN)
+	{
+		allow_junk_filtering = false;
 	}
 	
     if (library_type != "")
@@ -298,14 +327,8 @@ int parse_options(int argc, char** argv)
         }
     }
 	
-#if ADAM_MODE
-	if (corr_bias)
-		output_dir = output_dir + "/" + bias_mode;
-#endif
-	
     
-    //inner_dist_norm = normal(0, inner_dist_std_dev);
-	return 0;
+    return 0;
 }
 
 void add_non_shadow_scaffs(const vector<Scaffold>& lhs, 
@@ -727,7 +750,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	
 	vector<shared_ptr<Scaffold> > scaffolds;
 	
-	if (ref_driven)
+	if (bundle_mode == REF_DRIVEN)
 	{
 		scaffolds = bundle.ref_scaffolds();
 		if (!final_est_run && scaffolds.size() != 1) // Only learn bias on single isoforms
@@ -735,6 +758,45 @@ void assemble_bundle(const RefSequenceTable& rt,
 			delete bundle_ptr;
 			return;
 		}
+	}
+	else if (bundle_mode == REF_GUIDED)
+	{
+		vector<shared_ptr<Scaffold> > hit_scaffolds;
+		bool success = scaffolds_for_bundle(bundle, hit_scaffolds, NULL);
+		scaffolds = bundle.ref_scaffolds();
+		if (success)
+		{
+			size_t first_to_compare = 0;			
+			foreach(shared_ptr<Scaffold> hit_scaff, hit_scaffolds)
+			{
+				bool ok_to_add = true;
+				for(size_t i = first_to_compare; i < bundle.ref_scaffolds().size(); ++i)
+				{
+					shared_ptr<Scaffold> ref_scaff = bundle.ref_scaffolds()[i];
+					if (ref_scaff->right() + overhang_3 <= hit_scaff->left())
+					{
+						first_to_compare++;
+					}
+					else if (ref_scaff->left() >= hit_scaff->right() + overhang_3)
+					{
+						break;
+					}
+					else if (ref_scaff->contains_with_3_hang(*hit_scaff) && Scaffold::compatible(*ref_scaff, *hit_scaff))
+					{
+						ok_to_add = false;
+					}
+					else if (ref_scaff->contained_5_contains_3_hang(*hit_scaff) && Scaffold::compatible(*ref_scaff, *hit_scaff))
+					{
+						ref_scaff->extend_5(*hit_scaff);
+						ok_to_add = false;
+					}
+				}
+				if (ok_to_add)
+					scaffolds.push_back(hit_scaff);
+			}
+		}
+		sort(scaffolds.begin(), scaffolds.end(), scaff_lt_rt_oplt_sp);
+
 	}
 	else 
 	{
@@ -760,7 +822,7 @@ void assemble_bundle(const RefSequenceTable& rt,
         filter_junk_genes(genes);
 
 	
-	if (!final_est_run && ref_driven) // Bias needs to be learned
+	if (!final_est_run && bundle_mode==REF_DRIVEN) // Bias needs to be learned
 	{
 		for (size_t i = 0; i < genes.size(); ++i)
 		{
@@ -847,7 +909,7 @@ void assemble_bundle(const RefSequenceTable& rt,
     
 	//fprintf(fbundle_tracking, "CLOSE %d\n", bundle.id());
 	
-	if (ref_driven && num_scaffs_reported > bundle.ref_scaffolds().size())
+	if (bundle_mode==REF_DRIVEN && num_scaffs_reported > bundle.ref_scaffolds().size())
     {
 		fprintf(stderr, "Error: reported more isoforms than in reference!\n");
 		exit(1);
@@ -885,9 +947,9 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	string process;
 	if (corr_bias && final_est_run)
 		process = "Re-estimating abundances with bias correction.";
-	else if (ref_driven && final_est_run)
+	else if (bundle_mode==REF_DRIVEN && final_est_run)
 		process = "Estimating transcript abundances."; 
-	else if (ref_driven && corr_bias)
+	else if (bundle_mode==REF_DRIVEN && corr_bias)
 		process = "Learning bias parameters.";
 	else
 		process = "Assembling transcripts and estimating abundances.";
@@ -981,7 +1043,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	
 	p_bar.complete();
 	
-	if(!final_est_run && ref_driven) // We are learning bias
+	if(!final_est_run && bundle_mode==REF_DRIVEN) // We are learning bias
 	{
 		bl_ptr->normalizeParameters();
 #if ADAM_MODE
@@ -1018,7 +1080,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory));
+	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
 	
 	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
 	long double map_mass = 0.0;
@@ -1040,7 +1102,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    if (ref_driven)
+    if (bundle_mode != HIT_DRIVEN)
         inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
     else 
         inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
@@ -1071,7 +1133,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	BiasLearner* bl_ptr = new BiasLearner(rg_props->frag_len_dist());
     bundle_factory.read_group_properties(rg_props);
 
-	if (ref_driven)
+	if (ref_gtf)
 		bundle_factory.bad_intron_table(bad_introns);
 	
 	max_frag_len = frag_len_dist->max();
@@ -1091,7 +1153,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	hit_factory->reset();
 	int num_bundles = bundle_factory.num_bundles();
 	delete &bundle_factory;
-	BundleFactory bundle_factory2(hit_factory);
+	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
 	bundle_factory2.num_bundles(num_bundles);
 
@@ -1111,7 +1173,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     bundle_factory2.read_group_properties(rg_props);
 	bundle_factory2.reset();
 	
-	if(!ref_driven) // We still need to learn the bias since we didn't have the sequences before assembly
+	if(bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED) // We still need to learn the bias since we didn't have the sequences before assembly
 	{
 		learn_bias(bundle_factory2, *bl_ptr);
 		bundle_factory2.reset();
@@ -1124,6 +1186,14 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 
 int main(int argc, char** argv)
 {
+	char curr_version[256];
+	if (get_current_version(curr_version) && strcmp(curr_version, PACKAGE_VERSION)!=0)
+	{
+		char buff[256];
+		fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date.  It is highly recommended that you upgrade to Cufflinks v%s immediately to obtain the most recent features and bug fixed.  Press ENTER to continue.", curr_version);
+		fgets(buff,255,stdin);
+	}
+	
     init_library_table();
     
 	int parse_ret = parse_options(argc,argv);

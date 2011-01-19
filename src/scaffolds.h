@@ -370,6 +370,7 @@ public:
 	static bool strand_agree(const Scaffold& lhs, 
 							 const Scaffold& rhs);
 	
+	
 	// Incorporate Scaffold chow into this one.
 	static void merge(const Scaffold& lhs, 
 					  const Scaffold& rhs, 
@@ -383,9 +384,39 @@ public:
 	const vector<const MateHit*>& mate_hits() const { return _mates_in_scaff; }
 	RefID ref_id() const { return _ref_id; }
 	
+	void extend_5(const Scaffold& other);
+	
 	bool contains(const Scaffold& other) const
 	{
 		return (left() <= other.left() && right() >= other.right());
+	}
+	
+	// Tests whether the other scaffold is contained completely on the 5' end and within some overhang on the 3' end
+	bool contains_with_3_hang(const Scaffold& other) const
+	{
+		switch(strand())
+		{
+			case CUFF_FWD:
+				return (left() <= other.left() && right() + overhang_3 >= other.right()); 
+			case CUFF_REV:
+				return (right() >= other.right() && left() - overhang_3 <= other.left()); 
+		}
+		
+		return (left()-overhang_3 <= other.left() && right()+overhang_3 >= other.right()); 
+	}
+	
+	// Tests whether the other scaffold contains the 5' end and is contained (allowing some overhang) on the 3' end
+	bool contained_5_contains_3_hang(const Scaffold& other) const
+	{
+		switch(strand())
+		{
+			case CUFF_FWD:
+				return (left() >= other.left() && right() + overhang_3 >= other.right()); 
+			case CUFF_REV:
+				return (right() <= other.right() && left() - overhang_3 <= other.left()); 
+		}
+		
+		return false; 
 	}
 	
 	int match_length(int left, int right) const;

@@ -30,7 +30,6 @@ using boost::math::normal;
 
 extern bool final_est_run;
 extern bool corr_bias;
-extern bool ref_driven;
 
 extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;
@@ -38,6 +37,7 @@ extern uint32_t min_intron_length;
 extern uint32_t max_gene_length;
 
 extern int max_partner_dist;
+extern bool user_provided_fld;
 extern int def_frag_len_mean;
 extern int def_frag_len_std_dev;
 extern int def_max_frag_len;
@@ -46,6 +46,7 @@ extern int min_frag_len;
 
 extern double transcript_score_thresh;
 extern int olap_radius;
+extern int overhang_3;
 extern float pre_mrna_fraction;
 
 extern int num_threads;
@@ -61,7 +62,6 @@ extern std::string ref_gtf_filename;
 extern std::string mask_gtf_filename;
 extern std::string output_dir;
 extern std::string fasta_dir;
-extern std::string bias_mode;
 
 extern int microexon_length;
 extern bool cuff_verbose;
@@ -127,6 +127,23 @@ OutputIterator copy_if(InputIterator begin,
 	}
 	return destBegin;
 }
+
+enum BundleMode
+{
+	HIT_DRIVEN,
+	REF_DRIVEN,
+	REF_GUIDED
+};
+extern BundleMode bundle_mode;
+
+enum BiasMode
+{
+	SITE,
+	VLMM,
+	POS,
+	POS_VLMM
+};
+extern BiasMode bias_mode;
 
 enum Strandedness 
 {

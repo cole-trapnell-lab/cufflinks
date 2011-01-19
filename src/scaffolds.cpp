@@ -462,6 +462,57 @@ inline bool has_intron(const Scaffold& scaff)
 //	return false;
 //}
 
+void Scaffold::extend_5(const Scaffold& other)
+{
+	_has_intron = _has_intron | other.has_intron();
+	if (strand() == CUFF_FWD)
+	{
+		AugmentedCuffOp& first_op = _augmented_ops.front();
+		_augmented_ops.erase(_augmented_ops.begin());
+		
+		for(size_t i = 0; i < other.augmented_ops().size(); ++i)
+		{
+			AugmentedCuffOp op = other.augmented_ops()[i];
+			assert(op.g_right() <= first_op.g_right());
+			if (op.g_left() <= first_op.g_left())
+			{
+				_augmented_ops.insert( _augmented_ops.begin() + i, op);
+			}
+			if (op.g_right() == first_op.g_right())
+			{
+				break;
+			}
+		}
+		_left = _augmented_ops.front().g_left();
+	}
+	else if (strand() == CUFF_REV)
+	{
+		AugmentedCuffOp& last_op = _augmented_ops.back();
+		_augmented_ops.pop_back();
+		
+		size_t init_size = _augmented_ops.size();
+		for(size_t i = other.augmented_ops().size()-1; i >= 0; --i)
+		{
+			AugmentedCuffOp op = other.augmented_ops()[i];
+			assert(op.g_left() >= last_op.g_left());
+			if (op.g_right() >= last_op.g_right())
+			{
+				_augmented_ops.insert(_augmented_ops.begin() + init_size, op);
+			}
+			if (op.g_left() == last_op.g_left())
+			{
+				break;
+			}
+		}
+		_right = _augmented_ops.back().g_right();
+	}
+	else 
+	{
+		assert(false);
+	}
+	_annotated_trans_id += "_ext";
+}
+
 
 void Scaffold::merge(const Scaffold& lhs, 
 					 const Scaffold& rhs, 
@@ -672,7 +723,7 @@ bool Scaffold::strand_agree(const Scaffold& lhs,
 	return strand;
 }
 
-	
+
 bool Scaffold::compatible(const Scaffold& lhs, 
 						  const Scaffold& rhs)
 {	

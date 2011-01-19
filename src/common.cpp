@@ -30,7 +30,10 @@ using namespace std;
 
 bool final_est_run = true;
 bool corr_bias = false;
-bool ref_driven = false;
+
+BundleMode bundle_mode = HIT_DRIVEN;
+BiasMode bias_mode = VLMM;
+
 
 //int insert_len = 250;
 //int insert_len_std_dev = 20;
@@ -42,12 +45,15 @@ uint32_t max_intron_length = 300000;
 
 uint32_t max_gene_length = 3500000;
 int max_partner_dist = 50000;
+bool user_provided_fld = false;
 int def_frag_len_mean = 200;
 int def_frag_len_std_dev = 80;
 int def_max_frag_len = 800;
 int max_frag_len = 800;
 int min_frag_len = 1;
 int olap_radius = 50;
+
+int overhang_3 = 500;
 
 int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 
@@ -67,7 +73,6 @@ std::string ref_gtf_filename = "";
 std::string mask_gtf_filename = "";
 std::string output_dir = "./";
 std::string fasta_dir;
-std::string bias_mode = "vlmm";
 
 int microexon_length = 25;
 
@@ -314,7 +319,7 @@ void print_library_table()
 void encode_seq(const string seqStr, char* seq, char* c_seq)
 {
     
-	for (int i = 0; i < seqStr.length(); ++i)
+	for (size_t i = 0; i < seqStr.length(); ++i)
 	{
 		switch(seqStr[i])
 		{

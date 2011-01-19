@@ -60,8 +60,8 @@ const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:TNqv";
 
 
 static struct option long_options[] = {
-{"inner-dist-mean",			required_argument,       0,          'm'},
-{"inner-dist-stddev",		required_argument,       0,          's'},
+{"frag-len-mean",			required_argument,       0,          'm'},
+{"frag-len-std-dev",			required_argument,       0,          's'},
 {"transcript-score-thresh", required_argument,       0,          't'},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
@@ -139,12 +139,14 @@ int parse_options(int argc, char** argv)
                 break;
                 
 			case 'm':
+				user_provided_fld = true;
 				def_frag_len_mean = (uint32_t)parseInt(0, "-m/--frag-len-mean arg must be at least 0", print_usage);
 				break;
 			case 'c':
 				min_read_count = (uint32_t)parseInt(0, "-c/--min-alignment-count arg must be at least 0", print_usage);
 				break;
 			case 's':
+				user_provided_fld = true;
 				def_frag_len_std_dev = (uint32_t)parseInt(0, "-s/--frag-len-std-dev arg must be at least 0", print_usage);
 				break;
 			case 'p':
@@ -163,7 +165,19 @@ int parse_options(int argc, char** argv)
 				max_mle_iterations = parseInt(1, "--max-mle-iterations must be at least 1", print_usage);
 				break;
 			case OPT_BIAS_MODE:
-				bias_mode = optarg;
+				if (optarg == "site")
+					bias_mode = SITE;
+				else if (optarg == "pos")
+					bias_mode = POS;
+				else if (optarg == "pos_vlmm")
+					bias_mode = POS_VLMM;
+				else if (optarg == "vlmm")
+					bias_mode = VLMM;
+				else
+				{
+					fprintf(stderr, "Unknown bias mode.\n");
+					exit(1);
+				}
 				break;
 			case 'Q':
 			{
@@ -591,7 +605,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             
             all_hit_factories.push_back(hs);
             
-            shared_ptr<BundleFactory> hf(new BundleFactory(hs));
+            shared_ptr<BundleFactory> hf(new BundleFactory(hs, REF_DRIVEN));
             shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
             
             if (global_read_properties)

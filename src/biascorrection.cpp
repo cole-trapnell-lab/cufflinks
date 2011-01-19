@@ -151,7 +151,7 @@ const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.3,.4,.5,
 BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 {
 	paramTypes = vlmmSpec;
-	if (bias_mode=="site")
+	if (bias_mode==SITE)
 	{
 		paramTypes = siteSpec;
 	}
@@ -537,12 +537,12 @@ void BiasLearner::normalizeParameters()
 	if (end_tot==0.0)
 		ones(_endSeqParams);
 	
-	if (bias_mode=="vlmm" || bias_mode=="site")
+	if (bias_mode==VLMM || bias_mode==SITE)
 	{
 		ones(_startPosParams);
 		ones(_endPosParams);
 	}
-	else if (bias_mode =="pos")	
+	else if (bias_mode == POS)	
 	{
 		ones(_startSeqParams);
 		ones(_endSeqParams);
@@ -610,7 +610,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias);
 	}
 	
-	shared_ptr<EmpDist const> frag_len_dist = rgp->frag_len_dist();
+	shared_ptr<EmpDist const> fld = rgp->frag_len_dist();
 	
 	vector<double> tot_bias_for_len(trans_len+1, 0);
 	vector<double> start_bias_for_len(trans_len+1, 0);
@@ -621,7 +621,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	end_bias_for_len[trans_len] = trans_len;
 
 	
-	for(int l = rgp->frag_len_dist()->min(); l <= trans_len; l++)
+	for(int l = fld->min(); l <= trans_len; l++)
 	{
 		//double tot = 0;
 		//double start = 0;
@@ -632,7 +632,9 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 			tot_bias_for_len[l] += tot_bias;
 			start_bias_for_len[l] += start_bias[i];
 			end_bias_for_len[l] += end_bias[i+l-1];
-			eff_len += tot_bias * frag_len_dist->npdf(l, trans_len - i);
+			
+			double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(l, trans_len-i) : fld->pdf(l);
+			eff_len += tot_bias * frag_prob;
 		}
         //assert(tot != 0);
 		//tot_bias_for_len[l] = tot;
@@ -686,7 +688,8 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];
 	cond_prob *= _end_biases[i][end];
-	cond_prob *= fld->npdf(frag_len, trans_len-start); //defaults to pdf if trans_len==start
+	double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(frag_len, trans_len-start) : fld->pdf(frag_len);
+	cond_prob *= frag_prob; 
 	
 	if (cond_prob==0.0)
 		return 0.0;
