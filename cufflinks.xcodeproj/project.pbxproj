@@ -197,7 +197,7 @@
 		0A25E74B1242E95A0080BEA9 /* progressbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = progressbar.h; path = src/progressbar.h; sourceTree = "<group>"; };
 		0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
 		0A5D9A3F123B5BFE002BEFD5 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
-		0ACD78C612E6647B00310E07 /* update_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = update_check.h; sourceTree = "<group>"; };
+		0ACD78C612E6647B00310E07 /* update_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = update_check.h; path = src/update_check.h; sourceTree = "<group>"; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
 		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
 		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };

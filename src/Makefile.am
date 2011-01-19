@@ -13,6 +13,7 @@ bin_PROGRAMS = \
 #	gtf_reads
 
 noinst_HEADERS = \
+	update_check.h \
     biascorrection.h \
 	codons.h \
 	clustering.h \
