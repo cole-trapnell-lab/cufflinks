@@ -16,7 +16,6 @@ int NUM_SEPS = 3;
 
 bool error(const char *msg)
 {
-	fprintf(stderr, "Warning: Could not connect to update server to verify current version.  Please check at the Cufflinks website (http://cufflinks.cbcb.umd.edu).\n");
 	return false;
 }
 

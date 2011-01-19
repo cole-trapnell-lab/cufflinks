@@ -723,7 +723,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	{
 		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
 
-		if (allow_junk_filtering)
+		if (scaff->is_ref() && allow_junk_filtering)
 		{
 			const vector<const MateHit*> hits = scaff->mate_hits();
 			

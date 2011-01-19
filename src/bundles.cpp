@@ -167,7 +167,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					}
 				}
 				
-				Scaffold ref_scaff(ref_id, strand, ops);
+				Scaffold ref_scaff(ref_id, strand, ops, true);
 				
 				char* rna_seq;
 				int seqlen=0;

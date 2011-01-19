@@ -975,9 +975,11 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 				bundle.left(),
 				bundle.right());
 
-		if (bundle.right() - bundle.left() > 3000000)
+		if (bundle.right() - bundle.left() > max_gene_length)
 		{
-			verbose_msg( "%s\tWarning: large bundle encountered\n", bundle_label_buf);
+			fprintf(stderr, "\n%s\tWarning: Skipping large bundle.\n", bundle_label_buf);
+			delete bundle_ptr;
+			continue;
 		}
 
 		BundleStats stats;
@@ -1187,12 +1189,18 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 int main(int argc, char** argv)
 {
 	char curr_version[256];
-	if (get_current_version(curr_version) && strcmp(curr_version, PACKAGE_VERSION)!=0)
+	if (get_current_version(curr_version))
 	{
-		char buff[256];
-		fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date.  It is highly recommended that you upgrade to Cufflinks v%s immediately to obtain the most recent features and bug fixed.  Press ENTER to continue.", curr_version);
-		fgets(buff,255,stdin);
+		if (strcmp(curr_version, PACKAGE_VERSION)==0)
+			fprintf(stderr, "You are using Cufflinks v%s, which is the most recent release.\n", PACKAGE_VERSION);
+		else
+			fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date. It is recommended that you upgrade to Cufflinks v%s to benefit from the most recent features and bug fixes.\n", curr_version);
 	}
+	else
+	{
+		fprintf(stderr, "Warning: Could not connect to update server to verify current version. Please check at the Cufflinks website (http://cufflinks.cbcb.umd.edu).\n");
+	}
+
 	
     init_library_table();
     

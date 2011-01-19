@@ -189,11 +189,13 @@ public:
 	
 	Scaffold() :
 		_ref_id(0), 
+		_is_ref(false),
 		_strand(CUFF_STRAND_UNKNOWN), 
-		_classcode(0) {}
+		_classcode(0){}
 	
 	Scaffold(const MateHit& mate) :
 		  _ref_id(mate.ref_id()),
+		  _is_ref(false),
 		  _left(mate.left()), 
 	      _right(mate.right()),
 	      _classcode(0)
@@ -277,7 +279,7 @@ public:
 	}
 	
 	Scaffold(const vector<Scaffold>& hits, bool introns_overwrite_matches = true) 
-		:  _classcode(0)
+		:  _is_ref(false), _classcode(0)
 	{
 		assert (!hits.empty());
 		_ref_id = hits[0].ref_id();
@@ -292,7 +294,7 @@ public:
 	
 	// For manually constructing scaffolds, for example when a reference is 
 	// available
-	Scaffold(RefID ref_id, CuffStrand strand, const vector<AugmentedCuffOp>& ops)
+	Scaffold(RefID ref_id, CuffStrand strand, const vector<AugmentedCuffOp>& ops, bool is_ref = false)
 	: _ref_id(ref_id), 
 	  _augmented_ops(ops), 
 	  _strand(strand),
@@ -301,6 +303,7 @@ public:
 		_right = _augmented_ops.back().g_right();
 		_left = _augmented_ops.front().g_left();
 		_has_intron = has_intron(*this);
+		_is_ref = is_ref;
 		
 		assert(!_has_intron || _strand != CUFF_STRAND_UNKNOWN);
 
@@ -359,6 +362,9 @@ public:
 	
 	bool has_intron() const { return _has_intron; }
 	bool has_suspicious_unknown() const { return has_suspicious_unknown(*this); }
+	
+	bool is_ref() const { return _is_ref; }
+	void is_ref(bool ir) { _is_ref = ir; }
 	
 	CuffStrand strand() const { return _strand; }
 	void strand(CuffStrand strand) { _strand = strand; }
@@ -574,6 +580,7 @@ private:
 	int _left;
 	int _right;
 	bool _has_intron; 
+	bool _is_ref;
 	
 	vector<AugmentedCuffOp> _augmented_ops;
 	CuffStrand _strand;
