@@ -46,7 +46,7 @@ Options:\n\
 \n\
 -T  do not generate .tmap and .refmap files for each query file\n\
 \n\
--V  (mildly) verbose processing mode\n\
+-V  enable verbose processing mode (incl. GFF parsing warnings)\n\
 "
 bool debug=false;
 bool perContigStats=true;

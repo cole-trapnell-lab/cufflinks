@@ -182,7 +182,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		GSeqData* gdata=NULL;
 		uint tlen=m->len();
 		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
-			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
+			if (gtf_tracking_verbose) GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
 			mrnas.freeItem(k);
 			mrna_deleted++;
 			continue;
@@ -196,13 +196,13 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		feature.lower();
 		if (m->monoFeature() && (feature=="gene" || feature.index("loc")>=0)) {
 			//discard generic "gene" or "locus" features with no other detailed subfeatures
-			//GMessage("Warning: discarding %s GFF generic gene/locus container %s\n",m->getID());
+			if (gtf_tracking_verbose) GMessage("Warning: discarding %s GFF generic gene/locus container %s\n",m->getID());
 			mrnas.freeItem(k);
-            mrna_deleted++;
+			mrna_deleted++;
 			continue;
 			}
 		if (m->exons.Count()==0) {
-				//GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
+				if (gtf_tracking_verbose) GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
 				m->addExon(m->start,m->end);
 				}
 		if (glstdata.Found(&f,i)) gdata=glstdata[i];
@@ -231,7 +231,6 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 		     char* pgname=rp->getAttr(ATTR_GENE_NAME);
 		     if (pgname==NULL && gname!=NULL)
 		         rp->addAttr(ATTR_GENE_NAME, gname);
-			 //GMessage("--------->  ref %s as a duplicate of %s\n",m->getID(), rp->getID());
 		     mrnas.freeItem(k);
 		     mrna_deleted++;
 		     refdiscarded++;
@@ -350,7 +349,6 @@ bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl) {
             return false; //intron mismatch
 		}
 	}
-	//GMessage("tMatch found: %s == %s\n", a.getID(),b.getID());
 	return true;
 }
 
@@ -384,8 +382,7 @@ void cluster_mRNAs(GList<GffObj> & mrnas, GList<GLocus> & loci, int qfidx, bool 
  			 loci.Add(new GLocus(mrna, qfidx));
 		    }
 		 else if (lfound>1) {
-			//more than one loci found parenting this mRNA, merge loci
-			//if (lfound>2) GMessage(" merging %d loci \n",lfound);
+			//more than one locus found parenting this mRNA, merge loci
 		     lfound--;
 			 for (int l=0;l<lfound;l++) {
 				  int mlidx=mrgloci[l]; //largest indices first, so it's safe to remove
@@ -510,7 +507,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 	rewind(f);
 	GffReader* gffr=new GffReader(f, false); //allow loading of non-mRNA transcripts also
 	//          keepAttrs   mergeCloseExons   noExonAttrs
-    gffr->showWarnings();
+	gffr->showWarnings(gtf_tracking_verbose);
 	gffr->readAll(true,          true,        true);
 	//                               is_ref?    check_for_dups,
 	parse_mRNAs(gffr->gflst, seqdata, false,       false);
@@ -528,6 +525,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	//GffReader* gffr=new GffReader(f, true); //(file, mRNA_only)
 	GffReader* gffr=new GffReader(f, !isRefData); //also consider non-mRNA annotations
 	//           keepAttrs   mergeCloseExons   noExonAttrs
+	gffr->showWarnings(gtf_tracking_verbose);
 	gffr->readAll(true,          true,        isRefData || gtf_tracking_largeScale);
 	//so it will read exon attributes only for low number of Cufflinks files
 	
@@ -556,7 +554,6 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	for (int g=0;g<seqdata.Count();g++) {
 		//find the corresponding refseqdata with the same gseq_id
 		int gseq_id=seqdata[g]->gseq_id;
-		//if (gtf_tracking_verbose) GMessage("Clustering mRNAs on %s...\n", getGSeqName(gseq_id));
 		if (!isRefData) { //cufflinks data, find corresponding ref data
 			GSeqData* rdata=getRefData(gseq_id, *ref_data);
 			if (rdata!=NULL && seqdata[g]->umrnas.Count()>0) {
@@ -584,7 +581,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	if (fdis!=NULL) fclose(fdis);
 	if (frloci!=NULL) fclose(frloci);
 	if (discarded>0) {
-		GMessage("Warning: found %d transcripts with undetermined strand.\n", discarded);
+		if (gtf_tracking_verbose) GMessage("Found %d transcripts with undetermined strand.\n", discarded);
 	}
 	else { if (fdis!=NULL) remove(s.chars()); }
 }

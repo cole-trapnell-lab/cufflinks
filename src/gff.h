@@ -21,11 +21,11 @@ extern const int gff_fid_mRNA;
 extern const int gff_fid_exon;
 extern const int gff_fid_CDS; //never really used, except for display only
                               //use gff_fid_exon instead
-//extern bool gff_warns; //show parser warnings - now GffReader member
-
 extern const uint GFF_MAX_LOCUS;
 extern const uint GFF_MAX_EXON;
 extern const uint GFF_MAX_INTRON;
+
+extern bool gff_show_warnings;
 
 #define GFF_LINELEN 2048
 #define ERR_NULL_GFNAMES "Error: GffObj::%s requires a non-null GffNames* names!\n"
@@ -373,7 +373,7 @@ public:
   double gscore;
   double uscore; //custom, user-computed score, if needed
   int covlen; //total coverage of  reference genomic sequence (sum of maxcf segment lengths)
-
+  
    //--------- optional data:
   int qlen; //query length, start, end - if available
   int qstart;
@@ -415,7 +415,7 @@ public:
        xstart=0;
        xend=0;
        xstatus=0;
-       strand=0;
+       strand='.';
        gscore=0;
        uscore=0;
        attrs=NULL;
@@ -773,7 +773,7 @@ class GffReader {
   off_t fpos;
   int buflen;
  protected:
-  bool gff_warns; //warn about duplicate IDs, even when they are on different chromosomes
+  bool gff_warns; //warn about duplicate IDs, etc. even when they are on different chromosomes
   FILE* fh;
   char* fname;  //optional fasta file with the underlying genomic sequence to be attached to this reader
   GffNames* names; //just a pointer to the global static Gff names repository in GffObj
@@ -793,7 +793,7 @@ class GffReader {
   GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
   GffReader(FILE* f, bool justmrna=false, bool sort=false):phash(true), 
                              tids(true), gflst(sort), gseqstats(true,true,true) {
-      gff_warns=false;
+      gff_warns=gff_show_warnings;
       names=NULL;
       gffline=NULL;
       mrnaOnly=justmrna;
@@ -805,7 +805,7 @@ class GffReader {
       }
   GffReader(char* fn, bool justmrna=false, bool sort=false):phash(true),
                              tids(true),gflst(sort),gseqstats(true,true,true) {
-      gff_warns=false;
+      gff_warns=gff_show_warnings;
       names=NULL;
       fname=Gstrdup(fn);
       mrnaOnly=justmrna;
@@ -830,7 +830,9 @@ class GffReader {
 
   void showWarnings(bool v=true) {
       gff_warns=v;
+      gff_show_warnings=v;
       }
+      
   GffLine* nextGffLine();
 
   // load all subfeatures, re-group them:

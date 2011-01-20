@@ -5,10 +5,10 @@ GffNames* GffObj::names=NULL;
 //global set of feature names, attribute names etc.
 // -- common for all GffObjs in current application!
 
-const uint GFF_MAX_LOCUS = 4000000; //longest known gene in human is ~2.2M, UCSC claims a gene for mouse of ~ 3.1 M
-const uint GFF_MAX_EXON  =   20000; //longest known exon in human is ~11K
-const uint GFF_MAX_INTRON= 1600000;
-
+const uint GFF_MAX_LOCUS = 7000000; //longest known gene in human is ~2.2M, UCSC claims a gene for mouse of ~ 3.1 M
+const uint GFF_MAX_EXON  =   30000; //longest known exon in human is ~11K
+const uint GFF_MAX_INTRON= 6000000;
+bool gff_show_warnings = false; //global setting, set by GffReader->showWarnings()
 const int gff_fid_mRNA=0;
 const int gff_fid_exon=1;
 const int gff_fid_CDS=2; //never really used in GffObj ftype_id or subftype_id
@@ -142,7 +142,7 @@ GffLine::GffLine(GffReader* reader, const char* l) {
 
  if (reader->mrnaOnly) {
    if (!is_mrna && !is_cds && !is_exon) {
-                  if (reader->gff_warns) 
+                  if (gff_show_warnings) 
                         GMessage("skipping non-mRNA line: %s\n", l);
                   return; //skip this line, unwanted feature name
                   }
@@ -424,11 +424,12 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
         //if (ovlen>2 || exons[oi]->exontype!=exgffCDS || exontype!=exgffCDS) {
         // --> had to relax this because of some weird UCSC annotations with exons partially overlapping the CDS segments
         if (ovlen>2) {
-           //important structural warning:
-           GMessage("Warning: discarding overlapping feature segment (%d-%d) (vs %d-%d (%s)) for GFF ID %s on %s\n", 
+           //important structural warning, will always print:
+           if (gff_show_warnings) 
+               GMessage("GFF Warning: discarding overlapping feature segment (%d-%d) (vs %d-%d (%s)) for GFF ID %s on %s\n", 
                segstart, segend, exons[oi]->start, exons[oi]->end, getSubfName(), gffID, getGSeqName());
            hasErrors=true;
-           return false; //segment NOT added
+           return -1; //segment NOT added
            }
           // else add the segment if the overlap is small and between two CDS segments
           //we might want to add an attribute here with the slippage coordinate and size?
@@ -439,11 +440,12 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
    GffExon* enew=new GffExon(segstart, segend, sc, fr, qs, qe, exontype);
    int eidx=exons.Add(enew);
    if (eidx<0) {
-    //this would actually be acceptable if "exons" are in fact just isoforms with an internal exon skipping event
-    //      (and the Parent is a "gene")
-     GMessage("GFF Warning: failed adding segment %d-%d for GFF ID %s!\n",
+    //this would actually be acceptable if the object is a "Gene" and "exons" are in fact isoforms
+     if (gff_show_warnings) 
+       GMessage("GFF Warning: failed adding segment %d-%d for %s (discarded)!\n",
             segstart, segend, gffID);
      delete enew;
+     hasErrors=true;
      return -1;            
      }
    covlen+=(int)(exons[eidx]->end-exons[eidx]->start)+1;
@@ -492,7 +494,7 @@ chr1	hg18_knownGene	exon	69805456	69806912	0.000000	+	.
          exons.Delete(ni);
          }
       else {
-         GMessage("GFF Warning: overlapping feature segment (%d-%d) for GFF ID %s\n", segstart, segend, gffID);
+         if (gff_show_warnings) GMessage("GFF Warning: overlapping feature segment (%d-%d) for GFF ID %s\n", segstart, segend, gffID);
          hasErrors=true;
          break;
          }
@@ -548,6 +550,7 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
   gseq_id=-1;
   ftype_id=-1;
   subftype_id=-1;
+  strand='.';
   hasErrors=false;
   if (gfrd==NULL)
     GError("Cannot use this GffObj constructor with a NULL GffReader!\n");
@@ -694,7 +697,7 @@ GfoHolder* GffReader::newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr
   if (gff_warns) {
     int* pcount=tids.Find(newgfo->gffID);
     if (pcount!=NULL) {
-       GMessage("Warning: duplicate GFF ID: %s\n", newgfo->gffID);
+       if (gff_warns) GMessage("Warning: duplicate GFF ID: %s\n", newgfo->gffID);
        (*pcount)++;
        }
      else {
@@ -707,9 +710,8 @@ GfoHolder* GffReader::newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr
 bool GffReader::addSubFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr) {
   bool r=true;
   if (gffline->strand!=prevgfo->gffobj->strand) {
-     GMessage("Error: duplicate GFF ID '%s' (exons found on different strands of %s)\n",
+     GMessage("GFF Error: duplicate GFF ID '%s' (exons found on different strands of %s)\n",
         prevgfo->gffobj->gffID, prevgfo->gffobj->getGSeqName());
-     //validation_errors = true;
       r=false;
      }
   int gdist=(gffline->fstart>prevgfo->gffobj->end) ? gffline->fstart-prevgfo->gffobj->end :
@@ -732,7 +734,7 @@ bool GffReader::addSubFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonEx
    return r;
 }
 
-//this should be safe to use -- instead of all the parse* functions
+//have to parse the whole file because exons can be scattered all over
 void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
     bool validation_errors = false;
     //loc_debug=false;
@@ -740,7 +742,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
     while (nextGffLine()!=NULL) {
     if (gffline->Parent==NULL) {//no parent, new GFF3-like record starting
         if (gffline->ID == NULL)  {
-            GMessage("Warning: malformed GFF line encountered, no  record Id.  Skipping..\n");
+            if (gff_warns) GMessage("Warning: malformed GFF line encountered, no  record Id.  Skipping..\n");
             delete gffline;
             gffline=NULL;
             continue;
@@ -957,13 +959,11 @@ void GffObj::mRNA_CDS_coords(uint& cds_mstart, uint& cds_mend) {
              //CDstart in this segment
              //and we are getting the whole transcript
              cds_mend=s-(int)(CDstart-sgstart);
-             //GMessage("Setting cds_mend to %d\n",cds_mend);
              }
        if (CDend>=sgstart && CDend<=sgend) {
              //CDstart in this segment
              //and we are getting the whole transcript
              cds_mstart=s-(int)(CDend-cdsadj-sgstart);
-             //GMessage("Setting cds_mstart to %d\n",cds_mstart);
              }
       } //for each exon
     } // - strand
