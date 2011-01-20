@@ -177,21 +177,19 @@ int parse_options(int argc, char** argv)
 				max_mle_iterations = parseInt(1, "--max-mle-iterations must be at least 1", print_usage);
 				break;
 			case OPT_BIAS_MODE:
-				if (optarg == "site")
-						bias_mode = SITE;
-				else if (optarg == "pos")
+				if (!strcmp(optarg, "site"))
+					bias_mode = SITE;
+				else if (!strcmp(optarg, "pos"))
 					bias_mode = POS;
-				else if (optarg == "pos_vlmm")
-						bias_mode = POS_VLMM;
-				else if (optarg == "vlmm")
+				else if (!strcmp(optarg, "pos_vlmm"))
+					bias_mode = POS_VLMM;
+				else if (!strcmp(optarg, "vlmm"))
 					bias_mode = VLMM;
 				else
 				{
 					fprintf(stderr, "Unknown bias mode.\n");
 					exit(1);
 				}
-
-				
 				break;
 			case 'Q':
 			{
@@ -1188,19 +1186,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 
 int main(int argc, char** argv)
 {
-	char curr_version[256];
-	if (get_current_version(curr_version))
-	{
-		if (strcmp(curr_version, PACKAGE_VERSION)==0)
-			fprintf(stderr, "You are using Cufflinks v%s, which is the most recent release.\n", PACKAGE_VERSION);
-		else
-			fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date. It is recommended that you upgrade to Cufflinks v%s to benefit from the most recent features and bug fixes.\n", curr_version);
-	}
-	else
-	{
-		fprintf(stderr, "Warning: Could not connect to update server to verify current version. Please check at the Cufflinks website (http://cufflinks.cbcb.umd.edu).\n");
-	}
-
+	check_version(PACKAGE_VERSION);
 	
     init_library_table();
     

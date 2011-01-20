@@ -1,7 +1,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #else
- #define PACKAGE_VERSION "0.853"
+#define PACKAGE_VERSION "INTERNAL"
 #endif
 
 #include "GArgs.h"
@@ -153,6 +153,8 @@ GList<GSeqTrack> gseqtracks(true,true,true);
 GSeqTrack* findGSeqTrack(int gsid);
 
 int main(int argc, char * const argv[]) {
+	check_version(PACKAGE_VERSION);
+
   GArgs args(argc, argv, "XDTMNVGCKRLhp:c:d:s:i:n:r:o:");
   int e;
   if ((e=args.isError())>0)

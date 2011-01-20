@@ -1541,7 +1541,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//assert (det);
 	if (s == 0.0)
 	{
-		fprintf(stderr, "\nError: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
+		verbose_msg("Error: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
 		//cerr << covariance << endl;
 		return false;
 	}

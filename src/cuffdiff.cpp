@@ -165,13 +165,13 @@ int parse_options(int argc, char** argv)
 				max_mle_iterations = parseInt(1, "--max-mle-iterations must be at least 1", print_usage);
 				break;
 			case OPT_BIAS_MODE:
-				if (optarg == "site")
+				if (!strcmp(optarg, "site"))
 					bias_mode = SITE;
-				else if (optarg == "pos")
+				else if (!strcmp(optarg, "pos"))
 					bias_mode = POS;
-				else if (optarg == "pos_vlmm")
+				else if (!strcmp(optarg, "pos_vlmm"))
 					bias_mode = POS_VLMM;
-				else if (optarg == "vlmm")
+				else if (!strcmp(optarg, "vlmm"))
 					bias_mode = VLMM;
 				else
 				{
@@ -566,6 +566,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
+	check_version(PACKAGE_VERSION);
+
 	ReadTable it;
 	RefSequenceTable rt(true, false);
     

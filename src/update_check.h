@@ -14,6 +14,7 @@
 
 int NUM_SEPS = 3;
 
+
 bool error(const char *msg)
 {
 	return false;
@@ -74,4 +75,21 @@ bool get_current_version(char* curr_version)
 	strcpy(curr_version, token);
 		
 	return true;
+}
+
+void check_version(const char* this_version)
+{
+	char curr_version[256];
+	if (get_current_version(curr_version))
+	{
+		if (strcmp(curr_version, this_version)==0)
+			fprintf(stderr, "You are using Cufflinks v%s, which is the most recent release.\n", PACKAGE_VERSION);
+		else
+			fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date. It is recommended that you upgrade to Cufflinks v%s to benefit from the most recent features and bug fixes.\n", curr_version);
+		
+	}
+	else 
+	{
+		fprintf(stderr, "Warning: Could not connect to update server to verify current version. Please check at the Cufflinks website (http://cufflinks.cbcb.umd.edu).\n");
+	}
 }

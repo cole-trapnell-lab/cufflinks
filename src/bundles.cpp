@@ -477,7 +477,7 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
     }
     
     // Merge  hits
-    vector<int> indices(in_bundles.size(),0);
+    vector<size_t> indices(in_bundles.size(),0);
     while(true)
     {
         int next_bundle = -1;
@@ -506,12 +506,12 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
     }
     
     // Merge collapsed hits
-    indices = vector<int>(in_bundles.size(), 0);
+    indices = vector<size_t>(in_bundles.size(), 0);
     while(true)
     {
         int next_bundle = -1;
         const MateHit* next_hit = NULL; 
-        for(int i = 0; i < in_bundles.size(); ++i)
+        for(size_t i = 0; i < in_bundles.size(); ++i)
         {
             const vector<MateHit>& curr_non_redundant_hits = in_bundles[i]->non_redundant_hits();
             
@@ -534,7 +534,7 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
         indices[next_bundle]++;
     }
     
-    for(int i = 0; i < in_bundles.size(); ++i)
+    for(size_t i = 0; i < in_bundles.size(); ++i)
     {
         for (size_t j = 0; j < in_bundles[i]->_ref_scaffs.size(); ++j)
         {
@@ -543,12 +543,12 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
     }
     
     // Merge ref scaffolds
-    indices = vector<int>(in_bundles.size(), 0);
+    indices = vector<size_t>(in_bundles.size(), 0);
     while(true)
     {
         int next_bundle = -1;
         shared_ptr<Scaffold> next_scaff; 
-        for(int i = 0; i < in_bundles.size(); ++i)
+        for(size_t i = 0; i < in_bundles.size(); ++i)
         {
             const vector<shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]->_ref_scaffs;
             
