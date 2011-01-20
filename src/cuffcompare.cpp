@@ -1,14 +1,19 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
+#define CUFF_UPDATE_CHECK 1
 #else
 #define PACKAGE_VERSION "INTERNAL"
+#undef CUFF_UPDATE_CHECK
 #endif
 
 #include "GArgs.h"
 #include <ctype.h>
 #include <errno.h>
 #include "gtf_tracking.h"
-#include "update_check.h"
+
+#ifdef CUFF_UPDATE_CHECK
+ #include "update_check.h"
+#endif
 
 #define USAGE "Usage:\n\
 cuffcompare [-r <reference_mrna.gtf>] [-R] [-T] [-V] [-s <seq_path>] \n\
@@ -154,8 +159,9 @@ GList<GSeqTrack> gseqtracks(true,true,true);
 GSeqTrack* findGSeqTrack(int gsid);
 
 int main(int argc, char * const argv[]) {
+#ifdef CUFF_UPDATE_CHECK
 	check_version(PACKAGE_VERSION);
-
+#endif
   GArgs args(argc, argv, "XDTMNVGCKRLhp:c:d:s:i:n:r:o:");
   int e;
   if ((e=args.isError())>0)

@@ -2,12 +2,6 @@
 #include "GArgs.h"
 #include <ctype.h>
 
-#define TRACE 1
-
-
-//GArgs::is_opt="1"; //just to have a non-NULL value for switch testing
-
-
 GArgs::GArgs(int argc, char* const argv[], const char* format, bool nodigitopts) {
    /* format is:
        <letter>[:]    for e.g. p:hT    <-  -p testing -ptesting -h -T
