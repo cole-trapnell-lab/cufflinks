@@ -28,6 +28,7 @@
 #include "abundances.h"
 #include "tokenize.h"
 #include "biascorrection.h"
+#include "update_check.h"
 
 #include <boost/thread.hpp>
 #include <boost/graph/adjacency_list.hpp>

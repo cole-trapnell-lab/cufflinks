@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include "gtf_tracking.h"
+#include "update_check.h"
 
 #define USAGE "Usage:\n\
 cuffcompare [-r <reference_mrna.gtf>] [-R] [-T] [-V] [-s <seq_path>] \n\
