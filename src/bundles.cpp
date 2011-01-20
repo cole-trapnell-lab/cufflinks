@@ -80,22 +80,22 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 {
 	if (loadSeqs)
 		ProgressBar p_bar("Loading reference and sequence.",0);
-    
+
 	GList<GSeqData> ref_rnas;
 	
-    // If the RefSequenceTable already has entries, we will sort the GTF records
-    // according to their observation order.  Otherwise, we will sort the 
-    // RefSequenceTable's records lexicographically.
-    bool reorder_GTF_recs_lexicographically = false;
-    if (rt.size() == 0)
-    {
-        reorder_GTF_recs_lexicographically = true;
-    }
-    
+	// If the RefSequenceTable already has entries, we will sort the GTF records
+	// according to their observation order.  Otherwise, we will sort the 
+	// RefSequenceTable's records lexicographically.
+	bool reorder_GTF_recs_lexicographically = false;
+	if (rt.size() == 0)
+	{
+	  reorder_GTF_recs_lexicographically = true;
+	}
+
 	if (ref_mRNA_file)
 	{
+		gtf_tracking_verbose=cuff_verbose;
 		read_transcripts(ref_mRNA_file, ref_rnas);
-        //read_mRNAs(ref_mRNA_file, ref_rnas, &ref_rnas, true, -1, "", false);
 	}
 	
 	int last_gseq_id = -1;
@@ -117,16 +117,15 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 			int r_count = ref_rnas[j]->mrnas_r.Count();
 			int u_count = ref_rnas[j]->umrnas.Count();
 			
-			
 			while(!(f==f_count && r==r_count && u==u_count))
 			{	
 				CuffStrand strand;
 				
 				if (f < f_count)
-                {
+				{
 					rna_p = ref_rnas[j]->mrnas_f[f++];
 					strand = CUFF_FWD;
-                }
+				}
 				else if (r < r_count) 
 				{
 					rna_p = ref_rnas[j]->mrnas_r[r++];
@@ -137,11 +136,9 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					rna_p = ref_rnas[j]->umrnas[u++];
 					strand = CUFF_STRAND_UNKNOWN;
 				}
-				
-				
+
 				GffObj& rna = *rna_p;
-				
-                
+
 				if (loadSeqs && rna.gseq_id != last_gseq_id) //next chromosome
 				{
 					delete faseq;
@@ -174,7 +171,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				if (loadSeqs && faseq){ 
 					rna_seq = rna.getSpliced(faseq, false, &seqlen);
 				}
-                
+
 				if (rna.getID())
 					ref_scaff.annotated_trans_id(rna.getID());
 				
