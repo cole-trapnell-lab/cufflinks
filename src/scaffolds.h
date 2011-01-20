@@ -194,11 +194,11 @@ public:
 		_classcode(0){}
 	
 	Scaffold(const MateHit& mate) :
-		  _ref_id(mate.ref_id()),
-		  _is_ref(false),
-		  _left(mate.left()), 
-	      _right(mate.right()),
-	      _classcode(0)
+		_ref_id(mate.ref_id()),
+		_left(mate.left()), 
+	    _right(mate.right()),
+		_is_ref(false),
+	    _classcode(0)
 	{
 		const ReadHit* left_hit = mate.left_alignment();
 		//CuffAlign a;
@@ -406,9 +406,9 @@ public:
 				return (left() <= other.left() && right() + overhang_3 >= other.right()); 
 			case CUFF_REV:
 				return (right() >= other.right() && left() - overhang_3 <= other.left()); 
+			default:
+				return (left()-overhang_3 <= other.left() && right()+overhang_3 >= other.right()); 
 		}
-		
-		return (left()-overhang_3 <= other.left() && right()+overhang_3 >= other.right()); 
 	}
 	
 	// Tests whether the other scaffold contains the 5' end and is contained (allowing some overhang) on the 3' end
@@ -420,9 +420,9 @@ public:
 				return (left() >= other.left() && right() + overhang_3 >= other.right()); 
 			case CUFF_REV:
 				return (right() <= other.right() && left() - overhang_3 <= other.left()); 
+			default:
+				return false;
 		}
-		
-		return false; 
 	}
 	
 	int match_length(int left, int right) const;

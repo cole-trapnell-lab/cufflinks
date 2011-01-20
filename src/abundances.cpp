@@ -1707,8 +1707,8 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		return;
 	}
 	
-	int M = nr_alignments.size();
-	int N = transcripts.size();
+	size_t M = nr_alignments.size();
+	size_t N = transcripts.size();
 
 	
 	if (M > 0)

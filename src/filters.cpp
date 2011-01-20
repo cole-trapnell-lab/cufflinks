@@ -809,8 +809,14 @@ void filter_junk_genes(vector<Gene>& genes)
 	{
 		const Gene& g = genes[i];
 		bool good_gene = true;
+		bool has_ref_trans = false;
 		for (size_t j = 0; j < all_isoforms.size(); ++j)
 		{
+			if (all_isoforms[i].scaffold().is_ref())
+			{
+				has_ref_trans = true;
+				break;
+			}
 			vector<pair<int, int> > introns = all_isoforms[j].scaffold().gaps();
 			for (size_t k = 0; k < introns.size(); ++k)
 			{
@@ -828,7 +834,7 @@ void filter_junk_genes(vector<Gene>& genes)
                 good_gene = false;
             }
         }
-		if (good_gene)
+		if (good_gene || has_ref_trans)
         {
 			good_genes.push_back(g);
         }

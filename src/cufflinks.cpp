@@ -647,7 +647,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				density_per_bp *= avg_read_length;
 				//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
 				
-				if (!allow_junk_filtering || density_score > min_isoform_fraction || major_isoform_FPKM == 0.0)
+				if (!allow_junk_filtering || transfrag->is_ref() || density_score > min_isoform_fraction || major_isoform_FPKM == 0.0)
 				{
 					isoforms.push_back(Isoform(*transfrag,
 											   gene_id,
