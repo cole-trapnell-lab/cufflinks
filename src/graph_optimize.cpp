@@ -452,7 +452,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				
 				double lhs_len = lhs_scaff.right() - lhs_scaff.left();
 				
-				for (int i = 0; i < smaller_idx_array.size(); ++i)
+				for (size_t i = 0; i < smaller_idx_array.size(); ++i)
 				{
 					size_t j_scaff_idx = smaller_idx_array[i];
 					if (Scaffold::overlap_in_genome(lhs_scaff, fragments[j_scaff_idx], 0))
@@ -466,7 +466,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				sort(curr_conflicts.begin(), curr_conflicts.end());
 				
 				//bool advanced_curr = false;
-				for (int c = lhs + 1; c < smaller_idx_array.size(); ++c)
+				for (size_t c = lhs + 1; c < smaller_idx_array.size(); ++c)
 				{
 					size_t c_native_idx = smaller_idx_array[c];
 					const Scaffold& c_scaff = fragments[c_native_idx];
@@ -527,7 +527,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 					
 						// Now check that c doesn't have any additional conflicts
 						// of it's own
-						for (int i = lhs_native_idx + 1; i < fragments.size(); ++i)
+						for (size_t i = lhs_native_idx + 1; i < fragments.size(); ++i)
 						{
 							if (Scaffold::overlap_in_genome(fragments[i], lhs_scaff, 0))
 							{

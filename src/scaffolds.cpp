@@ -15,7 +15,8 @@
 using namespace std;
 
 bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
-								 const AugmentedCuffOp& rhs)
+								 const AugmentedCuffOp& rhs,
+								 int overhang_tolerance)
 {
 	int l_match = match_length(lhs, rhs.g_left(), rhs.g_right());
 	if (rhs.opcode == CUFF_INTRON)
@@ -33,7 +34,7 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 				if (left_diff + right_diff > max_frag_len)
 					return false;
 			}
-		else if (l_match > bowtie_overhang_tolerance)
+		else if (l_match > overhang_tolerance)
 		{
 			return false;
 		}
@@ -60,7 +61,7 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 				if (left_diff + right_diff > max_frag_len)
                 return false;
 		}
-		else if (r_match > bowtie_overhang_tolerance)
+		else if (r_match > overhang_tolerance)
 		{
 			return false;
 		}
@@ -464,44 +465,64 @@ inline bool has_intron(const Scaffold& scaff)
 
 void Scaffold::extend_5(const Scaffold& other)
 {
-	_has_intron = _has_intron | other.has_intron();
+	assert(Scaffold::compatible(*this, other));
+	bool single_exon = (_augmented_ops.size()==1);
+	
 	if (strand() == CUFF_FWD)
 	{
-		AugmentedCuffOp& first_op = _augmented_ops.front();
-		_augmented_ops.erase(_augmented_ops.begin());
-		
-		for(size_t i = 0; i < other.augmented_ops().size(); ++i)
+		AugmentedCuffOp first_op = _augmented_ops.front();
+		if (single_exon)
 		{
-			AugmentedCuffOp op = other.augmented_ops()[i];
-			assert(op.g_right() <= first_op.g_right());
-			if (op.g_left() <= first_op.g_left())
+			_augmented_ops = other.augmented_ops();
+			_augmented_ops.pop_back();
+			_augmented_ops.push_back(first_op);
+		}
+		else
+		{
+			_augmented_ops.erase(_augmented_ops.begin());
+			
+			for(size_t i = 0; i < other.augmented_ops().size(); ++i)
 			{
-				_augmented_ops.insert( _augmented_ops.begin() + i, op);
-			}
-			if (op.g_right() == first_op.g_right())
-			{
-				break;
+				AugmentedCuffOp op = other.augmented_ops()[i];
+				assert(op.g_right() <= first_op.g_right());
+				if (op.g_left() <= first_op.g_left())
+				{
+					_augmented_ops.insert( _augmented_ops.begin() + i, op);
+				}
+				if (op.g_right() == first_op.g_right())
+				{
+					break;
+				}
 			}
 		}
 		_left = _augmented_ops.front().g_left();
 	}
 	else if (strand() == CUFF_REV)
 	{
-		AugmentedCuffOp& last_op = _augmented_ops.back();
-		_augmented_ops.pop_back();
+		AugmentedCuffOp last_op = _augmented_ops.back();
 		
-		size_t init_size = _augmented_ops.size();
-		for(size_t i = other.augmented_ops().size()-1; i >= 0; --i)
+		if (single_exon)
 		{
-			AugmentedCuffOp op = other.augmented_ops()[i];
-			assert(op.g_left() >= last_op.g_left());
-			if (op.g_right() >= last_op.g_right())
+			_augmented_ops = other.augmented_ops();
+			_augmented_ops.erase(_augmented_ops.begin());
+			_augmented_ops.insert(_augmented_ops.begin(), last_op);
+		}
+		{
+			_augmented_ops.pop_back();
+			
+			size_t init_size = _augmented_ops.size();
+			for(size_t i = 0; i < other.augmented_ops().size(); ++i)
 			{
-				_augmented_ops.insert(_augmented_ops.begin() + init_size, op);
-			}
-			if (op.g_left() == last_op.g_left())
-			{
-				break;
+				AugmentedCuffOp op = other.augmented_ops()[other.augmented_ops().size() - i - 1];
+				assert(op.g_left() >= last_op.g_left());
+				if (op.g_right() >= last_op.g_right())
+				{
+					_augmented_ops.insert(_augmented_ops.begin() + init_size, op);
+				}
+				if (op.g_left() == last_op.g_left())
+				{
+					break;
+				}
 			}
 		}
 		_right = _augmented_ops.back().g_right();
@@ -510,6 +531,7 @@ void Scaffold::extend_5(const Scaffold& other)
 	{
 		assert(false);
 	}
+	_has_intron = has_intron(*this);
 	_annotated_trans_id += "_ext";
 }
 
@@ -725,7 +747,8 @@ bool Scaffold::strand_agree(const Scaffold& lhs,
 
 
 bool Scaffold::compatible(const Scaffold& lhs, 
-						  const Scaffold& rhs)
+						  const Scaffold& rhs,
+						  int overhang_tolerance)
 {	
 	if (!strand_agree(lhs, rhs))
 		return false;
@@ -735,7 +758,7 @@ bool Scaffold::compatible(const Scaffold& lhs,
 		if (overlap_in_genome(lhs, rhs, olap_radius))
 		{
 			// check compatibility
-			if (!compatible_contigs(lhs, rhs))
+			if (!compatible_contigs(lhs, rhs, overhang_tolerance))
 				return false;
 		}
 	}
@@ -744,7 +767,7 @@ bool Scaffold::compatible(const Scaffold& lhs,
 		if (overlap_in_genome(rhs, lhs, olap_radius))
 		{
 			// check compatibility
-			if (!compatible_contigs(rhs, lhs))
+			if (!compatible_contigs(rhs, lhs, overhang_tolerance))
 				return false;
 		}
 	}
@@ -753,8 +776,9 @@ bool Scaffold::compatible(const Scaffold& lhs,
 	return true;
 }
 
-bool Scaffold::distance_compatible_contigs(const Scaffold& lhs, 
-										   const Scaffold& rhs)
+bool Scaffold::compatible_contigs(const Scaffold& lhs, 
+								  const Scaffold& rhs,
+								  int overhang_tolerance)
 {
 	const vector<AugmentedCuffOp>& l_aug = lhs._augmented_ops;
 	const vector<AugmentedCuffOp>& r_aug = rhs._augmented_ops;
@@ -773,7 +797,7 @@ bool Scaffold::distance_compatible_contigs(const Scaffold& lhs,
 			if (AugmentedCuffOp::overlap_in_genome(l_op, r_op))
 			{
 				// check compatibility
-				if (!AugmentedCuffOp::compatible(l_op, r_op))
+				if (!AugmentedCuffOp::compatible(l_op, r_op, overhang_tolerance))
 					return false;
 //				if (l_op.opcode == CUFF_UNKNOWN && 
 //					r_op.opcode == CUFF_MATCH)
@@ -798,7 +822,7 @@ bool Scaffold::distance_compatible_contigs(const Scaffold& lhs,
 			if (AugmentedCuffOp::overlap_in_genome(r_op, l_op))
 			{
 				// check compatibility
-				if (!AugmentedCuffOp::compatible(r_op, l_op))
+				if (!AugmentedCuffOp::compatible(r_op, l_op, overhang_tolerance))
 						return false;
 //				if (r_op.opcode == CUFF_UNKNOWN && 
 //					l_op.opcode == CUFF_MATCH)

@@ -762,6 +762,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 		vector<shared_ptr<Scaffold> > hit_scaffolds;
 		bool success = scaffolds_for_bundle(bundle, hit_scaffolds, NULL);
 		scaffolds = bundle.ref_scaffolds();
+
 		if (success)
 		{
 			size_t first_to_compare = 0;			
@@ -779,11 +780,11 @@ void assemble_bundle(const RefSequenceTable& rt,
 					{
 						break;
 					}
-					else if (ref_scaff->contains_with_3_hang(*hit_scaff) && Scaffold::compatible(*ref_scaff, *hit_scaff))
+					else if (ref_scaff->contains(*hit_scaff, 0, overhang_3) && Scaffold::compatible(*ref_scaff, *hit_scaff, ref_merge_overhang_tolerance))
 					{
 						ok_to_add = false;
 					}
-					else if (ref_scaff->contained_5_contains_3_hang(*hit_scaff) && Scaffold::compatible(*ref_scaff, *hit_scaff))
+					else if (ref_scaff->overlapped_3(*hit_scaff, 0, overhang_3) && Scaffold::compatible(*ref_scaff, *hit_scaff, ref_merge_overhang_tolerance))
 					{
 						ref_scaff->extend_5(*hit_scaff);
 						ok_to_add = false;
@@ -1034,6 +1035,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 			thread_pool_lock.unlock();
 			break;
 		}
+		p_bar.remaining(curr_threads);
 		
 		thread_pool_lock.unlock();
 		//fprintf(stderr, "waiting to exit\n");

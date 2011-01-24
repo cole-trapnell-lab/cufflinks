@@ -695,7 +695,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             locus_thread_pool_lock.unlock();
             break;
         }
-        
         locus_thread_pool_lock.unlock();
         
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));

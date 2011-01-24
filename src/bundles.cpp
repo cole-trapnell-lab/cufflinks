@@ -891,7 +891,6 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 		{
 			return next_bundle_ref_driven(bundle);
 		}
-
 	}
 		
 	if (bh->left() < (*next_ref_scaff)->left())
@@ -925,31 +924,19 @@ bool BundleFactory::_expand_by_refs(HitBundle& bundle)
 	int initial_right = bundle.right();
 		
 	while(next_ref_scaff < ref_mRNAs.end())
-	{
-		if (bundle.ref_id() == (*next_ref_scaff)->ref_id())
+	{		
+		assert(bundle.ref_id() != (*next_ref_scaff)->ref_id() || (*next_ref_scaff)->left() >= bundle.left());
+		if (bundle.ref_id() == (*next_ref_scaff)->ref_id()
+			&& overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),bundle.left(), bundle.right()))
 		{
-			// if the ref_scaff here overlaps the current bundle interval,
-			// we have to include it, and expand the bundle interval
-			if (overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),bundle.left(), bundle.right()))
-			{
-				bundle.add_ref_scaffold(*next_ref_scaff);
-			}
-			
-			// If the ref transcript is to the right of the bundle interval, 
-			// then we can leave this the ref transcript out for now
-			if ((*next_ref_scaff)->left() >= bundle.right())
-			{
-				break;
-			}
+			bundle.add_ref_scaffold(*next_ref_scaff++);
 		}
 		else 
 		{
 			break;
-		}
-		
-		next_ref_scaff++;
+		}		
 	}
-	
+
 	
 	return (bundle.right() > initial_right);
 }

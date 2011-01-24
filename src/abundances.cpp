@@ -1384,12 +1384,12 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance)
 {	
-	int N = transcripts.size();	
-	int M = nr_alignments.size();
+	size_t N = transcripts.size();	
+	size_t M = nr_alignments.size();
 	
 	gamma_covariance = ublas::zero_matrix<double>(N);
 	
-	if (N == 1 || M == 0.0)
+	if (N == 1 || M == 0)
 	{
 		return true;
 	}
@@ -1409,7 +1409,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 				   fisher);
 	
 	ublas::matrix<double> epsilon = ublas::zero_matrix<double>(N,N);
-	for (int i = 0; i < N; ++i)
+	for (size_t i = 0; i < N; ++i)
 	{
 		epsilon(i,i) = 1e-6;
 	}
@@ -1454,7 +1454,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	}
 	
 	ublas::vector<double> MLE(N);
-	for (int i = 0; i < N; ++i)
+	for (size_t i = 0; i < N; ++i)
 	{
 		MLE(i) = gamma_map_estimate[i];
 	}
@@ -1493,7 +1493,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		ublas::vector<double> r = generator.next_rand();
 		ublas::vector<double> scaled_sample = r;
 		
-		for (int j = 0; j < N; ++j) {
+		for (size_t j = 0; j < N; ++j) {
 			if (scaled_sample(j) < 0)
 				scaled_sample(j) = 1e-10;
 		}
@@ -1501,7 +1501,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		double m = sum(scaled_sample);
 		if (m && !isnan(m))
 		{
-			for (int j = 0; j < N; ++j) {
+			for (size_t j = 0; j < N; ++j) {
 				scaled_sample(j) = scaled_sample(j) / m;
 			}
 			
@@ -1563,7 +1563,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	vector<ublas::vector<double> > weighted_samples;
 	
 	vector<vector<double> > cond_probs(N, vector<double>());
-	for(int j = 0; j < N; ++j)
+	for(size_t j = 0; j < N; ++j)
 	{
 		cond_probs[j]= *(transcripts[j]->cond_probs());
 	}
@@ -1609,7 +1609,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//expectation /= total_weight;
 	//cerr << expectation << endl;
 	
-	for (int j = 0; j < N; ++j) 
+	for (size_t j = 0; j < N; ++j) 
 	{
 		if (expectation(j) < 0)
 			expectation(j) = 0;
@@ -1623,7 +1623,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		return false;
 	}
 	
-	for (int j = 0; j < N; ++j) {
+	for (size_t j = 0; j < N; ++j) {
 		expectation(j) = expectation(j) / m;
 	}
 	
@@ -1655,9 +1655,9 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	ublas::matrix<double> revised_cov = ublas::zero_matrix<double>(N,N);
 	
 	// initialize the revised covariance with the values from the first sample
-	for (int k = 0; k < N; ++k)
+	for (size_t k = 0; k < N; ++k)
 	{
-		for (int i = 0; i < N; ++i)
+		for (size_t i = 0; i < N; ++i)
 		{
 			double log_sample_weight = sample_weights[0].second;
 			double x = sample_expectation_diffs[0](k);
@@ -1671,9 +1671,9 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	// accumulate the contributions from the other samples (doing one cell of 
 	// covariance matrix per outer (i x j) loop iteration.
-	for (int k = 0; k < N; ++k)
+	for (size_t k = 0; k < N; ++k)
 	{
-		for (int i = 0; i < N; ++i)
+		for (size_t i = 0; i < N; ++i)
 		{
 			for (size_t j = 1; j < sample_expectation_diffs.size(); ++j)
 			{

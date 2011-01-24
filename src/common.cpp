@@ -55,6 +55,7 @@ int olap_radius = 50;
 
 int overhang_3 = 500;
 
+int ref_merge_overhang_tolerance = 20;
 int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 
 float min_isoform_fraction = 0.1;

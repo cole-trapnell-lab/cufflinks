@@ -95,7 +95,8 @@ struct AugmentedCuffOp
 	}
 	
 	static bool compatible(const AugmentedCuffOp& lhs,
-						   const AugmentedCuffOp& rhs);
+						   const AugmentedCuffOp& rhs,
+						   int overhang_tolerance = bowtie_overhang_tolerance);
 	
 	bool operator==(const AugmentedCuffOp& rhs) const
 	{
@@ -371,7 +372,8 @@ public:
 	
 	// Could we merge lhs and rhs together?
 	static bool compatible(const Scaffold& lhs, 
-						   const Scaffold& rhs);
+						   const Scaffold& rhs,
+						   int overhang_tolerance = bowtie_overhang_tolerance);
 	
 	static bool strand_agree(const Scaffold& lhs, 
 							 const Scaffold& rhs);
@@ -392,34 +394,53 @@ public:
 	
 	void extend_5(const Scaffold& other);
 	
-	bool contains(const Scaffold& other) const
-	{
-		return (left() <= other.left() && right() >= other.right());
-	}
-	
 	// Tests whether the other scaffold is contained completely on the 5' end and within some overhang on the 3' end
-	bool contains_with_3_hang(const Scaffold& other) const
+	bool contains(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const
 	{
+		
+		if (left() <= other.left() && right()>= other.right())
+			return true;
+		
+		if (ohang_3 + ohang_5 == 0)
+			return false;
+		
+		int left_hang;
+		int right_hang;
 		switch(strand())
 		{
 			case CUFF_FWD:
-				return (left() <= other.left() && right() + overhang_3 >= other.right()); 
+				left_hang = ohang_5;
+				right_hang = ohang_3;
+				break;
 			case CUFF_REV:
-				return (right() >= other.right() && left() - overhang_3 <= other.left()); 
+				left_hang = ohang_5;
+				right_hang = ohang_3;
+				break;
 			default:
-				return (left()-overhang_3 <= other.left() && right()+overhang_3 >= other.right()); 
+				left_hang = max(ohang_3, ohang_5);
+				right_hang = left_hang;
 		}
+		
+		// Test to see if it is contained within the relaxed boundaries
+		if (left()-left_hang <= other.left() && right() + right_hang >= other.right());
+		{
+			// Ensure that there are no exons outside of the strict boundaries
+			return (other.augmented_ops().front().g_right() > left() && other.augmented_ops().back().g_left() < right()); 
+		}
+		
+		return false;
+
 	}
 	
 	// Tests whether the other scaffold contains the 5' end and is contained (allowing some overhang) on the 3' end
-	bool contained_5_contains_3_hang(const Scaffold& other) const
+	bool overlapped_3(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const
 	{
 		switch(strand())
 		{
 			case CUFF_FWD:
-				return (left() >= other.left() && right() + overhang_3 >= other.right()); 
+				return (left() + ohang_5 >= other.left() && right() + ohang_3 >= other.right()); 
 			case CUFF_REV:
-				return (right() <= other.right() && left() - overhang_3 <= other.left()); 
+				return (right() - ohang_5 <= other.right() && left() - ohang_3 <= other.left()); 
 			default:
 				return false;
 		}
@@ -551,17 +572,10 @@ private:
 	static double min_score(const Scaffold& contig, 
 							const vector<pair<int, int> >& inners);
 	
-	static bool distance_compatible_contigs(const Scaffold& lhs, 
-											const Scaffold& rhs);
-	
 	static bool compatible_contigs(const Scaffold& lhs, 
-								   const Scaffold& rhs)
-	{
-		
-		bool dist = distance_compatible_contigs(lhs,
-												rhs);
-		return (dist);
-	}
+											const Scaffold& rhs,
+											int overhang_tolerance = bowtie_overhang_tolerance);
+	
 	
 	typedef vector<AugmentedCuffOp> OpList;
 	

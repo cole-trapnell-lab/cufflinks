@@ -256,7 +256,7 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 	{
 		
 		//Position Bias
-		if (i > startBinCutoff && currStartBin < _startPosParams.size1()-1)
+		if (i > startBinCutoff && currStartBin < (int)_startPosParams.size1()-1)
 			startBinCutoff=positionBins[++currStartBin]*(seqLen - min_frag_len);
 		if (i - min_frag_len > endBinCutoff)
 			endBinCutoff = positionBins[++currEndBin]*(seqLen - min_frag_len);
@@ -352,7 +352,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 	for (int i=0; i < seqLen; i++)
 	{
 		//Position Bias
-		if (i > startBinCutoff && currStartBin < _startPosParams.size1()-1)
+		if (i > startBinCutoff && currStartBin < (int)_startPosParams.size1()-1)
 			startBinCutoff=positionBins[++currStartBin]*(seqLen - min_frag_len);
 		if (i - min_frag_len > endBinCutoff)
 			endBinCutoff = positionBins[++currEndBin]*(seqLen - min_frag_len);

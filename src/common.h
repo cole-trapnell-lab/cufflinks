@@ -51,6 +51,7 @@ extern float pre_mrna_fraction;
 
 extern int num_threads;
 
+extern int ref_merge_overhang_tolerance;
 extern int bowtie_overhang_tolerance;
 extern float min_isoform_fraction;
 //extern float min_isoform_fraction;

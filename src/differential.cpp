@@ -629,7 +629,7 @@ void test_differential(const string& locus_tag,
     // by the user.
 	for (size_t i = 1; i < samples.size(); ++i)
 	{
-		bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
+		//bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
 		
         int sample_to_start_test_against = 0;
         if (samples_are_time_series)

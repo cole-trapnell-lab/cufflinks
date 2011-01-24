@@ -189,7 +189,7 @@ void pre_mrna_filter(int bundle_length,
                                                    i_right - bundle_left);
         
         double cumul_cov = 0;
-        for (size_t i = 0; i < i_right - i_left; ++i)
+        for (int i = 0; i < i_right - i_left; ++i)
         {
             size_t pos = (i_left - bundle_left) + i;
             cumul_cov += depth_of_coverage[pos];
@@ -768,7 +768,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 			(abundances[t] / max_rev_ab) < min_isoform_fraction)
 			too_rare[t] = true;
         
-        if ((scaff->mate_hits().size() < min_frags_per_transfrag))
+        if (((int)scaff->mate_hits().size() < min_frags_per_transfrag))
             chaff[t] = true;
 		
 	}
@@ -812,7 +812,7 @@ void filter_junk_genes(vector<Gene>& genes)
 		bool has_ref_trans = false;
 		for (size_t j = 0; j < all_isoforms.size(); ++j)
 		{
-			if (all_isoforms[i].scaffold().is_ref())
+			if (all_isoforms[j].scaffold().is_ref())
 			{
 				has_ref_trans = true;
 				break;

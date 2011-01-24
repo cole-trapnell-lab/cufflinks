@@ -15,6 +15,8 @@ class ProgressBar
 	int _num_complete;
 	int _tot_num;
 	int _num_updates;
+	int _num_remaining;
+	
 public:
 	ProgressBar() {}
 	
@@ -23,6 +25,7 @@ public:
 		_tot_num = tot_num;
 		_process = process;
 		_num_complete = -1;
+		_num_remaining = -1;
 		_num_updates = 0;
 		
 		for(int i=0; i < BAR_BUF_SIZE; ++i) _bar_buf[i] = ' ';
@@ -63,6 +66,28 @@ public:
 		char line_buf[82];
 		snprintf(line_buf, 81, "\r> Processing Locus %-27s %s %3d%%", bundle_buf, _bar_buf, percent);
 
+		fprintf(stderr,"%s",line_buf);
+	}
+	
+	void remaining(int num_remaining)
+	{
+		if (cuff_verbose||cuff_quiet||_tot_num==0||num_remaining==_num_remaining) return;
+		
+		_num_remaining = num_remaining;
+		
+		int percent = ((_tot_num - num_remaining) * 100)/_tot_num;
+		percent = min(percent, 100);
+		
+		char msg_buff[45];
+		sprintf(msg_buff, "Waiting for %d threads to complete.", num_remaining);
+		
+		int last_bar = percent/(100/(BAR_BUF_SIZE-3));
+		for (int i=1; i <= last_bar; ++i)
+			_bar_buf[i] = SYMBOL;
+		
+		char line_buf[82];
+		snprintf(line_buf, 81, "\r> %-44s %s %3d%%", msg_buff, _bar_buf, percent);
+		
 		fprintf(stderr,"%s",line_buf);
 	}
 	

@@ -592,7 +592,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 
 	// Convert histogram to pdf and cdf, calculate mean
 	int frag_len_mode = 0;
-	for(size_t i = min_len; i <= max_len; i++)
+	for(size_t i = min_len; i <= (size_t)max_len; i++)
 	{
 		frag_len_pdf[i] = frag_len_hist[i]/tot_count;
 		frag_len_cdf[i] = frag_len_cdf[i-1] + frag_len_pdf[i];

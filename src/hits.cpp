@@ -408,7 +408,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
     
 	if (!spliced_alignment)
 	{
-		
+		assert(_rg_props.strandedness() == STRANDED_PROTOCOL || source_strand == CUFF_STRAND_UNKNOWN);
+
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(bam1_qname(hit_buf),
 						text_name,
@@ -543,7 +544,7 @@ void HitFactory::finalize_rg_props()
     }
 }
 
-static const int MAX_HEADER_LEN = 4 * 1024 * 1024; // 4 MB
+static const unsigned MAX_HEADER_LEN = 4 * 1024 * 1024; // 4 MB
 
 bool BAMHitFactory::inspect_header()
 {
@@ -844,8 +845,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
 	
 	if (!spliced_alignment)
-	{
-		
+	{		
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(name,
 						text_name,
