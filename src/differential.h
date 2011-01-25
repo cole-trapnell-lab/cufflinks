@@ -45,6 +45,7 @@ struct SampleDifference
 	value_2(0.0),
 	test_stat(0.0),
     p_value(1.0),
+	corrected_p(1.0),
 	tested_group_id(-1),
 	test_status(NOTEST),
 	significant(false){}
@@ -57,6 +58,7 @@ struct SampleDifference
 	double differential;
 	double test_stat;
 	double p_value;
+	double corrected_p;
 	
 	size_t tested_group_id; // which scaffolds' FPKMs contribute
 	

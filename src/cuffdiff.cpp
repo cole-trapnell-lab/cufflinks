@@ -253,6 +253,25 @@ int parse_options(int argc, char** argv)
         }
     } while(next_option != -1);
 	
+	if (library_type != "")
+    {
+        map<string, ReadGroupProperties>::iterator lib_itr = 
+		library_type_table.find(library_type);
+        if (lib_itr == library_type_table.end())
+        {
+            fprintf(stderr, "Error: Library type %s not supported\n", library_type.c_str());
+            exit(1);
+        }
+        else 
+        {
+            if (library_type == "transfrags")
+            {
+                allow_junk_filtering = false;
+            }
+            global_read_properties = &lib_itr->second;
+        }
+    }
+	
     tokenize(sample_label_list, ",", sample_labels);
     
 	allow_junk_filtering = false;
@@ -331,6 +350,7 @@ void print_tests(FILE* fout,
 			double r2 = test.value_2;
 			double d = test.differential;
 			double p = test.p_value;
+			double q = test.corrected_p;
 			const char* sig;
 			if (test.significant && test.test_status == OK)
 				sig = "yes";
@@ -343,12 +363,12 @@ void print_tests(FILE* fout,
 			else
 				status = "NOTEST";
 			
-			fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, sig);
+			fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
 			fprintf(fout, "\n");
 		}
 		else
 		{
-			fprintf(fout, "\tFAIL\t0.0\t0.0\t0.0\t0.0\t1.0\tno\n");
+			fprintf(fout, "\tFAIL\t0.0\t0.0\t0.0\t0.0\t1.0\t1.0\tno\n");
 		}
 	}
 }
@@ -431,6 +451,7 @@ int fdr_significance(double fdr,
 	{
 		double r = (double)passing.size() / (k + 1);
 		double corrected_p = passing[k]->p_value * r;
+		passing[k]->corrected_p = corrected_p;
 		passing[k]->significant = (corrected_p <= fdr);
 	}
 	return passing.size();
@@ -846,7 +867,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
 	fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
-    fprintf(outfiles.isoform_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
+    fprintf(outfiles.isoform_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
 	for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
@@ -868,7 +889,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
 	fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
-    fprintf(outfiles.group_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
+    fprintf(outfiles.group_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
 	for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
@@ -890,7 +911,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
 	fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
-	fprintf(outfiles.gene_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
+	fprintf(outfiles.gene_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
 	{        
         for (size_t j = 0; j < i; ++j)
@@ -911,7 +932,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
 	fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
-	fprintf(outfiles.cds_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tsignificant\n");
+	fprintf(outfiles.cds_de_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
@@ -955,7 +976,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	int promoter_tests = fdr_significance(FDR, promoter_diffs);
 	fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
-    fprintf(outfiles.diff_promoter_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tsignificant\n");
+    fprintf(outfiles.diff_promoter_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
@@ -976,7 +997,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
 	fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
-	fprintf(outfiles.diff_cds_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tsignificant\n");
+	fprintf(outfiles.diff_cds_outfile, "test_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
