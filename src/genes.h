@@ -97,6 +97,8 @@ public:
 	const string& gene_id() const { return _gene_id; }
 	const string& trans_id() const {return _trans_id; }
 	
+	bool is_ref_trans() const { return _scaffold.is_ref(); }
+	
 private:
 	
 	Scaffold _scaffold;
@@ -153,6 +155,16 @@ public:
 	int right() const { return _right; }
 	
 	const string& gene_id() const { return _gene_id; }
+	
+	bool has_ref_trans() const
+	{
+		foreach (const Isoform& iso, _isoforms)
+		{
+			if (iso.is_ref_trans())
+				return true;
+		}
+		return false;
+	}
 	
 private:
 	

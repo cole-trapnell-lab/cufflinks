@@ -466,72 +466,31 @@ inline bool has_intron(const Scaffold& scaff)
 void Scaffold::extend_5(const Scaffold& other)
 {
 	assert(Scaffold::compatible(*this, other));
-	bool single_exon = (_augmented_ops.size()==1);
 	
 	if (strand() == CUFF_FWD)
 	{
-		AugmentedCuffOp first_op = _augmented_ops.front();
-		if (single_exon)
-		{
-			_augmented_ops = other.augmented_ops();
-			_augmented_ops.pop_back();
-			_augmented_ops.push_back(first_op);
-		}
-		else
-		{
-			_augmented_ops.erase(_augmented_ops.begin());
-			
-			for(size_t i = 0; i < other.augmented_ops().size(); ++i)
-			{
-				AugmentedCuffOp op = other.augmented_ops()[i];
-				assert(op.g_right() <= first_op.g_right());
-				if (op.g_left() <= first_op.g_left())
-				{
-					_augmented_ops.insert( _augmented_ops.begin() + i, op);
-				}
-				if (op.g_right() == first_op.g_right())
-				{
-					break;
-				}
-			}
-		}
+		AugmentedCuffOp& my_first_op = _augmented_ops.front();
+		const AugmentedCuffOp& other_first_op = other.augmented_ops().front();
+
+		assert(my_first_op.g_right() <= other_first_op.g_right()
+			   && my_first_op.g_right() >= other_first_op.g_right() - ref_merge_overhang_tolerance);
+		my_first_op.g_left(other_first_op.g_left());
 		_left = _augmented_ops.front().g_left();
 	}
 	else if (strand() == CUFF_REV)
 	{
-		AugmentedCuffOp last_op = _augmented_ops.back();
+		AugmentedCuffOp& my_last_op = _augmented_ops.back();
+		const AugmentedCuffOp& other_last_op = other.augmented_ops().back();
 		
-		if (single_exon)
-		{
-			_augmented_ops = other.augmented_ops();
-			_augmented_ops.erase(_augmented_ops.begin());
-			_augmented_ops.insert(_augmented_ops.begin(), last_op);
-		}
-		{
-			_augmented_ops.pop_back();
-			
-			size_t init_size = _augmented_ops.size();
-			for(size_t i = 0; i < other.augmented_ops().size(); ++i)
-			{
-				AugmentedCuffOp op = other.augmented_ops()[other.augmented_ops().size() - i - 1];
-				assert(op.g_left() >= last_op.g_left());
-				if (op.g_right() >= last_op.g_right())
-				{
-					_augmented_ops.insert(_augmented_ops.begin() + init_size, op);
-				}
-				if (op.g_left() == last_op.g_left())
-				{
-					break;
-				}
-			}
-		}
+		assert(my_last_op.g_left() >= other_last_op.g_left()
+			   && my_last_op.g_left() <= other_last_op.g_left() + ref_merge_overhang_tolerance);
+		my_last_op.g_right(other_last_op.g_right());
 		_right = _augmented_ops.back().g_right();
 	}
 	else 
 	{
 		assert(false);
 	}
-	_has_intron = has_intron(*this);
 	_annotated_trans_id += "_ext";
 }
 

@@ -35,7 +35,18 @@ struct AugmentedCuffOp
 		assert (genomic_length >= 0);
 	}
 	
+	void g_left(int left) 
+	{ 
+		int right = genomic_offset + genomic_length;
+		genomic_offset = left;
+		genomic_length = right - left;
+	}
 	int g_left() const { return genomic_offset; }
+	
+	void g_right(int right) 
+	{ 
+		genomic_length = right - genomic_offset;
+	}
 	int g_right() const { return genomic_offset + genomic_length; }
 	
 	static bool overlap_in_genome(const AugmentedCuffOp& lhs,
@@ -246,10 +257,10 @@ public:
 		}
 		_mates_in_scaff.push_back(&mate);
 		sort(aug_ops.begin(), aug_ops.end(), AugmentedCuffOp::g_left_lt);
-        
-        foreach(AugmentedCuffOp& op, aug_ops)
+
+        for(size_t i = 0; i < aug_ops.size(); ++i)
         {
-            assert (op.genomic_length >= 1);
+            assert (aug_ops[i].genomic_length >= 1);
         }
         
         AugmentedCuffOp::merge_ops(aug_ops, _augmented_ops, false);
@@ -433,17 +444,24 @@ public:
 	}
 	
 	// Tests whether the other scaffold contains the 5' end and is contained (allowing some overhang) on the 3' end
+	// There can be no additional exons on the 5' end
 	bool overlapped_3(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const
 	{
 		switch(strand())
 		{
 			case CUFF_FWD:
-				return (left() + ohang_5 >= other.left() && right() + ohang_3 >= other.right()); 
+				if(!(left() + ohang_5 >= other.left() && right() + ohang_3 >= other.right()))
+					return false;
+				break;
 			case CUFF_REV:
-				return (right() - ohang_5 <= other.right() && left() - ohang_3 <= other.left()); 
+				if(!(right() - ohang_5 <= other.right() && left() - ohang_3 <= other.left()))
+					return false;
+				break;
 			default:
 				return false;
 		}
+		// Ensure that there are no exons outside of the strict boundaries
+		return (other.augmented_ops().front().g_right() > left() && other.augmented_ops().back().g_left() < right());
 	}
 	
 	int match_length(int left, int right) const;
