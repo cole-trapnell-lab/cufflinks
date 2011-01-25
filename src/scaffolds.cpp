@@ -1322,8 +1322,33 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                 leftmost_known_op = -1;
 			}
 		}
-		
 	}
+    
+    foreach (Scaffold& c, complete)
+    {
+        const vector<const MateHit*>& hits = c.mate_hits();
+        bool contains_spliced_hit = false;
+        foreach (const MateHit* h, hits)
+        {
+            const ReadHit* left = h->left_alignment();
+            const ReadHit* right = h->right_alignment();
+            if (left && left->contains_splice())
+            {
+                contains_spliced_hit = true;
+                break;
+            }
+            if (right && right->contains_splice())
+            {
+                contains_spliced_hit = true;
+                break;
+            }
+        }
+        
+        if (!contains_spliced_hit)
+        {
+            c.strand(CUFF_STRAND_UNKNOWN);
+        }
+    }
 }
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs)

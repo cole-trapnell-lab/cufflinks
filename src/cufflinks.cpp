@@ -334,30 +334,94 @@ void add_non_shadow_scaffs(const vector<Scaffold>& lhs,
 						   vector<Scaffold>& scaffolds,
 						   bool include_unknown_strand)
 {
-	for (size_t i = 0; i < lhs.size(); ++i)
-	{
-		bool add_to_asm = true;
-		if (lhs[i].strand() == CUFF_STRAND_UNKNOWN)
-		{
-			for (size_t j = 0; j < rhs.size(); ++j)
-			{
-				if (include_unknown_strand || 
-					rhs[j].strand() != CUFF_STRAND_UNKNOWN)
-				{
-					if (Scaffold::overlap_in_genome(lhs[i], rhs[j], 0) &&
-						Scaffold::compatible(lhs[i], rhs[j]))
-					{
-						add_to_asm = false;
-						break;
-					}
-				}
-			}
-		}
-		if (add_to_asm)
-		{
-			scaffolds.push_back(lhs[i]);	
-		}
-	}
+//	for (size_t i = 0; i < lhs.size(); ++i)
+//	{
+//		bool add_to_asm = true;
+//        for (size_t j = 0; j < rhs.size(); ++j)
+//        {
+//            if (lhs[i].strand() == CUFF_STRAND_UNKNOWN)
+//            {
+//                if (include_unknown_strand || 
+//                    rhs[j].strand() != CUFF_STRAND_UNKNOWN)
+//                {
+//                    if (Scaffold::overlap_in_genome(lhs[i], rhs[j], 0) &&
+//                        Scaffold::compatible(lhs[i], rhs[j]))
+//                    {
+//                        add_to_asm = false;
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//		if (add_to_asm)
+//		{
+//			scaffolds.push_back(lhs[i]);	
+//		}
+//	}
+    
+    vector<bool> kept_lhs(lhs.size(), false);
+    vector<bool> kept_rhs(rhs.size(), false);
+    
+    // We want to keep all fwd, all reverse, and only the non-redundant unknowns
+    // if two unknown strand frags olap, prefer the one from lhs.
+    for (size_t i = 0; i < lhs.size(); ++i)
+    {
+        if (lhs[i].strand() != CUFF_STRAND_UNKNOWN)
+        {
+            kept_lhs[i] = true;
+        }
+        else 
+        {
+            bool no_compat_olap = true;
+            for (size_t j = 0; j < rhs.size(); ++j)
+            {
+                if (Scaffold::overlap_in_genome(lhs[i], rhs[j], 0))
+                {
+                    if (Scaffold::compatible(lhs[i], rhs[j])
+                        && rhs[j].strand() != CUFF_STRAND_UNKNOWN)
+                    {
+                        no_compat_olap = false;
+                    }
+                }
+            }
+            kept_lhs[i] = no_compat_olap;
+        }
+    }
+    
+    for (size_t i = 0; i < rhs.size(); ++i)
+    {
+        if (rhs[i].strand() != CUFF_STRAND_UNKNOWN)
+        {
+            kept_rhs[i] = true;
+        }
+        else 
+        {
+            bool no_compat_olap = true;
+            for (size_t j = 0; j < lhs.size(); ++j)
+            {
+                if (Scaffold::overlap_in_genome(rhs[i], lhs[j], 0))
+                {
+                    if (Scaffold::compatible(rhs[i], lhs[j]))
+                    {
+                        no_compat_olap = false;
+                    }
+                }
+            }
+            kept_rhs[i] = no_compat_olap;
+        }
+    }
+    
+    for (size_t i = 0; i < lhs.size(); ++i)
+    {
+        if (kept_lhs[i])
+            scaffolds.push_back(lhs[i]);
+    }
+    
+    for (size_t i = 0; i < rhs.size(); ++i)
+    {
+        if (kept_rhs[i])
+            scaffolds.push_back(rhs[i]);
+    }
 }
 
 void guess_strand(int bundle_origin, 
@@ -509,7 +573,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                                                  rev_scaffolds);
 		
 		add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, tmp_scaffs, true);
-		add_non_shadow_scaffs(rev_scaffolds, fwd_scaffolds, tmp_scaffs, false);
+		//add_non_shadow_scaffs(rev_scaffolds, fwd_scaffolds, tmp_scaffs, false);
 	}
 	else
 	{
@@ -645,7 +709,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				density_per_bp *= avg_read_length;
 				//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
 				
-				if (!allow_junk_filtering || transfrag->is_ref() || density_score > min_isoform_fraction || major_isoform_FPKM == 0.0)
+				if (!allow_junk_filtering || transfrag->is_ref() || density_score > min_isoform_fraction)
 				{
 					isoforms.push_back(Isoform(*transfrag,
 											   gene_id,

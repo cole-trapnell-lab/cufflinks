@@ -688,7 +688,8 @@ void filter_hits(int bundle_length,
 
 
 void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
-						  vector<double>& abundances)
+						  vector<double>& abundances,
+                          const vector<shared_ptr<Abundance> >& mapped_transcripts)
 {
 	//	vector<double>::iterator max_ab = std::max_element(abundances.begin(),
 	//													   abundances.end());
@@ -759,18 +760,24 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 			double low_qual_frac = low_qual_hits / (double)hits.size();
 			if (low_qual_frac > low_qual_thresh)
 				repeats[t] = true;
+            
+            if (scaff->strand() == CUFF_FWD &&
+                (abundances[t] / max_fwd_ab) < min_isoform_fraction)
+                too_rare[t] = true;
+            if ((scaff->strand() == CUFF_REV ||  scaff->strand() == CUFF_STRAND_UNKNOWN) &&
+                (abundances[t] / max_rev_ab) < min_isoform_fraction)
+                too_rare[t] = true;
+
+            const vector<double>& cond_probs = (*mapped_transcripts[t]->cond_probs());
+            double supporting_hits = 0.0;
+            foreach(double d, cond_probs)
+            {
+                if (d > 0)
+                    supporting_hits += 1;
+            }
+            if (supporting_hits < min_frags_per_transfrag)
+                chaff[t] = true;
 		}
-		
-		if (scaff->strand() == CUFF_FWD &&
-			(abundances[t] / max_fwd_ab) < min_isoform_fraction)
-			too_rare[t] = true;
-		if ((scaff->strand() == CUFF_REV ||  scaff->strand() == CUFF_STRAND_UNKNOWN) &&
-			(abundances[t] / max_rev_ab) < min_isoform_fraction)
-			too_rare[t] = true;
-        
-        if (((int)scaff->mate_hits().size() < min_frags_per_transfrag))
-            chaff[t] = true;
-		
 	}
 	
 	vector<shared_ptr<Abundance> > non_junk_transcripts;
@@ -819,6 +826,8 @@ void filter_junk_genes(vector<Gene>& genes)
 		for (size_t j = 0; j < all_isoforms.size(); ++j)
 		{
 			vector<pair<int, int> > introns = all_isoforms[j].scaffold().gaps();
+            
+            //assert (!allow_junk_filtering || all_isoforms[j].scaffold().mate_hits().size() >= min_frags_per_transfrag);
 			for (size_t k = 0; k < introns.size(); ++k)
 			{
 				if (g.left() > introns[k].first && g.right() < introns[k].second &&

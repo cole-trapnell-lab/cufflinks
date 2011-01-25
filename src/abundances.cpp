@@ -575,7 +575,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
 	vector<double> filtered_gammas = gammas;
-	filter_junk_isoforms(filtered_transcripts, filtered_gammas);
+	filter_junk_isoforms(filtered_transcripts, filtered_gammas, mapped_transcripts);
 	
 	if (filtered_transcripts.empty())
 	{

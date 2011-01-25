@@ -18,7 +18,8 @@
 #include "genes.h"
 
 void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
-						  vector<double>& abundances);
+						  vector<double>& abundances,
+                          const vector<shared_ptr<Abundance> >& mapped_transcripts);
 
 
 void filter_introns(int bundle_length,
