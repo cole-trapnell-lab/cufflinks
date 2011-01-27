@@ -857,3 +857,64 @@ void filter_junk_genes(vector<Gene>& genes)
 	genes = good_genes;
 	
 }
+
+bool clip_by_3_prime_dropoff(Scaffold& scaff)
+{
+	if (!(scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_REV))
+		return false;
+
+	int scaff_len = scaff.length();
+	vector<double> coverage(scaff_len, 0.0);
+	
+	double total = 0;
+	foreach(const MateHit* hit, scaff.mate_hits())
+	{
+		int start, end, frag_len;
+		if (!scaff.map_frag(*hit, start, end, frag_len)) continue;
+		for(int i = start; i <= end; ++i)
+		{
+			coverage[i] += hit->mass();
+			total += hit->mass();
+		}
+	}
+	double avg_cov = total/scaff_len;
+	if (avg_cov < trim_3_avgcov_thresh)
+		return false;
+	
+	if (scaff.strand() == CUFF_FWD)
+	{
+		const AugmentedCuffOp& exon_3 = scaff.augmented_ops().back();
+		int to_remove;
+		double cov_to_end = 0;
+		for (to_remove = 0; to_remove < exon_3.genomic_length; to_remove++)
+		{
+			cov_to_end += coverage[scaff_len-to_remove-1];
+			if (cov_to_end/(to_remove+1) >= trim_3_dropoff_frac * avg_cov)
+				break;
+		}
+		if (to_remove < exon_3.genomic_length)
+		{
+			scaff.trim_3(to_remove);
+			return true;
+		}
+	}
+	else
+	{
+		const AugmentedCuffOp& exon_3 = scaff.augmented_ops().front();
+		int to_remove;
+		double cov_to_end = 0;
+		for (to_remove = 0; to_remove < exon_3.genomic_length; to_remove++)
+		{
+			cov_to_end += coverage[to_remove];
+			if (cov_to_end/(to_remove+1) >= trim_3_dropoff_frac * avg_cov)
+				break;
+		}
+		if (to_remove < exon_3.genomic_length)
+		{
+			scaff.trim_3(to_remove);
+			return true;
+		}
+	}
+	return false;
+	
+}

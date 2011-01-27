@@ -43,6 +43,9 @@ uint32_t min_intron_length = 50;
 uint32_t max_intron_length = 300000;
 //uint32_t min_exon_length = 100; 
 
+double trim_3_avgcov_thresh = 2.0;
+double trim_3_dropoff_frac = .5;
+
 uint32_t max_gene_length = 3500000;
 int max_partner_dist = 50000;
 bool user_provided_fld = false;

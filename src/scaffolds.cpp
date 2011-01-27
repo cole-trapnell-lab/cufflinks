@@ -494,6 +494,28 @@ void Scaffold::extend_5(const Scaffold& other)
 	_annotated_trans_id += "_ext";
 }
 
+// Clip final 3' exon by given amount
+void Scaffold::trim_3(int to_remove)
+{
+	if(strand() == CUFF_FWD)
+	{
+		AugmentedCuffOp& exon_3 = _augmented_ops.back();
+		assert (exon_3.genomic_length > to_remove);
+		exon_3.genomic_length -= to_remove;
+	}
+	else if(strand() == CUFF_REV)
+	{
+		AugmentedCuffOp& exon_3 = _augmented_ops.front();
+		assert (exon_3.genomic_length > to_remove);
+		exon_3.genomic_offset += to_remove;
+		exon_3.genomic_length -= to_remove;
+
+	}
+	else
+	{
+		assert(false);
+	}
+}
 
 void Scaffold::merge(const Scaffold& lhs, 
 					 const Scaffold& rhs, 
@@ -1148,6 +1170,8 @@ pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 
 // Returns true only when both the start and end are found
 // We can't use EmpDist unless it is unpaired since we call this function in inspect_bundle
+// End is inclusive
+// Returned indices are oriented with the transript!
 bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len) const
 {
 	

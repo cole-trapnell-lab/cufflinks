@@ -403,8 +403,11 @@ public:
 	const vector<const MateHit*>& mate_hits() const { return _mates_in_scaff; }
 	RefID ref_id() const { return _ref_id; }
 	
+	// Extend 5' end using beginning of other scaffold without adding new exons.
 	void extend_5(const Scaffold& other);
-	
+	// Clip final 3' exon by given amount
+	void trim_3(int to_remove);
+
 	// Tests whether the other scaffold is contained completely on the 5' end and within some overhang on the 3' end
 	bool contains(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const
 	{
