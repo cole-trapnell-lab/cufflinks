@@ -125,9 +125,7 @@ public:
 		_FPKM(FPKM),
 		_confidence(ci),
 		_status(status)
-	{
-		_id = get_next_gene_id();
-		
+	{		
 		vector<Scaffold> scaffolds;
 		for (size_t i = 0; i < isoforms.size(); ++i)
 			scaffolds.push_back(isoforms[i].scaffold());
@@ -150,7 +148,6 @@ public:
 	AbundanceStatus status() const { return _status; }
 	void   status(AbundanceStatus status) { _status = status; }
 	
-	int ID() const { return _id; }
 	int left() const { return _left; }
 	int right() const { return _right; }
 	
