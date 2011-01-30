@@ -1432,10 +1432,6 @@ bool Scaffold::hits_support_introns() const
     {
         if (a.opcode == CUFF_INTRON)
         {
-            if (a.g_left() == 6056419)
-            {
-                int b = 5;
-            }
             scaffold_introns.insert(a);
         }
     }

@@ -400,13 +400,6 @@ bool make_scaffolds(int bundle_left,
 
 		vector<Scaffold> hazards;
 		holdout_transitivity_hazards(hits, hazards);
-
-#if DEBUG		
-        foreach (const Scaffold& h, hits)
-        {
-            assert(h.hits_support_introns());
-        }
-#endif
         
         vector<Scaffold> split_hazards;
         // Cleave the partials at their unknowns to minimize FPKM dilation on  
@@ -418,25 +411,12 @@ bool make_scaffolds(int bundle_left,
             split_hazards.insert(split_hazards.end(), c.begin(), c.end()); 
         } 
         
-//#if DEBUG		
-//        foreach (const Scaffold& h, split_hazards)
-//        {
-//            assert(h.mate_hits().empty() || h.hits_support_introns());
-//        }
-//#endif
-        
 		vector<Scaffold> orig_hits = hits;
 		
         hits.insert(hits.end(), split_hazards.begin(), split_hazards.end());
 
         compress_fragments(hits);
-//#if DEBUG		
-//        foreach (const Scaffold& h, hits)
-//        {
-//            assert(h.mate_hits().empty() || h.hits_support_introns());
-//        }
-//#endif
-        
+
         verbose_msg( "%s\tAssembling bundle with %lu hits\n", bundle_label->c_str(), hits.size());
        
 		vector<int> depth_of_coverage(bundle_length,0);
