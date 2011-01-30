@@ -29,31 +29,6 @@
 using namespace std;
 using namespace CppUnit;
 
-class AutoFail : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE( AutoFail );
-	CPPUNIT_TEST( testFalse );
-	CPPUNIT_TEST( testNotEqual );
-	CPPUNIT_TEST_SUITE_END();
-	
-public:	
-	void testFalse();
-	void testNotEqual();
-};
-
-void AutoFail::testFalse()
-{
-	CPPUNIT_ASSERT(false);
-}
-
-void AutoFail::testNotEqual()
-{
-	CPPUNIT_ASSERT_EQUAL(1, 2);
-}
-
-CPPUNIT_TEST_SUITE_REGISTRATION( AutoFail );
-
-
 class CustomFormatter : public Outputter
 {
 public:

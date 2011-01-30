@@ -694,16 +694,31 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	if (cond_prob==0.0)
 		return 0.0;
 	
-	if (hit.is_pair())
-		cond_prob /= _tot_biases_for_len[i][frag_len];
+    if (hit.is_pair())
+    {
+        if (frag_len >= _tot_biases_for_len[i].size())
+            cond_prob = 0.0;
+        else
+            cond_prob /= _tot_biases_for_len[i][frag_len];
+    }
 	else if (start!=trans_len && end==trans_len) // The hit is a singleton at the start of a fragment
 		cond_prob /= _start_biases_for_len[i][frag_len];
 	else if (start==trans_len && end!=trans_len) // The hit is a singleton at the end of a fragment
 		cond_prob /= _end_biases_for_len[i][frag_len];
 	else if (frag_len==trans_len)  // We don't actually know where we start or end and can't subtract off the frag_len or we'll get inf
 		cond_prob /= trans_len;
-	else // Single-end read w/ library type FF or RR
-		cond_prob /= trans_len-frag_len;
+	else
+    {
+        if (trans_len < frag_len)
+        {
+            cond_prob = 0;
+        }
+        else 
+        {
+            // Single-end read w/ library type FF or RR
+            cond_prob /= trans_len-frag_len;
+        }
+    }
 
 	if (cond_prob > 0 && hit.collapse_mass() > 0)
 	{
@@ -711,6 +726,46 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 		_mapped = true;
 	}
 	
+#if DEBUG
+    if (isinf(cond_prob))
+    {
+        double cond_prob = 1.0;
+        cond_prob *= _start_biases[i][start];
+        cond_prob *= _end_biases[i][end];
+        double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(frag_len, trans_len-start) : fld->pdf(frag_len);
+        cond_prob *= frag_prob; 
+        
+        if (cond_prob==0.0)
+            return 0.0;
+        
+        if (hit.is_pair())
+        {
+            if (frag_len >= _tot_biases_for_len[i].size())
+                cond_prob = 0.0;
+            else
+                cond_prob /= _tot_biases_for_len[i][frag_len];
+        }
+        else if (start!=trans_len && end==trans_len) // The hit is a singleton at the start of a fragment
+            cond_prob /= _start_biases_for_len[i][frag_len];
+        else if (start==trans_len && end!=trans_len) // The hit is a singleton at the end of a fragment
+            cond_prob /= _end_biases_for_len[i][frag_len];
+        else if (frag_len==trans_len)  // We don't actually know where we start or end and can't subtract off the frag_len or we'll get inf
+            cond_prob /= trans_len;
+        else
+        {
+            if (trans_len < frag_len)
+            {
+                cond_prob = 0;
+            }
+            else 
+            {
+                // Single-end read w/ library type FF or RR
+                cond_prob /= trans_len-frag_len;
+            }
+        }
+    }
+#endif
+    
 	assert(!isinf(cond_prob));
 	assert(!isnan(cond_prob));
 	return cond_prob;

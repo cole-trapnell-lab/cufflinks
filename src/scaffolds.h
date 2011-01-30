@@ -378,8 +378,16 @@ public:
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }
 	
-	CuffStrand strand() const { return _strand; }
-	void strand(CuffStrand strand) { _strand = strand; }
+	CuffStrand strand() const 
+    { 
+        return _strand; 
+    }
+    
+	void strand(CuffStrand strand) 
+    { 
+        assert (!_has_intron || strand != CUFF_STRAND_UNKNOWN);
+        _strand = strand; 
+    }
 	
 	// Could we merge lhs and rhs together?
 	static bool compatible(const Scaffold& lhs, 
@@ -552,6 +560,7 @@ public:
 	
 	void get_complete_subscaffolds(vector<Scaffold>& complete);
     
+    bool hits_support_introns() const;    
 private: 
 	
 	void initialize_exon_lists();

@@ -517,6 +517,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		if (hits[i].strand() == CUFF_STRAND_UNKNOWN)
 		{
+            assert (!hits[i].has_intron());
 			uint8_t guess = CUFF_STRAND_UNKNOWN;
 			Scaffold& hit = hits[i];
 			const vector<AugmentedCuffOp>& ops = hit.augmented_ops();

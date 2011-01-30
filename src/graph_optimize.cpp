@@ -144,12 +144,46 @@ void fill_unambiguous_unknowns(vector<Scaffold>& scaffolds)
         }
     }
     
+#if DEBUG		
+    foreach (const Scaffold& h, scaffolds)
+    {
+        assert(h.mate_hits().empty() || h.hits_support_introns());
+    }
+#endif
+    
+    
     AugmentedCuffOp::merge_ops(non_conflict, merged, true);
+    
     for (size_t i = 0; i < scaffolds.size(); ++i)
     {
+        assert (!scaffolds[i].has_intron() || s != CUFF_STRAND_UNKNOWN);
+        
         scaffolds[i].strand(s);
+        
+        if (i == 338)
+        {
+            int b = 4;
+        }
+        
         scaffolds[i].fill_gaps(merged);
     }
+    
+#if DEBUG		
+    for (size_t i = 0; i < scaffolds.size(); ++i)
+    {
+        if (i == 338)
+        {
+            int b = 4;
+        }
+        if (!(scaffolds[i].mate_hits().empty() || scaffolds[i].hits_support_introns()))
+        {
+            scaffolds[i].hits_support_introns();
+        }
+        
+        //assert(h.mate_hits().empty() || h.hits_support_introns());
+    }
+#endif
+    
 }
 
 // WARNING: scaffolds MUST be sorted by scaff_lt_rt() in order for this routine
@@ -688,7 +722,21 @@ void compress_fragments(vector<Scaffold>& fragments)
     size_t pre_hit_collapse_size = fragments.size();
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
 	
+#if DEBUG		
+    foreach (const Scaffold& h, fragments)
+    {
+        assert(h.mate_hits().empty() || h.hits_support_introns());
+    }
+#endif
+    
     fill_unambiguous_unknowns(fragments);
+    
+//#if DEBUG		
+//    foreach (const Scaffold& h, fragments)
+//    {
+//        assert(h.mate_hits().empty() || h.hits_support_introns());
+//    }
+//#endif
     
 	compress_consitutive(fragments);
 	

@@ -29,11 +29,11 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 		}
 		else if (lhs.opcode == CUFF_UNKNOWN)
 		{
-            int left_diff = abs(lhs.g_left() - rhs.g_left());
-            int right_diff = abs(lhs.g_right() - rhs.g_right());
-				if (left_diff + right_diff > max_frag_len)
-					return false;
-			}
+            //int left_diff = abs(lhs.g_left() - rhs.g_left());
+            //int right_diff = abs(lhs.g_right() - rhs.g_right());
+			//if (left_diff + right_diff > max_frag_len)
+            //    return false;
+        }
 		else if (l_match > overhang_tolerance)
 		{
 			return false;
@@ -56,10 +56,10 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 		}
 		else if (lhs.opcode == CUFF_UNKNOWN)
 		{
-            int left_diff = abs(lhs.g_left() - rhs.g_left());
-            int right_diff = abs(lhs.g_right() - rhs.g_right());
-				if (left_diff + right_diff > max_frag_len)
-                return false;
+            //int left_diff = abs(lhs.g_left() - rhs.g_left());
+            //int right_diff = abs(lhs.g_right() - rhs.g_right());
+            //if (left_diff + right_diff > max_frag_len)
+            //    return false;
 		}
 		else if (r_match > overhang_tolerance)
 		{
@@ -438,7 +438,7 @@ bool check_merge_length(const vector<AugmentedCuffOp>& ops)
 		}
 
 inline bool has_intron(const Scaffold& scaff)
-			{
+{
 			
 	const vector<AugmentedCuffOp>& ops = scaff.augmented_ops();
 	for (size_t j = 0; j < ops.size(); ++j)
@@ -565,7 +565,7 @@ void Scaffold::merge(const Scaffold& lhs,
 		merged._strand = rhs.strand();
 	
 	merged._has_intron = has_intron(merged);
-	assert(!merged.has_intron() || merged._strand != CUFF_STRAND_UNKNOWN);
+	assert(!merged._has_intron || merged._strand != CUFF_STRAND_UNKNOWN);
 }
 
 
@@ -636,7 +636,7 @@ void Scaffold::merge(const vector<Scaffold>& s,
 	assert (r_check == merged._right);
 	merged._has_intron = has_intron(merged);
 	
-	assert(!merged.has_intron()|| merged._strand != CUFF_STRAND_UNKNOWN);
+	assert(!merged._has_intron|| merged._strand != CUFF_STRAND_UNKNOWN);
 }
 
 void Scaffold::fill_gaps(int filled_gap_size)
@@ -663,6 +663,8 @@ void Scaffold::fill_gaps(int filled_gap_size)
 	
 	AugmentedCuffOp::merge_ops(ops, _augmented_ops, false);
 	_has_intron = has_intron(*this);
+    assert(!_has_intron|| _strand != CUFF_STRAND_UNKNOWN);
+
 }
 
 void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
@@ -671,24 +673,55 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
 	
 	const vector<AugmentedCuffOp>& orig_ops = augmented_ops();
     
-	for (size_t i = 0; i < orig_ops.size(); ++i)
-	{
-		if (orig_ops[i].opcode == CUFF_UNKNOWN)
-		{
-            
-		}
-		else
-		{
-			ops.push_back(orig_ops[i]);
-		}
-	}
+    vector<AugmentedCuffOp> unknowns;
+	
+    size_t g_max = 0;
+	size_t g_min = 0xFFFFFFFF;
     
-    AugmentedCuffOp::fill_interstices(ops, filler, false); 
-	
-	sort(ops.begin(), ops.end(), AugmentedCuffOp::g_left_lt);
-	
-	AugmentedCuffOp::merge_ops(ops, _augmented_ops, false);
+    vector<AugmentedCuffOp> tmp_filler = filler;
+    
+    foreach(const AugmentedCuffOp& op, orig_ops)
+    {
+		assert (op.g_left() < op.g_right());
+		
+		if ((size_t)op.g_left() < g_min)
+			g_min = op.g_left();
+		if ((size_t)op.g_right() > g_max)
+			g_max = op.g_right();
+	}
+
+	tmp_filler.push_back(AugmentedCuffOp(CUFF_UNKNOWN, g_min, g_max - g_min + 1));
+    sort(tmp_filler.begin(), tmp_filler.end(), AugmentedCuffOp::g_left_lt);
+    
+    vector<AugmentedCuffOp> padded_filler;
+    AugmentedCuffOp::merge_ops(tmp_filler, padded_filler, false);
+    
+    	
+    vector<AugmentedCuffOp> overlapping;
+    foreach (const AugmentedCuffOp& op, padded_filler)
+    {
+        if (left() <= op.g_left() && right() >= op.g_right()
+            && (op.opcode != CUFF_UNKNOWN || !overlapping.empty()))
+        {
+            overlapping.push_back(op);
+        }
+    }
+    
+    overlapping.insert(overlapping.end(), _augmented_ops.begin(),_augmented_ops.end()); 
+    sort(overlapping.begin(), overlapping.end(), AugmentedCuffOp::g_left_lt);
+
+    
+    // we don't want either the terminal ops in the filler to be unknowns,
+    // because they'll just propogate to the scaffold we're trying to fill.
+    if (!overlapping.empty() && overlapping.back().opcode == CUFF_UNKNOWN)
+        overlapping.pop_back();
+    
+    if (overlapping.empty())
+        return;
+    
+	AugmentedCuffOp::merge_ops(overlapping, _augmented_ops, true);
 	_has_intron = has_intron(*this);
+    assert(!_has_intron|| _strand != CUFF_STRAND_UNKNOWN);
 }
 
 bool Scaffold::overlap_in_genome(const Scaffold& lhs, 
@@ -1339,6 +1372,11 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                         }
                     }
                     
+                    if (known.has_intron())
+                        known.strand(_strand);
+                    
+                    //assert (!known.mate_hits().empty());
+                    assert(!known.has_intron()|| known.strand() != CUFF_STRAND_UNKNOWN);
                     complete.push_back(known);
                 }
                     
@@ -1368,11 +1406,56 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
             }
         }
         
-        if (!contains_spliced_hit)
+        if (!hits.empty() && !contains_spliced_hit && !c.is_ref())
         {
             c.strand(CUFF_STRAND_UNKNOWN);
         }
     }
+}
+
+bool Scaffold::hits_support_introns() const
+{
+    set<AugmentedCuffOp> hit_introns;
+    set<AugmentedCuffOp> scaffold_introns;
+    foreach(const MateHit* h, _mates_in_scaff)
+    {
+        Scaffold s(*h);
+        foreach (AugmentedCuffOp a, s.augmented_ops())
+        {
+            if (a.opcode == CUFF_INTRON)
+            {
+                hit_introns.insert(a);
+            }
+        }
+    }
+    foreach (AugmentedCuffOp a, _augmented_ops)
+    {
+        if (a.opcode == CUFF_INTRON)
+        {
+            if (a.g_left() == 6056419)
+            {
+                int b = 5;
+            }
+            scaffold_introns.insert(a);
+        }
+    }
+    
+    if (hit_introns != scaffold_introns)
+    {
+        fprintf(stderr, "********************\n");
+        foreach(const AugmentedCuffOp& a, hit_introns)
+        {
+            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
+        }
+        
+        fprintf(stderr, "####################\n");
+        foreach(const AugmentedCuffOp& a, scaffold_introns)
+        {
+            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
+        }
+    }
+    
+    return hit_introns == scaffold_introns;
 }
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs)
