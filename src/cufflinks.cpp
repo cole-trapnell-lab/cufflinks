@@ -540,7 +540,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		vector<Scaffold> pseudohits;
 		pseudohits_from_ref(*ref_scaffs, pseudohits, 50);
-		pseudohits_from_ref(*ref_scaffs, pseudohits, 100);
 		hits.insert(hits.end(),
 					pseudohits.begin(),
 					pseudohits.end());

@@ -318,10 +318,8 @@ void holdout_transitivity_hazards(vector<Scaffold>& hits,
 			if (overlap_in_genome(introns[i].first, introns[i].second,
 								  introns[j].first, introns[j].second))
 			{
-				{
-					evil_introns.push_back(introns[i]);
-					evil_introns.push_back(introns[j]);
-				}
+				evil_introns.push_back(introns[i]);
+				evil_introns.push_back(introns[j]);
 			}
 		}
 	}
@@ -378,25 +376,25 @@ bool make_scaffolds(int bundle_left,
 	if (hits.empty())
 		return true;
 
-	int intron_hits = 0;
+	bool intron_hits = false;
 	for (size_t i = 0; i < hits.size(); ++i)
 	{
 		if (hits[i].has_intron())
 		{
-			intron_hits++;
+			intron_hits = true;
+			break;
 		}
 	}
 	
 	if (!intron_hits)
 	{
-
 		asm_verbose( "%s\tNo introns in bundle, collapsing all hits to single transcript\n", bundle_label->c_str());
 		scaffolds.push_back(Scaffold(hits));
 		fill_gaps(scaffolds, 2 * olap_radius);
 	}
 	else
 	{
-		asm_verbose( "%s\tBundle has %d spliced reads\n", bundle_label->c_str(), intron_hits);
+		asm_verbose( "%s\tBundle has spliced reads\n", bundle_label->c_str());
 
 		vector<Scaffold> hazards;
 		holdout_transitivity_hazards(hits, hazards);

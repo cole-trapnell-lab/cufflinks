@@ -550,10 +550,7 @@ void Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) c
 	}
 	
 	assert(len_so_far == match_length);
-	sub_scaff.ref_id(this->ref_id());
-	sub_scaff.strand(this->strand());
-	sub_scaff.is_ref(this->is_ref());
-	sub_scaff.augmented_ops(sub_ops);
+	sub_scaff = Scaffold(this->ref_id(), this->strand(), sub_ops, true);
 	return;
 }
 
