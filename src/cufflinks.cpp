@@ -468,10 +468,38 @@ CuffStrand guess_strand_for_interval(const vector<uint8_t>& strand_guess,
 	return (CuffStrand)guess;
 }
 
+
+void pseudohits_from_ref(vector<shared_ptr<Scaffold> >& ref_scaffs,
+						 vector<Scaffold>& pseudohits,
+						 int hit_len)
+{
+	foreach (shared_ptr<Scaffold> ref_scaff, ref_scaffs)
+	{
+		Scaffold tmp_scaff;
+		for(size_t i = 0; i < ref_scaff->augmented_ops().size(); ++i)
+		{
+			const AugmentedCuffOp& op = ref_scaff->augmented_ops()[i];
+			if (op.opcode == CUFF_MATCH)
+			{
+				for (int l=op.g_left(); l < op.g_right(); l++)
+				{
+					if (l + hit_len >= ref_scaff->right())
+						break;
+					ref_scaff->sub_scaffold(tmp_scaff, l, hit_len);
+					pseudohits.push_back(tmp_scaff);
+				}
+			}
+		}
+	}
+}
+
 bool scaffolds_for_bundle(const HitBundle& bundle, 
 						  vector<shared_ptr<Scaffold> >& scaffolds,
+						  vector<shared_ptr<Scaffold> >* ref_scaffs = NULL,
 						  BundleStats* stats = NULL)
 {
+	bool ref_guided = (ref_scaffs != NULL);
+	
 	vector<Scaffold> hits;
 	vector<Scaffold> tmp_scaffs;
 	
@@ -508,6 +536,17 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                        true);
     }
     
+	if (ref_guided)
+	{
+		vector<Scaffold> pseudohits;
+		pseudohits_from_ref(*ref_scaffs, pseudohits, 50);
+		pseudohits_from_ref(*ref_scaffs, pseudohits, 100);
+		hits.insert(hits.end(),
+					pseudohits.begin(),
+					pseudohits.end());
+		inplace_merge(hits.begin(),hits.end()-pseudohits.size(), hits.end(), scaff_lt);
+	}
+	
 	vector<uint8_t> strand_guess(bundle.length(), CUFF_STRAND_UNKNOWN);
 	guess_strand(bundle.left(),
 				 hits,
@@ -618,19 +657,18 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 			const MateHit& h = bundle.hits()[j];
 			tmp_scaffs[i].add_hit(&h);
 		}
+		clip_by_3_prime_dropoff(tmp_scaffs[i]);
 	}
 	
 	sort(tmp_scaffs.begin(), tmp_scaffs.end(), scaff_lt);
 	
 	foreach(Scaffold& scaff, tmp_scaffs)
 	{
-		clip_by_3_prime_dropoff(scaff);
 		scaffolds.push_back(shared_ptr<Scaffold>(new Scaffold(scaff)));
 	}
 	
 	return assembled_successfully;
 }
-
 
 //static long double min_abundance = 0.000001;
 
@@ -850,24 +888,18 @@ void assemble_bundle(const RefSequenceTable& rt,
 	}
 	else if (bundle_mode == REF_GUIDED)
 	{
-		vector<shared_ptr<Scaffold> > hit_scaffolds;
-		bool success = scaffolds_for_bundle(bundle, hit_scaffolds, NULL);
 		scaffolds = bundle.ref_scaffolds();
+		vector<shared_ptr<Scaffold> > hit_scaffolds;
+		bool success = scaffolds_for_bundle(bundle, hit_scaffolds, &scaffolds);
 
 		if (success)
 		{
-			size_t first_to_compare = 0;			
 			foreach(shared_ptr<Scaffold> hit_scaff, hit_scaffolds)
 			{
 				bool ok_to_add = true;
-				for(size_t i = first_to_compare; i < bundle.ref_scaffolds().size(); ++i)
+				foreach(shared_ptr<Scaffold> ref_scaff, bundle.ref_scaffolds())
 				{
-					shared_ptr<Scaffold> ref_scaff = bundle.ref_scaffolds()[i];
-					if (ref_scaff->right() + overhang_3 <= hit_scaff->left())
-					{
-						first_to_compare++;
-					}
-					else if (ref_scaff->left() >= hit_scaff->right() + overhang_3)
+					if (ref_scaff->left() >= hit_scaff->right() + overhang_3)
 					{
 						break;
 					}
@@ -1150,7 +1182,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
-
+	
 	shared_ptr<HitFactory> hit_factory;
 
     try

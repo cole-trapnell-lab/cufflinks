@@ -329,6 +329,11 @@ public:
 	
 	int right() const  { return _right; }
 	
+	const vector<const MateHit*>& mate_hits() const { return _mates_in_scaff; }
+	
+	RefID ref_id() const { return _ref_id; }
+	void ref_id(RefID rid) { _ref_id = rid; }
+	
 	const string& annotated_trans_id() const { return _annotated_trans_id; }
 	void annotated_trans_id(const string& ann_name) { _annotated_trans_id = ann_name; }
 	
@@ -408,23 +413,21 @@ public:
 					  Scaffold& merged,
 					  bool introns_overwrite_matches);
 
-	const vector<const MateHit*>& mate_hits() const { return _mates_in_scaff; }
-	RefID ref_id() const { return _ref_id; }
-	
 	// Extend 5' end using beginning of other scaffold without adding new exons.
 	void extend_5(const Scaffold& other);
 	// Clip final 3' exon by given amount
 	void trim_3(int to_remove);
 
+	// Creates a scaffold that matches this one but only covers the section from g_left for
+	// a distance of match_length.  It is assumed that this region is contained in the scaffold.
+	// sub_scaff should be an empty Scaffold object.
+	void sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const;
+
 	// Tests whether the other scaffold is contained completely on the 5' end and within some overhang on the 3' end
 	bool contains(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const
 	{
-		
 		if (left() <= other.left() && right()>= other.right())
 			return true;
-		
-		if (ohang_3 + ohang_5 == 0)
-			return false;
 		
 		int left_hang;
 		int right_hang;
@@ -435,16 +438,16 @@ public:
 				right_hang = ohang_3;
 				break;
 			case CUFF_REV:
-				left_hang = ohang_5;
-				right_hang = ohang_3;
+				left_hang = ohang_3;
+				right_hang = ohang_5;
 				break;
 			default:
 				left_hang = max(ohang_3, ohang_5);
 				right_hang = left_hang;
 		}
-		
+				
 		// Test to see if it is contained within the relaxed boundaries
-		if (left()-left_hang <= other.left() && right() + right_hang >= other.right());
+		if ((left()-left_hang) <= other.left() && (right() + right_hang) >= other.right())
 		{
 			// Ensure that there are no exons outside of the strict boundaries
 			return (other.augmented_ops().front().g_right() > left() && other.augmented_ops().back().g_left() < right()); 
@@ -461,18 +464,12 @@ public:
 		switch(strand())
 		{
 			case CUFF_FWD:
-				if(!(left() + ohang_5 >= other.left() && right() + ohang_3 >= other.right()))
-					return false;
-				break;
+				return((left() + ohang_5 >= other.left() && right() + ohang_3 >= other.right()) && other.augmented_ops().front().g_right() > left());
 			case CUFF_REV:
-				if(!(right() - ohang_5 <= other.right() && left() - ohang_3 <= other.left()))
-					return false;
-				break;
+				return ((right() - ohang_5 <= other.right() && left() - ohang_3 <= other.left()) && other.augmented_ops().back().g_left() < right());
 			default:
 				return false;
 		}
-		// Ensure that there are no exons outside of the strict boundaries
-		return (other.augmented_ops().front().g_right() > left() && other.augmented_ops().back().g_left() < right());
 	}
 	
 	int match_length(int left, int right) const;
@@ -518,6 +515,8 @@ public:
 						  const AugmentedCuffOp& rhs);
 	
 	const vector<AugmentedCuffOp>& augmented_ops() const { return _augmented_ops; }
+	void augmented_ops(vector<AugmentedCuffOp> aug_ops) { _augmented_ops = aug_ops; }
+
 	
 	static bool overlap_in_genome(const Scaffold& lhs, 
 								  const Scaffold& rhs, 

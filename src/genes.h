@@ -94,6 +94,7 @@ public:
 	void get_gtf(vector<string>& gtf_recs, 
 				 const RefSequenceTable& rt) const;
 	
+	void gene_id(string& gid) { _gene_id = gid; }
 	const string& gene_id() const { return _gene_id; }
 	const string& trans_id() const {return _trans_id; }
 	

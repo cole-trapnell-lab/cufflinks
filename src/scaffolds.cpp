@@ -517,6 +517,46 @@ void Scaffold::trim_3(int to_remove)
 	}
 }
 
+void Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const	
+{
+	size_t i;
+	for(i = 0; i < augmented_ops().size(); ++i)
+	{
+		if (augmented_ops()[i].g_right() > g_left)
+			break;
+	}
+	const AugmentedCuffOp& l_op = augmented_ops()[i];
+	
+	assert(l_op.opcode == CUFF_MATCH);
+	
+	vector<AugmentedCuffOp> sub_ops;
+	sub_ops.push_back(AugmentedCuffOp(CUFF_MATCH, g_left, min(match_length, l_op.g_right()-g_left)));					 
+	int len_so_far = sub_ops.back().genomic_length;
+						 
+	while(len_so_far < match_length && i < augmented_ops().size())
+	{
+		const AugmentedCuffOp& op = augmented_ops()[i++];
+		if(op.opcode==CUFF_MATCH)
+		{
+			sub_ops.push_back(AugmentedCuffOp(CUFF_MATCH, op.g_left(), min(match_length-len_so_far, op.genomic_length)));
+			len_so_far += sub_ops.back().genomic_length;
+			if (len_so_far == match_length)
+				break;
+		}
+		else 
+		{
+			sub_ops.push_back(op);
+		}
+	}
+	
+	assert(len_so_far == match_length);
+	sub_scaff.ref_id(this->ref_id());
+	sub_scaff.strand(this->strand());
+	sub_scaff.is_ref(this->is_ref());
+	sub_scaff.augmented_ops(sub_ops);
+	return;
+}
+
 void Scaffold::merge(const Scaffold& lhs, 
 					 const Scaffold& rhs, 
 					 Scaffold& merged,
@@ -566,6 +606,7 @@ void Scaffold::merge(const Scaffold& lhs,
 	
 	merged._has_intron = has_intron(merged);
 	assert(!merged._has_intron || merged._strand != CUFF_STRAND_UNKNOWN);
+	assert(!merged.is_ref());
 }
 
 

@@ -53,9 +53,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:M:o:r:TNqv";
+const char *short_options = "m:p:s:c:I:j:Q:L:M:o:r:TNqv";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:M:o:r:TNqv";
+const char *short_options = "m:s:c:I:j:Q:L:M:o:r:TNqv";
 #endif
 
 
@@ -64,7 +64,6 @@ static struct option long_options[] = {
 {"frag-len-mean",			required_argument,       0,          'm'},
 {"frag-len-std-dev",			required_argument,       0,          's'},
 {"transcript-score-thresh", required_argument,       0,          't'},
-{"min-isoform-fraction",    required_argument,       0,          'F'},
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
 {"max-intron-length",		required_argument,		 0,			 'I'},
 {"min-map-qual",			required_argument,		 0,			 'Q'},
@@ -363,7 +362,7 @@ void print_tests(FILE* fout,
 			else
 				status = "NOTEST";
 			
-			fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
+			fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
 			fprintf(fout, "\n");
 		}
 		else

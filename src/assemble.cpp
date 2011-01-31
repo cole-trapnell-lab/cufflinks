@@ -217,7 +217,7 @@ void add_weights_to_reachability_bp_graph(ReachGraph& bp,
 	{
 		for (size_t j = 0; j < hits.size(); ++j)
 		{
-			if (scaffolds[i].contains(hits[j]))
+			if (!hits[j].is_ref() && scaffolds[i].contains(hits[j]))
 			{
 				if (Scaffold::compatible(scaffolds[i],hits[j]))
 				{
@@ -400,7 +400,7 @@ bool make_scaffolds(int bundle_left,
 
 		vector<Scaffold> hazards;
 		holdout_transitivity_hazards(hits, hazards);
-        
+		
         vector<Scaffold> split_hazards;
         // Cleave the partials at their unknowns to minimize FPKM dilation on  
         // the low end of the expression profile. 
@@ -549,10 +549,7 @@ bool make_scaffolds(int bundle_left,
     // isn't needed
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
-#if DEBUG
-        assert(scaffolds[i].hits_support_introns());
-#endif
-        assert(!scaffolds[i].has_unknown());
+		//assert(!scaffolds[i].has_unknown());
 		
 		const vector<const MateHit*>& supporting = scaffolds[i].mate_hits();
 		CuffStrand s = CUFF_STRAND_UNKNOWN;
@@ -570,4 +567,3 @@ bool make_scaffolds(int bundle_left,
 	
 	return true;
 }
-

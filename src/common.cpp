@@ -44,7 +44,7 @@ uint32_t max_intron_length = 300000;
 //uint32_t min_exon_length = 100; 
 
 double trim_3_avgcov_thresh = 2.0;
-double trim_3_dropoff_frac = .5;
+double trim_3_dropoff_frac = .1;
 
 uint32_t max_gene_length = 3500000;
 int max_partner_dist = 50000;
@@ -58,7 +58,7 @@ int olap_radius = 50;
 
 int overhang_3 = 500;
 
-int ref_merge_overhang_tolerance = 20;
+int ref_merge_overhang_tolerance = 30;
 int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 
 float min_isoform_fraction = 0.1;

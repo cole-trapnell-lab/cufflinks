@@ -424,14 +424,15 @@ void sample_abundance_worker(const string& locus_tag,
     vector<AbundanceGroup> transcripts_by_gene_id;
     cluster_transcripts<ConnectByAnnotatedGeneId>(sample.transcripts,
                                                   transcripts_by_gene_id);
-    foreach(AbundanceGroup& ab_group, transcripts_by_gene_id)
+    
+	foreach(AbundanceGroup& ab_group, transcripts_by_gene_id)
     {
         ab_group.locus_tag(locus_tag);
         set<string> gene_ids = ab_group.gene_id();
         assert (gene_ids.size() == 1);
         ab_group.description(*(gene_ids.begin()));
     }
-    
+	
     sample.genes = transcripts_by_gene_id;
     
     if (perform_cds_analysis)
