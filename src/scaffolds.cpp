@@ -517,7 +517,7 @@ void Scaffold::trim_3(int to_remove)
 	}
 }
 
-void Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const	
+bool Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const	
 {
 	size_t i;
 	for(i = 0; i < augmented_ops().size(); ++i)
@@ -525,7 +525,7 @@ void Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) c
 		if (augmented_ops()[i].g_right() > g_left)
 			break;
 	}
-	const AugmentedCuffOp& l_op = augmented_ops()[i];
+	const AugmentedCuffOp& l_op = augmented_ops()[i++];
 	
 	assert(l_op.opcode == CUFF_MATCH);
 	
@@ -540,7 +540,7 @@ void Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) c
 		{
 			sub_ops.push_back(AugmentedCuffOp(CUFF_MATCH, op.g_left(), min(match_length-len_so_far, op.genomic_length)));
 			len_so_far += sub_ops.back().genomic_length;
-			if (len_so_far == match_length)
+			if (len_so_far >= match_length)
 				break;
 		}
 		else 
@@ -549,9 +549,9 @@ void Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) c
 		}
 	}
 	
-	assert(len_so_far == match_length);
+	//assert(len_so_far == match_length);
 	sub_scaff = Scaffold(this->ref_id(), this->strand(), sub_ops, true);
-	return;
+	return (!sub_ops.empty() && sub_ops.back().g_right() == right());
 }
 
 void Scaffold::merge(const Scaffold& lhs, 
@@ -1414,7 +1414,31 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                         known.strand(_strand);
                     
                     //assert (!known.mate_hits().empty());
-                    assert(!known.has_intron()|| known.strand() != CUFF_STRAND_UNKNOWN);
+                    //assert(!known.has_intron()|| known.strand() != CUFF_STRAND_UNKNOWN);
+                    
+                    const vector<const MateHit*>& hits = known.mate_hits();
+                    bool contains_spliced_hit = false;
+                    foreach (const MateHit* h, hits)
+                    {
+                        const ReadHit* left = h->left_alignment();
+                        const ReadHit* right = h->right_alignment();
+                        if (left && left->contains_splice())
+                        {
+                            contains_spliced_hit = true;
+                            break;
+                        }
+                        if (right && right->contains_splice())
+                        {
+                            contains_spliced_hit = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hits.empty() && !contains_spliced_hit && !known.is_ref())
+                    {
+                        known.strand(CUFF_STRAND_UNKNOWN);
+                    }
+                    
                     complete.push_back(known);
                 }
                     
@@ -1424,31 +1448,10 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
 		}
 	}
     
-    foreach (Scaffold& c, complete)
-    {
-        const vector<const MateHit*>& hits = c.mate_hits();
-        bool contains_spliced_hit = false;
-        foreach (const MateHit* h, hits)
-        {
-            const ReadHit* left = h->left_alignment();
-            const ReadHit* right = h->right_alignment();
-            if (left && left->contains_splice())
-            {
-                contains_spliced_hit = true;
-                break;
-            }
-            if (right && right->contains_splice())
-            {
-                contains_spliced_hit = true;
-                break;
-            }
-        }
-        
-        if (!hits.empty() && !contains_spliced_hit && !c.is_ref())
-        {
-            c.strand(CUFF_STRAND_UNKNOWN);
-        }
-    }
+//    foreach (Scaffold& c, complete)
+//    {
+//
+//    }
 }
 
 bool Scaffold::hits_support_introns() const

@@ -421,7 +421,7 @@ public:
 	// Creates a scaffold that matches this one but only covers the section from g_left for
 	// a distance of match_length.  It is assumed that this region is contained in the scaffold.
 	// sub_scaff should be an empty Scaffold object.
-	void sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const;
+	bool sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const;
 
 	// Tests whether the other scaffold is contained completely on the 5' end and within some overhang on the 3' end
 	bool contains(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const

@@ -484,10 +484,13 @@ void pseudohits_from_ref(vector<shared_ptr<Scaffold> >& ref_scaffs,
 			{
 				for (int l=op.g_left(); l < op.g_right(); l++)
 				{
-					if (l + hit_len >= ref_scaff->right())
-						break;
-					ref_scaff->sub_scaffold(tmp_scaff, l, hit_len);
+					//if (l + hit_len >= ref_scaff->right())
+//						break;
+                    
+					bool reached_end = ref_scaff->sub_scaffold(tmp_scaff, l, hit_len);
 					pseudohits.push_back(tmp_scaff);
+                    if (reached_end)
+                        break;
 				}
 			}
 		}
@@ -540,7 +543,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	if (ref_guided)
 	{
 		vector<Scaffold> pseudohits;
-//		pseudohits_from_ref(*ref_scaffs, pseudohits, 50);
+		pseudohits_from_ref(*ref_scaffs, pseudohits, 350);
 		hits.insert(hits.end(),
 					pseudohits.begin(),
 					pseudohits.end());

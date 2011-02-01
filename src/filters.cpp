@@ -205,8 +205,8 @@ void pre_mrna_filter(int bundle_length,
         
         for (size_t j = 0; j < hits.size(); ++j)
         {
-            //if (hits[j].has_intron())
-            //    continue;
+            if (hits[j].is_ref())
+                continue;
             double thresh = (1.0/pre_mrna_fraction) * intron_background;
             
             int len = 0;
@@ -502,7 +502,10 @@ void filter_hits(int bundle_length,
 			for (size_t j = 0; j < hits.size(); ++j)
 			{
 				if (hits[j].is_ref())
+                {
+                    int a = 4;
 					continue;
+                }
 				int i_left = itr->first.first;
 				int i_right = itr->first.second;
 				int j_match_len = hits[j].match_length(i_left, i_right); 
