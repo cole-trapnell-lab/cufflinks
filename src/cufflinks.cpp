@@ -31,6 +31,7 @@
 #include "assemble.h"
 #include "biascorrection.h"
 #include "gtf_tracking.h"
+#include "multireads.h"
 
 using namespace std;
 
@@ -539,7 +540,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	if (ref_guided)
 	{
 		vector<Scaffold> pseudohits;
-		pseudohits_from_ref(*ref_scaffs, pseudohits, 50);
+//		pseudohits_from_ref(*ref_scaffs, pseudohits, 50);
 		hits.insert(hits.end(),
 					pseudohits.begin(),
 					pseudohits.end());
@@ -1204,10 +1205,9 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
             exit(1);
         }
 	}
-	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
 	
-	shared_ptr<EmpDist> frag_len_dist(new EmpDist);
-	long double map_mass = 0.0;
+	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
+	shared_ptr<ReadGroupProperties> rg_props =bundle_factory.read_group_properties();
 	BadIntronTable bad_introns;
     
     rt.print_rec_ordering();
@@ -1227,9 +1227,9 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     }
     
     if (bundle_mode != HIT_DRIVEN)
-        inspect_map(bundle_factory, map_mass, NULL, *frag_len_dist);
+        inspect_map(bundle_factory, NULL);
     else 
-        inspect_map(bundle_factory, map_mass, &bad_introns, *frag_len_dist);
+        inspect_map(bundle_factory, &bad_introns);
     
     
     asm_verbose("%d ReadHits still live\n", num_deleted);
@@ -1241,28 +1241,16 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     }
     
     //fprintf(stderr, "ReadHit delete count is %d\n", num_deleted);
-    shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
     
-    if (global_read_properties)
-    {
-        *rg_props = *global_read_properties;
-    }
-    else 
-    {
-        *rg_props = hit_factory->read_group_properties();
-    }
-    
-    rg_props->frag_len_dist(frag_len_dist);
-    rg_props->total_map_mass(map_mass);
 	BiasLearner* bl_ptr = new BiasLearner(rg_props->frag_len_dist());
     bundle_factory.read_group_properties(rg_props);
 
 	if (ref_gtf)
 		bundle_factory.bad_intron_table(bad_introns);
 	
-	max_frag_len = frag_len_dist->max();
-	min_frag_len = frag_len_dist->min();
-	verbose_msg("\tTotal map density: %Lf\n", map_mass);
+	max_frag_len = rg_props->frag_len_dist()->max();
+	min_frag_len = rg_props->frag_len_dist()->min();
+	verbose_msg("\tTotal map density: %Lf\n", rg_props->total_map_mass());
 
 	if (corr_bias) final_est_run = false;
 
@@ -1280,6 +1268,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
 	bundle_factory2.num_bundles(num_bundles);
+	bundle_factory2.read_group_properties(rg_props);
 
     if (!ref_gtf)
     {
@@ -1294,7 +1283,6 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
         bundle_factory2.set_mask_rnas(mask_rnas);
     }    
-    bundle_factory2.read_group_properties(rg_props);
 	bundle_factory2.reset();
 	
 	if(bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED) // We still need to learn the bias since we didn't have the sequences before assembly

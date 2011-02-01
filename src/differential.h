@@ -217,20 +217,14 @@ public:
 //                *rg_props = *fac->read_group_properties();
 //            }
 
-            long double map_mass = 0.0;
             BadIntronTable bad_introns;
             
-            shared_ptr<EmpDist> frag_len_dist(new EmpDist);
-            
-            inspect_map(*fac, map_mass, NULL, *frag_len_dist, false);
+            inspect_map(*fac, NULL, false);
             
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
-            rg_props->frag_len_dist(frag_len_dist);
-            rg_props->total_map_mass(map_mass);
-            fac->read_group_properties(rg_props);
             
-			min_len = min(min_len, frag_len_dist->min());
-			max_len = max(max_len, frag_len_dist->max());
+			min_len = min(min_len, rg_props->frag_len_dist()->min());
+			max_len = max(max_len, rg_props->frag_len_dist()->max());
         }
 		
     }

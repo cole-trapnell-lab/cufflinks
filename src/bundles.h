@@ -200,7 +200,10 @@ class BundleFactory
 public:
     
 	BundleFactory(shared_ptr<HitFactory> fac, BundleMode bm)
-	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0) {}
+	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0) 
+	{
+		_rg_props = shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
+	}
 
 	bool next_bundle(HitBundle& bundle_out);
 	bool next_bundle_hit_driven(HitBundle& bundle_out);
@@ -326,9 +329,7 @@ void identify_bad_splices(const HitBundle& bundle,
 
 template<class BundleFactoryType>
 void inspect_map(BundleFactoryType& bundle_factory,
-                 long double& map_mass, 
                  BadIntronTable* bad_introns,
-                 EmpDist& frag_len_dist,
                  bool progress_bar = true)
 {
 
@@ -336,7 +337,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	if (progress_bar)
 		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
 	char last_chrom[100]; last_chrom[0] = 0;
-	map_mass = 0.0;
+
+	long double map_mass = 0.0;
+	
 	int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;
 	vector<double> frag_len_hist(def_max_frag_len+1,0);
@@ -610,13 +613,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
     std_dev = sqrt(std_dev);
 	
-	frag_len_dist.pdf(frag_len_pdf);
-	frag_len_dist.cdf(frag_len_cdf);
-	frag_len_dist.mode(frag_len_mode);
-	frag_len_dist.max(max_len);
-	frag_len_dist.min(min_len);
-	frag_len_dist.mean(mean);
-	frag_len_dist.std_dev(std_dev);
+	shared_ptr<ReadGroupProperties> rg_props = bundle_factory.read_group_properties();
+	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len));
+	rg_props->frag_len_dist(fld);
+	rg_props->total_map_mass(map_mass);
 
 	fprintf(stderr, "> Map Properties:\n");
 	if (use_quartile_norm)

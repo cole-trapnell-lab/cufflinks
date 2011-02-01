@@ -25,7 +25,6 @@ using boost::math::normal;
 #define reverse_foreach BOOST_REVERSE_FOREACH
 
 #include <boost/thread.hpp>
-
 #include <boost/shared_ptr.hpp>
 
 extern bool final_est_run;
@@ -186,12 +185,14 @@ class EmpDist
 	std::vector<double> _pdf;
 	std::vector<double> _cdf;
 	int _mode;
-	int _max;
-	int _min;
-    double _mean;
+	double _mean;
     double _std_dev;
+	int _min;
+	int _max;
 	
 public:
+	EmpDist(std::vector<double>& pdf, std::vector<double>& cdf, int mode, double mean, double std_dev, int min, int max)
+	: _pdf(pdf), _cdf(cdf), _mode(mode), _mean(mean), _std_dev(std_dev), _min(min), _max(max) {}
 	
 	void pdf(std::vector<double>& pdf)	{ _pdf = pdf; }
 	double pdf(int l) const
@@ -243,6 +244,7 @@ public:
 };
 
 class BiasLearner;
+class MultiReadTable;
 
 class ReadGroupProperties
 {
@@ -275,6 +277,9 @@ public:
 	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
     void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 
 	
+//	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }
+//	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt>) { return _multi_read_table = mrt; }
+	
 private:
     
     Strandedness _strandedness;
@@ -284,6 +289,7 @@ private:
     long double _total_map_mass;
     boost::shared_ptr<EmpDist const> _frag_len_dist;
 	boost::shared_ptr<BiasLearner const> _bias_learner;
+//	boost::shared_ptr<MultiReadTable> _multi_read_table;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;
