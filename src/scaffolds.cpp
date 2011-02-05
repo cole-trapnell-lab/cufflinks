@@ -489,7 +489,7 @@ void Scaffold::extend_5(const Scaffold& other)
 	}
 	
 	int id_length = annotated_trans_id().length();
-	if (!(id_length >= 4 && _annotated_trans_id[id_length-4]=="_ext"))
+	if (id_length < 4 || _annotated_trans_id.substr(id_length-4)!="_ext")
 		_annotated_trans_id += "_ext";
 }
 
