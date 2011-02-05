@@ -503,7 +503,6 @@ void filter_hits(int bundle_length,
 			{
 				if (hits[j].is_ref())
                 {
-                    int a = 4;
 					continue;
                 }
 				int i_left = itr->first.first;

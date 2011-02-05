@@ -373,12 +373,13 @@ public:
 		return -1.0;
 	}
 	
-			
 	char nearest_ref_classcode() const { return _classcode; }
 	void nearest_ref_classcode(char cc) { _classcode = cc; }
 	
 	bool has_intron() const { return _has_intron; }
 	bool has_suspicious_unknown() const { return has_suspicious_unknown(*this); }
+	bool has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs = NULL) const;
+
 	
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }
@@ -390,7 +391,7 @@ public:
     
 	void strand(CuffStrand strand) 
     { 
-        assert (!_has_intron || strand != CUFF_STRAND_UNKNOWN);
+        assert (strand != CUFF_STRAND_UNKNOWN || !has_strand_support());
         _strand = strand; 
     }
 	
@@ -402,6 +403,8 @@ public:
 	static bool strand_agree(const Scaffold& lhs, 
 							 const Scaffold& rhs);
 	
+	static bool exons_overlap(const Scaffold& lhs,
+							  const Scaffold& rhs);
 	
 	// Incorporate Scaffold chow into this one.
 	static void merge(const Scaffold& lhs, 
@@ -417,6 +420,8 @@ public:
 	void extend_5(const Scaffold& other);
 	// Clip final 3' exon by given amount
 	void trim_3(int to_remove);
+
+	void tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, int tile_offset) const;
 
 	// Creates a scaffold that matches this one but only covers the section from g_left for
 	// a distance of match_length.  It is assumed that this region is contained in the scaffold.

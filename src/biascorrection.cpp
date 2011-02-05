@@ -696,7 +696,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	
     if (hit.is_pair())
     {
-        if (frag_len >= _tot_biases_for_len[i].size())
+        if (frag_len >= (int)_tot_biases_for_len[i].size())
             cond_prob = 0.0;
         else
             cond_prob /= _tot_biases_for_len[i][frag_len];

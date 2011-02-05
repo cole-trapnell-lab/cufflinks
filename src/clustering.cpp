@@ -22,27 +22,14 @@ void ConnectByExonOverlap::operator()(const AbundanceGroup& cluster,
 	{
 		shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
 		assert (scaff_i);
-		const vector<AugmentedCuffOp>& i_ops = scaff_i->augmented_ops();
 		
 		for (size_t j = i + 1; j < abundances.size(); ++j)
 		{
 			shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
 			assert (scaff_j);
 			
-			const vector<AugmentedCuffOp>& j_ops = scaff_j->augmented_ops();
-			for (size_t K = 0; K < i_ops.size(); K++)
-			{
-				for (size_t L = 0; L < j_ops.size(); L++)
-				{
-					if (AugmentedCuffOp::overlap_in_genome(i_ops[K], j_ops[L]) &&
-						i_ops[K].opcode == CUFF_MATCH &&
-						j_ops[L].opcode == CUFF_MATCH)
-					{
-						add_edge(i, j, G);
-						break;
-					}
-				}
-			}
+			if (Scaffold::exons_overlap(*scaff_i, *scaff_j))
+				add_edge(i, j, G);
 		}
 	}
 }

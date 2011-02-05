@@ -86,6 +86,7 @@ extern std::string library_type;
 
 extern int min_frags_per_transfrag;
 
+
 #define ADAM_MODE 0
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1

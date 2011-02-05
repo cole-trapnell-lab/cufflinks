@@ -343,86 +343,101 @@ int parse_options(int argc, char** argv)
     return 0;
 }
 
-void add_non_shadow_scaffs(const vector<Scaffold>& lhs, 
-						   const vector<Scaffold>& rhs,
+void add_non_shadow_scaffs(vector<Scaffold>& lhs, 
+						   vector<Scaffold>& rhs,
 						   vector<Scaffold>& scaffolds,
-						   bool include_unknown_strand)
+						   vector<shared_ptr<Scaffold> >* ref_scaffs)
 {
-//	for (size_t i = 0; i < lhs.size(); ++i)
-//	{
-//		bool add_to_asm = true;
-//        for (size_t j = 0; j < rhs.size(); ++j)
-//        {
-//            if (lhs[i].strand() == CUFF_STRAND_UNKNOWN)
-//            {
-//                if (include_unknown_strand || 
-//                    rhs[j].strand() != CUFF_STRAND_UNKNOWN)
-//                {
-//                    if (Scaffold::overlap_in_genome(lhs[i], rhs[j], 0) &&
-//                        Scaffold::compatible(lhs[i], rhs[j]))
-//                    {
-//                        add_to_asm = false;
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-//		if (add_to_asm)
-//		{
-//			scaffolds.push_back(lhs[i]);	
-//		}
-//	}
+	// first check for strand support
+    for (size_t l = 0; l < lhs.size(); ++l)
+    {
+		if (!lhs[l].has_strand_support(ref_scaffs))
+			lhs[l].strand(CUFF_STRAND_UNKNOWN);
+	}
+	for (size_t r = 0; r < rhs.size(); ++r)
+    {
+		if (!rhs[r].has_strand_support(ref_scaffs))
+			rhs[r].strand(CUFF_STRAND_UNKNOWN);
+	}
+	
+    vector<bool> kept_lhs(lhs.size(), true);
+    vector<bool> kept_rhs(rhs.size(), true);
     
-    vector<bool> kept_lhs(lhs.size(), false);
-    vector<bool> kept_rhs(rhs.size(), false);
-    
+	// next filter both lists based on reference transcripts (if available)
+	if (ref_scaffs != NULL)
+	{
+		for(size_t l = 0; l < lhs.size(); ++l)
+		{			
+			foreach(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
+			{
+				if (ref_scaff->left() >= lhs[l].right() + overhang_3)
+				{
+					break;
+				}
+				else if (ref_scaff->contains(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
+				{
+					kept_lhs[l] = false;
+				}
+				else if (ref_scaff->overlapped_3(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
+				{
+					ref_scaff->extend_5(lhs[l]);
+					kept_lhs[l] = false;
+				}
+			}
+		}
+		for(size_t r = 0; r < rhs.size(); ++r)
+		{			
+			foreach(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
+			{
+				if (ref_scaff->left() >= rhs[r].right() + overhang_3)
+				{
+					break;
+				}
+				else if (ref_scaff->contains(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
+				{
+					kept_rhs[r] = false;
+				}
+				else if (ref_scaff->overlapped_3(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
+				{
+					ref_scaff->extend_5(rhs[r]);
+					kept_rhs[r] = false;
+				}
+			}
+		}
+	}
+	
     // We want to keep all fwd, all reverse, and only the non-redundant unknowns
-    // if two unknown strand frags olap, prefer the one from lhs.
-    for (size_t i = 0; i < lhs.size(); ++i)
-    {
-        if (lhs[i].strand() != CUFF_STRAND_UNKNOWN)
-        {
-            kept_lhs[i] = true;
-        }
-        else 
-        {
-            bool no_compat_olap = true;
-            for (size_t j = 0; j < rhs.size(); ++j)
-            {
-                if (Scaffold::overlap_in_genome(lhs[i], rhs[j], 0))
-                {
-                    if (Scaffold::compatible(lhs[i], rhs[j])
-                        && rhs[j].strand() != CUFF_STRAND_UNKNOWN)
-                    {
-                        no_compat_olap = false;
-                    }
-                }
-            }
-            kept_lhs[i] = no_compat_olap;
-        }
-    }
-    
-    for (size_t i = 0; i < rhs.size(); ++i)
-    {
-        if (rhs[i].strand() != CUFF_STRAND_UNKNOWN)
-        {
-            kept_rhs[i] = true;
-        }
-        else 
-        {
-            bool no_compat_olap = true;
-            for (size_t j = 0; j < lhs.size(); ++j)
-            {
-                if (Scaffold::overlap_in_genome(rhs[i], lhs[j], 0))
-                {
-                    if (Scaffold::compatible(rhs[i], lhs[j]))
-                    {
-                        no_compat_olap = false;
-                    }
-                }
-            }
-            kept_rhs[i] = no_compat_olap;
-        }
+    // if two unknown strand frags olap, merge them.
+    for (size_t l = 0; l < lhs.size(); ++l)
+    {		 
+		bool lhs_support = (lhs[l].strand() != CUFF_STRAND_UNKNOWN);
+		
+		for (size_t r = 0; r < rhs.size(); ++r)
+		{
+			if (Scaffold::overlap_in_genome(lhs[l], rhs[r], 0))
+			{
+				if (Scaffold::compatible(lhs[l], rhs[r]))
+				{
+					bool rhs_support = (rhs[r].strand() != CUFF_STRAND_UNKNOWN);
+					if (!lhs_support && !rhs_support)
+					{
+						Scaffold merged;
+						Scaffold::merge(lhs[l],rhs[r],merged, true);
+						scaffolds.push_back(merged);
+						kept_lhs[l] = false;
+						kept_rhs[r] = false;
+					}
+					else if (lhs_support && !rhs_support)
+					{
+						kept_rhs[r] = false;
+					}
+					else if (!lhs_support && rhs_support)
+					{
+						kept_lhs[l] = false;
+					}					
+				}
+			}
+		}		
     }
     
     for (size_t i = 0; i < lhs.size(); ++i)
@@ -470,33 +485,6 @@ CuffStrand guess_strand_for_interval(const vector<uint8_t>& strand_guess,
 }
 
 
-void pseudohits_from_ref(vector<shared_ptr<Scaffold> >& ref_scaffs,
-						 vector<Scaffold>& pseudohits,
-						 int hit_len)
-{
-	foreach (shared_ptr<Scaffold> ref_scaff, ref_scaffs)
-	{
-		Scaffold tmp_scaff;
-		for(size_t i = 0; i < ref_scaff->augmented_ops().size(); ++i)
-		{
-			const AugmentedCuffOp& op = ref_scaff->augmented_ops()[i];
-			if (op.opcode == CUFF_MATCH)
-			{
-				for (int l=op.g_left(); l < op.g_right(); l++)
-				{
-					//if (l + hit_len >= ref_scaff->right())
-//						break;
-                    
-					bool reached_end = ref_scaff->sub_scaffold(tmp_scaff, l, hit_len);
-					pseudohits.push_back(tmp_scaff);
-                    if (reached_end)
-                        break;
-				}
-			}
-		}
-	}
-}
-
 bool scaffolds_for_bundle(const HitBundle& bundle, 
 						  vector<shared_ptr<Scaffold> >& scaffolds,
 						  vector<shared_ptr<Scaffold> >* ref_scaffs = NULL,
@@ -507,12 +495,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	vector<Scaffold> hits;
 	vector<Scaffold> tmp_scaffs;
 	
-    //	for (size_t i = 0; i < bundle.non_redundant_hits().size(); ++i)
-    //	{
-    //		const MateHit& hit = bundle.non_redundant_hits()[i];
-    //		hits.push_back(Scaffold(hit));
-    //	}
-    
 	for (size_t i = 0; i < bundle.hits().size(); ++i)
 	{
 		const MateHit& hit = bundle.hits()[i];
@@ -543,7 +525,10 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	if (ref_guided)
 	{
 		vector<Scaffold> pseudohits;
-		pseudohits_from_ref(*ref_scaffs, pseudohits, 350);
+		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
+		{
+			ref_scaff->tile_with_scaffs(pseudohits, 400, 15);
+		}
 		hits.insert(hits.end(),
 					pseudohits.begin(),
 					pseudohits.end());
@@ -627,9 +612,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                                                  bundle.length(), 
                                                  rev_hits, 
                                                  rev_scaffolds);
-		
-		add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, tmp_scaffs, true);
-		//add_non_shadow_scaffs(rev_scaffolds, fwd_scaffolds, tmp_scaffs, false);
 	}
 	else
 	{
@@ -639,7 +621,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 													 bundle.length(),
 													 fwd_hits,
 													 fwd_scaffolds);
-			tmp_scaffs.insert(tmp_scaffs.end(),fwd_scaffolds.begin(), fwd_scaffolds.end());
 		}
 		else
 		{
@@ -647,9 +628,11 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 													 bundle.length(), 
 													 rev_hits, 
 													 rev_scaffolds);
-			tmp_scaffs.insert(tmp_scaffs.end(),rev_scaffolds.begin(), rev_scaffolds.end());
 		}
 	}
+	
+	add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, tmp_scaffs, ref_scaffs);
+
 	
 	// Make sure all the reads are accounted for, including the redundant ones...
 	for (size_t i = 0; i < tmp_scaffs.size(); ++i)
@@ -663,12 +646,18 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		clip_by_3_prime_dropoff(tmp_scaffs[i]);
 	}
 	
-	sort(tmp_scaffs.begin(), tmp_scaffs.end(), scaff_lt);
-	
-	foreach(Scaffold& scaff, tmp_scaffs)
+	if (ref_guided)
 	{
-		scaffolds.push_back(shared_ptr<Scaffold>(new Scaffold(scaff)));
+		scaffolds = *ref_scaffs;
 	}
+	if (assembled_successfully)
+	{
+		foreach(Scaffold& scaff, tmp_scaffs)
+		{
+			scaffolds.push_back(shared_ptr<Scaffold>(new Scaffold(scaff)));
+		}
+	}
+	sort(scaffolds.begin(), scaffolds.end(), scaff_lt_sp);
 	
 	return assembled_successfully;
 }
@@ -880,59 +869,32 @@ void assemble_bundle(const RefSequenceTable& rt,
 	
 	vector<shared_ptr<Scaffold> > scaffolds;
 	
-	if (bundle_mode == REF_DRIVEN)
+	switch(bundle_mode)
 	{
-		scaffolds = bundle.ref_scaffolds();
-		if (!final_est_run && scaffolds.size() != 1) // Only learn bias on single isoforms
-		{
-			delete bundle_ptr;
-			return;
-		}
-	}
-	else if (bundle_mode == REF_GUIDED)
-	{
-		scaffolds = bundle.ref_scaffolds();
-		vector<shared_ptr<Scaffold> > hit_scaffolds;
-		bool success = scaffolds_for_bundle(bundle, hit_scaffolds, &scaffolds);
-
-		if (success)
-		{
-			foreach(shared_ptr<Scaffold> hit_scaff, hit_scaffolds)
+		case REF_DRIVEN:
+			scaffolds = bundle.ref_scaffolds();
+			if (!final_est_run && scaffolds.size() != 1) // Only learn bias on single isoforms
 			{
-				bool ok_to_add = true;
-				foreach(shared_ptr<Scaffold> ref_scaff, bundle.ref_scaffolds())
-				{
-					if (ref_scaff->left() >= hit_scaff->right() + overhang_3)
-					{
-						break;
-					}
-					else if (ref_scaff->contains(*hit_scaff, 0, overhang_3) && Scaffold::compatible(*ref_scaff, *hit_scaff, ref_merge_overhang_tolerance))
-					{
-						ok_to_add = false;
-					}
-					else if (ref_scaff->overlapped_3(*hit_scaff, 0, overhang_3) && Scaffold::compatible(*ref_scaff, *hit_scaff, ref_merge_overhang_tolerance))
-					{
-						ref_scaff->extend_5(*hit_scaff);
-						ok_to_add = false;
-					}
-				}
-				if (ok_to_add)
-					scaffolds.push_back(hit_scaff);
+				delete bundle_ptr;
+				return;
 			}
-		}
-		sort(scaffolds.begin(), scaffolds.end(), scaff_lt_rt_oplt_sp);
-
-	}
-	else 
-	{
-		bool success = scaffolds_for_bundle(bundle, scaffolds, NULL);
-		if (!success)
-		{
-			delete bundle_ptr;
-			return;
-		}
+			break;
+		case REF_GUIDED:
+			scaffolds_for_bundle(bundle, scaffolds, &bundle.ref_scaffolds());
+			break;
+		case HIT_DRIVEN:
+			scaffolds_for_bundle(bundle, scaffolds);
+			break;
+		default:
+			assert(false);
 	}
 	
+	if (scaffolds.empty())
+	{
+		delete bundle_ptr;
+		return;
+	}
+		
 	vector<Gene> genes;
     
     // FIXME: this routine does more than just quantitation, and should be 
