@@ -465,7 +465,7 @@ inline bool has_intron(const Scaffold& scaff)
 
 void Scaffold::extend_5(const Scaffold& other)
 {
-	assert(Scaffold::compatible(*this, other, bowtie_overhang_tolerance));
+	assert(Scaffold::compatible(*this, other, ref_merge_overhang_tolerance));
 	
 	if (strand() == CUFF_FWD)
 	{
@@ -527,19 +527,17 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, 
 	{
 		while (augmented_ops()[l].opcode != CUFF_MATCH || l_off >= augmented_ops()[l].genomic_length)
 		{
-			if(l == augmented_ops().size())
-				return;
 			if (augmented_ops()[l].opcode == CUFF_MATCH)
 				l_off -= augmented_ops()[l].genomic_length;
-			l++;
+			if(++l == augmented_ops().size())
+				return;
 		}
 		while (augmented_ops()[r].opcode != CUFF_MATCH || r_off > augmented_ops()[r].genomic_length) // Strictly > because r_off is one past
 		{
-			if(r == augmented_ops().size())
-				return;
 			if (augmented_ops()[r].opcode == CUFF_MATCH)
 				r_off -= augmented_ops()[r].genomic_length;
-			r++;
+			if(++r == augmented_ops().size())
+				return;
 		}
 		
 		vector<AugmentedCuffOp> ops;
@@ -558,12 +556,14 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, 
 			}
 			if (r_off > 0)
 				ops.push_back(AugmentedCuffOp(CUFF_MATCH, augmented_ops()[r].g_left(), r_off));
-		}	
+		}
 		assert(ops.back().g_right() > ops.back().g_left());
 
 		
 		tile_scaffs.push_back(Scaffold(this->ref_id(), this->strand(), ops, true)); 
 		assert(tile_scaffs.back().length() == tile_length);
+		assert(tile_scaffs.back().left() >= left() &&
+			   tile_scaffs.back().right() <= right());
 		
 		l_off += tile_offset;
 		r_off += tile_offset;

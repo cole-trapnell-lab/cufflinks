@@ -410,10 +410,14 @@ void add_non_shadow_scaffs(vector<Scaffold>& lhs,
     // if two unknown strand frags olap, merge them.
     for (size_t l = 0; l < lhs.size(); ++l)
     {		 
+		if (!kept_lhs[l])
+			continue;
 		bool lhs_support = (lhs[l].strand() != CUFF_STRAND_UNKNOWN);
 		
 		for (size_t r = 0; r < rhs.size(); ++r)
 		{
+			if (!kept_rhs[r])
+				continue;
 			if (Scaffold::overlap_in_genome(lhs[l], rhs[r], 0))
 			{
 				if (Scaffold::compatible(lhs[l], rhs[r]))
@@ -426,6 +430,7 @@ void add_non_shadow_scaffs(vector<Scaffold>& lhs,
 						scaffolds.push_back(merged);
 						kept_lhs[l] = false;
 						kept_rhs[r] = false;
+						break;
 					}
 					else if (lhs_support && !rhs_support)
 					{
@@ -434,6 +439,7 @@ void add_non_shadow_scaffs(vector<Scaffold>& lhs,
 					else if (!lhs_support && rhs_support)
 					{
 						kept_lhs[l] = false;
+						break;
 					}					
 				}
 			}
