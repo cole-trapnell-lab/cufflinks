@@ -283,8 +283,7 @@ public:
 		
 		_has_intron = has_intron(*this);
 		
-		//FIXME: reinstate this assert after fixing the Graveley bug.
-		assert(!_has_intron || _strand != CUFF_STRAND_UNKNOWN);
+		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 
         assert (_augmented_ops.front().opcode == CUFF_MATCH);
         assert (_augmented_ops.back().opcode == CUFF_MATCH);
@@ -298,7 +297,7 @@ public:
 		
 		Scaffold::merge(hits, *this, introns_overwrite_matches);
 		
-		assert(!_has_intron || _strand != CUFF_STRAND_UNKNOWN);
+		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
         
         assert (_augmented_ops.front().opcode == CUFF_MATCH);
         assert (_augmented_ops.back().opcode == CUFF_MATCH);
@@ -317,7 +316,7 @@ public:
 		_has_intron = has_intron(*this);
 		_is_ref = is_ref;
 		
-		assert(!_has_intron || _strand != CUFF_STRAND_UNKNOWN);
+		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 
         assert (_augmented_ops.front().opcode == CUFF_MATCH);
         assert (_augmented_ops.back().opcode == CUFF_MATCH);
@@ -391,7 +390,7 @@ public:
     
 	void strand(CuffStrand strand) 
     { 
-        assert (strand != CUFF_STRAND_UNKNOWN || !has_strand_support());
+		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
         _strand = strand; 
     }
 	
@@ -421,7 +420,7 @@ public:
 	// Clip final 3' exon by given amount
 	void trim_3(int to_remove);
 
-	void tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, int tile_offset) const;
+	void tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int max_len, int tile_offset) const;
 
 	// Creates a scaffold that matches this one but only covers the section from g_left for
 	// a distance of match_length.  It is assumed that this region is contained in the scaffold.

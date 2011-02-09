@@ -516,12 +516,18 @@ void Scaffold::trim_3(int to_remove)
 	}
 }
 
-void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, int tile_offset) const
+void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int max_len, int tile_offset) const
 {
+	assert(min_len % tile_offset == 0 && max_len % tile_offset == 0);
+	
+	if (length() < max_len)
+		return;
+	
 	size_t l = 0;
 	size_t r = 0;
 	int l_off = 0;
-	int r_off = tile_length; // One past end
+	int r_off = min_len; // One past end
+	int curr_len = min_len;
 	
 	while(true)
 	{
@@ -530,14 +536,14 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, 
 			if (augmented_ops()[l].opcode == CUFF_MATCH)
 				l_off -= augmented_ops()[l].genomic_length;
 			if(++l == augmented_ops().size())
-				return;
+				assert(false);
 		}
 		while (augmented_ops()[r].opcode != CUFF_MATCH || r_off > augmented_ops()[r].genomic_length) // Strictly > because r_off is one past
 		{
 			if (augmented_ops()[r].opcode == CUFF_MATCH)
 				r_off -= augmented_ops()[r].genomic_length;
 			if(++r == augmented_ops().size())
-				return;
+				assert(false);
 		}
 		
 		vector<AugmentedCuffOp> ops;
@@ -561,12 +567,30 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int tile_length, 
 
 		
 		tile_scaffs.push_back(Scaffold(this->ref_id(), this->strand(), ops, true)); 
-		assert(tile_scaffs.back().length() == tile_length);
+		assert(tile_scaffs.back().length() == curr_len );
 		assert(tile_scaffs.back().left() >= left() &&
 			   tile_scaffs.back().right() <= right());
 		
-		l_off += tile_offset;
-		r_off += tile_offset;
+		if (l==0 && l_off == 0 && curr_len < max_len) // On left end, not yet full length
+		{
+			curr_len += tile_offset;
+			r_off += tile_offset;
+		}
+		else if(r==augmented_ops().size()-1 && 
+				r_off + tile_offset > augmented_ops().back().genomic_length) // On the right end of transcript, decreasing in length
+		{
+			curr_len += augmented_ops().back().genomic_length - r_off - tile_offset; 
+			r_off = augmented_ops().back().genomic_length;
+			l_off += tile_offset;
+			if (curr_len < min_len)
+				return;
+		}
+		else // In the middle of the transcript, full length
+		{
+			l_off += tile_offset;
+			r_off += tile_offset;
+		}
+			
 	}
 			   
 }
@@ -656,7 +680,7 @@ void Scaffold::merge(const Scaffold& lhs,
 		merged._strand = rhs.strand();
 	
 	merged._has_intron = has_intron(merged);
-	assert(!merged._has_intron || merged._strand != CUFF_STRAND_UNKNOWN);
+	assert(merged._strand != CUFF_STRAND_UNKNOWN || !merged.has_intron() );
 	assert(!merged.is_ref());
 }
 
@@ -673,7 +697,6 @@ void Scaffold::merge(const vector<Scaffold>& s,
 	for (size_t i = 0; i < s.size(); ++i)
 	{
 		ops.insert(ops.end(), s[i]._augmented_ops.begin(), s[i]._augmented_ops.end());
-		
 		merged._mates_in_scaff.insert(merged._mates_in_scaff.end(),
 									  s[i]._mates_in_scaff.begin(), 
 									  s[i]._mates_in_scaff.end());
@@ -727,8 +750,8 @@ void Scaffold::merge(const vector<Scaffold>& s,
 	
 	assert (r_check == merged._right);
 	merged._has_intron = has_intron(merged);
-	
-	assert(!merged._has_intron|| merged._strand != CUFF_STRAND_UNKNOWN);
+
+	assert(merged._strand != CUFF_STRAND_UNKNOWN || !merged.has_strand_support());
 }
 
 void Scaffold::fill_gaps(int filled_gap_size)
@@ -755,7 +778,7 @@ void Scaffold::fill_gaps(int filled_gap_size)
 	
 	AugmentedCuffOp::merge_ops(ops, _augmented_ops, false);
 	_has_intron = has_intron(*this);
-    assert(!_has_intron|| _strand != CUFF_STRAND_UNKNOWN);
+	assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 
 }
 
@@ -813,7 +836,7 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
     
 	AugmentedCuffOp::merge_ops(overlapping, _augmented_ops, true);
 	_has_intron = has_intron(*this);
-    assert(!_has_intron|| _strand != CUFF_STRAND_UNKNOWN);
+	assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 }
 
 bool Scaffold::overlap_in_genome(const Scaffold& lhs, 
@@ -1480,7 +1503,7 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                     {
 
                         const MateHit& m = **mitr;
-                        if (left_known <= m.left() && m.right() < right_known)
+                        if (left_known <= m.left() && m.right() <= right_known)
                         {
                             known.add_hit(&m);
                         }
@@ -1523,11 +1546,6 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
 			}
 		}
 	}
-    
-//    foreach (Scaffold& c, complete)
-//    {
-//
-//    }
 }
 
 bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) const
@@ -1535,10 +1553,15 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	if (strand() == CUFF_STRAND_UNKNOWN)
 		return false;
 	
+	// FIXME:  This is not true for non-canonical splicing
+	if (has_intron())
+		return true;
+	
 	foreach (const MateHit* h, mate_hits())
 	{
 		if (h->strand() == strand())
 			return true;
+		assert(h->strand() == CUFF_STRAND_UNKNOWN && !h->contains_splice());
 	}
 	
 	if (ref_scaffs == NULL)
@@ -1546,10 +1569,10 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	
 	foreach (shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 	{
-		if (exons_overlap(*this, *ref_scaff) && ref_scaff->strand() == strand())
+		if (ref_scaff->strand() == strand() && exons_overlap(*this, *ref_scaff))
 			return true;
 	}
-	
+		
 	return false;
 }
 

@@ -607,7 +607,8 @@ private:
     
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
-    size_t _num_seq_header_recs;
+    uint32_t _num_seq_header_recs;
+
 
 };
 
@@ -846,7 +847,6 @@ public:
 	{
 		return (_left_alignment && _right_alignment);
 	}
-	
 
 	int left() const 
 	{
@@ -894,6 +894,13 @@ public:
 		return max(left_strand, right_strand);
 	}
 	
+	
+	bool contains_splice() const
+	{
+		if (_right_alignment)
+			return (_left_alignment->contains_splice() || _right_alignment->contains_splice());
+		return (_left_alignment->contains_splice());
+	}
 	
 	InsertID insert_id() const
 	{

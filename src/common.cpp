@@ -56,7 +56,7 @@ int max_frag_len = 800;
 int min_frag_len = 1;
 int olap_radius = 50;
 
-int overhang_3 = 500;
+int overhang_3 = 600;
 
 int ref_merge_overhang_tolerance = 30;
 int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.

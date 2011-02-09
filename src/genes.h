@@ -38,7 +38,8 @@ public:
 			ConfidenceInterval ci = ConfidenceInterval(),
 			double cov = 0.0,
 			double fmi = 0.0,
-			AbundanceStatus status = NUMERIC_FAIL) :
+			AbundanceStatus status = NUMERIC_FAIL,
+			string ref_gene_id = "") :
 		_scaffold(s),
 		_FPKM(FPKM),
 		_eff_len(eff_len),
@@ -53,14 +54,16 @@ public:
 		char trans_id_str[256];
 		if (_scaffold.annotated_trans_id() != "")
 			strncpy(trans_id_str, _scaffold.annotated_trans_id().c_str(), 255);
+		else if (gid == -1)
+			sprintf(trans_id_str, "%s.%s.%d", user_label.c_str(), ref_gene_id.c_str(), tid);
 		else
 			sprintf(trans_id_str, "%s.%d.%d", user_label.c_str(), gid, tid);
 		
 		_trans_id = trans_id_str;
 		
 		char gene_id_str[256];
-		if (_scaffold.annotated_gene_id() != "")
-			strncpy(gene_id_str, _scaffold.annotated_gene_id().c_str(), 255);
+		if(gid == -1)
+			strncpy(gene_id_str, ref_gene_id.c_str(), 255);
 		else
 			sprintf(gene_id_str, "%s.%d", user_label.c_str(), gid);
 		_gene_id = gene_id_str;

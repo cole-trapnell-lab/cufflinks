@@ -148,7 +148,7 @@ void fill_unambiguous_unknowns(vector<Scaffold>& scaffolds)
     
     for (size_t i = 0; i < scaffolds.size(); ++i)
     {
-        assert (!scaffolds[i].has_intron() || s != CUFF_STRAND_UNKNOWN);
+		assert(!scaffolds[i].has_strand_support() || scaffolds[i].strand() != CUFF_STRAND_UNKNOWN);
         
         scaffolds[i].strand(s);
         scaffolds[i].fill_gaps(merged);

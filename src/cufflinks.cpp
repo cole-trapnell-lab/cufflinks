@@ -505,6 +505,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		const MateHit& hit = bundle.hits()[i];
 		hits.push_back(Scaffold(hit));
+		assert(hits.back().mate_hits().size() > 0);
 	}
     
     vector<int> depth_of_coverage(bundle.length(),0);
@@ -533,7 +534,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		vector<Scaffold> pseudohits;
 		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 		{
-			ref_scaff->tile_with_scaffs(pseudohits, 400, 15);
+			ref_scaff->tile_with_scaffs(pseudohits, 45, 405, 15);
 		}
 		hits.insert(hits.end(),
 					pseudohits.begin(),
@@ -584,6 +585,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		const Scaffold& hit = hits[i];
 		CuffStrand hs = hit.strand();
+				
 		if (hs == CUFF_FWD)
 			saw_fwd = true;
 		if (hs == CUFF_REV)
@@ -726,73 +728,76 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	foreach (const AbundanceGroup& strand_group, transfrags_by_strand)
 	{	
 		vector<AbundanceGroup> transfrags_by_gene;
-		
-		cluster_transcripts<ConnectByAnnotatedGeneId>(strand_group,
-													  transfrags_by_gene);
-		
-		foreach (const AbundanceGroup& gene_group, transfrags_by_gene)
-		{
-			vector<AbundanceGroup> overlapping_gene_transcripts;
 
-			cluster_transcripts<ConnectByExonOverlap>(gene_group,
-														  overlapping_gene_transcripts);
+		cluster_transcripts<ConnectByExonOverlap>(strand_group,
+													  transfrags_by_gene);
+		foreach(const AbundanceGroup& gene, transfrags_by_gene)
+		{
+			const vector<shared_ptr<Abundance> >& iso_abundances = gene.abundances();
+			vector<Isoform> isoforms;
 			
-			foreach(const AbundanceGroup& gene, overlapping_gene_transcripts)
+			int gene_id = -1;
+			int num_ref_gene_ids = 0;
+			string ref_gene_id = "";
+			
+			double major_isoform_FPKM = 0;
+			foreach (shared_ptr<Abundance> iso_ab, iso_abundances)
 			{
-				const vector<shared_ptr<Abundance> >& iso_abundances = gene.abundances();
-				vector<Isoform> isoforms;
-				
-				int gene_id = -1;
-				
-				double major_isoform_FPKM = 0;
-				foreach (shared_ptr<Abundance> iso_ab, iso_abundances)
+				if (iso_ab->transfrag()->is_ref())
 				{
-					major_isoform_FPKM = max(iso_ab->FPKM(), major_isoform_FPKM);
-				}
-				
-				foreach (shared_ptr<Abundance> iso_ab, iso_abundances)
-				{
-					// Calculate transcript depth of coverage and FMI from FPKM
-					double FPKM = iso_ab->FPKM();
-					double density_score = major_isoform_FPKM ? (FPKM / major_isoform_FPKM) : 0;
-					double density_per_bp = FPKM;
-					
-					shared_ptr<Scaffold> transfrag = iso_ab->transfrag();
-					assert(transfrag);
-					
-					double s_len = transfrag->length();
-					
-					density_per_bp *= (total_map_mass / 1000000.0); // yields (mass/(length/1000))
-					density_per_bp *= (s_len/ 1000.0);
-					density_per_bp /= s_len;
-					density_per_bp *= avg_read_length;
-					//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
-					
-					if (!allow_junk_filtering || transfrag->is_ref() || density_score > min_isoform_fraction)
+					if (iso_ab->transfrag()->annotated_gene_id() != ref_gene_id)
 					{
-						if (gene_id == -1)
-							gene_id = get_next_gene_id();
-						
-						isoforms.push_back(Isoform(*transfrag,
-												   gene_id,
-												   (int)isoforms.size() + 1,
-												   FPKM,
-												   iso_ab->effective_length(),
-												   iso_ab->gamma(),
-												   iso_ab->FPKM_conf(),
-												   density_per_bp, 
-												   density_score,
-												   iso_ab->status()));
+						ref_gene_id = iso_ab->transfrag()->annotated_gene_id();
+						num_ref_gene_ids++;
 					}
 				}
+				major_isoform_FPKM = max(iso_ab->FPKM(), major_isoform_FPKM);
+			}
+			
+			foreach (shared_ptr<Abundance> iso_ab, iso_abundances)
+			{
+				// Calculate transcript depth of coverage and FMI from FPKM
+				double FPKM = iso_ab->FPKM();
+				double density_score = major_isoform_FPKM ? (FPKM / major_isoform_FPKM) : 0;
+				double density_per_bp = FPKM;
 				
-				if (!isoforms.empty())
+				shared_ptr<Scaffold> transfrag = iso_ab->transfrag();
+				assert(transfrag);
+				
+				double s_len = transfrag->length();
+				
+				density_per_bp *= (total_map_mass / 1000000.0); // yields (mass/(length/1000))
+				density_per_bp *= (s_len/ 1000.0);
+				density_per_bp /= s_len;
+				density_per_bp *= avg_read_length;
+				//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
+				
+				if (!allow_junk_filtering || transfrag->is_ref() || density_score > min_isoform_fraction)
 				{
-					Gene g(isoforms, gene.FPKM(), gene.FPKM_conf(), gene.status());
-					genes.push_back(g);	
+					if (gene_id == -1 && num_ref_gene_ids != 1)
+						gene_id = get_next_gene_id();
+					
+					isoforms.push_back(Isoform(*transfrag,
+											   gene_id,
+											   (int)isoforms.size() + 1,
+											   FPKM,
+											   iso_ab->effective_length(),
+											   iso_ab->gamma(),
+											   iso_ab->FPKM_conf(),
+											   density_per_bp, 
+											   density_score,
+											   iso_ab->status(),
+											   ref_gene_id));
 				}
 			}
+			
+			if (!isoforms.empty())
+			{
+				Gene g(isoforms, gene.FPKM(), gene.FPKM_conf(), gene.status());
+				genes.push_back(g);	
+			}
 		}
+		
 	}
     
 }
