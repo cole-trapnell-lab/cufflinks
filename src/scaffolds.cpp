@@ -273,18 +273,18 @@ void AugmentedCuffOp::fill_interstices(vector<AugmentedCuffOp>& to_fill,
     
 	sort(filled.begin(), filled.end(), g_left_lt);
     
-//    for (size_t i = 0; i < filled.size(); ++i)
-//    {
-//        if (filled[i].opcode == CUFF_INTRON)
-//        {
-//            assert (i > 0);
-//            assert (i < filled.size() -1);
-//            assert (filled[i-1].opcode == CUFF_MATCH);
-//            assert (filled[i+1].opcode == CUFF_MATCH);
-//            assert (filled[i-1].g_right() == filled[i].g_left());
-//            assert (filled[i+1].g_left() == filled[i].g_right());
-//        }
-//    }
+    for (size_t i = 0; i < filled.size(); ++i)
+    {
+        if (filled[i].opcode == CUFF_INTRON)
+        {
+            assert (i > 0);
+            assert (i < filled.size() -1);
+            assert (filled[i-1].opcode == CUFF_MATCH);
+            assert (filled[i+1].opcode == CUFF_MATCH);
+            assert (filled[i-1].g_right() == filled[i].g_left());
+            assert (filled[i+1].g_left() == filled[i].g_right());
+        }
+    }
     
 	to_fill = filled;
 }
@@ -388,21 +388,21 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 			fill_interstices(merged, unknowns, false); 
 	}
 
-    //FIXME: put these back
-//    assert (merged.front().opcode == CUFF_MATCH);
-//    assert (merged.back().opcode == CUFF_MATCH);
-//    
-//    for (size_t i = 1; i < merged.size(); ++i)
-//    {
-//        if (merged[i].opcode == CUFF_INTRON)
-//        {
-//            assert (merged[i-1].opcode == CUFF_MATCH);
-//        }
-//        else if (merged[i].opcode == CUFF_UNKNOWN)
-//        {
-//            assert (merged[i-1].opcode != CUFF_INTRON);
-//        }
-//    }
+    assert (merged.front().opcode == CUFF_MATCH);
+    assert (merged.back().opcode == CUFF_MATCH);
+    
+    for (size_t i = 1; i < merged.size(); ++i)
+    {
+		assert(merged[i-1].g_right() == merged[i].g_left());
+        if (merged[i].opcode == CUFF_INTRON)
+        {
+            assert (merged[i-1].opcode == CUFF_MATCH);
+        }
+        else if (merged[i].opcode == CUFF_UNKNOWN)
+        {
+            assert (merged[i-1].opcode != CUFF_INTRON);
+        }
+    }
 }
     
 
@@ -721,6 +721,7 @@ void Scaffold::merge(const vector<Scaffold>& s,
 	
 	AugmentedCuffOp::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
 	
+	
 	//assert (ops.empty() || !(merged._augmented_ops.empty()));
 #ifdef DEBUG
 	if (merged._augmented_ops.empty() || 
@@ -788,6 +789,8 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
 	
 	const vector<AugmentedCuffOp>& orig_ops = augmented_ops();
     
+	const vector<AugmentedCuffOp> og_ops = augmented_ops();
+	
     vector<AugmentedCuffOp> unknowns;
 	
     size_t g_max = 0;
@@ -810,12 +813,12 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
     
     vector<AugmentedCuffOp> padded_filler;
     AugmentedCuffOp::merge_ops(tmp_filler, padded_filler, false);
-    
     	
     vector<AugmentedCuffOp> overlapping;
     foreach (const AugmentedCuffOp& op, padded_filler)
     {
-        if (left() <= op.g_left() && right() >= op.g_right()
+		//if (left() <= op.g_left() && right() >= op.g_right()
+		if(::overlap_in_genome(op.g_left(),op.g_right(), left(), right())
             && (op.opcode != CUFF_UNKNOWN || !overlapping.empty()))
         {
             overlapping.push_back(op);
@@ -824,8 +827,28 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
     
     overlapping.insert(overlapping.end(), _augmented_ops.begin(),_augmented_ops.end()); 
     sort(overlapping.begin(), overlapping.end(), AugmentedCuffOp::g_left_lt);
-
-    
+	
+	// Trim first in last in case they hang over the scaffold boundaries
+	if (overlapping.front().g_left() < left())
+	{
+		AugmentedCuffOp& first_op = overlapping.front();
+		first_op.genomic_length -= (left() - first_op.g_left());
+		first_op.genomic_offset = left();
+	}
+	if (overlapping.back().g_right() > right())
+	{
+		AugmentedCuffOp& last_op = overlapping.back();
+		last_op.genomic_length -= (last_op.g_right() - right());
+	}
+	if (overlapping.back().opcode == CUFF_INTRON && overlapping.back().genomic_length <= bowtie_overhang_tolerance)
+	{
+		overlapping.pop_back();
+	}
+	if (overlapping.front().opcode == CUFF_INTRON && overlapping.front().genomic_length <= bowtie_overhang_tolerance)
+	{
+		overlapping.erase(overlapping.begin(), overlapping.begin()+1);
+	}
+	
     // we don't want either the terminal ops in the filler to be unknowns,
     // because they'll just propogate to the scaffold we're trying to fill.
     if (!overlapping.empty() && overlapping.back().opcode == CUFF_UNKNOWN)

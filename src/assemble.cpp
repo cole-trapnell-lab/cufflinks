@@ -412,6 +412,7 @@ bool make_scaffolds(int bundle_left,
 		vector<Scaffold> orig_hits = hits;
 		
         hits.insert(hits.end(), split_hazards.begin(), split_hazards.end());
+		
 
         compress_fragments(hits);
 

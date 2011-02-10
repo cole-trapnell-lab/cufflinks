@@ -285,7 +285,12 @@ public:
 		
 		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 
-        assert (_augmented_ops.front().opcode == CUFF_MATCH);
+        for(size_t i = 1; i < _augmented_ops.size(); ++i)
+		{
+			assert(_augmented_ops[i-1].g_right() == _augmented_ops[i].g_left());
+		}
+		
+		assert (_augmented_ops.front().opcode == CUFF_MATCH);
         assert (_augmented_ops.back().opcode == CUFF_MATCH);
 	}
 	
@@ -378,7 +383,6 @@ public:
 	bool has_intron() const { return _has_intron; }
 	bool has_suspicious_unknown() const { return has_suspicious_unknown(*this); }
 	bool has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs = NULL) const;
-
 	
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }

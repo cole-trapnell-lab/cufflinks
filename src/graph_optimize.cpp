@@ -145,13 +145,14 @@ void fill_unambiguous_unknowns(vector<Scaffold>& scaffolds)
     }
     
     AugmentedCuffOp::merge_ops(non_conflict, merged, true);
-    
+	
     for (size_t i = 0; i < scaffolds.size(); ++i)
     {
 		assert(!scaffolds[i].has_strand_support() || scaffolds[i].strand() != CUFF_STRAND_UNKNOWN);
         
         scaffolds[i].strand(s);
-        scaffolds[i].fill_gaps(merged);
+		if (scaffolds[i].has_unknown())
+			scaffolds[i].fill_gaps(merged);
     }
 }
 

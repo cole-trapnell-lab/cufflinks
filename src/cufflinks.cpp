@@ -505,7 +505,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		const MateHit& hit = bundle.hits()[i];
 		hits.push_back(Scaffold(hit));
-		assert(hits.back().mate_hits().size() > 0);
 	}
     
     vector<int> depth_of_coverage(bundle.length(),0);
@@ -534,7 +533,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		vector<Scaffold> pseudohits;
 		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 		{
-			ref_scaff->tile_with_scaffs(pseudohits, 45, 405, 15);
+			//ref_scaff->tile_with_scaffs(pseudohits, 45, 405, 15);
 		}
 		hits.insert(hits.end(),
 					pseudohits.begin(),
@@ -585,7 +584,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		const Scaffold& hit = hits[i];
 		CuffStrand hs = hit.strand();
-				
+						
 		if (hs == CUFF_FWD)
 			saw_fwd = true;
 		if (hs == CUFF_REV)

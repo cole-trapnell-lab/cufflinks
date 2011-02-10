@@ -841,7 +841,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             
             for (size_t j = 0; j < s1.abundances().size(); ++j)
             {
-                assert (s1.abundances()[j]->description() == s1.abundances()[j]->description());
+                assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
             }
         }
 

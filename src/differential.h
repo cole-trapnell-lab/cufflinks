@@ -176,7 +176,7 @@ public:
         {
             const vector<shared_ptr<Scaffold> >& s1 = bundles[i]->ref_scaffolds();
             const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1]->ref_scaffolds();
-            assert (s1.size() == bundles[i-1]->ref_scaffolds().size());
+            assert (s1.size() == s2.size());
             for (size_t j = 0; j < s1.size(); ++j)
             {
                 assert (s1[j]->annotated_trans_id() == s2[j]->annotated_trans_id());
