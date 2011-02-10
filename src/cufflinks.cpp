@@ -533,7 +533,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		vector<Scaffold> pseudohits;
 		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 		{
-			//ref_scaff->tile_with_scaffs(pseudohits, 45, 405, 15);
+			ref_scaff->tile_with_scaffs(pseudohits, 45, 405, 15);
 		}
 		hits.insert(hits.end(),
 					pseudohits.begin(),
