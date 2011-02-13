@@ -889,16 +889,53 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
 	{
 		const AugmentedCuffOp& exon_3 = scaff.augmented_ops().back();
 		int to_remove;
-		double cov_to_end = 0;
-		for (to_remove = 0; to_remove < exon_3.genomic_length; to_remove++)
+        double min_cost = numeric_limits<double>::max();
+        double tmp_mean_to_keep = 0.0;
+        double tmp_mean_to_trim = 0.0;
+        
+        size_t min_cost_x = -1;
+		for (to_remove = 1; to_remove < exon_3.genomic_length - 1; to_remove++)
 		{
-			cov_to_end += coverage[scaff_len-to_remove-1];
-			if (cov_to_end/(to_remove+1) >= trim_3_dropoff_frac * avg_cov)
-				break;
+            for (size_t i = 0; i < exon_3.genomic_length; i++)
+            {
+                if (i <= to_remove)
+                {
+                    tmp_mean_to_trim += coverage[scaff_len-i-1];
+                }
+                else 
+                {
+                    tmp_mean_to_keep += coverage[scaff_len-i-1];
+                }
+            }
+            tmp_mean_to_trim /= to_remove;
+            tmp_mean_to_trim /= (exon_3.genomic_length - to_remove);
+            
+            double tmp_mean_cost = 0.0;
+            for (size_t i = 0; i < exon_3.genomic_length; i++)
+            {
+                if (i <= to_remove)
+                {
+                    double d = (coverage[scaff_len-i-1] - tmp_mean_to_trim);
+                    d *= d;
+                    tmp_mean_cost += d;
+                }
+                else 
+                {
+                    double d = (coverage[scaff_len-i-1] - tmp_mean_to_keep);
+                    d *= d;
+                    tmp_mean_cost += d;
+                }
+            }
+            if (tmp_mean_cost <= min_cost)
+            {
+                min_cost = tmp_mean_cost;
+                min_cost_x = to_remove;
+            }
 		}
-		if (to_remove < exon_3.genomic_length)
+        
+		if (min_cost_x < exon_3.genomic_length)
 		{
-			scaff.trim_3(to_remove);
+			scaff.trim_3(min_cost_x);
 			return true;
 		}
 	}
@@ -906,16 +943,53 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
 	{
 		const AugmentedCuffOp& exon_3 = scaff.augmented_ops().front();
 		int to_remove;
-		double cov_to_end = 0;
-		for (to_remove = 0; to_remove < exon_3.genomic_length; to_remove++)
+        double min_cost = numeric_limits<double>::max();
+        double tmp_mean_to_trim = 0.0;
+        double tmp_mean_to_keep = 0.0;
+        
+        size_t min_cost_x = -1;
+		for (to_remove = 1; to_remove < exon_3.genomic_length - 1; to_remove++)
 		{
-			cov_to_end += coverage[to_remove];
-			if (cov_to_end/(to_remove+1) >= trim_3_dropoff_frac * avg_cov)
-				break;
+            for (size_t i = 0; i < exon_3.genomic_length; i++)
+            {
+                if (i <= to_remove)
+                {
+                    tmp_mean_to_trim += coverage[i];
+                }
+                else 
+                {
+                    tmp_mean_to_keep += coverage[i];
+                }
+            }
+            tmp_mean_to_trim /= to_remove;
+            tmp_mean_to_keep /= (exon_3.genomic_length - to_remove);
+            
+            double tmp_mean_cost = 0.0;
+            for (size_t i = 0; i < exon_3.genomic_length; i++)
+            {
+                if (i <= to_remove)
+                {
+                    double d = (coverage[i] - tmp_mean_to_trim);
+                    d *= d;
+                    tmp_mean_cost += d;
+                }
+                else 
+                {
+                    double d = (coverage[i] - tmp_mean_to_keep);
+                    d *= d;
+                    tmp_mean_cost += d;
+                }
+            }
+            if (tmp_mean_cost <= min_cost)
+            {
+                min_cost = tmp_mean_cost;
+                min_cost_x = to_remove;
+            }
 		}
-		if (to_remove < exon_3.genomic_length)
+        
+		if (min_cost_x < exon_3.genomic_length)
 		{
-			scaff.trim_3(to_remove);
+			scaff.trim_3(min_cost_x);
 			return true;
 		}
 	}

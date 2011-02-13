@@ -36,7 +36,6 @@ extern uint32_t min_intron_length;
 extern uint32_t max_gene_length;
 
 extern double trim_3_avgcov_thresh;
-extern double trim_3_dropoff_frac;
 
 extern int max_partner_dist;
 extern bool user_provided_fld;
@@ -310,6 +309,5 @@ void init_library_table();
 #define OPT_BIAS_MODE               267
 #define OPT_MIN_INTRON_LENGTH       268
 #define OPT_3_PRIME_AVGCOV_THRESH	269
-#define OPT_3_PRIME_DROPOFF_FRAC    270
 
 #endif
