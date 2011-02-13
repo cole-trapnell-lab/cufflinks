@@ -445,14 +445,16 @@ int fdr_significance(double fdr,
 			tests[k]->significant = false;
 		}
 	}
-	
+	int significant = 0;
 	for (int k = 0; k < (int)passing.size(); ++k)
 	{
-		double r = (double)passing.size() / (k + 1);
+		double r = (double)passing.size() / ((double) k + 1);
 		double corrected_p = passing[k]->p_value * r;
 		passing[k]->corrected_p = corrected_p;
 		passing[k]->significant = (corrected_p <= fdr);
+        significant += passing[k]->significant;
 	}
+    
 	return passing.size();
 }
 

@@ -318,7 +318,7 @@ int main(int argc, char * const argv[]) {
         tfiles[fi]=fopen(s.chars(),"w");
         if (tfiles[fi]==NULL)
           GError("Error creating file '%s'!\n",s.chars());
-        fprintf(tfiles[fi],"ref_gene_id\tref_id\tclass_code\tcuff_gene_id\tcuff_id\tFMI\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tcov\tlen\tmajor_iso_id\n");
+        fprintf(tfiles[fi],"ref_gene_id\tref_id\tclass_code\tcuff_gene_id\tcuff_id\tFMI\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tcov\tlen\tmajor_iso_id\tref_match_len\n");
         s=sbase;
         s.append(".refmap");
         rtfiles[fi]=fopen(s.chars(),"w");
@@ -2101,42 +2101,47 @@ void reclassLoci(char strand, GList<GLocus>& qloci, GList<GLocus>* rloci, GFaSeq
 //for a single genomic sequence, all qry data and ref data is stored in gtrack
 //check for all 'u' transfrags if they are repeat ('r') or polymerase run 'p' or anything else
 void umrnaReclass(int qcount,  GSeqTrack& gtrack, FILE** ftr, GFaSeqGet* faseq=NULL) {
-  for (int q=0;q<qcount;q++) {
-    if (gtrack.qdata[q]==NULL) continue; //no transcripts in this q dataset for this genomic seq
-    reclassLoci('+', gtrack.qdata[q]->loci_f, gtrack.rloci_f, faseq);
-    reclassLoci('-', gtrack.qdata[q]->loci_r, gtrack.rloci_r, faseq);
-    reclass_mRNAs('+', gtrack.qdata[q]->umrnas, gtrack.rloci_f, faseq);
-    reclass_mRNAs('-', gtrack.qdata[q]->umrnas, gtrack.rloci_r, faseq);
-    //and also check for special cases with cross-strand overlaps:
-    reclass_XStrand(gtrack.qdata[q]->mrnas_f, gtrack.rloci_r);
-    reclass_XStrand(gtrack.qdata[q]->mrnas_r, gtrack.rloci_f);
-    // print all tmap data here here:
-    for (int i=0;i<gtrack.qdata[q]->tdata.Count();i++) {
-      CTData* mdata=gtrack.qdata[q]->tdata[i];
-      if (mdata->mrna==NULL) continue; //invalidated -- removed earlier
-      //GLocus* rlocus=NULL;
-      mdata->classcode='u';
-      GffObj* ref=NULL;
-      if (mdata->ovls.Count()>0) {
-            mdata->classcode=mdata->ovls[0]->code;
-            ref=mdata->ovls[0]->mrna;
+    for (int q=0;q<qcount;q++) {
+        if (gtrack.qdata[q]==NULL) continue; //no transcripts in this q dataset for this genomic seq
+        reclassLoci('+', gtrack.qdata[q]->loci_f, gtrack.rloci_f, faseq);
+        reclassLoci('-', gtrack.qdata[q]->loci_r, gtrack.rloci_r, faseq);
+        reclass_mRNAs('+', gtrack.qdata[q]->umrnas, gtrack.rloci_f, faseq);
+        reclass_mRNAs('-', gtrack.qdata[q]->umrnas, gtrack.rloci_r, faseq);
+        //and also check for special cases with cross-strand overlaps:
+        reclass_XStrand(gtrack.qdata[q]->mrnas_f, gtrack.rloci_r);
+        reclass_XStrand(gtrack.qdata[q]->mrnas_r, gtrack.rloci_f);
+        // print all tmap data here here:
+        for (int i=0;i<gtrack.qdata[q]->tdata.Count();i++) {
+            CTData* mdata=gtrack.qdata[q]->tdata[i];
+            if (mdata->mrna==NULL) continue; //invalidated -- removed earlier
+            //GLocus* rlocus=NULL;
+            mdata->classcode='u';
+            GffObj* ref=NULL;
+            if (mdata->ovls.Count()>0) {
+                mdata->classcode=mdata->ovls[0]->code;
+                ref=mdata->ovls[0]->mrna;
             }
-      //if (mdata->classcode<33) mdata->classcode='u';      
-      if (mdata->classcode<47) mdata->classcode='u'; // if 0, '-' or '.'
-      if (tmapFiles) {
-         if (ref!=NULL) {
-              fprintf(ftr[q],"%s\t%s\t",getGeneID(ref),ref->getID());
-              //rlocus=((CTData*)(ref->uptr))->locus;
-              }
-           else fprintf(ftr[q],"-          \t-          \t");
-      //fprintf(ftr[q],"%c\t%s\t%d\t%8.6f\t%8.6f\t%d\n", ovlcode, mdata->mrna->getID(),
-      //    iround(mdata->mrna->gscore/10), mdata->FPKM, mdata->cov, mdata->mrna->covlen);
-         const char* mlocname = (mdata->locus!=NULL) ? mdata->locus->mrna_maxcov->getID() : mdata->mrna->getID();
-         fprintf(ftr[q],"%c\t%s\t%s\t%d\t%8.6f\t%8.6f\t%8.6f\t%8.6f\t%d\t%s\n", mdata->classcode, getGeneID(mdata->mrna), mdata->mrna->getID(),
-           iround(mdata->mrna->gscore/10), mdata->FPKM, mdata->conf_lo,mdata->conf_hi, mdata->cov, mdata->mrna->covlen, mlocname);
-         }
-    } //for each tdata
-  } //for each qdata
+            //if (mdata->classcode<33) mdata->classcode='u';      
+            if (mdata->classcode<47) mdata->classcode='u'; // if 0, '-' or '.'
+            if (tmapFiles) {
+                char ref_match_len[2048];
+                if (ref!=NULL) {
+                    sprintf(ref_match_len, "%d",ref->covlen);
+                    fprintf(ftr[q],"%s\t%s\t",getGeneID(ref),ref->getID());
+                    //rlocus=((CTData*)(ref->uptr))->locus;
+                }
+                else {
+                    fprintf(ftr[q],"-          \t-          \t");
+                    strcpy(ref_match_len, "-");
+                }
+                //fprintf(ftr[q],"%c\t%s\t%d\t%8.6f\t%8.6f\t%d\n", ovlcode, mdata->mrna->getID(),
+                //    iround(mdata->mrna->gscore/10), mdata->FPKM, mdata->cov, mdata->mrna->covlen);
+                const char* mlocname = (mdata->locus!=NULL) ? mdata->locus->mrna_maxcov->getID() : mdata->mrna->getID();
+                fprintf(ftr[q],"%c\t%s\t%s\t%d\t%8.6f\t%8.6f\t%8.6f\t%8.6f\t%d\t%s\t%s\n", mdata->classcode, getGeneID(mdata->mrna), mdata->mrna->getID(),
+                        iround(mdata->mrna->gscore/10), mdata->FPKM, mdata->conf_lo,mdata->conf_hi, mdata->cov, mdata->mrna->covlen, mlocname, ref_match_len);
+            }
+        } //for each tdata
+    } //for each qdata
 }
 
 void buildXLoci(GTrackLocus& loctrack, int qcount, GSeqTrack& gtrack, char strand,
