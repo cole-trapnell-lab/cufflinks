@@ -875,6 +875,14 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
 	{
 		int start, end, frag_len;
 		if (!scaff.map_frag(*hit, start, end, frag_len)) continue;
+        
+        if (scaff.strand() == CUFF_REV)
+        {
+            start = scaff_len - 1 - start;
+            end = scaff_len - 1 - end;
+            swap(start, end);
+        }
+        
 		for(int i = start; i <= end; ++i)
 		{
 			coverage[i] += hit->mass();
@@ -885,114 +893,104 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
 	if (avg_cov < trim_3_avgcov_thresh)
 		return false;
 	
-	if (scaff.strand() == CUFF_FWD)
+    const AugmentedCuffOp* exon_3 = NULL;
+    int mult;
+    int offset;
+    
+	if (scaff.strand() == CUFF_REV)
 	{
-		const AugmentedCuffOp& exon_3 = scaff.augmented_ops().back();
-		int to_remove;
-        double min_cost = numeric_limits<double>::max();
-        double tmp_mean_to_keep = 0.0;
-        double tmp_mean_to_trim = 0.0;
+        mult = 1;
+        offset = 0;
+		exon_3 = &scaff.augmented_ops().front();
+    }
+    else 
+    {
+        mult = -1;
+        offset = scaff_len - 1;
+        exon_3 = &scaff.augmented_ops().back();
+    }
+
+    int to_remove;
+    double min_cost = numeric_limits<double>::max();
+    double mean_to_keep = 0.0;
+    double mean_to_trim = 0.0;
+    double tmp_mean_to_trim = 0.0;
+    double tmp_mean_to_keep = 0.0;
+    double tmp_mean_3prime = 0.0;
+    for (size_t i = 0; i < exon_3->genomic_length; i++)
+    {
+        tmp_mean_3prime += coverage[offset + mult*i];
+    }
+    tmp_mean_3prime /= exon_3->genomic_length;
+    
+    double base_cost = 0.0;
+    for (size_t i = 0; i < exon_3->genomic_length; i++)
+    {
+        double d = (coverage[offset + mult*i] - tmp_mean_3prime);
+        d *= d;
+        base_cost += d;
+    }
+    base_cost /= exon_3->genomic_length;
+    
+    size_t min_cost_x = -1;
+    for (to_remove = 1; to_remove < exon_3->genomic_length - 1; to_remove++)
+    {
+        tmp_mean_to_trim = 0.0;
+        tmp_mean_to_keep = 0.0;
+        for (size_t i = 0; i < exon_3->genomic_length; i++)
+        {
+            if (i <= to_remove)
+            {
+                tmp_mean_to_trim += coverage[offset + mult*i];
+            }
+            else 
+            {
+                tmp_mean_to_keep += coverage[offset + mult*i];
+            }
+        }
         
-        size_t min_cost_x = -1;
-		for (to_remove = 1; to_remove < exon_3.genomic_length - 1; to_remove++)
-		{
-            for (size_t i = 0; i < exon_3.genomic_length; i++)
-            {
-                if (i <= to_remove)
-                {
-                    tmp_mean_to_trim += coverage[scaff_len-i-1];
-                }
-                else 
-                {
-                    tmp_mean_to_keep += coverage[scaff_len-i-1];
-                }
-            }
-            tmp_mean_to_trim /= to_remove;
-            tmp_mean_to_trim /= (exon_3.genomic_length - to_remove);
-            
-            double tmp_mean_cost = 0.0;
-            for (size_t i = 0; i < exon_3.genomic_length; i++)
-            {
-                if (i <= to_remove)
-                {
-                    double d = (coverage[scaff_len-i-1] - tmp_mean_to_trim);
-                    d *= d;
-                    tmp_mean_cost += d;
-                }
-                else 
-                {
-                    double d = (coverage[scaff_len-i-1] - tmp_mean_to_keep);
-                    d *= d;
-                    tmp_mean_cost += d;
-                }
-            }
-            if (tmp_mean_cost <= min_cost)
-            {
-                min_cost = tmp_mean_cost;
-                min_cost_x = to_remove;
-            }
-		}
+        tmp_mean_to_trim /= to_remove;
+        tmp_mean_to_keep /= (exon_3->genomic_length - to_remove);
         
-		if (min_cost_x < exon_3.genomic_length)
-		{
-			scaff.trim_3(min_cost_x);
-			return true;
-		}
-	}
-	else
-	{
-		const AugmentedCuffOp& exon_3 = scaff.augmented_ops().front();
-		int to_remove;
-        double min_cost = numeric_limits<double>::max();
-        double tmp_mean_to_trim = 0.0;
-        double tmp_mean_to_keep = 0.0;
+        double tmp_mean_trim_cost = 0.0;
+        double tmp_mean_keep_cost = 0.0;
+        for (size_t i = 0; i < exon_3->genomic_length; i++)
+        {
+            if (i <= to_remove)
+            {
+                double d = (coverage[offset + mult*i] - tmp_mean_to_trim);
+                d *= d;
+                tmp_mean_trim_cost += d;
+            }
+            else 
+            {
+                double d = (coverage[offset + mult*i] - tmp_mean_to_keep);
+                d *= d;
+                tmp_mean_keep_cost += d;
+            }
+        }
         
-        size_t min_cost_x = -1;
-		for (to_remove = 1; to_remove < exon_3.genomic_length - 1; to_remove++)
-		{
-            for (size_t i = 0; i < exon_3.genomic_length; i++)
-            {
-                if (i <= to_remove)
-                {
-                    tmp_mean_to_trim += coverage[i];
-                }
-                else 
-                {
-                    tmp_mean_to_keep += coverage[i];
-                }
-            }
-            tmp_mean_to_trim /= to_remove;
-            tmp_mean_to_keep /= (exon_3.genomic_length - to_remove);
-            
-            double tmp_mean_cost = 0.0;
-            for (size_t i = 0; i < exon_3.genomic_length; i++)
-            {
-                if (i <= to_remove)
-                {
-                    double d = (coverage[i] - tmp_mean_to_trim);
-                    d *= d;
-                    tmp_mean_cost += d;
-                }
-                else 
-                {
-                    double d = (coverage[i] - tmp_mean_to_keep);
-                    d *= d;
-                    tmp_mean_cost += d;
-                }
-            }
-            if (tmp_mean_cost <= min_cost)
-            {
-                min_cost = tmp_mean_cost;
-                min_cost_x = to_remove;
-            }
-		}
+        tmp_mean_trim_cost /= to_remove;
+        tmp_mean_keep_cost /= (exon_3->genomic_length - to_remove);
         
-		if (min_cost_x < exon_3.genomic_length)
-		{
-			scaff.trim_3(min_cost_x);
-			return true;
-		}
-	}
+        double new_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
+        
+        if (new_cost < min_cost && tmp_mean_to_keep > 4 * tmp_mean_to_trim && new_cost < base_cost && to_remove > scaff_len * 0.05)
+        {
+            min_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
+            min_cost_x = to_remove;
+            mean_to_keep = tmp_mean_to_keep;
+            mean_to_trim = tmp_mean_to_trim;
+        }
+    }
+    
+    if (min_cost_x < exon_3->genomic_length)
+    {
+        scaff.trim_3(min_cost_x);
+        return true;
+    }
+
+
 	return false;
 	
 }
