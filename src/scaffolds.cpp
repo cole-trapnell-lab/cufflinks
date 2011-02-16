@@ -530,43 +530,62 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int 
 	int curr_len = min_len;
 	int remaining_len = length();
 	
+    const vector<AugmentedCuffOp>& orig_ops = augmented_ops();
+    
 	while(true)
 	{
-		while (augmented_ops()[l].opcode != CUFF_MATCH || l_off >= augmented_ops()[l].genomic_length)
+		while (l < orig_ops.size() && (orig_ops[l].opcode != CUFF_MATCH || l_off >= orig_ops[l].genomic_length))
 		{
-			if (augmented_ops()[l].opcode == CUFF_MATCH)
-				l_off -= augmented_ops()[l].genomic_length;
-			if(++l == augmented_ops().size())
-				assert(false);
+			if (orig_ops[l].opcode == CUFF_MATCH)
+				l_off -= orig_ops[l].genomic_length;
+            ++l;
+			//if(++l == augmented_ops().size())
+			//	assert(false);
 		}
-		while (augmented_ops()[r].opcode != CUFF_MATCH || r_off > augmented_ops()[r].genomic_length) // Strictly > because r_off is one past
+		while (r < orig_ops.size() && (orig_ops[r].opcode != CUFF_MATCH || r_off > orig_ops[r].genomic_length)) // Strictly > because r_off is one past
 		{
-			if (augmented_ops()[r].opcode == CUFF_MATCH)
-				r_off -= augmented_ops()[r].genomic_length;
-			if(++r == augmented_ops().size())
-				assert(false);
+			if (orig_ops[r].opcode == CUFF_MATCH)
+				r_off -= orig_ops[r].genomic_length;
+            ++r;
+			//if(++r == augmented_ops().size())
+			//	assert(false);
 		}
 		
 		vector<AugmentedCuffOp> ops;
 		
+        //if (l >= orig_ops.size() && r >= orig_ops.size())
+        //    break;
+        
 		if (l==r)
 		{
-			ops.push_back(AugmentedCuffOp(CUFF_MATCH, augmented_ops()[l].g_left() + l_off, r_off - l_off));
+            assert (l < orig_ops.size());
+			ops.push_back(AugmentedCuffOp(CUFF_MATCH, orig_ops[l].g_left() + l_off, r_off - l_off));
 		}
 		else
 		{
-			ops.push_back(AugmentedCuffOp(CUFF_MATCH, augmented_ops()[l].g_left() + l_off, augmented_ops()[l].genomic_length - l_off));
+            assert(orig_ops.size());
+            assert(orig_ops[l].genomic_offset != 0);
+            
+			ops.push_back(AugmentedCuffOp(CUFF_MATCH, orig_ops[l].g_left() + l_off, orig_ops[l].genomic_length - l_off));
 			assert(ops.back().g_right() > ops.back().g_left());
 			for(size_t i = l+1; i < r; i++)
 			{
-				ops.push_back(augmented_ops()[i]);
+				ops.push_back(orig_ops[i]);
 			}
-			if (r_off > 0)
-				ops.push_back(AugmentedCuffOp(CUFF_MATCH, augmented_ops()[r].g_left(), r_off));
+			if (r_off > 0 && r < orig_ops.size())
+            {
+                assert (r < orig_ops.size());
+                assert (orig_ops[r].genomic_offset != 0);
+				ops.push_back(AugmentedCuffOp(CUFF_MATCH, orig_ops[r].g_left(), r_off));
+            }
 		}
 		assert(ops.back().g_right() > ops.back().g_left());
 
-		
+		foreach(const AugmentedCuffOp& op, ops)
+        {
+            assert (op.genomic_offset != 0);
+        }
+        
 		tile_scaffs.push_back(Scaffold(this->ref_id(), this->strand(), ops, true)); 
 		assert(tile_scaffs.back().length() == curr_len );
 		assert(tile_scaffs.back().left() >= left() &&
@@ -594,7 +613,7 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int 
 		}
 			
 	}
-			   
+	
 }
 
 bool Scaffold::sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const	

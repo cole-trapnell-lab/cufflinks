@@ -43,6 +43,7 @@ uint32_t min_intron_length = 50;
 uint32_t max_intron_length = 300000;
 //uint32_t min_exon_length = 100; 
 
+double trim_3_dropoff_frac = .1;
 double trim_3_avgcov_thresh = 10.0;
 
 uint32_t max_gene_length = 3500000;

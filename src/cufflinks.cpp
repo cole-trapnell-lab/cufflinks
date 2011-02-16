@@ -72,6 +72,7 @@ static struct option long_options[] = {
 {"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
 {"min-frags-per-transfrags",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
 {"min-intron-length",required_argument,		         0,			 OPT_MIN_INTRON_LENGTH},
+{"trim-3-dropoff-frac",	required_argument,		 0,			     OPT_3_PRIME_AVGCOV_THRESH},
 {"trim-3-avgcov-thresh",	required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
 
 #if ADAM_MODE
@@ -120,7 +121,8 @@ void print_usage()
     fprintf(stderr, "  --max-bundle-length          maximum genomic length allowed for a given bundle     [ default:3500000 ]\n");
     fprintf(stderr, "  --min-intron-length          minimum intron size allowed in genome                 [ default:     50 ]\n");
     fprintf(stderr, "  --trim-3-avgcov-thresh       minimum avg coverage required to attempt 3' trimming  [ default:     10 ]\n");
-    
+    fprintf(stderr, "  --trim-3-dropoff-frac        fraction of avg coverage below which to trim 3' end   [ default:    0.1 ]\n");
+
     print_library_table();
 }
 
@@ -290,6 +292,11 @@ int parse_options(int argc, char** argv)
 			case OPT_3_PRIME_AVGCOV_THRESH:
 			{
 				trim_3_avgcov_thresh = parseFloat(0, 9999999, "--trim-3-avgcov-thresh must be at least 0", print_usage);
+				break;
+			}
+            case OPT_3_PRIME_DROPOFF_FRAC:
+			{
+				trim_3_dropoff_frac = parseFloat(0, 1.0, "--trim-3-dropoff-frac must be between 0 and 1.0", print_usage);
 				break;
 			}
                 

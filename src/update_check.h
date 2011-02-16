@@ -80,6 +80,7 @@ bool get_current_version(char* curr_version)
 void check_version(const char* this_version)
 {
 	char curr_version[256];
+    memset(curr_version, 0, sizeof(curr_version));
 	if (get_current_version(curr_version))
 	{
 		if (strcmp(curr_version, this_version)==0)

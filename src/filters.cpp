@@ -456,7 +456,7 @@ void filter_hits(int bundle_length,
 	
 	pre_mrna_filter(bundle_length, bundle_left, hits);
 	
-	vector<int> depth_of_coverage(bundle_length,0);
+	vector<int> depth_of_coverage(bundle_length+1,0);
 	vector<double> scaff_doc;
 	map<pair<int,int>, int> intron_doc;
 	vector<Scaffold> filtered_hits;
@@ -975,7 +975,7 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
         
         double new_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
         
-        if (new_cost < min_cost && tmp_mean_to_keep > 4 * tmp_mean_to_trim && new_cost < base_cost && to_remove > scaff_len * 0.05)
+        if (new_cost < min_cost && trim_3_dropoff_frac * tmp_mean_to_keep > tmp_mean_to_trim && new_cost < base_cost && to_remove > scaff_len * 0.05)
         {
             min_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
             min_cost_x = to_remove;
