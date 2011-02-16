@@ -1369,11 +1369,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </tr>
 		  <tr><td VALIGN=top nowrap>fr-unstranded (default)</td><td VALIGN=top nowrap><tt>Standard Illumina</tt></td><td VALIGN=top>Reads from the left-most end of the fragment (in transcript coordinates) map to the transcript strand, and the right-most end maps to the opposite strand.</td></tr>
 		  <tr><td VALIGN=top nowrap>fr-firststrand</td><td VALIGN=top nowrap><tt>dUTP, NSR, NNSR</tt></td><td VALIGN=top>Same as above except we enforce the rule that the right-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads).  Equivalently, it is assumed that only the strand generated during first strand synthesis is sequenced.</td></tr>
-		  <tr><td VALIGN=top nowrap>fr-secondstrand</td><td VALIGN=top nowrap><tt>Ligation, Standard SOLiD</tt></td><td VALIGN=top>Same as above except we enforce the rule that the left-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads).  Equivalently, it is assumed that only the strand generated during second strand synthesis is sequenced.</td></tr>
-		  <tr><td VALIGN=top nowrap>ff-unstranded</td><td VALIGN=top nowrap><tt></tt></td><td VALIGN=top>Both reads map to the same strand.</td></tr>
-		  <tr><td VALIGN=top nowrap>ff-firststrand</td><td VALIGN=top nowrap><tt></tt></td><td VALIGN=top>Both reads map to the non-transcript strand.</td></tr>
-		  <tr><td VALIGN=top nowrap>ff-secondstrand</td><td VALIGN=top nowrap><tt></tt></td><td VALIGN=top>Both reads map to the transcript strand.</td></tr>
-
+		  <tr><td VALIGN=top nowrap>fr-secondstrand</td><td VALIGN=top nowrap><tt>Directional Illumina (Ligation), Standard SOLiD</tt></td><td VALIGN=top>Same as above except we enforce the rule that the left-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads).  Equivalently, it is assumed that only the strand generated during second strand synthesis is sequenced.</td></tr>
 		  </table>
   <p>
   Please contact <a href="http://cs.berkeley.edu/~adarob">Adam Roberts</a> to request support for a new protocol.

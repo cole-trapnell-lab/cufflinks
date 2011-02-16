@@ -586,7 +586,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 #if ADAM_MODE    
     FILE* fhist = fopen(string(output_dir + "/frag_len_hist.csv").c_str(),"w");
     fprintf(fhist, "Length,Count\n");
-	for(int i = 1; i < frag_len_hist.size(); i++)
+	for(size_t i = 1; i < frag_len_hist.size(); i++)
 	{
 		fprintf(fhist, "%d,%f\n", i, frag_len_hist[i]);
 	}

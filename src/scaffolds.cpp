@@ -528,6 +528,7 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int 
 	int l_off = 0;
 	int r_off = min_len; // One past end
 	int curr_len = min_len;
+	int remaining_len = length();
 	
 	while(true)
 	{
@@ -576,12 +577,12 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int 
 			curr_len += tile_offset;
 			r_off += tile_offset;
 		}
-		else if(r==augmented_ops().size()-1 && 
-				r_off + tile_offset > augmented_ops().back().genomic_length) // On the right end of transcript, decreasing in length
+		else if(remaining_len - tile_offset < max_len) // On the right end of transcript, decreasing in length
 		{
 			curr_len += augmented_ops().back().genomic_length - r_off - tile_offset; 
 			r_off = augmented_ops().back().genomic_length;
 			l_off += tile_offset;
+			remaining_len -= tile_offset;
 			if (curr_len < min_len)
 				return;
 		}
@@ -589,6 +590,7 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int 
 		{
 			l_off += tile_offset;
 			r_off += tile_offset;
+			remaining_len -= tile_offset;
 		}
 			
 	}
