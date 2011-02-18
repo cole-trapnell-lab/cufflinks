@@ -57,7 +57,7 @@ struct CigarOp
 };
 
 typedef uint64_t InsertID;
-typedef uint32_t RefID;
+typedef uint64_t RefID;
 
 extern int num_deleted;
 
@@ -384,7 +384,7 @@ public:
 #if ENABLE_THREADS
         table_lock.lock();
 #endif
-		uint32_t _id = hash_string(name.c_str());
+		uint64_t _id = hash_string(name.c_str());
 		pair<InvertedIDTable::iterator, bool> ret = 
 		_by_id.insert(make_pair(_id, SequenceInfo(_next_id, NULL, NULL)));
 		if (ret.second == true)
@@ -493,16 +493,26 @@ public:
 private:
 	
 	// This is FNV-1, see http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
-	inline uint32_t hash_string(const char* __s)
+	inline uint64_t hash_string(const char* __s)
 	{
-		uint32_t hash = 0x811c9dc5;
+		uint64_t hash = 0xcbf29ce484222325ull;
 		for ( ; *__s; ++__s)
 		{
-			hash *= 16777619;
+			hash *= 1099511628211ull;
 			hash ^= *__s;
 		}
 		return hash;
 	}
+//	inline uint32_t hash_string(const char* __s)
+//	{
+//		uint32_t hash = 0x811c9dc5;
+//		for ( ; *__s; ++__s)
+//		{
+//			hash *= 16777619;
+//			hash ^= *__s;
+//		}
+//		return hash;
+//	}
 	
 	//IDTable _by_name;
 	RefID _next_id;
@@ -798,7 +808,7 @@ public:
     _collapsed_to(NULL){}
     
 	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
-            uint32_t refid, 
+            RefID refid, 
 			const ReadHit* left_alignment, 
 			const ReadHit* right_alignment) : 
     _rg_props(rg_props),

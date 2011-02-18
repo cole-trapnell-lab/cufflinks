@@ -167,8 +167,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   unsigned int edit_dist)
 {
 	uint64_t insert_id = _insert_table.get_id(insert_name);
-	uint32_t reference_id = _ref_table.get_id(ref_name, NULL);
-	uint32_t partner_ref_id = _ref_table.get_id(partner_ref, NULL);
+	RefID reference_id = _ref_table.get_id(ref_name, NULL);
+	RefID partner_ref_id = _ref_table.get_id(partner_ref, NULL);
 	
 	return ReadHit(reference_id,
 				   insert_id, 
@@ -194,8 +194,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   unsigned int edit_dist)
 {
 	uint64_t insert_id = _insert_table.get_id(insert_name);
-	uint32_t reference_id = _ref_table.get_id(ref_name, NULL);
-	uint32_t partner_ref_id = _ref_table.get_id(partner_ref, NULL);
+	RefID reference_id = _ref_table.get_id(ref_name, NULL);
+	RefID partner_ref_id = _ref_table.get_id(partner_ref, NULL);
 	
 	return ReadHit(reference_id,
 				   insert_id, 

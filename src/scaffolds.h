@@ -184,7 +184,8 @@ class Scaffold
                     //g_left -= cig[i].length;
 					break;
                 case DEL:
-                    ops.back().genomic_length += cig[i].length;
+					if (!ops.empty())
+						ops.back().genomic_length += cig[i].length;
                     g_left += cig[i].length;
 					break;
 				default:

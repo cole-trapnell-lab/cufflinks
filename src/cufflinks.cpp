@@ -727,9 +727,16 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	foreach (const AbundanceGroup& strand_group, transfrags_by_strand)
 	{	
 		vector<AbundanceGroup> transfrags_by_gene;
+		
+		if (bundle_mode == REF_DRIVEN)
+		{
+			cluster_transcripts<ConnectByAnnotatedGeneId>(strand_group, transfrags_by_gene);
+		}
+		else
+		{
+			cluster_transcripts<ConnectByExonOverlap>(strand_group, transfrags_by_gene);
+		}
 
-		cluster_transcripts<ConnectByExonOverlap>(strand_group,
-													  transfrags_by_gene);
 		foreach(const AbundanceGroup& gene, transfrags_by_gene)
 		{
 			const vector<shared_ptr<Abundance> >& iso_abundances = gene.abundances();
