@@ -818,7 +818,7 @@ GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons) {
  //but if mergeCloseExons then merge even when distance is up to 5 bases
  udata=0;
  uptr=NULL;
- if (ftype_id==gff_fid_mRNA) {
+ if (ftype_id==gff_fid_mRNA || subftype_id==gff_fid_exon || mergeCloseExons) { 
    int mindist=mergeCloseExons ? 5:1;
    for (int i=0;i<exons.Count()-1;i++) {
      int ni=i+1;
@@ -826,8 +826,6 @@ GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons) {
      while (ni<exons.Count()) {
        int dist=(int)(exons[ni]->start-mend);
        if (dist>mindist) break; //no merging with next segment
-       //if (dist<0 || dist>mindist) break;
-       //if (dist<=1 && gfr->gff_warns) { //overlapping or adjacent exons
        if (gfr!=NULL && gfr->gff_warns) {
           GMessage("GFF warning: merging adjacent/overlapping segments of %s on %s (%d-%d, %d-%d)\n",
                gffID, getGSeqName(), exons[i]->start, exons[i]->end,exons[ni]->start, exons[ni]->end);
