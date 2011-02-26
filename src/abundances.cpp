@@ -419,7 +419,6 @@ void AbundanceGroup::calculate_conf_intervals()
 			double FPKM_hi = FPKM() + 2 * sqrt(FPKM_variance());
 			double FPKM_lo = max(0.0, FPKM() - 2 * sqrt(FPKM_variance()));
 			ConfidenceInterval conf(FPKM_lo, FPKM_hi);
-			assert (FPKM_lo <= group_fpkm && group_fpkm <= FPKM_hi);
 			FPKM_conf(conf);
 		}
 		else
@@ -450,6 +449,7 @@ void AbundanceGroup::calculate_conf_intervals()
 				FPKM_hi = fpkm_high + 2 * sqrt(var_fpkm);
 				FPKM_lo = 0.0;
 				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
+				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
 				pA->FPKM_conf(conf);
                 pA->FPKM_variance(var_fpkm);
 			}

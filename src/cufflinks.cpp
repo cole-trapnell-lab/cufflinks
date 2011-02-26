@@ -1161,8 +1161,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 }
 	
 void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
-{
-	ReadTable it;
+{	ReadTable it;
 	RefSequenceTable rt(true, false);
 	
 	shared_ptr<HitFactory> hit_factory;

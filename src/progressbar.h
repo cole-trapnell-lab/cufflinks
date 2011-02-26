@@ -48,15 +48,18 @@ public:
 	
 	void update(const char* bundle_label_buf, int inc_amt)
 	{
+		
 		_num_complete += inc_amt;
 		_num_updates ++;
 		
 		if (cuff_verbose||cuff_quiet||_tot_num==0) return;
 
 		char bundle_buf[28];
+		bundle_buf[27] = '\0';
 		strncpy(bundle_buf, bundle_label_buf, 27);
 		
 		int percent = (_num_complete * 100)/_tot_num;
+
 		percent = min(percent, 100);
 		
 		int last_bar = percent/(100/(BAR_BUF_SIZE-3));
@@ -64,8 +67,8 @@ public:
 			_bar_buf[i] = SYMBOL;
 		
 		char line_buf[82];
-		snprintf(line_buf, 81, "\r> Processing Locus %-27s %s %3d%%", bundle_buf, _bar_buf, percent);
-
+		snprintf(line_buf, 82, "\r> Processing Locus %-27s %s %3d%%", bundle_buf, _bar_buf, percent);
+		
 		fprintf(stderr,"%s",line_buf);
 	}
 	
