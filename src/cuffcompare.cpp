@@ -733,12 +733,12 @@ void writeLoci(FILE* f, GList<GLocus> & loci) {
        loc.mrna_maxcov->getGSeqName(),
            loc.mrna_maxcov->strand, loc.start,loc.end);
    //now print all transcripts in this locus, comma delimited
-   int printed=0;
+   int printfd=0;
    for (int i=0;i<loc.mrnas.Count();i++) {
       if (loc.mrnas[i]==loc.mrna_maxcov) continue;
-      if (printed==0) fprintf(f,"%s",loc.mrnas[i]->getID());
+      if (printfd==0) fprintf(f,"%s",loc.mrnas[i]->getID());
           else fprintf(f,",%s",loc.mrnas[i]->getID());
-      printed++;
+      printfd++;
       }
    const char* rdescr=findDescr(loc.mrna_maxcov);
    if (rdescr==NULL)  fprintf(f,"\t\n");
@@ -747,17 +747,17 @@ void writeLoci(FILE* f, GList<GLocus> & loci) {
 }
 
 void printXQ1(FILE* f, int qidx, GList<GLocus>& qloci) {
-  int printed=0;
+  int printfd=0;
   //print
   for (int i=0;i<qloci.Count();i++) {
      if (qloci[i]->qfidx!=qidx) continue;
       for (int j=0;j<qloci[i]->mrnas.Count();j++) {
-        if (printed==0) fprintf(f,"%s",qloci[i]->mrnas[j]->getID());
+        if (printfd==0) fprintf(f,"%s",qloci[i]->mrnas[j]->getID());
             else fprintf(f,",%s",qloci[i]->mrnas[j]->getID());
-        printed++;
+        printfd++;
         }
       }
-  if (printed==0) fprintf(f,"-");
+  if (printfd==0) fprintf(f,"-");
  }
 
 void numXLoci(GList<GXLocus>& xloci, int& last_id) {
@@ -1048,15 +1048,15 @@ void printXLoci(FILE* f, FILE* fc, int qcount, GList<GXLocus>& xloci, GFaSeqGet 
             xloc.strand, xloc.start,xloc.end);
     //now print all transcripts in this locus, comma delimited
     //first, ref loci, if any
-    int printed=0;
+    int printfd=0;
     if (xloc.rloci.Count()>0) {
        for (int i=0;i<xloc.rloci.Count();i++) {
           for (int j=0;j<xloc.rloci[i]->mrnas.Count();j++) {
-            if (printed==0) fprintf(f,"%s|%s",getGeneID(xloc.rloci[i]->mrnas[j]),
+            if (printfd==0) fprintf(f,"%s|%s",getGeneID(xloc.rloci[i]->mrnas[j]),
                                                     xloc.rloci[i]->mrnas[j]->getID());
                 else fprintf(f,",%s|%s",getGeneID(xloc.rloci[i]->mrnas[j]),
                                                     xloc.rloci[i]->mrnas[j]->getID());
-            printed++;
+            printfd++;
             }
           }
        }

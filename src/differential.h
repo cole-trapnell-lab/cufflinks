@@ -308,155 +308,245 @@ public:
      
      */
     
-    void lowest(const vector<double>& x, 
-                const vector<double>& y, 
+    void lowest(double* x, 
+                double* y, 
                 int n, 
-                double xs, 
-                double* ys,
+                double &xs,
+                double &ys, 
                 int nleft, 
-                int nright,
-                vector<double>& w, 
-                int userw, 
-                vector<double>& rw, 
-                int* ok)
+                int nright, 
+                double *w,
+                bool userw, 
+                double *rw,
+                bool &ok)
     {
-        double range, h, h1, h9, a, b, c, r;
-        int j, nrt;
+        //*-*-*-*-*-*-*-*-*Fit value at x[i] *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+        //                 =================
+        //  Based on R function lowest: Translated to C++ by C. Stratowa
+        //  (R source file: lowess.c by R Development Core Team (C) 1999-2001)
+        //
+        //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
         
-        range = x[n - 1] - x[0];
-        h = fmax(xs - x[nleft], x[nright] - xs);
-        h9 = .999 * h;
-        h1 = .001 * h;
+        int    nrt, j;
+        double a, b, c, d, h, h1, h9, r, range;
         
-        /* compute weights (pick up all ties on right) */
-        a = 0.0;        /* sum of weights */
-        for(j = nleft; j < n; j++) {
-            w[j]=0.0;
-            r = fabs(x[j] - xs);
-            if (r <= h9) {    /* small enough for non-zero weight */
-                if (r > h1) w[j] = pow(1.0-pow(r/h, 3.0), 3.0);
-                else w[j] = 1.0;
-                if (userw) w[j] = rw[j] * w[j];
+        x--;
+        y--;
+        w--;
+        rw--;
+        
+        range = x[n]-x[1];
+        h = max(xs-x[nleft], x[nright]-xs);
+        h9 = 0.999*h;
+        h1 = 0.001*h;
+        
+        // sum of weights
+        a = 0.;
+        j = nleft;
+        while (j <= n) {
+            // compute weights (pick up all ties on right)
+            w[j] = 0.;
+            r = abs(x[j] - xs);
+            if (r <= h9) {
+                if (r <= h1) {
+                    w[j] = 1.;
+                } else {
+                    d = (r/h)*(r/h)*(r/h);
+                    w[j] = (1.- d)*(1.- d)*(1.- d);
+                }
+                if (userw)
+                    w[j] *= rw[j];
                 a += w[j];
-            }
-            else if (x[j] > xs) break;  /* get out at first zero wt on right */
+            } else if (x[j] > xs)
+                break;
+            j = j+1;
         }
-        nrt = j - 1;  /* rightmost pt (may be greater than nright because of ties) */
-        if (a <= 0.0) *ok = 0;
-        else { /* weighted least squares */
-            *ok = 1;
-            
-            /* make sum of w[j] == 1 */
-            for (j = nleft; j <= nrt; j++) w[j] = w[j] / a;
-            
-            if (h > 0.0) {     /* use linear fit */
-                
-                /* find weighted center of x values */
-                for (j = nleft, a = 0.0; j <= nrt; j++) a += w[j] * x[j];
-                
+        
+        // rightmost pt (may be greater than nright because of ties)
+        nrt = j-1;
+        if (a <= 0.)
+            ok = false;
+        else {
+            ok = true;
+            // weighted least squares: make sum of w[j] == 1
+            for(j=nleft ; j<=nrt ; j++)
+                w[j] /= a;
+            if (h > 0.) {
+                a = 0.;
+                // use linear fit weighted center of x values
+                for(j=nleft ; j<=nrt ; j++)
+                    a += w[j] * x[j];
                 b = xs - a;
-                for (j = nleft, c = 0.0; j <= nrt; j++) 
-                    c += w[j] * (x[j] - a) * (x[j] - a);
-                
-                if(sqrt(c) > .001 * range) {
-                    /* points are spread out enough to compute slope */
-                    b = b/c;
-                    for (j = nleft; j <= nrt; j++) 
-                        w[j] = w[j] * (1.0 + b*(x[j] - a));
+                c = 0.;
+                for(j=nleft ; j<=nrt ; j++)
+                    c += w[j]*(x[j]-a)*(x[j]-a);
+                if (sqrt(c) > 0.001*range) {
+                    b /= c;
+                    // points are spread out enough to compute slope
+                    for(j=nleft; j <= nrt; j++)
+                        w[j] *= (b*(x[j]-a) + 1.);
                 }
             }
-            for (j = nleft, *ys = 0.0; j <= nrt; j++)
-            {
-                *ys += w[j] * y[j];  
-                if (*ys < 0)
-                {
-                    int a = 5;
-                }
-            }
+            ys = 0.;
+            for(j=nleft; j <= nrt; j++)
+                ys += w[j] * y[j];
         }
     }
     
-    int lowess(const vector<double>& x, 
-               const vector<double>& y, 
-               double f,
-               int nsteps,
-               double delta,
-               vector<double>& ys, 
-               vector<double>& rw, 
-               vector<double>& res)
+    void Psort(vector<double>& x, int n, int k)
     {
-        int iter, ns, ok, nleft, nright, i, j, last, m1, m2;
-        double d1, d2, denom, alpha, cut, cmad, c9, c1, r;
-        int n = x.size();
-        assert (x.size() == y.size());
-        assert (ys.size() == y.size());
-        assert (rw.size() == y.size());
-        assert (res.size() == y.size());
+        //   static function
+        //   based on R function rPsort: adapted to C++ by Christian Stratowa
+        //   (R source file: R_sort.c by R Development Core Team (C) 1999-2001)
+        //
         
-        if (n < 2) { ys[0] = y[0]; return 1; }
-        ns = max(min((int) (f * n), n), 2);  /* at least two, at most n points */
-        for(iter = 1; iter <= nsteps + 1; iter++){      /* robustness iterations */
-            nleft = 0; nright = ns - 1;
-            last = -1;        /* index of prev estimated point */
-            i = 0;   /* index of current point */
-            do {
-                while(nright < n - 1){
-                    /* move nleft, nright to right if radius decreases */
+        double v, w;
+        int pL, pR, i, j;
+        
+        for (pL = 0, pR = n - 1; pL < pR; ) {
+            v = x[k];
+            for(i = pL, j = pR; i <= j;) {
+                while (x[i] < v) i++;
+                while (v < x[j]) j--;
+                if (i <= j) { w = x[i]; x[i++] = x[j]; x[j--] = w; }
+            }
+            if (j < k) pL = i;
+            if (k < i) pR = j;
+        }
+    }
+    
+    void lowess(double* x, 
+                double* y, 
+                int n,
+                double* ys,
+                double span, 
+                int iter, 
+                double delta)
+    {
+        //*-*-*-*-*-*-*-*-*Lowess regression smoother*-*-*-*-*-*-*-*-*-*-*-*-*-*
+        //                 ==========================
+        //   Based on R function clowess: Translated to C++ by C. Stratowa
+        //   (R source file: lowess.c by R Development Core Team (C) 1999-2001)
+        //
+        //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+            
+        int    i, iiter, j, last, m1, m2, nleft, nright, ns;
+        double alpha, c1, c9, cmad, cut, d1, d2, denom, r;
+        bool   ok;
+        
+        if (n < 2) {
+            ys[0] = y[0];
+            return;
+        }
+        
+        // nleft, nright, last, etc. must all be shifted to get rid of these:
+        x--;
+        y--;
+        ys--;
+        
+        //double *rw  = ((TGraphErrors*)fGout)->GetEX();
+        //double *res = ((TGraphErrors*)fGout)->GetEY();
+        
+        vector<double> rw(n, 0.0);
+        vector<double> res(n, 0.0);
+        
+        // at least two, at most n points
+        ns = max(2, min(n, (int)(span*n + 1e-7)));
+        
+        // robustness iterations
+        iiter = 1;
+        while (iiter <= iter+1) {
+            nleft = 1;
+            nright = ns;
+            last = 0;   // index of prev estimated point
+            i = 1;      // index of current point
+            
+            for(;;) {
+                if (nright < n) {
+                    // move nleft,  nright to right if radius decreases
                     d1 = x[i] - x[nleft];
-                    d2 = x[nright + 1] - x[i];
-                    /* if d1 <= d2 with x[nright+1] == x[nright], lowest fixes */
-                    if (d1 <= d2) break;
-                    /* radius will not decrease by move right */
-                    nleft++;
-                    nright++;
-                }
-                lowest(x, y, n, x[i], &ys[i], nleft, nright, res, (iter > 1), rw, &ok);
-                /* fitted value at x[i] */
-                if (! ok) ys[i] = y[i];
-                /* all weights zero - copy over value (all rw==0) */
-                if (last < i - 1) { /* skipped points -- interpolate */
-                    denom = x[i] - x[last];    /* non-zero - proof? */
-                    for(j = last + 1; j < i; j = j + 1){
-                        alpha = (x[j] - x[last]) / denom;
-                        ys[j] = alpha * ys[i] + (1.0 - alpha) * ys[last];
-                        if (ys[j] < 0)
-                        {
-                            int a = 5;
-                        }
+                    d2 = x[nright+1] - x[i];
+                    
+                    // if d1 <= d2 with x[nright+1] == x[nright], lowest fixes
+                    if (d1 > d2) {
+                        // radius will not decrease by move right
+                        nleft++;
+                        nright++;
+                        continue;
                     }
                 }
-                last = i;        /* last point actually estimated */
-                cut = x[last] + delta;     /* x coord of close points */
-                for(i=last + 1; i < n; i++) {     /* find close points */
-                    if (x[i] > cut) break;     /* i one beyond last pt within cut */
-                    if(x[i] == x[last]) {      /* exact match in x */
+                
+                // fitted value at x[i]
+                bool iterg1 = iiter>1;
+                lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
+                       &res[0], iterg1, &rw[0], ok);
+                if (!ok) ys[i] = y[i];
+                
+                // all weights zero copy over value (all rw==0)
+                if (last < i-1) {
+                    denom = x[i]-x[last];
+                    
+                    // skipped points -- interpolate non-zero - proof?
+                    for(j = last+1; j < i; j++) {
+                        alpha = (x[j]-x[last])/denom;
+                        ys[j] = alpha*ys[i] + (1.-alpha)*ys[last];
+                    }
+                }
+                
+                // last point actually estimated
+                last = i;
+                
+                // x coord of close points
+                cut = x[last] + delta;
+                for (i = last+1; i <= n; i++) {
+                    if (x[i] > cut)
+                        break;
+                    if (x[i] == x[last]) {
                         ys[i] = ys[last];
                         last = i;
                     }
                 }
-                i = max(last + 1,i - 1);
-                /* back 1 point so interpolation within delta, but always go forward */
-            } while(last < n - 1);
-            for (i = 0; i < n; i++)      /* residuals */
-                res[i] = y[i] - ys[i];
-            if (iter > nsteps) break; /* compute robustness weights except last time */
-            for (i = 0; i < n; i++) 
-                rw[i] = fabs(res[i]);
-            sort(rw.begin(),rw.end());
-            m1 = 1 + n / 2; m2 = n - m1 + 1;
-            cmad = 3.0 * (rw[m1] + rw[m2]);      /* 6 median abs resid */
-            c9 = .999 * cmad; c1 = .001 * cmad;
-            for (i = 0; i < n; i++) {
-                r = fabs(res[i]);
-                if(r <= c1) rw[i] = 1.0;      /* near 0, avoid underflow */
-                else if(r > c9) rw[i] = 0.0;  /* near 1, avoid underflow */
-                else rw[i] = pow(1.0 - pow(r / cmad, 2.0), 2.0);
+                i = max(last+1, i-1);
+                if (last >= n)
+                    break;
             }
+            
+            // residuals
+            for(i=0; i < n; i++)
+                res[i] = y[i+1] - ys[i+1];
+            
+            // compute robustness weights except last time
+            if (iiter > iter)
+                break;
+            for(i=0 ; i<n ; i++)
+                rw[i] = abs(res[i]);
+            
+            // compute cmad := 6 * median(rw[], n)
+            m1 = n/2;
+            // partial sort, for m1 & m2
+            Psort(rw, n, m1);
+            if(n % 2 == 0) {
+                m2 = n-m1-1;
+                Psort(rw, n, m2);
+                cmad = 3.*(rw[m1]+rw[m2]);
+            } else { /* n odd */
+                cmad = 6.*rw[m1];
+            }
+            
+            c9 = 0.999*cmad;
+            c1 = 0.001*cmad;
+            for(i=0 ; i<n ; i++) {
+                r = abs(res[i]);
+                if (r <= c1)
+                    rw[i] = 1.;
+                else if (r <= c9)
+                    rw[i] = (1.-(r/cmad)*(r/cmad))*(1.-(r/cmad)*(r/cmad));
+                else
+                    rw[i] = 0.;
+            }
+            iiter++;
         }
-        return(0);
     }
-    
-
     
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
@@ -585,12 +675,18 @@ public:
         vector<double> res(raw_means_and_vars.size(), 0.0);
         vector<double> rw(raw_means_and_vars.size(), 0.0);
         
-//        double smoothing = 0.75;
-//        int nsteps = 1;
-//        int delta = 1;
-//        lowess(raw_means, raw_variances, smoothing, nsteps, delta, fitted_values, rw, res); 
+        double smoothing = 2.0/3.0;
+        int nsteps = 3;
+        int delta = 0.01 * (raw_means[raw_means.size() - 1] - raw_means[0]);
+        //lowess(raw_means, raw_variances, smoothing, nsteps, delta, fitted_values, rw, res); 
         
-        
+        lowess(&raw_means[0], 
+               &raw_variances[0], 
+               raw_means.size(),
+               &fitted_values[0],
+               smoothing, 
+               nsteps, 
+               delta);
         
         char sample_name_buf[256];
         int sample_id = rand();
