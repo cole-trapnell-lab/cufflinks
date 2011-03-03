@@ -223,7 +223,7 @@ class GIArray:public GArray<GISeg> {
 class CEqList: public GList<GffObj> {
   public:
     GffObj* head;
-    CEqList():GList((GCompareProc*)cmpByPtr, (GFreeProc*)NULL, true) {
+    CEqList():GList<GffObj>((GCompareProc*)cmpByPtr, (GFreeProc*)NULL, true) {
       head=NULL;
       }
 };
