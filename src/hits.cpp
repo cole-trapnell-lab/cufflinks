@@ -519,7 +519,7 @@ bool HitFactory::parse_header_string(const string& header_rec,
                 if (info->observation_order != _num_seq_header_recs)
                 {
                     fprintf(stderr, "Error: sort order of reads in BAMs must be the same\n");
-                    exit(1);
+					exit(1);
                 }
             }
         }

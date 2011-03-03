@@ -430,8 +430,7 @@ void AbundanceGroup::calculate_conf_intervals()
 	}
 	else
 	{
-		double max_transfrag_FPKM_hi = 0;
-		double min_transfrag_FPKM_hi = numeric_limits<double>::max();
+		double sum_transfrag_FPKM_hi = 0;
         
 		foreach(shared_ptr<Abundance> pA, _abundances)
 		{
@@ -452,6 +451,7 @@ void AbundanceGroup::calculate_conf_intervals()
 				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
 				pA->FPKM_conf(conf);
                 pA->FPKM_variance(var_fpkm);
+				sum_transfrag_FPKM_hi += FPKM_hi;
 			}
 			else
 			{
@@ -461,14 +461,12 @@ void AbundanceGroup::calculate_conf_intervals()
 				pA->FPKM_conf(conf);
                 pA->FPKM_variance(0.0);
 			}
-			max_transfrag_FPKM_hi = max(max_transfrag_FPKM_hi, FPKM_hi);
-			min_transfrag_FPKM_hi = min(min_transfrag_FPKM_hi, FPKM_hi);
 				
 		}
 		
 		// In the case of a numeric failure, the groups error bars need to be 
 		// set such that 
-		FPKM_conf(ConfidenceInterval(0, max_transfrag_FPKM_hi));
+		FPKM_conf(ConfidenceInterval(0.0, sum_transfrag_FPKM_hi));
 	}
 }
 
