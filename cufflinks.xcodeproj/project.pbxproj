@@ -639,7 +639,6 @@
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "cufflinks" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
@@ -880,6 +879,7 @@
 					/usr/local/include,
 					./src,
 					/usr/local/include/boost,
+					"/usr/local/include/boost-1_41",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -917,6 +917,7 @@
 					/usr/local/include,
 					./src,
 					/usr/local/include/boost,
+					"/usr/local/include/boost-1_41",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -938,9 +939,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "/usr/local/include/boost-1_41/**";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
+				USER_HEADER_SEARCH_PATHS = "/usr/local/include/boost-1_41/**";
 			};
 			name = Debug;
 		};
@@ -1058,6 +1061,7 @@
 					/usr/local/include/,
 					./src,
 					/usr/local/include/boost,
+					"/user/local/include/boost-1_41",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -1086,6 +1090,7 @@
 				HEADER_SEARCH_PATHS = (
 					./src,
 					/usr/local/include/boost,
+					"/usr/local/include/boost-1_41",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
