@@ -308,6 +308,156 @@ public:
      
      */
     
+    void lowest(const vector<double>& x, 
+                const vector<double>& y, 
+                int n, 
+                double xs, 
+                double* ys,
+                int nleft, 
+                int nright,
+                vector<double>& w, 
+                int userw, 
+                vector<double>& rw, 
+                int* ok)
+    {
+        double range, h, h1, h9, a, b, c, r;
+        int j, nrt;
+        
+        range = x[n - 1] - x[0];
+        h = fmax(xs - x[nleft], x[nright] - xs);
+        h9 = .999 * h;
+        h1 = .001 * h;
+        
+        /* compute weights (pick up all ties on right) */
+        a = 0.0;        /* sum of weights */
+        for(j = nleft; j < n; j++) {
+            w[j]=0.0;
+            r = fabs(x[j] - xs);
+            if (r <= h9) {    /* small enough for non-zero weight */
+                if (r > h1) w[j] = pow(1.0-pow(r/h, 3.0), 3.0);
+                else w[j] = 1.0;
+                if (userw) w[j] = rw[j] * w[j];
+                a += w[j];
+            }
+            else if (x[j] > xs) break;  /* get out at first zero wt on right */
+        }
+        nrt = j - 1;  /* rightmost pt (may be greater than nright because of ties) */
+        if (a <= 0.0) *ok = 0;
+        else { /* weighted least squares */
+            *ok = 1;
+            
+            /* make sum of w[j] == 1 */
+            for (j = nleft; j <= nrt; j++) w[j] = w[j] / a;
+            
+            if (h > 0.0) {     /* use linear fit */
+                
+                /* find weighted center of x values */
+                for (j = nleft, a = 0.0; j <= nrt; j++) a += w[j] * x[j];
+                
+                b = xs - a;
+                for (j = nleft, c = 0.0; j <= nrt; j++) 
+                    c += w[j] * (x[j] - a) * (x[j] - a);
+                
+                if(sqrt(c) > .001 * range) {
+                    /* points are spread out enough to compute slope */
+                    b = b/c;
+                    for (j = nleft; j <= nrt; j++) 
+                        w[j] = w[j] * (1.0 + b*(x[j] - a));
+                }
+            }
+            for (j = nleft, *ys = 0.0; j <= nrt; j++)
+            {
+                *ys += w[j] * y[j];  
+                if (*ys < 0)
+                {
+                    int a = 5;
+                }
+            }
+        }
+    }
+    
+    int lowess(const vector<double>& x, 
+               const vector<double>& y, 
+               double f,
+               int nsteps,
+               double delta,
+               vector<double>& ys, 
+               vector<double>& rw, 
+               vector<double>& res)
+    {
+        int iter, ns, ok, nleft, nright, i, j, last, m1, m2;
+        double d1, d2, denom, alpha, cut, cmad, c9, c1, r;
+        int n = x.size();
+        assert (x.size() == y.size());
+        assert (ys.size() == y.size());
+        assert (rw.size() == y.size());
+        assert (res.size() == y.size());
+        
+        if (n < 2) { ys[0] = y[0]; return 1; }
+        ns = max(min((int) (f * n), n), 2);  /* at least two, at most n points */
+        for(iter = 1; iter <= nsteps + 1; iter++){      /* robustness iterations */
+            nleft = 0; nright = ns - 1;
+            last = -1;        /* index of prev estimated point */
+            i = 0;   /* index of current point */
+            do {
+                while(nright < n - 1){
+                    /* move nleft, nright to right if radius decreases */
+                    d1 = x[i] - x[nleft];
+                    d2 = x[nright + 1] - x[i];
+                    /* if d1 <= d2 with x[nright+1] == x[nright], lowest fixes */
+                    if (d1 <= d2) break;
+                    /* radius will not decrease by move right */
+                    nleft++;
+                    nright++;
+                }
+                lowest(x, y, n, x[i], &ys[i], nleft, nright, res, (iter > 1), rw, &ok);
+                /* fitted value at x[i] */
+                if (! ok) ys[i] = y[i];
+                /* all weights zero - copy over value (all rw==0) */
+                if (last < i - 1) { /* skipped points -- interpolate */
+                    denom = x[i] - x[last];    /* non-zero - proof? */
+                    for(j = last + 1; j < i; j = j + 1){
+                        alpha = (x[j] - x[last]) / denom;
+                        ys[j] = alpha * ys[i] + (1.0 - alpha) * ys[last];
+                        if (ys[j] < 0)
+                        {
+                            int a = 5;
+                        }
+                    }
+                }
+                last = i;        /* last point actually estimated */
+                cut = x[last] + delta;     /* x coord of close points */
+                for(i=last + 1; i < n; i++) {     /* find close points */
+                    if (x[i] > cut) break;     /* i one beyond last pt within cut */
+                    if(x[i] == x[last]) {      /* exact match in x */
+                        ys[i] = ys[last];
+                        last = i;
+                    }
+                }
+                i = max(last + 1,i - 1);
+                /* back 1 point so interpolation within delta, but always go forward */
+            } while(last < n - 1);
+            for (i = 0; i < n; i++)      /* residuals */
+                res[i] = y[i] - ys[i];
+            if (iter > nsteps) break; /* compute robustness weights except last time */
+            for (i = 0; i < n; i++) 
+                rw[i] = fabs(res[i]);
+            sort(rw.begin(),rw.end());
+            m1 = 1 + n / 2; m2 = n - m1 + 1;
+            cmad = 3.0 * (rw[m1] + rw[m2]);      /* 6 median abs resid */
+            c9 = .999 * cmad; c1 = .001 * cmad;
+            for (i = 0; i < n; i++) {
+                r = fabs(res[i]);
+                if(r <= c1) rw[i] = 1.0;      /* near 0, avoid underflow */
+                else if(r > c9) rw[i] = 0.0;  /* near 1, avoid underflow */
+                else rw[i] = pow(1.0 - pow(r / cmad, 2.0), 2.0);
+            }
+        }
+        return(0);
+    }
+    
+
+    
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
         vector<pair<string, vector<double> > > sample_count_table;
@@ -416,11 +566,32 @@ public:
             }
             if (var > 0.0)
                 var /= p.second.size();
-        
-            raw_means_and_vars.push_back(make_pair(mean, var));
+            if (mean > 0)
+                raw_means_and_vars.push_back(make_pair(mean, var));
         }
         
         sort(raw_means_and_vars.begin(), raw_means_and_vars.end());
+        
+        vector<double> raw_means(raw_means_and_vars.size(), 0.0);
+        vector<double> raw_variances(raw_means_and_vars.size(), 0.0);
+        
+        for(size_t i = 0; i < raw_means_and_vars.size(); ++i)
+        {
+            raw_means[i] = raw_means_and_vars[i].first;
+            raw_variances[i] = raw_means_and_vars[i].second;
+        }
+        
+        vector<double> fitted_values(raw_means_and_vars.size(), 0.0);
+        vector<double> res(raw_means_and_vars.size(), 0.0);
+        vector<double> rw(raw_means_and_vars.size(), 0.0);
+        
+//        double smoothing = 0.75;
+//        int nsteps = 1;
+//        int delta = 1;
+//        lowess(raw_means, raw_variances, smoothing, nsteps, delta, fitted_values, rw, res); 
+        
+        
+        
         char sample_name_buf[256];
         int sample_id = rand();
         sprintf(sample_name_buf, "%d_counts.txt", sample_id);
@@ -428,15 +599,13 @@ public:
         
         if (sample_count_file)
         {
-            fprintf(sample_count_file, "count_mean\tcount_var\n");
+            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\n");
             for (size_t i = 0; i < raw_means_and_vars.size(); ++i)
-            {
-                if (raw_means_and_vars[i].first > 0)
-                {
-                    fprintf(sample_count_file, "%lg\t%lg\n", 
-                            raw_means_and_vars[i].first, 
-                            raw_means_and_vars[i].second);
-                }
+        {
+                fprintf(sample_count_file, "%lg\t%lg\t%lg\n", 
+                        raw_means_and_vars[i].first, 
+                        raw_means_and_vars[i].second,
+                        fitted_values[i]);
             }
             fclose(sample_count_file);
         }

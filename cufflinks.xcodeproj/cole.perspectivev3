@@ -286,7 +286,7 @@
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 300}, {267, 975}}</string>
+							<string>{{0, 300}, {267, 914}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -296,14 +296,14 @@
 					<key>GeometryConfiguration</key>
 					<dict>
 						<key>Frame</key>
-						<string>{{0, 0}, {284, 993}}</string>
+						<string>{{0, 0}, {284, 932}}</string>
 						<key>GroupTreeTableConfiguration</key>
 						<array>
 							<string>MainColumn</string>
 							<real>267</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>652 144 1063 1034 0 0 1920 1178 </string>
+						<string>469 55 1063 973 0 0 1680 1028 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -333,7 +333,7 @@
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>EDC584C8130866820013090E</string>
+										<string>EDC584C913087F870013090E</string>
 										<key>history</key>
 										<array>
 											<string>EDBBA10211DA433F0015175B</string>
@@ -400,14 +400,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {774, 752}}</string>
+								<string>{{0, 0}, {774, 691}}</string>
 								<key>RubberWindowFrame</key>
-								<string>652 144 1063 1034 0 0 1920 1178 </string>
+								<string>469 55 1063 973 0 0 1680 1028 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>752pt</string>
+							<string>691pt</string>
 						</dict>
 						<dict>
 							<key>Proportion</key>
@@ -481,7 +481,7 @@
 										<key>Frame</key>
 										<string>{{10, 27}, {774, 209}}</string>
 										<key>RubberWindowFrame</key>
-										<string>652 144 1063 1034 0 0 1920 1178 </string>
+										<string>469 55 1063 973 0 0 1680 1028 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>
@@ -708,7 +708,7 @@
 		<string>/Users/cole/develop/cufflinks/cufflinks.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>652 144 1063 1034 0 0 1920 1178 </string>
+	<string>469 55 1063 973 0 0 1680 1028 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

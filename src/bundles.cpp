@@ -769,7 +769,7 @@ bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
 	bundle.add_open_hit(read_group_properties(), bh);
 	
 	_expand_by_hits(bundle);
-	
+
     assert(bundle.left() != -1);    
 	bundle.finalize_open_mates();
 	bundle.finalize();
@@ -1050,7 +1050,7 @@ void count_introns_in_read(const ReadHit& read,
                 
                 if (read.source_strand() == CUFF_FWD)
                 {
-                    itr->second.fwd_strand_frags;
+                    //itr->second.fwd_strand_frags;
                 }
                 else 
                 {
