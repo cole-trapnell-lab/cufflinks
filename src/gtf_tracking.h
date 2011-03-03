@@ -16,6 +16,10 @@
 
 
 #define MAX_QFILES 500
+
+//#define EQHEAD_TAG     0x80000
+//#define EQCHAIN_TAGMASK 0xFFFFF
+
 extern const char* ATTR_GENE_NAME;
 
 extern bool gtf_tracking_verbose;
@@ -77,7 +81,7 @@ class GFastaHandler {
             faIdx=new GFastaIndex(fastaPath,fainame.chars());
             GStr fainamecwd(fainame);
             int ip=-1;
-            if ((ip=fainamecwd.rindex(CHPATHSEP))>=0)
+            if ((ip=fainamecwd.rindex('/'))>=0)
                fainamecwd.cut(0,ip+1);
             if (!faIdx->hasIndex()) { //could not load index
                //try current directory
@@ -216,16 +220,25 @@ class GIArray:public GArray<GISeg> {
 
 };
 
+class CEqList: public GList<GffObj> {
+  public:
+    GffObj* head;
+    CEqList():GList((GCompareProc*)cmpByPtr, (GFreeProc*)NULL, true) {
+      head=NULL;
+      }
+};
+
 class CTData { //transcript associated data
 public:
-	GffObj* mrna;
+	GffObj* mrna; //owner transcript
 	GLocus* locus;
 	GList<COvLink> ovls; //overlaps with other transcripts (ref vs query)
 	//-- just for ichain match tracking:
-	GffObj* eqref; //ref having an ichain match
-	int qset; //qry set index (qfidx)
-	GffObj* eqnext;
-	int eqdata;
+	GffObj* eqref; //ref transcript having an ichain match
+	int qset; //qry set index (qfidx), -1 means reference dataset
+	//GffObj* eqnext; //next GffObj in the linked list of matching transfrags
+	CEqList* eqlist; //keep track of matching transfrags
+	//int eqdata; // flags for EQ list (is it a list head?)
 	// Cufflinks specific data:
 	double FPKM;
 	double conf_hi;
@@ -236,19 +249,89 @@ public:
 		mrna=m;
 		if (mrna!=NULL) mrna->uptr=this;
 		locus=l;
-        classcode=0;
+		classcode=0;
 		eqref=NULL;
-		eqnext=NULL;
-		eqdata=0;
+		//eqnext=NULL;
+		eqlist=NULL;
+		//eqdata=0;
 		qset=-2;
 		FPKM=0;
 		conf_lo=0;
 		conf_hi=0;
 		cov=0;
 	}
+
 	~CTData() {
 		ovls.Clear();
+		//if ((eqdata & EQHEAD_TAG)!=0) delete eqlist;
+		if (isEqHead()) delete eqlist;
 	}
+
+  //inline bool eqHead() { return ((eqdata & EQHEAD_TAG)!=0); }
+  bool isEqHead() { 
+      if (eqlist==NULL) return false;
+      return (eqlist->head==this->mrna);
+      }
+    
+  void joinEqList(GffObj* m) { //add list from m
+   //list head is set to the transfrag with the lower qset#
+  CTData* md=(CTData*)(m->uptr);
+  //ASSERT(md);
+  if (eqlist==NULL) {
+     if (md->eqlist!=NULL) {
+          eqlist=md->eqlist;
+          eqlist->Add(this->mrna);
+          CTData* md_head_d=(CTData*)(md->eqlist->head->uptr);
+          if (this->qset < md_head_d->qset)
+               eqlist->head=this->mrna;
+          }
+        else { //m was not in an EQ list
+          //eqlist=new GList<GffObj>((GCompareProc*)cmpByPtr, (GFreeProc*)NULL, true);
+          eqlist=new CEqList();
+          eqlist->Add(this->mrna);
+          eqlist->Add(m);
+          md->eqlist=eqlist;
+          if (qset<md->qset) eqlist->head=this->mrna;
+                       else  eqlist->head=m;
+          }
+      }//no eqlist before
+     else { //merge two eqlists
+      if (eqlist==md->eqlist) //already in the same eqlist, nothing to do
+         return;
+      if (md->eqlist!=NULL) { //copy elements of m's eqlist
+        //copy the smaller list into the larger one
+        CEqList* srclst, *destlst;
+        if (md->eqlist->Count()<eqlist->Count()) {
+           srclst=md->eqlist;
+           destlst=eqlist;
+           }
+         else {
+           srclst=eqlist;
+           destlst=md->eqlist;
+           }
+         for (int i=0;i<srclst->Count();i++) {
+           destlst->Add(srclst->Get(i));
+           CTData* od=(CTData*)((*srclst)[i]->uptr);
+           od->eqlist=destlst;
+           //od->eqdata=od->qset+1;
+           }
+        this->eqlist=destlst;
+        CTData* s_head_d=(CTData*)(srclst->head->uptr);
+        CTData* d_head_d=(CTData*)(destlst->head->uptr);
+        if (s_head_d->qset < d_head_d->qset )
+             this->eqlist->head=srclst->head; 
+        delete srclst;
+        }
+       else { //md->eqlist==NULL
+        eqlist->Add(m);
+        md->eqlist=eqlist;
+        CTData* head_d=(CTData*)(eqlist->head->uptr);
+        if (md->qset<head_d->qset)
+            eqlist->head=m;
+        }
+      }
+  }
+
 	void addOvl(char code,GffObj* target=NULL, int ovlen=0) {
 		ovls.AddIfNew(new COvLink(code, target, ovlen));
 	}
@@ -969,12 +1052,13 @@ class GXConsensus:public GSeg {
    GXConsensus* contained; //if contained into another GXConsensus 
    //list of ichain-matching query (cufflinks) transcripts that contributed to this consensus
    GList<GffObj> qchain;
-   GXConsensus(GffObj* c, GList<GffObj> qlst, GffObj* r=NULL, char rcode=0)
+   GXConsensus(GffObj* c, CEqList* qlst, GffObj* r=NULL, char rcode=0)
                    :qchain(false,false,false) {
       ref=r;
       refcode=rcode;
       tcons=c;
-      qchain.Add(qlst);
+      if (qlst!=NULL) qchain.Add(*((GList<GffObj>*)qlst));
+                 else qchain.Add(c);
       count++;
       tss_id=0;
       p_id=0;
@@ -1137,6 +1221,26 @@ class GXLocus:public GSeg {
          oxloc.rloci[i]->xlocus=this;
          }
   } //::addMerge()
+
+
+ void checkContainment() {
+   //checking containment
+  for (int j=0;j<tcons.Count()-1;j++) {
+    GXConsensus* t=tcons[j];
+    for (int i=j+1;i<tcons.Count();i++) {
+       if (tcons[i]->contained!=NULL && t->tcons->exons.Count()>1) continue; //will check the container later anyway
+       int c_status=checkXConsContain(t->tcons, tcons[i]->tcons);
+       if (c_status==0) continue; //no containment relationship between t and tcons[i]
+       if (c_status>0) { //t is a container for tcons[i]
+            tcons[i]->contained=t;
+            }
+         else { //contained into exising XCons
+            t->contained=tcons[i];
+            break;
+            }
+       }
+   }
+  }
  
  int checkXConsContain(GffObj* a, GffObj* b) {
   // returns  1 if a is the container of b
@@ -1145,12 +1249,19 @@ class GXLocus:public GSeg {
   if (a->end<b->start || b->end<a->start) return 0;
   if (a->exons.Count()==b->exons.Count()) {
      if (a->exons.Count()>1) return 0; //same number of exons - no containment possible
-                                       //and equivalence was already tested
+                                       //because equivalence was already tested
            else { //single exon containment testing
-             if (a->start<=b->start+10 && a->end+10>=b->end) return 1;
-               else { if (b->start<=a->start+10 && b->end+10>=a->end) return -1;
-                       else return 0;
-                     }
+             //this is fuzzy and messy (end result may vary depending on the testing order)
+             int ovlen=a->exons[0]->overlapLen(b->exons[0]);
+             int minlen=GMIN(a->covlen, b->covlen);
+             if (ovlen>=minlen*0.8) { //if at least 80% of the shorter one is covered, it is contained
+                return ((a->covlen>b->covlen) ? 1 : -1);
+                }
+              else return 0;
+             //if (a->start<=b->start+10 && a->end+10>=b->end) return 1;
+             //  else { if (b->start<=a->start+10 && b->end+10>=a->end) return -1;
+             //          else return 0; 
+             //}
              }
      }
    //different number of exons:
@@ -1159,18 +1270,6 @@ class GXLocus:public GSeg {
   }
   
  void addXCons(GXConsensus* t) {
-  for (int i=0;i<tcons.Count();i++) {
-     if (tcons[i]->contained!=NULL) continue; //will check the container anyway
-     int c_status=checkXConsContain(t->tcons, tcons[i]->tcons);
-     if (c_status==0) continue; //no containment relationship between t and tcons[i]
-     if (c_status>0) { //t is a container for tcons[i]
-          tcons[i]->contained=t;
-          }
-       else { //contained into exising XCons
-          t->contained=tcons[i];
-          break;
-          }
-     }
   tcons.Add(t);
   }
   
@@ -1187,7 +1286,7 @@ int parse_mRNAs(GList<GffObj>& mrnas,
 //reading a mRNAs from a gff file and grouping them into loci
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NULL, 
               bool check_for_dups=false, int qfidx=-1, const char* fname=NULL, 
-              bool checkseq=false, bool only_multiexon=false);
+              bool only_multiexon=false);
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata);
 

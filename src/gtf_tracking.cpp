@@ -17,13 +17,13 @@ bool gtf_tracking_largeScale=false; //many input Cufflinks files processed at on
 
 int GXConsensus::count=0;
 
-int cmpByPtr(const pointer p1, const pointer p2) {
-  return (p1>p2) ? 1: ((p1==p2)? 0 : -1);
-  }
-
 char* getGSeqName(int gseq_id) {
  return GffObj::names->gseqs.getName(gseq_id);
 }
+
+int cmpByPtr(const pointer p1, const pointer p2) {
+  return (p1>p2) ? 1: ((p1==p2)? 0 : -1);
+  }
 
 GffObj* is_mRNADup(GffObj* m, GList<GffObj>& mrnas) {
  //mrnas MUST be sorted by start coordinate
@@ -55,33 +55,43 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
  if (ti.exons[imax]->start<tj.exons[0]->end ||
      tj.exons[jmax]->start<ti.exons[0]->end )
          return false; //intron chains do not overlap at all
- //find the first intron overlap:
- uint istart=0, iend=0, jstart=0, jend=0;
+ 
+ uint eistart=0, eiend=0, ejstart=0, ejend=0; //exon boundaries
  int i=1; //exon idx to the right of the current intron of ti
  int j=1; //exon idx to the right of the current intron of tj
+ //find the first intron overlap:
  while (i<=imax && j<=jmax) {
-    istart=ti.exons[i-1]->end;
-    iend=ti.exons[i]->start;
-    jstart=tj.exons[j-1]->end;
-    jend=tj.exons[j]->start;
-    if (jend<istart) { j++; continue; }
-    if (iend<jstart) { i++; continue; }
+    eistart=ti.exons[i-1]->end;
+    eiend=ti.exons[i]->start;
+    ejstart=tj.exons[j-1]->end;
+    ejend=tj.exons[j]->start;
+    if (ejend<eistart) { j++; continue; }
+    if (eiend<ejstart) { i++; continue; }
     //we found an intron overlap
     break;
     }
  if ((i>1 && j>1) || i>imax || j>jmax) {
-     return false; //no intron overlaps found at all
-                  //or not the first intron for at least one of the transcripts
+     return false; //either no intron overlaps found at all
+                  //or it's not the first intron for at least one of the transcripts
      }
- if (istart!=jstart || iend!=jend) return false; //not an exact intron match
+ if (eistart!=ejstart || eiend!=ejend) return false; //not an exact intron match
  if (j>i) {
    //i==1, ti's start must not conflict with the previous intron of tj
    if (ti.start<tj.exons[j-1]->start) return false;
-   } else if (i>j) {
+   //so i's first intron starts AFTER j's first intron
+   // then j must contain i, so i's last intron must end with or before j's last intron
+   if (ti.exons[imax]->start>tj.exons[jmax]->start) return false;
+      //comment out the line above if you just want "intron compatibility" (i.e. extension of intron chains )
+   }
+  else if (i>j) {
    //j==1, tj's start must not conflict with the previous intron of ti
    if (tj.start<ti.exons[i-1]->start) return false;
+   //so j's intron chain starts AFTER i's
+   // then i must contain j, so j's last intron must end with or before j's last intron
+   if (tj.exons[jmax]->start>ti.exons[imax]->start) return false;
+      //comment out the line above for just "intronCompatible()" check
    }
- //now check if the rest of the introns overlap, in a linear succession
+ //now check if the rest of the introns overlap, in the same sequence
  i++;
  j++;
  while (i<=imax && j<=jmax) {
@@ -103,6 +113,7 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
 }
 
 bool t_contains(GffObj& a, GffObj& b) {
+ //returns true if b's intron chain (or single exon) is included in a
  if (b.exons.Count()>=a.exons.Count()) return false;
  if (b.exons.Count()==1) {
     //check if b is contained in any of a's exons:
@@ -111,33 +122,13 @@ bool t_contains(GffObj& a, GffObj& b) {
        }
     return false;
     }
- return intronRedundant(a,b);
+ if (intronRedundant(a,b)) {
+    //intronRedudant allows b's initial/terminal exons to extend beyond a's boundaries
+    //but we don't allow this kind of behavior here
+    return (b.start>=a.start && b.end<=a.end);
+    }
+  else return false;
  }
-
-
- int checkRedundancy(GffObj* a, GffObj* b) {
-  // returns  1 if a is the container of b
-  //         -1 if a is contained in b
-  //          0 if no 
-  if (a->end<b->start || b->end<a->start) return 0;
-  if (a->exons.Count()==b->exons.Count()) {
-     if (a->exons.Count()>1) {
-                //same number of exons - possible equivalence?
-                bool r=intronRedundant(*a,*b); 
-                if (r) { return (a->covlen>b->covlen) ? 1 : -1; }
-                return 0;
-                }
-           else { //single exon containment testing
-             if (a->start<=b->start+10 && a->end+10>=b->end) return 1;
-               else { if (b->start<=a->start+10 && b->end+10>=a->end) return -1;
-                       else return 0;
-                     }
-             }
-     }
-   //different number of exons:
-   if (a->exons.Count()>b->exons.Count()) return t_contains(*a, *b) ? 1:0;
-                     else return t_contains(*b, *a) ? -1 : 0;
-  }
 
 int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool& m_smaller) {
  //first locate the list index of the mrna starting just ABOVE
@@ -156,13 +147,6 @@ int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool& m_smaller) {
      if (omrna.start>m->end) continue; //this should never be the case if nidx was found correctly
      
      if (intronRedundant(*m, omrna)) return i;
-     /*
-     int r=checkRedundancy(m, &omrna);
-     if (r!=0) {
-         m_smaller=(r<0);
-         return i;
-         }
-     */
      }
  return -1;
 }
@@ -323,18 +307,19 @@ bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl) {
 	ovlen=0;
 	if (imax!=jmax) return false; //different number of introns
 	if (imax==0) { //single-exon mRNAs
-		//consider match if they overlap over 50% of max len
 		if (equnspl) {
+			//fuzz match for single-exon transfrags: 
+			// it's a match if they overlap at least 80% of max len
 			ovlen=a.exons[0]->overlapLen(b.exons[0]);
 			int maxlen=GMAX(a.covlen,b.covlen);
-			return (ovlen>maxlen/2);
+			return (ovlen>=maxlen*0.8);
 		}
-        else {
-            //only exact match
+	  else {
+			//only exact match
 			ovlen=a.covlen;
 			return (a.exons[0]->start==b.exons[0]->start &&
 					a.exons[0]->end==b.exons[0]->end);
-        }
+		}
 	}
 	if ( a.exons[imax]->start<b.exons[0]->end ||
 		b.exons[jmax]->start<a.exons[0]->end )
@@ -352,11 +337,11 @@ bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl) {
 	return true;
 }
 
-void cluster_mRNAs(GList<GffObj> & mrnas, GList<GLocus> & loci, int qfidx, bool refData) {
+void cluster_mRNAs(GList<GffObj> & mrnas, GList<GLocus> & loci, int qfidx) {
 	//mrnas sorted by start coordinate
 	//and so are the loci
 	//int rdisc=0;
-   	for (int t=0;t<mrnas.Count();t++) {
+		for (int t=0;t<mrnas.Count();t++) {
 		GArray<int> mrgloci(false);
 		GffObj* mrna=mrnas[t];
 		int lfound=0; //count of parent loci
@@ -516,7 +501,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 
 
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
-	         bool check_for_dups, int qfidx, const char* fname, bool checkseq, bool only_multiexon) {
+	         bool check_for_dups, int qfidx, const char* fname, bool only_multiexon) {
 	//>>>>> read all transcripts/features from a GTF/GFF3 file
 	//int imrna_counter=0;
 	int loci_counter=0;
@@ -561,10 +546,10 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 			    }
 		    }
 		//>>>>> group mRNAs into locus-clusters (based on exon overlap)
-		cluster_mRNAs(seqdata[g]->mrnas_f, seqdata[g]->loci_f, qfidx, isRefData);
-		cluster_mRNAs(seqdata[g]->mrnas_r, seqdata[g]->loci_r, qfidx, isRefData);
+		cluster_mRNAs(seqdata[g]->mrnas_f, seqdata[g]->loci_f, qfidx);
+		cluster_mRNAs(seqdata[g]->mrnas_r, seqdata[g]->loci_r, qfidx);
 		if (!isRefData) {
-			cluster_mRNAs(seqdata[g]->umrnas, seqdata[g]->nloci_u, qfidx, false);
+			cluster_mRNAs(seqdata[g]->umrnas, seqdata[g]->nloci_u, qfidx);
 			}
 		loci_counter+=seqdata[g]->loci_f.Count();
 		loci_counter+=seqdata[g]->loci_r.Count();
