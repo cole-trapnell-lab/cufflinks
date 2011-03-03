@@ -1207,10 +1207,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
+    vector<pair<string, double> > count_table;
     if (bundle_mode != HIT_DRIVEN)
-        inspect_map(bundle_factory, NULL);
+        inspect_map(bundle_factory, NULL, count_table);
     else 
-        inspect_map(bundle_factory, &bad_introns);
+        inspect_map(bundle_factory, &bad_introns, count_table);
     
     
     asm_verbose("%d ReadHits still live\n", num_deleted);

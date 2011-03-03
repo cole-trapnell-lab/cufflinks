@@ -330,6 +330,7 @@ void identify_bad_splices(const HitBundle& bundle,
 template<class BundleFactoryType>
 void inspect_map(BundleFactoryType& bundle_factory,
                  BadIntronTable* bad_introns,
+                 vector<pair<string, double> >& count_table,
                  bool progress_bar = true)
 {
 
@@ -379,13 +380,17 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
 		verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-		if (progress_bar) {
+		
+        if (progress_bar) 
+        {
 			int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
 			p_bar.update(bundle_label_buf, inc_amt);
 			strncpy(last_chrom, chrom, 100);
-			}
+        }
 		
-		if (bad_introns != NULL)
+        count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
+		
+        if (bad_introns != NULL)
 		{
 			identify_bad_splices(bundle, *bad_introns);
 		}

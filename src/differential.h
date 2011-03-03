@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <set>
 #include <map>
+#include <utility>
 #include <vector>
 #include <string>
 
@@ -203,30 +204,242 @@ public:
         }
     }
     
+    
+    /*
+     Model variance with a loess-smoothed function:
+     Public Function LOESS(X As Variant, Y As Variant, xDomain As Variant, nPts As Long) As Double()
+     Dim i As Long
+     Dim iMin As Long
+     Dim iMax As Long
+     Dim iPoint As Long
+     Dim iMx As Long
+     Dim mx As Variant
+     Dim maxDist As Double
+     Dim SumWts As Double, SumWtX As Double, SumWtX2 As Double, SumWtY As Double, SumWtXY As Double
+     Dim Denom As Double, WLRSlope As Double, WLRIntercept As Double
+     Dim xNow As Double
+     Dim distance() As Double
+     Dim weight() As Double
+     Dim yLoess() As Double
+     
+     If TypeName(X) = "Range" Then
+        X = X.Value
+     End If
+     
+     If TypeName(Y) = "Range" Then
+        Y = Y.Value
+     End If
+     
+     If TypeName(xDomain) = "Range" Then
+        xDomain = xDomain.Value
+     End If
+     
+     ReDim yLoess(LBound(xDomain, 1) To UBound(xDomain, 1), 1 To 1)
+     
+     For iPoint = LBound(xDomain, 1) To UBound(xDomain, 1)
+     
+         iMin = LBound(X, 1)
+         iMax = UBound(X, 1)
+         
+         xNow = xDomain(iPoint, 1)
+         
+         ReDim distance(iMin To iMax)
+         ReDim weight(iMin To iMax)
+         
+         For i = iMin To iMax
+            ' populate x, y, distance
+            distance(i) = Abs(X(i, 1) - xNow)
+         Next
+         
+         Do
+             ' find the nPts points closest to xNow
+             If iMax + 1 - iMin <= nPts Then Exit Do
+             If distance(iMin) > distance(iMax) Then
+                ' remove first point
+                iMin = iMin + 1
+             ElseIf distance(iMin) < distance(iMax) Then
+                ' remove last point
+                iMax = iMax - 1
+             Else
+                ' remove both points?
+                iMin = iMin + 1
+                iMax = iMax - 1
+             End If
+         Loop
+         
+         ' Find max distance
+         maxDist = -1
+         For i = iMin To iMax
+            If distance(i) > maxDist Then maxDist = distance(i)
+         Next
+         
+         ' calculate weights using scaled distances
+         For i = iMin To iMax
+            weight(i) = (1 - (distance(i) / maxDist) ^ 3) ^ 3
+         Next
+         
+         ' do the sums of squares
+         SumWts = 0
+         SumWtX = 0
+         SumWtX2 = 0
+         SumWtY = 0
+         SumWtXY = 0
+         For i = iMin To iMax
+             SumWts = SumWts + weight(i)
+             SumWtX = SumWtX + X(i, 1) * weight(i)
+             SumWtX2 = SumWtX2 + (X(i, 1) ^ 2) * weight(i)
+             SumWtY = SumWtY + Y(i, 1) * weight(i)
+             SumWtXY = SumWtXY + X(i, 1) * Y(i, 1) * weight(i)
+         Next
+         Denom = SumWts * SumWtX2 - SumWtX ^ 2
+         
+         ' calculate the regression coefficients, and finally the loess value
+         WLRSlope = (SumWts * SumWtXY - SumWtX * SumWtY) / Denom
+         WLRIntercept = (SumWtX2 * SumWtY - SumWtX * SumWtXY) / Denom
+         yLoess(iPoint, 1) = WLRSlope * xNow + WLRIntercept
+     
+     Next
+     
+     LOESS = yLoess
+     
+     
+     Read more: LOESS Smoothing in Excel | Peltier Tech Blog | Excel Charts http://peltiertech.com/WordPress/loess-smoothing-in-excel/#ixzz1FTum6dIE
+
+     
+     */
+    
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
+        vector<pair<string, vector<double> > > sample_count_table;
+        vector<double> sample_masses;
+        
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
-//            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
-//            if (global_read_properties)
-//            {
-//                *rg_props = *global_read_properties;
-//            }
-//            else 
-//            {
-//                *rg_props = *fac->read_group_properties();
-//            }
-
             BadIntronTable bad_introns;
             
-            inspect_map(*fac, NULL, false);
+            vector<pair<string, double> > count_table;
+            inspect_map(*fac, NULL, count_table, false);
             
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             
+            for (size_t i = 0; i < count_table.size(); ++i)
+            {
+                pair<string, double>& c = count_table[i];
+                double raw_count = c.second;
+
+                
+                if (i >= sample_count_table.size())
+                {
+                    sample_count_table.push_back(make_pair(c.first, vector<double>()));
+                    sample_count_table.back().second.push_back(raw_count);
+                }
+                else
+                {
+                    const string& label = sample_count_table[i].first;
+                    assert (label == c.first);
+                    sample_count_table[i].second.push_back(raw_count);
+                }
+            }
+            sample_masses.push_back(rg_props->total_map_mass());
 			min_len = min(min_len, rg_props->frag_len_dist()->min());
 			max_len = max(max_len, rg_props->frag_len_dist()->max());
         }
-		
+        
+        vector<double> geom_means(sample_count_table.size(), 0.0);
+        
+//        for (size_t i = 0; i < sample_count_table.size(); ++i)
+//        {
+//            scale_factors.push_back(1/sample_masses[i]);
+//        }
+        
+        for (size_t i = 0; i < sample_count_table.size(); ++i)
+        {
+            pair<string, vector<double> >& p = sample_count_table[i];
+            
+            for (size_t j = 0; j < p.second.size(); ++j)
+            {
+                assert (geom_means.size() > j);
+                if (geom_means[i] > 0  && p.second[j] > 0)
+                {
+                    geom_means[i] *= p.second[j];
+                }
+                else if (p.second[j] > 0)
+                {
+                    geom_means[i] = p.second[j];
+                }
+            }
+            geom_means[i] = pow(geom_means[i], 1.0/p.second.size());
+        }
+        
+
+        
+        vector<double> scale_factors(_factories.size(), 0.0);
+        for (size_t j = 0; j < scale_factors.size(); ++j)
+        {
+            vector<double> tmp_counts;
+            for (size_t i = 0; i < sample_count_table.size(); ++i)
+            {
+                if (geom_means[i])
+                    tmp_counts.push_back(sample_count_table[i].second[j] / geom_means[i]);
+            }
+            sort(tmp_counts.begin(), tmp_counts.end());
+            if (!tmp_counts.empty())
+                scale_factors[j] = tmp_counts[tmp_counts.size()/2];
+            else
+                scale_factors[j] = 0.0;
+        }
+        
+        // Transform raw counts to the common scale
+        for (size_t i = 0; i < sample_count_table.size(); ++i)
+        {
+            pair<string, vector<double> >& p = sample_count_table[i];
+            for (size_t j = 0; j < p.second.size(); ++j)
+            {
+                assert (scale_factors.size() > j);
+                p.second[j] *= (1.0 / scale_factors[j]);
+            }
+        }
+        
+        vector<pair<double, double> > raw_means_and_vars;
+        
+        for (size_t i = 0; i < sample_count_table.size(); ++i)
+        {
+            pair<string, vector<double> >& p = sample_count_table[i];
+            double mean = accumulate(p.second.begin(), p.second.end(), 0.0);
+            if (mean > 0.0)
+                mean /= p.second.size();
+            
+            double var = 0.0;
+            foreach (double d, p.second)
+            {
+                var += (d - mean) * (d - mean);
+            }
+            if (var > 0.0)
+                var /= p.second.size();
+        
+            raw_means_and_vars.push_back(make_pair(mean, var));
+        }
+        
+        sort(raw_means_and_vars.begin(), raw_means_and_vars.end());
+        char sample_name_buf[256];
+        int sample_id = rand();
+        sprintf(sample_name_buf, "%d_counts.txt", sample_id);
+        FILE* sample_count_file = fopen(sample_name_buf, "w");
+        
+        if (sample_count_file)
+        {
+            fprintf(sample_count_file, "count_mean\tcount_var\n");
+            for (size_t i = 0; i < raw_means_and_vars.size(); ++i)
+            {
+                if (raw_means_and_vars[i].first > 0)
+                {
+                    fprintf(sample_count_file, "%lg\t%lg\n", 
+                            raw_means_and_vars[i].first, 
+                            raw_means_and_vars[i].second);
+                }
+            }
+            fclose(sample_count_file);
+        }
     }
 	
     

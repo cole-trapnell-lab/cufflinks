@@ -257,7 +257,7 @@
 		EDA5153010C72963000A4F41 /* hits.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hits.cpp; path = src/hits.cpp; sourceTree = "<group>"; };
 		EDA5153110C72963000A4F41 /* scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = scaffolds.cpp; path = src/scaffolds.cpp; sourceTree = "<group>"; };
 		EDA5153210C72963000A4F41 /* tokenize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tokenize.cpp; path = src/tokenize.cpp; sourceTree = "<group>"; };
-		EDACE430114EFF5C009024DB /* differential.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = differential.h; path = src/differential.h; sourceTree = "<group>"; };
+		EDACE430114EFF5C009024DB /* differential.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = differential.h; path = src/differential.h; sourceTree = "<group>"; };
 		EDACE431114EFF5C009024DB /* differential.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = differential.cpp; path = src/differential.cpp; sourceTree = "<group>"; };
 		EDACE438114F031B009024DB /* clustering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = clustering.h; path = src/clustering.h; sourceTree = "<group>"; };
 		EDACE439114F031B009024DB /* clustering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = clustering.cpp; path = src/clustering.cpp; sourceTree = "<group>"; };
@@ -877,7 +877,7 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include,
 					./src,
-					"/usr/local/include/boost-1_41",
+					/usr/local/include/boost,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -913,7 +913,7 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include,
 					./src,
-					"/usr/local/include/boost-1_41",
+					/usr/local/include/boost,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -1054,7 +1054,7 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					./src,
-					"/usr/local/include/boost-1_41",
+					/usr/local/include/boost,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -1082,7 +1082,7 @@
 				GCC_UNROLL_LOOPS = YES;
 				HEADER_SEARCH_PATHS = (
 					./src,
-					"/usr/local/include/boost-1_41",
+					/usr/local/include/boost,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
