@@ -11,8 +11,9 @@ class MultiRead
 	std::vector<MultiHit> _hits;
 	std::vector<double> _expr;
 	double _tot_expr;
-	bool* _valid_mass;
 	InsertID _id;
+	bool* _valid_mass;
+
 	
 public:
 	
