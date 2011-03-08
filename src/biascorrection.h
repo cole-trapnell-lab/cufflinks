@@ -17,13 +17,12 @@
 #include <string>
 #include <boost/tr1/unordered_map.hpp>
 #include <boost/thread.hpp>
+#include "common.h"
 
 class MateHit;
 class Scaffold;
 class BundleFactory;
 class HitBundle;
-class EmpDist;
-class ReadGroupProperties;
 
 namespace ublas = boost::numeric::ublas;
 
