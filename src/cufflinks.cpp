@@ -110,7 +110,7 @@ void print_usage()
     fprintf(stderr, "  -B/--frag-bias-correction    reference fasta file for sequence bias correction     [ default:   NULL ]\n");
 	fprintf(stderr, "  -u/--multi-read-correction   use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "\nAdvanced Options:\n\n");
-    fprintf(stderr, "  -N/--quartile-normalization  use quartile normalization instead of total counts    [ default:  FALSE ]\n");
+    fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
     fprintf(stderr, "  -A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           the average fragment length                           [ default:    200 ]\n");

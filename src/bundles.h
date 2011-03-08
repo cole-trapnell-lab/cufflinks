@@ -512,8 +512,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	if (use_quartile_norm)
 	{
 		sort(mass_dist.begin(),mass_dist.end());
-		int num_included = mass_dist.size() * 0.75;
-		map_mass = accumulate(mass_dist.begin(), mass_dist.begin()+num_included, 0.0);
+		int upper_quart_index = mass_dist.size() * 0.75;
+		map_mass = mass_dist[upper_quart_index];
 	}
 
     if (bad_introns != NULL)
@@ -637,7 +637,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 
 	fprintf(stderr, "> Map Properties:\n");
 	if (use_quartile_norm)
-		fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
+		fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", map_mass);
 	else
 		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
 	fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 

@@ -90,7 +90,7 @@ bool cuff_verbose = false;
 
 bool cuff_quiet = false;
 
-bool allow_junk_filtering = false;
+bool allow_junk_filtering = true;
 
 bool use_quartile_norm = false;
 
