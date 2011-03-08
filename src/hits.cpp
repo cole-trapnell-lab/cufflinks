@@ -46,6 +46,13 @@ bool hits_eq_mod_id(const ReadHit& lhs, const ReadHit& rhs)
 			lhs.cigar() == rhs.cigar());
 }
 
+bool hits_eq_non_multi(const MateHit& lhs, const MateHit& rhs)
+{
+	if ((lhs.is_multi() || rhs.is_multi()) && lhs.insert_id() != rhs.insert_id())
+		return false;
+	return hits_equals(lhs, rhs);
+}
+
 bool hits_equals(const MateHit& lhs, const MateHit& rhs) 
 {
 	if (lhs.ref_id() != rhs.ref_id())
@@ -74,13 +81,14 @@ bool has_no_collapse_mass(const MateHit& hit)
 }
 
 // Assumes hits are sorted by mate_hit_lt
+// Does not collapse hits that are multi-reads
 void collapse_hits(const vector<MateHit>& hits,
 				   vector<MateHit>& non_redundant)
 {
 	copy(hits.begin(), hits.end(), back_inserter(non_redundant));
 	vector<MateHit>::iterator new_end = unique(non_redundant.begin(), 
 											   non_redundant.end(), 
-											   hits_equals);
+											   hits_eq_non_multi);
 	non_redundant.erase(new_end, non_redundant.end());
     non_redundant.resize(non_redundant.size());
 	
@@ -91,18 +99,25 @@ void collapse_hits(const vector<MateHit>& hits,
 	size_t curr_unique_aln = 0;
 	while (curr_aln < hits.size())
 	{
-		if (hits_equals(non_redundant[curr_unique_aln], hits[curr_aln]) || hits_equals(non_redundant[++curr_unique_aln], hits[curr_aln]))
+		if (hits_eq_non_multi(non_redundant[curr_unique_aln], hits[curr_aln]) || hits_eq_non_multi(non_redundant[++curr_unique_aln], hits[curr_aln]))
+		{
+			//assert(non_redundant[curr_unique_aln].collapse_mass() == 0 || !non_redundant[curr_unique_aln].is_multi());
 			non_redundant[curr_unique_aln].incr_collapse_mass(hits[curr_aln].mass());
+		}
 		else
 			assert(false);
 		
 		++curr_aln;
 	}
 	
-	non_redundant.erase(remove_if(non_redundant.begin(),non_redundant.end(),has_no_collapse_mass), non_redundant.end()); 
+	//foreach(MateHit& hit, non_redundant)
+		//assert(hit.collapse_mass() <= 1 || !hit.is_multi());
+	
+	//non_redundant.erase(remove_if(non_redundant.begin(),non_redundant.end(),has_no_collapse_mass), non_redundant.end()); 
 	
 }
 
+// Places multi-reads to the right of reads they match
 bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs)
 {
 	if (lhs.left() != rhs.left())
@@ -151,6 +166,11 @@ bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs)
 		}
 	}
 	
+	if (lhs.is_multi() != rhs.is_multi())
+	{
+		return rhs.is_multi();
+	}
+	
 	return false;
 }
 
@@ -164,9 +184,10 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   const string& partner_ref,
 							   int partner_pos, 
 							   double error_prob,
-							   unsigned int edit_dist)
+							   unsigned int edit_dist,
+							   int num_hits)
 {
-	uint64_t insert_id = _insert_table.get_id(insert_name);
+	InsertID insert_id = _insert_table.get_id(insert_name);
 	RefID reference_id = _ref_table.get_id(ref_name, NULL);
 	RefID partner_ref_id = _ref_table.get_id(partner_ref, NULL);
 	
@@ -179,7 +200,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   partner_ref_id,
 				   partner_pos,
 				   error_prob,
-				   edit_dist);	
+				   edit_dist,
+				   num_hits);	
 }
 
 ReadHit HitFactory::create_hit(const string& insert_name, 
@@ -191,9 +213,10 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   const string& partner_ref,
 							   int partner_pos,
 							   double error_prob,
-							   unsigned int edit_dist)
+							   unsigned int edit_dist,
+							   int num_hits)
 {
-	uint64_t insert_id = _insert_table.get_id(insert_name);
+	InsertID insert_id = _insert_table.get_id(insert_name);
 	RefID reference_id = _ref_table.get_id(ref_name, NULL);
 	RefID partner_ref_id = _ref_table.get_id(partner_ref, NULL);
 	
@@ -206,7 +229,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   partner_ref_id,
 				   partner_pos,
 				   error_prob,
-				   edit_dist);	
+				   edit_dist,
+				   num_hits);	
 }
 
 // populate a bam_t This will 
@@ -289,6 +313,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	
 	vector<CigarOp> cigar;
 	bool spliced_alignment = false;
+	int num_hits = 1;
 	
 	double mapQ = hit_buf->core.qual;
 	long double error_prob;
@@ -316,7 +341,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						"*",
 						0,
 						1.0,
-						0);
+						0,
+						1);
 		return true;
 	}
 	
@@ -401,6 +427,12 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		num_mismatches = bam_aux2i(ptr);
 	}
 
+	ptr = bam_aux_get(hit_buf, "NH");
+	if (ptr)
+	{
+		num_hits = bam_aux2i(ptr);
+	}
+	
     bool antisense_aln = bam1_strand(hit_buf);
     
     if (_rg_props.strandedness() == STRANDED_PROTOCOL && source_strand == CUFF_STRAND_UNKNOWN)
@@ -420,7 +452,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						mrnm,
 						text_mate_pos,
 						error_prob,
-						num_mismatches);
+						num_mismatches,
+						num_hits);
 		return true;
 		
 	}
@@ -440,7 +473,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						mrnm,
 						text_mate_pos,
 						error_prob,
-						num_mismatches);
+						num_mismatches,
+						num_hits);
 		return true;
 	}
 	
@@ -692,6 +726,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	//int len = strlen(sequence);
 	vector<CigarOp> cigar;
 	bool spliced_alignment = false;
+	int num_hits = 1;
 	
 	double mapQ = atoi(map_qual_str);
 	long double error_prob;
@@ -717,7 +752,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						"*",
 						0,
 						1.0,
-						0);
+						0,
+						1);
 		return true;
 	}
 	// Mostly pilfered direct from the SAM tools:
@@ -830,6 +866,10 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 				{
 					num_mismatches = atoi(third_token);
 				}
+				else if (!strcmp(first_token, "NH"))
+				{
+					num_hits = atoi(third_token);
+				}
 				else 
 				{
 					
@@ -856,7 +896,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						mrnm,
 						text_mate_pos - 1,
 						error_prob,
-						num_mismatches);
+						num_mismatches,
+						num_hits);
 		return true;
 		
 	}
@@ -876,7 +917,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						mrnm,
 						text_mate_pos - 1,
 						error_prob,
-						num_mismatches);
+						num_mismatches,
+						num_hits);
 		return true;
 	}
 	return false;

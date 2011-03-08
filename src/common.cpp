@@ -30,6 +30,7 @@ using namespace std;
 
 bool final_est_run = true;
 bool corr_bias = false;
+bool corr_multi = false;
 
 BundleMode bundle_mode = HIT_DRIVEN;
 BiasMode bias_mode = VLMM;
@@ -62,7 +63,6 @@ int ref_merge_overhang_tolerance = 30;
 int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 
 float min_isoform_fraction = 0.1;
-//float min_isoform_fraction = 0.1;
 float pre_mrna_fraction = 0.25;
 float high_phred_err_prob = 0.50; // about MAPQ = 3
 
@@ -90,7 +90,7 @@ bool cuff_verbose = false;
 
 bool cuff_quiet = false;
 
-bool allow_junk_filtering = true;
+bool allow_junk_filtering = false;
 
 bool use_quartile_norm = false;
 

@@ -13,7 +13,14 @@
 #include <netdb.h> 
 
 int NUM_SEPS = 3;
+int CONNECT_TIMEOUT = 5;
 
+static int sTimeout = 0; 
+
+static void AlarmHandler(int sig) 
+{ 
+	sTimeout = 1; 
+} 
 
 bool error(const char *msg)
 {
@@ -52,9 +59,18 @@ bool get_current_version(char* curr_version)
 		  (char *)&serv_addr.sin_addr.s_addr,
 		  server->h_length);
     serv_addr.sin_port = htons(portno);
-    if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
-        return error("ERROR connecting");
-
+    
+	signal(SIGALRM, AlarmHandler); 
+	sTimeout = 0; 
+	alarm(CONNECT_TIMEOUT); 
+	
+	int ret;
+	ret = connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+	if (ret < 0 || sTimeout)
+	{
+		return error("ERROR connecting");
+	}
+	
 	char buffer[1024];
 	strcpy(buffer, "GET /~adarob/curr_cuff_version HTTP/1.1\nHost: lmcb.math.berkeley.edu\n\n");
 	n = write(sockfd,buffer,1024);

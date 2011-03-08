@@ -260,6 +260,7 @@ bool HitBundle::add_hit(const MateHit& hit)
 	if (hit.right() > _rightmost)
 		_rightmost = hit.right();
 	
+	
 	_hits.push_back(hit);
 	return true;
 }
@@ -301,7 +302,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 		{
 			// No, so add it to the list of open mates, unless we would
 			// already have seen it's partner
-			if(bh->left() < bh->partner_pos())
+			if(bh->left() <= bh->partner_pos())
 			{
 				MateHit open_hit(rg_props,
                                  bh->ref_id(), 
@@ -384,36 +385,9 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 	}
 }
 
-
 void HitBundle::collapse_hits()
 {
-	copy(_hits.begin(), _hits.end(), back_inserter(_non_redundant));
-	vector<MateHit>::iterator new_end = unique(_non_redundant.begin(), 
-											   _non_redundant.end(), 
-											   hits_equals);
-	_non_redundant.erase(new_end, _non_redundant.end());
-    _non_redundant.resize(_non_redundant.size());
-	
-	foreach(MateHit& hit, _non_redundant)
-		hit.collapse_mass(0);
-	
-	size_t curr_aln = 0;
-	size_t curr_unique_aln = 0;
-	while (curr_aln < _hits.size())
-	{
-		if (hits_equals(_non_redundant[curr_unique_aln], _hits[curr_aln]) || hits_equals(_non_redundant[++curr_unique_aln], _hits[curr_aln]))
-		{
-			MateHit& unique_aln = _non_redundant[curr_unique_aln];
-			unique_aln.incr_collapse_mass(_hits[curr_aln].mass());
-			_hits[curr_aln].collapsed_to(&unique_aln);
-		}
-		else
-			assert(false);
-		
-		++curr_aln;
-	}
-	
-	//_non_redundant.erase(remove_if(_non_redundant.begin(),_non_redundant.end(),has_no_collapse_mass), _non_redundant.end()); 
+	::collapse_hits(_hits, _non_redundant);
 }
 
 void HitBundle::finalize_open_mates()

@@ -1,8 +1,8 @@
 #ifndef PROGRESS_H
 #define PROGRESS_H
 
-#include "common.h"
 #include "time.h"
+
 using namespace std;
 
 const int BAR_BUF_SIZE = 28;

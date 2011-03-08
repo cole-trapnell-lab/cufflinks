@@ -29,6 +29,7 @@ using boost::math::normal;
 
 extern bool final_est_run;
 extern bool corr_bias;
+extern bool corr_multi;
 
 extern uint32_t max_intron_length;
 extern uint32_t min_intron_length;
@@ -278,8 +279,8 @@ public:
 	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
     void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 
 	
-//	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }
-//	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt>) { return _multi_read_table = mrt; }
+	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }
+	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt; }
 	
 private:
     
@@ -290,7 +291,7 @@ private:
     long double _total_map_mass;
     boost::shared_ptr<EmpDist const> _frag_len_dist;
 	boost::shared_ptr<BiasLearner const> _bias_learner;
-//	boost::shared_ptr<MultiReadTable> _multi_read_table;
+	boost::shared_ptr<MultiReadTable> _multi_read_table;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;

@@ -17,16 +17,11 @@
 #include <vector>
 #include <map>
 
-//#include <lemon/list_graph.h>
 
-//#include <lemon/concepts/bpugraph.h>
-#include <boost/graph/adjacency_list.hpp>
-
-#include "hits.h"
 #include "bundles.h"
 #include "scaffolds.h"
-#include "biascorrection.h"
 
+class BiasLearner;
 
 bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr);
 

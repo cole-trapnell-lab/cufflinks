@@ -36,14 +36,14 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:g:f:o:M:r:a:A:Nqv";
+const char *short_options = "m:p:s:F:c:I:j:Q:L:G:g:f:o:M:B:a:A:Nqvu";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:g:f:o:M:r:a:A:Nqv";
+const char *short_options = "m:s:F:c:I:j:Q:L:G:g:f:o:M:B:a:A:Nqvu";
 #endif
 
 static struct option long_options[] = {
 {"frag-len-mean",			required_argument,       0,          'm'},
-{"frag-len-std-dev",			required_argument,       0,          's'},
+{"frag-len-std-dev",		required_argument,       0,          's'},
 {"transcript-score-thresh", required_argument,       0,          't'},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
 {"min-intron-fraction",     required_argument,       0,          'f'},
@@ -59,9 +59,10 @@ static struct option long_options[] = {
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"quartile-normalization",  no_argument,	 		 0,	         'N'},
-{"verbose",			    	no_argument,		 	0,			 'v'},
-{"quiet",			    	no_argument,		 	0,			 'q'},
-{"reference-seq",			required_argument,		 0,			 'r'},	
+{"verbose",			    	no_argument,		 	 0,			 'v'},
+{"quiet",			    	no_argument,			 0,			 'q'},
+{"frag-bias-correction",	required_argument,		 0,			 'B'},
+{"multi-read-correction",	no_argument,			 0,			 'u'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -106,7 +107,8 @@ void print_usage()
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-    fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+    fprintf(stderr, "  -B/--frag-bias-correction    reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+	fprintf(stderr, "  -u/--multi-read-correction   use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "\nAdvanced Options:\n\n");
     fprintf(stderr, "  -N/--quartile-normalization  use quartile normalization instead of total counts    [ default:  FALSE ]\n");
     fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
@@ -262,12 +264,17 @@ int parse_options(int argc, char** argv)
 				output_dir = optarg;
 				break;
 			}
-            case 'r':
+            case 'B':
 			{
 				fasta_dir = optarg;
 				corr_bias = true;
 				break;
             }    
+			case 'u':
+			{
+				corr_multi = true;
+				break;
+			}
             case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
@@ -339,7 +346,6 @@ int parse_options(int argc, char** argv)
         }
     }
 	
-    
     return 0;
 }
 
@@ -1049,12 +1055,20 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
     
 	string process;
-	if (corr_bias && final_est_run)
+	if (corr_bias && corr_multi && final_est_run)
+		process = "Re-estimating abundances with bias and multi-read correction.";
+	else if (corr_multi && final_est_run)
+		process = "Re-estimating abundances with multi-read correction.";
+	else if (corr_bias && final_est_run)
 		process = "Re-estimating abundances with bias correction.";
 	else if (bundle_mode==REF_DRIVEN && final_est_run)
 		process = "Estimating transcript abundances."; 
 	else if (bundle_mode==REF_DRIVEN && corr_bias)
 		process = "Learning bias parameters.";
+	else if (bundle_mode==REF_DRIVEN && corr_multi)
+		process = "Initializing transcript abundances for multi-read correction.";
+	else if (corr_multi)
+		process = "Assembling transcripts and initializing abundances for multi-read correction.";
 	else
 		process = "Assembling transcripts and estimating abundances.";
 		
@@ -1234,7 +1248,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	min_frag_len = rg_props->frag_len_dist()->min();
 	verbose_msg("\tTotal map density: %Lf\n", rg_props->total_map_mass());
 
-	if (corr_bias) final_est_run = false;
+	if (corr_bias || corr_multi) final_est_run = false;
 
 	assemble_hits(bundle_factory, bl_ptr);
     
@@ -1249,6 +1263,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	delete &bundle_factory;
 	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
+	rg_props->multi_read_table()->valid_mass(true);
 	bundle_factory2.num_bundles(num_bundles);
 	bundle_factory2.read_group_properties(rg_props);
 

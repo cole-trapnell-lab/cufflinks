@@ -350,11 +350,14 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	size_t total_hits = 0;
 	size_t total_non_redundant_hits = 0;
 	
-	vector<long double> mass_dist; //To be used for quartile normalization
+	//To be used for quartile normalization
+	vector<long double> mass_dist; 	
 	
 	// Store the maximum read length for "left" and "right" reads to report to user.
 	int max_left = 0;
 	int max_right = 0;
+	
+	shared_ptr<MultiReadTable> mrt(new MultiReadTable());
 	
 	while(true)
 	{
@@ -407,19 +410,29 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		int curr_range_end = numeric_limits<int>::max();
 		int next_range_start = -1;
 		
-		
 		total_non_redundant_hits += bundle.non_redundant_hits().size();
 		total_hits += bundle.hits().size();
 		
 		// This first loop calclates the map mass and finds ranges with no introns
 		// Note that we are actually looking at non-redundant hits, which is why we use collapse_mass
+		// This loop will also add multi-reads to the MultiReads table 
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
 			assert(hits[i].left_alignment());
+			
+			// Add to table if multi-read
+			if (hits[i].is_multi())
+			{
+				mrt->add_hit(hits[i]);
+			}
+			
+			// Find left length
 			int left_len = hits[i].left_alignment()->right()-hits[i].left_alignment()->left();
 			min_len = min(min_len, left_len);
 			if (!hits[i].left_alignment()->contains_splice())
 				max_left = max(max_left, left_len);
+			
+			// Find right length
 			if (hits[i].right_alignment())
 			{
 				int right_len = hits[i].right_alignment()->right()-hits[i].right_alignment()->left();
@@ -428,7 +441,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
 					max_right = max(max_right, right_len);
 				has_pairs = true;
 			}
-			if (bundle.ref_scaffolds().size()==1 && hits[i].is_pair()) // Annotation provided and single isoform gene.
+			
+			// Find fragment length
+			if (bundle.ref_scaffolds().size()==1 && hits[i].is_pair())
+			// Annotation provided and single isoform gene
 			{
 				int start, end, mate_length;
 				shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
@@ -438,7 +454,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 						frag_len_hist[mate_length] += hits[i].collapse_mass();
 				}
 			}
-			else
+			else if (bundle.ref_scaffolds().empty())
+			// No annotation provided.  Look for ranges.
 			{
 				if (hits[i].left() > curr_range_end)
 				{
@@ -489,7 +506,6 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		}
 		
         open_ranges.clear();
-        
 		delete bundle_ptr;
 	}
 	
@@ -520,16 +536,11 @@ void inspect_map(BundleFactoryType& bundle_factory,
     
 	if (progress_bar)
 		p_bar.complete();
-
 	
-    long double tot_count = 0;
 	vector<double> frag_len_pdf(max_len+1, 0.0);
 	vector<double> frag_len_cdf(max_len+1, 0.0);
-        
-    tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
-    	
+    long double tot_count = accumulate(frag_len_hist.begin(), frag_len_hist.end(), 0.0 );
     bool empirical = false;
-	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
 	
 	if (user_provided_fld && has_pairs && tot_count >= 10000)
 	{
@@ -551,8 +562,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			tot_count += frag_len_hist[i];
 		}
 	}
-		
-	else 
+	else
+	// Calculate the max frag length and interpolate all zeros between min read len and max frag len
 	{	
 		empirical = true;
 		double curr_total = 0;
@@ -620,6 +631,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	
 	shared_ptr<ReadGroupProperties> rg_props = bundle_factory.read_group_properties();
 	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len));
+	rg_props->multi_read_table(mrt);
 	rg_props->frag_len_dist(fld);
 	rg_props->total_map_mass(map_mass);
 
@@ -628,7 +640,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		fprintf(stderr, ">\tUpper Quartile Mass: %.2Lf\n", map_mass);
 	else
 		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-
+	fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
 	if (has_pairs)
 		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_left, max_right);
 	else

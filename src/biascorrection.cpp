@@ -8,8 +8,10 @@
  */
 
 #include "biascorrection.h"
+#include "scaffolds.h"
 #include "abundances.h"
 #include "progressbar.h"
+#include "bundles.h"
 
 #include <iostream>
 #include <fstream>
@@ -605,11 +607,6 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	vector<double> end_bias(trans_len+1, 1.0);
 	double eff_len = 0.0;
 	
-	if (rgp->bias_learner()!=NULL && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
-	{
-		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias);
-	}
-	
 	shared_ptr<EmpDist const> fld = rgp->frag_len_dist();
 	
 	vector<double> tot_bias_for_len(trans_len+1, 0);
@@ -620,27 +617,33 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	start_bias_for_len[trans_len] = trans_len;
 	end_bias_for_len[trans_len] = trans_len;
 
-	
-	for(int l = fld->min(); l <= trans_len; l++)
+	if (final_est_run && corr_bias && _transcript->strand()!=CUFF_STRAND_UNKNOWN)
 	{
-		//double tot = 0;
-		//double start = 0;
-		//double end = 0;
-		for(int i = 0; i <= trans_len - l; i++)
+		rgp->bias_learner()->getBias(*_transcript, start_bias, end_bias);
+
+		for(int l = fld->min(); l <= trans_len; l++)
 		{
-			double tot_bias = start_bias[i]*end_bias[i+l-1];
-			tot_bias_for_len[l] += tot_bias;
-			start_bias_for_len[l] += start_bias[i];
-			end_bias_for_len[l] += end_bias[i+l-1];
-			
-			double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(l, trans_len-i) : fld->pdf(l);
-			eff_len += tot_bias * frag_prob;
+			for(int i = 0; i <= trans_len - l; i++)
+			{
+				double tot_bias = start_bias[i]*end_bias[i+l-1];
+				tot_bias_for_len[l] += tot_bias;
+				start_bias_for_len[l] += start_bias[i];
+				end_bias_for_len[l] += end_bias[i+l-1];
+				
+				double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(l, trans_len-i) : fld->pdf(l);
+				eff_len += tot_bias * frag_prob;
+			}
 		}
-        //assert(tot != 0);
-		//tot_bias_for_len[l] = tot;
-		//eff_len += tot * p_len;
-		//mean_start_bias += start * p_len;
-		//mean_end_bias += end * p_len; 
+	}
+	else
+	{
+		for(int l = fld->min(); l <= trans_len; l++)
+		{
+			tot_bias_for_len[l] = trans_len - l;
+			start_bias_for_len[l] = trans_len - l;
+			end_bias_for_len[l] = trans_len - l;
+			eff_len += fld->pdf(l) * (trans_len - l);
+		}
 	}
 	
 	_start_biases.push_back(start_bias);
@@ -669,7 +672,7 @@ int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
 	return iter->second;
 }
 
-// Hit needs to be collapsed
+// Hit needs to be from the collapsed (non_redundant) list to match indexing 
 double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 {
 	shared_ptr<ReadGroupProperties const> rgp = hit.read_group_props();

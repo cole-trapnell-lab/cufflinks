@@ -720,9 +720,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	vector<bool> chaff(transcripts.size(), false); // only a single MateHit, impossible to reliably quantitate
 	vector<bool> repeats(transcripts.size(), false); // too many low-quality hits
 	vector<bool> too_rare(transcripts.size(), false); // too rare to be reliably quantitated, could be error
-	
-	vector<bool> illegal_microexon(transcripts.size(), false); // initial or terminal exons are too short
-	
+		
 	//cerr << "Chucked : ";
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{

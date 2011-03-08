@@ -24,7 +24,6 @@
 
 namespace ublas = boost::numeric::ublas;
 
-
 struct ConfidenceInterval
 {
 	ConfidenceInterval(double Low = 0.0, double High = 0.0) 
@@ -368,6 +367,8 @@ private:
 	void calculate_conf_intervals();
 	void calculate_counts(const vector<MateHit>& nr_alignments, const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
+	void update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts);
+
     
 	void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
 												  vector<shared_ptr<Abundance> >& transcripts,

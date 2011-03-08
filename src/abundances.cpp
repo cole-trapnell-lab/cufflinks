@@ -373,11 +373,43 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     // This will also compute the transcript level FPKMs
     calculate_counts(nr_alignments, transcripts);  
 
+	if(!final_est_run)
+	{
+		update_multi_reads(nr_alignments, mapped_transcripts);
+	}
+	
 	if (final_est_run) // Only on last estimation run
 	{
         calculate_conf_intervals();
         calculate_kappas();
     }
+}
+
+void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts)
+{
+	size_t M = alignments.size();
+	size_t N = transcripts.size();
+	
+	if (transcripts.empty())
+		return;
+    
+    for (size_t i = 0; i < M; ++i)
+	{
+		if (alignments[i].is_multi())
+		{
+			double num = 0.0;
+			double denom = 0.0;
+			for (size_t j = 0; j < N; ++j)
+			{
+				if (_abundances[j]->cond_probs()->at(i) > 0)
+				{
+					num += _abundances[j]->FPKM()*_abundances[j]->FPKM();
+					denom += _abundances[j]->FPKM();
+				}
+			}
+			alignments[i].read_group_props()->multi_read_table()->add_expr(alignments[i], (denom > 0) ? num/denom : 0);
+		}
+	}
 }
 
 void AbundanceGroup::calculate_conf_intervals()

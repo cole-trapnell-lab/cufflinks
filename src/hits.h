@@ -19,6 +19,7 @@
 #include <bam/sam.h>
 
 #include "common.h"
+#include "multireads.h"
 
 using namespace std;
 using boost::shared_ptr;
@@ -70,7 +71,8 @@ struct ReadHit
 		_ref_id(0),
 		_insert_id(0),
 		_error_prob(1.0),
-		_edit_dist(0xFFFFFFFF)
+		_edit_dist(0xFFFFFFFF),
+		_num_hits(1)
     {
         num_deleted++;
     }
@@ -84,7 +86,8 @@ struct ReadHit
 			RefID partner_ref,
 			int partner_pos,
 			double error_prob,
-			unsigned int edit_dist) :
+			unsigned int edit_dist,
+			int num_hits) :
 		_ref_id(ref_id),
 		_insert_id(insert_id), 
 		_left(left), 
@@ -94,7 +97,8 @@ struct ReadHit
 		_source_strand(source_strand),
 		_antisense_aln(antisense),
 		_error_prob(error_prob),
-		_edit_dist(edit_dist)
+		_edit_dist(edit_dist),
+		_num_hits(num_hits)
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
@@ -110,7 +114,8 @@ struct ReadHit
 			RefID partner_ref,
 			int partner_pos, 
 			double error_prob,
-			unsigned int  edit_dist) : 
+			unsigned int  edit_dist,
+			int num_hits) : 
 		_ref_id(ref_id),
 		_insert_id(insert_id), 	
 		_left(left),
@@ -120,7 +125,8 @@ struct ReadHit
 		_source_strand(source_strand),
 		_antisense_aln(antisense_aln),
 		_error_prob(error_prob),
-		_edit_dist(edit_dist)
+		_edit_dist(edit_dist),
+		_num_hits(num_hits)
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
@@ -139,6 +145,7 @@ struct ReadHit
 		_antisense_aln = other._antisense_aln;
 		_error_prob = other._error_prob;
 		_edit_dist = other._edit_dist;
+		_num_hits = other._num_hits;
         _right = get_right();
         num_deleted++;
     }
@@ -210,11 +217,14 @@ struct ReadHit
 	
 	double error_prob() const			{ return _error_prob;		}
 	
+	// Number of multi-hits for this read
+	int num_hits() const				{ return _num_hits;			}
+	
 	double mass() const 
 	{
 		if (is_singleton())
-			return 1.0 - error_prob();
-		return (1.0 - error_prob())/2.0;
+			return 1.0/_num_hits;
+		return 0.5/_num_hits;
 	}
 	
 	// For convenience, if you just want a copy of the gap intervals
@@ -306,6 +316,7 @@ private:
 	bool _antisense_aln;       // Whether the alignment is to the reverse strand
 	double _error_prob;		   // Probability that this alignment is incorrect
 	unsigned int  _edit_dist;            // Number of mismatches
+	int _num_hits; // Number of multi-hits (1 by default)
 	string _hitfile_rec; // Points to the buffer for the record from which this hit came
 };
 
@@ -562,7 +573,8 @@ public:
 					   const string& partner_ref,
 					   int partner_pos,
 					   double error_prob,
-					   unsigned int  edit_dist);
+					   unsigned int  edit_dist,
+					   int num_hits);
 	
 	ReadHit create_hit(const string& insert_name, 
 					   const string& ref_name,
@@ -573,7 +585,8 @@ public:
 					   const string& partner_ref,
 					   int partner_pos,
 					   double error_prob,
-					   unsigned int  edit_dist);
+					   unsigned int  edit_dist,
+					   int num_hits);
 	
 	virtual void reset() = 0;
 	
@@ -804,8 +817,7 @@ public:
     _left_alignment(NULL),
     _right_alignment(NULL),
     _collapse_mass(0.0),
-    _is_mapped(false),
-    _collapsed_to(NULL){}
+    _is_mapped(false){}
     
 	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
             RefID refid, 
@@ -816,8 +828,7 @@ public:
 	_left_alignment(left_alignment),
 	_right_alignment(right_alignment),
 	_collapse_mass(0.0),
-	_is_mapped(false),
-	_collapsed_to(NULL)
+	_is_mapped(false)
 	{
 		//_expected_inner_dist = min(genomic_inner_dist(), _expected_inner_dist);
 	}
@@ -846,13 +857,19 @@ public:
 	void is_mapped(bool mapped) 
 	{ 
 		_is_mapped = mapped; 
-		if (_collapsed_to)
-			_collapsed_to->is_mapped(mapped);
 	}
 	
-	MateHit* collapsed_to() const { return _collapsed_to; }
-	void collapsed_to(MateHit* hit) { _collapsed_to = hit; }
+	int num_hits() const 
+	{
+		assert(_left_alignment);
+		return _left_alignment->num_hits();
+	}
 	
+	bool is_multi() const 
+	{
+		return num_hits() > 1;
+	}
+		
 	bool is_pair() const
 	{
 		return (_left_alignment && _right_alignment);
@@ -956,14 +973,18 @@ public:
 		return make_pair(-1,-1);
 	}
 	
+	// MRT is incorrect and not added to rg_props until after inspect_map
 	double mass() const
 	{
-		double mass = 0.0;
-		if (_left_alignment)
-			mass += _left_alignment->mass();
-		if (_right_alignment) 
-			mass += _right_alignment->mass();
-		return mass;
+		if (is_multi())
+		{
+			shared_ptr<MultiReadTable> mrt = _rg_props->multi_read_table();
+			if (mrt)
+				return mrt->get_mass(*this);
+			else
+				return 1.0/num_hits();
+		}
+		return 1.0;
 	}
 	
 	unsigned int  edit_dist() const
@@ -988,13 +1009,14 @@ private:
 	const ReadHit* _right_alignment;
 	double _collapse_mass;
 	bool _is_mapped;
-	MateHit* _collapsed_to;
 	//bool _closed;
 };
 
 bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs);
 
 bool hits_eq_mod_id(const ReadHit& lhs, const ReadHit& rhs);
+
+bool hits_eq_non_multi(const MateHit& lhs, const MateHit& rhs);
 
 bool hits_equals(const MateHit& lhs, const MateHit& rhs);
 

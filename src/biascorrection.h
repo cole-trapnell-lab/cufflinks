@@ -11,13 +11,19 @@
  */
 
 
-#include "bundles.h"
 #include <boost/numeric/ublas/matrix.hpp>
 #include <vector>
 #include <list>
 #include <string>
 #include <boost/tr1/unordered_map.hpp>
 #include <boost/thread.hpp>
+
+class MateHit;
+class Scaffold;
+class BundleFactory;
+class HitBundle;
+class EmpDist;
+class ReadGroupProperties;
 
 namespace ublas = boost::numeric::ublas;
 
@@ -38,7 +44,7 @@ class BiasLearner{
 	static const int vlmmSpec[];
 	
 	const int* paramTypes;
-	shared_ptr<EmpDist const> _frag_len_dist;
+	boost::shared_ptr<EmpDist const> _frag_len_dist;
 	ublas::matrix<long double> _startSeqParams;
 	ublas::matrix<long double> _startSeqExp;
 	ublas::matrix<long double> _endSeqParams;
@@ -50,7 +56,7 @@ class BiasLearner{
 
 	int seqToInt(const char* seqSlice, int n) const;
 	void getSlice(const char* seq, char* slice, int start, int end) const;
-	void genNList(const char* seqSlice, int start, int n, list<int>& nList) const;
+	void genNList(const char* seqSlice, int start, int n, std::list<int>& nList) const;
 
 #if ENABLE_THREADS	
 	boost::mutex _bl_lock;
@@ -58,7 +64,7 @@ class BiasLearner{
 	
 public:
 	
-	BiasLearner(shared_ptr<EmpDist const> frag_len_dist);
+	BiasLearner(boost::shared_ptr<EmpDist const> frag_len_dist);
 	void preProcessTranscript(const Scaffold& transcript);
 	
 	void processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript);
@@ -75,8 +81,8 @@ void process_bundle(HitBundle& bundle, BiasLearner& bl);
 // Helps with the complexities of bias correction with replicates in cond_probs and eff_lens
 class BiasCorrectionHelper{
 	
-	shared_ptr<Scaffold> _transcript;
-    boost::unordered_map<shared_ptr<ReadGroupProperties const>, int> _rg_index;
+	boost::shared_ptr<Scaffold> _transcript;
+    boost::unordered_map<boost::shared_ptr<ReadGroupProperties const>, int> _rg_index;
 	int _size;
 	bool _mapped;
 	
@@ -90,12 +96,12 @@ class BiasCorrectionHelper{
 	std::vector<double> _eff_lens;
 	std::vector<double> _rg_masses;
 	
-	int add_read_group(shared_ptr<ReadGroupProperties const> rgp);	
-	int get_index(shared_ptr<ReadGroupProperties const> rgp);
+	int add_read_group(boost::shared_ptr<ReadGroupProperties const> rgp);	
+	int get_index(boost::shared_ptr<ReadGroupProperties const> rgp);
 	
 public:
 	
-	BiasCorrectionHelper(shared_ptr<Scaffold> transcript) 
+	BiasCorrectionHelper(boost::shared_ptr<Scaffold> transcript) 
 	{ 
 		_transcript = transcript;
 		_mapped = false;

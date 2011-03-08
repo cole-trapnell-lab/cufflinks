@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A6183721324308800EFF9AF /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
+		0A6183731324308800EFF9AF /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
 		9C198ABE12F231CD00919C3B /* test_scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */; };
 		9C198ACA12F240D400919C3B /* scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */; };
 		9C198AD712F2410100919C3B /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152210C72963000A4F41 /* common.cpp */; };
@@ -203,6 +205,7 @@
 		0A4C0AD412F734DE0055A9D8 /* multireads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = multireads.h; path = src/multireads.h; sourceTree = "<group>"; };
 		0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
 		0A5D9A3F123B5BFE002BEFD5 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
+		0A6183711324308800EFF9AF /* multireads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = multireads.cpp; path = src/multireads.cpp; sourceTree = "<group>"; };
 		0ACD78C612E6647B00310E07 /* update_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = update_check.h; path = src/update_check.h; sourceTree = "<group>"; };
 		9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_scaffolds.cpp; sourceTree = "<group>"; };
 		9CC50B5913204F180031949A /* cmd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = cmd.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -422,6 +425,7 @@
 		0A25E74A1242E9270080BEA9 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				0A6183711324308800EFF9AF /* multireads.cpp */,
 				0A4C0AD412F734DE0055A9D8 /* multireads.h */,
 				0A25E74B1242E95A0080BEA9 /* progressbar.h */,
 				ED877B71123BCA3E0025A050 /* GFastaIndex.h */,
@@ -804,6 +808,7 @@
 				EDE78BC611B716C3000F8846 /* matching_merge.cpp in Sources */,
 				EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 				ED877B74123BCA3F0025A050 /* GFastaIndex.cpp in Sources */,
+				0A6183721324308800EFF9AF /* multireads.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -864,6 +869,7 @@
 				EDBAC4C211FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 				EDFE39FC122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */,
 				ED877B73123BCA3F0025A050 /* GFastaIndex.cpp in Sources */,
+				0A6183731324308800EFF9AF /* multireads.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
