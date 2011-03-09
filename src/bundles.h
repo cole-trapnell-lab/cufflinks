@@ -640,7 +640,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", map_mass);
 	else
 		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
-	fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
+	if (corr_multi)
+		fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
 	if (has_pairs)
 		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_left, max_right);
 	else

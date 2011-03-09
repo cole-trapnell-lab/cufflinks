@@ -14,16 +14,14 @@ class MultiRead
 	std::vector<double> _expr;
 	double _tot_expr;
 	InsertID _id;
-	bool* _valid_mass;
 
 	
 public:
 	
-	MultiRead(InsertID id, bool* valid_mass, int exp_num_hits)
+	MultiRead(InsertID id, int exp_num_hits)
 	:	_curr_index(0),
 		_tot_expr(0.0),
-		_id(id),
-		_valid_mass(valid_mass)
+		_id(id)
 	{
 		_hits.reserve(exp_num_hits);
 		_expr.reserve(exp_num_hits);
@@ -32,7 +30,7 @@ public:
 	size_t num_hits() { return (int)_hits.size(); }
 	void add_hit(RefID r_id, int left);
 	void add_expr(RefID r_id, int left, double expr);
-	double get_mass(RefID r_id, int left);
+	double get_mass(RefID r_id, int left, bool valid_mass);
 	
 
 };

@@ -915,14 +915,14 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
     double tmp_mean_to_trim = 0.0;
     double tmp_mean_to_keep = 0.0;
     double tmp_mean_3prime = 0.0;
-    for (size_t i = 0; i < exon_3->genomic_length; i++)
+    for (int i = 0; i < exon_3->genomic_length; i++)
     {
         tmp_mean_3prime += coverage[offset + mult*i];
     }
     tmp_mean_3prime /= exon_3->genomic_length;
     
     double base_cost = 0.0;
-    for (size_t i = 0; i < exon_3->genomic_length; i++)
+    for (int i = 0; i < exon_3->genomic_length; i++)
     {
         double d = (coverage[offset + mult*i] - tmp_mean_3prime);
         d *= d;
@@ -952,7 +952,7 @@ bool clip_by_3_prime_dropoff(Scaffold& scaff)
         
         double tmp_mean_trim_cost = 0.0;
         double tmp_mean_keep_cost = 0.0;
-        for (size_t i = 0; i < exon_3->genomic_length; i++)
+        for (int i = 0; i < exon_3->genomic_length; i++)
         {
             if (i <= to_remove)
             {

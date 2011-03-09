@@ -397,17 +397,12 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 	{
 		if (alignments[i].is_multi())
 		{
-			double num = 0.0;
-			double denom = 0.0;
+			double expr = 0.0;
 			for (size_t j = 0; j < N; ++j)
 			{
-				if (_abundances[j]->cond_probs()->at(i) > 0)
-				{
-					num += _abundances[j]->FPKM()*_abundances[j]->FPKM();
-					denom += _abundances[j]->FPKM();
-				}
+				expr += _abundances[j]->cond_probs()->at(i) * _abundances[j]->FPKM();
 			}
-			alignments[i].read_group_props()->multi_read_table()->add_expr(alignments[i], (denom > 0) ? num/denom : 0);
+			alignments[i].read_group_props()->multi_read_table()->add_expr(alignments[i], expr);
 		}
 	}
 }

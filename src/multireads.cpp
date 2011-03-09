@@ -32,9 +32,9 @@ void MultiRead::add_expr(RefID r_id, int left, double expr)
 	_tot_expr += expr;
 }
 
-double MultiRead::get_mass(RefID r_id, int left)
+double MultiRead::get_mass(RefID r_id, int left, bool valid_mass)
 {
-	if (!*_valid_mass)
+	if (!valid_mass)
 	{
 		return 1.0/num_hits();
 	}
@@ -84,7 +84,7 @@ void MultiReadTable::add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_h
 	MultiRead* mr = get_read(mr_id);
 	if (!mr)
 	{
-		mr = &((_read_map.insert(std::make_pair(mr_id, MultiRead(mr_id, &_valid_mass, exp_num_hits)))).first->second); 
+		mr = &((_read_map.insert(std::make_pair(mr_id, MultiRead(mr_id, exp_num_hits)))).first->second); 
 	}
 	mr->add_hit(r_id, left);
 }
@@ -111,7 +111,7 @@ double MultiReadTable::get_mass(const MateHit& hit)
 	MultiRead* mr = get_read(hit.insert_id());
 	if(!mr)
 		return 1.0;
-	return mr->get_mass(hit.ref_id(), hit.left());
+	return mr->get_mass(hit.ref_id(), hit.left(), _valid_mass);
 }
 
 size_t MultiReadTable::num_multireads()
