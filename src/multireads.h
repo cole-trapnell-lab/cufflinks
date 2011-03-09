@@ -1,6 +1,8 @@
 #ifndef MULTIREADS_H
 #define MULTIREADS_H
 
+#include <boost/thread.hpp>
+
 typedef uint64_t RefID;
 typedef uint64_t InsertID;
 
@@ -42,14 +44,16 @@ class MultiReadTable
 	typedef std::map<InsertID, MultiRead> MultiReadMap;
 	MultiReadMap _read_map;
 	bool _valid_mass;
-
+	MultiRead* get_read(InsertID mr_id);
+#if ENABLE_THREADS
+	boost::mutex _lock;
+#endif
 public:
 	MultiReadTable(): _valid_mass(false) {}
 	
 	void valid_mass(bool vm) { _valid_mass = vm; }
-	MultiRead* get_read(InsertID mr_id);
-	MultiRead* add_hit(const MateHit& hit);
-	MultiRead* add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_hits);
+	void add_hit(const MateHit& hit);
+	void add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_hits);
 	void add_expr(const MateHit& hit, double expr);
 	void add_expr(RefID r_id, int left, InsertID mr_id, double expr);
 	double get_mass(const MateHit& hit);

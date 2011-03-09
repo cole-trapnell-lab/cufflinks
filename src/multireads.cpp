@@ -71,20 +71,22 @@ MultiRead* MultiReadTable::get_read(InsertID mr_id)
 	}
 }
 
-MultiRead* MultiReadTable::add_hit(const MateHit& hit)
+void MultiReadTable::add_hit(const MateHit& hit)
 {
-	return add_hit(hit.ref_id(), hit.left(), hit.insert_id(), hit.num_hits());
+	add_hit(hit.ref_id(), hit.left(), hit.insert_id(), hit.num_hits());
 }
 
-MultiRead* MultiReadTable::add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_hits)
+void MultiReadTable::add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_hits)
 {
+#if ENABLE_THREADS
+	boost::mutex::scoped_lock lock(_lock);
+#endif
 	MultiRead* mr = get_read(mr_id);
 	if (!mr)
 	{
 		mr = &((_read_map.insert(std::make_pair(mr_id, MultiRead(mr_id, &_valid_mass, exp_num_hits)))).first->second); 
 	}
 	mr->add_hit(r_id, left);
-	return mr;
 }
 
 void MultiReadTable::add_expr(const MateHit& hit, double expr)
@@ -94,12 +96,18 @@ void MultiReadTable::add_expr(const MateHit& hit, double expr)
 
 void MultiReadTable::add_expr(RefID r_id, int left, InsertID mr_id, double expr)
 {
+#if ENABLE_THREADS
+	boost::mutex::scoped_lock lock(_lock);
+#endif
 	MultiRead* mr = get_read(mr_id);
 	mr->add_expr(r_id, left, expr);
 }
 
 double MultiReadTable::get_mass(const MateHit& hit)
 {
+#if ENABLE_THREADS
+	boost::mutex::scoped_lock lock(_lock);
+#endif	
 	MultiRead* mr = get_read(hit.insert_id());
 	if(!mr)
 		return 1.0;
