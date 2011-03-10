@@ -639,13 +639,13 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	{
 		for(int l = fld->min(); l <= trans_len; l++)
 		{
-			tot_bias_for_len[l] = trans_len - l;
-			start_bias_for_len[l] = trans_len - l;
-			end_bias_for_len[l] = trans_len - l;
-			eff_len += fld->pdf(l) * (trans_len - l);
+			tot_bias_for_len[l] = trans_len - l + 1;
+			start_bias_for_len[l] = trans_len - l + 1;
+			end_bias_for_len[l] = trans_len - l + 1;
+			eff_len += fld->pdf(l) * (trans_len - l + 1);
 		}
 	}
-	
+		
 	_start_biases.push_back(start_bias);
 	_end_biases.push_back(end_bias);
 	_tot_biases_for_len.push_back(tot_bias_for_len);

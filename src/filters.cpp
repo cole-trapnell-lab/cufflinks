@@ -203,12 +203,14 @@ void pre_mrna_filter(int bundle_length,
             continue;
         }
         
+		//double thresh = (1.0/pre_mrna_fraction) * intron_background;
+		double thresh = pre_mrna_fraction * intron_background;
+
         for (size_t j = 0; j < hits.size(); ++j)
         {
             if (hits[j].is_ref())
                 continue;
-            double thresh = (1.0/pre_mrna_fraction) * intron_background;
-            
+			
             int len = 0;
             double doc = 0.0;
             size_t curr_op = 0;

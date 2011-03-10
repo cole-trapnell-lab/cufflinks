@@ -63,7 +63,7 @@ int ref_merge_overhang_tolerance = 30;
 int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 
 float min_isoform_fraction = 0.1;
-float pre_mrna_fraction = 0.25;
+float pre_mrna_fraction = 0.15;
 float high_phred_err_prob = 0.50; // about MAPQ = 3
 
 double transcript_score_thresh = -0.693;
