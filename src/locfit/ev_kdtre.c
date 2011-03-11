@@ -141,7 +141,7 @@ double *split_val;
 void kdtre_start(des,tr)
 design *des;
 lfit *tr;
-{ INT i, j, vc, d, nc, nv, ncm, nvm, k, m, n, p, *pi, fc;
+{ INT i, j, vc, d, nc, nv, ncm, nvm, k, m, n, p, *pi;
   double sv;
   d = tr->mi[MDIM]; n = tr->mi[MN]; pi = des->ind;
   kdtre_guessnv(&nvm,&ncm,&vc,tr->dp,tr->mi);

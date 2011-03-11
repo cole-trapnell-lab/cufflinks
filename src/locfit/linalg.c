@@ -207,6 +207,8 @@ INT p;
 void bacT(R,f,p,i0,i1)   /* R^{-1} (R^T)^{-1} f; p columns; use i0-(i1-1) */
 double *R, *f;
 INT p;
+int i0;
+int i1;
 { INT i, j;
   for (i=i0; i<i1; i++)
   { for (j=i0; j<i; j++)

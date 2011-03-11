@@ -14,6 +14,7 @@
 #include "abundances.h"
 #include "differential.h"
 #include "clustering.h"
+#include "differential.h"
 
 using namespace std;
 

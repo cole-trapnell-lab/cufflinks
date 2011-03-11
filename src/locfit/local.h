@@ -106,10 +106,10 @@ extern double Rf_lgammafn();
 #include "lffuns.h"
 
 #ifdef CVERSION
-#undef printf
-#define printf lfprintf
-extern int lfprintf(const char *format, ...);
-extern int printf(const char *format, ...);
+//#undef printf
+//#define printf lfprintf
+//extern int lfprintf(const char *format, ...);
+//extern int printf(const char *format, ...);
 #endif
 
 #ifdef SVERSION
@@ -143,8 +143,6 @@ extern INT lf_error;
 
 extern INT lf_error;
 
-/* a version of exp() that shouldn't overflow */
-static double lf_exp_t;
-#define lf_exp(x) (((lf_exp_t=x)<700.0) ? exp(lf_exp_t) : exp(700.0))
+double lf_exp(double x);
 
 #endif /* I_LF_H */

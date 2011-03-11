@@ -29,6 +29,8 @@ double vne(double e1,double e2) { return((double)(e1!=e2)); }
 
 arstruct art;
 
+double lf_exp(double x) { return (x<700.0) ? exp(x) : exp(700.0); }
+
 double vseq(double a,double b,int i,int n) { return(a+(b-a)*i/(n-1)); }
 
 double rsample(v)

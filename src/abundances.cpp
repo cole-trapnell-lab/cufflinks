@@ -26,6 +26,7 @@
 #include <boost/math/constants/constants.hpp>
 
 #include "filters.h"
+#include "replicates.h"
 
 //#define USE_LOG_CACHE
 
@@ -90,6 +91,17 @@ double AbundanceGroup::mass_fraction() const
 		mass += ab->mass_fraction();
 	}
 	return mass;
+}
+
+double AbundanceGroup::mass_variance_fraction() const
+{
+	double mass_var = 0;
+	
+	foreach(shared_ptr<Abundance> ab, _abundances)
+	{
+		mass_var += ab->mass_variance_fraction();
+	}
+	return mass_var;
 }
 
 double AbundanceGroup::FPKM() const
@@ -321,15 +333,22 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
     
     double avg_X_g = 0.0;
     double avg_mass_fraction = 0.0;
+    double avg_variance_fraction = 0.0;
+    
     
     for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = count_per_replicate.begin();
          itr != count_per_replicate.end();
          ++itr)
     {
-        avg_X_g += itr->second;
-        assert (itr->first->total_map_mass() != 0.0);
         shared_ptr<ReadGroupProperties const> rg_props = itr->first;
-        avg_mass_fraction += (itr->second / rg_props->total_map_mass());
+        double scaled_mass = rg_props->scale_mass(itr->second);
+        double scaled_total_mass = rg_props->scale_mass(rg_props->total_map_mass());
+        avg_X_g += scaled_mass;
+        shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
+        double scaled_variance = disperser->scale_mass_variance(scaled_mass);
+        avg_variance_fraction += scaled_variance / scaled_total_mass;
+        assert (scaled_total_mass != 0.0);
+        avg_mass_fraction += (scaled_mass / scaled_total_mass);
     }
     
     double num_replicates = count_per_replicate.size();
@@ -338,13 +357,19 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
     {
         avg_X_g /= num_replicates;
         avg_mass_fraction /= num_replicates;
+        avg_variance_fraction /= num_replicates;
     }
     
 	for (size_t j = 0; j < N; ++j)
 	{
 		_abundances[j]->num_fragments(_abundances[j]->gamma() * avg_X_g);
+        
         double j_avg_mass_fraction = _abundances[j]->gamma() * avg_mass_fraction;
         _abundances[j]->mass_fraction(j_avg_mass_fraction);
+        
+        double j_avg_variance_fraction = _abundances[j]->gamma() * avg_variance_fraction;
+        _abundances[j]->mass_variance_fraction(j_avg_variance_fraction);
+        
         if (j_avg_mass_fraction)
         {
             double FPKM = j_avg_mass_fraction * 1000000000/ _abundances[j]->effective_length();
@@ -408,7 +433,7 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 }
 
 void AbundanceGroup::calculate_conf_intervals()
-{
+{        
 	if (status() == NUMERIC_OK)
 	{
 		// This will compute the transcript level FPKM confidence intervals
@@ -421,7 +446,8 @@ void AbundanceGroup::calculate_conf_intervals()
                 double norm_frag_density = 1000000000;
                 norm_frag_density /= _abundances[j]->effective_length();
                 
-                norm_frag_density *= mass_fraction();
+                norm_frag_density *= mass_variance_fraction();
+                
                 iso_fpkm_var = norm_frag_density * _abundances[j]->gamma();
                 iso_fpkm_var += norm_frag_density * norm_frag_density * _gamma_covariance(j,j);
                 
@@ -466,7 +492,7 @@ void AbundanceGroup::calculate_conf_intervals()
 			if (pA->effective_length() > 0)
 			{
                 // FIXME: correct this
-                double fpkm_coeff = mass_fraction();
+                double fpkm_coeff = mass_variance_fraction();
                 fpkm_coeff *= 1000000000;
                 fpkm_coeff /= pA->effective_length();
                 double fpkm_high = fpkm_coeff * gamma();
@@ -525,7 +551,7 @@ void AbundanceGroup::calculate_FPKM_variance()
         }    
     }
     
-    double mass_coeff = (1000000000 * mass_fraction());
+    double mass_coeff = (1000000000 * mass_variance_fraction());
 	//double left = (mass_coeff * gamma());
     double eff_len = effective_length(); 
     //double right = (mass_coeff * mass_coeff * var_cumul_gamma);

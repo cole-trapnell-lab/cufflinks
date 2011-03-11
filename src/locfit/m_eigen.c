@@ -60,14 +60,14 @@ int d;
         }
     if (ms==0) return;
   }
-  printf("eig_dec not converged\n");
+  //printf("eig_dec not converged\n");
 }
 
 int eig_solve(J,x)
 jacobian *J;
 double *x;
 { int d, i, j, rank;
-  double mx, *D, *P, *Q, *w;
+  double  *D, *P, *Q, *w;
   double tol;
 
   D = J->Z;
@@ -98,7 +98,7 @@ int eig_hsolve(J,v)
 jacobian *J;
 double *v;
 { int i, j, p, rank;
-  double mx, *D, *Q, *w;
+  double *D, *Q, *w;
   double tol;
 
   D = J->Z;

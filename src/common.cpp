@@ -25,6 +25,7 @@
 
 #include "getopt.h"
 #include "common.h"
+#include "replicates.h"
 
 using namespace std;
 
@@ -107,6 +108,8 @@ int min_frags_per_transfrag = 10;
 
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
+
+bool poisson_dispersion = false;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
@@ -238,7 +241,7 @@ out:
     free(path);
     return (rv);
 }
-    
+
 void init_library_table()
 {
     ReadGroupProperties fr_unstranded;
@@ -340,3 +343,13 @@ void encode_seq(const string seqStr, char* seq, char* c_seq)
 	}
 }
 
+
+ReadGroupProperties::ReadGroupProperties() : 
+    _strandedness(UNKNOWN_STRANDEDNESS), 
+    _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
+    _platform(UNKNOWN_PLATFORM),
+    _total_map_mass(0.0),
+    _mass_scaling_factor(1.0)
+{
+    _mass_dispersion_model = boost::shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
+} 

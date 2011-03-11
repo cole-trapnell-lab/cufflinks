@@ -104,7 +104,7 @@ extern int ident, locfit(), lf_iter();
 /* math.c */
 extern double lflgamma(), lferf(), lferfc(), lfdaws();
 extern double ptail(), logit(), expit();
-extern double lgamma(), erf(), erfc();
+//extern double lgamma(), erf(), erfc();
 extern int factorial();
 
 /* minmax.c */
@@ -185,7 +185,7 @@ extern char *argval(), *getargval();
 extern int getarg(), readilist(), getlogic();
 
 /* cmd.c */
-extern INT dispatch();
+extern int locfit_dispatch(char*);
 extern void setuplf(), recondat(), cmdint();
 extern double backtr(), docrit();
 
@@ -226,7 +226,9 @@ extern void cscbmax();
 
 /* vari.c */
 extern INT vbytes();
-//extern vari *createvar(), *findvar();
+extern vari *createvar(varname name,int status, int n, int mode);
+extern vari* findvar(varname name, int err, int *n);
+
 extern void initdb(), deletevar(), deletename(), deleteifhidden(), setvarname();
 extern void *viptr(), vassn();
 extern double *vdptr(), vitem();

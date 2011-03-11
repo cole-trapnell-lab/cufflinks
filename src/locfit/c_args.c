@@ -65,7 +65,7 @@ int *ivec, n0, n1, pad;
   }
   for (i=0; i<n; i++)
   { nd = sscanf(z,"%d",&ivec[i]);
-    if (nd!=1) WARN(("problem scaning ilist %s",&ivec[i]));
+    //if (nd!=1) WARN(("problem scaning ilist %s",&ivec[i]));
     if (i<n-1) while (*z!=' ') z++;
   }
   if (pad)

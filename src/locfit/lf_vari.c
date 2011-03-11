@@ -85,7 +85,7 @@ lfit *lf;
 design *des;
 double *tr, *t0;
 { int i, j, k, p;
-  double *M12, *M2, ww, link[LLEN];
+  double *M12, *M2;
   M12 = des->V; M2 = des->P; p = des->p;
   vmat(lf,des,M12,M2,tr); /* M2 = X^T W^2 V X  tr0=sum(W) tr1=sum(W*W) */
   tr[2] = m_trace(M12,p);   /* tr (XTWVX)^{-1}(XTW^2VX) */

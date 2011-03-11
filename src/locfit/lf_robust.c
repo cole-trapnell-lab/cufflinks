@@ -25,6 +25,8 @@
 
 #include "local.h"
 
+void lfiter(lfit* lf, design* des);
+
 extern int lf_status;
 double robscale;
 

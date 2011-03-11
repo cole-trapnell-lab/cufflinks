@@ -31,6 +31,7 @@ INT lf_error, lfcm[10];
 
 vari *curstr;
 void cmdint();
+void del_lines();
 
 /*
 INDEX  data input and output functions
@@ -97,7 +98,7 @@ INDEX  Call fitting functions e.t.c.
 
 void ckap(v)
 vari *v;
-{ INT i, nd, dv[1+MXDIM];
+{ INT i, nd;
   nd = 0;
   if (v->n==1) /* compute for existing fit */
   { if (nofit()) { ERROR(("ckap: no fit, no arguments")); }
@@ -376,7 +377,7 @@ vari *va;
   for (i=0; i<root.n; i++)
   { v = viptr(&root,i);
     if (all || (v->stat==STREGULAR))
-    { printf("  %10s  %4d",v->name,vlength(v));
+    { //printf("  %10s  %4d",v->name,vlength(v));
       if (all)
       { switch(v->stat)
         { case STEMPTY:   printf("  empty  "); break;
@@ -397,9 +398,9 @@ vari *va;
           case VXYZ:      printf("  plxyz  "); break;
           default:        printf("  unknown"); break;
         }
-        printf("  %3d  %d",vlength(v),vdptr(v));
+        //printf("  %3d  %d",vlength(v),vdptr(v));
       }
-      printf("\n");
+      //printf("\n");
     }
   }
   return;
@@ -579,7 +580,7 @@ vari *v;
 INDEX control functions:
     setout(): set output file.
     cmdint(): send off the command...
-    dispatch(): called by the main program.
+    locfit_dispatch(): called by the main program.
 */
 
 void setout(v)
@@ -744,7 +745,7 @@ vari *v;
   }
 
   /* now, print the unassigned variables.
-   */
+   
   for (i=0; i<mn; i++)
   { for (j=0; j<vlength(v); j++)
     { vr = ((carg *)viptr(v,j))->result;
@@ -757,13 +758,14 @@ vari *v;
     }
     printf("\n");
   }
+   */
 
   for (i=0; i<vlength(v); i++)
     deleteifhidden(((carg *)viptr(v,i))->result);
 }
 
-INT dispatch(z)
-char *z;
+INT locfit_dispatch(char *z)
+
 { vari *v;
 
   makecmd(z);
@@ -807,23 +809,23 @@ void setuplf()
     pl[i].ty = PLNONE;
     pl[i].track = NULL;
   }
-  SetWinDev(&devwin);
-  SetPSDev(&devps);
-  AC("white",255,255,255,0);
-  AC("black",  0,  0,  0,1);
-  AC(  "red",255,  0,  0,2);
-  AC("green",  0,255,  0,3);
-  AC( "blue",  0,  0,255,4);
-  AC("magenta",255,0,255,5);
-  AC("yellow",255,255, 0,6);
-  AC( "cyan",  0,255,255,7);
+  //SetWinDev(&devwin);
+  //SetPSDev(&devps);
+//  AC("white",255,255,255,0);
+//  AC("black",  0,  0,  0,1);
+//  AC(  "red",255,  0,  0,2);
+//  AC("green",  0,255,  0,3);
+//  AC( "blue",  0,  0,255,4);
+//  AC("magenta",255,0,255,5);
+//  AC("yellow",255,255, 0,6);
+//  AC( "cyan",  0,255,255,7);
   lfcm[0] = 0;
   for (i=CAXI; i<=CPA1; i++) lfcm[i] = 1;
   lfcm[CPA2] = 2;
   rseed("LocalFit");
   if (setfilename("LFInit","cmd","r",0))
   { sprintf(command,"run %s",filename);
-    dispatch(command);
+    locfit_dispatch(command);
   }
 }
 

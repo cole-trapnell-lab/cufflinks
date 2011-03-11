@@ -5,6 +5,8 @@
 
 #include "local.h"
 
+void kdtre_guessnv(int* nvm, int* ncm, int* vc, double* dp, int* mi);
+
 INT cvi=-1;
 
 /*

@@ -83,6 +83,7 @@ static struct option long_options[] = {
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
+{"poisson-dispersion",		 no_argument,		 0,			     OPT_POISSON_DISPERSION},
 #if ADAM_MODE
 {"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
 #endif
@@ -118,6 +119,7 @@ void print_usage()
 	fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
 	fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "  --poisson-dispersion         Don't fit counts for overdispersion                   [ default:  FALSE ]\n");
     print_library_table();
 }
 
@@ -243,6 +245,11 @@ int parse_options(int argc, char** argv)
             case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
+				break;
+			}
+            case OPT_POISSON_DISPERSION:
+			{
+				poisson_dispersion = true;
 				break;
 			}
 

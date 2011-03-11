@@ -142,7 +142,7 @@ design *des;
 lfit *lf;
 int p;
 double *z, *coef;
-{ int i, st;
+{ int st;
   double f;
 
   setzero(coef,p);
@@ -221,7 +221,7 @@ if (sing) printf("final singular\n");
 }
 
 double findab(double gam)
-{ double *coef, f, sl;
+{ double *coef, sl;
   int i, p, nr_stat;
 
   mm_gam = gam;

@@ -81,7 +81,15 @@ noinst_HEADERS = \
 	lemon/concepts/heap.h \
 	lemon/concepts/maps.h \
 	lemon/concepts/path.h \
-	lemon/concepts/matrix_maps.h \
+    lemon/concepts/matrix_maps.h \
+    locfit/design.h	\
+    locfit/lfcons.h	\
+    locfit/lfstruc.h \
+    locfit/local.h \
+    locfit/imatlb.h	\
+    locfit/lffuns.h	\
+    locfit/lfwin.h \
+    locfit/mutil.h \
 	common.h 
 
 noinst_LIBRARIES = libcufflinks.a libgc.a
@@ -102,6 +110,57 @@ libcufflinks_a_SOURCES = \
     matching_merge.cpp \
     graph_optimize.cpp \
     biascorrection.cpp \
+    locfit/adap.c \
+    locfit/ar_funs.c \
+    locfit/arith.c \
+    locfit/band.c \
+    locfit/c_args.c \
+    locfit/c_plot.c \
+    locfit/cmd.c \
+    locfit/dens_haz.c \
+    locfit/dens_int.c \
+    locfit/dens_odi.c \
+    locfit/density.c \
+    locfit/dist.c \
+    locfit/ev_atree.c \
+    locfit/ev_interp.c \
+    locfit/ev_kdtre.c \
+    locfit/ev_main.c \
+    locfit/ev_trian.c \
+    locfit/family.c \
+    locfit/fitted.c \
+    locfit/frend.c \
+    locfit/help.c \
+    locfit/lf_dercor.c \
+    locfit/lf_fitfun.c \
+    locfit/lf_robust.c \
+    locfit/lf_vari.c \
+    locfit/lfd.c \
+    locfit/lfstr.c \
+    locfit/linalg.c \
+    locfit/locfit.c \
+    locfit/m_chol.c \
+    locfit/m_eigen.c \
+    locfit/m_jacob.c \
+    locfit/m_max.c \
+    locfit/makecmd.c \
+    locfit/math.c \
+    locfit/minmax.c \
+    locfit/nbhd.c \
+    locfit/pcomp.c \
+    locfit/pout.c \
+    locfit/preplot.c \
+    locfit/random.c \
+    locfit/readfile.c \
+    locfit/scb.c \
+    locfit/scb_cons.c \
+    locfit/simul.c \
+    locfit/solve.c \
+    locfit/startlf.c \
+    locfit/strings.c \
+    locfit/vari.c \
+    locfit/wdiag.c \
+    locfit/weight.c \
     jensen_shannon.cpp 
 	
 libgc_a_SOURCES = \

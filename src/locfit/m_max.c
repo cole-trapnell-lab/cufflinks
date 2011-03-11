@@ -31,6 +31,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "mutil.h"
 extern double innerprod();
 

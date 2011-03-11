@@ -113,5 +113,5 @@ extern void ReadFileDlg(), ReadDataDlg(), SaveDataDlg(), RunDlg();
 extern void ReadFitDlg();
 
 /* windlg.c */
-extern void BandDlg(), LocfitDlg(), PlotDataDlg(), wdispatch();
+extern void BandDlg(), LocfitDlg(), PlotDataDlg(), wlocfit_dispatch();
 extern int LFDefDlgProc();

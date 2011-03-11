@@ -91,6 +91,7 @@ INT v;
 void set_default_like(lf,nvm,v,d)
 lfit *lf;
 INT nvm, v;
+int d;
 { INT i;
   lf->lik[v] = lf->lik[nvm+v] = 0;
   lf->lik[2*nvm+v] = 0; /* should use sum of weights here? */

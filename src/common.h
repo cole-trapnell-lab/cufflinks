@@ -86,6 +86,7 @@ extern double binomial_junc_filter_alpha;
 extern std::string library_type;
 
 extern int min_frags_per_transfrag;
+extern bool poisson_dispersion;
 
 
 #define ADAM_MODE 0
@@ -248,15 +249,14 @@ public:
 class BiasLearner;
 class MultiReadTable;
 
+class MassDispersionModel;
+
+
 class ReadGroupProperties
 {
 public:
     
-    ReadGroupProperties() : 
-    _strandedness(UNKNOWN_STRANDEDNESS), 
-    _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
-    _platform(UNKNOWN_PLATFORM),
-    _total_map_mass(0.0) {} 
+    ReadGroupProperties(); 
     
     Strandedness strandedness() const { return _strandedness; }
     void strandedness(Strandedness s) { _strandedness = s; }
@@ -279,8 +279,26 @@ public:
 	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
     void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 
 	
-	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }
-	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt; }
+    void mass_scale_factor(double sf) { _mass_scaling_factor = sf; }
+    double mass_scale_factor() const  { return _mass_scaling_factor; }
+    
+    double scale_mass(double unscaled_mass) const 
+    { 
+        return unscaled_mass * (1.0 / _mass_scaling_factor);
+    }
+    
+    boost::shared_ptr<const MassDispersionModel> mass_dispersion_model() const 
+    { 
+        return _mass_dispersion_model; 
+    };
+    
+    void mass_dispersion_model(boost::shared_ptr<const MassDispersionModel> nm) 
+    { 
+        _mass_dispersion_model = nm; 
+    }
+    
+	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
+	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
 	
 private:
     
@@ -292,6 +310,9 @@ private:
     boost::shared_ptr<EmpDist const> _frag_len_dist;
 	boost::shared_ptr<BiasLearner const> _bias_learner;
 	boost::shared_ptr<MultiReadTable> _multi_read_table;
+    
+    double _mass_scaling_factor;
+    boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;
@@ -312,5 +333,5 @@ void init_library_table();
 #define OPT_MIN_INTRON_LENGTH       268
 #define OPT_3_PRIME_AVGCOV_THRESH	269
 #define OPT_3_PRIME_DROPOFF_FRAC    270
-
+#define OPT_POISSON_DISPERSION      271
 #endif

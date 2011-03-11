@@ -83,6 +83,7 @@ double loccp(h,des,tr,m) /* m=1: cp    m=2: gcv */
 double h;
 design *des;
 lfit *tr;
+int m;
 { double cp;
   INT dg;
   tr->dp[DALP] = 0;

@@ -54,6 +54,8 @@ double vmean(vari *v) { return(vsum(v)/vlength(v)); }
 
 int ar_setfunction(rt,z,len)
 arstruct *rt;
+int z;
+int len;
 { int rargs;
   rt->f = NULL;
   rt->cmd = 'f';
@@ -83,9 +85,9 @@ arstruct *rt;
     if (stm(z,"dnorm",5)) rt->f = vdnorm;
     if (stm(z,"logit",5)) rt->f = logit;
     if (stm(z,"expit",5)) rt->f = expit;
-   // if (stm(z,"runif",5)) { rt->f = runif; rt->cmd='G'; }
+    if (stm(z,"runif",5)) { rt->f = runif; rt->cmd='G'; }
     if (stm(z,"rnorm",5)) { rt->f = vrnorm;rt->cmd='G'; }
-   // if (stm(z,"rpois",5)) { rt->f = rpois; rt->cmd='H'; rargs=2; }
+    if (stm(z,"rpois",5)) { rt->f = rpois; rt->cmd='H'; rargs=2; }
   }
   if (len==6)
   { if (stm(z,"sample",6)) { rt->f = dummyf;rt->cmd='M'; rargs=2; }
@@ -97,7 +99,7 @@ arstruct *rt;
   }
   if (rt->f==NULL)
   { rt->cmd = 'e';
-    ERROR(("unknown function %s",z));
+    ERROR(("unknown function"));
   }
   return(rargs);
 }
