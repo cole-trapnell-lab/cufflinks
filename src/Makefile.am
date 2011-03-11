@@ -90,6 +90,8 @@ noinst_HEADERS = \
     locfit/lffuns.h	\
     locfit/lfwin.h \
     locfit/mutil.h \
+    replicates.h \
+    multireads.h \
 	common.h 
 
 noinst_LIBRARIES = libcufflinks.a libgc.a
@@ -161,6 +163,8 @@ libcufflinks_a_SOURCES = \
     locfit/vari.c \
     locfit/wdiag.c \
     locfit/weight.c \
+    replicates.cpp \
+    multireads.cpp \
     jensen_shannon.cpp 
 	
 libgc_a_SOURCES = \

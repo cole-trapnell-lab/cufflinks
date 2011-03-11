@@ -85,7 +85,7 @@ bool test_diffexp(const FPKMContext& curr,
 		{
 			//test = SampleDifference(sample1, sample2, prev.FPKM, 0, -DBL_MAX, 0, transcript_group_id); 
 			test.p_value = 0;
-			test.differential = -numeric_limits<double>::max();;
+			test.differential = -numeric_limits<double>::max();
 			test.test_stat = -numeric_limits<double>::max();
 			test.value_1 = prev.FPKM;
 			test.value_2 = 0;

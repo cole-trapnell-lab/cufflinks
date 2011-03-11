@@ -240,7 +240,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
     disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
-/*
+
     char sample_name_buf[256];
     int sample_id = rand();
     sprintf(sample_name_buf, "%d_counts.txt", sample_id);
@@ -258,7 +258,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
         }
         fclose(sample_count_file);
     }  
-*/
+
     
     return disperser;
 }
