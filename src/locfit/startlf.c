@@ -411,7 +411,7 @@ vari *v;
         return;
     }
     
-    printf("Evaluation structure %d, %d points.\n",lf.mi[MEV],lf.nv);
+    //printf("Evaluation structure %d, %d points.\n",lf.mi[MEV],lf.nv);
     if (argarg(v,0) != NULL) dosavefit(&lf,argarg(v,0),"wb",(INT)0);
     endfit();
 }

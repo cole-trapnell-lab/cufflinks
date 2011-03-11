@@ -175,18 +175,25 @@ public:
             }
         }
         
+        for (size_t i = 0; i < _factories.size(); ++i)
+        {
+            shared_ptr<ReadGroupProperties> rg_props = _factories[i]->read_group_properties();
+            vector<pair<string, double> > scaled_counts;
+            for (size_t j = 0; j < sample_count_table.size(); ++j)
+            {
+                scaled_counts.push_back(make_pair(sample_count_table[j].first, sample_count_table[j].second[i]));
+            }
+            rg_props->common_scale_counts(scaled_counts);
+        }
+        
         shared_ptr<MassDispersionModel const> disperser;
         disperser = fit_dispersion_model(scale_factors, sample_count_table);
-        
         
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             rg_props->mass_dispersion_model(disperser);
         }
-        
-
-        
     }
     
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
@@ -206,6 +213,8 @@ public:
             fac->set_mask_rnas(mRNAs);
         }
     }
+    
+    int num_replicates() const { return _factories.size(); }
     
 private:
 	vector<shared_ptr<BundleFactory> > _factories;

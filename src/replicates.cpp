@@ -135,7 +135,7 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
                 geom_means[i] = p.second[j];
             }
         }
-        geom_means[i] = pow(geom_means[i], 1.0/p.second.size());
+        geom_means[i] = pow(geom_means[i], 1.0/(double)p.second.size());
     }
     
     for (size_t j = 0; j < scale_factors.size(); ++j)
@@ -143,8 +143,12 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
         vector<double> tmp_counts;
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
-            if (geom_means[i])
-                tmp_counts.push_back(sample_count_table[i].second[j] / geom_means[i]);
+            if (geom_means[i] && !isinf(geom_means[i]) && !isnan(geom_means[i]) && sample_count_table[i].second[j])
+            {
+                double gm = (double)sample_count_table[i].second[j] / geom_means[i];
+                assert (!isinf(gm));
+                tmp_counts.push_back(gm);
+            }
         }
         sort(tmp_counts.begin(), tmp_counts.end());
         if (!tmp_counts.empty())
@@ -164,6 +168,17 @@ fit_dispersion_model(const vector<double>& scale_factors,
 #endif
     
     vector<pair<double, double> > raw_means_and_vars;
+    
+    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    {
+        if (sample_count_table[i].second.size() <= 1)
+        {
+            // only one replicate - no point in fitting variance
+            return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
+        }
+    }
+    
+    ProgressBar p_bar("Modeling fragment count overdispersion.",0);
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
@@ -240,7 +255,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
     disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
-
+/*
     char sample_name_buf[256];
     int sample_id = rand();
     sprintf(sample_name_buf, "%d_counts.txt", sample_id);
@@ -258,7 +273,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
         }
         fclose(sample_count_file);
     }  
-
+*/
     
     return disperser;
 }

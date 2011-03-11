@@ -603,7 +603,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
 	
-	vector<ReplicatedBundleFactory> bundle_factories;    
+	vector<ReplicatedBundleFactory> bundle_factories;
+    vector<shared_ptr<ReadGroupProperties> > all_read_groups;
     vector<shared_ptr<HitFactory> > all_hit_factories;
     
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
@@ -648,6 +649,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             {
                 *rg_props = hs->read_group_properties();
             }
+            
+            all_read_groups.push_back(rg_props);
             
             hf->read_group_properties(rg_props);
             
@@ -729,7 +732,79 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
 #endif
+    
+    bool single_replicate_factory = false;
+    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+    {
+        if (fac.num_replicates() == 1)
+        {
+            single_replicate_factory = true;
+        }
+        
+    }
+    
+    if (single_replicate_factory == true && poisson_dispersion == false)
+    {
+        vector<pair<string, vector<double> > > sample_count_table;
+        foreach(shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+        {
+            const vector<pair<string, double> >& common_count_table = rg_props->common_scale_counts();
+            double unscaling_factor = 1.0 / rg_props->mass_scale_factor();
+            for (size_t j = 0; j < common_count_table.size(); ++j)
+            {
+                if (sample_count_table.size() == j)
+                {
+                    sample_count_table.push_back(make_pair(common_count_table[j].first, vector<double>()));
+                }
+                double scaled = common_count_table[j].second;
+                sample_count_table[j].second.push_back(scaled * unscaling_factor);
+                assert(sample_count_table[j].second.back() >= 0 && !isinf(sample_count_table[j].second.back()));
+            }
+        }
+        
+        vector<double> scale_factors(all_read_groups.size(), 0.0);
+        
+        // TODO: needs to be refactored - similar code exists in replicates.cpp
+        calc_scaling_factors(sample_count_table, scale_factors);
+        
+        for (size_t i = 0; i < all_read_groups.size(); ++i)
+        {
+            shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+            rg_props->mass_scale_factor(scale_factors[i]);
+        }
+        
+        // Transform raw counts to the common scale
+        for (size_t i = 0; i < sample_count_table.size(); ++i)
+        {
+            pair<string, vector<double> >& p = sample_count_table[i];
+            for (size_t j = 0; j < p.second.size(); ++j)
+            {
+                assert (scale_factors.size() > j);
+                p.second[j] *= (1.0 / scale_factors[j]);
+            }
+        }
+        
+        for (size_t i = 0; i < all_read_groups.size(); ++i)
+        {
+            shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+            vector<pair<string, double> > scaled_counts;
+            for (size_t j = 0; j < sample_count_table.size(); ++j)
+            {
+                scaled_counts.push_back(make_pair(sample_count_table[i].first, sample_count_table[i].second[j]));
+            }
+            rg_props->common_scale_counts(scaled_counts);
+        }
+        
+        shared_ptr<MassDispersionModel const> disperser;
+        disperser = fit_dispersion_model(scale_factors, sample_count_table);
 
+        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+        {
+            rg_props->mass_dispersion_model(disperser);
+        }
+
+    }
+    
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	

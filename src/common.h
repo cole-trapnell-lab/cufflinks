@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <cassert>
 #include <string>
+#include <utility>
 
 #include <boost/math/distributions/normal.hpp> 
 using boost::math::normal;
@@ -297,6 +298,9 @@ public:
         _mass_dispersion_model = nm; 
     }
     
+    const std::vector<std::pair<std::string, double> >& common_scale_counts() { return _common_scale_counts; }
+    void common_scale_counts(const std::vector<std::pair<std::string, double> >& counts) { _common_scale_counts = counts; }
+    
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
 	
@@ -313,6 +317,7 @@ private:
     
     double _mass_scaling_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
+    std::vector<std::pair<std::string, double> > _common_scale_counts;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;
