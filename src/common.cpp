@@ -36,18 +36,6 @@ bool corr_multi = false;
 BundleMode bundle_mode = HIT_DRIVEN;
 BiasMode bias_mode = VLMM;
 
-
-//int insert_len = 250;
-//int insert_len_std_dev = 20;
-//
-//uint32_t min_anchor_len = 5;
-uint32_t min_intron_length = 50;
-uint32_t max_intron_length = 300000;
-//uint32_t min_exon_length = 100; 
-
-double trim_3_dropoff_frac = .1;
-double trim_3_avgcov_thresh = 10.0;
-
 uint32_t max_gene_length = 3500000;
 int max_partner_dist = 50000;
 bool user_provided_fld = false;
@@ -58,16 +46,22 @@ int max_frag_len = 800;
 int min_frag_len = 1;
 int olap_radius = 50;
 
+
+// Ref-guided assembly options
 int overhang_3 = 600;
-
 int ref_merge_overhang_tolerance = 30;
-int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 
+// General assembly options
+int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 float min_isoform_fraction = 0.1;
 float pre_mrna_fraction = 0.15;
 float high_phred_err_prob = 0.50; // about MAPQ = 3
-
+uint32_t min_intron_length = 50;
+uint32_t max_intron_length = 300000;
 double transcript_score_thresh = -0.693;
+double trim_3_dropoff_frac = .1;
+double trim_3_avgcov_thresh = 10.0;
+
 
 int num_threads = 1;
 

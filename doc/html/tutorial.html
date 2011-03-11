@@ -207,10 +207,20 @@
 				<blockquote>cufflinks ./test_data.sam</blockquote><br/>
 				You should see the following output:
 				<pre>
-Counting hits in map
-	Total map density: 13725.000000
-Processing bundle [ test_chromosome:52-550 ] with 99 non-redundant alignments
-				</pre>
+[bam_header_read] EOF marker is absent. The input is probably truncated.
+[bam_header_read] invalid BAM binary header (this is not a BAM file).
+File ./test_data.sam doesn't appear to be a valid BAM file, trying SAM...
+[13:23:15] Inspecting reads and determining fragment length distribution.
+> Processed 1 loci.                            [*************************] 100%
+> Map Properties:
+>       Total Map Mass: 104.00
+>       Read Type: 75bp paired-end
+>       Fragment Length Distribution: Gaussian (default)
+>                     Estimated Mean: 209.55
+>                  Estimated Std Dev: 70.54
+[13:23:15] Assembling transcripts and estimating abundances.
+> Processed 1 loci.                            [*************************] 100%
+</pre>
 				
 			<li>Verify that the file <tt>transcripts.gtf</tt> is in the current
 				directory and looks like this (your file will have GTF attributes, omitted here for clarity)

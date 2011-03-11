@@ -1171,6 +1171,10 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 		bl_ptr->output();
 #endif
 	}
+	
+	fclose(ftranscripts);
+	fclose(ftrans_abundances);
+	fclose(fgene_abundances);
 	return true;
 }
 	
@@ -1272,6 +1276,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 		ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
         ref_mRNAs.clear();
         ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, corr_bias, true);
+		bundle_mode = REF_DRIVEN;
     }    
 	bundle_factory2.set_ref_rnas(ref_mRNAs);
     if (mask_gtf)
@@ -1282,7 +1287,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     }    
 	bundle_factory2.reset();
 	
-	if(bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED) // We still need to learn the bias since we didn't have the sequences before assembly
+	if(corr_bias && (bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED)) // We still need to learn the bias since we didn't have the sequences before assembly
 	{
 		learn_bias(bundle_factory2, *bl_ptr);
 		bundle_factory2.reset();

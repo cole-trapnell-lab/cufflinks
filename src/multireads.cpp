@@ -3,7 +3,7 @@
  *  cufflinks
  *
  *  Created by Adam Roberts on 3/6/11.
- *  Copyright 2011 UC Berkeley. All rights reserved.
+ *  Copyright 2011 Adam Roberts. All rights reserved.
  *
  */
 
