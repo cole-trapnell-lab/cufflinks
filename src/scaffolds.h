@@ -425,7 +425,7 @@ public:
 	// Clip final 3' exon by given amount
 	void trim_3(int to_remove);
 
-	void tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int max_len, int tile_offset) const;
+	void tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int tile_offset) const;
 
 	// Creates a scaffold that matches this one but only covers the section from g_left for
 	// a distance of match_length.  It is assumed that this region is contained in the scaffold.

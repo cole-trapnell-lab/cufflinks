@@ -29,81 +29,74 @@
 
 using namespace std;
 
+// Non-option globals
 bool final_est_run = true;
-bool corr_bias = false;
-bool corr_multi = false;
-
-BundleMode bundle_mode = HIT_DRIVEN;
-BiasMode bias_mode = VLMM;
-
-uint32_t max_gene_length = 3500000;
-int max_partner_dist = 50000;
+bool allow_junk_filtering = true;
 bool user_provided_fld = false;
-int def_frag_len_mean = 200;
-int def_frag_len_std_dev = 80;
-int def_max_frag_len = 800;
-int max_frag_len = 800;
-int min_frag_len = 1;
-int olap_radius = 50;
 
 
-// Ref-guided assembly options
-int overhang_3 = 600;
-int ref_merge_overhang_tolerance = 30;
-
-// General assembly options
-int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
-float min_isoform_fraction = 0.1;
-float pre_mrna_fraction = 0.15;
-float high_phred_err_prob = 0.50; // about MAPQ = 3
-uint32_t min_intron_length = 50;
-uint32_t max_intron_length = 300000;
-double transcript_score_thresh = -0.693;
-double trim_3_dropoff_frac = .1;
-double trim_3_avgcov_thresh = 10.0;
-
-
+// Behavior options
 int num_threads = 1;
-
-float max_phred_err_prob = 1.0;
-
-std::string user_label = "CUFF";
-std::string ref_gtf_filename = "";
-std::string mask_gtf_filename = "";
-std::string output_dir = "./";
-std::string fasta_dir;
-
-int microexon_length = 25;
-
-bool perform_full_collapse = true;
-
+bool no_update_check = false;
+bool cuff_quiet = false;
 #if ASM_VERBOSE
 bool cuff_verbose = true;
 #else
 bool cuff_verbose = false;
 #endif
 
-bool cuff_quiet = false;
 
-bool allow_junk_filtering = true;
-
-bool use_quartile_norm = false;
-
-int max_mle_iterations = 5000;
-int num_importance_samples = 1000;
-
-double small_anchor_fraction = 7 / 75.0;
-double binomial_junc_filter_alpha = 0.001;
-
+// General options
+BundleMode bundle_mode = HIT_DRIVEN;
+int max_partner_dist = 50000;
+uint32_t max_gene_length = 3500000;
+std::string ref_gtf_filename = "";
+std::string mask_gtf_filename = "";
+std::string output_dir = "./";
+std::string fasta_dir;
 string default_library_type = "fr-unstranded";
 string library_type = default_library_type;
 
+
+// Abundance estimation options
+bool corr_bias = false;
+bool corr_multi = false;
+bool use_quartile_norm = false;
+bool poisson_dispersion = false;
+BiasMode bias_mode = VLMM;
+int def_frag_len_mean = 200;
+int def_frag_len_std_dev = 80;
+int def_max_frag_len = 800;
+int max_frag_len = 800;
+int min_frag_len = 1;
+float min_isoform_fraction = 0.1;
+int max_mle_iterations = 5000;
+int num_importance_samples = 1000;
+
+
+// Ref-guided assembly options
+int overhang_3 = 600;
+int ref_merge_overhang_tolerance = 30;
+int tile_len = 405;
+int tile_off = 15;
+
+// Assembly options
+uint32_t min_intron_length = 50;
+uint32_t max_intron_length = 300000;
+int olap_radius = 50;
+int bowtie_overhang_tolerance = 8; // Typically don't need to change this, except in special cases, such as meta-assembly.
 int min_frags_per_transfrag = 10;
+int microexon_length = 25;
+float pre_mrna_fraction = 0.15;
+float high_phred_err_prob = 0.50; // about MAPQ = 3
+double small_anchor_fraction = 7 / 75.0;
+double binomial_junc_filter_alpha = 0.001;
+double trim_3_dropoff_frac = .1;
+double trim_3_avgcov_thresh = 10.0;
+std::string user_label = "CUFF";
 
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
-
-bool poisson_dispersion = false;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
@@ -299,7 +292,7 @@ void init_library_table()
 
 void print_library_table()
 {
-    fprintf (stderr, "Supported library types:\n");
+    fprintf (stderr, "\nSupported library types:\n");
     for (map<string, ReadGroupProperties>::const_iterator itr = library_type_table.begin();
          itr != library_type_table.end();
          ++itr)

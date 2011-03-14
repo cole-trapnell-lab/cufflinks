@@ -53,9 +53,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:c:I:j:Q:L:M:o:r:TNqv";
+const char *short_options = "m:p:s:c:I:j:L:M:o:r:TNqv";
 #else
-const char *short_options = "m:s:c:I:j:Q:L:M:o:r:TNqv";
+const char *short_options = "m:s:c:I:j:L:M:o:r:TNqv";
 #endif
 
 
@@ -66,7 +66,6 @@ static struct option long_options[] = {
 {"transcript-score-thresh", required_argument,       0,          't'},
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
 {"max-intron-length",		required_argument,		 0,			 'I'},
-{"min-map-qual",			required_argument,		 0,			 'Q'},
 {"labels",					required_argument,		 0,			 'L'},
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
@@ -101,7 +100,6 @@ void print_usage()
     fprintf(stderr, "Options:\n\n");
     fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
    	fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
-	fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
 	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
@@ -181,20 +179,6 @@ int parse_options(int argc, char** argv)
 					exit(1);
 				}
 				break;
-			case 'Q':
-			{
-				int min_map_qual = parseInt(0, "-Q/--min-map-qual must be at least 0", print_usage);
-				if (min_map_qual > 0)
-				{
-					long double p = (-1.0 * min_map_qual) / 10.0;
-					max_phred_err_prob = pow(10.0L, p);
-				}
-				else
-				{
-					max_phred_err_prob = 1.0;
-				}
-				break;
-			}
 			case 'M':
 			{
 				mask_gtf_filename = optarg;
@@ -596,7 +580,6 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
-	check_version(PACKAGE_VERSION);
 
 	ReadTable it;
 	RefSequenceTable rt(true, false);
@@ -1119,7 +1102,10 @@ int main(int argc, char** argv)
         print_usage();
         return 1;
     }
-	
+    
+    if (!no_update_check)
+        check_version(PACKAGE_VERSION);
+    
     string ref_gtf_filename = argv[optind++];
 	
 	vector<string> sam_hit_filenames;

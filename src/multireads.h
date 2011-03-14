@@ -6,15 +6,27 @@
 typedef uint64_t RefID;
 typedef uint64_t InsertID;
 
+struct MultiHit
+{
+    MultiHit(RefID id, int l, int r)
+    :   r_id(id),
+        left(l),
+        right(r),
+        expr(0) {}
+    RefID r_id;
+    int left;
+    int right;
+    double expr;
+};
+
 class MultiRead
 {
-	typedef std::pair<RefID, int> MultiHit ;
 	size_t _curr_index;
 	std::vector<MultiHit> _hits;
-	std::vector<double> _expr;
 	double _tot_expr;
 	InsertID _id;
-
+    
+    MultiHit* get_hit(RefID r_id, int left, int right);
 	
 public:
 	
@@ -24,15 +36,12 @@ public:
 		_id(id)
 	{
 		_hits.reserve(exp_num_hits);
-		_expr.reserve(exp_num_hits);
 	}
 	
 	size_t num_hits() { return (int)_hits.size(); }
-	void add_hit(RefID r_id, int left);
-	void add_expr(RefID r_id, int left, double expr);
-	double get_mass(RefID r_id, int left, bool valid_mass);
-	
-
+	void add_hit(RefID r_id, int left, int right);
+	void add_expr(RefID r_id, int left, int right, double expr);
+	double get_mass(RefID r_id, int left, int right, bool valid_mass);
 };
 
 class MateHit;
@@ -51,9 +60,9 @@ public:
 	
 	void valid_mass(bool vm) { _valid_mass = vm; }
 	void add_hit(const MateHit& hit);
-	void add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_hits);
+	void add_hit(RefID r_id, int left, int right, InsertID mr_id, int exp_num_hits);
 	void add_expr(const MateHit& hit, double expr);
-	void add_expr(RefID r_id, int left, InsertID mr_id, double expr);
+	void add_expr(RefID r_id, int left, int right, InsertID mr_id, double expr);
 	double get_mass(const MateHit& hit);
 	size_t num_multireads();
 	size_t num_multihits();

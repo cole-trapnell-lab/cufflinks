@@ -11,28 +11,32 @@
 #include "hits.h"
 #include "multireads.h"
 
-void MultiRead::add_hit(RefID r_id, int left)
+void MultiRead::add_hit(RefID r_id, int left, int right)
 {
-	_hits.push_back(std::make_pair(r_id, left));
-	_expr.push_back(0.0);
+	_hits.push_back(MultiHit(r_id, left, right));
 }
 
-void MultiRead::add_expr(RefID r_id, int left, double expr)
+MultiHit* MultiRead::get_hit(RefID r_id, int left, int right)
 {
-	while (true)
+  	while (true)
 	{
 		MultiHit& hit = _hits[_curr_index];
-		if (hit.first == r_id && hit.second == left)
+		if (hit.r_id == r_id && hit.left == left && hit.right == right)
 		{
-			_expr[_curr_index] += expr;
-			break;
-		}
+			return &hit;
+        }
 		_curr_index = (_curr_index + 1) % num_hits();
-	}
+	}  
+}
+
+void MultiRead::add_expr(RefID r_id, int left, int right, double expr)
+{
+	MultiHit* hit = get_hit(r_id, left, right);
+    hit->expr += expr;
 	_tot_expr += expr;
 }
 
-double MultiRead::get_mass(RefID r_id, int left, bool valid_mass)
+double MultiRead::get_mass(RefID r_id, int left, int right, bool valid_mass)
 {
 	if (!valid_mass)
 	{
@@ -42,19 +46,8 @@ double MultiRead::get_mass(RefID r_id, int left, bool valid_mass)
 	if (_tot_expr == 0.0)
 		return 0.0;
 	
-	double this_expr;
-	while (true)
-	{
-		MultiHit& hit = _hits[_curr_index];
-		if (hit.first == r_id && hit.second == left)
-		{
-			this_expr = _expr[_curr_index];
-			break;
-		}
-		_curr_index = (_curr_index + 1) % num_hits();
-	}
-	
-	return this_expr/_tot_expr;
+	MultiHit* hit = get_hit(r_id, left, right);
+	return hit->expr/_tot_expr;
 }
 
 MultiRead* MultiReadTable::get_read(InsertID mr_id)
@@ -73,10 +66,10 @@ MultiRead* MultiReadTable::get_read(InsertID mr_id)
 
 void MultiReadTable::add_hit(const MateHit& hit)
 {
-	add_hit(hit.ref_id(), hit.left(), hit.insert_id(), hit.num_hits());
+	add_hit(hit.ref_id(), hit.left(), hit.right(), hit.insert_id(), hit.num_hits());
 }
 
-void MultiReadTable::add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_hits)
+void MultiReadTable::add_hit(RefID r_id, int left, int right, InsertID mr_id, int exp_num_hits)
 {
 #if ENABLE_THREADS
 	boost::mutex::scoped_lock lock(_lock);
@@ -86,21 +79,21 @@ void MultiReadTable::add_hit(RefID r_id, int left, InsertID mr_id, int exp_num_h
 	{
 		mr = &((_read_map.insert(std::make_pair(mr_id, MultiRead(mr_id, exp_num_hits)))).first->second); 
 	}
-	mr->add_hit(r_id, left);
+	mr->add_hit(r_id, left, right);
 }
 
 void MultiReadTable::add_expr(const MateHit& hit, double expr)
 {
-	add_expr(hit.ref_id(), hit.left(), hit.insert_id(), expr);
+	add_expr(hit.ref_id(), hit.left(), hit.right(), hit.insert_id(), expr);
 }
 
-void MultiReadTable::add_expr(RefID r_id, int left, InsertID mr_id, double expr)
+void MultiReadTable::add_expr(RefID r_id, int left, int right, InsertID mr_id, double expr)
 {
 #if ENABLE_THREADS
 	boost::mutex::scoped_lock lock(_lock);
 #endif
 	MultiRead* mr = get_read(mr_id);
-	mr->add_expr(r_id, left, expr);
+	mr->add_expr(r_id, left, right, expr);
 }
 
 double MultiReadTable::get_mass(const MateHit& hit)
@@ -111,7 +104,7 @@ double MultiReadTable::get_mass(const MateHit& hit)
 	MultiRead* mr = get_read(hit.insert_id());
 	if(!mr)
 		return 1.0;
-	return mr->get_mass(hit.ref_id(), hit.left(), _valid_mass);
+	return mr->get_mass(hit.ref_id(), hit.left(), hit.right(), _valid_mass);
 }
 
 size_t MultiReadTable::num_multireads()

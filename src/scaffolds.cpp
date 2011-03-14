@@ -516,8 +516,9 @@ void Scaffold::trim_3(int to_remove)
 	}
 }
 
-void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int min_len, int max_len, int tile_offset) const
+void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int tile_offset) const
 {
+    int min_len = tile_offset;
 	assert(min_len % tile_offset == 0 && max_len % tile_offset == 0);
 	
 	if (length() < max_len)

@@ -472,7 +472,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				}
 				if (hits[i].right_alignment() && hits[i].right_alignment()->contains_splice())
 				{
-					assert(hits[i].right_alignment()->left() > hits[i].left());
+					assert(hits[i].right_alignment()->left() >= hits[i].left());
 					curr_range_end = min(curr_range_end, hits[i].right_alignment()->left()-1);
 					next_range_start = max(next_range_start, hits[i].right());
 				}

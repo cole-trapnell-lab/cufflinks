@@ -36,49 +36,53 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:c:I:j:Q:L:G:g:f:o:M:B:a:A:Nqvu";
+const char *short_options = "m:p:s:F:I:j:Q:L:G:g:f:o:M:b:a:A:Nqvu";
 #else
-const char *short_options = "m:s:F:c:I:j:Q:L:G:g:f:o:M:B:a:A:Nqvu";
+const char *short_options = "m:s:F:I:j:Q:L:G:g:f:o:M:b:a:A:Nqvu";
 #endif
 
 static struct option long_options[] = {
+// general options
+{"GTF",					    required_argument,		 0,			 'G'},
+{"GTF-guide",			    required_argument,		 0,			 'g'},
+{"mask-gtf",                required_argument,		 0,			 'M'},
+{"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
+
+// program behavior
+{"output-dir",			    required_argument,		 0,			 'o'},
+{"verbose",			    	no_argument,		 	 0,			 'v'},
+{"quiet",			    	no_argument,			 0,			 'q'},
+{"no-update-check",         no_argument,             0,          OPT_NO_UPDATE_CHECK},
+#if ENABLE_THREADS
+    {"num-threads",			required_argument,       0,          'p'},
+#endif    
+
+// abundance estimation
 {"frag-len-mean",			required_argument,       0,          'm'},
 {"frag-len-std-dev",		required_argument,       0,          's'},
-{"transcript-score-thresh", required_argument,       0,          't'},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
 {"min-intron-fraction",     required_argument,       0,          'f'},
+{"quartile-normalization",  no_argument,	 		 0,	         'N'},
+{"frag-bias-correction",	required_argument,		 0,			 'b'},
+{"multi-read-correction",	no_argument,			 0,			 'u'},
+{"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
+{"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
+#if ADAM_MODE
+    {"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
+#endif
+
+// assembly
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
 {"junc-alpha",				required_argument,		 0,			 'a'},	
 {"small-anchor-fraction",	required_argument,		 0,			 'A'},
 {"max-intron-length",		required_argument,		 0,			 'I'},
-{"min-map-qual",			required_argument,		 0,			 'Q'},
 {"label",					required_argument,		 0,			 'L'},
-{"collapse-thresh",         required_argument,		 0,			 'c'},
-{"GTF",					    required_argument,		 0,			 'G'},
-{"GTF-guide",			    required_argument,		 0,			 'g'},
-{"mask-gtf",                required_argument,		 0,			 'M'},
-{"output-dir",			    required_argument,		 0,			 'o'},
-{"quartile-normalization",  no_argument,	 		 0,	         'N'},
-{"verbose",			    	no_argument,		 	 0,			 'v'},
-{"quiet",			    	no_argument,			 0,			 'q'},
-{"frag-bias-correction",	required_argument,		 0,			 'B'},
-{"multi-read-correction",	no_argument,			 0,			 'u'},
-#if ENABLE_THREADS
-{"num-threads",				required_argument,       0,          'p'},
-#endif
 {"overhang-tolerance",      required_argument,		 0,			 OPT_OVERHANG_TOLERANCE},
-{"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
-{"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
-{"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
-{"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
 {"min-frags-per-transfrags",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
-{"min-intron-length",required_argument,		         0,			 OPT_MIN_INTRON_LENGTH},
-{"trim-3-dropoff-frac",	required_argument,		 0,			     OPT_3_PRIME_AVGCOV_THRESH},
+{"min-intron-length",       required_argument,	     0,			 OPT_MIN_INTRON_LENGTH},
+{"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
+{"trim-3-dropoff-frac",     required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
 {"trim-3-avgcov-thresh",	required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
-
-#if ADAM_MODE
-{"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
-#endif
 
 {0, 0, 0, 0} // terminator
 };
@@ -90,41 +94,50 @@ void print_usage()
     fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
     fprintf(stderr, "-----------------------------\n"); 
     fprintf(stderr, "Usage:   cufflinks [options] <hits.sam>\n");
-    fprintf(stderr, "Options:\n\n");
+    fprintf(stderr, "General Options:\n");
+    fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
 #if ENABLE_THREADS
     fprintf(stderr, "  -p/--num-threads             number of threads used during analysis                [ default:      1 ]\n");
-#endif
-    
-    fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
+#endif    
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
-	fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotations to guide assembly                   \n");
-    fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.15 ]\n");
-    fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.05 ]\n");
+    fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotation to guide assembly                   \n");
+    fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
+    fprintf(stderr, "  -b/--frag-bias-correction    use bias correction - reference fasta required        [ default:   NULL ]\n");
+    fprintf(stderr, "  -u/--multi-read-correction   use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
+    fprintf(stderr, "  --library-type               library prep used for input reads                     [ default:  below ]\n");
+    
+    fprintf(stderr, "\nAdvanced Abundance Estimation Options:\n");
+    fprintf(stderr, "  -m/--frag-len-mean           average fragment length (needed for single-end)       [ default:    200 ]\n");
+    fprintf(stderr, "  -s/--frag-len-std-dev        fragment length standard deviation (for single-end)   [ default:     80 ]\n");
+    fprintf(stderr, "  --upper-quartile-norm        use upper-quartile normalization                      [ default:  FALSE ]\n");
+    fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+    
+    fprintf(stderr, "\nAdvanced Assembly Options:\n");
+    fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
+    fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.10 ]\n");
+    fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.10 ]\n");
     fprintf(stderr, "  -j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
     fprintf(stderr, "  -I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
-    fprintf(stderr, "  -Q/--min-map-qual            ignore alignments with lower than this mapping qual   [ default:      0 ]\n");
-    fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
-    fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
-	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
-    fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-    fprintf(stderr, "  -B/--frag-bias-correction    reference fasta file for sequence bias correction     [ default:   NULL ]\n");
-	fprintf(stderr, "  -u/--multi-read-correction   use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
-    fprintf(stderr, "\nAdvanced Options:\n\n");
-    fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:   0.01 ]\n");
-    fprintf(stderr, "  -A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.12 ]\n");
-    fprintf(stderr, "  -m/--frag-len-mean           the average fragment length                           [ default:    200 ]\n");
-    fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation                [ default:     80 ]\n");
+    fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:  0.001 ]\n");
+    fprintf(stderr, "  -A/--small-anchor-fraction   percent read overhang taken as 'suspiciously small'   [ default:   0.09 ]\n");
     fprintf(stderr, "  --min-frags-per-transfrag    minimum number of fragments needed for new transfrags [ default:     10 ]\n");
     fprintf(stderr, "  --overhang-tolerance         number of terminal exon bp to tolerate in introns     [ default:      8 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
-    fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  --max-bundle-length          maximum genomic length allowed for a given bundle     [ default:3500000 ]\n");
     fprintf(stderr, "  --min-intron-length          minimum intron size allowed in genome                 [ default:     50 ]\n");
     fprintf(stderr, "  --trim-3-avgcov-thresh       minimum avg coverage required to attempt 3' trimming  [ default:     10 ]\n");
     fprintf(stderr, "  --trim-3-dropoff-frac        fraction of avg coverage below which to trim 3' end   [ default:    0.1 ]\n");
-
+    
+    fprintf(stderr, "\nAdvanced Reference Annotation Guided Assembly Options:\n");
+    fprintf(stderr, "  --tile-read-len              length of faux-reads                                  [ default:    405 ]\n");
+    fprintf(stderr, "  --tile-read-sep              distance between faux-reads                           [ default:     15 ]\n");
+    fprintf(stderr, "  --3-overhang-tolerance       overhang allowed on 3' end when merging with reference[ default:    600 ]\n");
+    fprintf(stderr, "  --intron-overhang-tolerance  overhang allowed inside reference intron when merging [ default:     30 ]\n");
+    
+    fprintf(stderr, "\nAdvanced Program Behavior Options:\n");
+    fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
+    fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");
     print_library_table();
 }
 
@@ -146,9 +159,6 @@ int parse_options(int argc, char** argv)
 			case 's':
 				user_provided_fld = true;
 				def_frag_len_std_dev = (uint32_t)parseInt(0, "-s/--frag-len-std-dev arg must be at least 0", print_usage);
-				break;
-			case 't':
-				transcript_score_thresh = parseFloat(-99999999, 0, "-t/--transcript-score-thresh must less than or equal to 0", print_usage);
 				break;
 			case 'p':
 				num_threads = (uint32_t)parseInt(1, "-p/--num-threads arg must be at least 1", print_usage);
@@ -197,20 +207,6 @@ int parse_options(int argc, char** argv)
 					exit(1);
 				}
 				break;
-			case 'Q':
-			{
-				int min_map_qual = parseInt(0, "-Q/--min-map-qual must be at least 0", print_usage);
-				if (min_map_qual > 0)
-				{
-					long double p = (-1.0 * min_map_qual) / 10.0;
-					max_phred_err_prob = pow(10.0L, p);
-				}
-				else
-				{
-					max_phred_err_prob = 1.0;
-				}
-				break;
-			}
 			case 'L':
 			{
 				user_label = optarg;
@@ -264,7 +260,7 @@ int parse_options(int argc, char** argv)
 				output_dir = optarg;
 				break;
 			}
-            case 'B':
+            case 'b':
 			{
 				fasta_dir = optarg;
 				corr_bias = true;
@@ -285,7 +281,6 @@ int parse_options(int argc, char** argv)
 				max_gene_length = parseInt(1, "--max-bundle-length must be at least 1", print_usage);;
 				break;
 			}
-            
             case OPT_MIN_FRAGS_PER_TRANSFRAG:
 			{
 				min_frags_per_transfrag = parseInt(0, "--min-frags-per-transfrag must be at least 0", print_usage);;
@@ -306,7 +301,11 @@ int parse_options(int argc, char** argv)
 				trim_3_dropoff_frac = parseFloat(0, 1.0, "--trim-3-dropoff-frac must be between 0 and 1.0", print_usage);
 				break;
 			}
-                
+            case OPT_NO_UPDATE_CHECK:
+            {
+                no_update_check = true;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -539,7 +538,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		vector<Scaffold> pseudohits;
 		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 		{
-			ref_scaff->tile_with_scaffs(pseudohits, 45, 405, 15);
+			ref_scaff->tile_with_scaffs(pseudohits, tile_len, tile_off);
 		}
 		hits.insert(hits.end(),
 					pseudohits.begin(),
@@ -1276,7 +1275,6 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 		ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
         ref_mRNAs.clear();
         ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, corr_bias, true);
-		bundle_mode = REF_DRIVEN;
     }    
 	bundle_factory2.set_ref_rnas(ref_mRNAs);
     if (mask_gtf)
@@ -1287,12 +1285,14 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     }    
 	bundle_factory2.reset();
 	
-	if(corr_bias && (bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED)) // We still need to learn the bias since we didn't have the sequences before assembly
+	if(corr_bias && (bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED)) 
 	{
+        // We still need to learn the bias since we didn't have the sequences before assembly
 		learn_bias(bundle_factory2, *bl_ptr);
 		bundle_factory2.reset();
 	}
 
+    bundle_mode = REF_DRIVEN;
 	final_est_run = true;
 	assemble_hits(bundle_factory2, bl_ptr);
 	ref_mRNAs.clear();
@@ -1300,7 +1300,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 
 int main(int argc, char** argv)
 {
-	check_version(PACKAGE_VERSION);
+
 	
     init_library_table();
     
@@ -1314,6 +1314,9 @@ int main(int argc, char** argv)
         return 1;
     }
 	
+    if (!no_update_check)
+        check_version(PACKAGE_VERSION);
+    
     string sam_hits_file_name = argv[optind++];
 	
 

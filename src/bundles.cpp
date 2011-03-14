@@ -79,7 +79,9 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				   bool loadFPKM) 
 {
 	if (loadSeqs)
-		ProgressBar p_bar("Loading reference and sequence.",0);
+		ProgressBar p_bar("Loading reference annotation and sequence.",0);
+    else
+        ProgressBar p_bar("Loading reference annotation.",0);
 
 	GList<GSeqData> ref_rnas;
 	
@@ -317,7 +319,10 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 			}
 			else
 			{
-				add_hit(MateHit(rg_props,bh->ref_id(), bh, NULL));
+                // This should never happen during hit_driven or ref_guided bundling, and in the case of
+                // ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
+                // Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
+				// add_hit(MateHit(rg_props,bh->ref_id(), bh, NULL));
 			}
 		}
 		else
@@ -398,7 +403,10 @@ void HitBundle::finalize_open_mates()
 	{
 		for (list<MateHit>::iterator mi = itr->second.begin(); mi != itr->second.end(); ++mi)
 		{
-			add_hit(*mi);
+            // We don't want to split reads accross boundaries since this would only occur
+            // in ref_driven mode and the read shouldn't map to any of the references in this case.
+            if (mi->left_alignment()->partner_pos() <= right())
+                add_hit(*mi);
 		}
         itr->second.clear();
 	}
@@ -630,16 +638,13 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
         ReadHit tmp;
         if (!_hit_fac->get_hit_from_buf(hit_buf, tmp, false))
             continue;
-		
+        
 		if (tmp.ref_id() == 84696373)  // corresponds to SAM "*" under FNV hash. unaligned read record 
 
             continue;
 		
 		raw_mass += tmp.mass();
 		
-        if (tmp.error_prob() > max_phred_err_prob)
-            continue;
-
         if (_hit_fac->ref_table().get_name(tmp.ref_id())==NULL) // unaligned read record (!?)
             continue;
             

@@ -28,66 +28,60 @@ using boost::math::normal;
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
+// Non-option globals
 extern bool final_est_run;
-extern bool corr_bias;
-extern bool corr_multi;
-
-extern uint32_t max_intron_length;
-extern uint32_t min_intron_length;
-
-extern uint32_t max_gene_length;
-
-extern double trim_3_avgcov_thresh;
-extern double trim_3_dropoff_frac;
-
-extern int max_partner_dist;
+extern bool allow_junk_filtering;
 extern bool user_provided_fld;
-extern int def_frag_len_mean;
-extern int def_frag_len_std_dev;
 extern int def_max_frag_len;
 extern int max_frag_len;
 extern int min_frag_len;
 
-extern double transcript_score_thresh;
-extern int olap_radius;
-extern int overhang_3;
-extern float pre_mrna_fraction;
-
+// Behavior options
 extern int num_threads;
+extern bool no_update_check;
+extern bool cuff_quiet;
+extern bool cuff_verbose;
 
-extern int ref_merge_overhang_tolerance;
-extern int bowtie_overhang_tolerance;
-extern float min_isoform_fraction;
-//extern float min_isoform_fraction;
-extern float max_phred_err_prob;
-extern float high_phred_err_prob;
-
-extern std::string user_label;
+// General options
+extern int max_partner_dist;
+extern uint32_t max_gene_length;
 extern std::string ref_gtf_filename;
 extern std::string mask_gtf_filename;
 extern std::string output_dir;
 extern std::string fasta_dir;
-
-extern int microexon_length;
-extern bool cuff_verbose;
-extern bool cuff_quiet;
-extern bool perform_full_collapse;
-
-extern bool allow_junk_filtering;
-
-extern bool use_quartile_norm;
-
-extern int max_mle_iterations;
-extern int num_importance_samples;
-
-extern double small_anchor_fraction;
-
-extern double binomial_junc_filter_alpha;
-
 extern std::string library_type;
 
-extern int min_frags_per_transfrag;
+// Abundance estimation options
+extern bool corr_bias;
+extern bool corr_multi;
+extern bool use_quartile_norm;
 extern bool poisson_dispersion;
+extern int def_frag_len_mean;
+extern int def_frag_len_std_dev;
+extern int max_mle_iterations;
+extern int num_importance_samples;
+extern float min_isoform_fraction;
+
+// Ref-guided assembly options
+extern int overhang_3;
+extern int ref_merge_overhang_tolerance;
+extern int tile_len;
+extern int tile_off;
+
+// Assembly options
+extern uint32_t min_intron_length;
+extern uint32_t max_intron_length;
+extern int olap_radius;
+extern int bowtie_overhang_tolerance;
+extern int min_frags_per_transfrag;
+extern int microexon_length;
+extern float pre_mrna_fraction;
+extern float high_phred_err_prob;
+extern double trim_3_dropoff_frac;
+extern double trim_3_avgcov_thresh;
+extern double small_anchor_fraction;
+extern double binomial_junc_filter_alpha;
+extern std::string user_label;
 
 
 #define ADAM_MODE 0
@@ -339,4 +333,5 @@ void init_library_table();
 #define OPT_3_PRIME_AVGCOV_THRESH	269
 #define OPT_3_PRIME_DROPOFF_FRAC    270
 #define OPT_POISSON_DISPERSION      271
+#define OPT_NO_UPDATE_CHECK         272
 #endif
