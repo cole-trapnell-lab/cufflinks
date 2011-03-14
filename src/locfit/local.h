@@ -66,19 +66,19 @@
    Usually this only makes a difference on 64 bit systems.
 */
 
-#ifndef SWINVERSION
+//#ifndef SWINVERSION
 
-#ifdef RVERSION
+//#ifdef RVERSION
+//typedef int INT;
+//#else
+//#ifdef SVERSION
+//typedef long int INT;
+//#else
 typedef int INT;
-#else
-#ifdef SVERSION
-typedef long int INT;
-#else
-typedef int INT;
-#endif /* SVERSION */
-#endif /* RVERSION */
+//#endif /* SVERSION */
+//#endif /* RVERSION */
 
-#endif /* SWINVERSION */
+//#endif /* SWINVERSION */
 
 /******** NOTHING BELOW HERE NEEDS CHANGING **********/
 

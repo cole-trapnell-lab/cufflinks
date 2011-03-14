@@ -67,7 +67,8 @@ int des_reqi(INT n) { return(n); }
 void deschk(des,n,p)
 design *des;
 INT n, p;
-{ double *z;
+{ 
+    double *z;
     des->dw = checkvarlen(des->dw,des_reqd(n,p),"_deswork",VDOUBLE);
     z = vdptr(des->dw);
     des->X = z; z += n*p;
@@ -87,7 +88,8 @@ INT n, p;
     
     des->index = checkvarlen(des->index,des_reqi(n),"_desidx",VINT);
     des->ind = (INT *)vdptr(des->index);
-    des->n = n; des->p = p;
+    des->n = n; 
+    des->p = p;
     des->xtwx.p = p;
 }
 
@@ -160,7 +162,8 @@ void startlf(des,lf,vfun,nopc)
 design *des;
 lfit *lf;
 INT (*vfun)(), nopc;
-{ INT i, *mi;
+{ 
+    INT i, *mi;
     des->vfun = vfun;
     mi = lf->mi;
     mi[MP] = calcp(mi,mi[MDEG]);

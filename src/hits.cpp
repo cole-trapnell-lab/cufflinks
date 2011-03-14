@@ -440,7 +440,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
     
 	if (!spliced_alignment)
 	{
-		assert(_rg_props.strandedness() == STRANDED_PROTOCOL || source_strand == CUFF_STRAND_UNKNOWN);
+		//assert(_rg_props.strandedness() == STRANDED_PROTOCOL || source_strand == CUFF_STRAND_UNKNOWN);
 
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(bam1_qname(hit_buf),

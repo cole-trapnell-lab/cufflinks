@@ -221,7 +221,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
     vari* cm = createvar(namebuf,STREGULAR,raw_means.size(),VDOUBLE);
     for (size_t i = 0; i < raw_means.size(); ++i)
     {
-        cm->dpr[i] = log(raw_means[i]); 
+        cm->dpr[i] = log(raw_means[i]);
     }
     
     sprintf(namebuf, "countVariances");

@@ -1414,8 +1414,8 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	{
 		shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
 
-		if (hit.left_alignment()->antisense_align() && (strand() != CUFF_REV) 
-			|| !(hit.left_alignment()->antisense_align()) && strand() == CUFF_REV)
+		if ((hit.left_alignment()->antisense_align() && strand() != CUFF_REV) 
+			|| (!hit.left_alignment()->antisense_align() && strand() == CUFF_REV))
 		{
 			int g_end  = (strand()!=CUFF_REV) ? hit.right()-1:hit.left();
 			end = genomic_to_transcript_coord(g_end);
