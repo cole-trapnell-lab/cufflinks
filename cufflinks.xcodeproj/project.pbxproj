@@ -53,20 +53,12 @@
 		0A694178132AEDAC00558D76 /* ev_kdtre.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7713204FE50031949A /* ev_kdtre.c */; };
 		0A694179132AEDAC00558D76 /* scb.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7813204FE60031949A /* scb.c */; };
 		0A69417A132AEDAC00558D76 /* scb_cons.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7A13204FE60031949A /* scb_cons.c */; };
-		0A69417B132AEDAC00558D76 /* local.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7B13204FE60031949A /* local.h */; };
 		0A69417C132AEDAC00558D76 /* m_jacob.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7D13204FE60031949A /* m_jacob.c */; };
-		0A69417D132AEDAC00558D76 /* design.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7F13204FE70031949A /* design.h */; };
-		0A69417E132AEDAC00558D76 /* lffuns.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8013204FE70031949A /* lffuns.h */; };
-		0A69417F132AEDAC00558D76 /* lfstruc.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8113204FE70031949A /* lfstruc.h */; };
-		0A694180132AEDAC00558D76 /* mutil.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8213204FE70031949A /* mutil.h */; };
 		0A694181132AEDAC00558D76 /* lf_robust.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8313204FE80031949A /* lf_robust.c */; };
 		0A694182132AEDAC00558D76 /* m_chol.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8413204FE80031949A /* m_chol.c */; };
-		0A694183132AEDAC00558D76 /* lfcons.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8513204FE80031949A /* lfcons.h */; };
 		0A694184132AEDAC00558D76 /* arith.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8913204FE90031949A /* arith.c */; };
 		0A694185132AEDAC00558D76 /* c_args.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8A13204FE90031949A /* c_args.c */; };
 		0A694186132AEDAC00558D76 /* ar_funs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8B13204FE90031949A /* ar_funs.c */; };
-		0A694187132AEDAC00558D76 /* lfwin.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8E13204FEA0031949A /* lfwin.h */; };
-		0A694188132AEDAC00558D76 /* imatlb.h in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8F13204FEA0031949A /* imatlb.h */; };
 		0A694189132AEDAC00558D76 /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5913204F180031949A /* cmd.c */; };
 		0A9291D5132AD37100E7B024 /* replicates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED677C0D132A3D83000CFDC8 /* replicates.cpp */; };
 		9C198ABE12F231CD00919C3B /* test_scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */; };
@@ -366,9 +358,9 @@
 		9CC50B7713204FE50031949A /* ev_kdtre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ev_kdtre.c; sourceTree = "<group>"; };
 		9CC50B7813204FE60031949A /* scb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = scb.c; sourceTree = "<group>"; };
 		9CC50B7A13204FE60031949A /* scb_cons.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = scb_cons.c; sourceTree = "<group>"; };
-		9CC50B7B13204FE60031949A /* local.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = local.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		9CC50B7B13204FE60031949A /* local.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; lineEnding = 0; path = local.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		9CC50B7D13204FE60031949A /* m_jacob.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m_jacob.c; sourceTree = "<group>"; };
-		9CC50B7F13204FE70031949A /* design.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = design.h; sourceTree = "<group>"; };
+		9CC50B7F13204FE70031949A /* design.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = design.h; sourceTree = "<group>"; };
 		9CC50B8013204FE70031949A /* lffuns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lffuns.h; sourceTree = "<group>"; };
 		9CC50B8113204FE70031949A /* lfstruc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lfstruc.h; sourceTree = "<group>"; };
 		9CC50B8213204FE70031949A /* mutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mutil.h; sourceTree = "<group>"; };
@@ -570,13 +562,13 @@
 		0A25E74A1242E9270080BEA9 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9CC50B5813204F180031949A /* locfit */,
+				ED1C0C6D11D7D9C000CFD663 /* Autotools */,
 				0A6183711324308800EFF9AF /* multireads.cpp */,
 				0A4C0AD412F734DE0055A9D8 /* multireads.h */,
 				0A25E74B1242E95A0080BEA9 /* progressbar.h */,
 				ED877B71123BCA3E0025A050 /* GFastaIndex.h */,
 				ED877B72123BCA3F0025A050 /* GFastaIndex.cpp */,
-				9CC50B5813204F180031949A /* locfit */,
-				ED1C0C6D11D7D9C000CFD663 /* Autotools */,
 				EDA5150910C72963000A4F41 /* abundances.h */,
 				EDA5150A10C72963000A4F41 /* assemble.h */,
 				EDBAC4C011FF5AD3002B7162 /* biascorrection.h */,
@@ -991,20 +983,12 @@
 				0A694178132AEDAC00558D76 /* ev_kdtre.c in Sources */,
 				0A694179132AEDAC00558D76 /* scb.c in Sources */,
 				0A69417A132AEDAC00558D76 /* scb_cons.c in Sources */,
-				0A69417B132AEDAC00558D76 /* local.h in Sources */,
 				0A69417C132AEDAC00558D76 /* m_jacob.c in Sources */,
-				0A69417D132AEDAC00558D76 /* design.h in Sources */,
-				0A69417E132AEDAC00558D76 /* lffuns.h in Sources */,
-				0A69417F132AEDAC00558D76 /* lfstruc.h in Sources */,
-				0A694180132AEDAC00558D76 /* mutil.h in Sources */,
 				0A694181132AEDAC00558D76 /* lf_robust.c in Sources */,
 				0A694182132AEDAC00558D76 /* m_chol.c in Sources */,
-				0A694183132AEDAC00558D76 /* lfcons.h in Sources */,
 				0A694184132AEDAC00558D76 /* arith.c in Sources */,
 				0A694185132AEDAC00558D76 /* c_args.c in Sources */,
 				0A694186132AEDAC00558D76 /* ar_funs.c in Sources */,
-				0A694187132AEDAC00558D76 /* lfwin.h in Sources */,
-				0A694188132AEDAC00558D76 /* imatlb.h in Sources */,
 				0A694189132AEDAC00558D76 /* cmd.c in Sources */,
 				0A9291D5132AD37100E7B024 /* replicates.cpp in Sources */,
 				EDA5155210C729A9000A4F41 /* abundances.cpp in Sources */,

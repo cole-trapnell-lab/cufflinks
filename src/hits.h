@@ -986,6 +986,23 @@ public:
 		}
 		return 1.0;
 	}
+    
+	double common_scale_mass() const
+	{
+        double m = 0.0;
+		if (is_multi())
+		{
+			shared_ptr<MultiReadTable> mrt = _rg_props->multi_read_table();
+			if (mrt)
+				m = mrt->get_mass(*this);
+			else
+				m = 1.0/num_hits();
+		}
+		m = 1.0;
+        m *= _rg_props->mass_scale_factor();
+        
+        return m;
+	}
 	
 	unsigned int  edit_dist() const
 	{
