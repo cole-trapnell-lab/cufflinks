@@ -85,6 +85,8 @@ INT n, p;
     des->oc =z; z += p;
     des->cf =z; z += p;
     
+    setzero(des->cf, p);
+    
     z = jac_alloc(&des->xtwx,p,z);
     
     des->index = checkvarlen(des->index,des_reqi(n),"_desidx",VINT);
