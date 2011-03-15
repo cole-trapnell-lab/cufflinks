@@ -337,7 +337,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	ProgressBar p_bar;
 	if (progress_bar)
 		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
-	char last_chrom[100]; last_chrom[0] = 0;
+	RefID last_chrom = 0;
 
 	long double map_mass = 0.0;
 	
@@ -386,9 +386,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		
         if (progress_bar) 
         {
-			int inc_amt = (strncmp(last_chrom, chrom, 100)==0) ? 0 : 1;
+			int inc_amt = last_chrom == bundle.ref_id() ? 0 : 1;
 			p_bar.update(bundle_label_buf, inc_amt);
-			strncpy(last_chrom, chrom, 100);
+			last_chrom = bundle.ref_id();
         }
 		
         count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));

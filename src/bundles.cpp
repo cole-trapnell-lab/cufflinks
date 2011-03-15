@@ -383,7 +383,10 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 				}
 				else
 				{
-					add_hit(MateHit(rg_props, bh->ref_id(), bh, NULL));
+                    // This should never happen during hit_driven or ref_guided bundling, and in the case of
+                    // ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
+                    // Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
+					// add_hit(MateHit(rg_props, bh->ref_id(), bh, NULL));
 				}
 			}
 		}
