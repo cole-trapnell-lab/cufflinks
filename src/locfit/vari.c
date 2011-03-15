@@ -16,12 +16,13 @@ static INT lfwptr, lf_work;
 vari root;
 
 void initdb() /* initialize locfit's work space */
-{ char *z;
+{ 
+    char *z = NULL;
     z = getenv("LFWORK");
     if (z==NULL) lf_work = LF_WORK;
     else sscanf(z,"%d",&lf_work);
     lf_work <<= 10;
-    db = (char *)malloc(lf_work);
+    db = (char *)calloc(lf_work, 1);
     if (db == NULL)
     {
         fprintf(stderr, "Error: Locfit working space could not be allocated!\n");
@@ -38,7 +39,8 @@ void initdb() /* initialize locfit's work space */
 vari *growvar(vold,n)
 vari *vold;
 INT n;
-{ vari *vnew;
+{ 
+    vari *vnew;
     INT reqd_bytes;
     
     if (vold==NULL)
@@ -59,8 +61,10 @@ INT n;
 
 INT vbytes(n,mode)
 INT n, mode;
-{ switch(mode)
-    { case VDOUBLE: return(n*sizeof(double));
+{ 
+    switch(mode)
+    { 
+        case VDOUBLE: return(n*sizeof(double));
         case VINT:    return(n*sizeof(INT));
         case VCHAR:   return(n);
         case VARGL:   return(n*sizeof(carg));
@@ -206,16 +210,19 @@ INT status, n, mode;
         deletename(name);
     
     if (status!=STREADFI)
-    { for (i=0; i<root.n; i++) /* does unused variable have space allocated? */
-    { v = viptr(&root,i);
-        if ((v->stat == STEMPTY) && (v->bytes >= bytes))
-        { strcpy(v->name,name);
-            vlength(v) = n;
-            v->stat = status;
-            v->mode = mode;
-            return(v);
+    { 
+        for (i=0; i < root.n; i++) /* does unused variable have space allocated? */
+        { 
+            v = viptr(&root,i);
+            if ((v->stat == STEMPTY) && (v->bytes >= bytes))
+            { 
+                strcpy(v->name,name);
+                vlength(v) = n;
+                v->stat = status;
+                v->mode = mode;
+                return(v);
+            }
         }
-    }
     }
     
     /* must allocate next variable. First, is there space? */
@@ -231,7 +238,7 @@ INT status, n, mode;
     v->bytes = bytes;
     v->mode = mode;
     if (status!=STSYSPEC)
-    { v->dpr = (double *)(&db[lfwptr]);
+    { v->dpr = (double *)(&(root.dpr[lfwptr]));
         lfwptr += bytes;
     }
     root.n++;
