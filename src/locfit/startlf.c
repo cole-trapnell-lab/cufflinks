@@ -61,7 +61,7 @@ INT n, d;
 int des_reqd(n,p)
 INT n, p;
 { 
-    return 2 * (n*(p+5)+2*p*p+4*p + jac_reqd(p));
+    return (n*(p+5)+2*p*p+4*p + jac_reqd(p));
 }
 int des_reqi(INT n) { return(n); }
 
