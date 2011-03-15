@@ -6,6 +6,7 @@
  */
 
 #include "local.h"
+#include <errno.h>
 
 #define MAXV 1000
 #define LF_WORK 1024
@@ -23,9 +24,11 @@ void initdb() /* initialize locfit's work space */
     db = (char *)malloc(lf_work);
     if (!db)
     {
-        fprintf(stderr, "Error: Locfit working space could not be allocated!");
+        fprintf(stderr, "Error: Locfit working space could not be allocated!\n");
+        fprintf(stderr, "Error code %d\n", errno);
     }
-        root.stat = STSYSTEM;
+    
+    root.stat = STSYSTEM;
     root.mode = VVARI;
     root.dpr = (double *)db;
     lfwptr = root.bytes = MAXV*sizeof(vari);
