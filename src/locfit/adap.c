@@ -55,7 +55,7 @@ static double mcp, clo, cup;
 INT ainitband(des,lf)
 design *des;
 lfit   *lf;
-{ INT lf_status, p, z, cri, noit, redo;
+{ INT lf_status = LF_OK, p, z, cri, noit, redo;
   double h, ho, t[6];
   p = des->p;
   cri = lf->mi[MACRI];

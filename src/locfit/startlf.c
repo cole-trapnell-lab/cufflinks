@@ -244,7 +244,8 @@ void fitoptions(lf,vc,re)
 lfit *lf;
 vari *vc;
 INT re;
-{ INT d, n, i, i0, i1, *mi;
+{ 
+    INT d = 0, n, i, i0, i1, *mi;
     char kc, *key;
     vari *v;
     

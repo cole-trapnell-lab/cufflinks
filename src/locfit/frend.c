@@ -197,8 +197,8 @@ INT procvvord(des,lf,v)
 design *des;
 lfit *lf;
 INT v;
-{ double tr[6], gcv, g0, ap, coef[4][10], t2[4], th, md;
-  INT i, j, k, d1, *mi, i0, p1, ip;
+{ double tr[6], gcv, g0, ap, coef[4][10], t2[4], th, md = 0.0;
+  INT i, j, k = 0, d1, *mi, i0, p1, ip;
   mi = lf->mi;
   des->xev = evpt(lf,v);
 

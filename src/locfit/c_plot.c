@@ -166,7 +166,7 @@ plots *win;
 void plotdata(v)
 vari *v;
 { INT add, i, j, k;
-  plxyz *xyz, *xyz2;
+  plxyz *xyz = NULL, *xyz2 = NULL;
   char *type;
 
   cpl = get_graphics_window(v);
@@ -223,7 +223,7 @@ vari *v;
 
 void plotfit(v)
 vari *v;
-{ INT add, d, dp, i, j, n, sef;
+{ INT add, d, dp, i = 0, j = 0, n, sef;
   INT dt, mg[MXDIM], ix, iy;
   double c, sd, xl[2*MXDIM], xll[2];
   char cb;

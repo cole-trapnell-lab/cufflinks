@@ -236,7 +236,7 @@ char *fi, *mode;
 int fp;
 { void (*fn)();
   double z;
-  INT d, i, k, lm, ld;
+  INT d = 0, i, k, lm, ld;
 
   if (fi==NULL) return;
   if (setfilename(fi,"fit",mode,fp)==0)

@@ -1435,6 +1435,7 @@
 					DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					./src,
@@ -1465,6 +1466,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_VECLIB;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					./src,
 					/usr/local/include/boost,
