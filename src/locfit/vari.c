@@ -238,7 +238,8 @@ INT status, n, mode;
     v->bytes = bytes;
     v->mode = mode;
     if (status!=STSYSPEC)
-    { v->dpr = (double *)(&(root.dpr[lfwptr]));
+    { 
+        v->dpr = (double *)(&(root.dpr[lfwptr]));
         lfwptr += bytes;
     }
     root.n++;
