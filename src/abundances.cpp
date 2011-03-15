@@ -491,8 +491,8 @@ void AbundanceGroup::calculate_conf_intervals()
 			double FPKM_lo;
 			if (pA->effective_length() > 0)
 			{
-                double fpkm_coeff =double norm_frag_density = 1000000000;
-                norm_frag_density /= _abundances[j]->effective_length();
+                double norm_frag_density = 1000000000;
+                norm_frag_density /= pA->effective_length();
                 
                 norm_frag_density *= mass_variance_fraction();
                 double fpkm_high = norm_frag_density;
