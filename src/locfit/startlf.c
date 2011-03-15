@@ -73,18 +73,39 @@ INT n, p;
     des->dw = checkvarlen(des->dw,des_reqd(n,p),"_deswork",VDOUBLE);
     z = vdptr(des->dw);
     des->X = z; z += n*p;
-    des->w = z; z += n;
-    des->res=z; z += n;
-    des->di =z; z += n;
-    des->th =z; z += n;
-    des->wd =z; z += n;
-    des->V  =z; z += p*p;
-    des->P  =z; z += p*p;
-    des->f1 =z; z += p;
-    des->ss =z; z += p;
-    des->oc =z; z += p;
-    des->cf =z; z += p;
+    setzero(des->X, n*p);
     
+    des->w = z; z += n;
+    setzero(des->w, n);
+    
+    des->res=z; z += n;
+    setzero(des->res, n);
+    
+    des->di =z; z += n;
+    setzero(des->di, n);
+    
+    des->th =z; z += n;
+    setzero(des->th, n);
+    
+    des->wd =z; z += n;
+    setzero(des->wd, n);
+    
+    des->V  =z; z += p*p;
+    setzero(des->V, p*p);
+    
+    des->P  =z; z += p*p;
+    setzero(des->P, p*p);
+    
+    des->f1 =z; z += p;
+    setzero(des->f1, p);
+    
+    des->ss =z; z += p;
+    setzero(des->ss, p);
+    
+    des->oc =z; z += p;
+    setzero(des->oc, p);
+    
+    des->cf =z; z += p;
     setzero(des->cf, p);
     
     z = jac_alloc(&des->xtwx,p,z);
