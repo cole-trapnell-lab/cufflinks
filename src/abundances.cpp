@@ -491,11 +491,10 @@ void AbundanceGroup::calculate_conf_intervals()
 			double FPKM_lo;
 			if (pA->effective_length() > 0)
 			{
-                // FIXME: correct this
                 double fpkm_coeff = mass_variance_fraction();
                 fpkm_coeff *= 1000000000;
                 fpkm_coeff /= pA->effective_length();
-                double fpkm_high = fpkm_coeff * gamma();
+                double fpkm_high = fpkm_coeff;
                 double var_fpkm = fpkm_high; 
 				
 				FPKM_hi = fpkm_high + 2 * sqrt(var_fpkm);
@@ -504,7 +503,7 @@ void AbundanceGroup::calculate_conf_intervals()
 				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
 				pA->FPKM_conf(conf);
                 pA->FPKM_variance(var_fpkm);
-				sum_transfrag_FPKM_hi += FPKM_hi;
+				sum_transfrag_FPKM_hi = max(sum_transfrag_FPKM_hi, FPKM_hi);
 			}
 			else
 			{

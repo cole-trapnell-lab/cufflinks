@@ -22,7 +22,7 @@ void initdb() /* initialize locfit's work space */
     else sscanf(z,"%d",&lf_work);
     lf_work <<= 10;
     db = (char *)malloc(lf_work);
-    if (!db)
+    if (db == NULL)
     {
         fprintf(stderr, "Error: Locfit working space could not be allocated!\n");
         fprintf(stderr, "Error code %d\n", errno);
