@@ -397,19 +397,19 @@ void HitBundle::collapse_hits()
 
 void HitBundle::finalize_open_mates()
 {
-	for (OpenMates::iterator itr = _open_mates.begin(); 
-		 itr != _open_mates.end(); 
-		 ++itr)
-	{
-		for (list<MateHit>::iterator mi = itr->second.begin(); mi != itr->second.end(); ++mi)
-		{
-            // We don't want to split reads accross boundaries since this would only occur
-            // in ref_driven mode and the read shouldn't map to any of the references in this case.
-            if (mi->left_alignment()->partner_pos() <= right())
-                add_hit(*mi);
-		}
-        itr->second.clear();
-	}
+    // We don't want to split reads accross boundaries since this would only occur
+    // in ref_driven mode and the read shouldn't map to any of the references in this case.
+
+//	for (OpenMates::iterator itr = _open_mates.begin(); 
+//		 itr != _open_mates.end(); 
+//		 ++itr)
+//	{
+//		for (list<MateHit>::iterator mi = itr->second.begin(); mi != itr->second.end(); ++mi)
+//		{
+//             add_hit(*mi);
+//		}
+//        itr->second.clear();
+//	}
     _open_mates.clear();
 }
 
@@ -640,9 +640,8 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
             continue;
         
 		if (tmp.ref_id() == 84696373)  // corresponds to SAM "*" under FNV hash. unaligned read record 
-
             continue;
-		
+	
 		raw_mass += tmp.mass();
 		
         if (_hit_fac->ref_table().get_name(tmp.ref_id())==NULL) // unaligned read record (!?)
