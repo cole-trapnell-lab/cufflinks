@@ -142,7 +142,8 @@ enum BiasMode
 	SITE,
 	VLMM,
 	POS,
-	POS_VLMM
+	POS_VLMM,
+    POS_SITE
 };
 extern BiasMode bias_mode;
 

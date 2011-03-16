@@ -196,6 +196,8 @@ int parse_options(int argc, char** argv)
 					bias_mode = POS_VLMM;
 				else if (!strcmp(optarg, "vlmm"))
 					bias_mode = VLMM;
+                else if (!strcmp(optarg, "pos_site"))
+					bias_mode = POS_SITE;
 				else
 				{
 					fprintf(stderr, "Unknown bias mode.\n");

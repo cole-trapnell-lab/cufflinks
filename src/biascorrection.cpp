@@ -153,7 +153,7 @@ const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.3,.4,.5,
 BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 {
 	paramTypes = vlmmSpec;
-	if (bias_mode==SITE)
+	if (bias_mode==SITE || bias_mode==POS_SITE)
 	{
 		paramTypes = siteSpec;
 	}
@@ -630,7 +630,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 				start_bias_for_len[l] += start_bias[i];
 				end_bias_for_len[l] += end_bias[i+l-1];
 				
-				double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(l, trans_len-i) : fld->pdf(l);
+				double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM || bias_mode == POS_SITE) ? fld->npdf(l, trans_len-i) : fld->pdf(l);
 				eff_len += tot_bias * frag_prob;
 			}
 		}
@@ -691,7 +691,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];
 	cond_prob *= _end_biases[i][end];
-	double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(frag_len, trans_len-start) : fld->pdf(frag_len);
+	double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM || bias_mode == POS_SITE) ? fld->npdf(frag_len, trans_len-start) : fld->pdf(frag_len);
 	cond_prob *= frag_prob; 
 	
 	if (cond_prob==0.0)
@@ -735,7 +735,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
         double cond_prob = 1.0;
         cond_prob *= _start_biases[i][start];
         cond_prob *= _end_biases[i][end];
-        double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM) ? fld->npdf(frag_len, trans_len-start) : fld->pdf(frag_len);
+        double frag_prob = (bias_mode == POS || bias_mode == POS_VLMM || bias_mode == POS_SITE) ? fld->npdf(frag_len, trans_len-start) : fld->pdf(frag_len);
         cond_prob *= frag_prob; 
         
         if (cond_prob==0.0)
