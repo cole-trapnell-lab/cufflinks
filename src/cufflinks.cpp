@@ -1171,9 +1171,8 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	if(!final_est_run && bundle_mode==REF_DRIVEN) // We are learning bias
 	{
 		bl_ptr->normalizeParameters();
-#if ADAM_MODE
-		bl_ptr->output();
-#endif
+        if (output_bias_params)
+            bl_ptr->output();
 	}
 	
 	fclose(ftranscripts);
