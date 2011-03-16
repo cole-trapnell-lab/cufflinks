@@ -508,7 +508,6 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
 	learn_bias(*fac, *bl, false);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
-	fac->reset();
 }
 
 bool quantitate_next_locus(const RefSequenceTable& rt,
@@ -816,7 +815,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         else if (corr_multi)
             p_bar = ProgressBar("Calculating initial abundance estimates for multi-read correction.", num_bundles);
 
-		
 		while (1) 
 		{
 			p_bar.update("",1);
@@ -826,6 +824,12 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 			if (!more_loci_remain)
 				break;
 		}
+        
+        foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
+		{
+			rep_fac.reset();
+        }
+        
 		p_bar.complete();
 	}
     if (corr_bias)
@@ -833,7 +837,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         p_bar = ProgressBar("Learning bias parameters.", 0);
 		foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
 		{
-			rep_fac.reset();
 			foreach (shared_ptr<BundleFactory> fac, rep_fac.factories())
 			{
 #if ENABLE_THREADS	
@@ -858,6 +861,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 #else
 				learn_bias_worker(fac);
 #endif
+                rep_fac.reset();
+
 			}
     	}
     

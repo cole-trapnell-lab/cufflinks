@@ -296,7 +296,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 	else
 	{
 		if (expand_by_partner)
-			_rightmost = max(_rightmost, bh->partner_pos()+1);
+			_rightmost = max(max(_rightmost, bh->right()), bh->partner_pos()+1);
 		OpenMates::iterator mi = _open_mates.find(bh->left());
 		
 		// Does this read hit close an open mate?
