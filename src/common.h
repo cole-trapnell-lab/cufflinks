@@ -41,6 +41,8 @@ extern int num_threads;
 extern bool no_update_check;
 extern bool cuff_quiet;
 extern bool cuff_verbose;
+extern bool output_fld;
+extern bool output_bias_params;
 
 // General options
 extern int max_partner_dist;
@@ -83,8 +85,6 @@ extern double small_anchor_fraction;
 extern double binomial_junc_filter_alpha;
 extern std::string user_label;
 
-
-#define ADAM_MODE 0
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
 
@@ -334,4 +334,6 @@ void init_library_table();
 #define OPT_3_PRIME_DROPOFF_FRAC    270
 #define OPT_POISSON_DISPERSION      271
 #define OPT_NO_UPDATE_CHECK         272
+#define OPT_OUTPUT_FLD              273
+#define OPT_OUTPUT_BIAS_PARAMS      274
 #endif

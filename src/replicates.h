@@ -144,8 +144,7 @@ public:
                 }
                 else
                 {
-                    const string& label = sample_count_table[i].first;
-                    assert (label == c.first);
+                    assert (sample_count_table[i].first == c.first);
                     sample_count_table[i].second.push_back(raw_count);
                 }
             }

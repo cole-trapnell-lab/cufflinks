@@ -398,7 +398,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     // This will also compute the transcript level FPKMs
     calculate_counts(nr_alignments, transcripts);  
 
-	if(!final_est_run)
+	if(corr_multi && !final_est_run)
 	{
 		update_multi_reads(nr_alignments, mapped_transcripts);
 	}

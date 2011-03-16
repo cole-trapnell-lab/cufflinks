@@ -53,9 +53,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:c:I:j:L:M:o:r:TNqv";
+const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvu";
 #else
-const char *short_options = "m:s:c:I:j:L:M:o:r:TNqv";
+const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvu";
 #endif
 
 
@@ -73,19 +73,20 @@ static struct option long_options[] = {
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},
-{"reference-seq",			required_argument,		 0,			 'r'},
+{"frag-bias-correct",       required_argument,		 0,			 'b'},
+{"multi-read-correct",      no_argument,			 0,			 'u'},
 {"time-series",             no_argument,             0,			 'T'},
-{"quartile-normalization",  no_argument,	 		 0,	         'N'},
+{"upper-quartile-norm",     no_argument,	 		 0,	         'N'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
-{"max-mle-iterations",		 required_argument,		 0,			 OPT_MLE_MAX_ITER},
-{"poisson-dispersion",		 no_argument,		 0,			     OPT_POISSON_DISPERSION},
-#if ADAM_MODE
-{"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
-#endif
+{"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
+{"poisson-dispersion",		no_argument,             0,		     OPT_POISSON_DISPERSION},
+{"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
+{"no-update-check",         no_argument,             0,          OPT_NO_UPDATE_CHECK},
+
 {0, 0, 0, 0} // terminator
 };
 
@@ -97,27 +98,29 @@ void print_usage()
 	//NOTE: SPACES ONLY, bozo
     fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
 	fprintf(stderr, "   Supply replicate SAMs as comma separated lists for each condition: sample1_rep1.sam,sample1_rep2.sam,...sample1_repM.sam\n");
-    fprintf(stderr, "Options:\n\n");
+    fprintf(stderr, "General Options:\n");
+    fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
     fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
-   	fprintf(stderr, "  -N/--quartile-normalization  use upper-quartile normalization                      [ default:  FALSE ]\n");
 	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
-    fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
-	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
-	fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-	fprintf(stderr, "  -r/--reference-seq           reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+    fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
+    fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
+    fprintf(stderr, "  -N/--upper-quartile-norm     use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
-	fprintf(stderr, "\nAdvanced Options:\n\n");
+	fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
-    fprintf(stderr, "  -m/--frag-len-mean           the average fragment length (use with unpaired reads only)               \n");
-	fprintf(stderr, "  -s/--frag-len-std-dev        the fragment length standard deviation  (use with unpaired reads only)   \n");
-	fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+    fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
+    fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
+    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --poisson-dispersion         Don't fit counts for overdispersion                   [ default:  FALSE ]\n");
+    fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
+	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
     print_library_table();
 }
 
@@ -226,6 +229,11 @@ int parse_options(int argc, char** argv)
             	use_quartile_norm = true;
             	break;
             }
+            case 'u':
+            {
+                corr_multi = true;
+                break;
+            }
             case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
@@ -236,7 +244,11 @@ int parse_options(int argc, char** argv)
 				poisson_dispersion = true;
 				break;
 			}
-
+            case OPT_NO_UPDATE_CHECK:
+            {
+                no_update_check = true;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -795,9 +807,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	int num_bundles = bundle_factories[0].num_bundles();
 	
-	if (corr_bias) // Only run initial estimation if correcting bias
+	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
-		p_bar = ProgressBar("Calculating initial abundance estimates.", num_bundles);
+        if (corr_bias && corr_multi)
+            p_bar = ProgressBar("Calculating initial abundance estimates for bias and multi-read correction.", num_bundles);
+        else if (corr_bias)
+            p_bar = ProgressBar("Calculating initial abundance estimates for bias correction.", num_bundles);
+        else if (corr_multi)
+            p_bar = ProgressBar("Calculating initial abundance estimates for multi-read correction.", num_bundles);
+
 		
 		while (1) 
 		{
@@ -809,8 +827,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 				break;
 		}
 		p_bar.complete();
-	
-		p_bar = ProgressBar("Learning bias parameters.", 0);
+	}
+    if (corr_bias)
+    {
+        p_bar = ProgressBar("Learning bias parameters.", 0);
 		foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
 		{
 			rep_fac.reset();

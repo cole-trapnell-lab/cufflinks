@@ -36,9 +36,9 @@
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:F:I:j:Q:L:G:g:f:o:M:b:a:A:Nqvu";
+const char *short_options = "m:p:s:F:I:j:Q:L:G:g:o:M:b:a:A:Nqvu";
 #else
-const char *short_options = "m:s:F:I:j:Q:L:G:g:f:o:M:b:a:A:Nqvu";
+const char *short_options = "m:s:F:I:j:Q:L:G:g:o:M:b:a:A:Nqvu";
 #endif
 
 static struct option long_options[] = {
@@ -56,20 +56,19 @@ static struct option long_options[] = {
 #if ENABLE_THREADS
     {"num-threads",			required_argument,       0,          'p'},
 #endif    
-
+{"output-fld",              no_argument,             0,          OPT_OUTPUT_FLD},
+{"output-bias-params",      no_argument,             0,          OPT_OUTPUT_BIAS_PARAMS},
+    
 // abundance estimation
 {"frag-len-mean",			required_argument,       0,          'm'},
 {"frag-len-std-dev",		required_argument,       0,          's'},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
-{"min-intron-fraction",     required_argument,       0,          'f'},
 {"quartile-normalization",  no_argument,	 		 0,	         'N'},
-{"frag-bias-correction",	required_argument,		 0,			 'b'},
-{"multi-read-correction",	no_argument,			 0,			 'u'},
+{"frag-bias-correct",       required_argument,		 0,			 'b'},
+{"multi-read-correct",      no_argument,			 0,			 'u'},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
-#if ADAM_MODE
-    {"bias-mode",		    required_argument,		 0,			 OPT_BIAS_MODE},
-#endif
+{"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
 
 // assembly
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
@@ -102,13 +101,13 @@ void print_usage()
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotation to guide assembly                   \n");
     fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
-    fprintf(stderr, "  -b/--frag-bias-correction    use bias correction - reference fasta required        [ default:   NULL ]\n");
-    fprintf(stderr, "  -u/--multi-read-correction   use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
+    fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
+    fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "  --library-type               library prep used for input reads                     [ default:  below ]\n");
     
     fprintf(stderr, "\nAdvanced Abundance Estimation Options:\n");
-    fprintf(stderr, "  -m/--frag-len-mean           average fragment length (needed for single-end)       [ default:    200 ]\n");
-    fprintf(stderr, "  -s/--frag-len-std-dev        fragment length standard deviation (for single-end)   [ default:     80 ]\n");
+    fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
+    fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  --upper-quartile-norm        use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
@@ -116,7 +115,6 @@ void print_usage()
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
     fprintf(stderr, "  -F/--min-isoform-fraction    suppress transcripts below this abundance level       [ default:   0.10 ]\n");
-    fprintf(stderr, "  -f/--min-intron-fraction     filter spliced alignments below this level            [ default:   0.10 ]\n");
     fprintf(stderr, "  -j/--pre-mrna-fraction       suppress intra-intronic transcripts below this level  [ default:   0.15 ]\n");
     fprintf(stderr, "  -I/--max-intron-length       ignore alignments with gaps longer than this          [ default: 300000 ]\n");
     fprintf(stderr, "  -a/--junc-alpha              alpha for junction binomial test filter               [ default:  0.001 ]\n");
@@ -129,8 +127,8 @@ void print_usage()
     fprintf(stderr, "  --trim-3-dropoff-frac        fraction of avg coverage below which to trim 3' end   [ default:    0.1 ]\n");
     
     fprintf(stderr, "\nAdvanced Reference Annotation Guided Assembly Options:\n");
-    fprintf(stderr, "  --tile-read-len              length of faux-reads                                  [ default:    405 ]\n");
-    fprintf(stderr, "  --tile-read-sep              distance between faux-reads                           [ default:     15 ]\n");
+//    fprintf(stderr, "  --tile-read-len              length of faux-reads                                  [ default:    405 ]\n");
+//    fprintf(stderr, "  --tile-read-sep              distance between faux-reads                           [ default:     15 ]\n");
     fprintf(stderr, "  --3-overhang-tolerance       overhang allowed on 3' end when merging with reference[ default:    600 ]\n");
     fprintf(stderr, "  --intron-overhang-tolerance  overhang allowed inside reference intron when merging [ default:     30 ]\n");
     
@@ -166,9 +164,6 @@ int parse_options(int argc, char** argv)
 			case 'F':
 				min_isoform_fraction = parseFloat(0, 1.0, "-F/--min-isoform-fraction must be between 0 and 1.0", print_usage);
 				F_set = true;
-				break;
-			case 'f':
-				min_isoform_fraction = parseFloat(0, 1.0, "-f/--min-intron-fraction must be between 0 and 1.0", print_usage);
 				break;
 			case 'I':
 				max_intron_length = parseInt(1, "-I/--max-intron-length must be at least 1", print_usage);
@@ -304,6 +299,16 @@ int parse_options(int argc, char** argv)
             case OPT_NO_UPDATE_CHECK:
             {
                 no_update_check = true;
+                break;
+            }
+            case OPT_OUTPUT_FLD:
+            {
+                output_fld = true;
+                break;
+            }
+            case OPT_OUTPUT_BIAS_PARAMS:
+            {
+                output_bias_params = true;
                 break;
             }
 			default:

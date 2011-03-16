@@ -1440,7 +1440,7 @@
 					/usr/local/include/,
 					./src,
 					/usr/local/include/boost,
-					"/user/local/include/boost-1_41",
+					"/usr/local/include/boost-1_41",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (

@@ -203,37 +203,31 @@
 	  the alignments you supply have some of these tags.  Please see <a href="#input">
 	  Input formats</a> for more details.
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top>
-	  <b>Options:</b>
+	  <b>General Options:</b>
 	  </td><td VALIGN=top>
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-h/--help</tt>
 	  </td><td VALIGN=top>
 	  Prints the help message and exits   
 	  </td></tr> 
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-q/--quiet</tt>
-	  </td><td VALIGN=top>
-	  Suppress messages other than serious warnings and errors.
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-v/--verbose</tt>
-	  </td><td VALIGN=top>
-	  Print lots of status updates and other diagnostic information.
-	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-o/--output-dir &lt;string&gt;</tt>
 	  </td><td VALIGN=top>
 	  Sets the name of the directory in which Cufflinks will write all of its 
 	  output.  The default is "./".
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-L/--label</tt>
+	  <tt>-p/--num-threads &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  Cufflinks will report transfrags in GTF format, with a prefix given by 
-	  this option.  The default prefix is "CUFF".
+	  Use this many threads to align reads. The default is 1.
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-G/--GTF &lt;reference_annotation.gtf&gt;</tt>
 	  </td><td VALIGN=top>
@@ -241,13 +235,101 @@
 	  isoform expression.  It will not assemble novel transcripts, and the program
 	  will ignore alignments not structurally compatible with any reference transcript.  
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-I/--max-intron-length &lt;int&gt;</tt>
+	  <tt>-g/--GTF-guide &lt;reference_annotation.gtf&gt;</tt>
 	  </td><td VALIGN=top>
-	  The maximum intron length.  Cufflinks will not report transcripts with 
-	  introns longer than this, and will ignore SAM alignments with REF_SKIP 
-	  CIGAR operations longer than this.  The default is 300,000.
+	  Tells Cufflinks to use the supplied reference annotation to guide the assembly.
+	  Reference transcripts will be tiled with faux-reads to provide additional information
+	  in assembly. Output will include all reference transcripts as well as any novel
+	  genes and isoforms that are assembled.
 	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-M/--mask-file &lt;mask.gtf&gt;</tt>
+	  </td><td VALIGN=top>
+	  Tells Cufflinks to ignore all reads that could have come from transcripts in this GTF 
+	  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant
+	  transcripts you wish to ignore in your analysis in this file.  Due to variable efficiency
+	  of mRNA enrichment methods and rRNA depletion kits, masking these transcripts often 
+	  improves the overall robustness of transcript abundance estimates. 
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-b/--frag-bias-correct &lt;genome.fa&gt;</tt>
+	  </td><td VALIGN=top>
+	  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
+	  bias detection and correction algorithm which can significantly improve accuracy of 
+	  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How It Works</a> for more details.
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-u/--multi-read-correct</tt>
+	  </td><td VALIGN=top>
+	  Tells Cufflinks to do an initial estimation procedure to more accurately weight reads
+	  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How It Works</a> for more details.
+	  </td></tr>
+	  <tr><td VALIGN=top>
+	  
+	  <tt>--library-type</tt>
+	  </td><td VALIGN=top>
+	  See <a href="#library">Library Types</a>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>	
+	  
+	  <tr><td VALIGN=top>
+	  <b>Advanced Abundance Estimation Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>	
+	  <tt>-m/--frag-len-mean &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  This is the expected (mean) fragment length. The default is 200bp. <br/><b>Note: 
+	  Cufflinks now learns the fragment length mean for each SAM file, so using this option is
+	  no longer recommended with paired-end reads.</b>
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-s/--frag-len-std-dev &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The standard deviation for the distribution on fragment lengths.  The default is 80bp. <br/><b>Note: 
+	  Cufflinks now learns the fragment length standard deviation for each SAM file, so using this option is
+	  no longer recommended with paired-end reads.</b>
+	  </td></tr>
+	  
+  	  <tr><td VALIGN=top nowrap>
+	  <tt>-N/--upper-quartile-norm</tt>
+	  </td><td VALIGN=top>
+	  With this option, Cufflinks normalizes by the upper quartile of the number of fragments mapping
+	  to individual loci instead of the total number of sequenced fragments.  This can improve robustness 
+	  of differential expression calls for less abundant genes and transcripts.
+	  </td></tr>
+  		
+  	  <tr><td VALIGN=top nowrap>
+	  <tt>--num-importance-samples &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
+	  </td></tr> 
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--max-mle-iterations &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
+	  </td></tr>
+	
+	  <tr><td VALIGN=top>
+	  <b>Advanced Assembly Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-L/--label</tt>
+	  </td><td VALIGN=top>
+	  Cufflinks will report transfrags in GTF format, with a prefix given by 
+	  this option.  The default prefix is "CUFF".
+	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-F/--min-isoform-fraction &lt;0.0-1.0&gt;</tt>
 	  </td><td VALIGN=top>
@@ -257,8 +339,9 @@
 	  and may even be artifacts of incompletely spliced precursors of processed
 	  transcripts. This parameter is also used to filter out introns
 	  that have far fewer spliced alignments supporting them. The default is 
-	  0.05, or 5% of the most abundant isoform (the major isoform) of the gene.  
+	  0.1, or 10% of the most abundant isoform (the major isoform) of the gene.  
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-j/--pre-mrna-fraction &lt;0.0-1.0&gt;</tt>
 	  </td><td VALIGN=top>
@@ -269,96 +352,115 @@
 	  spliced alignments.  The minimum depth of coverage in the intronic region covered 
 	  by the alignment is divided by the number of spliced reads, and if the 
 	  result is lower than this parameter value, the intronic alignments are 
-	  ignored. The default is 5%.
+	  ignored. The default is 15%.
 	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-p/--num-threads &lt;int&gt;</tt>
+	  <tt>-I/--max-intron-length &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  Use this many threads to align reads. The default is 1.
+	  The maximum intron length.  Cufflinks will not report transcripts with 
+	  introns longer than this, and will ignore SAM alignments with REF_SKIP 
+	  CIGAR operations longer than this.  The default is 300,000.
 	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-Q/--min-mapqual &lt;int&gt;</tt>
-	  </td><td VALIGN=top>
-	  Instructs Cufflinks to ignore alignments with a SAM mapping quality lower
-	  than this number.  The default is 0.
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-M/--mask-file &lt;mask.gtf&gt;</tt>
-	  </td><td VALIGN=top>
-	  Tells Cufflinks to ignore all reads that could have come from transcripts in this GTF 
-	  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant
-	  transcripts you wish to ignore in your analysis in this file.  Due to variable efficiency
-	  of mRNA enrichment methods and rRNA depletion kits, masking these transcripts often 
-	  improves the overall robustness of transcript abundance estimates. 
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-r/--reference-seq &lt;genome.fa&gt;</tt>
-	  </td><td VALIGN=top>
-	  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
-	  bias detection and correction algorithm which can significantly improve accuracy of 
-	  transcript abundance estimates.  
-	  </td></tr>
-	  <tr><td VALIGN=top>
-	  <b>Advanced Options:</b>
-	  </td><td VALIGN=top>
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-N/--quartile-normalization</tt>
-	  </td><td VALIGN=top>
-	  With this option, Cufflinks excludes the contribution of the top 25 percent most highly expressed genes from 
-	  the number of mapped fragments used in the FPKM denominator.  This can improve robustness 
-	  of differential expression calls for less abundant genes and transcripts.
-	  </td></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-a/--junc-alpha &lt;0.0-1.0&gt; </tt>
 	  </td><td VALIGN=top>
 	  The alpha value for the binomial test used during false positive spliced alignment 
 	  filtration. Default: 0.01
 	  </td></tr>
+	 
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-A/--small-anchor-fraction &lt;0.0-1.0&gt;</tt>
 	  </td><td VALIGN=top>
 	  Spliced reads with less than this percent of their length on each side of the junction
 	  are considered suspicious and are candidates for filtering prior to assembly.  Default: 0.12.  
 	  </td></tr>
+	 
 	  <tr><td VALIGN=top nowrap>
 	  <tt>--min-frags-per-transfrag &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
 	  Assembled transfrags supported by fewer than this many aligned RNA-Seq fragments are 
 	  not reported.  Default: 10.
 	  </t></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>--num-importance-samples &lt;int&gt;</tt>
+	  <tt>--overhang-tolerance &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
-	  </td></tr> 
+	  The number of bp allowed to enter the intron of a transcript when determining if a read or 
+	  another transcript is mappable to/compatible with it.  The default is 8 bp based on the default
+	  bowtie/TopHat parameters.
+	  </t></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>--max-mle-iterations &lt;int&gt;</tt>
+	  <tt>--max-bundle-length &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>	
-	  <tt>--library-type</tt>
-	  </td><td VALIGN=top>
-	  See <a href="#library">Library Types</a>
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>	
-	  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
-	  </td><td VALIGN=top>
-	  This is the expected (mean) inner distance between mate pairs.  For, 
-	  example, for paired end runs with fragments selected at 300bp, where each
-	  end is 50bp, you should set -r to be 200.  The default is 45bp. <br/><b>Note: 
-	  Cufflinks now learns the fragment length mean for each SAM file, so using this option is
-	  no longer recommended</b>
-	  </td></tr>
+	  Maximum genomic length allowed for a given bundle.  The default is 3,500,000 bp.
+	  </t></tr>
+	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
+	  <tt>--min-intron-length &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  The standard deviation for the distribution on inner distances between
-	  mate pairs.  The default is 20bp. <br/><b>Note: 
-	  Cufflinks now learns the fragment length standard deviation for each SAM file, so using this option is
-	  no longer recommended</b>
+	  Minimum intron size allowed in genome. The default is 50 bp.
+	  </t></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--trim-3-avgcov-thresh &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Minimum average coverage required to attempt 3' trimming.  The default is 10.
+	  </t></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--trim-3-dropoff-frac &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The fraction of average coverage below which to trim the 3' end of an assembled
+	  transcript.  The default is 0.1.
+	  </t></tr>
+	  
+	  <b>Advanced Reference Annotation Guided Assembly Options:</b>
+	  </td><td VALIGN=top>
 	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--3-overhang-tolerance &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The number of bp allowed to overhang the 3' end of a reference transcript when determining 
+	  if an assembled transcript should be merged with it (ie, the assembled transcript is not novel).  
+	  The default is 600 bp.
+	  </t></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--intron-overhang-tolerance &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The number of bp allowed to enter the intron of a reference transcript when determining if an 
+	  assembled transcript should be merged with it (ie, the assembled transcript is not novel).  
+	  The default is 50 bp.
+	  </t></tr>
+
+	  <tr><td VALIGN=top>
+	  <b>Advanced Program Behavior Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-v/--verbose</tt>
+	  </td><td VALIGN=top>
+	  Print lots of status updates and other diagnostic information.
+	  </td></tr>
+	  
+	   <tr><td VALIGN=top nowrap>
+	  <tt>-q/--quiet</tt>
+	  </td><td VALIGN=top>
+	  Suppress messages other than serious warnings and errors.
+	  </td></tr>
+
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-update-check</tt>
+	  </td><td VALIGN=top>
+	  Turns off the automatic routine that contacts the Cufflinks server to check for a more 
+	  recent version.
+	  </td></tr>
+	  
 	  </table><br/>
 	
 	  <h2 id="cufflinks_input">Cufflinks Input</h2><br/>
@@ -958,16 +1060,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  Prints the help message and exits   
 		  </td></tr> 
-	 	  <tr><td VALIGN=top nowrap>
-		  <tt>-q/--quiet</tt>
-		  </td><td VALIGN=top>
-		  Suppress messages other than serious warnings and errors.
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>
-		  <tt>-v/--verbose</tt>
-		  </td><td VALIGN=top>
-		  Print lots of status updates and other diagnostic information.
-		  </td></tr>
+
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-o/--output-dir &lt;string&gt;</tt>
 		  </td><td VALIGN=top>
@@ -993,25 +1086,31 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  increasing time order at the command line (e.g first time point SAM, second timepoint SAM, etc.) 
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-N/--quartile-normalization</tt>
+		  <tr><td VALIGN=top nowrap>
+	  
+		  <tt>-N/--upper-quartile-norm</tt>
 		  </td><td VALIGN=top>
-		  With this option, Cufflinks excludes the contribution of the top 25 percent most highly expressed genes from 
-		  the number of mapped fragments used in the FPKM denominator.  This can improve robustness 
+		  With this option, Cufflinks normalizes by the upper quartile of the number of fragments mapping
+		  to individual loci instead of the total number of sequenced fragments.  This can improve robustness 
 		  of differential expression calls for less abundant genes and transcripts.
 		  </td></tr>
+			
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-r/--reference-seq &lt;genome.fa&gt;</tt>
+		  <tt>-b/--frag-bias-correct &lt;genome.fa&gt;</tt>
 		  </td><td VALIGN=top>
 		  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
 		  bias detection and correction algorithm which can significantly improve accuracy of 
-		  transcript abundance estimates.  
+		  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How It Works</a> for more details.
 		  </td></tr>
+		  
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-Q/--min-mapqual &lt;int&gt;</tt>
+		  <tt>-u/--multi-read-correct</tt>
 		  </td><td VALIGN=top>
-		  Instructs Cufflinks to ignore alignments with a SAM mapping quality lower
-		  than this number.  The default is 0.
+		  Tells Cufflinks to do an initial estimation procedure to more accurately weight reads
+		  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How It Works</a> for more details.
 		  </td></tr>
+		  <tr><td VALIGN=top>
+		   
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-c/--min-alignment-count &lt;int&gt;</tt>
 		  </td><td VALIGN=top>
@@ -1021,38 +1120,51 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  and the locus' observed changes don't contribute to correction for 
 		  multiple testing. The default is 10 fragment alignments. 
 		  </td></tr>
+		  
+		   <tr><td VALIGN=top nowrap>
+	  <tt>-M/--mask-file &lt;mask.gtf&gt;</tt>
+	  </td><td VALIGN=top>
+	  Tells Cuffdiff to ignore all reads that could have come from transcripts in this GTF 
+	  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant
+	  transcripts you wish to ignore in your analysis in this file.  Due to variable efficiency
+	  of mRNA enrichment methods and rRNA depletion kits, masking these transcripts often 
+	  improves the overall robustness of transcript abundance estimates. 
+	  </td></tr>
+		  
 		  <tr><td VALIGN=top nowrap>
 		  <tt>--FDR &lt;float&gt;</tt>
 		  </td><td VALIGN=top>
 		  The allowed false discovery rate.  The default is 0.05. 
 		  </td></tr>
-		  <tr><td VALIGN=top>
-		  <b>Advanced Options:</b>
-		  </td><td VALIGN=top>
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>	
-		  <tt>--library-type</tt>
-		  </td><td VALIGN=top>
-		  See <a href="#library">Library Types</a>
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>	
-		  <tt>-m/--inner-dist-mean &lt;int&gt;</tt>
-		  </td><td VALIGN=top>
-		  This is the expected (mean) inner distance between mate pairs.  For, 
-		  example, for paired end runs with fragments selected at 300bp, where each
-		  end is 50bp, you should set -r to be 200.  The default is 45bp. <br/><b>Note: 
-		  Cufflinks now learns the fragment length mean for each SAM file, so using this option is
-		  no longer recommended</b>
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>
-		  <tt>-s/--inner-dist-std-dev &lt;int&gt;</tt>
-		  </td><td VALIGN=top>
-		  The standard deviation for the distribution on inner distances between
-		  mate pairs.  The default is 20bp. <br/><b>Note: 
-		  Cufflinks now learns the fragment length standard deviation for each SAM file, so using this option is
-		  no longer recommended</b>
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>
+		  
+		  
+	  <tr><td VALIGN=top>
+	  <b>Advanced Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>	
+	  <tt>--library-type</tt>
+	  </td><td VALIGN=top>
+	  See <a href="#library">Library Types</a>
+	  </td></tr>
+	   <tr><td VALIGN=top nowrap>	
+	  <tt>-m/--frag-len-mean &lt;int&gt;</tt>
+	
+	  </td><td VALIGN=top>
+	  This is the expected (mean) fragment length. The default is 200bp. <br/><b>Note: 
+	  Cufflinks now learns the fragment length mean for each SAM file, so using this option is
+	  no longer recommended with paired-end reads.</b>
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-s/--frag-len-std-dev &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The standard deviation for the distribution on fragment lengths.  The default is 80bp. <br/><b>Note: 
+	  Cufflinks now learns the fragment length standard deviation for each SAM file, so using this option is
+	  no longer recommended with paired-end reads.</b>
+	  </td></tr>
+	  
+	 <tr><td VALIGN=top nowrap>
 		  <tt>--num-importance-samples &lt;int&gt;</tt>
 		  </td><td VALIGN=top>
 		  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
@@ -1062,6 +1174,26 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
 		  </td></tr>
+		  
+		  	  <tr><td VALIGN=top nowrap>
+	  <tt>-v/--verbose</tt>
+	  </td><td VALIGN=top>
+	  Print lots of status updates and other diagnostic information.
+	  </td></tr>
+	  
+	   <tr><td VALIGN=top nowrap>
+	  <tt>-q/--quiet</tt>
+	  </td><td VALIGN=top>
+	  Suppress messages other than serious warnings and errors.
+	  </td></tr>
+
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-update-check</tt>
+	  </td><td VALIGN=top>
+	  Turns off the automatic routine that contacts the Cufflinks server to check for a more 
+	  recent version.
+	  </td></tr>
+	  
 		  </table><br/>
 	  <h2 id="cuffdiff_output">Cuffdiff Output</h2><br/>
 		<br/>

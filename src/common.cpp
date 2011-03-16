@@ -29,11 +29,11 @@
 
 using namespace std;
 
+
 // Non-option globals
 bool final_est_run = true;
 bool allow_junk_filtering = true;
 bool user_provided_fld = false;
-
 
 // Behavior options
 int num_threads = 1;
@@ -44,7 +44,8 @@ bool cuff_verbose = true;
 #else
 bool cuff_verbose = false;
 #endif
-
+bool output_fld = false;
+bool output_bias_params = false;
 
 // General options
 BundleMode bundle_mode = HIT_DRIVEN;

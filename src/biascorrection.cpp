@@ -135,9 +135,9 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 		p_bar.complete();
 		
 	bl.normalizeParameters();
-#if ADAM_MODE
-	bl.output();
-#endif
+    
+    if (output_bias_params)
+        bl.output();
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};

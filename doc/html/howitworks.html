@@ -133,7 +133,9 @@
   	      <li><a href="#hass">How does Cufflinks assemble transcripts?</a></li>
   	  	  <li><a href="#hqua">How does Cufflinks calculate transcript abundances?</a></li>
   	  	  <li><a href="#hdis">How does Cufflinks estimate the fragment length distribution?</a></li>
-  	  	  <li><a href="#hsbi">How does Cufflinks handle sequence bias?</a></li>
+  	  	  <li><a href="#hsbi">How does Cufflinks identify and correct for sequence bias?</a></li>
+  	  	  <li><a href="#hmul">How does Cufflinks handle multi-mapped reads?</a></li>
+   	  	  <li><a href="#hrga">How does reference annotation guided assembly work?</a></li>
   	  	  <li><a href="#hdif">How does Cuffdiff test for differential expression and differential regulation?</a></li>
  	   	  <li><a href="#huqn">How does upper-quartile normalization work?</a></li>
 
@@ -178,7 +180,7 @@
 		<ul>
 		<li>Eric T. Wang, Rickard Sandberg, Shujun Luo, Irina Khrebtukova, Lu Zhang, Christine Mayr, Stephen F. Kingsmore, Gary P. Schroth, and Christopher B. Burge,
 			<a href="http://www.nature.com/nature/journal/v456/n7221/abs/nature07509.html">Alternative isoform regulation in human tissue transcriptomes</a>
-			Nature, volume 456, 470 - 476 (2008)
+			Nature, Volume 456, 470 - 476 (2008)
 	   </ul>
 		
 		<p>
@@ -219,7 +221,7 @@
 	  <ul>
 		<li>Ali Mortazavi, Brian A Williams, Kenneth McCue, Lorian Schaeffer and Barbara Wold
 			<a href="http://www.nature.com/nmeth/journal/v5/n7/abs/nmeth.1226.html">Mapping and quantifying mammalian transcriptomes by RNA-Seq</a>
-			Nature Methods, volume 5, 621 - 628 (2008)
+			Nature Methods, Volume 5, 621 - 628 (2008)
 	  </ul>
 	  <br/>
 	  
@@ -279,7 +281,7 @@
 	  will be used, one can first assemble with the Gaussian and then supply the output GTF assembly in a second run of Cufflinks.</li></ul>
 	  <br/>
 	  
-	<h2 id="hsbi">How does Cufflinks handle sequence bias?</h2><br/>
+	<h2 id="hsbi">How does Cufflinks identify and correct for sequence bias?</h2><br/>
 	  <p>
 	  Often in RNA-Seq experiments, a sequence-specific bias is introduced during the 
 	  library preparation that challenges the assumption of uniform coverage. For example, 
@@ -316,10 +318,47 @@
 	  new set of FPKMs that are less affected by sequence-specific bias.</p>
 	  
 	  <p> Note that since it must know which ends of reads are fragment ends, Cufflinks will not bias correct reads mapping to transcripts
-	  with unknown strandedness or single-end reads generated from an FF protocol (such as SOLiD's).
+	  with unknown strandedness.
 	  </p>
+	  <p>The full details of our method can be found in</p>
+	  		
+	  <br/><ul>
+		<li>Adam Roberts, Cole Trapnell, Julie Donaghey, John L. Rinn and Lior Pachter,
+			<a href="http://genomebiology.com">Improving RNA-Seq expression estimates by correcting for fragment bias</a>
+			Genome Biology, Volume XXX, Issue XXX (2011)
+	  </ul><br/>
+	  
+	  
+	  <h2 id="hmul">How does Cufflinks handle multi-mapped reads?</h2><br/>
+	  <p> Individual reads will sometimes be mapped to multiple positions in the genome due to sequence repeats and homology. 
+	  By default, Cufflinks will uniformly divide each multi-mapped read to all of the positions it maps to.  In other words,
+	  a read mapping to 10 positions will count as 10% of a read at each position.</p>
+	  <p>If multi-mapped read correction is enabled (-u/--multi-read-correct), Cufflinks will improve its estimation in a manner
+	  inspired by (but using more information than) the 'rescue' method described in</p>	
+	  <br/><ul>
+		<li>Ali Mortazavi, Brian A Williams, Kenneth McCue, Lorian Schaeffer and Barbara Wold
+			<a href="http://www.nature.com/nmeth/journal/v5/n7/abs/nmeth.1226.html">Mapping and quantifying mammalian transcriptomes by RNA-Seq</a>
+			Nature Methods, Volume 5, 621 - 628 (2008)
+	  </ul><br/>
+	  <p>Cufflinks will first calculate initial abundance estimates for all transcripts using the uniform dividing scheme.  Cufflinks will
+	  then re-estimate the abundances dividing each multi-mapped read probabalistically based on the initial abundance estimation of the genes
+	  it maps to, the inferred fragment length, and fragment bias (if bias correction is enabled).</p>
 	  <br/>
-	  	
+	  
+	  <h2 id="hrga">How does reference annotation guided assembly work?</h2><br/>
+	  <p>Reference annotation guided assembly seeks to build upon available information about the transcriptome of
+	  an organism to find novel genes and isoforms.  When a reference GTF is provided with the -g/--GTF-guide option,
+	  the reference transcripts are tiled with faux-reads that will aid in the assembly of novel isoforms. These
+	  faux reads are combined with the sequencing reads and are input into the regular Cufflinks assembler.  The assembled
+	  transfrags are then compared to the reference transcripts to determine if they are sufficiently different to be 
+	  considered novel.  Those that are labeled novel by our criteria (see Cufflinks options to adjust the parameters)
+	  are output along with the transcripts from the annotation.
+	  <p>The use of faux-reads was inspired by the methods of</p>
+	<br/><ul>
+		<li>J Venter, M Adams, E Myers, P Li, R Mural, G Sutton, H Smith, M Yandell, C Evans, R Holt, et al.
+			<a href="http://www.sciencemag.org/content/291/5507/1304.full">The sequence of the human genome</a>
+			Science, Volume 291, 1304 - 1351 (2001)
+	  </ul><br/>	  
 	<h2 id="hdif">How does Cuffdiff test for differential expression and regulation?</h2><br/>
 		Cuffdiff takes a GTF file of transcripts as input, along with two or more 
 		SAM files containing the fragment alignments for two or more samples. 
@@ -433,8 +472,8 @@
 	  <br/>
 	  
 	  <p>
-	  This correction is implemented in Cufflinks and Cuffdiff as a command-line option. If requested, Cufflinks/Cuffdiff will use the value of the 
-	  upper-quartile in place of the "map mass" (M) when calculating FPKM.
+	  This correction is implemented in Cufflinks and Cuffdiff as a command-line option. If requested, Cufflinks/Cuffdiff will use the number of reads mapping to the 
+	  upper-quartile locus in place of the "map mass" (M) when calculating FPKM.
 	  </p>
   
 	  <br/>

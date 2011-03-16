@@ -598,16 +598,17 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	}
 	
     double mean = 0.0;
-    
-#if ADAM_MODE    
-    FILE* fhist = fopen(string(output_dir + "/frag_len_hist.csv").c_str(),"w");
-    fprintf(fhist, "Length,Count\n");
-	for(size_t i = 1; i < frag_len_hist.size(); i++)
-	{
-		fprintf(fhist, "%d,%f\n", i, frag_len_hist[i]);
-	}
-	fclose(fhist);
-#endif	
+
+    if (output_fld)
+    {
+        FILE* fhist = fopen(string(output_dir + "/frag_len_hist.csv").c_str(),"w");
+        fprintf(fhist, "Length,Count\n");
+        for(size_t i = 1; i < frag_len_hist.size(); i++)
+        {
+            fprintf(fhist, "%zu,%f\n", i, frag_len_hist[i]);
+        }
+        fclose(fhist);
+    }
 
 	// Convert histogram to pdf and cdf, calculate mean
 	int frag_len_mode = 0;

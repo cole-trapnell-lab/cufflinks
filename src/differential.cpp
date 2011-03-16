@@ -544,7 +544,7 @@ void sample_worker(const RefSequenceTable& rt,
     
     if (!*non_empty)
         return;
-    if (!final_est_run && bundle.ref_scaffolds().size() != 1) // Only learn on single isoforms
+    if (!corr_multi && !final_est_run && bundle.ref_scaffolds().size() != 1) // Only learn on single isoforms
     	return;
     
     abundance->cluster_mass = bundle.mass();
