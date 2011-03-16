@@ -268,6 +268,9 @@ public:
     long double total_map_mass() const { return _total_map_mass; }
     void total_map_mass(long double p)  { _total_map_mass = p; }  
     
+    long double normalized_map_mass() const { return _norm_map_mass; }
+    void normalized_map_mass(long double p)  { _norm_map_mass = p; }  
+    
     boost::shared_ptr<EmpDist const> frag_len_dist() const { return _frag_len_dist; }
     void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }  
     
@@ -305,6 +308,7 @@ private:
 	MateStrandMapping _mate_strand_mapping;
     Platform _platform;
     long double _total_map_mass;
+    long double _norm_map_mass;
     boost::shared_ptr<EmpDist const> _frag_len_dist;
 	boost::shared_ptr<BiasLearner const> _bias_learner;
 	boost::shared_ptr<MultiReadTable> _multi_read_table;

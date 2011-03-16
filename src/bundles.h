@@ -340,6 +340,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	RefID last_chrom = 0;
 
 	long double map_mass = 0.0;
+    long double norm_map_mass = 0.0;
 	
 	int min_len = numeric_limits<int>::max();
 	int max_len = def_max_frag_len;
@@ -509,11 +510,13 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		delete bundle_ptr;
 	}
 	
+    norm_map_mass = map_mass;
+    
 	if (use_quartile_norm)
 	{
 		sort(mass_dist.begin(),mass_dist.end());
 		int upper_quart_index = mass_dist.size() * 0.75;
-		map_mass = mass_dist[upper_quart_index];
+		norm_map_mass = mass_dist[upper_quart_index];
 	}
 
     if (bad_introns != NULL)
@@ -634,13 +637,14 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len));
 	rg_props->multi_read_table(mrt);
 	rg_props->frag_len_dist(fld);
-	rg_props->total_map_mass(map_mass);
+	rg_props->normalized_map_mass(norm_map_mass);
+    rg_props->total_map_mass(map_mass);
 
 	fprintf(stderr, "> Map Properties:\n");
 	if (use_quartile_norm)
-		fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", map_mass);
+		fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
 	else
-		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", map_mass);
+		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", norm_map_mass);
 	if (corr_multi)
 		fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
 	if (has_pairs)

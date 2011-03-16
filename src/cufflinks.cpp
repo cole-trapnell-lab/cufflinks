@@ -1136,7 +1136,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 					 boost::cref(rt), 
 					 bundle_ptr, 
 					 bl_ptr,
-					 bundle_factory.read_group_properties()->total_map_mass(),
+					 bundle_factory.read_group_properties()->normalized_map_mass(),
 					 ftranscripts, 
 					 fgene_abundances,
 					 ftrans_abundances);
@@ -1144,7 +1144,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 		assemble_bundle(boost::cref(rt), 
 						bundle_ptr, 
 						bl_ptr,
-						bundle_factory.read_group_properties()->total_map_mass(),
+						bundle_factory.read_group_properties()->normalized_map_mass(),
 						ftranscripts,
 						fgene_abundances,
 						ftrans_abundances);

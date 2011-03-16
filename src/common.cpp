@@ -337,6 +337,7 @@ ReadGroupProperties::ReadGroupProperties() :
     _std_mate_orient(UNKNOWN_MATE_ORIENTATION),
     _platform(UNKNOWN_PLATFORM),
     _total_map_mass(0.0),
+    _norm_map_mass(0.0),
     _mass_scaling_factor(1.0)
 {
     _mass_dispersion_model = boost::shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
