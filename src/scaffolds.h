@@ -424,6 +424,9 @@ public:
 	void extend_5(const Scaffold& other);
 	// Clip final 3' exon by given amount
 	void trim_3(int to_remove);
+    
+    // Extend final 3' exon by given amount
+    void extend_3(int to_add);
 
 	void tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int tile_offset) const;
 

@@ -36,6 +36,6 @@ void filter_junk_genes(vector<Gene>& genes);
 
 void filter_hits(int bundle_length, int bundle_left, vector<Scaffold>& hits);
 
-bool clip_by_3_prime_dropoff(Scaffold& scaff);
+void clip_by_3_prime_dropoff(vector<Scaffold>& scaff);
 
 #endif

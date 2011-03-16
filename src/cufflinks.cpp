@@ -353,11 +353,15 @@ int parse_options(int argc, char** argv)
     return 0;
 }
 
-void add_non_shadow_scaffs(vector<Scaffold>& lhs, 
+void combine_strand_assemblies(vector<Scaffold>& lhs, 
 						   vector<Scaffold>& rhs,
 						   vector<Scaffold>& scaffolds,
 						   vector<shared_ptr<Scaffold> >* ref_scaffs)
 {
+    // first trim off any polymerase run-ons, and make 3' ends consistent
+    clip_by_3_prime_dropoff(scaffolds);
+
+    
 	// first check for strand support
     for (size_t l = 0; l < lhs.size(); ++l)
     {
@@ -648,7 +652,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		}
 	}
 	
-	add_non_shadow_scaffs(fwd_scaffolds, rev_scaffolds, tmp_scaffs, ref_scaffs);
+	combine_strand_assemblies(fwd_scaffolds, rev_scaffolds, tmp_scaffs, ref_scaffs);
 
 	
 	// Make sure all the reads are accounted for, including the redundant ones...
@@ -660,7 +664,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 			const MateHit& h = bundle.hits()[j];
 			tmp_scaffs[i].add_hit(&h);
 		}
-		clip_by_3_prime_dropoff(tmp_scaffs[i]);
 	}
 	
 	if (ref_guided)

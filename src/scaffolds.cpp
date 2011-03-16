@@ -516,6 +516,29 @@ void Scaffold::trim_3(int to_remove)
 	}
 }
 
+// Clip final 3' exon by given amount
+void Scaffold::extend_3(int to_add)
+{
+	if(strand() == CUFF_FWD)
+	{
+		AugmentedCuffOp& exon_3 = _augmented_ops.back();
+		//assert (exon_3.genomic_length > to_remove);
+		exon_3.genomic_length += to_add;
+	}
+	else if(strand() == CUFF_REV)
+	{
+		AugmentedCuffOp& exon_3 = _augmented_ops.front();
+		//assert (exon_3.genomic_length > to_remove);
+		exon_3.genomic_offset -= to_add;
+		exon_3.genomic_length += to_add;
+        
+	}
+	else
+	{
+		assert(false);
+	}
+}
+
 void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int tile_offset) const
 {
     int min_len = tile_offset;

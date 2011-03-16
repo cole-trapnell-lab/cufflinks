@@ -101,7 +101,7 @@ void print_usage()
     fprintf(stderr, "General Options:\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
     fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
-	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   1000 ]\n");
+	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
@@ -117,7 +117,7 @@ void print_usage()
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --poisson-dispersion         Don't fit counts for overdispersion                   [ default:  FALSE ]\n");
+    fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion                   [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    

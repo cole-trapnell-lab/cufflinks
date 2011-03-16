@@ -162,10 +162,10 @@ boost::shared_ptr<MassDispersionModel const>
 fit_dispersion_model(const vector<double>& scale_factors,
                      const vector<pair<string, vector<double> > >& sample_count_table)
 {
-    
-#if ENABLE_THREADS
-	boost::mutex::scoped_lock lock(_locfit_lock);
-#endif
+//    
+//#if ENABLE_THREADS
+//	boost::mutex::scoped_lock lock(_locfit_lock);
+//#endif
     
     vector<pair<double, double> > raw_means_and_vars;
     
@@ -178,13 +178,15 @@ fit_dispersion_model(const vector<double>& scale_factors,
         }
     }
     
+    _locfit_lock.lock();
+    
     ProgressBar p_bar("Modeling fragment count overdispersion.",0);
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
         const pair<string, vector<double> >& p = sample_count_table[i];
         double mean = accumulate(p.second.begin(), p.second.end(), 0.0);
-        if (mean > 0.0)
+        if (mean > 0.0 && p.second.size() > 0)
             mean /= p.second.size();
         
         double var = 0.0;
@@ -192,7 +194,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
         {
             var += (d - mean) * (d - mean);
         }
-        if (var > 0.0)
+        if (var > 0.0 && p.second.size())
             var /= p.second.size();
         if (mean > 0)
             raw_means_and_vars.push_back(make_pair(mean, var));
@@ -272,8 +274,11 @@ fit_dispersion_model(const vector<double>& scale_factors,
                     fitted_values[i]);
         }
         fclose(sample_count_file);
-    }  
+    } 
+ 
 */
+ 
+    _locfit_lock.unlock();
     
     return disperser;
 }
