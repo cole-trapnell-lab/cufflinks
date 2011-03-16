@@ -203,7 +203,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
     if (raw_means_and_vars.empty())
     {
         fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
-        return;
+        return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
     }
     
     sort(raw_means_and_vars.begin(), raw_means_and_vars.end());
