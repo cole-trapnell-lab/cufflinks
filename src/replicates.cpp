@@ -196,8 +196,14 @@ fit_dispersion_model(const vector<double>& scale_factors,
         }
         if (var > 0.0 && p.second.size())
             var /= p.second.size();
-        if (mean > 0)
+        if (mean > 0 && var > 0.0)
             raw_means_and_vars.push_back(make_pair(mean, var));
+    }
+    
+    if (raw_means_and_vars.empty())
+    {
+        fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
+        return;
     }
     
     sort(raw_means_and_vars.begin(), raw_means_and_vars.end());
