@@ -101,7 +101,7 @@ public:
 		char complete_buf[45];
 		snprintf(complete_buf, 44, "Processed %d loci.", _num_updates); 
 		if (cuff_verbose||cuff_quiet)
-			fprintf(stderr, "%-44s", complete_buf);
+			fprintf(stderr, "%-44s\n", complete_buf);
 		else
 			fprintf(stderr, "\r> %-44s %s %3d%%\n", complete_buf, _bar_buf, 100);
 	}

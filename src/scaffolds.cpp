@@ -1406,7 +1406,9 @@ pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 	return make_pair(s_start, s_end);
 }
 
-// Returns true only when both the start and end are found
+// Returns true only when both the start and end are found (ie, frag_len is known), which
+// can only happen if the read is paired.  Returned values that are equal to the trans_len 
+// should be ignored, as they are invalid.
 // We can't use EmpDist unless it is unpaired since we call this function in inspect_bundle
 // End is inclusive
 // Returned indices are oriented with the transript!
@@ -1420,7 +1422,6 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 //        int a = 4;
 //    }
 //    
-	// Defaults will cause them to be ignored when they are unknown
 	start = trans_len;
 	end = trans_len;
 	

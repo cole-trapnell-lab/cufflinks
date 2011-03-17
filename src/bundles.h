@@ -114,17 +114,7 @@ public:
     const std::vector<MateHit>& hits() const { return _hits; } 
 	const std::vector<MateHit>& non_redundant_hits() const { return _non_redundant; } 
 	
-	RefID ref_id()  const
-	{
-		if (!_hits.empty())
-			return _hits.front().ref_id();
-		else if (!_open_mates.empty())
-			return _open_mates.begin()->second.front().ref_id();
-		else if (!_ref_scaffs.empty())
-			return _ref_scaffs.front()->ref_id();
-		else
-			return 0;
-	}
+	RefID ref_id()  const {return _ref_id; }
 	
 	int id() const { return _id; }
 	
@@ -179,6 +169,7 @@ private:
 	std::vector<shared_ptr<Scaffold> > _ref_scaffs; // user-supplied reference annotations overlapping the bundle
 	bool _final;
 	int _id;
+    RefID _ref_id;
 	double _raw_mass;
 
 	

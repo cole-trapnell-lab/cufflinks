@@ -286,7 +286,8 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 							 bool expand_by_partner)
 {	
 	_leftmost = min(_leftmost, bh->left());
-	
+	_ref_id = bh->ref_id();
+    
 	if (bh->is_singleton())
 	{
 		_rightmost = max(_rightmost, bh->right());

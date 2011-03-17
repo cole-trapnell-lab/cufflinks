@@ -1096,12 +1096,6 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 		
 		HitBundle& bundle = *bundle_ptr;
         
-        if (bundle.hits().empty())
-        {
-            delete bundle_ptr;
-			continue;
-        }
-
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, 
 				"%s:%d-%d", 
