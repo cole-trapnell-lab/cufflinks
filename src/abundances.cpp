@@ -342,7 +342,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
     {
         shared_ptr<ReadGroupProperties const> rg_props = itr->first;
         double scaled_mass = rg_props->scale_mass(itr->second);
-        double scaled_total_mass = rg_props->scale_mass(rg_props->total_map_mass());
+        double scaled_total_mass = rg_props->scale_mass(rg_props->normalized_map_mass());
         avg_X_g += scaled_mass;
         shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
         double scaled_variance = disperser->scale_mass_variance(scaled_mass);
