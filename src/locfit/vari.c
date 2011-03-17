@@ -9,7 +9,7 @@
 #include <errno.h>
 
 #define MAXV 1000
-#define LF_WORK 10240
+#define LF_WORK 102400
 
 static char *db;
 static INT lfwptr, lf_work;
