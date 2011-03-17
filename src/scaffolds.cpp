@@ -1415,10 +1415,14 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	
 	int trans_len = length();
 	
+//    if (Scaffold(hit).augmented_ops() == augmented_ops())
+//    {
+//        int a = 4;
+//    }
+//    
 	// Defaults will cause them to be ignored when they are unknown
 	start = trans_len;
 	end = trans_len;
-	
 	
 	if (hit.is_pair())
 	{

@@ -360,10 +360,6 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 						   vector<Scaffold>& scaffolds,
 						   vector<shared_ptr<Scaffold> >* ref_scaffs)
 {
-    // first trim off any polymerase run-ons, and make 3' ends consistent
-    clip_by_3_prime_dropoff(scaffolds);
-
-    
 	// first check for strand support
     for (size_t l = 0; l < lhs.size(); ++l)
     {
@@ -461,6 +457,11 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 			}
 		}		
     }
+    
+    // first trim off any polymerase run-ons, and make 3' ends consistent
+    clip_by_3_prime_dropoff(lhs);
+    clip_by_3_prime_dropoff(rhs);
+
     
     for (size_t i = 0; i < lhs.size(); ++i)
     {
