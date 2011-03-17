@@ -1417,10 +1417,10 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	
 	int trans_len = length();
 	
-    if (Scaffold(hit).augmented_ops() == augmented_ops())
-    {
-        int a = 4;
-    }
+//    if (Scaffold(hit).augmented_ops() == augmented_ops())
+//    {
+//        int a = 4;
+//    }
     
 	start = trans_len;
 	end = trans_len;
