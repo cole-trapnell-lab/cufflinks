@@ -900,8 +900,8 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             }
         }
         double avg_cov = total/scaff_len;
-        if (avg_cov < trim_3_avgcov_thresh)
-            continue;
+//        if (avg_cov < trim_3_avgcov_thresh)
+//            continue;
         
         const AugmentedCuffOp* exon_3 = NULL;
         int mult;
@@ -913,11 +913,15 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             offset = 0;
             exon_3 = &scaff.augmented_ops().front();
         }
-        else if (scaff.strand() == CUFF_REV)
+        else if (scaff.strand() == CUFF_FWD)
         {
             mult = -1;
             offset = scaff_len - 1;
             exon_3 = &scaff.augmented_ops().back();
+        }
+        else
+        {
+            continue;
         }
 
         int to_remove;
@@ -996,7 +1000,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
         
         // If trimming reduces the overall mean squared error of the coverage
         // do it
-        if (min_cost_x < exon_3->genomic_length)
+        if (avg_cov >= trim_3_avgcov_thresh && min_cost_x < exon_3->genomic_length)
         {
             scaff.trim_3(min_cost_x);
         }

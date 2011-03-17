@@ -1,3 +1,5 @@
+include $(top_srcdir)/build-aux/cufflinks.mk
+
 AM_CPPFLAGS = -I$(top_srcdir)/src 
 
 EXTRA_DIST = $(top_srcdir)/AUTHORS $(top_srcdir)/make_bin.sh
@@ -177,6 +179,10 @@ libgc_a_SOURCES = \
 	GFastaIndex.cpp \
 	gff.cpp \
 	gtf_tracking.cpp 
+
+#-- scripts to be installed in $prefix/bin
+dist_bin_SCRIPTS = \
+    merge_cuff_asms.py
 
 cufflinks_SOURCES = cufflinks.cpp  
 cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 

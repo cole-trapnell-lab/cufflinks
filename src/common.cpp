@@ -285,7 +285,8 @@ void init_library_table()
 	transfrags.mate_strand_mapping(FR);
     transfrags.std_mate_orientation(MATES_POINT_TOWARD);
     transfrags.strandedness(UNSTRANDED_PROTOCOL);
-	
+	transfrags.complete_fragments(true);
+    
     library_type_table["transfrags"] = transfrags;
 	
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
@@ -338,7 +339,8 @@ ReadGroupProperties::ReadGroupProperties() :
     _platform(UNKNOWN_PLATFORM),
     _total_map_mass(0.0),
     _norm_map_mass(0.0),
-    _mass_scaling_factor(1.0)
+    _mass_scaling_factor(1.0),
+    _complete_fragments(false)
 {
     _mass_dispersion_model = boost::shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
 } 

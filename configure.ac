@@ -14,6 +14,8 @@ AM_INIT_AUTOMAKE
 
 #AM_PATH_CPPUNIT(1.10.2)
 
+AC_ARG_VAR(PYTHON, [python program])
+
  # Make sure CXXFLAGS is defined so that AC_PROG_CXX doesn't set it.
 CXXFLAGS="$CXXFLAGS"
 CFLAGS="$CFLAGS"
@@ -27,6 +29,7 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+AM_PATH_PYTHON([2.4])
 AX_BOOST_BASE([1.38.0])
 AX_BAM
 AX_BOOST_THREAD
@@ -131,4 +134,9 @@ echo \
   See config.h for further configuration information.
   Email <${PACKAGE_BUGREPORT}> with questions and bug reports.
 "
+
+if test x"${PYTHON}" = x":"  ||  ! test -x "${PYTHON}"; then
+    echo "WARNING! python was not found and is required to run some utility scripts"
+    echo "  We recommend installing python and pointing configure to the installed location"
+fi
 

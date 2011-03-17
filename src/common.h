@@ -281,6 +281,9 @@ public:
     void mass_scale_factor(double sf) { _mass_scaling_factor = sf; }
     double mass_scale_factor() const  { return _mass_scaling_factor; }
     
+    void complete_fragments(bool c)  { _complete_fragments = c; }
+    bool complete_fragments() const { return _complete_fragments; }
+    
     double scale_mass(double unscaled_mass) const 
     { 
         return unscaled_mass * (1.0 / _mass_scaling_factor);
@@ -317,6 +320,8 @@ private:
     double _mass_scaling_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
     std::vector<std::pair<std::string, double> > _common_scale_counts;
+    
+    bool _complete_fragments;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;

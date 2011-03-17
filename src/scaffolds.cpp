@@ -1417,15 +1417,23 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	
 	int trans_len = length();
 	
-//    if (Scaffold(hit).augmented_ops() == augmented_ops())
-//    {
-//        int a = 4;
-//    }
-//    
+    if (Scaffold(hit).augmented_ops() == augmented_ops())
+    {
+        int a = 4;
+    }
+    
 	start = trans_len;
 	end = trans_len;
 	
-	if (hit.is_pair())
+    if (hit.read_group_props()->complete_fragments())
+    {
+        pair<int,int> g_span = make_pair(hit.left(), hit.right() - 1);
+		pair<int,int> t_span = genomic_to_transcript_span(g_span);
+		start = t_span.first;
+		end = t_span.second;
+		frag_len = abs(end-start)+1;
+    }
+	else if (hit.is_pair())
 	{
 		pair<int,int> g_span = hit.genomic_outer_span();
 		pair<int,int> t_span = genomic_to_transcript_span(g_span);
