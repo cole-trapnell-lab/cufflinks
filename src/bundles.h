@@ -125,6 +125,7 @@ public:
 		if (scaff->right() > _rightmost)
 			_rightmost = scaff->right();
 		_ref_scaffs.push_back(scaff);
+        _ref_id = scaff->ref_id();
 	}
 	
 	vector<shared_ptr<Scaffold> >& ref_scaffolds() { return _ref_scaffs; }
