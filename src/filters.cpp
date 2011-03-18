@@ -1049,7 +1049,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
         
 		for (size_t j = i + 1; j < three_prime_ends.size(); ++j)
 		{
-			Scaffold* scaff_j = three_prime_ends[i].second;
+			Scaffold* scaff_j = three_prime_ends[j].second;
             
             if (scaff_i->strand() != scaff_j->strand())
                 continue;
@@ -1094,21 +1094,66 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
         if (group.empty())
             continue;
         
-        Scaffold* group_leader = group.front().second;
+        Scaffold* group_leader = NULL;
         const AugmentedCuffOp* group_exon_3 = NULL;
+        vector<pair<double, Scaffold*> >::iterator l_itr = group.begin();
+        while (l_itr != group.end())
+        {
+            Scaffold* possible_leader = l_itr->second;
+            bool ok_clip_leader = true;
+            vector<pair<double, Scaffold*> >::iterator g_itr = group.begin();
+            const AugmentedCuffOp* l_exon_3 = NULL;
+            CuffStrand s = possible_leader->strand();
+
+            if (s != CUFF_STRAND_UNKNOWN)
+            {  
+                if (s == CUFF_REV)
+                    l_exon_3 = &(possible_leader->augmented_ops().front());
+                else 
+                    l_exon_3 = &(possible_leader->augmented_ops().back());
+                for (; g_itr != group.end(); ++g_itr)
+                {
+                    const AugmentedCuffOp* g_exon_3 = NULL;
+                    if (s == CUFF_REV)
+                    {
+                        //  bad:
+                        //              leader  
+                        //    follower
+                        g_exon_3 = &(g_itr->second->augmented_ops().front());
+                        if (g_exon_3->g_right() <= l_exon_3->g_left())
+                            ok_clip_leader = false;
+                    }
+                    else 
+                    {
+                        //  bad:
+                        //          follower  
+                        //  leader
+                        g_exon_3 = &(g_itr->second->augmented_ops().back());
+                        if (g_exon_3->g_left() >= l_exon_3->g_right())
+                            ok_clip_leader = false;
+                    }
+                }
+            }
+            else
+            {
+                ok_clip_leader = false;
+            }
+            
+            if (ok_clip_leader)
+            {
+                group_leader = possible_leader;
+                group_exon_3 = l_exon_3;
+                break;
+            }
+            ++l_itr;
+        }
         
-        if (group_leader->strand() == CUFF_REV)
-        {
-            group_exon_3 = &(group_leader->augmented_ops().front());
-        }
-        else 
-        {
-            group_exon_3 = &(group_leader->augmented_ops().back());
-        }
+        if (!group_leader || !group_exon_3)
+            continue;
         
         // trim everyone else in the cluster down to have the same 3' end
         // as the most evenly covered transcript.
-        for (size_t j = 1; j < group.size(); ++j)
+        for (size_t j = 0; j < group.size(); ++j)
         {
             const AugmentedCuffOp* exon_3 = NULL;
             int end_diff = 0;
