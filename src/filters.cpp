@@ -1167,10 +1167,19 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
                 exon_3 = &(group[j].second->augmented_ops().back());                
                 end_diff = exon_3->g_right() - group_exon_3->g_right();
             }
+            
             if (end_diff > 0)
+            {
+                // leader
+                //     follower
                 group[j].second->trim_3(end_diff);
+            }
             else if (end_diff < 0)
-                group[j].second->extend_3(end_diff);
+            {
+                //        leader
+                //   follower
+                group[j].second->extend_3(-end_diff);
+            }
         }
     }
     
