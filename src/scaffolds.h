@@ -204,7 +204,8 @@ public:
 		_ref_id(0), 
 		_is_ref(false),
 		_strand(CUFF_STRAND_UNKNOWN), 
-		_classcode(0){}
+		_classcode(0),
+        _fpkm(0.0) {}
 	
 	Scaffold(const MateHit& mate) :
 		_ref_id(mate.ref_id()),
@@ -293,6 +294,12 @@ public:
 		
 		assert (_augmented_ops.front().opcode == CUFF_MATCH);
         assert (_augmented_ops.back().opcode == CUFF_MATCH);
+        
+        if (library_type == "transfrags")
+        {
+            double avg_fpkm = mate.mass();
+            fpkm(avg_fpkm);
+        }
 	}
 	
 	Scaffold(const vector<Scaffold>& hits, bool introns_overwrite_matches = true) 
@@ -307,6 +314,17 @@ public:
         
         assert (_augmented_ops.front().opcode == CUFF_MATCH);
         assert (_augmented_ops.back().opcode == CUFF_MATCH);
+        
+        if (library_type == "transfrags")
+        {
+            double avg_fpkm = 0.0;
+            foreach (const Scaffold& sc, hits)
+            {
+                avg_fpkm += sc.fpkm();
+            }
+            avg_fpkm /= hits.size();
+            fpkm(avg_fpkm);
+        }
 	}
 	
 	// For manually constructing scaffolds, for example when a reference is 

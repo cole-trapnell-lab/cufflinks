@@ -297,13 +297,6 @@ void pre_mrna_filter(int bundle_length,
 		if (!toss[j])
 		{
 			filtered_hits.push_back(hits[j]);
-			//#if ASM_VERBOSE
-			//			if (hits[j].has_intron())
-			//			{
-			//				
-			//				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-			//			}
-			//#endif	
 		}
 		else
 		{
@@ -319,143 +312,6 @@ void pre_mrna_filter(int bundle_length,
 	
 	hits = filtered_hits;
 }
-
-//void pre_mrna_filter(int bundle_length,
-//					 int bundle_left,
-//					 vector<Scaffold>& hits)
-//{
-//	vector<int> depth_of_coverage(bundle_length,0);
-//	vector<double> scaff_doc;
-//	map<pair<int,int>, int> intron_doc;
-//	vector<Scaffold> filtered_hits;
-//	vector<bool> toss(hits.size(), false);
-//	
-//	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
-//	double bundle_avg_doc = compute_doc(bundle_left, 
-//										hits, 
-//										depth_of_coverage, 
-//										intron_doc,
-//										true);
-//	
-//	// recompute the real DoCs
-//	compute_doc(bundle_left, 
-//				hits, 
-//				depth_of_coverage, 
-//				intron_doc,
-//				false);
-//	
-//	record_doc_for_scaffolds(bundle_left, 
-//							 hits, 
-//							 depth_of_coverage, 
-//							 intron_doc,
-//							 scaff_doc);
-//	
-////	vector<int>::iterator new_end = remove(depth_of_coverage.begin(), depth_of_coverage.end(), 0);
-////	depth_of_coverage.erase(new_end, depth_of_coverage.end());
-////	sort(depth_of_coverage.begin(), depth_of_coverage.end());
-////	
-////	size_t median = floor(depth_of_coverage.size() / 2);
-//	
-//	
-//	Scaffold smashed_gene;
-//	vector<Scaffold> spliced_hits;
-//    for (size_t i = 0; i < hits.size(); ++i)
-//    {
-//        const vector<const MateHit*>& m_hits = hits[i].mate_hits();
-//        for (size_t j = 0; j < m_hits.size(); ++j)
-//        {
-//            if (m_hits[j]->left_alignment() && !m_hits[j]->left_alignment()->contiguous())
-//            {
-//                spliced_hits.push_back(Scaffold(MateHit(m_hits[j]->ref_id(),
-//                                                        m_hits[j]->left_alignment(),
-//                                                        shared_ptr<const ReadHit>(),
-//                                                        0,
-//                                                        0)));
-//
-//            }
-//            if (m_hits[j]->right_alignment() && !m_hits[j]->right_alignment()->contiguous())
-//            {
-//                spliced_hits.push_back(Scaffold(MateHit(m_hits[j]->ref_id(),
-//                                                        m_hits[j]->right_alignment(),
-//                                                        shared_ptr<const ReadHit>(),
-//                                                        0,
-//                                                        0)));
-//                
-//            }
-//        }
-//    }
-//    
-//	Scaffold::merge(spliced_hits, smashed_gene, false);
-//	vector<bool> constitutive_introns(intron_doc.size(), true);
-//	
-//    vector<pair<int, int> > gaps = smashed_gene.gaps();
-//    
-//	//size_t intron_idx = 0;
-//    
-//	for(map<pair<int, int>, int >::const_iterator itr = intron_doc.begin();
-//		itr != intron_doc.end(); 
-//		++itr)
-//	{
-//		int i_left = itr->first.first;
-//		int i_right = itr->first.second;
-//		
-//        double cumul_cov = 0;
-//        for (size_t i = 0; i < i_right - i_left; ++i)
-//        {
-//            size_t pos = (i_left - bundle_left) + i;
-//            cumul_cov += depth_of_coverage[pos];
-//        }
-//        cumul_cov /= i_right - i_left;
-//#if ASM_VERBOSE
-//        fprintf(stderr, "retained intron %d-%d depth of cov: %lf\n", i_left, i_right, cumul_cov);
-//#endif
-//        if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
-//        {
-//            continue;
-//        }
-//        
-//        for (size_t j = 0; j < hits.size(); ++j)
-//        {
-//            //if (hits[j].has_intron())
-//            //    continue;
-//            if (hits[j].match_length(i_left, i_right))
-//            {
-//                toss[j] = true;
-//            }
-//		}
-//	}
-//    
-//	for (size_t j = 0; j < hits.size(); ++j)
-//	{	
-//		if (!toss[j])
-//		{
-//			filtered_hits.push_back(hits[j]);
-//			//#if ASM_VERBOSE
-//			//			if (hits[j].has_intron())
-//			//			{
-//			//				
-//			//				fprintf(stderr, "KEEPING intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//			//			}
-//			//#endif	
-//		}
-//		else
-//		{
-//#if ASM_VERBOSE
-//			//			if (hits[j].has_intron())
-//			//			{
-//			//				
-//			//				fprintf(stderr, "\tFiltering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//			//			}
-//#endif	
-//		}
-//	}
-//	
-//	//#if ASM_VERBOSE
-//	//	fprintf(stderr, "\tInitial filter pass complete\n");
-//	//#endif
-//	
-//	hits = filtered_hits;
-//}
 
 void filter_hits(int bundle_length,
 				 int bundle_left,
@@ -756,21 +612,24 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 				}
 			}
 			
-			double low_qual_hits = 0.0;
-			static const double low_qual_err_prob = high_phred_err_prob; // hits with error_prob() above this are low quality;
-			static const double low_qual_thresh = 0.75; // hits with more than this fraction of low qual hits are repeats
-			for (vector<const MateHit*>::const_iterator itr = hits.begin();
-				 itr != hits.end();
-				 ++itr)
-			{
-				double e = 1-(*itr)->mass();
-				if (e >= low_qual_err_prob)
-					low_qual_hits += 1.0;
-			}
-			double low_qual_frac = low_qual_hits / (double)hits.size();
-			if (low_qual_frac > low_qual_thresh)
-				repeats[t] = true;
+            if (library_type != "transfrags")
+            {
+                double low_qual_hits = 0.0;
+                static const double low_qual_err_prob = high_phred_err_prob; // hits with error_prob() above this are low quality;
+                static const double low_qual_thresh = 0.75; // hits with more than this fraction of low qual hits are repeats
+                for (vector<const MateHit*>::const_iterator itr = hits.begin();
+                     itr != hits.end();
+                     ++itr)
+                {
+                    double e = 1-(*itr)->mass();
+                    if (e >= low_qual_err_prob)
+                        low_qual_hits += 1.0;
+                }
             
+                double low_qual_frac = low_qual_hits / (double)hits.size();
+                if (low_qual_frac > low_qual_thresh)
+                    repeats[t] = true;
+            }
             if (scaff->strand() == CUFF_FWD &&
                 (abundances[t] / max_fwd_ab) < min_isoform_fraction)
                 too_rare[t] = true;
@@ -778,15 +637,18 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
                 (abundances[t] / max_rev_ab) < min_isoform_fraction)
                 too_rare[t] = true;
 
-            const vector<double>& cond_probs = (*mapped_transcripts[t]->cond_probs());
-            double supporting_hits = 0.0;
-            foreach(double d, cond_probs)
+            const vector<double>* cond_probs = (mapped_transcripts[t]->cond_probs());
+            if (cond_probs)
             {
-                if (d > 0)
-                    supporting_hits += 1;
+                double supporting_hits = 0.0;
+                foreach(double d, *cond_probs)
+                {
+                    if (d > 0)
+                        supporting_hits += 1;
+                }
+                if (supporting_hits < min_frags_per_transfrag)
+                    chaff[t] = true;
             }
-            if (supporting_hits < min_frags_per_transfrag)
-                chaff[t] = true;
 		}
 	}
 	

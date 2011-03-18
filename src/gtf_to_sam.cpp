@@ -25,6 +25,7 @@
 
 #include "gtf_tracking.h"
 #include "scaffolds.h"
+#include "tokenize.h"
 
 using namespace std;
 
@@ -45,9 +46,9 @@ void print_usage()
 	fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
 	fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
 	fprintf(stderr, "-----------------------------\n"); 
-	fprintf(stderr, "Usage:   cufflinks [options] <transcripts.gtf> <out.sam\n");
+	fprintf(stderr, "Usage:   cufflinks [options] <transcripts1.gtf,...,transcriptsN.gtf> <out.sam>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-r/--reference-seq			  reference fasta file for sequence bias correction     [ default:   NULL ]\n");
+	fprintf(stderr, "-r/--reference-seq			  reference fasta file     [ default:   NULL ]\n");
 }
 
 int parse_options(int argc, char** argv)
@@ -160,24 +161,41 @@ void print_scaff_as_sam(FILE* sam_out,
 				"\tXS:A:%c",
 				scaff.strand() == CUFF_REV ? '-' : '+');
 	}
+    
+    if (scaff.fpkm() != 0)
+	{
+		fprintf(sam_out,
+				"\tZF:f:%f",
+				scaff.fpkm());
+	}
 	
 	fprintf(sam_out, "\n");
     
 }
 	
-void driver(FILE* ref_gtf, FILE* sam_out)
+void driver(vector<FILE*> ref_gtf_files, FILE* sam_out)
 {
 	ReadTable it;
 	RefSequenceTable rt(true, false);
 	
-	vector<shared_ptr<Scaffold> > ref_mRNAs;
-	
-	::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, false);
-	
-	for (size_t i = 0; i < ref_mRNAs.size(); ++i)
-	{
-	    print_scaff_as_sam(sam_out, rt, *ref_mRNAs[i]);
-	}
+	vector<vector<shared_ptr<Scaffold> > > ref_mRNA_table;
+	vector<pair<string, vector<double> > > sample_count_table;
+    
+    foreach (FILE* ref_gtf, ref_gtf_files)
+    {
+        vector<shared_ptr<Scaffold> > ref_mRNAs;
+        ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, true);
+        ref_mRNA_table.push_back(ref_mRNAs);
+    }
+    
+    for (size_t j = 0; j < ref_mRNA_table.size(); ++j)
+    {
+        const vector<shared_ptr<Scaffold> > ref_mRNAs = ref_mRNA_table[j];
+        for (size_t i = 0; i < ref_mRNAs.size(); ++i)
+        {
+            print_scaff_as_sam(sam_out, rt, *ref_mRNA_table[j][i]);
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -195,7 +213,7 @@ int main(int argc, char** argv)
         return 1;
     }
 	
-    string ref_gtf_in_filename = argv[optind++];
+    string ref_gtf_in_filenames = argv[optind++];
     
     if(optind >= argc)
     {
@@ -205,17 +223,26 @@ int main(int argc, char** argv)
 	
     string sam_out_filename = argv[optind++];
     
-    FILE* ref_gtf = NULL;
-	if (ref_gtf_in_filename != "")
-	{
-		ref_gtf = fopen(ref_gtf_in_filename.c_str(), "r");
-		if (!ref_gtf)
-		{
-			fprintf(stderr, "Error: cannot open GTF file %s for reading\n",
-					ref_gtf_in_filename.c_str());
-			exit(1);
-		}
-	}
+    vector<string> ref_gtf_filenames;
+    tokenize(ref_gtf_in_filenames, ",", ref_gtf_filenames);
+    
+    vector<FILE*> ref_gtf_files;
+    
+    foreach (const string& ref_gtf_in_filename, ref_gtf_filenames)
+    {
+        FILE* ref_gtf = NULL;
+        if (ref_gtf_in_filename != "")
+        {
+            ref_gtf = fopen(ref_gtf_in_filename.c_str(), "r");
+            if (!ref_gtf)
+            {
+                fprintf(stderr, "Error: cannot open GTF file %s for reading\n",
+                        ref_gtf_in_filename.c_str());
+                exit(1);
+            }
+            ref_gtf_files.push_back(ref_gtf);
+        }
+    }
     
     FILE* sam_out = NULL;
 	if (sam_out_filename != "")
@@ -229,7 +256,7 @@ int main(int argc, char** argv)
 		}
 	}
     
-    driver(ref_gtf, sam_out);
+    driver(ref_gtf_files, sam_out);
 	
 	return 0;
 }

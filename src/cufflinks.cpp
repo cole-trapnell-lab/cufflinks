@@ -344,10 +344,10 @@ int parse_options(int argc, char** argv)
         }
         else 
         {
-            if (library_type == "transfrags")
-            {
-                allow_junk_filtering = false;
-            }
+//            if (library_type == "transfrags")
+//            {
+//                allow_junk_filtering = false;
+//            }
             global_read_properties = &lib_itr->second;
         }
     }
@@ -734,6 +734,50 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
     {
         transfrag_cluster.calculate_abundance(hits_in_cluster);
 	}
+    else
+    {
+        vector<shared_ptr<Abundance> >& abundances = transfrag_cluster.abundances();
+        
+        int N = abundances.size();
+        double total_fpkm = 0.0;
+        vector<double> gammas;
+        for (size_t j = 0; j < N; ++j)
+        {
+            double FPKM = abundances[j]->transfrag()->fpkm();
+            abundances[j]->FPKM(FPKM);
+            total_fpkm += FPKM;
+            gammas.push_back(FPKM);
+        }
+        
+        for (size_t j = 0; j < N; ++j)
+        {
+            if (total_fpkm)
+                gammas[j] /= total_fpkm;
+        }
+        
+        vector<shared_ptr<Abundance> > filtered_transcripts = abundances;
+        filter_junk_isoforms(filtered_transcripts, gammas, abundances);
+        vector<bool> to_keep (abundances.size(), false);
+        for(size_t i = 0; i < abundances.size(); ++i)
+        {
+            shared_ptr<Abundance> ab_i = abundances[i];
+            bool found = false;
+            foreach (shared_ptr<Abundance> ab_j, filtered_transcripts)
+            {
+                if (ab_i == ab_j)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found)
+                to_keep[i] = true;
+        }
+        
+        AbundanceGroup kept;
+        transfrag_cluster.filter_group(to_keep, kept);
+        transfrag_cluster = kept;
+    }
     
 	vector<AbundanceGroup> transfrags_by_strand;
 	cluster_transcripts<ConnectByStrand>(transfrag_cluster,

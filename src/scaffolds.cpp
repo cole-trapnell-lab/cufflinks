@@ -727,6 +727,13 @@ void Scaffold::merge(const Scaffold& lhs,
 	merged._has_intron = has_intron(merged);
 	assert(merged._strand != CUFF_STRAND_UNKNOWN || !merged.has_intron() );
 	assert(!merged.is_ref());
+    
+    if (library_type == "transfrags")
+    {
+        double avg_fpkm = lhs.fpkm() + rhs.fpkm();
+        avg_fpkm /= 2;
+        merged.fpkm(avg_fpkm);
+    }
 }
 
 
@@ -798,6 +805,17 @@ void Scaffold::merge(const vector<Scaffold>& s,
 	merged._has_intron = has_intron(merged);
 
 	assert(merged._strand != CUFF_STRAND_UNKNOWN || !merged.has_strand_support());
+    
+    if (library_type == "transfrags")
+    {
+        double avg_fpkm = 0.0;
+        foreach (const Scaffold& sc, s)
+        {
+            avg_fpkm += sc.fpkm();
+        }
+        avg_fpkm /= s.size();
+        merged.fpkm(avg_fpkm);
+    }
 }
 
 void Scaffold::fill_gaps(int filled_gap_size)

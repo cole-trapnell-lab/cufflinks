@@ -63,7 +63,7 @@ typedef uint64_t RefID;
 extern int num_deleted;
 
 /*  Stores the information from a single record of the bowtie map. A given read
-    may have many of these.  Reads up to 255bp are supported. 
+    may have many of these.
 */
 struct ReadHit
 {
@@ -71,7 +71,8 @@ struct ReadHit
 		_ref_id(0),
 		_insert_id(0),
 		_error_prob(1.0),
-		_edit_dist(0xFFFFFFFF),
+        _base_mass(1.0),
+        _edit_dist(0xFFFFFFFF),
 		_num_hits(1)
     {
         num_deleted++;
@@ -87,7 +88,8 @@ struct ReadHit
 			int partner_pos,
 			double error_prob,
 			unsigned int edit_dist,
-			int num_hits) :
+			int num_hits,
+            float base_mass) :
 		_ref_id(ref_id),
 		_insert_id(insert_id), 
 		_left(left), 
@@ -97,7 +99,8 @@ struct ReadHit
 		_source_strand(source_strand),
 		_antisense_aln(antisense),
 		_error_prob(error_prob),
-		_edit_dist(edit_dist),
+        _base_mass(base_mass),
+        _edit_dist(edit_dist),
 		_num_hits(num_hits)
 	{
 		assert(_cigar.capacity() == _cigar.size());
@@ -115,7 +118,8 @@ struct ReadHit
 			int partner_pos, 
 			double error_prob,
 			unsigned int  edit_dist,
-			int num_hits) : 
+			int num_hits,
+            float base_mass) : 
 		_ref_id(ref_id),
 		_insert_id(insert_id), 	
 		_left(left),
@@ -125,7 +129,8 @@ struct ReadHit
 		_source_strand(source_strand),
 		_antisense_aln(antisense_aln),
 		_error_prob(error_prob),
-		_edit_dist(edit_dist),
+        _base_mass(base_mass),
+        _edit_dist(edit_dist),
 		_num_hits(num_hits)
 	{
 		assert(_cigar.capacity() == _cigar.size());
@@ -144,8 +149,9 @@ struct ReadHit
 		_source_strand = other._source_strand;
 		_antisense_aln = other._antisense_aln;
 		_error_prob = other._error_prob;
-		_edit_dist = other._edit_dist;
 		_num_hits = other._num_hits;
+        _base_mass = other._base_mass;
+        _edit_dist = other._edit_dist;
         _right = get_right();
         num_deleted++;
     }
@@ -223,8 +229,8 @@ struct ReadHit
 	double mass() const 
 	{
 		if (is_singleton())
-			return 1.0/_num_hits;
-		return 0.5/_num_hits;
+			return _base_mass/_num_hits;
+		return 0.5 * _base_mass / _num_hits;
 	}
 	
 	// For convenience, if you just want a copy of the gap intervals
@@ -270,8 +276,8 @@ struct ReadHit
 		return _cigar.size() == 1 && _cigar[0].opcode == MATCH;
 	}
 	
-	unsigned int  edit_dist() const { return _edit_dist; }
-	
+    unsigned int  edit_dist() const { return _edit_dist; }
+    
 	const string& hitfile_rec() const { return _hitfile_rec; }
 	void hitfile_rec(const string& rec) { _hitfile_rec = rec; }
 	
@@ -315,7 +321,8 @@ private:
 	CuffStrand _source_strand;    // Which strand the read really came from, if known
 	bool _antisense_aln;       // Whether the alignment is to the reverse strand
 	double _error_prob;		   // Probability that this alignment is incorrect
-	unsigned int  _edit_dist;            // Number of mismatches
+    float _base_mass;
+    unsigned int  _edit_dist;            // Number of mismatches
 	int _num_hits; // Number of multi-hits (1 by default)
 	string _hitfile_rec; // Points to the buffer for the record from which this hit came
 };
@@ -574,7 +581,8 @@ public:
 					   int partner_pos,
 					   double error_prob,
 					   unsigned int  edit_dist,
-					   int num_hits);
+					   int num_hits,
+                       float base_mass);
 	
 	ReadHit create_hit(const string& insert_name, 
 					   const string& ref_name,
@@ -586,7 +594,8 @@ public:
 					   int partner_pos,
 					   double error_prob,
 					   unsigned int  edit_dist,
-					   int num_hits);
+					   int num_hits,
+                       float base_mass);
 	
 	virtual void reset() = 0;
 	
@@ -976,15 +985,20 @@ public:
 	// MRT is incorrect and not added to rg_props until after inspect_map
 	double mass() const
 	{
+        double base_mass = 0.0;
+        if (_left_alignment)
+            base_mass += _left_alignment->mass();
+        if (_right_alignment)
+            base_mass += _right_alignment->mass();
 		if (is_multi())
 		{
 			shared_ptr<MultiReadTable> mrt = _rg_props->multi_read_table();
 			if (mrt)
-				return mrt->get_mass(*this);
+				return base_mass * mrt->get_mass(*this);
 			else
-				return 1.0/num_hits();
+				return base_mass/num_hits();
 		}
-		return 1.0;
+		return base_mass;
 	}
     
 	double common_scale_mass() const

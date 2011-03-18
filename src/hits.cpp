@@ -185,7 +185,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   int partner_pos, 
 							   double error_prob,
 							   unsigned int edit_dist,
-							   int num_hits)
+							   int num_hits,
+                               float base_mass)
 {
 	InsertID insert_id = _insert_table.get_id(insert_name);
 	RefID reference_id = _ref_table.get_id(ref_name, NULL);
@@ -201,7 +202,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   partner_pos,
 				   error_prob,
 				   edit_dist,
-				   num_hits);	
+				   num_hits,
+                   base_mass);	
 }
 
 ReadHit HitFactory::create_hit(const string& insert_name, 
@@ -214,7 +216,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   int partner_pos,
 							   double error_prob,
 							   unsigned int edit_dist,
-							   int num_hits)
+							   int num_hits,
+                               float base_mass)
 {
 	InsertID insert_id = _insert_table.get_id(insert_name);
 	RefID reference_id = _ref_table.get_id(ref_name, NULL);
@@ -230,7 +233,8 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   partner_pos,
 				   error_prob,
 				   edit_dist,
-				   num_hits);	
+				   num_hits,
+                   base_mass);	
 }
 
 // populate a bam_t This will 
@@ -342,7 +346,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						0,
 						1.0,
 						0,
-						1);
+						1,
+                        1.0);
 		return true;
 	}
 	
@@ -432,6 +437,15 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	{
 		num_hits = bam_aux2i(ptr);
 	}
+    
+    double mass = 1.0;
+    ptr = bam_aux_get(hit_buf, "ZF");
+	if (ptr)
+	{
+		mass = bam_aux2i(ptr);
+        if (mass <= 0.0)
+            mass = 1.0;
+	}
 	
     bool antisense_aln = bam1_strand(hit_buf);
     
@@ -453,7 +467,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_mate_pos,
 						error_prob,
 						num_mismatches,
-						num_hits);
+						num_hits,
+                        mass);
 		return true;
 		
 	}
@@ -474,7 +489,8 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_mate_pos,
 						error_prob,
 						num_mismatches,
-						num_hits);
+						num_hits,
+                        mass);
 		return true;
 	}
 	
@@ -753,7 +769,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						0,
 						1.0,
 						0,
-						1);
+						1,
+                        1.0);
 		return true;
 	}
 	// Mostly pilfered direct from the SAM tools:
@@ -839,6 +856,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	
 	const char* tag_buf = buf;
 	
+    double mass = 1.0;
+    
 	while((tag_buf = strsep((char**)&buf,"\t")))
 	{
 		
@@ -870,6 +889,12 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 				{
 					num_hits = atoi(third_token);
 				}
+                else if (!strcmp(first_token, "ZF"))
+				{
+					mass = atof(third_token);
+                    if (mass <= 0.0)
+                        mass = 1.0;
+				}
 				else 
 				{
 					
@@ -897,7 +922,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_mate_pos - 1,
 						error_prob,
 						num_mismatches,
-						num_hits);
+						num_hits,
+                        mass);
 		return true;
 		
 	}
@@ -918,7 +944,8 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_mate_pos - 1,
 						error_prob,
 						num_mismatches,
-						num_hits);
+						num_hits,
+                        mass);
 		return true;
 	}
 	return false;

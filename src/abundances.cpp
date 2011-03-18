@@ -1840,6 +1840,7 @@ double compute_doc(int bundle_origin,
 		++itr)
 	{
 		hits.push_back(Scaffold(**itr));
+        hits.back().fpkm((**itr).mass());
 	}
 	
 	for (size_t i = 0; i < hits.size(); ++i)
@@ -1868,13 +1869,13 @@ double compute_doc(int bundle_origin,
 			{
 				for (int K = op.g_left(); K < op.g_right(); ++K)
 				{
-					depth_of_coverage[K - bundle_origin]++;
+					depth_of_coverage[K - bundle_origin] += hits[i].fpkm();
 				}
 			}
 			else if (op.opcode == CUFF_INTRON)
 			{
 				pair<map<pair<int,int>,int>::iterator, bool> is = intron_depth_of_coverage.insert(make_pair(make_pair(op.g_left(), op.g_right()), 0));
-				is.first->second++;
+				is.first->second += hits[i].fpkm();
 			}
 		}
 	}
