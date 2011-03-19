@@ -89,9 +89,7 @@ INT nopc;
     lf->mi[MPC] = 1;
     des->xev = pc->xbar;
     k = locfit(lf,des,0.0,0);
-#if DEBUG
-    fprintf(stderr, "Fitting...\n");
-#endif
+
     if (lf_error) return;
     switch(k)
     { case LF_NOPT:
