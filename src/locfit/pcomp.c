@@ -42,7 +42,7 @@ INT d, p, lc;
     double *z;
     pc->wk = checkvarlen(pc->wk,pc_reqd(d,p),"_pcwork",VDOUBLE);
     z = vdptr(pc->wk);
-    k = 0;
+    //k = 0;
     
     pc->xbar = z; z += d;
     pc->coef = z; z += p;
