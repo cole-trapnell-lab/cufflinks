@@ -364,28 +364,28 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		map_mass += bundle.raw_mass();
 		if (use_quartile_norm && bundle.raw_mass() > 0) mass_dist.push_back(bundle.raw_mass());
 		
-		if (!valid_bundle)
-		{
-			delete bundle_ptr;
-			break;
-		}
-		num_bundles++;
-
 		const RefSequenceTable& rt = bundle_factory.ref_table();
 		const char* chrom = rt.get_name(bundle.ref_id());	
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
 		verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
 		
+        count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
+		
+        if (!valid_bundle)
+		{
+			delete bundle_ptr;
+			break;
+		}
+		num_bundles++;
+        
         if (progress_bar) 
         {
 			int inc_amt = last_chrom == bundle.ref_id() ? 0 : 1;
 			p_bar.update(bundle_label_buf, inc_amt);
 			last_chrom = bundle.ref_id();
         }
-		
-        count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
-		
+        
         if (bad_introns != NULL)
 		{
 			identify_bad_splices(bundle, *bad_introns);

@@ -769,6 +769,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		{
 			bundle.add_raw_mass(next_valid_alignment(bh));
 		}
+        bundle.finalize();
 		return false;
 	}
 	
