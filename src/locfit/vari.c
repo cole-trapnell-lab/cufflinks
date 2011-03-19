@@ -11,7 +11,7 @@
 #define MAXV 1000
 #define LF_WORK 102400
 
-static char *db;
+static char *db = NULL;
 static INT lfwptr, lf_work;
 vari root;
 
@@ -22,6 +22,11 @@ void initdb() /* initialize locfit's work space */
     if (z==NULL) lf_work = LF_WORK;
     else sscanf(z,"%d",&lf_work);
     lf_work <<= 10;
+    if (db != NULL)
+    {
+        free(db);
+        lfwptr = 0;
+    }
     db = (char *)calloc(lf_work, 1);
     if (db == NULL)
     {
