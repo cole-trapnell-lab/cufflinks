@@ -38,7 +38,7 @@ void pcchk(pc,d,p,lc)
 paramcomp *pc;
 INT d, p, lc;
 { 
-    INT k;
+    //INT k;
     double *z;
     pc->wk = checkvarlen(pc->wk,pc_reqd(d,p),"_pcwork",VDOUBLE);
     z = vdptr(pc->wk);
@@ -62,6 +62,14 @@ INT nopc;
     paramcomp *pc;
     pc = &lf->pc;
     pcchk(pc,lf->mi[MDIM],lf->mi[MP],1);
+    
+    if (pc == NULL)
+    {
+        fprintf(stderr, "Error: locfit cannot allocate pc working memory\n");
+        pcchk(pc,lf->mi[MDIM],lf->mi[MP],1);
+        return;
+    }
+    
     for (i=0; i<lf->mi[MDIM]; i++) pc->xbar[i] = 0.0;
     sw = 0.0;
     for (i=0; i<lf->mi[MN]; i++)
