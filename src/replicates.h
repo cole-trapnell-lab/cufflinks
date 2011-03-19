@@ -136,7 +136,6 @@ public:
                 pair<string, double>& c = count_table[i];
                 double raw_count = c.second;
                 
-                
                 if (i >= sample_count_table.size())
                 {
                     sample_count_table.push_back(make_pair(c.first, vector<double>()));
@@ -144,7 +143,11 @@ public:
                 }
                 else
                 {
-                    assert (sample_count_table[i].first == c.first);
+                    if (sample_count_table[i].first != c.first)
+                    {
+                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                        exit(1);
+                    }
                     sample_count_table[i].second.push_back(raw_count);
                 }
             }

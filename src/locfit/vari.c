@@ -244,7 +244,7 @@ INT status, n, mode;
     v->mode = mode;
     if (status!=STSYSPEC)
     { 
-        v->dpr = (double *)(&(root.dpr[lfwptr]));
+        v->dpr = (double *)((char*)(root.dpr) + lfwptr);
         lfwptr += bytes;
     }
     root.n++;
