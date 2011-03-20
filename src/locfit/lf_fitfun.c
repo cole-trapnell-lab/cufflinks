@@ -142,9 +142,9 @@ INT *deriv, nd;
         return;
     }
     memset(ct_deriv, 0, sizeof(ct_deriv));
-    for (int i = 0; i < MXDIM; ++i)
+    for (i = 0; i < MXDIM; ++i)
     {
-        for (int j = 0; j < 1 + MXDEG; ++j)
+        for (j = 0; j < 1 + MXDEG; ++j)
         {
             ff[i][j] = 0;
         }
