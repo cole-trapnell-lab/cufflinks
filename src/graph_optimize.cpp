@@ -105,54 +105,32 @@ void collect_non_redundant_ops(const vector<Scaffold>& scaffolds,
 	sort (ops.begin(), ops.end(), op_left_lt_right_lt);   
 }
 
-void fill_unambiguous_unknowns(vector<Scaffold>& scaffolds)
+void fill_unambiguous_unknowns(vector<Scaffold>& to_fill, 
+                               const vector<Scaffold>& constitutive)
 {
-    vector<AugmentedCuffOp> conflict_ops;
-    vector<AugmentedCuffOp> ops;
-    
-    collect_non_redundant_ops(scaffolds, ops);
-    
-    extract_conflicting_ops(ops, conflict_ops);
-    
-    sort(conflict_ops.begin(), conflict_ops.end());
-    sort(ops.begin(), ops.end());
-    
-    vector<AugmentedCuffOp> non_conflict;
-    
-    set_difference(ops.begin(), 
-                   ops.end(), 
-                   conflict_ops.begin(), 
-                   conflict_ops.end(), 
-                   back_inserter(non_conflict));
-    sort(non_conflict.begin(), non_conflict.end(), AugmentedCuffOp::g_left_lt);
-    vector<AugmentedCuffOp> merged;
-    
-    CuffStrand s = CUFF_STRAND_UNKNOWN;
-    for (size_t i = 0; i < scaffolds.size(); ++i)
-    {
-        if (scaffolds[i].strand() != CUFF_STRAND_UNKNOWN)
-        {
-            if (s != CUFF_STRAND_UNKNOWN)
-            {
-                assert (s == scaffolds[i].strand());
-            }
-            else 
-            {
-                s = scaffolds[i].strand();
-            }
+//    vector<AugmentedCuffOp> conflict_ops;
+//    vector<AugmentedCuffOp> ops;
 
-        }
-    }
-    
-    AugmentedCuffOp::merge_ops(non_conflict, merged, true);
-	
-    for (size_t i = 0; i < scaffolds.size(); ++i)
+    for (size_t i = 0; i < to_fill.size(); ++i)
     {
-		assert(!scaffolds[i].has_strand_support() || scaffolds[i].strand() != CUFF_STRAND_UNKNOWN);
-        
-        scaffolds[i].strand(s);
-		if (scaffolds[i].has_unknown())
-			scaffolds[i].fill_gaps(merged);
+        if (to_fill[i].has_unknown())
+        {
+            for( size_t j = 0; j < constitutive.size(); ++j)
+            {
+                const Scaffold& cons = constitutive[j];
+                if (Scaffold::overlap_in_genome(to_fill[i], cons, 0) &&
+                    Scaffold::compatible(to_fill[i], cons))
+                {
+                    to_fill[i].strand(cons.strand());
+
+                    to_fill[i].fill_gaps(cons.augmented_ops());
+                    if (!to_fill[i].has_unknown())
+                    {
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -643,8 +621,12 @@ void compress_consitutive(vector<Scaffold>& hits)
         hits.insert(hits.end(), completes.begin(), completes.end()); 
     }
     
+    fill_unambiguous_unknowns(non_constitutive, hits);
+    
     hits.insert(hits.end(), non_constitutive.begin(), non_constitutive.end());
     sort(hits.begin(), hits.end(), scaff_lt);
+    
+    
     size_t post_compress = hits.size();
     size_t delta = pre_compress - post_compress;
     double collapse_ratio = delta / (double) pre_compress; 
@@ -691,8 +673,6 @@ void compress_fragments(vector<Scaffold>& fragments)
     asm_verbose("%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
-    
-    //fill_unambiguous_unknowns(fragments);
     
 	compress_consitutive(fragments);
 	

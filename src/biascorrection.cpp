@@ -797,6 +797,7 @@ double BiasCorrectionHelper::get_effective_length()
 	}
 	
 	assert(eff_len>0);
+    //assert(eff_len>1);
 	assert(!isnan(eff_len));
 	return eff_len;
 }

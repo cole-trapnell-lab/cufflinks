@@ -370,7 +370,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
         double j_avg_variance_fraction = _abundances[j]->gamma() * avg_variance_fraction;
         _abundances[j]->mass_variance_fraction(j_avg_variance_fraction);
         
-        if (j_avg_mass_fraction)
+        if (j_avg_mass_fraction > 0)
         {
             double FPKM = j_avg_mass_fraction * 1000000000/ _abundances[j]->effective_length();
             _abundances[j]->FPKM(FPKM);
@@ -378,6 +378,8 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
         else 
         {
             _abundances[j]->FPKM(0);
+            _abundances[j]->mass_variance_fraction(0);
+            _abundances[j]->mass_fraction(0);
         }
 	}
 }
@@ -449,6 +451,8 @@ void AbundanceGroup::calculate_conf_intervals()
                 norm_frag_density *= mass_variance_fraction();
                 
                 iso_fpkm_var = norm_frag_density * _abundances[j]->gamma();
+                assert (!isnan(_gamma_covariance(j,j)));
+                
                 iso_fpkm_var += norm_frag_density * norm_frag_density * _gamma_covariance(j,j);
                 
 				double FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(iso_fpkm_var);

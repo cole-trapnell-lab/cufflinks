@@ -49,6 +49,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         slope*(scaled_mass - _scaled_mass_means.size()-1);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
+        assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
     }
     else if (scaled_mass < _scaled_mass_means.front())
@@ -72,6 +73,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         double mean_interp = _scaled_mass_variances[0] - slope*(_scaled_mass_means[0] - scaled_mass);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
+        assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
     }
     
@@ -84,6 +86,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         int d = lb - _scaled_mass_means.begin();
         if (*lb == scaled_mass)
         {
+            assert (!isnan(_scaled_mass_variances[d]) && !isinf(_scaled_mass_variances[d]));
             return _scaled_mass_variances[d];
         }
         
@@ -106,10 +109,12 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         double mean_interp = _scaled_mass_variances[d] + slope*(scaled_mass - _scaled_mass_means[d]);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
+        assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
     }
     else
     {
+        assert (!isnan(scaled_mass) && !isinf(scaled_mass));
         return scaled_mass; // revert to poisson assumption
     }
 }
@@ -264,7 +269,7 @@ fit_dispersion_model(const vector<double>& scale_factors,
     disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
-/*
+
     char sample_name_buf[256];
     int sample_id = rand();
     sprintf(sample_name_buf, "%d_counts.txt", sample_id);
@@ -282,8 +287,6 @@ fit_dispersion_model(const vector<double>& scale_factors,
         }
         fclose(sample_count_file);
     } 
- 
-*/
  
     _locfit_lock.unlock();
     
