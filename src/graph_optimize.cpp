@@ -121,7 +121,8 @@ void fill_unambiguous_unknowns(vector<Scaffold>& to_fill,
                 if (Scaffold::overlap_in_genome(to_fill[i], cons, 0) &&
                     Scaffold::compatible(to_fill[i], cons))
                 {
-                    to_fill[i].strand(cons.strand());
+                    if (cons.strand() != CUFF_STRAND_UNKNOWN)
+                        to_fill[i].strand(cons.strand());
 
                     to_fill[i].fill_gaps(cons.augmented_ops());
                     if (!to_fill[i].has_unknown())
@@ -621,7 +622,7 @@ void compress_consitutive(vector<Scaffold>& hits)
         hits.insert(hits.end(), completes.begin(), completes.end()); 
     }
     
-    //fill_unambiguous_unknowns(non_constitutive, hits);
+    fill_unambiguous_unknowns(non_constitutive, hits);
     
     hits.insert(hits.end(), non_constitutive.begin(), non_constitutive.end());
     sort(hits.begin(), hits.end(), scaff_lt);
