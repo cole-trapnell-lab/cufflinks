@@ -206,11 +206,11 @@ INT v;
     mi = lf->mi;
     des->xev = evpt(lf,v);
     
-    for (int p = 0; p < x_1; ++k)
+    for (i = 0; i < x_1; ++i)
     {
-        for (int l = 0; l < y_1; ++l)
+        for (j = 0; j < y_1; ++j)
         {
-            coef[p][l] = 0;
+            coef[i][j] = 0;
         }
     }
     
