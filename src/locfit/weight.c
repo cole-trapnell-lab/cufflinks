@@ -219,6 +219,7 @@ INT d, *j, nj, ker;
 { double I, z;
   int k, dj;
   dj = d;
+    I = 0.0;
   for (k=0; k<nj; k++) dj += j[k];
   switch(ker) /* int_0^1 u^(dj-1) W(u)du  */
   { case WRECT: I = 1.0/dj; break;

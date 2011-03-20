@@ -285,6 +285,7 @@ INT d, *w, nc;
     return(sa);
   }
   sa = 1.0;
+    vals0 = NULL;
   for (j=d; j>0; j--)  /* eliminate v[w[j]] */
   { lb = xxa[j]/sa;
     for (k=0; k<j; k++) /* Interpolate edge v[w[k]],v[w[j]] */
@@ -304,7 +305,13 @@ INT d, *w, nc;
     sa -= xxa[j];
     if (sa<=0) j = 0;
   }
-  return(vals0[0]);
+    if (vals0)
+      return(vals0[0]);
+    else
+    {
+        fprintf(stderr, "Warning: vals0 is undefined!\n");
+        return 0.0;
+    }
 }
 
 double triang_clotoch(xev,vv,ce,p,xxa)

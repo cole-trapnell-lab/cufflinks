@@ -73,7 +73,7 @@ lfit *lf;
 design *des;
 INT what;
 { 
-    INT d, i;
+    INT i;
     //d = lf->mi[MDIM];
     for (i=0; i<lf->nv; i++)
     { predptall(lf,des,evpt(lf,i),what,EFITP,i);

@@ -186,7 +186,7 @@ vari *va;
     
     if (va==NULL)
     { va = createvar("_varith",STSYSTEM,10,VARC);
-        if ((lf_error) | (va==NULL)) 
+        if (lf_error || va == NULL) 
         {
             return(NULL);   
         }
@@ -595,7 +595,7 @@ double *res;
     if (z==NULL) return(0);
     
     v = varith(z,"arvect",STPLOTVAR);
-    if ((v==NULL) | (lf_error)) 
+    if (v==NULL || lf_error) 
     {
         return(0);   
     }

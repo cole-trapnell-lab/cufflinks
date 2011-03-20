@@ -225,7 +225,7 @@ INT procvhatm(des,lf,v)
 design *des;
 lfit *lf;
 INT v;
-{ INT k, n;
+{ INT k = 0, n;
   double *l;
   n = (ident==0) ? lf->mi[MN] : des->p;
   if ((lf->mi[MKER]!=WPARM) | (!hasparcomp(lf))) k = procvraw(des,lf,v);

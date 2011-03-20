@@ -194,12 +194,14 @@ INT what;
     z0 = z0*tr->mg[j]+v[j];
   }
   nce[0] = z0; nce[1] = z0+1; sk = jj = 1; 
+    memset(nce, 0, sizeof(nce));
   for (i=1; i<d; i++)
   { sk *= tr->mg[i-1];
     jj<<=1;
     for (j=0; j<jj; j++)
       nce[j+jj] = nce[j]+sk;
   }
+    nc = 0;
   for (i=0; i<vc; i++)
     nc = exvval(tr,vv[i],nce[i],d,what,1);
   ll = evpt(tr,nce[0]);
@@ -253,6 +255,7 @@ INT what, ev, j;
   { xf = floor(x[i]/(2*PI*lf->sca[i]));
     x[i] -= xf*2*PI*lf->sca[i];
   }
+    f = 0;
   if (ident==1) return(dointpointpf(lf,des,x,what));
   switch(ev)
   { case EGRID: f = gridint(lf,x,what); break;

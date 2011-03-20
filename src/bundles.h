@@ -51,7 +51,7 @@ private:
     HitBundle(const HitBundle& rhs) {} 
 public:
 	HitBundle() 
-    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _raw_mass(0.0), _num_replicates(1) {}
+    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _ref_id(0), _raw_mass(0.0), _num_replicates(1) {}
 	
     ~HitBundle()
     {
@@ -365,13 +365,15 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		if (use_quartile_norm && bundle.raw_mass() > 0) mass_dist.push_back(bundle.raw_mass());
 		
 		const RefSequenceTable& rt = bundle_factory.ref_table();
-		const char* chrom = rt.get_name(bundle.ref_id());	
+		const char* chrom = rt.get_name(bundle.ref_id());
 		char bundle_label_buf[2048];
-		sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
-		verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-		
-        count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
-		
+        if (chrom)
+        {
+            sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
+            verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
+            count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
+		}
+        
         if (!valid_bundle)
 		{
 			delete bundle_ptr;

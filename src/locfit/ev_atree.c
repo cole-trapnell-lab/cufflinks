@@ -59,6 +59,7 @@ INT *ce;
 double *le, *ll, *ur;
 { INT d, vc, i, is;
   double h, hmin, score[MXDIM];
+    memset(score, 0, sizeof(score));
   d = lf->mi[MDIM]; vc = 1<<d;
 
   hmin = 0.0;

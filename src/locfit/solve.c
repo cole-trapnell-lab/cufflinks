@@ -109,6 +109,7 @@ double (*f)(), x0, tol;
 int maxit;
 { double x1;
   int i;
+    x1 = 0;
   for (i=0; i<maxit; i++)
   { x1 = f(x0);
     if (fabs(x1-x0)<tol) return(x1);

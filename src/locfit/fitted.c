@@ -78,6 +78,8 @@ double *fit;
 INT what, cv, st, ty;
 { INT i, j, d, n, ev;
   double xx[MXDIM], th, inl, var, link[LLEN];
+    inl = 0.0;
+    var = 0.0;
   n = lf->mi[MN];
   d = lf->mi[MDIM];
   ev = lf->mi[MEV];

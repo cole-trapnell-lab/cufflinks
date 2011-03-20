@@ -101,6 +101,7 @@ double *v;
   double *D, *Q, *w;
   double tol;
 
+    rank = 0;
   D = J->Z;
   Q = J->Q;
   p = J->p;

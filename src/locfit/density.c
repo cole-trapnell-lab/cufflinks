@@ -200,6 +200,7 @@ double *t, *resp, *resp2, *coef, h;
 { INT dim, deg, p, i, j, k, st;
   double cf[MXDEG+1], hj, hs, prod_wk[MXDIM][2*MXDEG+1];
 
+    st = 0;
   dim = lf->mi[MDIM];
   deg = lf->mi[MDEG];
   p = lf->mi[MP];
@@ -294,6 +295,7 @@ double *coef, *lk0, *f1, *A;
 { double lk, r;
   int i, j, p, rstat;
 
+    lk = 0;
   lf_status = LF_OK;
   p = den_des->p;
   if ((den_lf->mi[MLINK]==LIDENT) && (coef[0] != 0.0)) return(NR_BREAK);

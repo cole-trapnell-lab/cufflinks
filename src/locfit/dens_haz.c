@@ -105,7 +105,7 @@ double *t, *resp, *x, *cf, h;
   deg = lf->mi[MDEG];
   setzero(resp,p*p);
   hj = hs = h*lf->sca[0];
-
+    memset(dfx, 0.0, sizeof(dfx));
   ncf[0] = cf[0];
   for (i=1; i<=deg; i++)
   { ncf[i] = hj*cf[(i-1)*d+1]; hj *= hs;

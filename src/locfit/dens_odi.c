@@ -465,6 +465,7 @@ double *cf, l0, l1, *resp;
 INT *mi;
 { double u, uj, y, ncf[4], rr[5];
   INT deg, i, j;
+    memset(rr, 0, sizeof(rr));
 if (debug) printf("onedint: %f %f %f   %f %f\n",cf[0],cf[1],cf[2],l0,l1);
   deg = mi[MDEG];
 

@@ -197,6 +197,7 @@ vari *vc;
     double *data[MXDIM];
     varname vn;
     INT i, k, j, gr, n, z, mg[MXDIM];
+    memset(mg, 0, sizeof(mg));
     dosavefit(&lf,getargval(vc,"fit",0),"rb",(INT)0);
     if (nofit()) ERROR(("predict: no fit to interpolate\n"));
     if (lf_error)  return;
@@ -270,7 +271,7 @@ vari *vc;
         { for (k=0; k<i; k++) z /= mg[k];
             z = z%mg[i];
         }
-        printf("%10.6f ",data[i][z]);
+        //printf("%10.6f ",data[i][z]);
     }
         if (vitem(pp.fit,j)==NOSLN) printf("   Not computed\n");
         else printf("   %10.6f\n",vitem(pp.fit,j));
