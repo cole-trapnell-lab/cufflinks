@@ -621,7 +621,7 @@ void compress_consitutive(vector<Scaffold>& hits)
         hits.insert(hits.end(), completes.begin(), completes.end()); 
     }
     
-    fill_unambiguous_unknowns(non_constitutive, hits);
+    //fill_unambiguous_unknowns(non_constitutive, hits);
     
     hits.insert(hits.end(), non_constitutive.begin(), non_constitutive.end());
     sort(hits.begin(), hits.end(), scaff_lt);
