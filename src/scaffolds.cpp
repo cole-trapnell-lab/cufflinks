@@ -363,6 +363,7 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 	
 	unknowns.push_back(AugmentedCuffOp(CUFF_UNKNOWN, g_min, g_max - g_min + 1));
 	
+    vector<AugmentedCuffOp> pre_merge = matches;
 	
 	disjoint_ops(matches);
 	disjoint_ops(introns);

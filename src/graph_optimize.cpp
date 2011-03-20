@@ -692,7 +692,7 @@ void compress_fragments(vector<Scaffold>& fragments)
     size_t pre_hit_collapse_size = fragments.size();
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
     
-    fill_unambiguous_unknowns(fragments);
+    //fill_unambiguous_unknowns(fragments);
     
 	compress_consitutive(fragments);
 	
