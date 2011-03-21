@@ -606,10 +606,12 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int 
 		}
 		assert(ops.back().g_right() > ops.back().g_left());
 
-		foreach(const AugmentedCuffOp& op, ops)
-        {
-            assert (op.genomic_offset != 0);
-        }
+        // genomic_offset actually could be zero - from an exon starting at coord
+        // 1 in some chromosome of the ref.
+//		foreach(const AugmentedCuffOp& op, ops)
+//        {
+//            assert (op.genomic_offset != 0);
+//        }
         
 		tile_scaffs.push_back(Scaffold(this->ref_id(), this->strand(), ops, true)); 
 		assert(tile_scaffs.back().length() == curr_len );
