@@ -18,6 +18,11 @@
 #include <string>
 
 #include <boost/version.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/visitors.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/connected_components.hpp>
 
 #include "common.h"
 #include "hits.h"
@@ -27,28 +32,33 @@
 #include "scaffolds.h"
 #include "tokenize.h"
 
+using namespace boost;
 using namespace std;
 
 #if ENABLE_THREADS
-const char *short_options = "r:";
+const char *short_options = "r:F";
 #else
-const char *short_options = "r:";
+const char *short_options = "r:F";
 #endif
 
+bool raw_fpkm = false;
+
 static struct option long_options[] = {
-{"reference-seq",		required_argument,		 0,			 'r'},	
+{"reference-seq",		required_argument,		 0,			 'r'},
+{"raw-fpkm",            no_argument,             0,			 'F'},
 {0, 0, 0, 0} // terminator
 };
 
 void print_usage()
 {
 	//NOTE: SPACES ONLY, bozo
-	fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
+	fprintf(stderr, "gtf_to_sam v%s\n", PACKAGE_VERSION);
 	fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
 	fprintf(stderr, "-----------------------------\n"); 
 	fprintf(stderr, "Usage:   cufflinks [options] <transcripts1.gtf,...,transcriptsN.gtf> <out.sam>\n");
 	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "-r/--reference-seq			  reference fasta file     [ default:   NULL ]\n");
+	fprintf(stderr, "-r/--reference-seq			  reference fasta file                     [ default:   NULL ]\n");
+    fprintf(stderr, "-F/--raw-fpkm			      use FPKM instead of isoform fraction                        \n");
 }
 
 int parse_options(int argc, char** argv)
@@ -65,6 +75,11 @@ int parse_options(int argc, char** argv)
 				fasta_dir = optarg;
 				break;
             }    
+            case 'F':
+			{
+				raw_fpkm = true;
+				break;
+            }   
 			default:
 				print_usage();
 				return 1;
@@ -173,6 +188,60 @@ void print_scaff_as_sam(FILE* sam_out,
     
 }
 	
+void set_relative_fpkms(vector<shared_ptr<Scaffold> >& ref_mRNAs)
+{
+    adjacency_list <vecS, vecS, undirectedS> G;
+	
+	for (size_t i = 0; i < ref_mRNAs.size(); ++i)
+	{
+		add_vertex(G);
+	}
+	
+    for (size_t i = 0; i < ref_mRNAs.size(); ++i)
+	{
+        shared_ptr<Scaffold> scaff_i = ref_mRNAs[i];
+        for (size_t j = 0; j < ref_mRNAs.size(); ++j)
+        {
+            shared_ptr<Scaffold> scaff_j = ref_mRNAs[j];
+			if (scaff_i->annotated_gene_id() == scaff_j->annotated_gene_id())
+				add_edge(i, j, G);
+		}
+	}
+    
+    std::vector<int> component(num_vertices(G));
+	connected_components(G, &component[0]);
+	
+	vector<vector<bool> > clusters(ref_mRNAs.size(), 
+								   vector<bool>(ref_mRNAs.size(), false));
+	
+	//vector<vector<size_t> > cluster_indices(three_prime_ends.size());
+    
+    vector<vector<shared_ptr<Scaffold> > > grouped_scaffolds(ref_mRNAs.size());
+	for (size_t i = 0; i < ref_mRNAs.size(); ++i)
+	{
+		clusters[component[i]][i] = true;
+		grouped_scaffolds[component[i]].push_back(ref_mRNAs[i]);
+	}
+    
+    for (size_t i = 0; i < grouped_scaffolds.size(); ++i)
+    {
+        vector<shared_ptr<Scaffold> >& gene = grouped_scaffolds[i];
+        
+        double total_fpkm = 0.0;
+        foreach(shared_ptr<Scaffold> scaff, gene)
+        {
+            total_fpkm += scaff->fpkm();
+        }
+        if (total_fpkm > 0)
+        {
+            foreach (shared_ptr<Scaffold> scaff, gene)
+            {
+                scaff->fpkm(scaff->fpkm() / total_fpkm);
+            }
+        }
+    }
+}
+
 void driver(vector<FILE*> ref_gtf_files, FILE* sam_out)
 {
 	ReadTable it;
@@ -190,7 +259,11 @@ void driver(vector<FILE*> ref_gtf_files, FILE* sam_out)
     
     for (size_t j = 0; j < ref_mRNA_table.size(); ++j)
     {
-        const vector<shared_ptr<Scaffold> > ref_mRNAs = ref_mRNA_table[j];
+        vector<shared_ptr<Scaffold> > ref_mRNAs = ref_mRNA_table[j];
+        
+        if (!raw_fpkm)
+            set_relative_fpkms(ref_mRNAs);
+        
         for (size_t i = 0; i < ref_mRNAs.size(); ++i)
         {
             print_scaff_as_sam(sam_out, rt, *ref_mRNA_table[j][i]);

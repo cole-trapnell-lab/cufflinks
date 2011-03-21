@@ -589,7 +589,7 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int 
 		else
 		{
             assert(orig_ops.size());
-            assert(orig_ops[l].genomic_offset != 0);
+            //assert(orig_ops[l].genomic_offset != 0);
             
 			ops.push_back(AugmentedCuffOp(CUFF_MATCH, orig_ops[l].g_left() + l_off, orig_ops[l].genomic_length - l_off));
 			assert(ops.back().g_right() > ops.back().g_left());
@@ -600,7 +600,7 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int 
 			if (r_off > 0 && r < orig_ops.size())
             {
                 assert (r < orig_ops.size());
-                assert (orig_ops[r].genomic_offset != 0);
+                //assert (orig_ops[r].genomic_offset != 0);
 				ops.push_back(AugmentedCuffOp(CUFF_MATCH, orig_ops[r].g_left(), r_off));
             }
 		}
