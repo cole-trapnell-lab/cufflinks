@@ -1,5 +1,5 @@
 //
-//  vari.h
+//  vari.hpp
 //  cufflinks
 //
 //  Created by Cole Trapnell on 3/22/11.

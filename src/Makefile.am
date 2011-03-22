@@ -93,7 +93,7 @@ noinst_HEADERS = \
     locfit/lffuns.h	\
     locfit/lfwin.h \
     locfit/mutil.h \
-    locfit/vari.h \
+    locfit/vari.hpp \
     replicates.h \
     multireads.h \
 	common.h 
@@ -140,7 +140,7 @@ libcufflinks_a_SOURCES = \
     locfit/lf_dercor.c \
     locfit/lf_fitfun.c \
     locfit/lf_robust.c \
-    locfit/lf_vari.cpp \
+    locfit/lf_vari.c \
     locfit/lfd.c \
     locfit/lfstr.c \
     locfit/linalg.c \
@@ -164,7 +164,7 @@ libcufflinks_a_SOURCES = \
     locfit/solve.c \
     locfit/startlf.c \
     locfit/strings.c \
-    locfit/vari.c \
+    locfit/vari.cpp \
     locfit/wdiag.c \
     locfit/weight.c \
     replicates.cpp \

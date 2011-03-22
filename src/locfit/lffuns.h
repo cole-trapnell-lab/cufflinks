@@ -211,5 +211,5 @@ extern void readfile();
 extern void cscbmax();
 
 /* vari.c */
-#include "vari.h"
+#include "vari.hpp"
 

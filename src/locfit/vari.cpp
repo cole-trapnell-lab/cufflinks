@@ -12,7 +12,7 @@ extern "C"
 
 #include <errno.h>
 
-#include "vari.h"
+#include "vari.hpp"
 //#define MAXV 1000
 //#define LF_WORK 102400
 
