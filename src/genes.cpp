@@ -34,6 +34,8 @@ void Isoform::get_gtf(vector<string>& gff_recs,
 {
 	const char* ref_name = rt.get_name(_scaffold.ref_id());
 	
+    assert (ref_name != NULL);
+    
 	const char* strand_str = NULL;
 	if (_scaffold.strand() == CUFF_STRAND_UNKNOWN)
 		strand_str = ".";

@@ -516,7 +516,7 @@
 		9CC50B8E13204FEA0031949A /* lfwin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lfwin.h; sourceTree = "<group>"; };
 		9CC50B8F13204FEA0031949A /* imatlb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imatlb.h; sourceTree = "<group>"; };
 		9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = compress_gtf.cpp; path = src/compress_gtf.cpp; sourceTree = "<group>"; };
-		9CD6E93F13379B7E00CCE1DE /* gtf_to_sam copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "gtf_to_sam copy"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CD6E93F13379B7E00CCE1DE /* compress_gtf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compress_gtf; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
 		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
 		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };
@@ -803,7 +803,7 @@
 				EDD94B671205C9E800AA1086 /* cufflinks_xcode */,
 				EDFE39CE122BE65600F24CD3 /* cuffcluster */,
 				ED41B838127602C60000B5A2 /* cufflinks_xcode */,
-				9CD6E93F13379B7E00CCE1DE /* gtf_to_sam copy */,
+				9CD6E93F13379B7E00CCE1DE /* compress_gtf */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -950,7 +950,7 @@
 			name = compress_gtf;
 			productInstallPath = "$(HOME)/bin";
 			productName = cufflinks_xcode;
-			productReference = 9CD6E93F13379B7E00CCE1DE /* gtf_to_sam copy */;
+			productReference = 9CD6E93F13379B7E00CCE1DE /* compress_gtf */;
 			productType = "com.apple.product-type.tool";
 		};
 		ED41B816127602C60000B5A2 /* gtf_reads */ = {
@@ -1696,7 +1696,7 @@
 					"\\\\\\\"$(SRCROOT)\\\\\\\"",
 					/usr/local/libIntel64,
 				);
-				PRODUCT_NAME = "gtf_to_sam copy";
+				PRODUCT_NAME = compress_gtf;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 			};
 			name = Debug;
@@ -1730,7 +1730,7 @@
 					/usr/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = "gtf_to_sam copy";
+				PRODUCT_NAME = compress_gtf;
 			};
 			name = Release;
 		};
