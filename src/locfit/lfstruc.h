@@ -7,7 +7,7 @@
  *   Structures, typedefs etc used in Locfit
  */
 
-typedef char varname[15];
+typedef char varname[64];
 
 /*
  *  Define the vari type for locfit variables and related macros.
