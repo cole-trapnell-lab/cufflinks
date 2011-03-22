@@ -156,20 +156,6 @@ extern double W(), weight(), weightd(), Wd(), Wdd(), wint();
 extern double Wconv(), Wconv1(), Wconv4(), Wconv5(), Wconv6(), Wikk();
 extern INT iscompact(), wtaylor();
 
-/* FILES IN THE src-s DIRECTORY */
-
-#ifdef SVERSION
-
-/* S_enter.c */
-extern void basis(), vbasis();
-
-#endif
-
-
-
-/* FILES IN THE src-c DIRECTORY */
-
-#ifdef CVERSION
 /* arith.c */
 extern INT arvect(), intitem();
 extern double areval(), arith(), darith(), dareval();
@@ -225,14 +211,5 @@ extern void readfile();
 extern void cscbmax();
 
 /* vari.c */
-extern INT vbytes();
-extern vari *createvar(varname name,int status, int n, int mode);
-extern vari* findvar(varname name, int err, int *n);
+#include "vari.h"
 
-extern void initdb(), deletevar(), deletename(), deleteifhidden(), setvarname();
-extern void *viptr(), vassn();
-extern double *vdptr(), vitem();
-
-#else
-#define vdptr(z) z->dpr
-#endif

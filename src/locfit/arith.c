@@ -399,7 +399,7 @@ double (*f)();
     v = createvar("_vrvec",STHIDDEN,n,VDOUBLE);
     if (lf_error) return(NULL);
     for (i=0; i<n; i++) vassn(v,i,f(vitem(a1,i)));
-    deleteifhidden(v1,a1);
+    //deleteifhidden(v1,a1);
     return(v);
 }
 

@@ -20,7 +20,7 @@ device devps, devwin;
 design des;
 lfit lf;
 vari *aru;
-extern vari root;
+
 extern plots pl[];
 pplot pp;
 struct lfcol mycol[MAXCOLOR];
@@ -373,44 +373,6 @@ vari *v;
     }
 }
 
-void summdata(va)
-vari *va;
-{ INT i, all;
-    vari *v;
-    i = getarg(va,"all",1);
-    all = (i>0) ? getlogic(va,i) : 0;
-    for (i=0; i<root.n; i++)
-    { v = viptr(&root,i);
-        if (all || (v->stat==STREGULAR))
-        { //printf("  %10s  %4d",v->name,vlength(v));
-            if (all)
-            { switch(v->stat)
-                { case STEMPTY:   printf("  empty  "); break;
-                    case STREGULAR: printf("  regular"); break;
-                    case STHIDDEN:  printf("  hidden "); break;
-                    case STPLOTVAR: printf("  plotvar"); break;
-                    case STSYSTEM:  printf("  system "); break;
-                    case STSYSPEC:  printf("  syspec "); break;
-                    default:        printf("  unknown");
-                }
-                switch(v->mode)
-                { case VDOUBLE:   printf("  double "); break;
-                    case VINT:      printf("  integer"); break;
-                    case VCHAR:     printf("  charact"); break;
-                    case VARGL:     printf("  arglist"); break;
-                    case VPREP:     printf("  preplot"); break;
-                    case VARC:      printf("  arith  "); break;
-                    case VXYZ:      printf("  plxyz  "); break;
-                    default:        printf("  unknown"); break;
-                }
-                //printf("  %3d  %d",vlength(v),vdptr(v));
-            }
-            //printf("\n");
-        }
-    }
-    return;
-}
-
 void summfit(v)
 vari *v;
 { int i;
@@ -481,34 +443,36 @@ vari *v;
 
 void setcolor(v)
 vari *v;
-{ int i;
-    lfcm[CBAK] = getcolidx(getargval(v,"back",0),lfcm[CBAK]);
-    
-    i = getarg(v,"fore",1);
-    if (i>0)
-    { lfcm[CAXI] = getcolidx(argval(v,i));
-        for (i=CTEX; i<CPA2; i++) lfcm[i] = lfcm[CAXI];
-    }
-    
-    lfcm[CAXI] = getcolidx(getargval(v,"axis",0),lfcm[CAXI]);
-    lfcm[CTEX] = getcolidx(getargval(v,"text",0),lfcm[CTEX]);
-    lfcm[CLIN] = getcolidx(getargval(v,"lines",0),lfcm[CLIN]);
-    lfcm[CPOI] = getcolidx(getargval(v,"points",0),lfcm[CPOI]);
-    lfcm[CCON] = getcolidx(getargval(v,"cont",0),lfcm[CCON]);
-    lfcm[CCLA] = getcolidx(getargval(v,"clab",0),lfcm[CCLA]);
-    lfcm[CSEG] = getcolidx(getargval(v,"cseg",0),lfcm[CSEG]);
-    lfcm[CPA1] = getcolidx(getargval(v,"patch1",0),lfcm[CPA1]);
-    lfcm[CPA2] = getcolidx(getargval(v,"patch2",0),lfcm[CPA2]);
-    if (lfcm[CAXI]==lfcm[0]) WARN(("axis color = background color"));
-    if (lfcm[CTEX]==lfcm[0]) WARN(("text color = background color"));
-    if (lfcm[CLIN]==lfcm[0]) WARN(("lines color = background color"));
-    if (lfcm[CPOI]==lfcm[0]) WARN(("points color = background color"));
-    if (lfcm[CCON]==lfcm[0]) WARN(("cont color = background color"));
-    if (lfcm[CCLA]==lfcm[0]) WARN(("clab color = background color"));
-    if (lfcm[CSEG]==lfcm[0]) WARN(("cseg color = background color"));
-    if (lfcm[CPA1]==lfcm[0]) WARN(("patch1 color = background color"));
-    if (lfcm[CPA2]==lfcm[0]) WARN(("patch2 color = background color"));
-    if (lfcm[CPA1]==lfcm[CPA2]) WARN(("patch1 color = patch2 color"));
+{
+    return NULL;
+//   int i;
+//    lfcm[CBAK] = getcolidx(getargval(v,"back",0),lfcm[CBAK]);
+//    
+//    i = getarg(v,"fore",1);
+//    if (i>0)
+//    { lfcm[CAXI] = getcolidx(argval(v,i));
+//        for (i=CTEX; i<CPA2; i++) lfcm[i] = lfcm[CAXI];
+//    }
+//    
+//    lfcm[CAXI] = getcolidx(getargval(v,"axis",0),lfcm[CAXI]);
+//    lfcm[CTEX] = getcolidx(getargval(v,"text",0),lfcm[CTEX]);
+//    lfcm[CLIN] = getcolidx(getargval(v,"lines",0),lfcm[CLIN]);
+//    lfcm[CPOI] = getcolidx(getargval(v,"points",0),lfcm[CPOI]);
+//    lfcm[CCON] = getcolidx(getargval(v,"cont",0),lfcm[CCON]);
+//    lfcm[CCLA] = getcolidx(getargval(v,"clab",0),lfcm[CCLA]);
+//    lfcm[CSEG] = getcolidx(getargval(v,"cseg",0),lfcm[CSEG]);
+//    lfcm[CPA1] = getcolidx(getargval(v,"patch1",0),lfcm[CPA1]);
+//    lfcm[CPA2] = getcolidx(getargval(v,"patch2",0),lfcm[CPA2]);
+//    if (lfcm[CAXI]==lfcm[0]) WARN(("axis color = background color"));
+//    if (lfcm[CTEX]==lfcm[0]) WARN(("text color = background color"));
+//    if (lfcm[CLIN]==lfcm[0]) WARN(("lines color = background color"));
+//    if (lfcm[CPOI]==lfcm[0]) WARN(("points color = background color"));
+//    if (lfcm[CCON]==lfcm[0]) WARN(("cont color = background color"));
+//    if (lfcm[CCLA]==lfcm[0]) WARN(("clab color = background color"));
+//    if (lfcm[CSEG]==lfcm[0]) WARN(("cseg color = background color"));
+//    if (lfcm[CPA1]==lfcm[0]) WARN(("patch1 color = background color"));
+//    if (lfcm[CPA2]==lfcm[0]) WARN(("patch2 color = background color"));
+//    if (lfcm[CPA1]==lfcm[CPA2]) WARN(("patch1 color = patch2 color"));
 }
 
 void table(v)
@@ -694,7 +658,6 @@ vari *v;
     if (argvalis(v,0,"outf"))     { setout(v); return; }
     if (argvalis(v,0,"setplot"))  { setplot(v); return; }
     if (argvalis(v,0,"sleep"))    { dosleep(v); return; }
-    if (argvalis(v,0,"summdata")) { summdata(v); return; }
     if (argvalis(v,0,"summfit"))  { summfit(v); return; }
     if (argvalis(v,0,"table"))    { table(v); return; }
     if (argvalis(v,0,"track"))    { plottrack(v); return; }

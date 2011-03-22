@@ -12,7 +12,7 @@
 		0A69414F132AEDAB00558D76 /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
 		0A694150132AEDAB00558D76 /* dens_int.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3713213B19008DDA0B /* dens_int.c */; };
 		0A694151132AEDAB00558D76 /* dens_odi.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3813213B19008DDA0B /* dens_odi.c */; };
-		0A694152132AEDAB00558D76 /* vari.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.c */; };
+		0A694152132AEDAB00558D76 /* vari.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.cpp */; };
 		0A694153132AEDAB00558D76 /* density.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F30132137F4008DDA0B /* density.c */; };
 		0A694154132AEDAB00558D76 /* minmax.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5D13204FE30031949A /* minmax.c */; };
 		0A694155132AEDAB00558D76 /* locfit.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5E13204FE30031949A /* locfit.c */; };
@@ -71,7 +71,7 @@
 		9CBCD9B61333ECF50059FE74 /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
 		9CBCD9B71333ECF50059FE74 /* dens_int.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3713213B19008DDA0B /* dens_int.c */; };
 		9CBCD9B81333ECF50059FE74 /* dens_odi.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3813213B19008DDA0B /* dens_odi.c */; };
-		9CBCD9B91333ECF50059FE74 /* vari.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.c */; };
+		9CBCD9B91333ECF50059FE74 /* vari.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.cpp */; };
 		9CBCD9BA1333ECF50059FE74 /* density.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F30132137F4008DDA0B /* density.c */; };
 		9CBCD9BB1333ECF50059FE74 /* minmax.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5D13204FE30031949A /* minmax.c */; };
 		9CBCD9BC1333ECF50059FE74 /* locfit.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5E13204FE30031949A /* locfit.c */; };
@@ -147,7 +147,7 @@
 		9CD6E90413379B7E00CCE1DE /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
 		9CD6E90513379B7E00CCE1DE /* dens_int.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3713213B19008DDA0B /* dens_int.c */; };
 		9CD6E90613379B7E00CCE1DE /* dens_odi.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3813213B19008DDA0B /* dens_odi.c */; };
-		9CD6E90713379B7E00CCE1DE /* vari.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.c */; };
+		9CD6E90713379B7E00CCE1DE /* vari.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.cpp */; };
 		9CD6E90813379B7E00CCE1DE /* density.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F30132137F4008DDA0B /* density.c */; };
 		9CD6E90913379B7E00CCE1DE /* minmax.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5D13204FE30031949A /* minmax.c */; };
 		9CD6E90A13379B7E00CCE1DE /* locfit.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5E13204FE30031949A /* locfit.c */; };
@@ -273,8 +273,8 @@
 		ED920F2F132136CE008DDA0B /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5913204F180031949A /* cmd.c */; };
 		ED920F31132137F4008DDA0B /* density.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F30132137F4008DDA0B /* density.c */; };
 		ED920F32132137F4008DDA0B /* density.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F30132137F4008DDA0B /* density.c */; };
-		ED920F3413213903008DDA0B /* vari.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.c */; };
-		ED920F3513213903008DDA0B /* vari.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.c */; };
+		ED920F3413213903008DDA0B /* vari.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.cpp */; };
+		ED920F3513213903008DDA0B /* vari.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3313213903008DDA0B /* vari.cpp */; };
 		ED920F3913213B19008DDA0B /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
 		ED920F3A13213B19008DDA0B /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
 		ED920F3B13213B19008DDA0B /* dens_int.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3713213B19008DDA0B /* dens_int.c */; };
@@ -470,6 +470,7 @@
 		0A6183711324308800EFF9AF /* multireads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = multireads.cpp; path = src/multireads.cpp; sourceTree = "<group>"; };
 		0ACD78C612E6647B00310E07 /* update_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = update_check.h; path = src/update_check.h; sourceTree = "<group>"; };
 		9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_scaffolds.cpp; sourceTree = "<group>"; };
+		9C29C3E31339285000EC6E65 /* vari.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = vari.h; sourceTree = "<group>"; };
 		9CAB363D1332794000455316 /* cufflinks.mk */ = {isa = PBXFileReference; lastKnownFileType = text; name = cufflinks.mk; path = "build-aux/cufflinks.mk"; sourceTree = "<group>"; };
 		9CC50B5913204F180031949A /* cmd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = cmd.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		9CC50B5D13204FE30031949A /* minmax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = minmax.c; sourceTree = "<group>"; };
@@ -531,7 +532,7 @@
 		ED877B71123BCA3E0025A050 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
 		ED877B72123BCA3F0025A050 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
 		ED920F30132137F4008DDA0B /* density.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = density.c; sourceTree = "<group>"; };
-		ED920F3313213903008DDA0B /* vari.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vari.c; sourceTree = "<group>"; };
+		ED920F3313213903008DDA0B /* vari.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = vari.cpp; sourceTree = "<group>"; };
 		ED920F3613213B19008DDA0B /* dens_haz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dens_haz.c; sourceTree = "<group>"; };
 		ED920F3713213B19008DDA0B /* dens_int.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dens_int.c; sourceTree = "<group>"; };
 		ED920F3813213B19008DDA0B /* dens_odi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dens_odi.c; sourceTree = "<group>"; };
@@ -814,7 +815,7 @@
 				ED920F3613213B19008DDA0B /* dens_haz.c */,
 				ED920F3713213B19008DDA0B /* dens_int.c */,
 				ED920F3813213B19008DDA0B /* dens_odi.c */,
-				ED920F3313213903008DDA0B /* vari.c */,
+				ED920F3313213903008DDA0B /* vari.cpp */,
 				ED920F30132137F4008DDA0B /* density.c */,
 				9CC50B5D13204FE30031949A /* minmax.c */,
 				9CC50B5E13204FE30031949A /* locfit.c */,
@@ -870,6 +871,7 @@
 				9CC50B8E13204FEA0031949A /* lfwin.h */,
 				9CC50B8F13204FEA0031949A /* imatlb.h */,
 				9CC50B5913204F180031949A /* cmd.c */,
+				9C29C3E31339285000EC6E65 /* vari.h */,
 			);
 			name = locfit;
 			path = src/locfit;
@@ -1119,7 +1121,7 @@
 				0A69414F132AEDAB00558D76 /* dens_haz.c in Sources */,
 				0A694150132AEDAB00558D76 /* dens_int.c in Sources */,
 				0A694151132AEDAB00558D76 /* dens_odi.c in Sources */,
-				0A694152132AEDAB00558D76 /* vari.c in Sources */,
+				0A694152132AEDAB00558D76 /* vari.cpp in Sources */,
 				0A694153132AEDAB00558D76 /* density.c in Sources */,
 				0A694154132AEDAB00558D76 /* minmax.c in Sources */,
 				0A694155132AEDAB00558D76 /* locfit.c in Sources */,
@@ -1229,7 +1231,7 @@
 				9CD6E90413379B7E00CCE1DE /* dens_haz.c in Sources */,
 				9CD6E90513379B7E00CCE1DE /* dens_int.c in Sources */,
 				9CD6E90613379B7E00CCE1DE /* dens_odi.c in Sources */,
-				9CD6E90713379B7E00CCE1DE /* vari.c in Sources */,
+				9CD6E90713379B7E00CCE1DE /* vari.cpp in Sources */,
 				9CD6E90813379B7E00CCE1DE /* density.c in Sources */,
 				9CD6E90913379B7E00CCE1DE /* minmax.c in Sources */,
 				9CD6E90A13379B7E00CCE1DE /* locfit.c in Sources */,
@@ -1373,7 +1375,7 @@
 				ED920F2E132136CE008DDA0B /* ar_funs.c in Sources */,
 				ED920F2F132136CE008DDA0B /* cmd.c in Sources */,
 				ED920F31132137F4008DDA0B /* density.c in Sources */,
-				ED920F3413213903008DDA0B /* vari.c in Sources */,
+				ED920F3413213903008DDA0B /* vari.cpp in Sources */,
 				ED920F3913213B19008DDA0B /* dens_haz.c in Sources */,
 				ED920F3B13213B19008DDA0B /* dens_int.c in Sources */,
 				ED920F3D13213B19008DDA0B /* dens_odi.c in Sources */,
@@ -1456,7 +1458,7 @@
 				9CBCD9B61333ECF50059FE74 /* dens_haz.c in Sources */,
 				9CBCD9B71333ECF50059FE74 /* dens_int.c in Sources */,
 				9CBCD9B81333ECF50059FE74 /* dens_odi.c in Sources */,
-				9CBCD9B91333ECF50059FE74 /* vari.c in Sources */,
+				9CBCD9B91333ECF50059FE74 /* vari.cpp in Sources */,
 				9CBCD9BA1333ECF50059FE74 /* density.c in Sources */,
 				9CBCD9BB1333ECF50059FE74 /* minmax.c in Sources */,
 				9CBCD9BC1333ECF50059FE74 /* locfit.c in Sources */,
@@ -1516,7 +1518,7 @@
 				EDFE39FB122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */,
 				EDDBF70A12D29DF000130D8A /* cuffcluster.cpp in Sources */,
 				ED920F32132137F4008DDA0B /* density.c in Sources */,
-				ED920F3513213903008DDA0B /* vari.c in Sources */,
+				ED920F3513213903008DDA0B /* vari.cpp in Sources */,
 				ED920F3A13213B19008DDA0B /* dens_haz.c in Sources */,
 				ED920F3C13213B19008DDA0B /* dens_int.c in Sources */,
 				ED920F3E13213B19008DDA0B /* dens_odi.c in Sources */,
