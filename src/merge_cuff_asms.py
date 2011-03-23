@@ -34,7 +34,7 @@ run_cmd = None
 tmp_dir = output_dir + "tmp/"
 bin_dir = sys.path[0] + "/"
 run_meta_assembly = True
-
+fail_str = "\t[FAILED]\n"
 
 class Usage(Exception):
     def __init__(self, msg):
@@ -72,7 +72,7 @@ class TestParams:
     def parse_options(self, argv):
         try:
             opts, args = getopt.getopt(argv[1:],
-                                       "hvp:o:G:M:s:q:",
+                                       "hvp:o:g:M:s:q:",
                                        ["version",
                                         "help",
                                         "ref-sequence=",
@@ -97,7 +97,7 @@ class TestParams:
                 exit(0)
             if option in ("-h", "--help"):
                 raise Usage(use_message)
-            if option in ("-G", "--ref-gtf"):
+            if option in ("-g", "--ref-gtf"):
                 self.ref_gtf = value
             if option in ("-s", "--ref-sequence"):
                 self.fasta = value
@@ -165,7 +165,7 @@ def cufflinks(params,
         cmd.extend(["-o", out_dir])
 
     if gtf_file != None:
-        cmd.extend(["-G", gtf_file])
+        cmd.extend(["-g", gtf_file])
 
     if extra_opts != None:
         cmd.extend(extra_opts)
@@ -411,23 +411,12 @@ def main(argv=None):
     warnings.filterwarnings("ignore", "tmpnam is a potential security risk")
     global params
     params = TestParams()
-    
-    if argv is None:
-        argv = sys.argv
-    try:
-        try:
-            opts, args = getopt.getopt(argv[1:], "ho:v", ["help", "output="])
-        except getopt.error, msg:
-            raise Usage(msg)
-    
-        # option processing
-        for option, value in opts:
-            if option == "-v":
-                verbose = True
-            if option in ("-h", "--help"):
-                raise Usage(help_message)
-            if option in ("-o", "--output"):
-                output = value
+
+    try:  
+        if argv is None:
+            argv = sys.argv
+            args = params.parse_options(argv)
+            params.check()
         
         #if len(args) < 2:
         #    raise Usage(help_message)
@@ -436,8 +425,8 @@ def main(argv=None):
         global run_cmd
 
         print >> sys.stderr
-        print >> sys.stderr, "[%s] Beginning transcriptome build (suite v%s)" % (right_now(), get_version())
-        print >> sys.stderr, "-----------------------------------------------"
+        print >> sys.stderr, "[%s] Beginning transcriptome assembly merge" % (right_now())
+        print >> sys.stderr, "-------------------------------------------"
         print >> sys.stderr
         
         start_time = datetime.now()
@@ -459,16 +448,13 @@ def main(argv=None):
         
         #Meta assembly option:
         global run_meta_assembly
-        if run_meta_assembly == 1:
-            print >> sys.stderr, "Run Meta-Assembly \n"
+        if run_meta_assembly:
             # Convert the primary assemblies to SAM format
             sam_input_files = convert_gtf_to_sam(gtf_input_files)
-
             # Merge the primary assembly SAMs into a single input SAM file
             merged_sam_filename = merge_sam_inputs(sam_input_files)
-
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
-            cufflinks(params, "merged_asm", merged_sam_filename)
+            cufflinks(params, "merged_asm", merged_sam_filename, params.ref_gtf)
         #Meta Cuffcompare option:
         else:
             cuffcompare_all_assemblies(gtf_input_files);
