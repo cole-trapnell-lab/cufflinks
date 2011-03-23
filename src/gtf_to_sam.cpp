@@ -203,8 +203,11 @@ void set_relative_fpkms(vector<shared_ptr<Scaffold> >& ref_mRNAs)
         for (size_t j = 0; j < ref_mRNAs.size(); ++j)
         {
             shared_ptr<Scaffold> scaff_j = ref_mRNAs[j];
-			if (scaff_i->annotated_gene_id() == scaff_j->annotated_gene_id())
+            if (scaff_i->ref_id() == scaff_j->ref_id() &&
+                scaff_i->annotated_gene_id() == scaff_j->annotated_gene_id())
+            {
 				add_edge(i, j, G);
+            }
 		}
 	}
     
