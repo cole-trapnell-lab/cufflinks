@@ -957,6 +957,8 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             continue;
         
         Scaffold* group_leader = NULL;
+        int trim_point = -1;
+        
         const AugmentedCuffOp* group_exon_3 = NULL;
         vector<pair<double, Scaffold*> >::iterator l_itr = group.begin();
         while (l_itr != group.end())
@@ -1003,9 +1005,26 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             
             if (ok_clip_leader)
             {
+                if (s == CUFF_REV)
+                {
+                    if (trim_point == -1)
+                        trim_point = l_exon_3->g_left();
+                    else if (l_exon_3->g_left() < trim_point)
+                        ok_clip_leader = false;
+                }
+                else 
+                {
+                    if (trim_point == -1)
+                        trim_point = l_exon_3->g_right();
+                    else if (l_exon_3->g_right() > trim_point)
+                        ok_clip_leader = false;
+                }
+            }
+            
+            if (ok_clip_leader)
+            {
                 group_leader = possible_leader;
                 group_exon_3 = l_exon_3;
-                break;
             }
             ++l_itr;
         }
