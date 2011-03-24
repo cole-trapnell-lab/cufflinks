@@ -14,11 +14,10 @@
 
 using namespace std;
 
-bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
+inline bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 								 const AugmentedCuffOp& rhs,
 								 int overhang_tolerance)
 {
-	int l_match = match_length(lhs, rhs.g_left(), rhs.g_right());
 	if (rhs.opcode == CUFF_INTRON)
 	{
 		if (lhs.opcode == CUFF_INTRON)
@@ -34,18 +33,22 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 			//if (left_diff + right_diff > max_frag_len)
             //    return false;
         }
-		else if (l_match > overhang_tolerance)
-		{
-			return false;
-		}
+        else
+        {
+            int l_match = match_length(lhs, rhs.g_left(), rhs.g_right());
+            if (l_match > overhang_tolerance)
+            {
+                return false;
+            }
+        }
 	}
 	else if (rhs.opcode == CUFF_UNKNOWN)
 	{
+        int l_match = match_length(lhs, rhs.g_left(), rhs.g_right());
 		if (l_match > max_frag_len)
 			return false;
 	}
-	
-	int r_match = match_length(rhs, lhs.g_left(), lhs.g_right());
+
 	if (lhs.opcode == CUFF_INTRON)
 	{
 		if (rhs.opcode == CUFF_INTRON)
@@ -61,13 +64,18 @@ bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
             //if (left_diff + right_diff > max_frag_len)
             //    return false;
 		}
-		else if (r_match > overhang_tolerance)
-		{
-			return false;
-		}
+		else 
+        {
+            int r_match = match_length(rhs, lhs.g_left(), lhs.g_right());
+            if (r_match > overhang_tolerance)
+            {
+                return false;
+            }
+        }
 	}	
 	else if (lhs.opcode == CUFF_UNKNOWN)
 	{
+        int r_match = match_length(rhs, lhs.g_left(), lhs.g_right());
 		if (r_match > max_frag_len)
 			return false;
 	}
