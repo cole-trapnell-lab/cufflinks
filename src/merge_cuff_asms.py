@@ -150,7 +150,7 @@ def tmp_name(prefix):
 def cufflinks(params,
               out_dir,
               sam_file,
-              min_isoform_frac=0.05
+              min_isoform_frac=0.05,
               gtf_file=None,
               extra_opts=["-q", "--overhang-tolerance", "200", "--library-type=transfrags",  "-A","0.0", "--min-frags-per-transfrag", "0"],
               lsf=False,
