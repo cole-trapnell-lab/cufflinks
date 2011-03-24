@@ -292,10 +292,20 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 	{
 		_rightmost = max(_rightmost, bh->right());
 		MateHit m(rg_props, bh->ref_id(), bh, NULL);
+        if (m.right() - m.left() > max_gene_length)
+        {
+            fprintf(stderr, "Warning: hit is longer than max_gene_length, skipping\n");
+            return;
+        }
 		add_hit(m);
 	}
 	else
 	{
+        if (abs(bh->right() - bh->partner_pos()+1) > max_gene_length)
+        {
+            fprintf(stderr, "Warning: hit is longer than max_gene_length, skipping\n");
+            return;
+        }
 		if (expand_by_partner)
 			_rightmost = max(max(_rightmost, bh->right()), bh->partner_pos()+1);
 		OpenMates::iterator mi = _open_mates.find(bh->left());

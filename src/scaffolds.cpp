@@ -357,7 +357,7 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
     }
     if (gaurd_assembly() && merged_length > (int)max_gene_length)
 	{
-		fprintf(stderr, "Warning: nonsense gene merge - product > max_gene_length\n");
+		fprintf(stderr, "Error: nonsense gene merge - product > max_gene_length\n");
 		exit(1);
 	}
 	
