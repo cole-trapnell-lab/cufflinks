@@ -545,7 +545,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                        true);
     }
     
-	if (ref_guided)
+	if (ref_guided && !hits.empty())
 	{
 		vector<Scaffold> pseudohits;
 		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
@@ -1324,7 +1324,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	bundle_factory2.num_bundles(num_bundles);
 	bundle_factory2.read_group_properties(rg_props);
 
-    if (!ref_gtf)
+    if (bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED)
     {
 		ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
         ref_mRNAs.clear();
