@@ -584,12 +584,12 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	vector<bool> chaff(transcripts.size(), false); // only a single MateHit, impossible to reliably quantitate
 	vector<bool> repeats(transcripts.size(), false); // too many low-quality hits
 	vector<bool> too_rare(transcripts.size(), false); // too rare to be reliably quantitated, could be error
-		
+	
 	//cerr << "Chucked : ";
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
 		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
-
+        
 		if (!(scaff->is_ref()) && allow_junk_filtering)
 		{
 			const vector<const MateHit*> hits = scaff->mate_hits();

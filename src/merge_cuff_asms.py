@@ -150,8 +150,9 @@ def tmp_name(prefix):
 def cufflinks(params,
               out_dir,
               sam_file,
+              min_isoform_frac=0.05
               gtf_file=None,
-              extra_opts=["-q", "--overhang-tolerance", "200", "--library-type=transfrags",  "-A","0.0", "-F", "0.0", "-j 0.0"],
+              extra_opts=["-q", "--overhang-tolerance", "200", "--library-type=transfrags",  "-A","0.0", "--min-frags-per-transfrag", "0"],
               lsf=False,
               curr_queue=None):
     if gtf_file != None:
@@ -163,6 +164,8 @@ def cufflinks(params,
 
     if out_dir != None and out_dir != "":
         cmd.extend(["-o", out_dir])
+           
+    cmd.extend(["-F", str(min_isoform_frac)])
 
     if gtf_file != None:
         cmd.extend(["-g", gtf_file])
