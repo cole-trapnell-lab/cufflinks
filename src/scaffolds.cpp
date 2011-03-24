@@ -14,7 +14,7 @@
 
 using namespace std;
 
-inline bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
+bool AugmentedCuffOp::compatible(const AugmentedCuffOp& lhs,
 								 const AugmentedCuffOp& rhs,
 								 int overhang_tolerance)
 {

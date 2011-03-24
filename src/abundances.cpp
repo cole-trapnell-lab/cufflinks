@@ -895,52 +895,8 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 	{
 		assert(false);
 	}
-//#ifdef DEBUG
-//	for (j = 0; j < N; ++j) {
-//		cout << p[j] << " ";
-//	}
-//	cout << endl;
-//#endif
-	
 }
  
-//double logLike (int N, 
-//				int M, 
-//				vector<double> & p,
-//				vector<vector<double> > const & cond_prob, 
-//				vector<double> const & u) {
-//	//int i,j;
-//	
-//	double ell = 0;
-//	double Prob_Y;
-//	
-//	double* tmp_prob = (float*)calloc(M, sizeof(float));
-//	
-//	for (int i= 0; i < M; i++) 
-//	{
-//		//tmp_prob[i] = 0;
-//		for (int j= 0; j < N; j++) {
-//			tmp_prob[i] += (float)(cond_prob[i][j] * p[j]);
-//		}
-//	} 
-//	
-//	for (int i= 0; i < M; i++) 
-//	{
-//		float l = tmp_prob[i]; 
-//		tmp_prob[i] = logf(l); 
-//	}
-//	
-//	for (int i= 0; i < M; i++) 
-//	{
-//		if (!isinf(tmp_prob[i]) && !isnan(tmp_prob[i]))
-//		{
-//			ell += tmp_prob[i];
-//		}
-//	}
-//	
-//	free(tmp_prob);
-//	return ell;
-//}
 
 double logLike (int N, 
 				int M, 
@@ -963,7 +919,168 @@ double logLike (int N,
 	return ell;
 }
 
-//#define SEEPROB
+void grad_ascent_step (int N, 
+                       int M, 
+                       vector<double> const & p,
+                       vector<vector<double> >& U,
+                       const vector<vector<double> >& cond_probs,
+                       const vector<double>& u,
+                       vector<double>& newP,
+                       double& epsilon) 
+{
+	// given p, fills U with expected frequencies
+	//int i,j;	
+    
+    vector<double> dLL_dj(N, 0.0);
+    
+    for (size_t i = 0; i < M; ++i)
+    {
+        double denom = 0.0;
+        for (size_t j = 0; j < N; ++j)
+        {
+            denom += p[j] * cond_probs[j][i];
+        }
+        
+        for (size_t j = 0; j < N; ++j)
+        {
+            if (denom > 0)
+            {
+                dLL_dj[j] += u[i] * p[j] * cond_probs[j][i] / denom;
+            }
+        }
+    }
+    
+//    for (size_t j = 0; j < N; ++j)
+//    {
+//        assert (p[j] >= 0.0 && p[j] <= 1.0);
+//        for (size_t i = 0; i < M; ++i)
+//        {
+//            double denom = 0;
+//            for (size_t k = 0; k < N; ++k)
+//            {
+//                double t = p[k] * cond_probs[k][i];
+//                assert (!isnan(t) && !isinf(t));
+//                denom += t;
+//            }
+//            assert (!isnan(denom) && !isinf(denom));
+//            double L = (p[j] * cond_probs[j][i]);
+//            assert (!isnan(L) && !isinf(L));
+//            L *= u[i] * cond_probs[j][i];
+//            assert (!isnan(L) && !isinf(L));
+//            if (denom > 0)
+//                dLL_dj[j] += L / denom;
+//            assert (!isinf(dLL_dj[j]) && !isnan(dLL_dj[j]));
+//        }
+//    }
+    
+    for (size_t j = 0; j < N; ++j)
+    {
+        newP[j] = p[j] + epsilon * dLL_dj[j];
+    }
+    
+    double m = accumulate(newP.begin(), newP.end(), 0.0);
+    if (m > 0)
+    {    
+        for (int j = 0; j < N; ++j) {
+            newP[j] = newP[j] / m;
+        }
+    }
+    else
+    {
+        return;
+    }
+    
+//    for (size_t j = 0; j < N; ++j)
+//    {
+//        fprintf(stderr,"\t%g", newP[j]);
+//    }
+//    fprintf(stderr,"\n");
+    
+//    vector<double> frag_prob_sums(M, 0.0);
+//    
+//    for (j = 0; j < N; ++j) 
+//    {
+//        for (i = 0; i < M; ++i) 
+//        {
+//            frag_prob_sums [i] += cond_probs[j][i] * p[j];
+//        }
+//    }
+//    
+//    for (i = 0; i < M; ++i) 
+//    {
+//        frag_prob_sums[i] = frag_prob_sums[i] ? (1.0 / frag_prob_sums[i]) : 0.0;
+//    }
+//    
+//    for (j = 0; j < N; ++j) 
+//    {
+//        for (i = 0; i < M; ++i) 
+//        {
+//            double ProbY = frag_prob_sums[i];
+//            double exp_i_j = u[i] * cond_probs[j][i] * p[j] * ProbY;
+//            U[j][i] = exp_i_j;
+//        }
+//    }
+    
+    
+}
+
+double grad_ascent (int N, int M, vector<double> & newP, 
+                    const vector<vector<double> >& cond_prob, 
+                    vector<double> const & u) 
+{
+    double sum = 0;
+	double newEll = 0;
+	vector<double> p(N,0);
+	vector<vector<double> > U(N, vector<double>(M,0));
+	double ell = 0; 
+	int iter = 0;
+	int j;
+	
+	for (j = 0; j < N; ++j) {
+		p[j] = rand();
+		sum += p[j];
+	}
+	for (j = 0; j < N; ++j) {
+		p[j] = p[j] / sum;
+	}
+	
+    ell = logLike(N, M, p, cond_prob,u);
+    
+    double epsilon = 1e-2;
+    
+    static const double ACCURACY = .1; // convergence criteria
+	
+	while (iter <= 2 || iter < max_mle_iterations) 
+    {
+        grad_ascent_step(N, M, p, U, cond_prob, u, newP, epsilon);
+		
+		newEll = logLike(N, M, newP, cond_prob,u);
+		
+        double delta = newEll - ell;
+        //fprintf (stderr, "%g\n", delta);
+        if (delta > 0)
+        {
+            //round(newP);
+			p = newP;
+			ell = newEll;
+            if (abs(delta) < ACCURACY)
+            {
+                break;
+            }
+        }
+        else
+        {
+            verbose_msg("Reducing EPSILON \n");
+            epsilon /= 2;verbose_msg("Convergence reached in %d iterations \n", iter);
+        }
+		iter++;
+	}
+	if (iter == max_mle_iterations)
+		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
+	verbose_msg("Convergence reached in %d iterations \n", iter);
+	return newEll;
+
+}
 
 double EM (int N, int M, vector<double> & newP, 
 		   const vector<vector<double> >& cond_prob, 
@@ -1015,7 +1132,7 @@ double EM (int N, int M, vector<double> & newP,
 	}
 	if (iter == max_mle_iterations)
 		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
-	//fprintf(stderr, "Convergence reached in %d iterations \n", iter);
+	verbose_msg("Convergence reached in %d iterations \n", iter);
 	return newEll;
 }
 
@@ -1794,8 +1911,9 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		}
 		
 		
-		logL = EM(N, M, prob, cond_probs, u);
-
+		//logL = EM(N, M, prob, cond_probs, u);
+        logL = grad_ascent(N, M, prob, cond_probs, u);
+        
 		gammas = prob;
 		
 		for (size_t i = 0; i < gammas.size(); ++i)
