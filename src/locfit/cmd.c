@@ -686,7 +686,8 @@ vari *v;
     { j = 0;
         vv = findvar(argval(v,0),0,&j);
         if ((vv!=NULL) && ((vv->mode==VARGL) & (!argvalis(v,0,"=cline"))))
-        { cmdint(vv);
+        { 
+            cmdint(vv);
             return;
         }
     }

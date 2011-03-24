@@ -197,19 +197,30 @@ void set_relative_fpkms(vector<shared_ptr<Scaffold> >& ref_mRNAs)
 		add_vertex(G);
 	}
 	
+    map<string, vector<int> > gene_id_idxs;
+    
     for (size_t i = 0; i < ref_mRNAs.size(); ++i)
-	{
-        shared_ptr<Scaffold> scaff_i = ref_mRNAs[i];
-        for (size_t j = 0; j < ref_mRNAs.size(); ++j)
+    {
+        pair<map<string, vector<int> >::iterator, bool> inserted;
+        inserted = gene_id_idxs.insert(make_pair(ref_mRNAs[i]->annotated_gene_id(), vector<int>()));
+        inserted.first->second.push_back(i);
+    }
+    
+    for (map<string, vector<int> >::iterator itr = gene_id_idxs.begin();
+         itr != gene_id_idxs.end();
+         ++itr)
+    {
+        vector<int>& gene = itr->second;
+        for (size_t i = 0; i < gene.size(); ++i)
         {
-            shared_ptr<Scaffold> scaff_j = ref_mRNAs[j];
-            if (scaff_i->ref_id() == scaff_j->ref_id() &&
-                scaff_i->annotated_gene_id() == scaff_j->annotated_gene_id())
+            for (size_t j = 0; j < gene.size(); ++j)
             {
-				add_edge(i, j, G);
+                {
+                    add_edge(gene[i], gene[j], G);
+                }
             }
-		}
-	}
+        }
+    }
     
     std::vector<int> component(num_vertices(G));
 	connected_components(G, &component[0]);
