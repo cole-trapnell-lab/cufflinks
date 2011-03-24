@@ -457,7 +457,7 @@ def main(argv=None):
             # Merge the primary assembly SAMs into a single input SAM file
             merged_sam_filename = merge_sam_inputs(sam_input_files)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
-            cufflinks(params, "merged_asm", merged_sam_filename, params.ref_gtf)
+            cufflinks(params, "merged_asm", merged_sam_filename, 0.05, params.ref_gtf)
         #Meta Cuffcompare option:
         else:
             cuffcompare_all_assemblies(gtf_input_files);
