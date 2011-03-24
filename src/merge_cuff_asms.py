@@ -165,7 +165,7 @@ def cufflinks(params,
     if out_dir != None and out_dir != "":
         cmd.extend(["-o", out_dir])
            
-    cmd.extend(["-F", str(min_isoform_frac)])
+    cmd.extend(["-F", "0.05"])
 
     if gtf_file != None:
         cmd.extend(["-g", gtf_file])
