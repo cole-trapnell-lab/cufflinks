@@ -438,13 +438,16 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 				for (size_t i = 0; i < smaller_idx_array.size(); ++i)
 				{
 					size_t j_scaff_idx = smaller_idx_array[i];
-					if (Scaffold::overlap_in_genome(lhs_scaff, fragments[j_scaff_idx], 0))
-					{
-						if (!Scaffold::compatible(lhs_scaff, fragments[j_scaff_idx]))
-						{
-							curr_conflicts.push_back(j_scaff_idx);
-						}
-					}
+                    if (replacements[j_scaff_idx] == j_scaff_idx)
+                    {
+                        if (Scaffold::overlap_in_genome(lhs_scaff, fragments[j_scaff_idx], 0))
+                        {
+                            if (!Scaffold::compatible(lhs_scaff, fragments[j_scaff_idx]))
+                            {
+                                curr_conflicts.push_back(j_scaff_idx);
+                            }
+                        }
+                    }
 				}
 				sort(curr_conflicts.begin(), curr_conflicts.end());
 				
@@ -512,23 +515,28 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						// of it's own
 						for (size_t i = lhs_native_idx + 1; i < fragments.size(); ++i)
 						{
-							if (Scaffold::overlap_in_genome(fragments[i], lhs_scaff, 0))
-							{
-								if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0) &&
-									!Scaffold::compatible(fragments[i], c_scaff))
-								{
-									//c_conflicts.push_back(i);
-									if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
-									{
-										not_equivalent = true;
-										break;
-									}
-								}
-							}
-							else
-							{
-								break;
-							}
+                            if (replacements[i] == i)
+                            {
+                                if (Scaffold::overlap_in_genome(fragments[i], lhs_scaff, 0))
+                                {
+                                    if (Scaffold::overlap_in_genome(fragments[i], c_scaff, 0))
+                                    {
+                                        if (!Scaffold::compatible(fragments[i], c_scaff))
+                                        {
+                                            //c_conflicts.push_back(i);
+                                            if (!binary_search(curr_conflicts.begin(), curr_conflicts.end(), i))
+                                            {
+                                                not_equivalent = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
 						}
 						
 						
