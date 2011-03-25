@@ -1267,7 +1267,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     vector<shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
-        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, corr_bias, false);
+        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, corr_bias && bundle_mode == REF_DRIVEN, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();

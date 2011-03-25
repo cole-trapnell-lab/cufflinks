@@ -101,7 +101,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 
 	ProgressBar p_bar;
 	if (progress_bar)
-		ProgressBar p_bar("Learning bias parameters.", bundle_factory.num_bundles());
+		p_bar = ProgressBar("Learning bias parameters.", bundle_factory.num_bundles());
 
 	while(true)
 	{
