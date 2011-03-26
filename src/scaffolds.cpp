@@ -482,7 +482,6 @@ void Scaffold::extend_5(const Scaffold& other)
 		const AugmentedCuffOp& other_first_op = other.augmented_ops().front();
 
 		my_first_op.g_left(other_first_op.g_left());
-		_left = _augmented_ops.front().g_left();
 	}
 	else if (strand() == CUFF_REV)
 	{
@@ -490,7 +489,6 @@ void Scaffold::extend_5(const Scaffold& other)
 		const AugmentedCuffOp& other_last_op = other.augmented_ops().back();
 		
 		my_last_op.g_right(other_last_op.g_right());
-		_right = _augmented_ops.back().g_right();
 	}
 	else 
 	{
@@ -721,14 +719,12 @@ void Scaffold::merge(const Scaffold& lhs,
 													  merged._mates_in_scaff.end());
 	merged._mates_in_scaff.erase(new_end, merged._mates_in_scaff.end());
 	
-	merged._right = merged._augmented_ops.back().g_right();
-	merged._left = merged._augmented_ops.front().g_left();
 	
-	int r_check = merged._left;
+	int r_check = merged.left();
 	for (size_t i = 0; i < merged._augmented_ops.size(); ++i)
 		r_check += merged._augmented_ops[i].genomic_length;
 	
-	assert(r_check == merged._right);
+	assert(r_check == merged.right());
 	
 	if (lhs.strand() != CUFF_STRAND_UNKNOWN)
 		merged._strand = lhs.strand();
@@ -797,22 +793,19 @@ void Scaffold::merge(const vector<Scaffold>& s,
 	
 	merged._ref_id = s.front().ref_id();
 	merged._strand = strand;
-	
-	merged._left = merged._augmented_ops.front().g_left();
-	merged._right = merged._augmented_ops.back().g_right();
-	
-	int r_check = merged._left;
+		
+	int r_check = merged.left();
 	for (size_t i = 0; i < merged._augmented_ops.size(); ++i)
 		r_check += merged._augmented_ops[i].genomic_length;
 	
 #ifdef DEBUG
-	if (r_check != merged._right)
+	if (r_check != merged.right())
 	{
 		AugmentedCuffOp::merge_ops(ops, merged._augmented_ops, introns_overwrite_matches);
 	}
 #endif
 	
-	assert (r_check == merged._right);
+	assert (r_check == merged.right());
 	merged._has_intron = has_intron(merged);
 
 	assert(merged._strand != CUFF_STRAND_UNKNOWN || !merged.has_strand_support());
@@ -1588,12 +1581,12 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
 				int right_known;
 				
 				if (i == _augmented_ops.size() - 1)
-					right_known = _right;
+					right_known = right();
 				else
 					right_known = op.g_left() - 1;
 				
 				if (last_unknown == -1)
-					left_known = _left;
+					left_known = left();
 				else
 					left_known = _augmented_ops[last_unknown].g_right();
 				

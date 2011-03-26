@@ -101,7 +101,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 
 	ProgressBar p_bar;
 	if (progress_bar)
-		p_bar = ProgressBar("Learning bias parameters.", bundle_factory.num_bundles());
+		p_bar = ProgressBar("Learning bias parameters.", bundle_factory.read_group_properties()->total_map_mass());
 
 	while(true)
 	{
@@ -118,7 +118,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 		char bundle_label_buf[2048];
 		sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
 		if (progress_bar)
-			p_bar.update(bundle_label_buf, 1);
+			p_bar.update(bundle_label_buf, bundle.raw_mass());
 		
 		if (bundle.non_redundant_hits().size()==0 || bundle.ref_scaffolds().size() != 1)
 		{

@@ -12,19 +12,19 @@ class ProgressBar
 {
 	char _bar_buf[BAR_BUF_SIZE];
 	string _process;
-	int _num_complete;
-	int _tot_num;
+	double _num_complete;
+	double _tot_num;
 	int _num_updates;
 	int _num_remaining;
 	
 public:
 	ProgressBar() {}
 	
-	ProgressBar(string process, int tot_num) 
+	ProgressBar(string process, double tot_num) 
 	{ 
 		_tot_num = tot_num;
 		_process = process;
-		_num_complete = -1;
+		_num_complete = 0;
 		_num_remaining = -1;
 		_num_updates = 0;
 		
@@ -46,7 +46,7 @@ public:
 		fprintf(stderr, "[%s] %s\n", time_buf, _process.c_str());
 	}
 	
-	void update(const char* bundle_label_buf, int inc_amt)
+	void update(const char* bundle_label_buf, double inc_amt)
 	{
 		
 		_num_complete += inc_amt;
@@ -60,7 +60,7 @@ public:
 		
 		int percent = (_num_complete * 100)/_tot_num;
 
-		percent = min(percent, 100);
+		percent = min(percent, 99);
 		
 		int last_bar = percent/(100/(BAR_BUF_SIZE-3));
 		for (int i=1; i <= last_bar; ++i)
@@ -78,8 +78,8 @@ public:
 		
 		_num_remaining = num_remaining;
 		
-		int percent = ((_tot_num - num_remaining) * 100)/_tot_num;
-		percent = min(percent, 100);
+		int percent = (_num_complete * 100)/_tot_num;
+		percent = min(percent, 99);
 		
 		char msg_buff[45];
 		sprintf(msg_buff, "Waiting for %d threads to complete.", num_remaining);

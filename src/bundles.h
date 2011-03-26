@@ -383,7 +383,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
         
         if (progress_bar) 
         {
-			int inc_amt = last_chrom == bundle.ref_id() ? 0 : 1;
+			double inc_amt = last_chrom == bundle.ref_id() ? 0.0 : 1.0;
 			p_bar.update(bundle_label_buf, inc_amt);
 			last_chrom = bundle.ref_id();
         }
@@ -414,8 +414,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		for (size_t i = 0; i < hits.size(); ++i) 
 		{
 			assert(hits[i].left_alignment());
-			
-			// Add to table if multi-read
+            
+            // Add to table if multi-read
 			if (hits[i].is_multi())
 			{
 				mrt->add_hit(hits[i]);

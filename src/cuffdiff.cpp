@@ -806,7 +806,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	final_est_run = false;
 	
-	int num_bundles = bundle_factories[0].num_bundles();
+	double num_bundles = (double)bundle_factories[0].num_bundles();
 	
 	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{

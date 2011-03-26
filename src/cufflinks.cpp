@@ -1093,9 +1093,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 {
 	srand(time(0));
-	
-	int num_bundles = 0;
-	
+		
 	RefSequenceTable& rt = bundle_factory.ref_table();
     
 	//FILE* fbundle_tracking = fopen("open_bundles", "w");
@@ -1126,7 +1124,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	else
 		process = "Assembling transcripts and estimating abundances.";
 		
-	ProgressBar p_bar(process, bundle_factory.num_bundles());
+	ProgressBar p_bar(process, bundle_factory.read_group_properties()->total_map_mass());
 
 	while(true)
 	{
@@ -1155,7 +1153,6 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 		}
 
 		BundleStats stats;
-		num_bundles++;
 #if ENABLE_THREADS			
 		while(1)
 		{
@@ -1172,7 +1169,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 			
 		}
 #endif
-		p_bar.update(bundle_label_buf, 1);	
+		p_bar.update(bundle_label_buf, bundle.raw_mass());	
 
 #if ENABLE_THREADS			
 		thread_pool_lock.lock();
@@ -1316,12 +1313,10 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     }
     
 	hit_factory->reset();
-	int num_bundles = bundle_factory.num_bundles();
 	delete &bundle_factory;
 	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
 	rg_props->multi_read_table()->valid_mass(true);
-	bundle_factory2.num_bundles(num_bundles);
 	bundle_factory2.read_group_properties(rg_props);
 
     if (bundle_mode==HIT_DRIVEN || bundle_mode==REF_GUIDED)

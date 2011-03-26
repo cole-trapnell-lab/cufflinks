@@ -382,7 +382,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 				// If we got here, couldn't actually close any mates with
 				// this read hit, so open a new one, unless we can never
 				// close this one
-				if(bh->left() < bh->partner_pos())
+				if(bh->left() <= bh->partner_pos())
 				{
 					MateHit open_hit(rg_props, bh->ref_id(), bh, NULL);
 					

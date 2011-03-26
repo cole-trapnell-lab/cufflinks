@@ -182,8 +182,9 @@ fit_dispersion_model(const vector<double>& scale_factors,
             return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
         }
     }
-    
+#if ENABLE_THREADS
     _locfit_lock.lock();
+#endif
     
     ProgressBar p_bar("Modeling fragment count overdispersion.",0);
     
@@ -287,8 +288,8 @@ fit_dispersion_model(const vector<double>& scale_factors,
         }
         fclose(sample_count_file);
     } 
- 
+#if ENABLE_THREADS
     _locfit_lock.unlock();
-    
+#endif
     return disperser;
 }

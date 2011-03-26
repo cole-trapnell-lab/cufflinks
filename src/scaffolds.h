@@ -209,8 +209,6 @@ public:
 	
 	Scaffold(const MateHit& mate) :
 		_ref_id(mate.ref_id()),
-		_left(mate.left()), 
-	    _right(mate.right()),
 		_is_ref(false),
 	    _classcode(0)
 	{
@@ -266,22 +264,18 @@ public:
         }
         
         AugmentedCuffOp::merge_ops(aug_ops, _augmented_ops, false);
-        
-		_right = _augmented_ops.back().g_right();
-		_left = _augmented_ops.front().g_left();
 		
-		
-		int r_check = _left;
+		int r_check = left();
 		for (size_t i = 0; i < _augmented_ops.size(); ++i)
 			r_check += _augmented_ops[i].genomic_length;
 		
 #ifdef DEBUG
-		if (r_check != _right)
+		if (r_check != right())
 		{
             AugmentedCuffOp::merge_ops(aug_ops, _augmented_ops, false);
 		}
 #endif
-		assert (r_check == _right);
+		assert (r_check == right());
 		
 		_has_intron = has_intron(*this);
 		
@@ -335,8 +329,6 @@ public:
 	  _strand(strand),
 	  _classcode(0)
 	{
-		_right = _augmented_ops.back().g_right();
-		_left = _augmented_ops.front().g_left();
 		_has_intron = has_intron(*this);
 		_is_ref = is_ref;
 		
@@ -348,9 +340,8 @@ public:
 	
 	//int get_id() const { return _id; }
 		
-	int left() const { return _left; }
-	
-	int right() const  { return _right; }
+	int left() const { return _augmented_ops.front().g_left(); }
+	int right() const  { return _augmented_ops.back().g_right(); }
 	
 	const vector<const MateHit*>& mate_hits() const { return _mates_in_scaff; }
 	
@@ -650,8 +641,6 @@ private:
 	
 	vector<const MateHit*> _mates_in_scaff;
 	
-	int _left;
-	int _right;
 	bool _has_intron; 
 	bool _is_ref;
 	
