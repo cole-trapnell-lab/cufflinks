@@ -464,26 +464,27 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 seen_olap = true;   
             }
             
-            vector<double> cond_probs_k(N,0);
+            vector<double>* cond_probs_k;
             double last_cond_prob = -1;
             
             bool equiv = true;
             
-            for (int j = 0; j < N; ++j)
-            {
-                if (compatibilities[j][k] != compatibilities[j][i])
-                {
-                    equiv = false;
-                    break;
-                }
-            }
-            
-            if (!equiv)
-                continue;
+//            for (int j = 0; j < N; ++j)
+//            {
+//                if (compatibilities[j][k] != compatibilities[j][i])
+//                {
+//                    equiv = false;
+//                    break;
+//                }
+//            }
+//            
+//            if (!equiv)
+//                continue;
             
             if (cached_cond_probs[k].empty())
             {
-                
+                cached_cond_probs[k] = vector<double>(N, 0.0);
+                cond_probs_k = &cached_cond_probs[k];
                 for (int j = 0; j < N; ++j)
                 {
                     shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
@@ -491,22 +492,22 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                     if (compatibilities[j][k]==1)
                     {
                         total_cond_prob_calls++;
-                        cond_probs_k[j] = bchs[j].get_cond_prob(alignments[k]);
+                        (*cond_probs_k)[j] = bchs[j].get_cond_prob(alignments[k]);
                     }
                 }
-                cached_cond_probs[k] = cond_probs_k;
+                //cached_cond_probs[k] = cond_probs_k;
             }
             else
             {
-                cond_probs_k = cached_cond_probs[k];
+                cond_probs_k = &cached_cond_probs[k];
             }
                
             
             for (int j = 0; j < N; ++j)
             {
-                if (cond_probs_k[j] != 0 && cond_probs_i[j] != 0)
+                if ((*cond_probs_k)[j] != 0 && cond_probs_i[j] != 0)
                 {
-                    double ratio =  cond_probs_k[j] / cond_probs_i[j];
+                    double ratio =  (*cond_probs_k)[j] / cond_probs_i[j];
                     if (last_cond_prob == -1)
                     {
                         last_cond_prob = ratio;
@@ -520,7 +521,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                         }
                     }
                 }
-                else if (cond_probs_k[j] == 0 && cond_probs_i[j] == 0)
+                else if ((*cond_probs_k)[j] == 0 && cond_probs_i[j] == 0)
                 {
                     // just do nothing in this iter.
                     // last_cond_prob = 0.0;
@@ -542,6 +543,8 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 assert (!isinf(mass_multiplier) && !isnan(mass_multiplier));
                 log_conv_factors[log_conv_factors.size() - 1] += mass_multiplier; 
                 replaced[k] = true;
+                cached_cond_probs[k].clear();
+                vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
                 num_replaced++;
                 curr_align->incr_collapse_mass(alignments[k].common_scale_mass());
             }
@@ -549,31 +552,41 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
     }
     
     N = transcripts.size();
-	M = nr_alignments.size();
+	//M = nr_alignments.size();
         
 	for (int j = 0; j < N; ++j) 
     {
 		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
-		vector<double>& cond_probs = *(new vector<double>(M,0));
+		vector<double>& cond_probs = *(new vector<double>(nr_alignments.size(),0));
 		
 		BiasCorrectionHelper bch(transfrag);
 		
+        size_t last_cond_prob_idx = 0;
 		for(int i = 0 ; i < M; ++i)
 		{
-			if (compatibilities[j][i]==1)
-				cond_probs[i] = cached_cond_probs[i][j];
+            if (!cached_cond_probs[i].empty())
+            {
+                if (compatibilities[j][i]==1)
+                {
+                    assert (cached_cond_probs[i].size() > j);
+                    cond_probs[last_cond_prob_idx] = cached_cond_probs[i][j];
+                }
+                last_cond_prob_idx++;
+            }
         }
 		
+        assert (last_cond_prob_idx == nr_alignments.size());
+        
 		transcripts[j]->effective_length(bch.get_effective_length());
 		transcripts[j]->cond_probs(&cond_probs);
 		
 		if (bch.is_mapped()) 
 			mapped_transcripts.push_back(transcripts[j]);
 	}
-//    if (nr_alignments.size())
-//    {
-//        fprintf(stderr, "\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * nr_alignments.size()/(double)alignments.size());
-//    }
+    if (nr_alignments.size())
+    {
+        asm_verbose("\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * nr_alignments.size()/(double)alignments.size());
+    }
 }
 
 #define PERFORM_EQUIV_COLLAPSE 1
