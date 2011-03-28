@@ -559,7 +559,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
 		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
 		vector<double>& cond_probs = *(new vector<double>(nr_alignments.size(),0));
 		
-		BiasCorrectionHelper bch(transfrag);
+		BiasCorrectionHelper& bch = bchs[j];
 		
         size_t last_cond_prob_idx = 0;
 		for(int i = 0 ; i < M; ++i)
