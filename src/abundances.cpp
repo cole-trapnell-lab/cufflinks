@@ -404,6 +404,12 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
     vector<bool> replaced(M, false);
     int num_replaced = 0;
     
+    vector<BiasCorrectionHelper> bchs;
+    for (size_t j = 0; j < N; ++j)
+    {
+        bchs.push_back(BiasCorrectionHelper(transcripts[j]->transfrag()));   
+    }
+    
     for(int i = 0 ; i < M; ++i)
     {
         vector<double> cond_probs_i(N,0);
@@ -415,11 +421,11 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
             for (int j = 0; j < N; ++j)
             {
                 shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
-                BiasCorrectionHelper bch(transfrag);
+                
                 if (compatibilities[j][i]==1)
                 {
                     total_cond_prob_calls++;
-                    cond_probs_i[j] = bch.get_cond_prob(alignments[i]);
+                    cond_probs_i[j] = bchs[j].get_cond_prob(alignments[i]);
                 }
                 
             }
@@ -481,11 +487,11 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 for (int j = 0; j < N; ++j)
                 {
                     shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
-                    BiasCorrectionHelper bch(transfrag);
+                    
                     if (compatibilities[j][k]==1)
                     {
                         total_cond_prob_calls++;
-                        cond_probs_k[j] = bch.get_cond_prob(alignments[k]);
+                        cond_probs_k[j] = bchs[j].get_cond_prob(alignments[k]);
                     }
                 }
                 cached_cond_probs[k] = cond_probs_k;
