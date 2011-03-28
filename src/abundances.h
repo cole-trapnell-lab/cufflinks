@@ -373,6 +373,7 @@ private:
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
 	
 	bool calculate_gammas(const vector<MateHit>& nr_alignments, 
+                          const vector<double>& log_conv_factors,
 						  const vector<shared_ptr<Abundance> >& transcripts,
 						  const vector<shared_ptr<Abundance> >& mapped_transcripts);
 	void calculate_FPKM_variance();
@@ -407,11 +408,13 @@ void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundan
 
 bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& nr_alignments,
+               const vector<double>& log_conv_factors,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance);
 
 void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& nr_alignments,
+               const vector<double>& log_conv_factors,
 			   vector<double>& gammas);
 
 double compute_doc(int bundle_origin, 

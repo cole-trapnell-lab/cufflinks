@@ -384,6 +384,194 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
 	}
 }
 
+int total_cond_prob_calls = 0;
+void collapse_equivalent_hits(const vector<MateHit>& alignments,
+                              vector<shared_ptr<Abundance> >& transcripts,
+                              vector<shared_ptr<Abundance> >& mapped_transcripts,
+                              vector<MateHit>& nr_alignments,
+                              vector<double>& log_conv_factors)
+{
+    int N = transcripts.size();
+	int M = alignments.size();
+    
+    nr_alignments.clear();
+    
+	vector<vector<char> > compatibilities(N, vector<char>(M,0));
+	compute_compatibilities(transcripts, alignments, compatibilities);
+    
+    vector<vector<double> > cached_cond_probs (M, vector<double>());
+    
+    vector<bool> replaced(M, false);
+    int num_replaced = 0;
+    
+    for(int i = 0 ; i < M; ++i)
+    {
+        vector<double> cond_probs_i(N,0);
+        if (replaced[i] == true)
+            continue;
+        
+        if (cached_cond_probs[i].empty())
+        {
+            for (int j = 0; j < N; ++j)
+            {
+                shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+                BiasCorrectionHelper bch(transfrag);
+                if (compatibilities[j][i]==1)
+                {
+                    total_cond_prob_calls++;
+                    cond_probs_i[j] = bch.get_cond_prob(alignments[i]);
+                }
+                
+            }
+            cached_cond_probs[i] = cond_probs_i;
+        }
+        else
+        {
+            cond_probs_i = cached_cond_probs[i];
+        }
+        
+        MateHit* curr_align = NULL;
+        
+        nr_alignments.push_back(alignments[i]);
+        curr_align = &nr_alignments.back();
+        log_conv_factors.push_back(0);
+        
+        if (alignments[i].is_multi()) // don't reduce other hits into multihits
+            continue;
+        
+        bool seen_olap = false;
+        
+        for(int k = i + 1 ; k < M; ++k)
+        {
+            if (replaced[k] || alignments[k].is_multi())
+                continue;
+            if (!::overlap_in_genome(curr_align->left(), curr_align->right(),
+                                     alignments[k].left(), alignments[k].right()))
+            {
+                if (seen_olap) 
+                    break;
+                else
+                    continue;
+            }
+            else
+            {
+                seen_olap = true;   
+            }
+            
+            vector<double> cond_probs_k(N,0);
+            double last_cond_prob = -1;
+            
+            bool equiv = true;
+            
+            for (int j = 0; j < N; ++j)
+            {
+                if (compatibilities[j][k] != compatibilities[j][i])
+                {
+                    equiv = false;
+                    break;
+                }
+            }
+            
+            if (!equiv)
+                continue;
+            
+            if (cached_cond_probs[k].empty())
+            {
+                
+                for (int j = 0; j < N; ++j)
+                {
+                    shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+                    BiasCorrectionHelper bch(transfrag);
+                    if (compatibilities[j][k]==1)
+                    {
+                        total_cond_prob_calls++;
+                        cond_probs_k[j] = bch.get_cond_prob(alignments[k]);
+                    }
+                }
+                cached_cond_probs[k] = cond_probs_k;
+            }
+            else
+            {
+                cond_probs_k = cached_cond_probs[k];
+            }
+               
+            
+            for (int j = 0; j < N; ++j)
+            {
+                if (cond_probs_k[j] != 0 && cond_probs_i[j] != 0)
+                {
+                    double ratio =  cond_probs_k[j] / cond_probs_i[j];
+                    if (last_cond_prob == -1)
+                    {
+                        last_cond_prob = ratio;
+                    }
+                    else
+                    {
+                        if (last_cond_prob != ratio)
+                        {
+                            equiv = false;
+                            break;
+                        }
+                    }
+                }
+                else if (cond_probs_k[j] == 0 && cond_probs_i[j] == 0)
+                {
+                    // just do nothing in this iter.
+                    // last_cond_prob = 0.0;
+                }
+                else
+                {
+                    equiv = false;
+                    break;
+                }
+            }
+            
+            // cond_prob_i vector is a scalar multiple of cond_prob_k, so we
+            // can collapse k into i via the mass.
+            if (equiv && last_cond_prob > 0.0)
+            {
+                assert (last_cond_prob > 0);
+                //double mass_muliplier = sqrt(last_cond_prob);
+                double mass_multiplier = log(last_cond_prob);
+                assert (!isinf(mass_multiplier) && !isnan(mass_multiplier));
+                log_conv_factors[log_conv_factors.size() - 1] += mass_multiplier; 
+                replaced[k] = true;
+                num_replaced++;
+                curr_align->incr_collapse_mass(alignments[k].common_scale_mass());
+            }
+        }
+    }
+    
+    N = transcripts.size();
+	M = nr_alignments.size();
+        
+	for (int j = 0; j < N; ++j) 
+    {
+		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+		vector<double>& cond_probs = *(new vector<double>(M,0));
+		
+		BiasCorrectionHelper bch(transfrag);
+		
+		for(int i = 0 ; i < M; ++i)
+		{
+			if (compatibilities[j][i]==1)
+				cond_probs[i] = cached_cond_probs[i][j];
+        }
+		
+		transcripts[j]->effective_length(bch.get_effective_length());
+		transcripts[j]->cond_probs(&cond_probs);
+		
+		if (bch.is_mapped()) 
+			mapped_transcripts.push_back(transcripts[j]);
+	}
+//    if (nr_alignments.size())
+//    {
+//        fprintf(stderr, "\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * nr_alignments.size()/(double)alignments.size());
+//    }
+}
+
+#define PERFORM_EQUIV_COLLAPSE 1
+
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 {
 	vector<shared_ptr<Abundance> > transcripts;
@@ -392,17 +580,27 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 	
 	vector<MateHit> nr_alignments;
 	collapse_hits(alignments, nr_alignments);
-	
-	compute_cond_probs_and_effective_lengths(nr_alignments, transcripts, mapped_transcripts);
-	
-	calculate_gammas(nr_alignments, transcripts, mapped_transcripts);		
+    
+#if PERFORM_EQUIV_COLLAPSE
+    vector<MateHit> non_equiv_alignments;
+    vector<double> log_conv_factors;
+    collapse_equivalent_hits(nr_alignments, transcripts, mapped_transcripts, non_equiv_alignments, log_conv_factors);
+    assert (non_equiv_alignments.size() == log_conv_factors.size());
+    nr_alignments.clear();
+#else
+    vector<MateHit> non_equiv_alignments = nr_alignments;
+    vector<double> log_conv_factors(nr_alignments.size(), 0);
+	compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
+#endif
+    
+	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);		
 	
     // This will also compute the transcript level FPKMs
-    calculate_counts(nr_alignments, transcripts);  
+    calculate_counts(non_equiv_alignments, transcripts);  
 
 	if(corr_multi && !final_est_run)
 	{
-		update_multi_reads(nr_alignments, mapped_transcripts);
+		update_multi_reads(non_equiv_alignments, mapped_transcripts);
 	}
 	
 	if (final_est_run) // Only on last estimation run
@@ -410,6 +608,8 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         calculate_conf_intervals();
         calculate_kappas();
     }
+    
+    //fprintf(stderr, "Total calls to get_cond_prob = %d\n", total_cond_prob_calls);
 }
 
 void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts)
@@ -584,7 +784,10 @@ void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateH
 		for(int i = 0 ; i < M; ++i)
 		{
 			if (compatibilities[j][i]==1)
+            {
+                total_cond_prob_calls++;
 				cond_probs[i] = bch.get_cond_prob(alignments[i]);
+            }
 		}
 		
 		transcripts[j]->effective_length(bch.get_effective_length());
@@ -598,6 +801,7 @@ void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateH
 // FIXME: This function doesn't really need to copy the transcripts out of 
 // the cluster.  Needs refactoring
 bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments, 
+                                      const vector<double>& log_conv_factors,
 									  const vector<shared_ptr<Abundance> >& transcripts, 
 									  const vector<shared_ptr<Abundance> >& mapped_transcripts)
 {
@@ -619,6 +823,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	gamma_mle(mapped_transcripts,
 			  nr_alignments,
+              log_conv_factors,
 			  gammas);
 	
 	asm_verbose( "Tossing likely garbage isoforms\n");
@@ -653,6 +858,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	gamma_mle(filtered_transcripts,
 			  nr_alignments,
+              log_conv_factors, 
 			  filtered_gammas);
 	
 
@@ -673,6 +879,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	{
 		success = gamma_map(filtered_transcripts,
 							nr_alignments,
+                            log_conv_factors,
 							filtered_gammas,
 							_gamma_covariance);
 	}
@@ -902,10 +1109,11 @@ double logLike (int N,
 				int M, 
 				vector<double> & p,
 				const vector<vector<double> >& cond_prob, 
-				vector<double> const & u) {
+				const vector<double>& u,
+                const vector<double>& log_conv_factors) {
 	int i,j;
 	
-	double ell = 0;
+	double ell = accumulate(log_conv_factors.begin(), log_conv_factors.end(), 0.0);
 	double Prob_Y;
 	for (i= 0; i < M; i++) {
 		Prob_Y = 0;
@@ -950,29 +1158,6 @@ void grad_ascent_step (int N,
         }
     }
     
-//    for (size_t j = 0; j < N; ++j)
-//    {
-//        assert (p[j] >= 0.0 && p[j] <= 1.0);
-//        for (size_t i = 0; i < M; ++i)
-//        {
-//            double denom = 0;
-//            for (size_t k = 0; k < N; ++k)
-//            {
-//                double t = p[k] * cond_probs[k][i];
-//                assert (!isnan(t) && !isinf(t));
-//                denom += t;
-//            }
-//            assert (!isnan(denom) && !isinf(denom));
-//            double L = (p[j] * cond_probs[j][i]);
-//            assert (!isnan(L) && !isinf(L));
-//            L *= u[i] * cond_probs[j][i];
-//            assert (!isnan(L) && !isinf(L));
-//            if (denom > 0)
-//                dLL_dj[j] += L / denom;
-//            assert (!isinf(dLL_dj[j]) && !isnan(dLL_dj[j]));
-//        }
-//    }
-    
     for (size_t j = 0; j < N; ++j)
     {
         newP[j] = p[j] + epsilon * dLL_dj[j];
@@ -989,44 +1174,12 @@ void grad_ascent_step (int N,
     {
         return;
     }
-    
-//    for (size_t j = 0; j < N; ++j)
-//    {
-//        fprintf(stderr,"\t%g", newP[j]);
-//    }
-//    fprintf(stderr,"\n");
-    
-//    vector<double> frag_prob_sums(M, 0.0);
-//    
-//    for (j = 0; j < N; ++j) 
-//    {
-//        for (i = 0; i < M; ++i) 
-//        {
-//            frag_prob_sums [i] += cond_probs[j][i] * p[j];
-//        }
-//    }
-//    
-//    for (i = 0; i < M; ++i) 
-//    {
-//        frag_prob_sums[i] = frag_prob_sums[i] ? (1.0 / frag_prob_sums[i]) : 0.0;
-//    }
-//    
-//    for (j = 0; j < N; ++j) 
-//    {
-//        for (i = 0; i < M; ++i) 
-//        {
-//            double ProbY = frag_prob_sums[i];
-//            double exp_i_j = u[i] * cond_probs[j][i] * p[j] * ProbY;
-//            U[j][i] = exp_i_j;
-//        }
-//    }
-    
-    
 }
 
 double grad_ascent (int N, int M, vector<double> & newP, 
                     const vector<vector<double> >& cond_prob, 
-                    vector<double> const & u) 
+                    vector<double> const & u,
+                    vector<double> const & log_conv_factors) 
 {
     double sum = 0;
 	double newEll = 0;
@@ -1044,17 +1197,17 @@ double grad_ascent (int N, int M, vector<double> & newP,
 		p[j] = p[j] / sum;
 	}
 	
-    ell = logLike(N, M, p, cond_prob,u);
+    ell = logLike(N, M, p, cond_prob, u, log_conv_factors);
     
     double epsilon = 1e-2;
     
-    static const double ACCURACY = .1; // convergence criteria
+    static const double ACCURACY = .001; // convergence criteria
 	
 	while (iter <= 2 || iter < max_mle_iterations) 
     {
         grad_ascent_step(N, M, p, U, cond_prob, u, newP, epsilon);
 		
-		newEll = logLike(N, M, newP, cond_prob,u);
+		newEll = logLike(N, M, newP, cond_prob,u, log_conv_factors);
 		
         double delta = newEll - ell;
         //fprintf (stderr, "%g\n", delta);
@@ -1071,7 +1224,7 @@ double grad_ascent (int N, int M, vector<double> & newP,
         else
         {
             verbose_msg("Reducing EPSILON \n");
-            epsilon /= 2;verbose_msg("Convergence reached in %d iterations \n", iter);
+            epsilon /= 10;
         }
 		iter++;
 	}
@@ -1084,7 +1237,8 @@ double grad_ascent (int N, int M, vector<double> & newP,
 
 double EM (int N, int M, vector<double> & newP, 
 		   const vector<vector<double> >& cond_prob, 
-		   vector<double> const & u) 
+		   vector<double> const & u,
+           vector<double> const & log_conv_factors) 
 {
 	double sum = 0;
 	double newEll = 0;
@@ -1121,7 +1275,7 @@ double EM (int N, int M, vector<double> & newP,
 		Estep(N, M, p, U, cond_prob, u); //  fills U
 		Mstep(N, M, newP,U); // fills p
 		
-		newEll = logLike(N, M, newP, cond_prob,u);
+		newEll = logLike(N, M, newP, cond_prob,u, log_conv_factors);
 		
 		//fprintf(stderr, "%d\t%lf\n", iter, newEll);
 		
@@ -1444,6 +1598,7 @@ void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
 							const vector<vector<double> >& cond_probs,
 							const vector<ublas::vector<double> >& samples,
 							const vector<double>& u,
+                            const vector<double>& log_conv_factors,
 							double scale,
 							const ublas::vector<double>& MLE,
 							vector<ublas::vector<double> >& weighted_samples,
@@ -1465,10 +1620,11 @@ void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
 
 		
 		double ell = logLike(N,
-								 M,
-								 sample, 
-								 cond_probs, 
-							 u);
+                             M,
+                             sample, 
+                             cond_probs, 
+							 u,
+                             log_conv_factors);
 		
 		ublas::vector<double> diff = (samples[i] - MLE);
 		//cerr << "diff: "<<diff << endl;
@@ -1556,6 +1712,7 @@ void compute_posterior_expectation(const vector<ublas::vector<double> >& weighte
 
 bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& nr_alignments,
+               const vector<double>& log_conv_factors,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance)
 {	
@@ -1747,6 +1904,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 						   cond_probs,
 						   samples,
 						   u,
+                           log_conv_factors,
 						   denom,
 						   MLE,
 						   weighted_samples,
@@ -1869,6 +2027,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 
 void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& nr_alignments,
+               const vector<double>& log_conv_factors,
 			   vector<double>& gammas)
 {
 	gammas.clear();
@@ -1910,9 +2069,8 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			u[i] = nr_alignments[i].collapse_mass();
 		}
 		
-		
 		//logL = EM(N, M, prob, cond_probs, u);
-        logL = grad_ascent(N, M, prob, cond_probs, u);
+        logL = grad_ascent(N, M, prob, cond_probs, u, log_conv_factors);
         
 		gammas = prob;
 		

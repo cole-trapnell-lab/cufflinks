@@ -668,6 +668,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 									 char* name_tags)
 {	
 	char bwt_buf[10*2048];
+
 	strcpy(bwt_buf, orig_bwt_buf);
 	// Are we still in the header region?
 	if (bwt_buf[0] == '@')

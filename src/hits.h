@@ -278,8 +278,8 @@ struct ReadHit
 	
     unsigned int  edit_dist() const { return _edit_dist; }
     
-	const string& hitfile_rec() const { return _hitfile_rec; }
-	void hitfile_rec(const string& rec) { _hitfile_rec = rec; }
+	//const string& hitfile_rec() const { return _hitfile_rec; }
+	//void hitfile_rec(const string& rec) { _hitfile_rec = rec; }
 	
 private:
 	
@@ -320,11 +320,11 @@ private:
 	
 	CuffStrand _source_strand;    // Which strand the read really came from, if known
 	bool _antisense_aln;       // Whether the alignment is to the reverse strand
-	double _error_prob;		   // Probability that this alignment is incorrect
+	float _error_prob;		   // Probability that this alignment is incorrect
     float _base_mass;
     unsigned int  _edit_dist;            // Number of mismatches
 	int _num_hits; // Number of multi-hits (1 by default)
-	string _hitfile_rec; // Points to the buffer for the record from which this hit came
+	//string _hitfile_rec; // Points to the buffer for the record from which this hit came
 };
 
 class ReadTable
