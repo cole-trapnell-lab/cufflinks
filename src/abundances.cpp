@@ -647,7 +647,7 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 			double expr = 0.0;
 			for (size_t j = 0; j < N; ++j)
 			{
-				expr += _abundances[j]->cond_probs()->at(i) * _abundances[j]->FPKM();
+				expr += _abundances[j]->cond_probs()->at(i) * _abundances[j]->FPKM() * _abundances[j]->effective_length();
 			}
 			alignments[i].read_group_props()->multi_read_table()->add_expr(alignments[i], expr);
 		}

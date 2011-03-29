@@ -12,8 +12,8 @@ class ProgressBar
 {
 	char _bar_buf[BAR_BUF_SIZE];
 	string _process;
-	double _num_complete;
-	double _tot_num;
+	long double _num_complete;
+	long double _tot_num;
 	int _num_updates;
 	int _num_remaining;
 	
