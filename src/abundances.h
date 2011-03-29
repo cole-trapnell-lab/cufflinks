@@ -379,7 +379,6 @@ private:
 	void calculate_FPKM_variance();
 	void calculate_conf_intervals();
 	void calculate_counts(const vector<MateHit>& nr_alignments,
-                          const vector<double>& log_conv_factors,
                           const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
 	void update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts);
