@@ -295,7 +295,8 @@ double AbundanceGroup::effective_length() const
 	return eff_len;
 }
 
-void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments, 
+void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
+                                      const vector<double>& log_conv_factors,
                                       const vector<shared_ptr<Abundance> >& transcripts)
 {
 	size_t M = alignments.size();
@@ -326,7 +327,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             //assert (parent != NULL);
             pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
             inserted = count_per_replicate.insert(make_pair(rg_props, 0.0));
-            double more_mass = alignments[i].collapse_mass();
+            double more_mass = exp(log_conv_factors[i]) * alignments[i].collapse_mass();
             inserted.first->second += more_mass;
         }
     }
@@ -615,7 +616,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);		
 	
     // This will also compute the transcript level FPKMs
-    calculate_counts(non_equiv_alignments, transcripts);  
+    calculate_counts(non_equiv_alignments, log_conv_factors, transcripts);  
 
 	if(corr_multi && !final_est_run)
 	{

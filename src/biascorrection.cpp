@@ -725,7 +725,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 
 	if (cond_prob > 0 && hit.collapse_mass() > 0)
 	{
-		_rg_masses[i] += hit.collapse_mass();
+		_rg_masses[i] +=  hit.collapse_mass();
 		_mapped = true;
 	}
 	
