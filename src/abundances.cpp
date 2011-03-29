@@ -547,7 +547,9 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 cached_cond_probs[k].clear();
                 vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
                 num_replaced++;
-                curr_align->incr_collapse_mass(alignments[k].common_scale_mass());
+                double more_mass = alignments[k].common_scale_mass();
+                
+                curr_align->incr_collapse_mass(more_mass);
             }
         }
     }
@@ -590,7 +592,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
     }
 }
 
-#define PERFORM_EQUIV_COLLAPSE 0
+#define PERFORM_EQUIV_COLLAPSE 1
 
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 {

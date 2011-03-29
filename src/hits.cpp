@@ -101,8 +101,9 @@ void collapse_hits(const vector<MateHit>& hits,
 	{
 		if (hits_eq_non_multi(non_redundant[curr_unique_aln], hits[curr_aln]) || hits_eq_non_multi(non_redundant[++curr_unique_aln], hits[curr_aln]))
 		{
+            double more_mass = hits[curr_aln].common_scale_mass();
 			//assert(non_redundant[curr_unique_aln].collapse_mass() == 0 || !non_redundant[curr_unique_aln].is_multi());
-			non_redundant[curr_unique_aln].incr_collapse_mass(hits[curr_aln].common_scale_mass());
+			non_redundant[curr_unique_aln].incr_collapse_mass(more_mass);
 		}
 		else
 			assert(false);
