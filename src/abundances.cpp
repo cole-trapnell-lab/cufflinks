@@ -547,8 +547,8 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 cached_cond_probs[k].clear();
                 vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
                 num_replaced++;
-                double more_mass = alignments[k].common_scale_mass() * alignments[k].collapse_mass() ;
-                
+                //double more_mass = alignments[k].common_scale_mass() * alignments[k].collapse_mass() ;
+                double more_mass = alignments[k].common_scale_mass();
                 curr_align->incr_collapse_mass(more_mass);
             }
         }
@@ -603,17 +603,20 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 	vector<MateHit> nr_alignments;
 	collapse_hits(alignments, nr_alignments);
     
-#if PERFORM_EQUIV_COLLAPSE
     vector<MateHit> non_equiv_alignments;
     vector<double> log_conv_factors;
-    collapse_equivalent_hits(nr_alignments, transcripts, mapped_transcripts, non_equiv_alignments, log_conv_factors);
-    assert (non_equiv_alignments.size() == log_conv_factors.size());
-    nr_alignments.clear();
-#else
-    vector<MateHit> non_equiv_alignments = nr_alignments;
-    vector<double> log_conv_factors(nr_alignments.size(), 0);
-	compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
-#endif
+    if (cond_prob_collapse)
+    {
+        collapse_equivalent_hits(nr_alignments, transcripts, mapped_transcripts, non_equiv_alignments, log_conv_factors);
+        assert (non_equiv_alignments.size() == log_conv_factors.size());
+        nr_alignments.clear();
+    }
+    else
+    {
+        non_equiv_alignments = nr_alignments;
+        log_conv_factors = vector<double>(nr_alignments.size(), 0);
+        compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
+    }
     
 	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);		
 	
@@ -1225,7 +1228,7 @@ double grad_ascent (int N, int M, vector<double> & newP,
     
     double epsilon = 1e-5;
     
-    static const double ACCURACY = .001; // convergence criteria
+    static const double ACCURACY = 1e-6; // convergence criteria
 	
 	while (iter <= 2 || iter < max_mle_iterations) 
     {
@@ -1287,7 +1290,7 @@ double EM (int N, int M, vector<double> & newP,
 	//	cout << endl;
 	//#endif
 
-	static const double ACCURACY = .000001; // convergence for EM
+	static const double ACCURACY = 1e-3; // convergence for EM
 	
 	while (((iter <= 2) || (abs(ell - newEll) > ACCURACY)) && (iter < max_mle_iterations)) {
 		if (iter > 0) {
@@ -2093,8 +2096,14 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			u[i] = nr_alignments[i].collapse_mass();
 		}
 		
-		//logL = EM(N, M, prob, cond_probs, u);
-        logL = grad_ascent(N, M, prob, cond_probs, u, log_conv_factors);
+        if (use_em)
+        {
+            logL = EM(N, M, prob, cond_probs, u, log_conv_factors);
+        }
+		else
+        {
+            logL = grad_ascent(N, M, prob, cond_probs, u, log_conv_factors);
+        }
         
 		gammas = prob;
 		

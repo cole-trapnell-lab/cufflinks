@@ -63,6 +63,8 @@ extern int def_frag_len_std_dev;
 extern int max_mle_iterations;
 extern int num_importance_samples;
 extern float min_isoform_fraction;
+extern bool use_em;
+extern bool cond_prob_collapse;
 
 // Ref-guided assembly options
 extern int overhang_3;
@@ -346,4 +348,6 @@ void init_library_table();
 #define OPT_NO_UPDATE_CHECK         272
 #define OPT_OUTPUT_FLD              273
 #define OPT_OUTPUT_BIAS_PARAMS      274
+#define OPT_USE_EM                  275
+#define OPT_COLLAPSE_COND_PROB      276
 #endif

@@ -96,6 +96,9 @@ double trim_3_dropoff_frac = .1;
 double trim_3_avgcov_thresh = 10.0;
 std::string user_label = "CUFF";
 
+bool use_em = true;
+bool cond_prob_collapse = true;
+
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 

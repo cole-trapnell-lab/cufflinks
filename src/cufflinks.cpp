@@ -69,7 +69,10 @@ static struct option long_options[] = {
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
+{"use-em",                  no_argument,             0,			 OPT_USE_EM},
+{"collapse-cond-prob",      no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
 
+    
 // assembly
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
 {"junc-alpha",				required_argument,		 0,			 'a'},	
@@ -311,6 +314,16 @@ int parse_options(int argc, char** argv)
             case OPT_OUTPUT_BIAS_PARAMS:
             {
                 output_bias_params = true;
+                break;
+            }
+            case OPT_USE_EM:
+            {
+                use_em = true;
+                break;
+            }
+            case OPT_COLLAPSE_COND_PROB:
+            {
+                cond_prob_collapse = true;
                 break;
             }
 			default:
