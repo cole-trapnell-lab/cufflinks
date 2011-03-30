@@ -1177,7 +1177,7 @@ void grad_ascent_step (int N,
         {
             if (denom > 0)
             {
-                dLL_dj[j] += u[i] * p[j] * cond_probs[j][i] / denom;
+                dLL_dj[j] += u[i] * cond_probs[j][i] / denom;
             }
         }
     }
