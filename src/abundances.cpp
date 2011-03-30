@@ -1223,7 +1223,7 @@ double grad_ascent (int N, int M, vector<double> & newP,
 	
     ell = logLike(N, M, p, cond_prob, u, log_conv_factors);
     
-    double epsilon = 1e-2;
+    double epsilon = 1e-5;
     
     static const double ACCURACY = .001; // convergence criteria
 	
@@ -1247,7 +1247,7 @@ double grad_ascent (int N, int M, vector<double> & newP,
         }
         else
         {
-            verbose_msg("Reducing EPSILON \n");
+            //verbose_msg("Reducing EPSILON \n");
             epsilon /= 10;
         }
 		iter++;
