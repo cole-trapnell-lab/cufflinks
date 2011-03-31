@@ -450,7 +450,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
         
         for(int k = i + 1 ; k < M; ++k)
         {
-            if (replaced[k] || alignments[k].is_multi())
+            if (replaced[k] || alignments[k].is_multi() || alignments[i].read_group_props() != alignments[k].read_group_props())
                 continue;
             if (!::overlap_in_genome(curr_align->left(), curr_align->right(),
                                      alignments[k].left(), alignments[k].right()))

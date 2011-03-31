@@ -69,8 +69,8 @@ static struct option long_options[] = {
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
-{"use-em",                  no_argument,             0,			 OPT_USE_EM},
-{"collapse-cond-prob",      no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
+{"use-grad-ascent",         no_argument,             0,			 OPT_USE_EM},
+{"no-collapse-cond-prob",   no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
 
     
 // assembly
@@ -318,12 +318,12 @@ int parse_options(int argc, char** argv)
             }
             case OPT_USE_EM:
             {
-                use_em = true;
+                use_em = false;
                 break;
             }
             case OPT_COLLAPSE_COND_PROB:
             {
-                cond_prob_collapse = true;
+                cond_prob_collapse = false;
                 break;
             }
 			default:
