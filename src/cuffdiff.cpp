@@ -729,17 +729,37 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     }
 #endif
     
-    bool single_replicate_factory = false;
-    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+    int most_reps = -1;
+    int most_reps_idx = 0;
+    
+    bool single_replicate_fac = false;
+    
+    for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
-        if (fac.num_replicates() == 1)
+        ReplicatedBundleFactory& fac = bundle_factories[i];
+        if (fac.num_replicates() > most_reps)
         {
-            single_replicate_factory = true;
+            most_reps = fac.num_replicates();
+            most_reps_idx = i;
         }
-        
+        if (most_reps == 1)
+        {
+            single_replicate_fac = true;
+        }
     }
     
-    if (single_replicate_factory == true && poisson_dispersion == false)
+    if (most_reps != 1 && poisson_dispersion == false)
+    {
+        foreach (ReplicatedBundleFactory& fac, bundle_factories)
+        {
+            if (fac.num_replicates() == 1)
+            {
+                fac.mass_dispersion_model(bundle_factories[most_reps_idx].mass_dispersion_model());
+            }
+        }
+    }
+    
+    if (most_reps == 1 && poisson_dispersion == false)
     {
         vector<pair<string, vector<double> > > sample_count_table;
         foreach(shared_ptr<ReadGroupProperties> rg_props, all_read_groups)

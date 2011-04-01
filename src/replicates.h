@@ -218,6 +218,19 @@ public:
     
     int num_replicates() const { return _factories.size(); }
     
+    void mass_dispersion_model(shared_ptr<MassDispersionModel const> disperser)
+    {
+        foreach(shared_ptr<BundleFactory>& fac, _factories)
+        {
+            fac->read_group_properties()->mass_dispersion_model(disperser);
+        }
+    }
+    
+    shared_ptr<MassDispersionModel const> mass_dispersion_model() const
+    {
+        return _factories.front()->read_group_properties()->mass_dispersion_model();
+    }
+    
 private:
 	vector<shared_ptr<BundleFactory> > _factories;
 };
