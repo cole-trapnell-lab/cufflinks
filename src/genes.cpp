@@ -52,7 +52,7 @@ void Isoform::get_gtf(vector<string>& gff_recs,
 	char buf[2048];	
 
 	sprintf(buf, 
-			"%s\tCufflinks\ttranscript\t%d\t%d\t%d\t%s\t.\tgene_id \"%s\"; transcript_id \"%s\"; FPKM \"%10.10lf\"; frac \"%lf\"; conf_lo \"%lf\"; conf_hi \"%lf\"; cov \"%lf\";\n",
+			"%s\tCufflinks\ttranscript\t%d\t%d\t%d\t%s\t.\tgene_id \"%s\"; transcript_id \"%s\"; FPKM \"%10.10lf\"; frac \"%lf\"; conf_lo \"%lf\"; conf_hi \"%lf\"; cov \"%lf\"; full_read_support \"%s\"\n",
 			ref_name,
 			_scaffold.left() + 1,
 			_scaffold.right(), // GTF intervals are inclusive on both ends, but ours are half-open
@@ -64,7 +64,8 @@ void Isoform::get_gtf(vector<string>& gff_recs,
 			_fraction,
 			_confidence.low, 
 			_confidence.high,
-			_coverage);
+			_coverage,
+            (_scaffold.has_struct_support()) ? "Yes":"No");
 	gff_recs.push_back(buf);
 	
 	int exon_num = 1;

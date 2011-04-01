@@ -475,7 +475,6 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
     clip_by_3_prime_dropoff(lhs);
     clip_by_3_prime_dropoff(rhs);
 
-    
     for (size_t i = 0; i < lhs.size(); ++i)
     {
         if (kept_lhs[i])

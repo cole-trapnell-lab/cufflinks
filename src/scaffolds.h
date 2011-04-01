@@ -392,8 +392,20 @@ public:
 	
 	bool has_intron() const { return _has_intron; }
 	bool has_suspicious_unknown() const { return has_suspicious_unknown(*this); }
-	bool has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs = NULL) const;
-	
+
+    // returns the percent coverage of internal exons, returns 0 if no internal exons
+	double internal_exon_coverage() const;
+    
+    // returns true if the scaffold strand is supported with reads or exon overlap with
+    // a reference scaffold of known strand (since the scaffold may have been created with faux reads)
+    bool has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs = NULL) const;
+    
+    // returns true if all introns are supported with splice reads, false ow
+    bool hits_support_introns() const; 
+    
+    // returns true if all internal exons are fully covered and hits support introns, false ow
+    bool has_struct_support() const;
+    
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }
 	
@@ -444,12 +456,15 @@ public:
 	// sub_scaff should be an empty Scaffold object.
 	bool sub_scaffold(Scaffold& sub_scaff, int g_left, int match_length) const;
 
-	// Tests whether the other scaffold is contained completely on the 5' end and within some overhang on the 3' end
+ 	// Tests whether the other scaffold is contained allowing the given overhang
 	bool contains(const Scaffold& other, int ohang_5 = 0, int ohang_3 = 0) const
 	{
 		if (left() <= other.left() && right()>= other.right())
 			return true;
 		
+        if (!(ohang_5 || ohang_3))
+            return false;
+        
 		int left_hang;
 		int right_hang;
 		switch(strand())
@@ -579,8 +594,6 @@ public:
 	bool add_hit(const MateHit*);
 	
 	void get_complete_subscaffolds(vector<Scaffold>& complete);
-    
-    bool hits_support_introns() const;    
 private: 
 	
 	void initialize_exon_lists();

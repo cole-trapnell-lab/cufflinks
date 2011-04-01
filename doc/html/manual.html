@@ -1269,10 +1269,10 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top><tt>genes.fpkm_tracking</tt></td><td VALIGN=top>Gene FPKMs.  Tracks the summed FPKM of transcripts sharing each <tt>gene_id</tt></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top><tt>cds.fpkm_tracking</tt></td><td VALIGN=top>Primary transcript FPKMs. Tracks the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
+			<td VALIGN=top><tt>cds.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence FPKMs. Tracks the summed FPKM of transcripts sharing each <tt>p_id</tt>, independent of <tt>tss_id</tt></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top><tt>tss_groups.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence FPKMs. Tracks the summed FPKM of transcripts sharing each <tt>p_id</tt>, independent of <tt>tss_id</tt></td>
+			<td VALIGN=top><tt>tss_groups.fpkm_tracking</tt></td><td VALIGN=top>Primary transcript FPKMs. Tracks the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
 		  </tr>
 		  </table>
 		
@@ -1296,7 +1296,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top><tt>tss_group_exp.diff</tt></td><td VALIGN=top>Primary transcript differential FPKM.  Tests differences in the summed FPKM of transcripts sharing each <tt>tss_id</tt></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top><tt>cds_exp.fpkm_tracking</tt></td><td VALIGN=top>Coding sequence differential FPKM. Tests differences in the summed FPKM of transcripts sharing each <tt>p_id</tt> independent of <tt>tss_id</tt></td>
+			<td VALIGN=top><tt>cds_exp.diff</tt></td><td VALIGN=top>Coding sequence differential FPKM. Tests differences in the summed FPKM of transcripts sharing each <tt>p_id</tt> independent of <tt>tss_id</tt></td>
 		  </tr>
 		</table>
 		
@@ -1396,9 +1396,9 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		<h2 id="cds_diff">4) Differential coding output - cds.diff</h2>
 		<p>
 		This tab delimited file lists, for each gene, the amount of overloading
-		detected among its primary transcripts, i.e. how much differential 
-		promoter use exists between samples.  Only genes producing two or more
-		distinct primary transcripts (i.e. multi-promoter genes) are listed here.
+		detected among its coding sequences, i.e. how much differential 
+		CDS output exists between samples.  Only genes producing two or more
+		distinct CDS (i.e. multi-protein genes) are listed here.</p>
 		
 		<!-- test_id	gene	locus	sample_1 sample_2 status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
 		<table CELLSPACING=15>
@@ -1446,9 +1446,10 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		<h2 id="promoter_diff">5) Differential promoter use - promoters.diff</h2>
 		<p>
 		This tab delimited file lists, for each gene, the amount of overloading
-		detected among its coding sequences, i.e. how much differential 
-		CDS output exists between samples.  Only genes producing two or more
-		distinct CDS (i.e. multi-protein genes) are listed here.</p>
+		detected among its primary transcripts, i.e. how much differential 
+		promoter use exists between samples.  Only genes producing two or more
+		distinct primary transcripts (i.e. multi-promoter genes) are listed here.</p>
+		
 
 		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
 		<table CELLSPACING=15>

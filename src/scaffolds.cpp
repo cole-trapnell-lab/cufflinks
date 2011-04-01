@@ -9,6 +9,7 @@
 
 #include <list>
 #include <algorithm>
+#include <numeric>
 #include "common.h"
 #include "scaffolds.h"
 
@@ -1428,6 +1429,7 @@ pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 	return make_pair(s_start, s_end);
 }
 
+// Should only be called if the hit is known to be compatible and contained
 // Returns true only when both the start and end are found (ie, frag_len is known), which
 // can only happen if the read is paired.  Returned values that are equal to the trans_len 
 // should be ignored, as they are invalid.
@@ -1439,6 +1441,10 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	
 	int trans_len = length();
 	
+    Scaffold h(hit);
+    assert(contains(h));
+    assert(Scaffold::compatible(*this, h));
+    
 //    if (Scaffold(hit).augmented_ops() == augmented_ops())
 //    {
 //        int a = 4;
@@ -1536,7 +1542,7 @@ void Scaffold::clear_hits()
 bool Scaffold::add_hit(const MateHit* hit)
 {
 	Scaffold hs(*hit);
-	if (Scaffold::overlap_in_genome(*this, hs, olap_radius) &&
+	if (contains(hs) &&
 		Scaffold::compatible(*this, hs))
 	{
 		if (!binary_search(_mates_in_scaff.begin(),
@@ -1651,6 +1657,30 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
 	}
 }
 
+double Scaffold::internal_exon_coverage() const
+{
+    // First check if there are internal exons
+    if (augmented_ops().size() < 5) 
+        return 0.0;
+    
+    int left = augmented_ops()[2].g_left();
+    int right = augmented_ops()[augmented_ops().size() - 3].g_right();
+    vector<bool> covered(right-left, 0);
+    foreach(const MateHit* h, mate_hits())
+    {
+        if (::overlap_in_genome(h->left(),h->right(), left, right))
+        {
+            for (int i = max(h->left()-left, 0); i < min(h->right()-left, right-left); ++i)
+            {
+                assert(i < covered.size());
+                covered[i] = 1;
+            }
+        }
+    }
+    double percent_covered = accumulate(covered.begin(),covered.end(),0.0)/(right-left);
+    return percent_covered;
+}
+
 bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) const
 {
 	if (strand() == CUFF_STRAND_UNKNOWN)
@@ -1679,6 +1709,18 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	return false;
 }
 
+bool Scaffold::has_struct_support() const
+{
+    if(augmented_ops().size() == 1)
+        return mate_hits().size() > 0;
+
+    if(augmented_ops().size() == 3)
+        return hits_support_introns();
+    
+    return (hits_support_introns() && internal_exon_coverage() == 1.0);
+}
+
+
 bool Scaffold::hits_support_introns() const
 {
     set<AugmentedCuffOp> hit_introns;
@@ -1702,20 +1744,20 @@ bool Scaffold::hits_support_introns() const
         }
     }
     
-    if (hit_introns != scaffold_introns)
-    {
-        fprintf(stderr, "********************\n");
-        foreach(const AugmentedCuffOp& a, hit_introns)
-        {
-            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
-        }
-        
-        fprintf(stderr, "####################\n");
-        foreach(const AugmentedCuffOp& a, scaffold_introns)
-        {
-            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
-        }
-    }
+//    if (hit_introns != scaffold_introns)
+//    {
+//        fprintf(stderr, "********************\n");
+//        foreach(const AugmentedCuffOp& a, hit_introns)
+//        {
+//            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
+//        }
+//        
+//        fprintf(stderr, "####################\n");    
+//        foreach(const AugmentedCuffOp& a, scaffold_introns)
+//        {
+//            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
+//        }
+//    }
     
     return hit_introns == scaffold_introns;
 }
