@@ -181,7 +181,7 @@ void add_non_constitutive_to_scaffold_mask(const vector<Scaffold>& scaffolds,
 		}
 	}
     
-	asm_verbose("%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
+	verbose_msg("%lu constitutive reads of %lu smash-filtered from further consideration\n", num_filtered, smash_filter.size());
     
     vector<AugmentedCuffOp> ops;
     collect_non_redundant_ops(scaffolds, ops);
@@ -222,7 +222,7 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 	while (max_rounds--)
 	{
 		
-		asm_verbose("%s\tStarting new collapse round\n", bundle_label->c_str());
+		verbose_msg("%s\tStarting new collapse round\n", bundle_label->c_str());
         
 		ContainmentGraph containment;
 		
@@ -273,12 +273,12 @@ bool collapse_contained_transfrags(vector<Scaffold>& scaffolds,
 		
 		lemon::MaxBipartiteMatching<ContainmentGraph>  matcher(containment);
         
-		asm_verbose("%s\tContainment graph has %d nodes, %d edges\n", bundle_label->c_str(), containment.aNodeNum(), containment.uEdgeNum());
-		asm_verbose("%s\tFinding a maximum matching to collapse scaffolds\n", bundle_label->c_str());
+		verbose_msg("%s\tContainment graph has %d nodes, %d edges\n", bundle_label->c_str(), containment.aNodeNum(), containment.uEdgeNum());
+		verbose_msg("%s\tFinding a maximum matching to collapse scaffolds\n", bundle_label->c_str());
         
 		matcher.run();
         
-		asm_verbose( "%s\tWill collapse %d scaffolds\n", bundle_label->c_str(), matcher.matchingSize());
+		verbose_msg( "%s\tWill collapse %d scaffolds\n", bundle_label->c_str(), matcher.matchingSize());
 		
 		ContainmentGraph::UEdgeMap<bool> matched_edges(containment);
 		
@@ -372,12 +372,12 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 			 smaller_idx_array.end(), 
 			 FragIndexSortSmallerLR(fragments));
 		
-		asm_verbose("%s\tStarting new collapse round\n", bundle_label->c_str());
-        asm_verbose("%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
+		verbose_msg("%s\tStarting new collapse round\n", bundle_label->c_str());
+        verbose_msg("%s\tFinding fragment-level conflicts\n", bundle_label->c_str());
 
         bool will_perform_collapse = false;
 		
-        asm_verbose( "%s\tAssessing overlaps between %lu fragments for identical conflict sets\n", 
+        verbose_msg( "%s\tAssessing overlaps between %lu fragments for identical conflict sets\n", 
                 bundle_label->c_str(), 
                 fragments.size());
         vector<size_t> replacements;
@@ -468,7 +468,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						{
 							if (num_merges % 100 == 0)
 							{
-								asm_verbose("%s\tCollapsing frag # %d\n", 
+								verbose_msg("%s\tCollapsing frag # %d\n", 
 										bundle_label->c_str(), 
 										num_merges);
 							}
@@ -546,7 +546,7 @@ bool collapse_equivalent_transfrags(vector<Scaffold>& fragments,
 						// merge
 						if (num_merges % 100 == 0)
 						{
-							asm_verbose("%s\tCollapsing frag # %d\n", 
+							verbose_msg("%s\tCollapsing frag # %d\n", 
 									bundle_label->c_str(), 
 									num_merges);
 						}
@@ -602,7 +602,7 @@ void compress_consitutive(vector<Scaffold>& hits)
 {
     vector<bool> scaffold_mask;
     
-    asm_verbose("%s\tBuilding constitutivity mask\n", bundle_label->c_str()); 
+    verbose_msg("%s\tBuilding constitutivity mask\n", bundle_label->c_str()); 
     
     scaffold_mask = vector<bool>(hits.size(), false);
     add_non_constitutive_to_scaffold_mask(hits, scaffold_mask);
