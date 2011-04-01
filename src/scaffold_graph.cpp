@@ -235,7 +235,7 @@ bool create_overlap_dag(vector<Scaffold>& hits,
                          tr, 
                          G_to_TR,
                          w);
-    asm_verbose("dag has %lu edges, tr has %lu edges\n", num_edges(bundle_dag), num_edges(tr));
+    verbose_msg("dag has %lu edges, tr has %lu edges\n", num_edges(bundle_dag), num_edges(tr));
     
 	//assert (num_edges(bundle_dag) == num_edges(tr));
 #endif
@@ -281,7 +281,7 @@ pair<DAGNode, DAGNode> add_terminal_nodes(DAG& bundle_dag)
         }
     }
     
-#if ASM_VERBOSE
+#if verbose_msg
     HitsForNodeMap hits_for_node = get(vertex_name, bundle_dag);
     DAG::vertex_iterator ki, ke;
 	for (tie(ki, ke) = vertices(bundle_dag); ki != ke; ++ki)
@@ -298,7 +298,7 @@ pair<DAGNode, DAGNode> add_terminal_nodes(DAG& bundle_dag)
             fprintf(stderr, "%d-%d has edge to sink\n", pS->left(), pS->right());
         }
     }
-    asm_verbose("%d source nodes, %d sink nodes\n", num_attached_to_source, num_attached_to_sink);
+    verbose_msg("%d source nodes, %d sink nodes\n", num_attached_to_source, num_attached_to_sink);
 #endif
     return make_pair(source, sink);
 }

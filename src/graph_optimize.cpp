@@ -690,7 +690,7 @@ void compress_redundant(vector<Scaffold>& fragments)
 
 void compress_fragments(vector<Scaffold>& fragments)
 {
-    asm_verbose("%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
+    verbose_msg("%s\tPerforming preliminary containment collapse on %lu fragments\n", bundle_label->c_str(), fragments.size());
     size_t pre_hit_collapse_size = fragments.size();
     sort(fragments.begin(), fragments.end(), scaff_lt_rt);
     
@@ -699,7 +699,7 @@ void compress_fragments(vector<Scaffold>& fragments)
 	compress_redundant(fragments);
     
     size_t post_hit_collapse_size = fragments.size();
-    asm_verbose("%s\tIgnoring %lu strictly contained fragments\n", bundle_label->c_str(), pre_hit_collapse_size - post_hit_collapse_size);
+    verbose_msg("%s\tIgnoring %lu strictly contained fragments\n", bundle_label->c_str(), pre_hit_collapse_size - post_hit_collapse_size);
 }
 
 void compress_overlap_dag_paths(DAG& bundle_dag,
@@ -732,13 +732,13 @@ void compress_overlap_dag_paths(DAG& bundle_dag,
         if (!compressed_paths[i].empty())
         {
             Scaffold s(compressed_paths[i]);
-            asm_verbose("Path over %d-%d has %lu fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
+            verbose_msg("Path over %d-%d has %lu fragments in it\n", s.left(), s.right(), compressed_paths[i].size());
             new_scaffs.push_back(s);
         }
     }
     //hits = new_scaffs;
 	
-    asm_verbose("%s\tCompressed overlap graph from %lu to %lu fragments (%f percent)\n",
+    verbose_msg("%s\tCompressed overlap graph from %lu to %lu fragments (%f percent)\n",
             bundle_label->c_str(), 
             hits.size(), 
             new_scaffs.size(), 

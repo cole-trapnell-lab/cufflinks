@@ -627,9 +627,9 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	}
 	
 	{
-		asm_verbose ("%s\tFiltering forward strand\n", bundle_label->c_str());
+		verbose_msg ("%s\tFiltering forward strand\n", bundle_label->c_str());
 		filter_hits(bundle.length(), bundle.left(), fwd_hits);
-		asm_verbose ("%s\tFiltering reverse strand\n", bundle_label->c_str());
+		verbose_msg ("%s\tFiltering reverse strand\n", bundle_label->c_str());
 		filter_hits(bundle.length(), bundle.left(), rev_hits);
 	}
     
@@ -923,7 +923,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	{
 		quantitate_transcript_cluster(cluster, total_map_mass, genes);
 	}
-    asm_verbose( "%s\tBundle quantitation complete\n", bundle_label->c_str());
+    verbose_msg( "%s\tBundle quantitation complete\n", bundle_label->c_str());
 }
 
 void assemble_bundle(const RefSequenceTable& rt,
@@ -993,7 +993,7 @@ void assemble_bundle(const RefSequenceTable& rt,
                                    map_mass,
                                    genes);
     
-    asm_verbose( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
+    verbose_msg( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
     
     if (allow_junk_filtering)
         filter_junk_genes(genes);
@@ -1092,7 +1092,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 		exit(1);
 	}
 	
-    asm_verbose( "%s\tBundle complete\n", bundle_label->c_str());
+    verbose_msg( "%s\tBundle complete\n", bundle_label->c_str());
     
 #if ENABLE_THREADS
 	out_file_lock.unlock();
@@ -1295,8 +1295,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         inspect_map(bundle_factory, &bad_introns, count_table);
     
     
-    asm_verbose("%d ReadHits still live\n", num_deleted);
-    asm_verbose("Found %lu reference contigs\n", rt.size());
+    verbose_msg("%d ReadHits still live\n", num_deleted);
+    verbose_msg("Found %lu reference contigs\n", rt.size());
     
     foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
     {

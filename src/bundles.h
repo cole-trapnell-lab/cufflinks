@@ -527,8 +527,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
             num_introns += itr->second.size();
         }
         
-        asm_verbose( "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
-    	asm_verbose( "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
+        verbose_msg( "Bad intron table has %lu introns: (%lu alloc'd, %lu used)\n", num_introns, alloced, used);
+    	verbose_msg( "Map has %lu hits, %lu are non-redundant\n", total_hits, total_non_redundant_hits);
     } 
     
 	if (progress_bar)

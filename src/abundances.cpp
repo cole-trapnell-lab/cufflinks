@@ -588,7 +588,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
 	}
     if (nr_alignments.size())
     {
-        asm_verbose("\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * nr_alignments.size()/(double)alignments.size());
+        verbose_msg("\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * nr_alignments.size()/(double)alignments.size());
     }
 }
 
@@ -846,14 +846,14 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	vector<double> gammas;
 	
-	asm_verbose( "Calculating intial MLE\n");
+	verbose_msg( "Calculating intial MLE\n");
 	
 	gamma_mle(mapped_transcripts,
 			  nr_alignments,
               log_conv_factors,
 			  gammas);
 	
-	asm_verbose( "Tossing likely garbage isoforms\n");
+	verbose_msg( "Tossing likely garbage isoforms\n");
 	
 	for (size_t i = 0; i < gammas.size(); ++i)
 	{
@@ -881,7 +881,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	filtered_gammas.clear();
 	
-	asm_verbose( "Revising MLE\n");
+	verbose_msg( "Revising MLE\n");
 	
 	gamma_mle(filtered_transcripts,
 			  nr_alignments,
@@ -897,7 +897,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		}
 	}
 	
-	asm_verbose( "Importance sampling posterior distribution\n");
+	verbose_msg( "Importance sampling posterior distribution\n");
 	
 	bool success = true;
 	size_t N = transcripts.size();
@@ -2338,7 +2338,7 @@ double get_intron_doc(const Scaffold& s,
 					 zi != intron_depth_of_coverage.end();
 					 ++zi)
 				{
-					asm_verbose( "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
+					verbose_msg( "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
 				}
 			}
 
