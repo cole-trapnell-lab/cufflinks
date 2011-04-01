@@ -606,7 +606,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		}
 	}
 	
-	vector<Scaffold> fwd_hits, rev_hits;
 	bool saw_fwd = false;
 	bool saw_rev = false;
 	
@@ -620,18 +619,12 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		if (hs == CUFF_REV)
 			saw_rev = true;
 		
-		if (hs != CUFF_REV) 
-			fwd_hits.push_back(hit);
-		if (hs != CUFF_FWD)
-			rev_hits.push_back(hit);
+//		if (hs != CUFF_REV) 
+//			fwd_hits.push_back(hit);
+//		if (hs != CUFF_FWD)
+//			rev_hits.push_back(hit);
 	}
-	
-	{
-		verbose_msg ("%s\tFiltering forward strand\n", bundle_label->c_str());
-		filter_hits(bundle.length(), bundle.left(), fwd_hits);
-		verbose_msg ("%s\tFiltering reverse strand\n", bundle_label->c_str());
-		filter_hits(bundle.length(), bundle.left(), rev_hits);
-	}
+
     
 	vector<Scaffold> fwd_scaffolds;
 	vector<Scaffold> rev_scaffolds;
@@ -640,31 +633,92 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	
 	if (saw_fwd && saw_rev)
 	{
-		assembled_successfully |= make_scaffolds(bundle.left(), 
-                                                 bundle.length(), 
-                                                 fwd_hits, 
-                                                 fwd_scaffolds);
+        // Forward strand hits
+        {
+            vector<Scaffold> fwd_hits;
+            for (size_t i = 0; i < hits.size(); ++i)
+            {
+                const Scaffold& hit = hits[i];
+                CuffStrand hs = hit.strand();
+                if (hs != CUFF_REV) 
+                    fwd_hits.push_back(hit);
+            }
+            
+            verbose_msg ("%s\tFiltering forward strand\n", bundle_label->c_str());
+            filter_hits(bundle.length(), bundle.left(), fwd_hits);
+            assembled_successfully |= make_scaffolds(bundle.left(), 
+                                                     bundle.length(), 
+                                                     fwd_hits, 
+                                                     fwd_scaffolds);
+        }
         
-		assembled_successfully |= make_scaffolds(bundle.left(), 
-                                                 bundle.length(), 
-                                                 rev_hits, 
-                                                 rev_scaffolds);
+        // Reverse strand hits
+        {
+            vector<Scaffold> rev_hits;
+            for (size_t i = 0; i < hits.size(); ++i)
+            {
+                const Scaffold& hit = hits[i];
+                CuffStrand hs = hit.strand();
+                if (hs != CUFF_FWD)
+                    rev_hits.push_back(hit);
+            }
+            
+            verbose_msg ("%s\tFiltering reverse strand\n", bundle_label->c_str());
+            filter_hits(bundle.length(), bundle.left(), rev_hits);
+            assembled_successfully |= make_scaffolds(bundle.left(), 
+                                                     bundle.length(), 
+                                                     rev_hits, 
+                                                     rev_scaffolds);
+        }
 	}
 	else
 	{
 		if (saw_fwd || (!saw_fwd && !saw_rev))
 		{
-			assembled_successfully |= make_scaffolds(bundle.left(),
-													 bundle.length(),
-													 fwd_hits,
-													 fwd_scaffolds);
+            // Forward strand hits
+            {
+                vector<Scaffold> fwd_hits;
+                for (size_t i = 0; i < hits.size(); ++i)
+                {
+                    const Scaffold& hit = hits[i];
+                    CuffStrand hs = hit.strand();
+                    if (hs != CUFF_REV) 
+                        fwd_hits.push_back(hit);
+                }
+                
+                verbose_msg ("%s\tFiltering forward strand\n", bundle_label->c_str());
+                filter_hits(bundle.length(), bundle.left(), fwd_hits);
+                assembled_successfully |= make_scaffolds(bundle.left(), 
+                                                         bundle.length(), 
+                                                         fwd_hits, 
+                                                         fwd_scaffolds);
+            
+                assembled_successfully |= make_scaffolds(bundle.left(),
+                                                         bundle.length(),
+                                                         fwd_hits,
+                                                         fwd_scaffolds);
+            }
 		}
 		else
 		{
-			assembled_successfully |= make_scaffolds(bundle.left(), 
-													 bundle.length(), 
-													 rev_hits, 
-													 rev_scaffolds);
+            // Reverse strand hits
+            {
+                vector<Scaffold> rev_hits;
+                for (size_t i = 0; i < hits.size(); ++i)
+                {
+                    const Scaffold& hit = hits[i];
+                    CuffStrand hs = hit.strand();
+                    if (hs != CUFF_FWD)
+                        rev_hits.push_back(hit);
+                }
+                
+                verbose_msg ("%s\tFiltering reverse strand\n", bundle_label->c_str());
+                filter_hits(bundle.length(), bundle.left(), rev_hits);
+                assembled_successfully |= make_scaffolds(bundle.left(), 
+                                                         bundle.length(), 
+                                                         rev_hits, 
+                                                         rev_scaffolds);
+            }
 		}
 	}
 	
