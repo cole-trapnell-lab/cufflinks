@@ -639,7 +639,7 @@ void compress_consitutive(vector<Scaffold>& hits)
     size_t post_compress = hits.size();
     size_t delta = pre_compress - post_compress;
     double collapse_ratio = delta / (double) pre_compress; 
-    asm_verbose("%s\tCompressed %lu of %lu constitutive fragments (%lf percent)\n", 
+    verbose_msg("%s\tCompressed %lu of %lu constitutive fragments (%lf percent)\n", 
             bundle_label->c_str(),
             delta, 
             pre_compress, 
@@ -660,6 +660,8 @@ void compress_redundant(vector<Scaffold>& fragments)
         rightmost = std::max((long)fragments[i].right(), rightmost);
     }
     
+    size_t pre_compress = fragments.size();
+    
     while (true)
     {
         if (last_size == -1 || 0.9 * last_size > fragments.size())
@@ -675,6 +677,15 @@ void compress_redundant(vector<Scaffold>& fragments)
             break;
         }
     }
+    
+    size_t post_compress = fragments.size();
+    size_t delta = pre_compress - post_compress;
+    double collapse_ratio = delta / (double) pre_compress; 
+    verbose_msg("%s\tCompressed %lu of %lu redundant fragments (%lf percent)\n", 
+                bundle_label->c_str(),
+                delta, 
+                pre_compress, 
+                collapse_ratio);
 }
 
 void compress_fragments(vector<Scaffold>& fragments)
