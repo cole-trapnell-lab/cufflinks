@@ -16,6 +16,7 @@ import errno
 import os
 import tempfile
 import warnings
+import types
 
 help_message = '''
 merge_cuff_asms takes two or more Cufflinks GTF files and merges them into a 
@@ -165,7 +166,7 @@ def cufflinks(params,
     if out_dir != None and out_dir != "":
         cmd.extend(["-o", out_dir])
            
-    cmd.extend(["-F", "0.05"])
+    cmd.extend(["-F", "0.10"])
 
     if gtf_file != None:
         cmd.extend(["-g", gtf_file])
@@ -201,7 +202,7 @@ def cuffcompare(params, prefix, ref_gtf, fasta, cuff_gtf):
         cmd.extend(["-r", ref_gtf])
     if  fasta != None:
         cmd.extend(["-s", fasta])
-    if type(cuff_gtf) == ListType:
+    if type(cuff_gtf) == types.ListType:
         for g in cuff_gtf:
             cmd.extend([g])
     else:
@@ -302,9 +303,9 @@ def merge_sam_inputs(sam_input_list):
 def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
     print >> sys.stderr, "[%s] Comparing against reference file %s" % (right_now(), ref_gtf)
     if fasta != None:
-        comp_cmd = '''cuffcompare -o meta_asm_vs_GENCODE -r %s -s %s %s %s;''' % (ref_gtf, fasta, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s -s %s %s %s;''' % (ref_gtf, fasta, meta_asm_gtf, meta_asm_gtf)
     else:
-        comp_cmd = '''cuffcompare -o meta_asm_vs_GENCODE -r %s %s %s;''' % (ref_gtf, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s %s %s;''' % (ref_gtf, meta_asm_gtf, meta_asm_gtf)
 
     #cmd = bsub_cmd(comp_cmd, "/gencode_cmp", True, job_mem=8)
     cmd = comp_cmd
@@ -316,8 +317,7 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
             print >> sys.stderr, fail_str, "Error: could not execute cuffcompare"
             exit(1)
         tmap_out = meta_asm_gtf.split("/")[-1] + ".tmap"
-        shutil.copy2(tmap_out, "./meta_asm_vs_GENCODE.tmap")
-        return ("./meta_asm_vs_GENCODE.combined.gtf", tmap_out)
+        return tmap_out
     # cuffcompare not found
     except OSError, o:
         if o.errno == errno.ENOTDIR or o.errno == errno.ENOENT:
@@ -373,41 +373,50 @@ def merge_gtfs(gtf_filenames, merged_gtf, ref_gtf=None):
             print >> sys.stderr, fail_str, "Error: cuffcompare not found on this system.  Did you forget to include it in your PATH?"
         exit(1)
 
-def cuffcompare_all_assemblies(gtf_input_files):
-    print >> sys.stderr, "Cuffcmpare all assemblies GTFs"
-    cmd = ["cuffcompare"]
-    gtf_lst=" ".join(gtf_input_files)
-    cuffcompare(None, "cuffcmpr1" , None,None, gtf_input_files)
-    print >> sys.stderr, "Cuffcmpare all assemblies GTFs : run second cuffcompare"
-    cuffcompare(None, "cuffcmpr2" , "cuffcmpr1.combined.gtf",None, "cuffcmpr1.combined.gtf")
-    tmap="cuffcmpr1.combined.gtf.tmap"
-    print >> sys.stderr, "Cuffcmpare all assemblies GTFs : filter c"
+def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_codes=["c", "i", "r", "p", "e"]):
+    #print >> sys.stderr, "Cuffcmpare all assemblies GTFs"
+    
+    tmap = compare_to_reference(gtf_input_file, ref_gtf, fasta_file)
+    
+    #print >> sys.stderr, "Cuffcmpare all assemblies GTFs : filter %s" % ",".join(class_codes)
     selected_ids= set([])
     f_tmap = open(tmap)
-    out = open("cuffcmpr1_selectedIds.txt", "w")
+    #out = open("tmp_meta_asm_selectedIds.txt", "w")
     for line in f_tmap:
         line = line.strip()
         cols = line.split('\t')
         if len(cols) < 5:
             continue
         class_code = cols[2]
-        name =cols[4]
-        if class_code != "c" :
-            print >> out, name
-        selected_ids.add(name)
-
+        name = cols[4]
+        if class_code not in class_codes:
+            selected_ids.add(name)
+    
     global output_dir
     asm_dir = output_dir + "merged_asm/"
-    print >> sys.stderr, asm_dir
+    
     if os.path.exists(asm_dir):
         pass
     else:
         os.mkdir(asm_dir)
-    current_asm_gtf = "cuffcmpr1.combined.gtf"
-    select_gtf(current_asm_gtf, selected_ids, "merged_asm/transcripts.gtf")
+    current_asm_gtf = "tmp_meta_asm.combined.gtf"
+    select_gtf(current_asm_gtf, selected_ids, output_dir + "merged.gtf")
+    os.remove(tmap)
+    os.remove("tmp_meta_asm.combined.gtf")
+    os.remove("tmp_meta_asm.loci")
+    os.remove("tmp_meta_asm.tracking")
+    os.remove("transcripts.gtf.refmap")
+    os.remove("tmp_meta_asm")
+    tmp_dir = asm_dir
+    tmp_files = os.listdir(tmp_dir)
+    for t in tmp_files:
+        os.remove(tmp_dir+t)
+    os.rmdir(tmp_dir)
+
+#os.remove("tmp_meta_asm.tmap")
 
 def get_version():
-    return "0.0.1"
+    return "1.0.0"
 
 def main(argv=None):
     
@@ -458,11 +467,15 @@ def main(argv=None):
             merged_sam_filename = merge_sam_inputs(sam_input_files)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
             cufflinks(params, "merged_asm", merged_sam_filename, 0.05, params.ref_gtf)
+            compare_meta_asm_against_ref(params.ref_gtf, params.fasta, "merged_asm/transcripts.gtf")
         #Meta Cuffcompare option:
         else:
-            cuffcompare_all_assemblies(gtf_input_files);
-        
+            cuffcompare_all_assemblies(gtf_input_files)
     
+        tmp_files = os.listdir(tmp_dir)
+        for t in tmp_files:
+            os.remove(tmp_dir+t)
+        os.rmdir(tmp_dir)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         return 2

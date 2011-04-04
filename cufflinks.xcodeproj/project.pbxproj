@@ -529,6 +529,7 @@
 		ED5D1EE8114B490C00A2AF02 /* libboost_thread.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_thread.a; path = /usr/local/lib/libboost_thread.a; sourceTree = "<absolute>"; };
 		ED677C0D132A3D83000CFDC8 /* replicates.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = replicates.cpp; path = src/replicates.cpp; sourceTree = "<group>"; };
 		ED677C0E132A3D83000CFDC8 /* replicates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = replicates.h; path = src/replicates.h; sourceTree = "<group>"; };
+		ED784D46134793CC0057F3B8 /* merge_cuff_asms.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = merge_cuff_asms.py; path = src/merge_cuff_asms.py; sourceTree = "<group>"; };
 		ED877B71123BCA3E0025A050 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
 		ED877B72123BCA3F0025A050 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
 		ED920F30132137F4008DDA0B /* density.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = density.c; sourceTree = "<group>"; };
@@ -790,6 +791,7 @@
 				0ACD78C612E6647B00310E07 /* update_check.h */,
 				ED677C0D132A3D83000CFDC8 /* replicates.cpp */,
 				ED677C0E132A3D83000CFDC8 /* replicates.h */,
+				ED784D46134793CC0057F3B8 /* merge_cuff_asms.py */,
 			);
 			name = src;
 			sourceTree = "<group>";

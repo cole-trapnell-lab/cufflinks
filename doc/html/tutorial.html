@@ -239,8 +239,30 @@ test_chromosome Cufflinks       exon    501     550     1000    +       .
 				</pre>
 				</ol>
 			</li>
-      	
       	<br/>
+		<h2>Common uses of the Cufflinks package</h2><br/>
+		<h2 id="boost">Identifying differentially expressed and regulated genes</h2><br/>
+			<p>
+			There are two workflows you can choose from when looking for differentially expressed and regulated genes using the Cufflinks package.  The first workflow is simpler and is a good choice when you aren't looking for novel genes and transcripts.  This workflow requires that you not only have a reference genome, but also a reference gene annotation in GTF format. The second workflow, which includes steps to discover new genes and new splice variants of known genes, is more complex and requires more computing power.  The second workflow can use and augment a reference gene annotation GTF if one is available.
+			</p> 
+			<br/>
+			<b>Differential analysis without gene and transcript discovery</b>
+			<p>
+				<ol>
+					<li>Map the reads for each condition to the reference genome</li>
+					<li>Run Cuffdiff</li>
+			</ol>
+			</p>
+			<br/>
+			<b>Differential analysis with gene and transcript discovery</b>
+			<p>
+				<ol>
+					<li>Map the reads for each condition to the reference genome</li>
+					<li>Assemble the transcriptome separately for each condition</li>
+					<li>Merge the assemblies and the reference transcriptome (if available)</li>
+					<li>Run Cuffdiff</li>
+				</ol>
+			</p>
     </div>
   </div>
   <div id="footer">
