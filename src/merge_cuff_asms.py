@@ -477,7 +477,7 @@ def main(argv=None):
         else:
             cuffcompare_all_assemblies(gtf_input_files)
     
-        not params.system_params.keep_tmp:
+        if not params.system_params.keep_tmp:
             tmp_files = os.listdir(tmp_dir)
             for t in tmp_files:
                 os.remove(tmp_dir+t)
