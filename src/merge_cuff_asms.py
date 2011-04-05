@@ -305,7 +305,7 @@ def merge_sam_inputs(sam_input_list):
 def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
     print >> sys.stderr, "[%s] Comparing against reference file %s" % (right_now(), ref_gtf)
     if fasta != None:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s -s %s %s %s;''' % (ref_gtf, fasta, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s -s %s %s %s''' % (ref_gtf, fasta, meta_asm_gtf, meta_asm_gtf)
     else:
         comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s %s %s''' % (ref_gtf, meta_asm_gtf, meta_asm_gtf)
 
@@ -401,8 +401,11 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
         pass
     else:
         os.mkdir(asm_dir)
-    current_asm_gtf = "tmp_meta_asm.combined.gtf"
+    current_asm_gtf = output_dir +"transcripts.gtf"
     select_gtf(current_asm_gtf, selected_ids, output_dir + "/merged.gtf")
+    tmap = compare_to_reference(output_dir + "/merged.gtf", ref_gtf, fasta_file)
+    shutil.move("tmp_meta_asm.combined.gtf", output_dir + "/merged.gtf")
+
 #os.remove(tmap)
 #    os.remove("tmp_meta_asm.combined.gtf")
 #    os.remove("tmp_meta_asm.loci")
