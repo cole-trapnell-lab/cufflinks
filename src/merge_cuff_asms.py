@@ -410,10 +410,10 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
     os.remove("transcripts.gtf.refmap")
     os.remove("tmp_meta_asm")
     tmp_dir = asm_dir
-    tmp_files = os.listdir(tmp_dir)
-    for t in tmp_files:
-        os.remove(tmp_dir+t)
-    os.rmdir(tmp_dir)
+    #tmp_files = os.listdir(tmp_dir)
+    #for t in tmp_files:
+    #    os.remove(tmp_dir+t)
+    #os.rmdir(tmp_dir)
 
 #os.remove("tmp_meta_asm.tmap")
 
