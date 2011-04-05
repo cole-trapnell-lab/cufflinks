@@ -29,10 +29,10 @@ usage:
 '''
 
 output_dir = "./"
-logging_dir = output_dir + "/logs/merge_asm_logs"
+logging_dir = output_dir + "/logs/merge_asm_logs/"
 run_log = None
 run_cmd = None
-tmp_dir = output_dir + "meta_asm_tmp/"
+tmp_dir = output_dir + "/meta_asm_tmp/"
 bin_dir = sys.path[0] + "/"
 run_meta_assembly = True
 fail_str = "\t[FAILED]\n"
@@ -124,11 +124,11 @@ def prepare_output_dir():
     else:
         os.makedirs(output_dir)
 
-    print >> sys.stderr, "Checking for %s", logging_dir
+    #print >> sys.stderr, "Checking for %s", logging_dir
     if os.path.exists(logging_dir):
         pass
     else:
-        print >> sys.stderr, "Creating %s", logging_dir
+        #print >> sys.stderr, "Creating %s", logging_dir
         os.makedirs(logging_dir)
 
     if os.path.exists(tmp_dir):
@@ -307,7 +307,7 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
     if fasta != None:
         comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s -s %s %s %s;''' % (ref_gtf, fasta, meta_asm_gtf, meta_asm_gtf)
     else:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s %s %s;''' % (ref_gtf, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s %s %s''' % (ref_gtf, meta_asm_gtf, meta_asm_gtf)
 
     #cmd = bsub_cmd(comp_cmd, "/gencode_cmp", True, job_mem=8)
     cmd = comp_cmd
@@ -468,8 +468,8 @@ def main(argv=None):
             # Merge the primary assembly SAMs into a single input SAM file
             merged_sam_filename = merge_sam_inputs(sam_input_files)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
-            cufflinks(params, "merged_asm", merged_sam_filename, 0.05, params.ref_gtf)
-            compare_meta_asm_against_ref(params.ref_gtf, params.fasta, "merged_asm/transcripts.gtf")
+            cufflinks(params, output_dir+"/merged_asm", merged_sam_filename, 0.05, params.ref_gtf)
+            compare_meta_asm_against_ref(params.ref_gtf, params.fasta, output_dir+"/merged_asm/transcripts.gtf")
         #Meta Cuffcompare option:
         else:
             cuffcompare_all_assemblies(gtf_input_files)
