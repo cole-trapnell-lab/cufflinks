@@ -29,7 +29,7 @@ usage:
 '''
 
 output_dir = "./"
-logging_dir = output_dir + "logs/"
+logging_dir = output_dir + "logs/merge_asm_logs"
 run_log = None
 run_cmd = None
 tmp_dir = output_dir + "meta_asm_tmp/"
@@ -122,17 +122,17 @@ def prepare_output_dir():
     if os.path.exists(output_dir):
         pass
     else:
-        os.mkdir(output_dir)
+        os.makedirs(output_dir)
 
     if os.path.exists(logging_dir):
         pass
     else:
-        os.mkdir(logging_dir)
+        os.makedirs(logging_dir)
 
     if os.path.exists(tmp_dir):
         pass
     else:
-        os.mkdir(tmp_dir)
+        os.makedirs(tmp_dir)
 
 def formatTD(td):
     hours = td.seconds // 3600
