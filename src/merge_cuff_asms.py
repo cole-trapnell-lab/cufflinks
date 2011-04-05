@@ -477,10 +477,11 @@ def main(argv=None):
         else:
             cuffcompare_all_assemblies(gtf_input_files)
     
-        tmp_files = os.listdir(tmp_dir)
-        for t in tmp_files:
-            os.remove(tmp_dir+t)
-        os.rmdir(tmp_dir)
+        not params.system_params.keep_tmp:
+            tmp_files = os.listdir(tmp_dir)
+            for t in tmp_files:
+                os.remove(tmp_dir+t)
+            os.rmdir(tmp_dir)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         return 2
