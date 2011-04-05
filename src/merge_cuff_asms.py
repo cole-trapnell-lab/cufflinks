@@ -28,7 +28,7 @@ usage:
     merge_cuff_asms [-r reference.gtf] <cuff_asm_1.gtf> ... <cuff_asm_N.gtf>
 '''
 
-output_dir = "./"
+output_dir = "./merged_asm"
 logging_dir = output_dir + "/logs/merge_asm_logs/"
 run_log = None
 run_cmd = None
@@ -395,7 +395,7 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
             selected_ids.add(name)
     
     global output_dir
-    asm_dir = output_dir + "merged_asm/"
+    asm_dir = output_dir
     
     if os.path.exists(asm_dir):
         pass
@@ -468,8 +468,8 @@ def main(argv=None):
             # Merge the primary assembly SAMs into a single input SAM file
             merged_sam_filename = merge_sam_inputs(sam_input_files)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
-            cufflinks(params, output_dir+"/merged_asm", merged_sam_filename, 0.05, params.ref_gtf)
-            compare_meta_asm_against_ref(params.ref_gtf, params.fasta, output_dir+"/merged_asm/transcripts.gtf")
+            cufflinks(params, output_dir, merged_sam_filename, 0.05, params.ref_gtf)
+            compare_meta_asm_against_ref(params.ref_gtf, params.fasta, output_dir+"/transcripts.gtf")
         #Meta Cuffcompare option:
         else:
             cuffcompare_all_assemblies(gtf_input_files)
