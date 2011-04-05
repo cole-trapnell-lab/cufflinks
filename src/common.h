@@ -138,6 +138,7 @@ enum BundleMode
 	REF_GUIDED
 };
 extern BundleMode bundle_mode;
+extern BundleMode init_bundle_mode;
 
 enum BiasMode
 {

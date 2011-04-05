@@ -216,12 +216,14 @@ int parse_options(int argc, char** argv)
 			{
 				ref_gtf_filename = optarg;
 				bundle_mode = REF_DRIVEN;
+                init_bundle_mode = REF_DRIVEN;
 				break;
 			}
 			case 'g':
 			{
 				ref_gtf_filename = optarg;
 				bundle_mode = REF_GUIDED;
+                init_bundle_mode = REF_GUIDED;
 				break;
 			}
             case 'M':
@@ -1066,6 +1068,25 @@ void assemble_bundle(const RefSequenceTable& rt,
 #if ENABLE_THREADS	
 	out_file_lock.lock();
 #endif
+    
+    // Get hit_introns for full_read_support test if ref-guided
+    set<AugmentedCuffOp>* hit_introns = NULL;
+    if (init_bundle_mode == REF_GUIDED)
+    {
+        hit_introns = new set<AugmentedCuffOp>();
+        foreach(const MateHit& h, bundle.non_redundant_hits())
+        {
+            Scaffold s(h);
+            foreach (AugmentedCuffOp a, s.augmented_ops())
+            {
+                if (a.opcode == CUFF_INTRON)
+                {
+                    hit_introns->insert(a);
+                }
+            }
+        }
+    }
+    
 	
 	size_t num_scaffs_reported = 0;
 	for (size_t i = 0; i < genes.size(); ++i)
@@ -1083,7 +1104,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 			
 			vector<string> isoform_exon_recs;
             
-			iso.get_gtf(isoform_exon_recs, rt);
+			iso.get_gtf(isoform_exon_recs, rt, hit_introns);
 			
 			for (size_t g = 0; g < isoform_exon_recs.size(); ++g)
 			{
@@ -1136,7 +1157,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 				status);
 		fflush(fgene_abundances);
 	}
-    
+    delete hit_introns;
 	//fprintf(fbundle_tracking, "CLOSE %d\n", bundle.id());
 	
 	if (bundle_mode==REF_DRIVEN && num_scaffs_reported > bundle.ref_scaffolds().size())
@@ -1295,9 +1316,10 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 }
 	
 void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
-{	ReadTable it;
+{	
+    ReadTable it;
 	RefSequenceTable rt(true, false);
-	
+	    
 	shared_ptr<HitFactory> hit_factory;
 
     try

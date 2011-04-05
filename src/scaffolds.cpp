@@ -1429,7 +1429,6 @@ pair <int,int> Scaffold::genomic_to_transcript_span(pair<int,int> g_span) const
 	return make_pair(s_start, s_end);
 }
 
-// Should only be called if the hit is known to be compatible and contained
 // Returns true only when both the start and end are found (ie, frag_len is known), which
 // can only happen if the read is paired.  Returned values that are equal to the trans_len 
 // should be ignored, as they are invalid.
@@ -1440,10 +1439,6 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 {
 	
 	int trans_len = length();
-	
-    Scaffold h(hit);
-    assert(contains(h));
-    assert(Scaffold::compatible(*this, h));
     
 //    if (Scaffold(hit).augmented_ops() == augmented_ops())
 //    {
@@ -1453,6 +1448,10 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	start = trans_len;
 	end = trans_len;
 	
+    Scaffold h(hit);
+    if(!(contains(h) && Scaffold::compatible(*this, h)))
+       return false;
+    
     if (hit.read_group_props()->complete_fragments())
     {
         pair<int,int> g_span = make_pair(hit.left(), hit.right() - 1);
@@ -1709,15 +1708,15 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	return false;
 }
 
-bool Scaffold::has_struct_support() const
+bool Scaffold::has_struct_support(set<AugmentedCuffOp>& hit_introns) const
 {
     if(augmented_ops().size() == 1)
         return mate_hits().size() > 0;
 
     if(augmented_ops().size() == 3)
-        return hits_support_introns();
+        return hits_support_introns(hit_introns);
     
-    return (hits_support_introns() && internal_exon_coverage() == 1.0);
+    return (hits_support_introns(hit_introns) && internal_exon_coverage() == 1.0);
 }
 
 
@@ -1744,22 +1743,37 @@ bool Scaffold::hits_support_introns() const
         }
     }
     
-//    if (hit_introns != scaffold_introns)
-//    {
-//        fprintf(stderr, "********************\n");
-//        foreach(const AugmentedCuffOp& a, hit_introns)
-//        {
-//            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
-//        }
-//        
-//        fprintf(stderr, "####################\n");    
-//        foreach(const AugmentedCuffOp& a, scaffold_introns)
-//        {
-//            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
-//        }
-//    }
+    if (hit_introns != scaffold_introns)
+    {
+        fprintf(stderr, "********************\n");
+        foreach(const AugmentedCuffOp& a, hit_introns)
+        {
+            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
+        }
+        
+        fprintf(stderr, "####################\n");    
+        foreach(const AugmentedCuffOp& a, scaffold_introns)
+        {
+            fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
+        }
+    }
     
     return hit_introns == scaffold_introns;
+}
+
+bool Scaffold::hits_support_introns(set<AugmentedCuffOp>& hit_introns) const
+{
+    set<AugmentedCuffOp> scaffold_introns;
+
+    foreach (AugmentedCuffOp a, _augmented_ops)
+    {
+        if (a.opcode == CUFF_INTRON)
+        {
+            scaffold_introns.insert(a);
+        }
+    }
+    
+    return includes(hit_introns.begin(),hit_introns.end(), scaffold_introns.begin(), scaffold_introns.end());
 }
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs)

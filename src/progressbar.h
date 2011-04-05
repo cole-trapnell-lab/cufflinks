@@ -24,8 +24,8 @@ public:
 	{ 
 		_tot_num = tot_num;
 		_process = process;
-		_num_complete = 0;
-		_num_remaining = -1;
+		_num_complete = -1.0;
+		_num_remaining = -1.0;
 		_num_updates = 0;
 		
 		for(int i=0; i < BAR_BUF_SIZE; ++i) _bar_buf[i] = ' ';

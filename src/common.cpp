@@ -49,6 +49,7 @@ bool output_bias_params = false;
 
 // General options
 BundleMode bundle_mode = HIT_DRIVEN;
+BundleMode init_bundle_mode = HIT_DRIVEN;
 int max_partner_dist = 50000;
 uint32_t max_gene_length = 3500000;
 std::string ref_gtf_filename = "";

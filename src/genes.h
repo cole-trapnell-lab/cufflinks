@@ -95,7 +95,8 @@ public:
 	int ID() const { return _id; }
 
 	void get_gtf(vector<string>& gtf_recs, 
-				 const RefSequenceTable& rt) const;
+				 const RefSequenceTable& rt,
+                 set<AugmentedCuffOp>* hit_introns=NULL) const;
 	
 	void gene_id(string& gid) { _gene_id = gid; }
 	const string& gene_id() const { return _gene_id; }

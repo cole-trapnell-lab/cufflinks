@@ -393,7 +393,7 @@ public:
 	bool has_intron() const { return _has_intron; }
 	bool has_suspicious_unknown() const { return has_suspicious_unknown(*this); }
 
-    // returns the percent coverage of internal exons, returns 0 if no internal exons
+    // returns the fraction coverage of internal exons, returns 0 if no internal exons
 	double internal_exon_coverage() const;
     
     // returns true if the scaffold strand is supported with reads or exon overlap with
@@ -402,9 +402,10 @@ public:
     
     // returns true if all introns are supported with splice reads, false ow
     bool hits_support_introns() const; 
-    
+    bool hits_support_introns(set<AugmentedCuffOp>& hit_introns) const; 
+
     // returns true if all internal exons are fully covered and hits support introns, false ow
-    bool has_struct_support() const;
+    bool has_struct_support(set<AugmentedCuffOp>& hit_introns) const;
     
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }
