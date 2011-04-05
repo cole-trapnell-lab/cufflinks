@@ -402,7 +402,7 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
     else:
         os.mkdir(asm_dir)
     current_asm_gtf = "tmp_meta_asm.combined.gtf"
-    select_gtf(current_asm_gtf, selected_ids, output_dir + "merged.gtf")
+    select_gtf(current_asm_gtf, selected_ids, output_dir + "/merged.gtf")
     os.remove(tmap)
     os.remove("tmp_meta_asm.combined.gtf")
     os.remove("tmp_meta_asm.loci")
