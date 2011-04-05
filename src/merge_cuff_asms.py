@@ -403,12 +403,12 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
         os.mkdir(asm_dir)
     current_asm_gtf = "tmp_meta_asm.combined.gtf"
     select_gtf(current_asm_gtf, selected_ids, output_dir + "/merged.gtf")
-    os.remove(tmap)
-    os.remove("tmp_meta_asm.combined.gtf")
-    os.remove("tmp_meta_asm.loci")
-    os.remove("tmp_meta_asm.tracking")
-    os.remove("transcripts.gtf.refmap")
-    os.remove("tmp_meta_asm")
+#os.remove(tmap)
+#    os.remove("tmp_meta_asm.combined.gtf")
+#    os.remove("tmp_meta_asm.loci")
+#    os.remove("tmp_meta_asm.tracking")
+#    os.remove("transcripts.gtf.refmap")
+#    os.remove("tmp_meta_asm")
     tmp_dir = asm_dir
     #tmp_files = os.listdir(tmp_dir)
     #for t in tmp_files:
