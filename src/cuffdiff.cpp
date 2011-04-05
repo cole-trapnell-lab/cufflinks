@@ -214,7 +214,7 @@ int parse_options(int argc, char** argv)
 				output_dir = optarg;
 				break;
 			}
-			case 'r':
+			case 'b':
 			{
 				fasta_dir = optarg;
 				corr_bias = true;
