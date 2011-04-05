@@ -28,7 +28,7 @@ usage:
     merge_cuff_asms [-r reference.gtf] <cuff_asm_1.gtf> ... <cuff_asm_N.gtf>
 '''
 
-output_dir = "./merged_asm"
+output_dir = "./merged_asm/"
 logging_dir = output_dir + "/logs/merge_asm_logs/"
 run_log = None
 run_cmd = None
