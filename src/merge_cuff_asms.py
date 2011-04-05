@@ -29,7 +29,7 @@ usage:
 '''
 
 output_dir = "./"
-logging_dir = output_dir + "logs/merge_asm_logs"
+logging_dir = output_dir + "/logs/merge_asm_logs"
 run_log = None
 run_cmd = None
 tmp_dir = output_dir + "meta_asm_tmp/"
@@ -124,9 +124,11 @@ def prepare_output_dir():
     else:
         os.makedirs(output_dir)
 
+    print >> sys.stderr, "Checking for %s", logging_dir
     if os.path.exists(logging_dir):
         pass
     else:
+        print >> sys.stderr, "Creating %s", logging_dir
         os.makedirs(logging_dir)
 
     if os.path.exists(tmp_dir):
