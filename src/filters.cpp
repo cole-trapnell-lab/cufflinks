@@ -734,156 +734,217 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
 {
     vector<pair<double, Scaffold*> > three_prime_ends;
     
-    foreach (Scaffold& scaff, scaffolds)
+    if (library_type != "transfrags")
     {
-        if (!(scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_REV))
-            continue;
-
-        int scaff_len = scaff.length();
-        vector<double> coverage(scaff_len, 0.0);
-        
-        double total = 0;
-        foreach(const MateHit* hit, scaff.mate_hits())
+        foreach (Scaffold& scaff, scaffolds)
         {
-            int start, end, frag_len;
-            if (!scaff.map_frag(*hit, start, end, frag_len)) continue;
+            if (!(scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_REV))
+                continue;
+
+            int scaff_len = scaff.length();
+            vector<double> coverage(scaff_len, 0.0);
+            
+            double total = 0;
+            foreach(const MateHit* hit, scaff.mate_hits())
+            {
+                int start, end, frag_len;
+                if (!scaff.map_frag(*hit, start, end, frag_len)) continue;
+                
+                if (scaff.strand() == CUFF_REV)
+                {
+                    start = scaff_len - 1 - start;
+                    end = scaff_len - 1 - end;
+                    swap(start, end);
+                }
+                
+                for(int i = start; i <= end; ++i)
+                {
+                    coverage[i] += hit->mass();
+                    total += hit->mass();
+                }
+            }
+            double avg_cov = total/scaff_len;
+    //        if (avg_cov < trim_3_avgcov_thresh)
+    //            continue;
+            
+            const AugmentedCuffOp* exon_3 = NULL;
+            int mult;
+            int offset;
             
             if (scaff.strand() == CUFF_REV)
             {
-                start = scaff_len - 1 - start;
-                end = scaff_len - 1 - end;
-                swap(start, end);
+                mult = 1;
+                offset = 0;
+                exon_3 = &scaff.augmented_ops().front();
             }
-            
-            for(int i = start; i <= end; ++i)
+            else if (scaff.strand() == CUFF_FWD)
             {
-                coverage[i] += hit->mass();
-                total += hit->mass();
+                mult = -1;
+                offset = scaff_len - 1;
+                exon_3 = &scaff.augmented_ops().back();
             }
-        }
-        double avg_cov = total/scaff_len;
-//        if (avg_cov < trim_3_avgcov_thresh)
-//            continue;
-        
-        const AugmentedCuffOp* exon_3 = NULL;
-        int mult;
-        int offset;
-        
-        if (scaff.strand() == CUFF_REV)
-        {
-            mult = 1;
-            offset = 0;
-            exon_3 = &scaff.augmented_ops().front();
-        }
-        else if (scaff.strand() == CUFF_FWD)
-        {
-            mult = -1;
-            offset = scaff_len - 1;
-            exon_3 = &scaff.augmented_ops().back();
-        }
-        else
-        {
-            continue;
-        }
+            else
+            {
+                continue;
+            }
 
-        int to_remove;
-        double min_cost = numeric_limits<double>::max();
-        double mean_to_keep = 0.0;
-        double mean_to_trim = 0.0;
-        double tmp_mean_to_trim = 0.0;
-        double tmp_mean_to_keep = 0.0;
-        double tmp_mean_3prime = 0.0;
-        for (int i = 0; i < exon_3->genomic_length; i++)
-        {
-            tmp_mean_3prime += coverage[offset + mult*i];
-        }
-        tmp_mean_3prime /= exon_3->genomic_length;
-        
-        double base_cost = 0.0;
-        for (int i = 0; i < exon_3->genomic_length; i++)
-        {
-            double d = (coverage[offset + mult*i] - tmp_mean_3prime);
-            d *= d;
-            base_cost += d;
-        }
-        base_cost /= exon_3->genomic_length;
-        
-        size_t min_cost_x = -1;
-        for (to_remove = 1; to_remove < exon_3->genomic_length - 1; to_remove++)
-        {
-            tmp_mean_to_trim = 0.0;
-            tmp_mean_to_keep = 0.0;
-            for (size_t i = 0; i < exon_3->genomic_length; i++)
-            {
-                if (i <= to_remove)
-                {
-                    tmp_mean_to_trim += coverage[offset + mult*i];
-                }
-                else 
-                {
-                    tmp_mean_to_keep += coverage[offset + mult*i];
-                }
-            }
-            
-            tmp_mean_to_trim /= to_remove;
-            tmp_mean_to_keep /= (exon_3->genomic_length - to_remove);
-            
-            double tmp_mean_trim_cost = 0.0;
-            double tmp_mean_keep_cost = 0.0;
+            int to_remove;
+            double min_cost = numeric_limits<double>::max();
+            double mean_to_keep = 0.0;
+            double mean_to_trim = 0.0;
+            double tmp_mean_to_trim = 0.0;
+            double tmp_mean_to_keep = 0.0;
+            double tmp_mean_3prime = 0.0;
             for (int i = 0; i < exon_3->genomic_length; i++)
             {
-                if (i <= to_remove)
-                {
-                    double d = (coverage[offset + mult*i] - tmp_mean_to_trim);
-                    d *= d;
-                    tmp_mean_trim_cost += d;
-                }
-                else 
-                {
-                    double d = (coverage[offset + mult*i] - tmp_mean_to_keep);
-                    d *= d;
-                    tmp_mean_keep_cost += d;
-                }
+                tmp_mean_3prime += coverage[offset + mult*i];
             }
+            tmp_mean_3prime /= exon_3->genomic_length;
             
-            tmp_mean_trim_cost /= to_remove;
-            tmp_mean_keep_cost /= (exon_3->genomic_length - to_remove);
-            
-            double new_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
-            
-            if (new_cost < min_cost && trim_3_dropoff_frac * tmp_mean_to_keep > tmp_mean_to_trim && new_cost < base_cost && to_remove > scaff_len * 0.05)
+            double base_cost = 0.0;
+            for (int i = 0; i < exon_3->genomic_length; i++)
             {
-                min_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
-                min_cost_x = to_remove;
-                mean_to_keep = tmp_mean_to_keep;
-                mean_to_trim = tmp_mean_to_trim;
+                double d = (coverage[offset + mult*i] - tmp_mean_3prime);
+                d *= d;
+                base_cost += d;
             }
+            base_cost /= exon_3->genomic_length;
+            
+            size_t min_cost_x = -1;
+            for (to_remove = 1; to_remove < exon_3->genomic_length - 1; to_remove++)
+            {
+                tmp_mean_to_trim = 0.0;
+                tmp_mean_to_keep = 0.0;
+                for (size_t i = 0; i < exon_3->genomic_length; i++)
+                {
+                    if (i <= to_remove)
+                    {
+                        tmp_mean_to_trim += coverage[offset + mult*i];
+                    }
+                    else 
+                    {
+                        tmp_mean_to_keep += coverage[offset + mult*i];
+                    }
+                }
+                
+                tmp_mean_to_trim /= to_remove;
+                tmp_mean_to_keep /= (exon_3->genomic_length - to_remove);
+                
+                double tmp_mean_trim_cost = 0.0;
+                double tmp_mean_keep_cost = 0.0;
+                for (int i = 0; i < exon_3->genomic_length; i++)
+                {
+                    if (i <= to_remove)
+                    {
+                        double d = (coverage[offset + mult*i] - tmp_mean_to_trim);
+                        d *= d;
+                        tmp_mean_trim_cost += d;
+                    }
+                    else 
+                    {
+                        double d = (coverage[offset + mult*i] - tmp_mean_to_keep);
+                        d *= d;
+                        tmp_mean_keep_cost += d;
+                    }
+                }
+                
+                tmp_mean_trim_cost /= to_remove;
+                tmp_mean_keep_cost /= (exon_3->genomic_length - to_remove);
+                
+                double new_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
+                
+                if (new_cost < min_cost && trim_3_dropoff_frac * tmp_mean_to_keep > tmp_mean_to_trim && new_cost < base_cost && to_remove > scaff_len * 0.05)
+                {
+                    min_cost = tmp_mean_trim_cost + tmp_mean_keep_cost;
+                    min_cost_x = to_remove;
+                    mean_to_keep = tmp_mean_to_keep;
+                    mean_to_trim = tmp_mean_to_trim;
+                }
+            }
+            
+            // If trimming reduces the overall mean squared error of the coverage
+            // do it
+            if (avg_cov >= trim_3_avgcov_thresh && min_cost_x < exon_3->genomic_length)
+            {
+                scaff.trim_3(min_cost_x);
+            }
+            
+            // store the mean squared error for this exon
+            tmp_mean_3prime = 0.0;
+            for (int i = 0; i < exon_3->genomic_length; i++)
+            {
+                tmp_mean_3prime += coverage[offset + mult*i];
+            }
+            tmp_mean_3prime /= exon_3->genomic_length;
+            
+            base_cost = 0.0;
+            for (int i = 0; i < exon_3->genomic_length; i++)
+            {
+                double d = (coverage[offset + mult*i] - tmp_mean_3prime);
+                d *= d;
+                base_cost += d;
+            }
+            base_cost /= exon_3->genomic_length;
+            three_prime_ends.push_back(make_pair(base_cost, &scaff));
+        }
+    }
+    else
+    {
+        foreach (Scaffold& scaff, scaffolds)
+        {
+            if (!(scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_REV))
+                continue;
+            
+            int scaff_len = scaff.length();
+            vector<double> coverage(scaff_len, 0.0);
+            
+            double total = 0;
+            foreach(const MateHit* hit, scaff.mate_hits())
+            {
+                int start, end, frag_len;
+                if (!scaff.map_frag(*hit, start, end, frag_len)) continue;
+                
+                if (scaff.strand() == CUFF_REV)
+                {
+                    start = scaff_len - 1 - start;
+                    end = scaff_len - 1 - end;
+                    swap(start, end);
+                }
+                
+                for(int i = start; i <= end; ++i)
+                {
+                    coverage[i] += hit->mass();
+                    total += hit->mass();
+                }
+            }
+            double avg_cov = total/scaff_len;
+            //        if (avg_cov < trim_3_avgcov_thresh)
+            //            continue;
+            
+            const AugmentedCuffOp* exon_3 = NULL;
+            int mult;
+            int offset;
+            
+            if (scaff.strand() == CUFF_REV)
+            {
+                mult = 1;
+                offset = 0;
+                exon_3 = &scaff.augmented_ops().front();
+            }
+            else if (scaff.strand() == CUFF_FWD)
+            {
+                mult = -1;
+                offset = scaff_len - 1;
+                exon_3 = &scaff.augmented_ops().back();
+            }
+            else
+            {
+                continue;
+            }
+            
+            three_prime_ends.push_back(make_pair(scaff.fpkm(), &scaff));
         }
         
-        // If trimming reduces the overall mean squared error of the coverage
-        // do it
-        if (avg_cov >= trim_3_avgcov_thresh && min_cost_x < exon_3->genomic_length)
-        {
-            scaff.trim_3(min_cost_x);
-        }
-        
-        // store the mean squared error for this exon
-        tmp_mean_3prime = 0.0;
-        for (int i = 0; i < exon_3->genomic_length; i++)
-        {
-            tmp_mean_3prime += coverage[offset + mult*i];
-        }
-        tmp_mean_3prime /= exon_3->genomic_length;
-        
-        base_cost = 0.0;
-        for (int i = 0; i < exon_3->genomic_length; i++)
-        {
-            double d = (coverage[offset + mult*i] - tmp_mean_3prime);
-            d *= d;
-            base_cost += d;
-        }
-        base_cost /= exon_3->genomic_length;
-        three_prime_ends.push_back(make_pair(base_cost, &scaff));
     }
     
     adjacency_list <vecS, vecS, undirectedS> G;
@@ -948,7 +1009,6 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
 		grouped_scaffolds[component[i]].push_back(three_prime_ends[i]);
 	}
     
-    
     for (size_t i = 0; i < grouped_scaffolds.size(); ++i)
     {
         vector<pair<double, Scaffold*> >& group = grouped_scaffolds[i];
@@ -986,6 +1046,14 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
                         g_exon_3 = &(g_itr->second->augmented_ops().front());
                         if (g_exon_3->g_right() <= l_exon_3->g_left())
                             ok_clip_leader = false;
+                        
+                        // for meta-assembly libraries, don't ever allow clipping, just extension
+                        // bad:
+                        //             leader
+                        //         follower
+                        if (library_type == "transfrags" && 
+                            g_exon_3->g_left() < l_exon_3->g_left())
+                            ok_clip_leader = false;
                     }
                     else 
                     {
@@ -994,6 +1062,14 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
                         //  leader
                         g_exon_3 = &(g_itr->second->augmented_ops().back());
                         if (g_exon_3->g_left() >= l_exon_3->g_right())
+                            ok_clip_leader = false;
+                        
+                        // for meta-assembly libraries, don't ever allow clipping, just extension
+                        // bad:
+                        //             leader
+                        //                follower
+                        if (library_type == "transfrags" && 
+                            g_exon_3->g_right() > l_exon_3->g_right())
                             ok_clip_leader = false;
                     }
                 }
@@ -1025,6 +1101,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             {
                 group_leader = possible_leader;
                 group_exon_3 = l_exon_3;
+                break;
             }
             ++l_itr;
         }
@@ -1032,8 +1109,6 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
         if (!group_leader || !group_exon_3)
             continue;
         
-        // trim everyone else in the cluster down to have the same 3' end
-        // as the most evenly covered transcript.
         for (size_t j = 0; j < group.size(); ++j)
         {
             const AugmentedCuffOp* exon_3 = NULL;
