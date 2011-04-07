@@ -440,7 +440,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 		if (!kept_lhs[l])
 			continue;
 		bool lhs_support = (lhs[l].strand() != CUFF_STRAND_UNKNOWN);
-		
+        
 		for (size_t r = 0; r < rhs.size(); ++r)
 		{
 			if (!kept_rhs[r])

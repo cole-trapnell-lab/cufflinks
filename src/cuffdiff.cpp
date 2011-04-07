@@ -883,8 +883,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 #else
 				learn_bias_worker(fac);
 #endif
-                rep_fac.reset();
-
 			}
     	}
     
@@ -904,7 +902,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 		}
 #endif
+        foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
+		{
+			rep_fac.reset();
+        }
 	}
+    
+    
 	
 	Tests tests;
     
