@@ -694,10 +694,6 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                                                          fwd_hits, 
                                                          fwd_scaffolds);
             
-                assembled_successfully |= make_scaffolds(bundle.left(),
-                                                         bundle.length(),
-                                                         fwd_hits,
-                                                         fwd_scaffolds);
             }
 		}
 		else
