@@ -809,6 +809,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 scaled_counts.push_back(make_pair(sample_count_table[i].first, sample_count_table[i].second[j]));
             }
             rg_props->common_scale_counts(scaled_counts);
+            // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
+
+            rg_props->mass_scale_factor(1.0);         
         }
         
         shared_ptr<MassDispersionModel const> disperser;
