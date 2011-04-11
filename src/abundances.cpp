@@ -899,7 +899,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	verbose_msg( "Importance sampling posterior distribution\n");
 	
-	bool success = true;
 	size_t N = transcripts.size();
 	
 	if (final_est_run) // Only on last estimation run.
@@ -2069,19 +2068,19 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 {
 	gammas.clear();
 	if (transcripts.empty())
-		return false;
+		return true;
 	
 	//long double bundle_mass_fraction = bundle_mass / (long double) map_mass;
 	if (transcripts.size() == 1)
 	{
 		gammas.push_back(1.0);
-		return;
+		return true;
 	}
 	
 	size_t M = nr_alignments.size();
 	size_t N = transcripts.size();
 
-	
+    bool converged = true;
 	if (M > 0)
 	{
 		
@@ -2105,9 +2104,7 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		{
 			u[i] = nr_alignments[i].collapse_mass();
 		}
-        
-        bool converged;
-		
+        		
         if (use_em)
         {
             logL = EM(N, M, prob, cond_probs, u, log_conv_factors, converged);
@@ -2128,7 +2125,7 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		gammas = vector<double>(N, 0.0);
 	}
-    return converged
+    return converged;
 }
 
 void calc_isoform_fpkm_conf_intervals(double FPKM,
