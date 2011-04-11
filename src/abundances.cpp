@@ -883,10 +883,10 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	verbose_msg( "Revising MLE\n");
 	
-	gamma_mle(filtered_transcripts,
-			  nr_alignments,
-              log_conv_factors, 
-			  filtered_gammas);
+    bool success = gamma_mle(filtered_transcripts,
+                               nr_alignments,
+                               log_conv_factors, 
+                               filtered_gammas);
 	
 
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
@@ -904,7 +904,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	if (final_est_run) // Only on last estimation run.
 	{
-		success = gamma_map(filtered_transcripts,
+		success &= gamma_map(filtered_transcripts,
 							nr_alignments,
                             log_conv_factors,
 							filtered_gammas,
@@ -1206,8 +1206,10 @@ void grad_ascent_step (int N,
 double grad_ascent (int N, int M, vector<double> & newP, 
                     const vector<vector<double> >& cond_prob, 
                     vector<double> const & u,
-                    vector<double> const & log_conv_factors) 
+                    vector<double> const & log_conv_factors,
+                    bool& converged) 
 {
+    converged = true;
     double sum = 0;
 	double newEll = 0;
 	vector<double> p(N,0);
@@ -1256,8 +1258,11 @@ double grad_ascent (int N, int M, vector<double> & newP,
 		iter++;
 	}
 	if (iter == max_mle_iterations)
+    {
 		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
-	verbose_msg("Convergence reached in %d iterations \n", iter);
+        converged = false;
+    }
+    verbose_msg("Convergence reached in %d iterations \n", iter);
 	return newEll;
 
 }
@@ -1265,8 +1270,10 @@ double grad_ascent (int N, int M, vector<double> & newP,
 double EM (int N, int M, vector<double> & newP, 
 		   const vector<vector<double> >& cond_prob, 
 		   vector<double> const & u,
-           vector<double> const & log_conv_factors) 
+           vector<double> const & log_conv_factors,
+           bool& converged) 
 {
+    converged = true;
 	double sum = 0;
 	double newEll = 0;
 	vector<double> p(N,0);
@@ -1312,8 +1319,11 @@ double EM (int N, int M, vector<double> & newP,
 		iter++;
 	}
 	if (iter == max_mle_iterations)
+    {
 		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
-	verbose_msg("Convergence reached in %d iterations \n", iter);
+        converged = false;
+    }
+    verbose_msg("Convergence reached in %d iterations \n", iter);
 	return newEll;
 }
 
@@ -2052,14 +2062,14 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	return true;
 }
 
-void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& nr_alignments,
                const vector<double>& log_conv_factors,
 			   vector<double>& gammas)
 {
 	gammas.clear();
 	if (transcripts.empty())
-		return;
+		return false;
 	
 	//long double bundle_mass_fraction = bundle_mass / (long double) map_mass;
 	if (transcripts.size() == 1)
@@ -2095,14 +2105,16 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		{
 			u[i] = nr_alignments[i].collapse_mass();
 		}
+        
+        bool converged;
 		
         if (use_em)
         {
-            logL = EM(N, M, prob, cond_probs, u, log_conv_factors);
+            logL = EM(N, M, prob, cond_probs, u, log_conv_factors, converged);
         }
 		else
         {
-            logL = grad_ascent(N, M, prob, cond_probs, u, log_conv_factors);
+            logL = grad_ascent(N, M, prob, cond_probs, u, log_conv_factors, converged);
         }
         
 		gammas = prob;
@@ -2116,6 +2128,7 @@ void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		gammas = vector<double>(N, 0.0);
 	}
+    return converged
 }
 
 void calc_isoform_fpkm_conf_intervals(double FPKM,

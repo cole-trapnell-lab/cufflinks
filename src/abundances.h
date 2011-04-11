@@ -413,7 +413,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			   vector<double>& gamma_map_estimate,
 			   ublas::matrix<double>& gamma_covariance);
 
-void gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			   const vector<MateHit>& nr_alignments,
                const vector<double>& log_conv_factors,
 			   vector<double>& gammas);
