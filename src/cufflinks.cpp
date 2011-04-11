@@ -1118,8 +1118,12 @@ void assemble_bundle(const RefSequenceTable& rt,
 			const char* status;
 			if (iso.status()==NUMERIC_OK) 
 				status = "OK";
-			else 
+			else if (iso.status() == NUMERIC_LOW_DATA)
+                status = "LOWDATA";
+            else if (iso.status() == NUMERIC_FAIL)
 				status = "FAIL";
+            else
+                assert (false);
 			
 			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%s\n", 
 					iso.trans_id().c_str(),
@@ -1142,10 +1146,14 @@ void assemble_bundle(const RefSequenceTable& rt,
 		}
 		
 		const char* status;
-		if (gene.status()==NUMERIC_OK)
-			status = "OK";
-		else
-			status = "FAIL";
+        if (gene.status()==NUMERIC_OK) 
+            status = "OK";
+        else if (gene.status() == NUMERIC_LOW_DATA)
+            status = "LOWDATA";
+        else if (gene.status() == NUMERIC_FAIL)
+            status = "FAIL";
+        else
+            assert (false);
 
 		fprintf(fgene_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%s\n",
 				gene.gene_id().c_str(),

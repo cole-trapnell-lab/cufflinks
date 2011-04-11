@@ -32,6 +32,7 @@ using namespace std;
 
 enum TestStatus {
 	NOTEST,  // successful calculation, test not performed
+    LOWDATA, // unsuccessful calculation due to low data, test not performed
 	OK,      // successful numerical calc, test performed
 	FAIL     // numerical exception, test not performed
 }; 

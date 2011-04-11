@@ -364,8 +364,12 @@ void print_tests(FILE* fout,
 			const char* status;
 			if (test.test_status == OK)
 				status = "OK";
-			else
+			else if (test.test_status == LOWDATA)
+                status = "LOWDATA";
+            else if (test.test_status == NOTEST)
 				status = "NOTEST";
+            else
+                assert(false);
 			
 			fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
 			fprintf(fout, "\n");

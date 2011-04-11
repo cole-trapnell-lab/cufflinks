@@ -32,7 +32,7 @@ struct ConfidenceInterval
 	double high;
 };
 
-enum AbundanceStatus { NUMERIC_OK, NUMERIC_FAIL };
+enum AbundanceStatus { NUMERIC_OK, NUMERIC_FAIL, NUMERIC_LOW_DATA };
 
 class Abundance
 {
@@ -407,16 +407,16 @@ void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
 								   vector<MateHit>& alignments);
 
-bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& nr_alignments,
-               const vector<double>& log_conv_factors,
-			   vector<double>& gamma_map_estimate,
-			   ublas::matrix<double>& gamma_covariance);
+AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
+                          const vector<MateHit>& nr_alignments,
+                          const vector<double>& log_conv_factors,
+                          vector<double>& gamma_map_estimate,
+                          ublas::matrix<double>& gamma_covariance);
 
-bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& nr_alignments,
-               const vector<double>& log_conv_factors,
-			   vector<double>& gammas);
+AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+                          const vector<MateHit>& nr_alignments,
+                          const vector<double>& log_conv_factors,
+                          vector<double>& gammas);
 
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,

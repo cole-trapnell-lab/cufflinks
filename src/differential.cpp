@@ -138,14 +138,28 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 			test.test_status = NOTEST;
 		
 	}
-	else
+	else if (curr_abundance.status == NUMERIC_FAIL || 
+             prev_abundance.status == NUMERIC_FAIL)
 	{
 		test.test_stat = 0;
-		test.test_stat = 1.0;
+		test.p_value = 1.0;
 		test.differential = 0.0;
 		test.test_status = FAIL;
 	}
-	
+	else if (curr_abundance.status == NUMERIC_LOW_DATA || 
+             prev_abundance.status == NUMERIC_LOW_DATA)
+    {
+        // perform the test, but mark it as not significant and don't add it to the 
+        // pile. This way we don't penalize for multiple testing, but users can still
+        // see the fold change.
+		test_diffexp(r1, r2, test);
+        test.test_stat = 0;
+        test.p_value = 1.0;
+        test.differential = 0.0;
+		
+		test.test_status = LOWDATA;
+    }
+    
 	inserted.first->second = test;
 	
 	return make_pair(total_iso_de_tests, inserted.first);
@@ -271,9 +285,15 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 
 		inserted.first->second = test;
 	}
-	else
+	else // we won't even bother with the JS-based testing in LOWDATA cases.
 	{
-		test.test_status = FAIL;
+        if (prev_status == NUMERIC_OK && curr_status == NUMERIC_OK)
+            test.test_status = NOTEST;
+        else if (prev_status == NUMERIC_FAIL || curr_status == NUMERIC_FAIL)
+            test.test_status = FAIL;
+        else
+            test.test_status = LOWDATA;
+            
 		test.test_stat = 0;
 		test.p_value = 0.0;
 		test.differential = 0.0;

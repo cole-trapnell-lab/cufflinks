@@ -871,10 +871,10 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	verbose_msg( "Revising MLE\n");
 	
-    bool success = gamma_mle(filtered_transcripts,
-                               nr_alignments,
-                               log_conv_factors, 
-                               filtered_gammas);
+    AbundanceStatus mle_success = gamma_mle(filtered_transcripts,
+                                            nr_alignments,
+                                            log_conv_factors, 
+                                            filtered_gammas);
 	
 
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
@@ -889,13 +889,15 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	size_t N = transcripts.size();
 	
+    AbundanceStatus map_success = NUMERIC_OK;
 	if (final_est_run) // Only on last estimation run.
 	{
-		success &= gamma_map(filtered_transcripts,
-							nr_alignments,
-                            log_conv_factors,
-							filtered_gammas,
-							_gamma_covariance);
+		map_success = gamma_map(filtered_transcripts,
+                                            nr_alignments,
+                                            log_conv_factors,
+                                            filtered_gammas,
+                                            _gamma_covariance);
+        
 	}
 	else 
 	{
@@ -908,7 +910,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		if (isnan(gammas[i]))
 		{
 			verbose_msg( "Warning: isoform abundance is NaN!\n");
-			success = false;
+			mle_success = NUMERIC_FAIL;
 		}
 	}
 	
@@ -957,13 +959,32 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		}
 	}
 	
+    AbundanceStatus numeric_status = NUMERIC_OK;
+    if (mle_success == NUMERIC_LOW_DATA)
+    {
+        numeric_status = NUMERIC_LOW_DATA;
+    }
+    else if (mle_success == NUMERIC_FAIL)
+    {
+        numeric_status = NUMERIC_FAIL;
+    }
+    else
+    {
+        assert (mle_success == NUMERIC_OK);
+        if (map_success == NUMERIC_FAIL)
+        {
+            numeric_status = NUMERIC_FAIL;
+        }
+        // otherwise, we're cool.
+    }
+    
 	// All scaffolds that go in get abundances, but those that get "filtered"
 	// from the calculation get zeros.
 	//gammas = updated_gammas;
 	for (size_t i = 0; i < _abundances.size(); ++i)
 	{
 		_abundances[i]->gamma(updated_gammas[i]);
-		_abundances[i]->status(success ? NUMERIC_OK : NUMERIC_FAIL);
+		_abundances[i]->status(numeric_status);
 	}
 	_gamma_covariance = updated_gamma_cov;
 	
@@ -1735,11 +1756,11 @@ void compute_posterior_expectation(const vector<ublas::vector<double> >& weighte
 	}
 }
 
-bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& nr_alignments,
-               const vector<double>& log_conv_factors,
-			   vector<double>& gamma_map_estimate,
-			   ublas::matrix<double>& gamma_covariance)
+AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
+                          const vector<MateHit>& nr_alignments,
+                          const vector<double>& log_conv_factors,
+                          vector<double>& gamma_map_estimate,
+                          ublas::matrix<double>& gamma_covariance)
 {	
 	size_t N = transcripts.size();	
 	size_t M = nr_alignments.size();
@@ -1748,7 +1769,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	if (N == 1 || M == 0)
 	{
-		return true;
+		return NUMERIC_OK;
 	}
 
 	typedef ublas::matrix<double> matrix_type;
@@ -1783,7 +1804,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (ch != 0.0)
 	{
 		verbose_msg("Warning: Fisher matrix is not positive definite (bad element: %lg)\n", ch);
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	//cerr << "FISHER" << fisher << endl << endl;
@@ -1807,7 +1828,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (ch != 0.0 || !invertible)
 	{
 		verbose_msg("Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	ublas::vector<double> MLE(N);
@@ -1832,7 +1853,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (ch != 0.0)
 	{
 		verbose_msg("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	chol_invert_matrix(covariance_chol, inv_cov);
@@ -1886,7 +1907,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (samples.size() < 100)
 	{
 		verbose_msg("Warning: not-enough samples for MAP re-estimation\n");
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	double det = determinant(covariance_chol);
@@ -1900,7 +1921,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		verbose_msg("Error: sqrt(det(cov)) == 0, %lf after rounding. \n", det);
 		//cerr << covariance << endl;
-		return false;
+		return NUMERIC_FAIL;
 	}
 	assert (s);
 	assert (denom);
@@ -1910,7 +1931,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (!invertible)
 	{
 		verbose_msg("Warning: covariance matrix is not invertible, probability interval is not available\n");
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	long double log_total_weight = 0.0;
@@ -1943,7 +1964,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (log_total_weight == 0 || sample_weights.size() < 100)
 	{
 		verbose_msg("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	ublas::vector<long double> expectation(N);
@@ -1958,7 +1979,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		if (isinf(expectation(e)) || isnan(expectation(e)))
 		{
 			verbose_msg("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
-			return false;
+			return NUMERIC_FAIL;
 		}
 	}
 	
@@ -1978,7 +1999,7 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	if (m == 0 || isinf(m) || isnan(m))
 	{
 		verbose_msg("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
-		return false;
+		return NUMERIC_FAIL;
 	}
 	
 	for (size_t j = 0; j < N; ++j) {
@@ -2047,23 +2068,23 @@ bool gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//cerr << revised_cov << endl;
 	gamma_covariance = revised_cov;
 	
-	return true;
+	return NUMERIC_OK;
 }
 
-bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
-			   const vector<MateHit>& nr_alignments,
-               const vector<double>& log_conv_factors,
-			   vector<double>& gammas)
+AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+                          const vector<MateHit>& nr_alignments,
+                          const vector<double>& log_conv_factors,
+                          vector<double>& gammas)
 {
 	gammas.clear();
 	if (transcripts.empty())
-		return true;
+		return NUMERIC_OK;
 	
 	//long double bundle_mass_fraction = bundle_mass / (long double) map_mass;
 	if (transcripts.size() == 1)
 	{
 		gammas.push_back(1.0);
-		return true;
+		return NUMERIC_OK;
 	}
 	
 	size_t M = nr_alignments.size();
@@ -2140,7 +2161,18 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		gammas = vector<double>(N, 0.0);
 	}
-    return converged && identifiable;
+    
+    if (converged && identifiable)
+        return NUMERIC_OK;
+    else
+    {
+        if (!identifiable)
+            return NUMERIC_LOW_DATA;
+        else
+            return NUMERIC_FAIL;
+    }
+    
+    return NUMERIC_OK;
 }
 
 void calc_isoform_fpkm_conf_intervals(double FPKM,
