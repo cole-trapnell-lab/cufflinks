@@ -17,7 +17,10 @@
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/triangular.hpp>
+
+#define BOOST_UBLAS_TYPE_CHECK 0
 #include <boost/numeric/ublas/lu.hpp>
+
 #include <boost/numeric/ublas/io.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
