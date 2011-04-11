@@ -47,6 +47,7 @@ static struct option long_options[] = {
 {"GTF-guide",			    required_argument,		 0,			 'g'},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
+{"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 
 // program behavior
 {"output-dir",			    required_argument,		 0,			 'o'},
@@ -326,6 +327,11 @@ int parse_options(int argc, char** argv)
             case OPT_COLLAPSE_COND_PROB:
             {
                 cond_prob_collapse = false;
+                break;
+            }
+            case OPT_RANDOM_SEED:
+            {
+                random_seed = parseInt(0, "--seed must be at least 0", print_usage);
                 break;
             }
 			default:
@@ -1175,7 +1181,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 
 bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 {
-	srand(time(0));
+	//srand(time(0));
 		
 	RefSequenceTable& rt = bundle_factory.ref_table();
     
@@ -1453,8 +1459,10 @@ int main(int argc, char** argv)
     string sam_hits_file_name = argv[optind++];
 	
 
-	
-	srand48(time(NULL));
+	if (random_seed == -1)
+        random_seed = time(NULL);
+    
+	srand48(random_seed);
 	
 	FILE* ref_gtf = NULL;
 	if (ref_gtf_filename != "")

@@ -470,18 +470,6 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
             
             bool equiv = true;
             
-//            for (int j = 0; j < N; ++j)
-//            {
-//                if (compatibilities[j][k] != compatibilities[j][i])
-//                {
-//                    equiv = false;
-//                    break;
-//                }
-//            }
-//            
-//            if (!equiv)
-//                continue;
-            
             if (cached_cond_probs[k].empty())
             {
                 cached_cond_probs[k] = vector<double>(N, 0.0);
@@ -617,7 +605,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         log_conv_factors = vector<double>(nr_alignments.size(), 0);
         compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
-    
+        
 	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);		
 	
     //non_equiv_alignments.clear();
@@ -1218,7 +1206,7 @@ double grad_ascent (int N, int M, vector<double> & newP,
 	int j;
 	
 	for (j = 0; j < N; ++j) {
-		p[j] = rand();
+		p[j] = drand48();
 		sum += p[j];
 	}
 	for (j = 0; j < N; ++j) {
@@ -1282,7 +1270,7 @@ double EM (int N, int M, vector<double> & newP,
 	int j;
 	
 	for (j = 0; j < N; ++j) {
-		p[j] = rand();
+		p[j] = drand48();
 		sum += p[j];
 	}
 	for (j = 0; j < N; ++j) {
@@ -1544,7 +1532,8 @@ public:
 	multinormal_generator(const ublas::vector<ValueType>& mean,
 						  const ublas::matrix<ValueType>& chol_cov)
 		:	
-			_engine(time(0)),
+            // FIXME: revert back to seeding on time(NULL)
+			_engine(random_seed),
 			_distribution(),
 			_generator(boost::variate_generator<base_generator_type&, 
 			     distribution_type >(_engine, 
@@ -2081,6 +2070,8 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 	size_t N = transcripts.size();
 
     bool converged = true;
+    bool identifiable = true;
+    
 	if (M > 0)
 	{
 		
@@ -2099,6 +2090,30 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		{
 			cond_probs[j] = *(transcripts[j]->cond_probs());
 		}
+        
+        ublas::matrix<double> compat = ublas::zero_matrix<double>(M,N);
+        
+        for (size_t j = 0; j < N; ++j)
+        {
+            for (size_t i = 0; i < M; ++i)
+            {
+                if (cond_probs[j][i])
+                    compat(i,j) = 1;
+            }
+        }
+        
+        typedef ublas::permutation_matrix<std::size_t> pmatrix;
+        // create a working copy of the input
+        
+        // create a permutation matrix for the LU-factorization
+        pmatrix pm(compat.size1());
+        
+        //cerr << compat <<endl;
+        // perform LU-factorization
+        int res = lu_factorize(compat,pm);
+        if (res != 0)
+            identifiable = false;
+        
 		vector<double> u(M);
 		for (size_t i = 0; i < M; ++i)
 		{
@@ -2125,7 +2140,7 @@ bool gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 	{
 		gammas = vector<double>(N, 0.0);
 	}
-    return converged;
+    return converged && identifiable;
 }
 
 void calc_isoform_fpkm_conf_intervals(double FPKM,

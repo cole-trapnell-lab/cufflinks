@@ -86,6 +86,7 @@ extern double trim_3_avgcov_thresh;
 extern double small_anchor_fraction;
 extern double binomial_junc_filter_alpha;
 extern std::string user_label;
+extern int random_seed;
 
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
@@ -351,4 +352,5 @@ void init_library_table();
 #define OPT_OUTPUT_BIAS_PARAMS      274
 #define OPT_USE_EM                  275
 #define OPT_COLLAPSE_COND_PROB      276
+#define OPT_RANDOM_SEED             277
 #endif
