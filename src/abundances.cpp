@@ -18,7 +18,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/triangular.hpp>
 
-#define BOOST_UBLAS_TYPE_CHECK 0
+//#define BOOST_UBLAS_TYPE_CHECK 0
 #include <boost/numeric/ublas/lu.hpp>
 
 #include <boost/numeric/ublas/io.hpp>
@@ -2074,6 +2074,39 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	return NUMERIC_OK;
 }
 
+template<class M, class PM>
+bool is_identifiable(M &m, PM &pm)
+{
+    using namespace ublas;
+    typedef M matrix_type;
+    typedef typename M::size_type size_type;
+    typedef typename M::value_type value_type;
+
+    int singular = 0;
+    size_type size1 = m.size1 ();
+    size_type size2 = m.size2 ();
+    size_type size = (std::min) (size1, size2);
+    for (size_type i = 0; i < size; ++ i) {
+        matrix_column<M> mci (column (m, i));
+        matrix_row<M> mri (row (m, i));
+        size_type i_norm_inf = i + index_norm_inf (project (mci, range (i, size1)));
+        if (m (i_norm_inf, i) != value_type/*zero*/()) {
+            if (i_norm_inf != i) {
+                pm (i) = i_norm_inf;
+                row (m, i_norm_inf).swap (mri);
+            } else {
+                //BOOST_UBLAS_CHECK (pm (i) == i_norm_inf, external_logic ());
+            }
+            project (mci, range (i + 1, size1)) *= value_type (1) / m (i, i);
+        } else if (singular == 0) {
+            singular = i + 1;
+        }
+        project (m, range (i + 1, size1), range (i + 1, size2)).minus_assign (outer_prod (project (mci, range (i + 1, size1)),
+                                                                              project (mri, range (i + 1, size2))));
+    }
+    return singular == 0;
+}
+
 AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
@@ -2127,16 +2160,14 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
         }
         
         typedef ublas::permutation_matrix<std::size_t> pmatrix;
-        // create a working copy of the input
         
         // create a permutation matrix for the LU-factorization
         pmatrix pm(compat.size1());
         
         //cerr << compat <<endl;
         // perform LU-factorization
-        int res = lu_factorize(compat,pm);
-        if (res != 0)
-            identifiable = false;
+        identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(compat,pm);
+
         
 		vector<double> u(M);
 		for (size_t i = 0; i < M; ++i)

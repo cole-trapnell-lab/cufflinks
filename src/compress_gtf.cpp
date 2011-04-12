@@ -177,6 +177,20 @@ void compress_genes(FILE* ftranscripts,
         {
             foreach (shared_ptr<Scaffold> s, gene)
             {
+                /*
+                 *transfrag,
+                 gene_id,
+                 (int)isoforms.size() + 1,
+                 FPKM,
+                 iso_ab->effective_length(),
+                 iso_ab->gamma(),
+                 iso_ab->FPKM_conf(),
+                 density_per_bp, 
+                 estimated_count,
+                 density_score,
+                 iso_ab->status(),
+                 ref_gene_id)*/
+                
                 Isoform iso(*s,
                             -1,
                             1,
@@ -184,7 +198,8 @@ void compress_genes(FILE* ftranscripts,
                             s->length(),
                             0.0,
                             ConfidenceInterval(0.0,0.0),
-                            0, 
+                            0,
+                            0,
                             0,
                             NUMERIC_OK,
                             gene_id);
@@ -253,6 +268,7 @@ void compress_genes(FILE* ftranscripts,
                         0.0,
                         ConfidenceInterval(0.0,0.0),
                         0, 
+                        0,
                         0,
                         NUMERIC_OK,
                         gene_id);
