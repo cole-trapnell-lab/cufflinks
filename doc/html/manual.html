@@ -996,8 +996,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 
 		<br/>
 		<h2 id="cuffcomp_input">merge_cuff_asm.py Input</h2><br/>
-		merge_cuff_asms.py takes Cufflinks' GTF output as input, and optionally can take 
-		a "reference" annotation (such as from <a href="ftp://ftp.ensembl.org/pub/current_gtf/">Ensembl</a>).
+		merge_cuff_asms.py takes several assembly GTF files from Cufflinks' as input.  Input GTF files must be specified in a "manifest" file listing full paths to the files. 
 		<br/>
 
 		  <table CELLSPACING=15>
@@ -1008,7 +1007,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr><td VALIGN=top nowrap>
 		  <tt>&lt;assembly_list.txt&gt;</tt>
 		  </td><td VALIGN=top>
-		  Text file with a list (one per line) of GTF files that you'd like to merge together into a single GTF file.
+		  Text file "manifest" with a list (one per line) of GTF files that you'd like to merge together into a single GTF file.
 		  </td></tr>
 		  <tr><td VALIGN=top>
 		  <b>Options:</b>
@@ -1025,38 +1024,28 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  Write the summary stats into the text output file &lt;outprefix&gt;(instead of stdout)
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-r</tt>
+		  <tt>-r/--ref-gtf</tt>
 		  </td><td VALIGN=top>
-		  An optional "reference" annotation GTF.  Each sample is matched against
-		  this file, and sample isoforms are tagged as overlapping, matching, or 
-		  novel where appropriate.  See the <a href="#refmap">refmap</a> and 
-		  <a href="#tmap">tmap</a> output file descriptions below.
+		  An optional "reference" annotation GTF.  The input assemblies are merged together with 
+		  the reference GTF and included in the final output.
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-R</tt>
+		  <tt>-p/--num-threads &lt;int&gt;</tt>
 		  </td><td VALIGN=top>
-		  If <tt>-r</tt> was specified, this option causes <tt>cuffcompare</tt> to 
-		  ignore reference transcripts that are not overlapped by any transcript in
-		  one of <tt>cuff1.gtf</tt>,...,<tt>cuffN.gtf</tt>.  Useful for ignoring
-		  annotated transcripts that are not present in your RNA-Seq samples and thus
-		  adjusting the "sensitivity" calculation in the accuracy report
-		  written in the &lt;outprefix&gt; file
+		  Use this many threads to align reads. The default is 1.
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>-s &lt;seq_dir&gt;</tt>
+		  <tt>-s/--ref-sequence &lt;seq_dir&gt;/&lt;seq_fasta&gt;</tt>
 		  </td><td VALIGN=top>
-		  Causes <tt>cuffcompare</tt> to look into <seq_dir> for fasta files with the 
-		  underlying genomic sequences (one file per contig) against which your 
-		  reads were aligned for some optional classification functions.  For example,
+		  This argument should point to the genomic DNA sequences for the reference. 
+		  If a directory, it should contain one fasta file per contig. If a 
+		  multifasta file, all contigs should be present.  The merge script will 
+		  pass this option to <tt>cuffcompare</tt>, which will use the sequences
+		  to assist in classifying transfrags and excluding artifacts (e.g. repeats). For example,
 		  Cufflinks transcripts consisting mostly of lower-case bases are classified
 		  as repeats.  Note that &lt;seq_dir&gt; <strong>must</strong> contain one
 		  fasta file per reference chromosome, and each file must be named after
 		  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
-		  </td></tr>
-		  <tr><td VALIGN=top nowrap>
-		  <tt>-V</tt>
-		  </td><td VALIGN=top>
-		  (Mildly) more verbose processing mode  
 		  </td></tr>
 		  </table><br/>
 	  <h2 id="merger_output">merge_cuff_asms.py Output</h2><br/>
@@ -1064,10 +1053,11 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	      merge_cuff_asms.py produces a single GTF file that contains an assembly that merges together the input assemblies.
 		</p>
 		<br/>
-		<b>&lt;outprefix&gt;/merged.gtf</b>
-		<p>
-	        <br/>
-		<br/>
+		<ol>
+			<b>&lt;outprefix&gt;/merged.gtf</b>
+			<p>
+		</ol>
+			<br/>
 			<br/>
 			</ol>
 		<h2 id="cuffdiff">Running Cuffdiff</h2><br/>

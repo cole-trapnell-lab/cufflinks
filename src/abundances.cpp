@@ -66,9 +66,13 @@ AbundanceStatus AbundanceGroup::status() const
 {
 	foreach(shared_ptr<Abundance> ab, _abundances)
 	{
-		if (ab->status() != NUMERIC_OK)
+		if (ab->status() == NUMERIC_FAIL)
 		{
 			return NUMERIC_FAIL;
+		}
+        if (ab->status() == NUMERIC_LOW_DATA)
+		{
+			return NUMERIC_LOW_DATA;
 		}
 	}
 	return NUMERIC_OK;
