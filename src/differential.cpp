@@ -117,8 +117,28 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
     const FPKMContext& r1 = curr_abundance;
     const FPKMContext& r2 = prev_abundance;
     
-	if (curr_abundance.status == NUMERIC_OK && 
-		prev_abundance.status == NUMERIC_OK)
+	if (curr_abundance.status == NUMERIC_FAIL || 
+        prev_abundance.status == NUMERIC_FAIL)
+    {
+        test.test_stat = 0;
+		test.p_value = 1.0;
+		test.differential = 0.0;
+		test.test_status = FAIL;
+    }
+    else if (curr_abundance.status == NUMERIC_LOW_DATA && 
+             prev_abundance.status == NUMERIC_LOW_DATA)
+    {
+        // perform the test, but mark it as not significant and don't add it to the 
+        // pile. This way we don't penalize for multiple testing, but users can still
+        // see the fold change.
+		test_diffexp(r1, r2, test);
+        test.test_stat = 0;
+        test.p_value = 1.0;
+        //test.differential = 0.0;
+		
+		test.test_status = LOWDATA;
+    }
+    else // at least one is OK, the other might be LOW_DATA
 	{
 		test.test_status = FAIL;
 
@@ -138,27 +158,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 			test.test_status = NOTEST;
 		
 	}
-	else if (curr_abundance.status == NUMERIC_FAIL || 
-             prev_abundance.status == NUMERIC_FAIL)
-	{
-		test.test_stat = 0;
-		test.p_value = 1.0;
-		test.differential = 0.0;
-		test.test_status = FAIL;
-	}
-	else if (curr_abundance.status == NUMERIC_LOW_DATA || 
-             prev_abundance.status == NUMERIC_LOW_DATA)
-    {
-        // perform the test, but mark it as not significant and don't add it to the 
-        // pile. This way we don't penalize for multiple testing, but users can still
-        // see the fold change.
-		test_diffexp(r1, r2, test);
-        test.test_stat = 0;
-        test.p_value = 1.0;
-        test.differential = 0.0;
-		
-		test.test_status = LOWDATA;
-    }
+	
     
 	inserted.first->second = test;
 	
