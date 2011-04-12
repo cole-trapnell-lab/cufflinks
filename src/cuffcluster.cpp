@@ -157,6 +157,7 @@ struct ExprRecord
     string tracking_id;
     string class_code;
     string nearest_ref_id;
+    string gene_id;
     string gene_short_name;
     string tss_id;
     string locus; 
@@ -605,7 +606,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         line_num++;
     }
     
-    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi\tmax_FPKM\tcluster_id");
+    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_id\tgene_short_name\ttss_id\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi\tmax_FPKM\tcluster_id");
 
     for (size_t i = 0; i < sample_names.size(); ++i)
     {
@@ -635,9 +636,10 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         rec.tracking_id = tokens[0];
         rec.class_code = tokens[1];
         rec.nearest_ref_id = tokens[2];
-        rec.gene_short_name = tokens[3];
-        rec.tss_id = tokens[4];
-        rec.locus = tokens[5];
+        rec.gene_id = tokens[3];
+        rec.gene_short_name = tokens[4];
+        rec.tss_id = tokens[5];
+        rec.locus = tokens[6];
         
         static const size_t first_sample_idx = 6;
         
@@ -790,10 +792,11 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         }
         
         fprintf(spec_out, 
-                "%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%lg\t%s",
+                "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%lg\t%s",
                 rec.tracking_id.c_str(),
                 rec.class_code.c_str(),
                 rec.nearest_ref_id.c_str(),
+                rec.gene_id.c_str(),
                 rec.gene_short_name.c_str(),
                 rec.tss_id.c_str(),
                 rec.locus.c_str(), 

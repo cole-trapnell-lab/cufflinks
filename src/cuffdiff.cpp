@@ -360,7 +360,7 @@ void print_tests(FILE* fout,
 void print_FPKM_tracking(FILE* fout, 
 						 const FPKMTrackingTable& tracking)
 {
-	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus");
+	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
 	if (first_itr != tracking.end())
 	{
@@ -385,6 +385,10 @@ void print_FPKM_tracking(FILE* fout,
                 status = NUMERIC_FAIL;
         }
         
+        string all_gene_ids = cat_strings(track.gene_ids);
+		if (all_gene_ids == "")
+			all_gene_ids = "-";
+        
 		string all_gene_names = cat_strings(track.gene_names);
 		if (all_gene_names == "")
 			all_gene_names = "-";
@@ -393,10 +397,11 @@ void print_FPKM_tracking(FILE* fout,
 		if (all_tss_ids == "")
 			all_tss_ids = "-";
 		
-		fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
+		fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
 				description.c_str(),
 				track.classcode ? track.classcode : '-',
 				track.ref_match.c_str(),
+                all_gene_ids.c_str(),
 				all_gene_names.c_str(), 
 				all_tss_ids.c_str(),
 				track.locus_tag.c_str(),

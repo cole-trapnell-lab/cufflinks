@@ -120,6 +120,7 @@ struct FPKMTracking
 	string locus_tag;
 	char classcode;
 	set<string> tss_ids; // for individual isoforms only
+    set<string> gene_ids;
 	set<string> gene_names;
 	set<string> protein_ids;
 	string description; // isoforms or tss groups (e.g.) involved in this test

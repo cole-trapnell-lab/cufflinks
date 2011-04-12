@@ -325,10 +325,12 @@ void add_to_tracking_table(size_t sample_index,
 	FPKMTracking& fpkm_track = inserted.first->second;
 	
 	set<string> tss = ab.tss_id();
+    set<string> gene_ids = ab.gene_id();
 	set<string> genes = ab.gene_name();
 	set<string> proteins = ab.protein_id();
 	
 	fpkm_track.tss_ids.insert(tss.begin(), tss.end());
+    fpkm_track.gene_ids.insert(gene_ids.begin(), gene_ids.end());
 	fpkm_track.gene_names.insert(genes.begin(), genes.end());
 	fpkm_track.protein_ids.insert(proteins.begin(), proteins.end());
 	
