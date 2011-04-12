@@ -904,6 +904,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				
 				density_per_bp *= (total_map_mass / 1000000.0); // yields (mass/(length/1000))
 				density_per_bp *= (s_len/ 1000.0);
+                double estimated_count = density_per_bp;
 				density_per_bp /= s_len;
 				density_per_bp *= avg_read_length;
 				//double density_per_bp = (FPKM * (map_mass / 1000000.0) * 1000.0);
@@ -921,6 +922,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 											   iso_ab->gamma(),
 											   iso_ab->FPKM_conf(),
 											   density_per_bp, 
+                                               estimated_count,
 											   density_score,
 											   iso_ab->status(),
 											   ref_gene_id));
@@ -1095,6 +1097,8 @@ void assemble_bundle(const RefSequenceTable& rt,
 	{
 		const Gene& gene = genes[i];
 		const vector<Isoform>& isoforms = gene.isoforms();
+        set<string> annotated_gene_names;
+        set<string> annotated_tss_ids;
 		for (size_t j = 0; j < isoforms.size(); ++j)
 		{
 			const Isoform& iso = isoforms[j];
@@ -1125,23 +1129,26 @@ void assemble_bundle(const RefSequenceTable& rt,
             else
                 assert (false);
 			
-			fprintf(ftrans_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%s\n", 
+			fprintf(ftrans_abundances,"%s\t%c\t%s\t%s\t%s\t%s:%d-%d\t%d\t%lg\t%s\t%lg\t%lg\t%lg\n", 
 					iso.trans_id().c_str(),
-					bundle.id(),
+                    (iso.scaffold().nearest_ref_classcode() == 0 ? '-' : iso.scaffold().nearest_ref_classcode()),
+                    (iso.scaffold().nearest_ref_id() == "" ? "-" : iso.scaffold().nearest_ref_id().c_str()),
+                    (iso.scaffold().annotated_gene_name() == "" ? "-" : iso.scaffold().annotated_gene_name().c_str()), 
+                    (iso.scaffold().annotated_tss_id() == "" ? "-" : iso.scaffold().annotated_tss_id().c_str()),
 					rt.get_name(bundle.ref_id()),
 					iso.scaffold().left(),
 					iso.scaffold().right(),
-					iso.FPKM(),
-					iso.FMI(),
-					iso.fraction(),
+                    iso.scaffold().length(),
+                    iso.coverage(),
+                    status,
+                    iso.FPKM(),
 					iso.confidence().low,
-					iso.confidence().high,
-					iso.coverage(),
-					iso.scaffold().length(),
-					iso.effective_length(),
-					status);
+					iso.confidence().high);
 			fflush(ftrans_abundances);
 			
+            annotated_gene_names.insert(iso.scaffold().annotated_gene_name());
+            annotated_tss_ids.insert(iso.scaffold().annotated_tss_id());
+            
 			num_scaffs_reported++;
 		}
 		
@@ -1155,16 +1162,26 @@ void assemble_bundle(const RefSequenceTable& rt,
         else
             assert (false);
 
-		fprintf(fgene_abundances,"%s\t%d\t%s\t%d\t%d\t%lg\t%lg\t%lg\t%s\n",
-				gene.gene_id().c_str(),
-				bundle.id(),
-				rt.get_name(bundle.ref_id()),
-				gene.left(),
-				gene.right(),
-				gene.FPKM(),
-				gene.confidence().low,
-				gene.confidence().high,
-				status);
+        string gene_names = cat_strings(annotated_gene_names);
+        if (gene_names == "") gene_names = "-";
+        string tss_ids = cat_strings(annotated_tss_ids);
+        if (tss_ids == "") tss_ids = "-";
+        
+        fprintf(fgene_abundances,"%s\t%c\t%s\t%s\t%s\t%s:%d-%d\t%s\t%s\t%s\t%lg\t%lg\t%lg\n",
+                gene.gene_id().c_str(),
+                '-',
+                "-",
+                gene_names.c_str(), 
+                tss_ids.c_str(),
+                rt.get_name(bundle.ref_id()),
+                gene.left(),
+                gene.right(),
+                "-",
+                "-",
+                status,
+                gene.FPKM(),
+                gene.confidence().low,
+                gene.confidence().high);
 		fflush(fgene_abundances);
 	}
     delete hit_introns;
@@ -1196,11 +1213,13 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	//FILE* fbundle_tracking = fopen("open_bundles", "w");
     
 	//FILE* fstats = fopen("bundles.stats", "w");
-	FILE* ftrans_abundances = fopen(string(output_dir + "/" + "transcripts.expr").c_str(), "w");
-	fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tstatus\n");
-	
-	FILE* fgene_abundances = fopen(string(output_dir + "/" + "genes.expr").c_str(), "w");
-	fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tstatus\n");
+	FILE* ftrans_abundances = fopen(string(output_dir + "/" + "isoforms.fpkm_tracking").c_str(), "w");
+	//fprintf(ftrans_abundances,"trans_id\tbundle_id\tchr\tleft\tright\tFPKM\tFMI\tfrac\tFPKM_conf_lo\tFPKM_conf_hi\tcoverage\tlength\teffective_length\tstatus\n");
+	fprintf(ftrans_abundances,"tracking_id\tclass_code\tnearest_ref_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\n");
+	FILE* fgene_abundances = fopen(string(output_dir + "/" + "genes.fpkm_tracking").c_str(), "w");
+	//fprintf(fgene_abundances,"gene_id\tbundle_id\tchr\tleft\tright\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tstatus\n");
+    fprintf(fgene_abundances,"tracking_id\tclass_code\tnearest_ref_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\n");
+    
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
     
 	string process;

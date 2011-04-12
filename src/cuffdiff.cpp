@@ -297,30 +297,6 @@ void decr_pool_count()
 }
 #endif
 
-template<typename T>
-string cat_strings(const T& container, const char* delimiter=",")
-{
-	string cat;
-	if (container.empty())
-	{
-		cat = "";
-	}
-	else
-	{
-		typename T::const_iterator itr = container.begin();
-		//cat = *(itr);
-		for (; itr != container.end(); itr++)
-		{
-			if (!(*itr).empty()) {
-				if (!cat.empty()) cat += delimiter;
-				cat += *itr; 
-				}
-		}
-	}
-
-	return cat;
-}
-
 void print_tests(FILE* fout,
                  const char* sample_1_label,
                  const char* sample_2_label,
@@ -384,7 +360,7 @@ void print_tests(FILE* fout,
 void print_FPKM_tracking(FILE* fout, 
 						 const FPKMTrackingTable& tracking)
 {
-	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_short_name\ttss_id\tlocus");
+	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
 	if (first_itr != tracking.end())
 	{
@@ -402,6 +378,13 @@ void print_FPKM_tracking(FILE* fout,
 		const FPKMTracking& track = itr->second;
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
 		
+        AbundanceStatus status = NUMERIC_OK;
+        foreach (const FPKMContext& c, fpkms)
+        {
+            if (c.status == NUMERIC_FAIL)
+                status = NUMERIC_FAIL;
+        }
+        
 		string all_gene_names = cat_strings(track.gene_names);
 		if (all_gene_names == "")
 			all_gene_names = "-";
@@ -410,13 +393,16 @@ void print_FPKM_tracking(FILE* fout,
 		if (all_tss_ids == "")
 			all_tss_ids = "-";
 		
-		fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s", 
+		fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
 				description.c_str(),
 				track.classcode ? track.classcode : '-',
 				track.ref_match.c_str(),
 				all_gene_names.c_str(), 
 				all_tss_ids.c_str(),
-				track.locus_tag.c_str());
+				track.locus_tag.c_str(),
+                "-",
+                "-",
+                status == NUMERIC_FAIL ? "FAIL" : "OK");
 		
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{

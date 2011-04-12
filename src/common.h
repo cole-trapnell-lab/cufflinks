@@ -335,6 +335,31 @@ extern const ReadGroupProperties* global_read_properties;
 void print_library_table();
 void init_library_table();
 
+
+template<typename T>
+std::string cat_strings(const T& container, const char* delimiter=",")
+{
+    std::string cat;
+	if (container.empty())
+	{
+		cat = "";
+	}
+	else
+	{
+		typename T::const_iterator itr = container.begin();
+		//cat = *(itr);
+		for (; itr != container.end(); itr++)
+		{
+			if (!(*itr).empty()) {
+				if (!cat.empty()) cat += delimiter;
+				cat += *itr; 
+            }
+		}
+	}
+    
+	return cat;
+}
+
 #define OPT_NUM_IMP_SAMPLES         260
 #define OPT_MLE_MAX_ITER            261
 #define OPT_FDR                     262

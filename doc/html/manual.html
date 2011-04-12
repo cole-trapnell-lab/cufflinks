@@ -149,6 +149,11 @@
 			</ul>
 			<li><a href="#class_codes">Transfrag class codes</a></li>
  	    </ul>
+		<li><a href="#merge_cuff_asm">Merging assemblies with merge_cuff_asms.py</a></li>
+		<ul>
+  	      <li><a href="#merger_input">Input Files</a></li>
+  	  	  <li><a href="#merger_output">Output Files</a></li>
+ 	    </ul>
   	    <li><a href="#cuffdiff">Running Cuffdiff</a></li>
 		<ul>
   	      <li><a href="#cuffdiff_input">Input Files</a></li>
@@ -979,6 +984,92 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		
 		<br/>
 		</ol>
+		<h2 id="cuffcompare">Running merge_cuff_asm.py</h2><br/>
+		<p>
+		Cufflinks includes a script called merge_cuff_asms.py that you can use to merge together several Cufflinks assemblies.  It handles also handles running Cuffcompare for you, and automatically filters a number of transfrags that are probably artfifacts.  If you have a reference GTF file available, you can provide it to the script in order to gracefully merge novel isoforms and known isoforms and maximize overall assembly quality.  The main purpose of this script is to make it easier to make an assembly GTF file suitable for use with Cuffdiff.   
+		
+		From the command line, run <tt>merge_cuff_asms.py</tt> as follows:
+		<p>
+		  <blockquote>
+		   merge_cuff_asms.py [options]* &lt;assembly_list.txt&gt;
+		  </blockquote>
+
+		<br/>
+		<h2 id="cuffcomp_input">merge_cuff_asm.py Input</h2><br/>
+		merge_cuff_asms.py takes Cufflinks' GTF output as input, and optionally can take 
+		a "reference" annotation (such as from <a href="ftp://ftp.ensembl.org/pub/current_gtf/">Ensembl</a>).
+		<br/>
+
+		  <table CELLSPACING=15>
+		  <tr><td VALIGN=top>
+		  <b>Arguments:</b>
+		  </td><td VALIGN=top>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>&lt;assembly_list.txt&gt;</tt>
+		  </td><td VALIGN=top>
+		  Text file with a list (one per line) of GTF files that you'd like to merge together into a single GTF file.
+		  </td></tr>
+		  <tr><td VALIGN=top>
+		  <b>Options:</b>
+		  </td><td VALIGN=top>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-h/--help</tt>
+		  </td><td VALIGN=top>
+		  Prints the help message and exits   
+		  </td></tr> 
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-o &lt;outprefix&gt;</tt>
+		  </td><td VALIGN=top>
+		  Write the summary stats into the text output file &lt;outprefix&gt;(instead of stdout)
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-r</tt>
+		  </td><td VALIGN=top>
+		  An optional "reference" annotation GTF.  Each sample is matched against
+		  this file, and sample isoforms are tagged as overlapping, matching, or 
+		  novel where appropriate.  See the <a href="#refmap">refmap</a> and 
+		  <a href="#tmap">tmap</a> output file descriptions below.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-R</tt>
+		  </td><td VALIGN=top>
+		  If <tt>-r</tt> was specified, this option causes <tt>cuffcompare</tt> to 
+		  ignore reference transcripts that are not overlapped by any transcript in
+		  one of <tt>cuff1.gtf</tt>,...,<tt>cuffN.gtf</tt>.  Useful for ignoring
+		  annotated transcripts that are not present in your RNA-Seq samples and thus
+		  adjusting the "sensitivity" calculation in the accuracy report
+		  written in the &lt;outprefix&gt; file
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-s &lt;seq_dir&gt;</tt>
+		  </td><td VALIGN=top>
+		  Causes <tt>cuffcompare</tt> to look into <seq_dir> for fasta files with the 
+		  underlying genomic sequences (one file per contig) against which your 
+		  reads were aligned for some optional classification functions.  For example,
+		  Cufflinks transcripts consisting mostly of lower-case bases are classified
+		  as repeats.  Note that &lt;seq_dir&gt; <strong>must</strong> contain one
+		  fasta file per reference chromosome, and each file must be named after
+		  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-V</tt>
+		  </td><td VALIGN=top>
+		  (Mildly) more verbose processing mode  
+		  </td></tr>
+		  </table><br/>
+	  <h2 id="merger_output">merge_cuff_asms.py Output</h2><br/>
+		<p>
+	      merge_cuff_asms.py produces a single GTF file that contains an assembly that merges together the input assemblies.
+		</p>
+		<br/>
+		<b>&lt;outprefix&gt;/merged.gtf</b>
+		<p>
+	        <br/>
+		<br/>
+			<br/>
+			</ol>
 		<h2 id="cuffdiff">Running Cuffdiff</h2><br/>
 		<p>
 		Cufflinks includes a program, "Cuffdiff", that you can use to find significant changes 

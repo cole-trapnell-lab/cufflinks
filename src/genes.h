@@ -37,6 +37,7 @@ public:
 			double fraction = 0.0,
 			ConfidenceInterval ci = ConfidenceInterval(),
 			double cov = 0.0,
+            double est_frag_count = 0.0,
 			double fmi = 0.0,
 			AbundanceStatus status = NUMERIC_FAIL,
 			string ref_gene_id = "") :
@@ -46,6 +47,7 @@ public:
 		_fraction(fraction),
 		_confidence(ci),
 		_coverage(cov),
+        _estimated_count(est_frag_count),
 		_FMI(fmi),
 		_status(status)
 	{
@@ -104,6 +106,8 @@ public:
 	
 	bool is_ref_trans() const { return _scaffold.is_ref(); }
 	
+    double estimated_count() const { return _estimated_count; }
+    void estimated_count(double est) { _estimated_count = est; }
 private:
 	
 	Scaffold _scaffold;
@@ -112,6 +116,7 @@ private:
 	double _fraction;
 	ConfidenceInterval _confidence;
 	double _coverage;
+    double _estimated_count;
 	double _FMI;
 	int _id;
 	string _gene_id;
@@ -167,6 +172,31 @@ public:
 		}
 		return false;
 	}
+    
+    double estimated_count() const 
+    {
+        double est = 0.0;
+        foreach (const Isoform& iso, _isoforms)
+		{
+			est += iso.estimated_count(); 
+		}
+		return est;
+    }
+    
+    double effective_length() const 
+    {
+        double eff = 0.0;
+        double total_fpkm = 0;
+        foreach (const Isoform& iso, _isoforms)
+		{
+			eff += iso.FPKM() * iso.effective_length();
+            total_fpkm += iso.FPKM();
+		}
+        if (total_fpkm)
+            return eff / total_fpkm;
+		else
+            return 0;
+    }
 	
 private:
 	
