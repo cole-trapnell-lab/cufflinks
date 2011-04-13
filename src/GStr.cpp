@@ -331,7 +331,23 @@ bool GStr::contains(const char *s) const {
  }
 
 bool GStr::startsWith(const char *s) const {
- return (index(s, 0) == 0);
+ //return (index(s, 0) == 0);
+ return ::startsWith(this->chars(), s);
+ }
+
+bool GStr::startsWith(const GStr& s) const {
+ //return (index(s, 0) == 0);
+ return ::startsWith(this->chars(), s.chars());
+ }
+
+bool GStr::endsWith(const char *s) const {
+ //return (index(s, 0) == 0);
+ return ::endsWith(this->chars(), s);
+ }
+
+bool GStr::endsWith(const GStr& s) const {
+ //return (index(s, 0) == 0);
+ return ::endsWith(this->chars(), s.chars());
  }
 
 bool GStr::contains(char c) const {

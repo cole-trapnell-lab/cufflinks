@@ -7,10 +7,7 @@
  *
  */
 
-#include <cstdlib>
 #include "gtf_tracking.h"
-
-const char* ATTR_GENE_NAME=  "gene_name";
 
 bool gtf_tracking_verbose = false;
 bool gtf_tracking_largeScale=false; //many input Cufflinks files processed at once by cuffcompare, discard exon attributes
@@ -25,9 +22,10 @@ int cmpByPtr(const pointer p1, const pointer p2) {
   return (p1>p2) ? 1: ((p1==p2)? 0 : -1);
   }
 
-GffObj* is_mRNADup(GffObj* m, GList<GffObj>& mrnas) {
+GffObj* is_RefDup(GffObj* m, GList<GffObj>& mrnas, int& dupidx) {
  //mrnas MUST be sorted by start coordinate
   int ovlen=0;
+  dupidx=-1;
   if (mrnas.Count()==0) return NULL;
   int nidx=qsearch_mrnas(m->end, mrnas);
   if (nidx==0) return NULL;
@@ -40,7 +38,10 @@ GffObj* is_mRNADup(GffObj* m, GList<GffObj>& mrnas) {
            }
       if (omrna.start>m->end) continue; //this should never be the case if nidx was found correctly
       //locus overlap here:
-      if (tMatch(*m, omrna, ovlen)) return mrnas[i];
+      if (tMatch(*m, omrna, ovlen)) {
+             dupidx=i;
+             return mrnas[i];
+             }
       }
   return NULL;
 }
@@ -151,152 +152,156 @@ int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool& m_smaller) {
  return -1;
 }
 
-int parse_mRNAs(GList<GffObj>& mrnas,
+int parse_mRNAs(GfList& mrnas,
 				 GList<GSeqData>& glstdata,
 				 bool is_ref_set,
 				 bool check_for_dups,
 				 int qfidx, bool only_multiexon) {
 	int refdiscarded=0; //ref duplicates discarded
 	int tredundant=0; //cufflinks redundant transcripts discarded
-	int mrna_deleted=0;
 	for (int k=0;k<mrnas.Count();k++) {
 		GffObj* m=mrnas[k];
 		int i=-1;
 		GSeqData f(m->gseq_id);
 		GSeqData* gdata=NULL;
 		uint tlen=m->len();
-		if (m->hasErrors || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
-			if (gtf_tracking_verbose) GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
-			mrnas.freeItem(k);
-			mrna_deleted++;
+		if (m->hasErrors() || (tlen+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
+			if (gtf_tracking_verbose) 
+			      GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", m->getID(), tlen);
 			continue;
 			}
 		if (only_multiexon && m->exons.Count()<2) {
-			mrnas.freeItem(k);
-            mrna_deleted++;
 			continue;
 			}
 		GStr feature(m->getFeatureName());
 		feature.lower();
-		if (m->monoFeature() && (feature=="gene" || feature.index("loc")>=0)) {
+		bool gene_or_locus=(feature.endsWith("gene") ||feature.index("loc")>=0);
+		if (m->exons.Count()==0 && gene_or_locus) {
 			//discard generic "gene" or "locus" features with no other detailed subfeatures
-			if (gtf_tracking_verbose) GMessage("Warning: discarding %s GFF generic gene/locus container %s\n",m->getID());
-			mrnas.freeItem(k);
-			mrna_deleted++;
+			//if (gtf_tracking_verbose)
+			//    GMessage("Warning: discarding GFF generic gene/locus container %s\n",m->getID());
 			continue;
 			}
 		if (m->exons.Count()==0) {
-				if (gtf_tracking_verbose) GMessage("Warning: %s %s found without exon segments; adjusting..\n",m->getFeatureName(), m->getID());
+				//if (gtf_tracking_verbose)
+				//   GMessage("Warning: %s %s found without exon segments (adding default exon).\n",m->getFeatureName(), m->getID());
 				m->addExon(m->start,m->end);
 				}
 		if (glstdata.Found(&f,i)) gdata=glstdata[i];
 		else {
 			gdata=new GSeqData(m->gseq_id);
 			glstdata.Add(gdata);
-		}
+			}
+		
 		double fpkm=0;
 		double cov=0;
 		double conf_hi=0;
 		double conf_lo=0;
-		
-		GList<GffObj>* target_mrnas;
-		if (m->strand=='+') { target_mrnas = &(gdata->mrnas_f); }
-			  else if (m->strand=='-') { target_mrnas=&(gdata->mrnas_r); }
-			     else { m->strand='.'; target_mrnas=&(gdata->umrnas); }
-		if (is_ref_set) {
-		  if (check_for_dups) {
-		 //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
-		  GffObj* rp= (m->strand=='+') ? is_mRNADup(m, gdata->mrnas_f) :
-		                                 is_mRNADup(m, gdata->mrnas_r);
-		  if (rp!=NULL) {
-		    //just discard this, it's a duplicate ref
-		     //but let's just keep the gene_name if present
-		     char* gname=m->getAttr(ATTR_GENE_NAME);
-		     char* pgname=rp->getAttr(ATTR_GENE_NAME);
-		     if (pgname==NULL && gname!=NULL)
-		         rp->addAttr(ATTR_GENE_NAME, gname);
-		     mrnas.freeItem(k);
-		     mrna_deleted++;
-		     refdiscarded++;
+
+		GList<GffObj>* target_mrnas=NULL;
+		if (is_ref_set) { //-- ref transcripts
+		   if (m->strand=='.') {
+		     //unknown strand - discard from reference set (!)
 		     continue;
 		     }
-		   } //suppress ref dups
-		} //is ref 
-		else { // query transfrags
-		if (check_for_dups) { //check for redundancy
-			// check if there is a redundancy between this and another already loaded Cufflinks transcript
-			bool m_smaller=false;
-			int cidx =  is_Redundant(m, target_mrnas, m_smaller);
-			if (cidx>=0) {
-				//always discard the "shorter" transcript of the redundant pair
-				if (target_mrnas->Get(cidx)->covlen>m->covlen) {
-				//if (m_smaller) {
-				//new transcript is shorter, discard it
-					mrnas.freeItem(k);
-					mrna_deleted++;
-					continue;
-				} else {
-					//new transcript is longer, discard the older one
-					((CTData*)(target_mrnas->Get(cidx)->uptr))->mrna=NULL;
-					target_mrnas->Delete(cidx);
-					//the uptr (CTData) pointer will still be kept in gdata->ctdata and freed accordindly at the end
-					}
-				tredundant++;
-				}
-			} // ^^^ redundant transcript check
-		if (m->gscore==0.0)   
-		   m->gscore=m->exons[0]->score; //Cufflinks exon score = isoform abundance
-		//for Cufflinks file, parse expr attribute from the 1st exon (the lowest coordinate exon)
-		const char* expr = (gtf_tracking_largeScale) ? m->getAttr("FPKM") : m->exons[0]->getAttr(m->names,"FPKM");
-		if (expr!=NULL) {
-			if (expr[0]=='"') expr++;
-			fpkm=strtod(expr, NULL);
-			} else { //backward compatibility: read RPKM if FPKM not found
-			expr=(gtf_tracking_largeScale) ? m->getAttr("RPKM") : m->exons[0]->getAttr(m->names,"RPKM");
-			if (expr!=NULL) {
-				if (expr[0]=='"') expr++;
-				fpkm=strtod(expr, NULL);
-				}
-			}
-		const char* scov=(gtf_tracking_largeScale) ? m->getAttr("cov") : m->exons[0]->getAttr(m->names,"cov");
-		if (scov!=NULL) {
-			if (scov[0]=='"') scov++; 
-			cov=strtod(scov, NULL);
-			}
-		const char* sconf_hi=(gtf_tracking_largeScale) ? m->getAttr("conf_hi") : m->exons[0]->getAttr(m->names,"conf_hi");
-		if (sconf_hi!=NULL){
-			if (sconf_hi[0]=='"') sconf_hi++;
-			conf_hi=strtod(sconf_hi, NULL);
-			}
-		const char* sconf_lo=(gtf_tracking_largeScale) ? m->getAttr("conf_lo") : m->exons[0]->getAttr(m->names,"conf_lo");
-		if (sconf_lo!=NULL) {
-			if (sconf_lo[0]=='"') sconf_lo++;
-			conf_lo=strtod(sconf_lo, NULL);
-			}
-		} //Cufflinks transfrags
-
-		if (is_ref_set && m->strand=='.') {
-		 //unknown strand - discard from reference set (!)
-		   mrnas.freeItem(k);
-		   mrna_deleted++;
-		   continue;
-		   }
-		 else {
-		   target_mrnas->Add(m);
-		   }
+		   if (check_for_dups) {
+		     //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
+		     target_mrnas=(m->strand=='+') ? &(gdata->mrnas_f) : &(gdata->mrnas_r);
+		     int rpidx=-1;
+		     GffObj* rp= is_RefDup(m, *target_mrnas, rpidx);
+		     if (rp!=NULL) { //duplicate found
+		       //discard the one that was seen "later" (higher track_id)
+		       //but let's keep the gene_name if present
+		       refdiscarded++;
+		       if (rp->track_id <= m->track_id) {
+		           if (rp->getGene()==NULL && m->getGene()!=NULL) {
+		                  rp->setGene(m->getGene());
+		                  }
+		           continue;
+		           }
+		         else {
+		           if (m->getGene()==NULL && rp->getGene()!=NULL) {
+		                  m->setGene(rp->getGene());
+		                  }
+		           ((CTData*)(rp->uptr))->mrna=NULL;
+		           rp->isUsed(false);
+		           target_mrnas->Forget(rpidx);
+		           target_mrnas->Delete(rpidx);
+		           }
+		       }
+		     } //check for duplicate ref transcripts
+		   } //ref transcripts
+		else { //-- transfrags
+		   if (m->strand=='+') { target_mrnas = &(gdata->mrnas_f); }
+		     else if (m->strand=='-') { target_mrnas=&(gdata->mrnas_r); }
+		        else { m->strand='.'; target_mrnas=&(gdata->umrnas); }
+		   if (check_for_dups) { //check for redundancy
+		     // check if there is a redundancy between this and another already loaded Cufflinks transcript
+		     bool m_smaller=false;
+		     int cidx =  is_Redundant(m, target_mrnas, m_smaller);
+		     if (cidx>=0) {
+		        //always discard the "shorter" transcript of the redundant pair
+		        if (target_mrnas->Get(cidx)->covlen>m->covlen) {
+		            //new transcript is shorter, discard it
+		            continue;
+		            } 
+		        else {
+		            //discard the older transfrag
+		            ((CTData*)(target_mrnas->Get(cidx)->uptr))->mrna=NULL;
+		            target_mrnas->Get(cidx)->isUsed(false);
+		            target_mrnas->Forget(cidx);
+		            target_mrnas->Delete(cidx);
+		            //the uptr (CTData) pointer will still be kept in gdata->ctdata and deallocated eventually
+		            }
+		        tredundant++;
+		        }
+		     }// redundant transfrag check
+		   if (m->gscore==0.0)   
+		     m->gscore=m->exons[0]->score; //Cufflinks exon score = isoform abundance
+		   //parse attributes from the 1st exon
+		   const char* expr = (gtf_tracking_largeScale) ? m->getAttr("FPKM") : m->exons[0]->getAttr(m->names,"FPKM");
+		   if (expr!=NULL) {
+		       if (expr[0]=='"') expr++;
+		       fpkm=strtod(expr, NULL);
+		       } else { //backward compatibility: read RPKM if FPKM not found
+		       expr=(gtf_tracking_largeScale) ? m->getAttr("RPKM") : m->exons[0]->getAttr(m->names,"RPKM");
+		       if (expr!=NULL) {
+		           if (expr[0]=='"') expr++;
+		           fpkm=strtod(expr, NULL);
+		           }
+		       }
+		   const char* scov=(gtf_tracking_largeScale) ? m->getAttr("cov") : m->exons[0]->getAttr(m->names,"cov");
+		   if (scov!=NULL) {
+		       if (scov[0]=='"') scov++; 
+		       cov=strtod(scov, NULL);
+		       }
+		   const char* sconf_hi=(gtf_tracking_largeScale) ? m->getAttr("conf_hi") : m->exons[0]->getAttr(m->names,"conf_hi");
+		   if (sconf_hi!=NULL){
+		       if (sconf_hi[0]=='"') sconf_hi++;
+		       conf_hi=strtod(sconf_hi, NULL);
+		       }
+		   const char* sconf_lo=(gtf_tracking_largeScale) ? m->getAttr("conf_lo") : m->exons[0]->getAttr(m->names,"conf_lo");
+		   if (sconf_lo!=NULL) {
+		       if (sconf_lo[0]=='"') sconf_lo++;
+		       conf_lo=strtod(sconf_lo, NULL);
+		       }
+		   } //Cufflinks transfrags
+		target_mrnas->Add(m);
+		m->isUsed(true);
 		CTData* mdata=new CTData(m);
 		mdata->qset=qfidx;
 		gdata->tdata.Add(mdata);
+		if (!is_ref_set) {
 		// Cufflinks - attributes parsing
-		mdata->FPKM=fpkm;
-		mdata->cov=cov;
-		mdata->conf_hi=conf_hi;
-		mdata->conf_lo=conf_lo;
-		//
+		   mdata->FPKM=fpkm;
+		   mdata->cov=cov;
+		   mdata->conf_hi=conf_hi;
+		   mdata->conf_lo=conf_lo;
+		   }
 	}//for each mrna read
- if (mrna_deleted>0) {
-   mrnas.Pack();
-   }
+ //if (mrna_deleted>0)
+ //  mrnas.Pack();
+ 
  return (is_ref_set ? refdiscarded : tredundant);
 }
 
@@ -463,14 +468,14 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 			seqdata.umrnas.Forget(i);
 		}
 		else if (seqdata.umrnas[i]->strand=='-') {
-            seqdata.mrnas_r.Add(seqdata.umrnas[i]);
-            seqdata.umrnas.Forget(i);
+		    seqdata.mrnas_r.Add(seqdata.umrnas[i]);
+		    seqdata.umrnas.Forget(i);
 		}
 		else {  //discard mRNAs not settled
 			seqdata.umrnas[i]->strand='.';
 			if (fdis!=NULL) {
 				seqdata.umrnas[i]->printGtf(fdis);
-            }
+				}
 			fcount++;
 		}
 	}
@@ -490,13 +495,14 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
 	rewind(f);
-	GffReader* gffr=new GffReader(f, false); //allow loading of non-mRNA transcripts also
+	GffReader gffr(f, true); //loading only recognizable transcript features
+	gffr.showWarnings(gtf_tracking_verbose);
+
 	//          keepAttrs   mergeCloseExons   noExonAttrs
-	gffr->showWarnings(gtf_tracking_verbose);
-	gffr->readAll(true,          true,        true);
+	gffr.readAll(true,          true,        true);
+
 	//                               is_ref?    check_for_dups,
-	parse_mRNAs(gffr->gflst, seqdata, false,       false);
-	delete gffr;
+	parse_mRNAs(gffr.gflst, seqdata, false,       false);
 }
 
 
@@ -507,10 +513,10 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	int loci_counter=0;
 	if (ref_data==NULL) ref_data=&seqdata;
 	bool isRefData=(&seqdata==ref_data);
-	//GffReader* gffr=new GffReader(f, true); //(file, mRNA_only)
-	GffReader* gffr=new GffReader(f, !isRefData); //also consider non-mRNA annotations
-	//           keepAttrs   mergeCloseExons   noExonAttrs
+	                          //(f, transcripts_only)
+	GffReader* gffr=new GffReader(f, true); //load only transcript annotations
 	gffr->showWarnings(gtf_tracking_verbose);
+	//           keepAttrs   mergeCloseExons   noExonAttrs
 	gffr->readAll(true,          true,        isRefData || gtf_tracking_largeScale);
 	//so it will read exon attributes only for low number of Cufflinks files
 	
@@ -520,7 +526,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	             else GMessage(" %d redundant cufflinks transfrags discarded.\n",d);
 	  }
 	//imrna_counter=gffr->mrnas.Count();
-	delete gffr; //free the extra memory
+	delete gffr; //free the extra memory and unused GffObjs
 	
 	//for each genomic sequence, cluster transcripts
 	int discarded=0;
@@ -542,9 +548,9 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 		if (!isRefData) { //cufflinks data, find corresponding ref data
 			GSeqData* rdata=getRefData(gseq_id, *ref_data);
 			if (rdata!=NULL && seqdata[g]->umrnas.Count()>0) {
-				discarded+=fix_umrnas(*seqdata[g], rdata, fdis);
+			    discarded+=fix_umrnas(*seqdata[g], rdata, fdis);
 			    }
-		    }
+			}
 		//>>>>> group mRNAs into locus-clusters (based on exon overlap)
 		cluster_mRNAs(seqdata[g]->mrnas_f, seqdata[g]->loci_f, qfidx);
 		cluster_mRNAs(seqdata[g]->mrnas_r, seqdata[g]->loci_r, qfidx);

@@ -18,6 +18,30 @@ static char msg[4069];
 #endif
 */
 
+
+int saprintf(char **retp, const char *fmt, ...) {
+  va_list argp;
+  int len;
+  char *buf;
+
+  va_start(argp, fmt);
+  len = vsnprintf(NULL, 0, fmt, argp);
+  va_end(argp);
+  GMALLOC(buf, (len + 1));
+  if(buf == NULL)
+    {
+    *retp = NULL;
+    return -1;
+    }
+
+  va_start(argp, fmt);
+  vsnprintf(buf, len+1, fmt, argp);
+  va_end(argp);
+
+  *retp = buf;
+  return len;
+}
+
 //************************* Debug helpers **************************
 // Assert failed routine
 void GAssert(const char* expression, const char* filename, unsigned int lineno){
@@ -47,6 +71,7 @@ void GError(const char* format,...){
   #endif
     exit(1);
   }
+  
 // Warning routine (just print message without exiting)
 void GMessage(const char* format,...){
   va_list arguments;
@@ -441,11 +466,22 @@ char* strifind(char* str,  const char* substr) {
 
 
 // tests if string s has the given prefix
-bool startsWith(char* s, const char* prefix) {
+bool startsWith(const char* s, const char* prefix) {
  if (prefix==NULL || s==NULL) return false;
  int i=0;
  while (prefix[i]!='\0' && prefix[i]==s[i]) i++;
  return (prefix[i]=='\0');
+ }
+
+// tests if string s ends with given suffix
+bool endsWith(const char* s, const char* suffix) {
+ if (suffix==NULL || s==NULL) return false;
+ if (suffix[0]==0) return true; //special case: empty suffix
+ int j=strlen(suffix)-1;
+ int i=strlen(s)-1;
+ if (i<j) return false;
+ while (j>=0 && s[i]==suffix[j]) { i--; j--; }
+ return (j==-1);
  }
 
 
@@ -494,24 +530,36 @@ int strhash(const char* str){
   return h;
   }
 
-// removes the directory part from a full-path file name
+// removes the last part (file or directory name) of a full path
 // this is a destructive operation for the given string!!!
 // the trailing '/' is guaranteed to be there
 void delFileName(char* filepath) {
  char *p, *sep;
  if (filepath==NULL) return;
  for (p=filepath, sep=filepath;*p!='\0';p++)
-     if (*p==CHPATHSEP) sep=p+1;
+     if (*p=='/' || *p=='\\') sep=p+1;
  *sep='\0'; // truncate filepath
 }
 
-// returns a pointer to the file name part in a full-path filename
-char* getFileName(char* filepath) {
- char *p, *sep;
+// returns a pointer to the last file or directory name in a full path
+const char* getFileName(const char* filepath) {
+ const char *p, *sep;
  if (filepath==NULL) return NULL;
  for (p=filepath, sep=filepath;*p!='\0';p++)
-     if (*p==CHPATHSEP) sep=p+1;
+     if (*p=='/' || *p=='\\') sep=p+1;
  return sep;
+}
+
+// returns a pointer to the file "extension" part in a filename
+const char* getFileExt(const char* filepath) {
+ const char *p, *dp, *sep;
+ if (filepath==NULL) return NULL;
+ for (p=filepath, dp=filepath, sep=filepath;*p!='\0';p++) {
+     if (*p=='.') dp=p+1;
+       else if (*p=='/' || *p=='\\') 
+                  sep=p+1;
+     }
+ return (dp>sep) ? dp : NULL ;
 }
 
 int fileExists(const char* fname) {
@@ -678,3 +726,28 @@ void writeFasta(FILE *fw, const char* seqid, const char* descr,
   fflush(fw);
  }
 
+char* commaprint(uint64 n) {
+  static int comma = '\0';
+  static char retbuf[48];
+  char *p = &retbuf[sizeof(retbuf)-1];
+  int i = 0;
+  if(comma == '\0') {
+    /* struct lconv *lcp = localeconv();
+    if(lcp != NULL) {
+      if(lcp->thousands_sep != NULL &&
+        *lcp->thousands_sep != '\0')
+        comma = *lcp->thousands_sep;
+      else  */
+                          comma = ',';
+     // }
+    }
+  *p = '\0';
+  do {
+    if(i%3 == 0 && i != 0)
+      *--p = comma;
+    *--p = '0' + n % 10;
+    n /= 10;
+    i++;
+  } while(n != 0);
+  return p;
+}

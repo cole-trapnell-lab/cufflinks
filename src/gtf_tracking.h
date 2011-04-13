@@ -17,11 +17,6 @@
 
 #define MAX_QFILES 500
 
-//#define EQHEAD_TAG     0x80000
-//#define EQCHAIN_TAGMASK 0xFFFFF
-
-extern const char* ATTR_GENE_NAME;
-
 extern bool gtf_tracking_verbose;
 
 extern bool gtf_tracking_largeScale;
@@ -1277,7 +1272,7 @@ class GXLocus:public GSeg {
 
 
 
-int parse_mRNAs(GList<GffObj>& mrnas,
+int parse_mRNAs(GfList& mrnas,
 				 GList<GSeqData>& glstdata,
 				 bool is_ref_set=true,
 				 bool check_for_dups=false,

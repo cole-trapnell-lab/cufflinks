@@ -45,7 +45,7 @@ template <class OBJ> class GVec {
     int fCount;
     int fCapacity;
   public:
-    GVec(int init_capacity=50);
+    GVec(int init_capacity=20);
     GVec(GVec<OBJ>& array); //copy constructor
     const GVec<OBJ>& operator=(GVec& array); //copy operator
     virtual ~GVec();
@@ -297,9 +297,17 @@ template <class OBJ> class GStack {
 
 //-------------------- TEMPLATE IMPLEMENTATION-------------------------------
 
+template <class OBJ> GVec<OBJ>::GVec(int init_capacity) {
+  fCount=0;
+  fCapacity=0;
+  fArray=NULL;
+  setCapacity(init_capacity);
+}
+
 template <class OBJ> GVec<OBJ>::GVec(GVec<OBJ>& array) { //copy constructor
  this->fCount=array.fCount;
  this->fCapacity=array.fCapacity;
+ this->fArray=NULL;
  if (this->fCapacity>0) {
     GMALLOC(fArray, fCapacity*sizeof(OBJ));
     }
@@ -311,6 +319,7 @@ template <class OBJ> GVec<OBJ>::GVec(GVec<OBJ>& array) { //copy constructor
 template <class OBJ> GArray<OBJ>::GArray(GArray<OBJ>& array):GVec<OBJ>(0) { //copy constructor
  this->fCount=array.fCount;
  this->fCapacity=array.fCapacity;
+ this->fArray=NULL;
  if (this->fCapacity>0) {
     GMALLOC(this->fArray, this->fCapacity*sizeof(OBJ));
     }
@@ -341,12 +350,12 @@ template <class OBJ> const GArray<OBJ>& GArray<OBJ>::operator=(GArray<OBJ>& arra
  if (&array==this) return *this;
  GVec<OBJ>::Clear();
  this->fCount=array.fCount;
- fUnique=array.fUnique;
+ this->fUnique=array.fUnique;
  this->fCapacity=array.fCapacity;
  if (this->fCapacity>0) {
     GMALLOC(this->fArray, this->fCapacity*sizeof(OBJ));
     }
- fCompareProc=array.fCompareProc;
+ this->fCompareProc=array.fCompareProc;
  this->fCount=array.fCount;
  // uses OBJ operator=
  for (int i=0;i<this->fCount;i++) {
@@ -363,13 +372,6 @@ template <class OBJ> GArray<OBJ>::GArray(CompareProc* cmpFunc):GVec<OBJ>(0) {
 template <class OBJ> GArray<OBJ>::GArray(bool sorted, bool unique):GVec<OBJ>(0) {
   fUnique=unique;
   fCompareProc=sorted? &DefaultCompareProc : NULL;
-}
-
-template <class OBJ> GVec<OBJ>::GVec(int init_capacity) {
-  fCount=0;
-  fCapacity=0;
-  fArray=NULL;
-  setCapacity(init_capacity);
 }
 
 template <class OBJ> GArray<OBJ>::GArray(int init_capacity,
@@ -715,6 +717,7 @@ template <class OBJ> GPVec<OBJ>::GPVec(GPVec& list) { //copy constructor
 template <class OBJ> GPVec<OBJ>::GPVec(GPVec* plist) { //another copy constructor
  fCount=0;
  fCapacity=plist->fCapacity;
+ fList=NULL;
  if (fCapacity>0) {
      GMALLOC(fList, fCapacity*sizeof(OBJ*));
      }
@@ -752,6 +755,7 @@ template <class OBJ> GList<OBJ>::GList(GList<OBJ>& list):GPVec<OBJ>(list) { //co
 
 template <class OBJ> GList<OBJ>::GList(GList<OBJ>* plist):GPVec<OBJ>(0) { //another copy constructor
  this->fCapacity=plist->fCapacity;
+ this->fList=NULL;
  if (this->fCapacity>0) {
      GMALLOC(this->fList, this->fCapacity*sizeof(OBJ*));
      }
@@ -1235,7 +1239,7 @@ return -1; //not found
 
 template <class OBJ> void GPVec<OBJ>::Pack()  {//also frees items!
  for (int i=fCount-1; i>=0; i--)
-    if (fList[i]==NULL) Delete(i); //also shift contents of fList accordingly
+    if (fList[i]==NULL) Delete(i); //shift rest of fList content accordingly
 }
 
 template <class OBJ> void GPVec<OBJ>::setCount(int NewCount) {

@@ -113,6 +113,9 @@ class GStr {
         bool contains(const char* s) const;
         bool contains(char c) const;
         bool startsWith(const char* s) const;
+        bool startsWith(const GStr& s) const;
+        bool endsWith(const char* s) const;
+        bool endsWith(const GStr& s) const;
         GStr split(const char* delim);
         GStr split(char c);
            /* splits "this" in two parts, at the first (leftmost)

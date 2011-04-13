@@ -1,9 +1,8 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#define CUFF_UPDATE_CHECK 1
 #else
 #define PACKAGE_VERSION "INTERNAL"
-#undef CUFF_UPDATE_CHECK
+#define SVN_REVISION "SVN"
 #endif
 
 #include "GArgs.h"
@@ -11,8 +10,8 @@
 #include <errno.h>
 #include "gtf_tracking.h"
 
-#ifdef CUFF_UPDATE_CHECK
- #include "update_check.h"
+#ifdef HAVE_CONFIG_H
+#include "update_check.h"
 #endif
 
 #define USAGE "Usage:\n\
@@ -20,19 +19,20 @@ cuffcompare [-r <reference_mrna.gtf>] [-R] [-T] [-V] [-s <seq_path>] \n\
     [-o <stats.txt>] [-p <cprefix>] \n\
     {-i <input_gtf_list> | <input1.gtf> [<input2.gtf> .. <inputN.gtf>]}\n\
 \n\
- Provides classification and various statistics for Cufflinks' transfrags.\n\
- Tracks expression changes of loci across multiple input files, writing\n\
+ Cuffcompare provides classification, reference annotation mapping and various\n\
+ statistics for Cufflinks transfrags.\n\
+ Cuffcompare clusters and tracks transfrags across multiple samples, writing\n\
  matching transcripts (intron chains) into <stats>.tracking, and a GTF\n\
- file <stats>.combined.gtf showing a nonredundant set of transcripts \n\
- across all input files, with a single representative transcript selected\n\
- for each set of fully matching transcripts.\n\
+ file <stats>.combined.gtf containing a nonredundant set of transcripts \n\
+ across all input files (with a single representative transfrag chosen\n\
+ for each clique of matching transfrags across samples).\n\
 \n\
 Options:\n\
--i provide a file with a list of gtf files to process, instead of giving\n\
-   the files as arguments; use this when a large number of input files\n\
-   should be processed and no individual accuracy statistics is needed\n\
+-i provide a text file with a list of Cufflinks GTF files to process instead\n\
+   of expecting them as command line arguments (useful when a large number\n\
+   of GTF files should be processed)\n\
 \n\
--d  max distance (range) for grouping transcript start sites (100)n\
+-d  max distance (range) for grouping transcript start sites (100)\
 \n\
 -r  a set of known mRNAs to use as a reference for assessing \n\
     the accuracy of mRNAs or gene models given in <input.gtf>\n\
@@ -52,7 +52,7 @@ Options:\n\
 \n\
 -T  do not generate .tmap and .refmap files for each query file\n\
 \n\
--V  enable verbose processing mode (incl. GFF parsing warnings)\n\
+-V  enable verbose processing mode (will show all GFF parsing warnings)\n\
 "
 bool debug=false;
 bool perContigStats=true;
@@ -155,20 +155,25 @@ GList<GStr> qryfiles(false,true,false);
 GList<GSeqTrack> gseqtracks(true,true,true);
 GSeqTrack* findGSeqTrack(int gsid);
 
+
+void show_usage() {
+  GMessage("cuffcompare v%s (%s)\n", PACKAGE_VERSION, SVN_REVISION);
+  GMessage( "-----------------------------\n");
+  GMessage("%s\n", USAGE);
+  }
+
 int main(int argc, char * const argv[]) {
-#ifdef CUFF_UPDATE_CHECK
-	check_version(PACKAGE_VERSION);
-#endif
   GArgs args(argc, argv, "XDTMNVGCKRLhp:c:d:s:i:n:r:o:");
   int e;
-  if ((e=args.isError())>0)
-    GError("%s\nInvalid argument: %s\n", USAGE, argv[e]);
+  if ((e=args.isError())>0) {
+    show_usage();
+    GMessage("Invalid argument: %s\n", argv[e]);
+    exit(1);
+    }
   if (args.getOpt('h')!=NULL){
-    GMessage("cuffcompare v%s\n", PACKAGE_VERSION); 
-    GMessage("-----------------------------\n"); 
-    GMessage("%s\n", USAGE);
-                exit(1);
-  }
+    show_usage();
+    exit(1);
+    }
   debugExit=(args.getOpt('X')!=NULL);
   showContained=(args.getOpt('C')!=NULL);
   debug=(args.getOpt('D')!=NULL || debugExit);
@@ -213,14 +218,17 @@ int main(int argc, char * const argv[]) {
           }
         numqryfiles=qryfiles.Count();
         if (numqryfiles==0) {
-         GError("cuffcompare v%s\n-----------------------------\n%s\n", PACKAGE_VERSION, USAGE);
-         }
+          show_usage();
+          exit(1);
+          }
       if (numqryfiles>MAX_QFILES) {
            GMessage("Error: too many input files (limit set to %d at compile time)\n",MAX_QFILES);
            GMessage("(if you need to raise this limit set a new value for\nMAX_QFILES in gtf_tracking.h and recompile)\n");
            exit(0x5000);
            }
-  
+  #ifdef HAVE_CONFIG_H
+  check_version(PACKAGE_VERSION);
+  #endif
   gfasta.init(args.getOpt('s'));
    // determine if -s points to a multi-fasta file or a directory
   s=args.getOpt('c');
@@ -246,7 +254,7 @@ int main(int argc, char * const argv[]) {
     read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), (multiexonrefs_only || multiexon_only));
     haveRefs=(ref_data.Count()>0);
     reduceRefs=(args.getOpt('R')!=NULL);
-    if (gtf_tracking_verbose) GMessage("..ref data loaded\n");
+    if (gtf_tracking_verbose) GMessage("..reference annotation loaded\n");
   }
 
   s=args.getOpt('o'); //if a full pathname is given
@@ -716,9 +724,9 @@ const char* findDescr(GffObj* gfobj) {
 }
 
 const char* getGeneID(GffObj* gfobj) {
- const char* s=gfobj->getAttr(ATTR_GENE_NAME);
- if (s!=NULL) return s;
- s=gfobj->getGene();
+ const char* s=gfobj->getGene();
+ if (s) return s;
+ s=gfobj->getAttr("Name");
  return (s==NULL) ? gfobj->getID() : s;
 }
 
@@ -926,16 +934,15 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
      xc->tcons->getGSeqName(),xc->tcons->getTrackName(),xc->tcons->exons[i]->start, xc->tcons->exons[i]->end, xc->tcons->strand,
        xlocnum, cprefix, xc->id, i+1);
     //if (i==0) {
-   if (xc->ref!=NULL) {
-       const char* s = xc->ref->getAttr(ATTR_GENE_NAME);
-       if (s != NULL) fprintf (fc, " gene_name \"%s\";",s); 
+   if (xc->ref && xc->ref->getGene()) {
+       fprintf (fc, " gene_name \"%s\";", xc->ref->getGene());
        }
    fprintf(fc, " oId \"%s\";",xc->tcons->getID());
-   if (xc->contained!=NULL) {
+   if (xc->contained) {
      fprintf(fc, " contained_in \"%s_%08d\";", cprefix, xc->contained->id);
      }
    if (haveRefs) {
-     if (xc->ref)
+     if (xc->ref!=NULL)
        fprintf(fc, " nearest_ref \"%s\";",xc->ref->getID());
      fprintf(fc, " class_code \"%c\";",xc->refcode ? xc->refcode: '.');
      }
@@ -1345,13 +1352,6 @@ void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
     if (fsp>100.0) fsp=100.0;
     if (fsn>100.0) fsn=100.0;
     fprintf(fout, "Intron chain level: \t%5.1f\t%5.1f\t%5.1f\t%5.1f\n",sn, sp, fsn, fsp);
-    //DEBUG only:
-    /* fprintf(fout, "ichain TP:%d\tref_total: %d\tqry_total: %d\n",
-      ps->ichainTP, ps->total_richains, ps->total_qichains);
-    //DEBUG only:
-    fprintf(fout, "locus  TP:%d\tref_total: %d\tqry_total: %d\n",
-      ps->locusTP, ps->total_rloci, ps->total_qloci);
-      */
     }
   else {
     fprintf(fout, "      Intron level: \t  -  \t  -  \t  -  \t  -  \n");
@@ -1967,15 +1967,6 @@ void findTRMatch(GTrackLocus& loctrack, int qcount, GLocus& rloc) {
 bool inPolyRun(char strand, GffObj& m, GList<GLocus>* rloci, int& rlocidx) {
  //we are only here if there is no actual overlap between m and any locus in rloci
  if (rloci==NULL || rloci->Count()==0) return false; // || m.exons.Count()>1
-  /*
- if (rlocidx<0) { //always
-     GLocus floc;
-     floc.start=m.start;
-     floc.end=m.end;
-     rloci->Found(&floc,rlocidx); //find closest locus
-     if (rlocidx>=rloci->Count() || rlocidx<0) rlocidx=rloci->Count()-1;
-     }
-  */   
   if (strand=='-') {
         rlocidx=qsearch_loci(m.end, *rloci);
         //returns index of locus starting just ABOVE m.end
@@ -2002,52 +1993,6 @@ bool inPolyRun(char strand, GffObj& m, GList<GLocus>* rloci, int& rlocidx) {
           }
         }
   return false;
- /*
- GLocus* rloc=rloci->Get(rlocidx);
- //make sure rloc is the closest upstream locus
- if (strand=='+') {
-    //make sure rloc ends before m starts
-    while ((int)(m.start-rloc->end)<-4) { 
-          //reposition rlocidx if needed
-          if (rlocidx==0 || (int)(m.start-rloci->Get(rlocidx)->start)) return false;
-          rlocidx--;
-          rloc=rloci->Get(rlocidx);
-          }
-    int rd=(int)(m.start-rloc->end);
-    int ridx=rlocidx;
-    while (ridx<rloci->Count()-1) {
-        ridx++;
-        int newrd=(int)(m.start-rloci->Get(ridx)->end);
-        if (newrd>0 && newrd<rd) {
-            rlocidx=ridx;
-            rloc=rloci->Get(rlocidx);
-            rd=newrd;
-            }
-         else break;
-        }
-    return (m.end>rloc->end && m.start<rloc->end+polyrun_range);
-    } //forward strand
- else { //reverse strand
-   while ((int)(rloc->start-m.end)<-4) { //reposition rlocidx if needed
-         if (rlocidx==rloci->Count()-1) return false;
-         rlocidx++;
-         rloc=rloci->Get(rlocidx);
-         }
-   int rd=(int)(rloc->start-m.end);
-   int ridx=rlocidx;
-   while (ridx>0) {
-       ridx--;
-       int newrd=rloci->Get(ridx)->start-m.end;
-       if (newrd>0 && newrd<rd) {
-           rlocidx=ridx;
-           rloc=rloci->Get(rlocidx);
-           rd=newrd;
-           }
-        else break;
-       }
-    return (m.start<rloc->start && m.end+polyrun_range>rloc->start);
-    }
- */
 }
 
 CTData* getBestOvl(GffObj& m) {
@@ -2057,42 +2002,6 @@ CTData* getBestOvl(GffObj& m) {
      return (CTData*)m.uptr;
   return NULL;
 }
-
-/*
-//Debug stats:
-class CCodeCount {
- public:
-   char ovlcode;
-   int count;
- CCodeCount(char o=0, int c=0) {
-   ovlcode=o;
-   count=c;
-   }
-};
-
-GVec<CCodeCount> codenums;
-
-
-void incCodeCount(char ovlcode) {
-  for (int i=0;i<codenums.Count();i++) {
-    if (codenums[i].ovlcode==ovlcode) {
-        codenums[i].count++;
-        return;
-        }
-    }
-  CCodeCount cc(ovlcode);
-  codenums.Add(cc);
-  }
-
-int getCodeCount(char ovlcode) {
-  for (int i=0;i<codenums.Count();i++) {
-    if (codenums[i].ovlcode==ovlcode) {
-        return codenums[i].count;
-        }
-    }
-  return 0;
-  }
-*/
 
 void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
   //checking for relationship with ref transcripts on opposite strand
@@ -2620,15 +2529,6 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
       }
     delete faseq;
     }
-  /* --- debug stats:
-  GMessage("XStrand processing stats:\n");
-  for (int i=0;i<codenums.Count();i++) {
-     char ovlcode=codenums[i].ovlcode;
-     if (ovlcode==0) ovlcode='-';
-     GMessage("code '%c':\t%d\n",ovlcode,codenums[i].count);
-     }
-  */
-  // ^^^^ debug only ^^^^
   if (tmapFiles) {
    for (int q=0;q<qcount;q++) { fclose(ftr[q]); fclose(frs[q]); }
    }

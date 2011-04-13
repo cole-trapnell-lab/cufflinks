@@ -247,7 +247,6 @@ char* GFaSeqGet::copyRange(uint cstart, uint cend, bool revCmpl, bool upCase) {
 const char* GFaSeqGet::loadsubseq(uint cstart, int& clen) {
   //assumes enough lastsub->sq space allocated previously
   //only loads the requested clen chars from file, at offset &lastsub->sq[cstart-lastsub->sqstart]
-  //DEBUG:
   int sofs=cstart-lastsub->sqstart;
   int lendlen=line_blen-line_len;
   char* seqp=lastsub->sq+sofs;
