@@ -843,10 +843,10 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	verbose_msg( "Calculating intial MLE\n");
 	
-	gamma_mle(mapped_transcripts,
-			  nr_alignments,
-              log_conv_factors,
-			  gammas);
+	AbundanceStatus first_mle_success = gamma_mle(mapped_transcripts,
+                                                  nr_alignments,
+                                                  log_conv_factors,
+                                                  gammas);
 	
 	verbose_msg( "Tossing likely garbage isoforms\n");
 	
@@ -878,10 +878,10 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	verbose_msg( "Revising MLE\n");
 	
-    AbundanceStatus mle_success = gamma_mle(filtered_transcripts,
-                                            nr_alignments,
-                                            log_conv_factors, 
-                                            filtered_gammas);
+    AbundanceStatus second_mle_success = gamma_mle(filtered_transcripts,
+                                                   nr_alignments,
+                                                   log_conv_factors, 
+                                                   filtered_gammas);
 	
 
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
@@ -917,7 +917,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		if (isnan(gammas[i]))
 		{
 			verbose_msg( "Warning: isoform abundance is NaN!\n");
-			mle_success = NUMERIC_FAIL;
+			map_success = NUMERIC_FAIL;
 		}
 	}
 	
@@ -967,17 +967,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	}
 	
     AbundanceStatus numeric_status = NUMERIC_OK;
-    if (mle_success == NUMERIC_LOW_DATA)
+    if (second_mle_success == NUMERIC_LOW_DATA)
     {
         numeric_status = NUMERIC_LOW_DATA;
     }
-    else if (mle_success == NUMERIC_FAIL)
+    else if (second_mle_success == NUMERIC_FAIL)
     {
         numeric_status = NUMERIC_FAIL;
     }
     else
     {
-        assert (mle_success == NUMERIC_OK);
+        assert (second_mle_success == NUMERIC_OK);
         if (map_success == NUMERIC_FAIL)
         {
             numeric_status = NUMERIC_FAIL;
@@ -1289,7 +1289,7 @@ double EM (int N, int M, vector<double> & newP,
            bool& converged) 
 {
     converged = true;
-	double sum = 0;
+	//double sum = 0;
 	double newEll = 0;
 	vector<double> p(N,0);
 	vector<vector<double> > U(N, vector<double>(M,0));
@@ -1298,18 +1298,19 @@ double EM (int N, int M, vector<double> & newP,
 	int j;
 	
 	for (j = 0; j < N; ++j) {
-		p[j] = drand48();
-		sum += p[j];
+		//p[j] = drand48();
+		//sum += p[j];
+        p[j] = 1.0/(double)N;
 	}
-	for (j = 0; j < N; ++j) {
-		p[j] = p[j] / sum;
-	}
+//	for (j = 0; j < N; ++j) {
+//		p[j] = p[j] / sum;
+//	}
 	
 	//#ifdef DEBUG
-	//	for (j = 0; j < N; ++j) {
-	//		cout << p[j] << " ";
-	//	}
-	//	cout << endl;
+//	for (j = 0; j < N; ++j) {
+//		cout << p[j] << " ";
+//	}
+//	cout << endl;
 	//#endif
 
 	static const double ACCURACY = 1e-3; // convergence for EM
@@ -1863,7 +1864,7 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		return NUMERIC_FAIL;
 	}
 	
-	chol_invert_matrix(covariance_chol, inv_cov);
+	invertible = chol_invert_matrix(covariance_chol, inv_cov);
 	
 	//cerr << "COV" << endl << covariance << endl;
 	//cerr << "COV^-1" << inv_cov << endl;
@@ -1872,8 +1873,9 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	multinormal_generator<double> generator(MLE, covariance_chol);
 	
 	vector<ublas::vector<double> > samples;
-	//int num_samples = 1000;
-	for (int i = 0; i < num_importance_samples; ++i)
+	int num_samples = std::min((int)N * 1000, num_importance_samples);
+    
+	for (int i = 0; i < num_samples; ++i)
 	{
 		ublas::vector<double> r = generator.next_rand();
 		ublas::vector<double> scaled_sample = r;
@@ -2168,7 +2170,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
         // create a permutation matrix for the LU-factorization
         pmatrix pm(compat.size1());
         
-        //cerr << compat <<endl;
+        // cerr << compat <<endl;
         // perform LU-factorization
         identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(compat,pm);
 

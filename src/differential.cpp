@@ -29,36 +29,42 @@ bool test_diffexp(const FPKMContext& curr,
 	bool performed_test = false;
 	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
 	{
-		assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
+		//assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
 //		double log_curr = log(curr.counts);
 //		double log_prev = log(prev.counts);
         
-		double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
-		double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
+        double stat = 0.0;
+        double p_value = 1.0;
         
-        double numerator = log(prev.FPKM / curr.FPKM);
+        if (curr.FPKM_variance > 0.0 || prev.FPKM_variance > 0.0)
+        {
+            double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
+            double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
+            
+            double numerator = log(prev.FPKM / curr.FPKM);
+            
+            double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
+            stat = numerator / denominator;
         
-		double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
-		double stat = numerator / denominator;
 		
-		normal norm;
-		double t1, t2;
-		if (stat > 0.0)
-		{
-			t1 = stat;
-			t2 = -stat;
-		}
-		else
-		{
-			t1 = -stat;
-			t2 = stat;
-		}
-		double tail_1 = cdf(norm, t1);
-		double tail_2 = cdf(norm, t2);
+            normal norm;
+            double t1, t2;
+            if (stat > 0.0)
+            {
+                t1 = stat;
+                t2 = -stat;
+            }
+            else
+            {
+                t1 = -stat;
+                t2 = stat;
+            }
+            double tail_1 = cdf(norm, t1);
+            double tail_2 = cdf(norm, t2);
+            p_value = 1.0 - (tail_1 - tail_2);
+        }
 		
 		double differential = log(curr.FPKM) - log(prev.FPKM);
-		
-		double p_value = 1.0 - (tail_1 - tail_2);
 		
 		//test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
 		test.p_value = p_value;

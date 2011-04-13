@@ -81,6 +81,8 @@ static struct option long_options[] = {
 {"num-threads",				required_argument,       0,          'p'},
 #endif
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
+{"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
+
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"poisson-dispersion",		no_argument,             0,		     OPT_POISSON_DISPERSION},
@@ -249,6 +251,11 @@ int parse_options(int argc, char** argv)
             case OPT_NO_UPDATE_CHECK:
             {
                 no_update_check = true;
+                break;
+            }
+            case OPT_RANDOM_SEED:
+            {
+                random_seed = parseInt(0, "--seed must be at least 0", print_usage);
                 break;
             }
 			default:
@@ -1191,9 +1198,12 @@ int main(int argc, char** argv)
         exit(1);
     }
     
+    if (random_seed == -1)
+        random_seed = time(NULL);
+    
 	// seed the random number generator - we'll need it for the importance
 	// sampling during MAP estimation of the gammas
-	srand48(time(NULL));
+	srand48(random_seed);
 	
 	FILE* ref_gtf = NULL;
 	if (ref_gtf_filename != "")

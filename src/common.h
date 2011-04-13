@@ -86,7 +86,7 @@ extern double trim_3_avgcov_thresh;
 extern double small_anchor_fraction;
 extern double binomial_junc_filter_alpha;
 extern std::string user_label;
-extern int random_seed;
+extern long random_seed;
 
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
