@@ -28,7 +28,7 @@
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2011-04-02T20:06:56Z</date>
+			<date>2011-04-11T14:00:45Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
@@ -84,14 +84,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>8</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>240</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>216</integer>
+			<integer>34</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>

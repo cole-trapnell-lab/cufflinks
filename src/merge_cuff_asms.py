@@ -227,6 +227,7 @@ def gtf_to_sam(gtf_filename):
     sam_out = tmp_name("gtf2sam_")
 
     cmd = ["gtf_to_sam"]
+    cmd.append("-F")
     cmd.append(gtf_filename)
     cmd.append(sam_out)
     try:
