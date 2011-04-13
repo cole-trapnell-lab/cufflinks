@@ -226,11 +226,12 @@ struct ReadHit
 	// Number of multi-hits for this read
 	int num_hits() const				{ return _num_hits;			}
 	
+    // We are ignoring the _base_mass and re-calculating based on multi-hits
 	double mass() const 
 	{
 		if (is_singleton())
-			return _base_mass/_num_hits;
-		return 0.5 * _base_mass / _num_hits;
+			return 1.0/_num_hits;
+		return 0.5 / _num_hits;
 	}
 	
 	// For convenience, if you just want a copy of the gap intervals
@@ -983,18 +984,16 @@ public:
 	}
 	
 	// MRT is incorrect and not added to rg_props until after inspect_map
+    // We are ignoring the mass reported by the ReadHits and re-calculating based on multi-hits
 	double mass() const
 	{
-        double base_mass = 0.0;
-        if (_left_alignment)
-            base_mass += _left_alignment->mass();
-        if (_right_alignment)
-            base_mass += _right_alignment->mass();
-		if (is_multi())
+        double base_mass = 1.0;
+
+        if (is_multi())
 		{
 			shared_ptr<MultiReadTable> mrt = _rg_props->multi_read_table();
 			if (mrt)
-				return base_mass * mrt->get_mass(*this);
+				return mrt->get_mass(*this);
 			else
 				return base_mass/num_hits();
 		}
