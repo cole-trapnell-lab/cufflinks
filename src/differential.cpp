@@ -108,6 +108,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	int total_iso_de_tests = 0;
 			
 	SampleDifference test;
+    
 	pair<SampleDiffs::iterator, bool> inserted;
 //	inserted = de_tests.insert(make_pair(curr_abundance.description(),
 //										 SampleDifference())); 
@@ -180,6 +181,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	inserted = diff_tests.insert(make_pair(name,SampleDifference())); 
 	SampleDifference test;
 	
+    test.gene_ids = curr_abundance.gene_id();
 	test.gene_names = curr_abundance.gene_name();
 	test.protein_ids = curr_abundance.protein_id();
 	test.locus_desc = curr_abundance.locus_tag();
@@ -682,6 +684,7 @@ void test_differential(const string& locus_tag,
                                       tests.isoform_de_tests[i][j],
                                       enough_reads);
                 
+                result.second->second.gene_ids = curr_abundance.gene_id();
                 result.second->second.gene_names = curr_abundance.gene_name();
                 result.second->second.protein_ids = curr_abundance.protein_id();
                 result.second->second.locus_desc = curr_abundance.locus_tag();
@@ -702,6 +705,7 @@ void test_differential(const string& locus_tag,
                              tests.cds_de_tests[i][j],
                              enough_reads);
                 
+                result.second->second.gene_ids = curr_abundance.gene_id();
                 result.second->second.gene_names = curr_abundance.gene_name();
                 result.second->second.protein_ids = curr_abundance.protein_id();
                 result.second->second.locus_desc = curr_abundance.locus_tag();
@@ -722,6 +726,7 @@ void test_differential(const string& locus_tag,
                              tests.tss_group_de_tests[i][j],
                              enough_reads);
                 
+                result.second->second.gene_ids = curr_abundance.gene_id();
                 result.second->second.gene_names = curr_abundance.gene_name();
                 result.second->second.protein_ids = curr_abundance.protein_id();
                 result.second->second.locus_desc = curr_abundance.locus_tag();
@@ -742,6 +747,7 @@ void test_differential(const string& locus_tag,
                              tests.gene_de_tests[i][j],
                              enough_reads);
                 
+                result.second->second.gene_ids = curr_abundance.gene_id();
                 result.second->second.gene_names = curr_abundance.gene_name();
                 result.second->second.protein_ids = curr_abundance.protein_id();
                 result.second->second.locus_desc = curr_abundance.locus_tag();

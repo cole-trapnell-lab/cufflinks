@@ -66,6 +66,7 @@ struct SampleDifference
 	size_t tested_group_id; // which scaffolds' FPKMs contribute
 	
 	string locus_desc;
+    set<string> gene_ids;
 	set<string> gene_names;
 	set<string> protein_ids;
 	string description; // isoforms or tss groups (e.g.) involved in this test
