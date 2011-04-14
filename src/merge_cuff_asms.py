@@ -66,14 +66,15 @@ class TestParams:
         self.ref_gtf = None
         self.fasta = None
         self.out_prefix=""
-
+        self.min_isoform_frac = 0.05
+    
     def check(self):
         self.system_params.check()
 
     def parse_options(self, argv):
         try:
             opts, args = getopt.getopt(argv[1:],
-                                       "hvp:o:g:M:s:q:",
+                                       "hvp:o:g:M:s:q:F:",
                                        ["version",
                                         "help",
                                         "ref-sequence=",
@@ -81,7 +82,8 @@ class TestParams:
                                         "output-dir=",
                                         "num-threads=",
                                         "out-prefix=",
-                                        "keep-tmp"])
+                                        "keep-tmp",
+                                        "min-isoform-fraction="])
         except getopt.error, msg:
             raise Usage(msg)
 
@@ -104,6 +106,8 @@ class TestParams:
                 self.fasta = value
             if option == "--out-prefix":
                 self.out_prefix = value
+            if option == "--out-prefix":
+                self.min_isoform_frac = float(value)
             if option in ("-o", "--output-dir"):
                 output_dir = value + "/"
                 logging_dir = output_dir + "logs/"
@@ -153,7 +157,7 @@ def tmp_name(prefix):
 def cufflinks(params,
               out_dir,
               sam_file,
-              min_isoform_frac=0.05,
+              min_isoform_frac,
               gtf_file=None,
               extra_opts=["-q", "--overhang-tolerance", "200", "--library-type=transfrags",  "-A","0.0", "--min-frags-per-transfrag", "0"],
               lsf=False,
@@ -168,7 +172,7 @@ def cufflinks(params,
     if out_dir != None and out_dir != "":
         cmd.extend(["-o", out_dir])
            
-    cmd.extend(["-F", "0.10"])
+    cmd.extend(["-F", str(min_isoform_frac)])
 
     if gtf_file != None:
         cmd.extend(["-g", gtf_file])
@@ -305,10 +309,14 @@ def merge_sam_inputs(sam_input_list):
 
 def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
     print >> sys.stderr, "[%s] Comparing against reference file %s" % (right_now(), ref_gtf)
+    ref_str = ""
+    if ref_gtf != None:
+        ref_str = " -r %s " % ref_gtf
+    
     if fasta != None:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s -s %s %s %s''' % (ref_gtf, fasta, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm %s -s %s %s %s''' % (ref_str, fasta, meta_asm_gtf, meta_asm_gtf)
     else:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm -r %s %s %s''' % (ref_gtf, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm %s %s %s''' % (ref_str, meta_asm_gtf, meta_asm_gtf)
 
     #cmd = bsub_cmd(comp_cmd, "/gencode_cmp", True, job_mem=8)
     cmd = comp_cmd
@@ -404,15 +412,20 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
         os.mkdir(asm_dir)
     current_asm_gtf = output_dir +"transcripts.gtf"
     select_gtf(current_asm_gtf, selected_ids, output_dir + "/merged.gtf")
+            #os.remove("transcripts.gtf.tmap")
+            #os.remove("transcripts.gtf.refmap")
     tmap = compare_to_reference(output_dir + "/merged.gtf", ref_gtf, fasta_file)
+    os.remove("merged.gtf.tmap")
+    os.remove("merged.gtf.refmap")
     shutil.move("tmp_meta_asm.combined.gtf", output_dir + "/merged.gtf")
 
 #os.remove(tmap)
 #    os.remove("tmp_meta_asm.combined.gtf")
-#    os.remove("tmp_meta_asm.loci")
-#    os.remove("tmp_meta_asm.tracking")
-#    os.remove("transcripts.gtf.refmap")
-#    os.remove("tmp_meta_asm")
+    os.remove("tmp_meta_asm.loci")
+    os.remove("tmp_meta_asm.tracking")
+    os.remove("transcripts.gtf.refmap")
+    os.remove("transcripts.gtf.tmap")
+    os.remove("tmp_meta_asm")
     tmp_dir = asm_dir
     #tmp_files = os.listdir(tmp_dir)
     #for t in tmp_files:
@@ -472,7 +485,7 @@ def main(argv=None):
             # Merge the primary assembly SAMs into a single input SAM file
             merged_sam_filename = merge_sam_inputs(sam_input_files)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
-            cufflinks(params, output_dir, merged_sam_filename, 0.05, params.ref_gtf)
+            cufflinks(params, output_dir, merged_sam_filename, params.min_isoform_frac, params.ref_gtf)
             compare_meta_asm_against_ref(params.ref_gtf, params.fasta, output_dir+"/transcripts.gtf")
         #Meta Cuffcompare option:
         else:
