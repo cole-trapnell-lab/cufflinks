@@ -1873,16 +1873,18 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	multinormal_generator<double> generator(MLE, covariance_chol);
 	
 	vector<ublas::vector<double> > samples;
-	int num_samples = std::min((int)N * 1000, num_importance_samples);
-    
+	//int num_samples = std::min((int)N * 1000, num_importance_samples);
+    int num_samples = num_importance_samples;
 	for (int i = 0; i < num_samples; ++i)
 	{
 		ublas::vector<double> r = generator.next_rand();
 		ublas::vector<double> scaled_sample = r;
 		
 		for (size_t j = 0; j < N; ++j) {
-			if (scaled_sample(j) < 0)
-				scaled_sample(j) = 1e-10;
+//			if (scaled_sample(j) < 0)
+//				scaled_sample(j) = 1e-10;
+            if (scaled_sample(j) < 0)
+                scaled_sample(j) = -scaled_sample(j);
 		}
 		
 		double m = sum(scaled_sample);
