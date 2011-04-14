@@ -106,7 +106,7 @@ class TestParams:
                 self.fasta = value
             if option == "--out-prefix":
                 self.out_prefix = value
-            if option == "--out-prefix":
+            if option in ("-F", "--min-isoform-fraction"):
                 self.min_isoform_frac = float(value)
             if option in ("-o", "--output-dir"):
                 output_dir = value + "/"
