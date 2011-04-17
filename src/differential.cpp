@@ -59,9 +59,19 @@ bool test_diffexp(const FPKMContext& curr,
                 t1 = -stat;
                 t2 = stat;
             }
-            double tail_1 = cdf(norm, t1);
-            double tail_2 = cdf(norm, t2);
-            p_value = 1.0 - (tail_1 - tail_2);
+            
+            if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
+            {
+                
+                fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc, test.sample_1, test.sample_2);
+                p_value = 1.0;
+            }
+            else
+            {
+                double tail_1 = cdf(norm, t1);
+                double tail_2 = cdf(norm, t2);
+                p_value = 1.0 - (tail_1 - tail_2);                
+            }
         }
 		
 		double differential = log(curr.FPKM) - log(prev.FPKM);
