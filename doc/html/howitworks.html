@@ -42,6 +42,7 @@
 		      <li><a href="tutorial.html">Getting started</a></li>
 		      <li><a href="manual.html">Manual</a></li>
 			  <li><a href="howitworks.html">How Cufflinks works</a></li>
+ 		      <li><a href="faq.html">FAQ</a></li>
 		    </ul>
 		  </div>
 		
@@ -128,13 +129,13 @@
       <div id="toc">
   	    <ul>
   	    <li><a href="#whis">What is Cufflinks?</a></li>
-		<ul>
+  	    <ul>
   	      <li><a href="#hass">How does Cufflinks assemble transcripts?</a></li>
   	  	  <li><a href="#hqua">How does Cufflinks calculate transcript abundances?</a></li>
   	  	  <li><a href="#hdis">How does Cufflinks estimate the fragment length distribution?</a></li>
   	  	  <li><a href="#hsbi">How does Cufflinks identify and correct for sequence bias?</a></li>
   	  	  <li><a href="#hmul">How does Cufflinks handle multi-mapped reads?</a></li>
-   	  	  <li><a href="#hrga">How does reference annotation guided assembly work?</a></li>
+   	  	  <li><a href="#hrga">How does Reference Annotation Based Transcript (RABT) assembly work?</a></li>
   	  	  <li><a href="#hdif">How does Cuffdiff test for differential expression and differential regulation?</a></li>
  	   	  <li><a href="#huqn">How does upper-quartile normalization work?</a></li>
 		  <li><a href="#reps">How does Cuffdiff treat replicates?</a></li>
@@ -344,8 +345,8 @@
 	  it maps to, the inferred fragment length, and fragment bias (if bias correction is enabled).</p>
 	  <br/>
 	  
-	  <h2 id="hrga">How does reference annotation guided assembly work?</h2><br/>
-	  <p>Reference annotation guided assembly seeks to build upon available information about the transcriptome of
+	  <h2 id="hrga">How does Reference Annotation Based Transcript (RABT) assembly work?</h2><br/>
+	  <p>Reference annotation based assembly seeks to build upon available information about the transcriptome of
 	  an organism to find novel genes and isoforms.  When a reference GTF is provided with the -g/--GTF-guide option,
 	  the reference transcripts are tiled with faux-reads that will aid in the assembly of novel isoforms. These
 	  faux reads are combined with the sequencing reads and are input into the regular Cufflinks assembler.  The assembled

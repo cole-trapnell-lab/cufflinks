@@ -843,7 +843,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	verbose_msg( "Calculating intial MLE\n");
 	
-	AbundanceStatus first_mle_success = gamma_mle(mapped_transcripts,
+	AbundanceStatus mle_success = gamma_mle(mapped_transcripts,
                                                   nr_alignments,
                                                   log_conv_factors,
                                                   gammas);
@@ -874,15 +874,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		return true;
 	}
 	
-	filtered_gammas.clear();
-	
-	verbose_msg( "Revising MLE\n");
-	
-    AbundanceStatus second_mle_success = gamma_mle(filtered_transcripts,
-                                                   nr_alignments,
-                                                   log_conv_factors, 
-                                                   filtered_gammas);
-	
+    if (filtered_transcripts.size() == mapped_transcripts.size())
+    {    
+        filtered_gammas.clear();
+        
+        verbose_msg( "Revising MLE\n");
+        
+        mle_success = gamma_mle(filtered_transcripts,
+                                        nr_alignments,
+                                        log_conv_factors, 
+                                        filtered_gammas);
+    }
 
 	for (size_t i = 0; i < filtered_gammas.size(); ++i)
 	{
@@ -967,17 +969,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	}
 	
     AbundanceStatus numeric_status = NUMERIC_OK;
-    if (second_mle_success == NUMERIC_LOW_DATA)
+    if (mle_success == NUMERIC_LOW_DATA)
     {
         numeric_status = NUMERIC_LOW_DATA;
     }
-    else if (second_mle_success == NUMERIC_FAIL)
+    else if (mle_success == NUMERIC_FAIL)
     {
         numeric_status = NUMERIC_FAIL;
     }
     else
     {
-        assert (second_mle_success == NUMERIC_OK);
+        assert (mle_success == NUMERIC_OK);
         if (map_success == NUMERIC_FAIL)
         {
             numeric_status = NUMERIC_FAIL;

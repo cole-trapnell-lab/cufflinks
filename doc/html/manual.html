@@ -42,6 +42,7 @@
 		      <li><a href="tutorial.html">Getting started</a></li>
 		      <li><a href="manual.html">Manual</a></li>
 			  <li><a href="howitworks.html">How Cufflinks works</a></li>
+			  <li><a href="faq.html">FAQ</a></li>
 		    </ul>
 		  </div>
 		
@@ -233,7 +234,7 @@
 	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-G/--GTF &lt;reference_annotation.gtf&gt;</tt>
+	  <tt>-G/--GTF &lt;reference_annotation.(gtf/gff)&gt;</tt>
 	  </td><td VALIGN=top>
 	  Tells Cufflinks to use the supplied reference annotation to estimate 
 	  isoform expression.  It will not assemble novel transcripts, and the program
@@ -241,16 +242,16 @@
 	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-g/--GTF-guide &lt;reference_annotation.gtf&gt;</tt>
+	  <tt>-g/--GTF-guide &lt;reference_annotation.(gtf/gff)&gt;</tt>
 	  </td><td VALIGN=top>
-	  Tells Cufflinks to use the supplied reference annotation to guide the assembly.
+	  Tells Cufflinks to use the supplied reference annotation to guide <a href=howitworks#hrga>RABT assembly</a>.
 	  Reference transcripts will be tiled with faux-reads to provide additional information
 	  in assembly. Output will include all reference transcripts as well as any novel
 	  genes and isoforms that are assembled.
 	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-M/--mask-file &lt;mask.gtf&gt;</tt>
+	  <tt>-M/--mask-file &lt;mask.(gtf/gff)&gt;</tt>
 	  </td><td VALIGN=top>
 	  Tells Cufflinks to ignore all reads that could have come from transcripts in this GTF 
 	  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant
@@ -264,14 +265,14 @@
 	  </td><td VALIGN=top>
 	  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
 	  bias detection and correction algorithm which can significantly improve accuracy of 
-	  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How It Works</a> for more details.
+	  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How Cufflinks Works</a> for more details.
 	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-u/--multi-read-correct</tt>
 	  </td><td VALIGN=top>
 	  Tells Cufflinks to do an initial estimation procedure to more accurately weight reads
-	  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How It Works</a> for more details.
+	  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How Cufflinks Works</a> for more details.
 	  </td></tr>
 	  <tr><td VALIGN=top>
 	  
@@ -1120,9 +1121,9 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>&lt;transcripts.gtf&gt;</tt>
+		  <tt>&lt;transcripts.(gtf/gff)&gt;</tt>
 		  </td><td VALIGN=top>
-		  A transcript TF file produced by cufflinks, cuffcompare, or other source.
+		  A transcript annotation file produced by cufflinks, cuffcompare, or other source.
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
 		  <tt>&lt;sample1.sam&gt;</tt>
@@ -1180,14 +1181,14 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
 		  bias detection and correction algorithm which can significantly improve accuracy of 
-		  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How It Works</a> for more details.
+		  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How Cufflinks Works</a> for more details.
 		  </td></tr>
 		  
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-u/--multi-read-correct</tt>
 		  </td><td VALIGN=top>
 		  Tells Cufflinks to do an initial estimation procedure to more accurately weight reads
-		  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How It Works</a> for more details.
+		  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How Cufflinks Works</a> for more details.
 		  </td></tr>
 		  <tr><td VALIGN=top>
 		   
@@ -1202,7 +1203,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td></tr>
 		  
 		   <tr><td VALIGN=top nowrap>
-	  <tt>-M/--mask-file &lt;mask.gtf&gt;</tt>
+	  <tt>-M/--mask-file &lt;mask.(gtf/gff)&gt;</tt>
 	  </td><td VALIGN=top>
 	  Tells Cuffdiff to ignore all reads that could have come from transcripts in this GTF 
 	  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant

@@ -28,7 +28,8 @@
     It accepts aligned RNA-Seq reads 
 	and assembles the alignments into a parsimonious set of transcripts.
 	Cufflinks then estimates the relative abundances of these transcripts based
-	on how many reads support each one.
+	on how many reads support each one, taking into account biases in
+	library preparation protocols.
 	 	<br/> <br/>
 	Cufflinks is a collaborative effort between the <a href="http://bio.math.berkeley.edu/">
 	Laboratory for Mathematical and Computational Biology</a>, led by Lior Pachter at UC Berkeley, 
@@ -51,6 +52,7 @@
 		      <li><a href="tutorial.html">Getting started</a></li>
 		      <li><a href="manual.html">Manual</a></li>
 			  <li><a href="howitworks.html">How Cufflinks works</a></li>
+  		      <li><a href="faq.html">FAQ</a></li>
 		    </ul>
 		  </div>
 		
@@ -133,9 +135,31 @@
 
     </div> <!-- End of "rightside" -->
     <div id="leftside">
+    
+    	<h2>1.0.0 release - 4/XX/2011</h2>
+	      <p>This release represents a huge leap for Cufflinks in terms of performance and features.  It is highly recommended that all users upgrade to this
+	      first non-beta version of Cufflinks.  Updates and improvements include:
+		  <ul>
+		    <li>A new Reference Annotation Based Transcript (RABT) assembly mode has been added.  More details can be found in the <a href=howitworks.html#hmul>How Cufflinks Works</a> section.
+		    <li>Bias correction described <a href="http://genomebiology.com/2011/12/3/R22/">here</a> is now enabled with the <tt>-b/--bias-correct</tt> option (<tt>-r/--ref-seq</tt> is no longer in use).  A path to the reference multi-fasta used in mapping must be supplied following the option.
+		    <li>Added support for improved handling multi-mapping reads. Enable with the <tt>-u/--multi-read-correct</tt> option. See <a href=howitworks.html#hmul>How Cufflinks Works</a> for more details. </li>
+		  	<li>Trimming has been instituted to more accurately locate the 3' ends of transcripts during assembly based on coverage.</li>
+		  	<li>Output file formats have been made consistent between Cufflinks and Cuffdiff.  See the <a href=manual.html>Manual</a> for more details.</li>
+		  	<li>Both GFF3 and GTF2 annotations are now fully supported as input to all programs.</li>
+		  	<li>Improved reporting of Map Properties.</li>
+		  	<li>Added automatic update availability check.</li>
+		  	<li>Total map mass is now based on all reads mapped by your alignment tool, not just those mapping to a given annotation.</li>
+		  	<li>Upper-quartile normalizaion (<tt>-N/--upper-quartile-norm</tt>) now calculated correctly.</li>
+		  	<li>Fixed a bug where some splice-junction reads were lost in quantitation.</li>
+			<li>Fixed a bug where reads landing in introns were over-filtered in assembly.</li>
+		  	<li>Numerous improvements in speed for both assembly and quantitation.</li>
+			<li>Numerous minor bug fixes.</li>
+			</ul>
+			</p>
+    
 		<p><br/>    
     	  <h2>Cufflinks Bias Correction paper published - 3/16/2011</h2>
-     	 <p> Our new <a href="http://genomebiology.com/2011/12/3/R22/abstract">paper</a> on the Cufflinks bias correction method introduced in v0.9.0 has appeared 
+     	 <p> Our new <a href="http://genomebiology.com/2011/12/3/R22/">paper</a> on the Cufflinks bias correction method introduced in v0.9.0 has appeared 
 	  		in <i><a href="http://www.genomebiology.com/">Genome Biology</a></i>.  The paper describes the details of the
           method and provides validations for the improvements in expression estimates it produces.  As a reminder, 
           bias correction is only activated when a reference sequence (fasta) is supplied with the -r option. 

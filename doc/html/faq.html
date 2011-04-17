@@ -129,20 +129,20 @@
       <div id="toc">
   	    <ul>
  	    <li><a href="#hass">What's the difference between FPKM and RPKM?</a></li>
- 	    <li><a href="#hqua">Can Cufflinks handle strand specific RNA-Seq?</li>
+ 	    <li><a href="#hssd">Can Cufflinks handle strand-specific RNA-Seq data?</li>
  	  	<li><a href="#hdis">Can I use Cufflinks with RNA-Seq data from Bacteria?</a></li>
  	  	<li><a href="#hsbi">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</a></li>
 		<li><a href="#hsbi">Will you please report how many fragments come from each transcript in a future release?</a></li>
 		<li><a href="#hsbi">How is Cuffdiff different from other differential expression tools?</a></li>
  	  	<li><a href="#hmul">Can I use Cufflinks to find SNPs or RNA editing sites?</a></li>
   	  	<li><a href="#hrga">Does Cufflinks discover gene fusions or trans-spliced transcripts?</a></li>
- 	  	<li><a href="#hdif">Does Cufflinks support both BAM and SAM?</a></li>
+ 	  	<li><a href="#hbam">Does Cufflinks support both BAM and SAM?</a></li>
 	   	<li><a href="#huqn">What does "NOTEST" mean in Cuffdiff's output?</a></li>
 	    <li><a href="#reps">Why does Cufflinks occasionally report "FAIL" for some genes?</a></li>
 	 	<li><a href="#reps">How many replicates do I need?  Do I need technical replicates as well as biological ones?</a></li>
 		<li><a href="#reps">How does Cufflinks calculate its p-values?</a></li>
-		<li><a href="#reps">I'm looking for a GTF file with annotated transcripts?  Do you provide annotation files?</a></li>
-		<li><a href="#reps">I'm trying to assemble a sample.  Cufflinks is almost done, but it seems to be hanging at "99% complete".  What's going on?</a></li>
+		<li><a href="#reps">I'm looking for a GTF file with annotated transcripts.  Do you provide annotation files?</a></li>
+		<li><a href="#h99p">I'm trying to assemble a sample.  Cufflinks is almost done, but it seems to be hanging at "99% complete".  What's going on?</a></li>
 		<li><a href="#reps">Can I use Cuffdiff on time-series data?</a></li>
 		<li><a href="#reps">How can I visualize by Cufflinks and Cuffdiff results?</a></li>
  	    <li><a href="#reps">I'm having trouble installing Cufflinks on my system.  Can you help me?</a></li>
@@ -151,7 +151,28 @@
 
   	    </ul><br/>
   	  </div>
-		
+  	  
+	  <h2 id="hssd">Can Cufflinks handle strand-specific RNA-Seq data?</h2><br/><p> 
+	  Yes.  If you mapped your reads with TopHat using the strand-specific mode or manually added
+  	  XS tags, Cufflinks will automatically treat your data as strand-specific.  If this is not the case,
+  	  you should use the <tt>--library-type</tt> option along with the type of strand-specific protocol that
+  	  was used to generate your data.  More information can be found <a href=manual.html#library>here</a>.
+  	  </p><br/>
+	
+	  <h2 id="hbam">Does Cufflinks support both BAM and SAM?</h2><br/><p> 
+	  Yes. If a SAM is supplied, an error message will be output that the file is not a valid BAM file.
+	  However, Cufflinks will recognize this and treat the file as a SAM.  When using a SAM file, you should
+	  include a proper header or ensure that the reads are lexicographically by chromosome and then numerically
+	  by left position.  You can accomplish this sorting with the command <tt>sort -k3,3 -k4,4n in.sam > out.sam</tt>.
+	  </p><br/>
+	
+	  <h2 id="h99p">I'm trying to assemble a sample.  Cufflinks is almost done, but it seems to be hanging at "99% complete".  What's going on?</h2><br/><p> 
+	  Cufflinks spawns threads for each locus to assemble and quantitate the "bundle" of reads in that locus.  Some loci may have more reads and more complicated alternative
+	  splicing than others, which requires more CPU cycles.  These bundles can continue processing long after all others have completed, leading
+	  to this behavior.  You may be able to decrease the number of such bundles by masking out ribosomal and mitochondrial RNA using the <tt>-M/--mask-file</tt> option
+	  described in the <a href="manual.html">Manual</a>.
+	  </p><br/>
+	
 	</div>
   </div>
   <div id="footer">
