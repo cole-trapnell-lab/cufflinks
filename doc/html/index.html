@@ -141,12 +141,12 @@
 	      first non-beta version of Cufflinks.  Updates and improvements include:
 		  <ul>
 		    <li>A new Reference Annotation Based Transcript (RABT) assembly mode has been added.  More details can be found in the <a href=howitworks.html#hmul>How Cufflinks Works</a> section.
-		    <li>Bias correction described <a href="http://genomebiology.com/2011/12/3/R22/">here</a> is now enabled with the <tt>-b/--bias-correct</tt> option (<tt>-r/--ref-seq</tt> is no longer in use).  A path to the reference multi-fasta used in mapping must be supplied following the option.
+		    <li>Bias correction described <a href="http://genomebiology.com/2011/12/3/R22/">here</a> is now enabled with the <tt>-b/--frag-bias-correct</tt> option (<tt>-r/--reference-seq</tt> is no longer in use).  A path to the reference multi-fasta used in mapping must be supplied following the option.
 		    <li>Added support for improved handling multi-mapping reads. Enable with the <tt>-u/--multi-read-correct</tt> option. See <a href=howitworks.html#hmul>How Cufflinks Works</a> for more details. </li>
 		  	<li>Trimming has been instituted to more accurately locate the 3' ends of transcripts during assembly based on coverage.</li>
 		  	<li>Output file formats have been made consistent between Cufflinks and Cuffdiff.  See the <a href=manual.html>Manual</a> for more details.</li>
 		  	<li>Both GFF3 and GTF2 annotations are now fully supported as input to all programs.</li>
-		  	<li>Improved reporting of Map Properties.</li>
+		  	<li>Improved reporting of map properties.</li>
 		  	<li>Added automatic update availability check.</li>
 		  	<li>Total map mass is now based on all reads mapped by your alignment tool, not just those mapping to a given annotation.</li>
 		  	<li>Upper-quartile normalizaion (<tt>-N/--upper-quartile-norm</tt>) now calculated correctly.</li>

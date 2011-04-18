@@ -576,6 +576,9 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  <tr>
 		<td VALIGN=top>cov</td><td VALIGN=top><tt>100.765</tt></td><td VALIGN=top>Estimate for the absolute depth of read coverage across the whole transcript</td>
 	  </tr>
+	  <tr>
+		<td VALIGN=top>full_read_support</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>When RABT assembly is used, this attribute reports whether or not all introns and internal exons were fully covered by reads from the data.</td>
+	  </tr>
 	  </table>
 	  <br/>
 	<h2 id="transexpr">2) transcripts.expr</h2>
@@ -1179,7 +1182,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr><td VALIGN=top nowrap>
 		  <tt>-b/--frag-bias-correct &lt;genome.fa&gt;</tt>
 		  </td><td VALIGN=top>
-		  Providing Cufflinks with a multifasta file via this option instructs it to run our new 
+		  Providing Cufflinks with the multifasta file your reads were mapped to via this option instructs it to run our 
 		  bias detection and correction algorithm which can significantly improve accuracy of 
 		  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How Cufflinks Works</a> for more details.
 		  </td></tr>
