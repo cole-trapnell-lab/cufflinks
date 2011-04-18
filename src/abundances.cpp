@@ -874,7 +874,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		return true;
 	}
 	
-    if (filtered_transcripts.size() == mapped_transcripts.size())
+    if (filtered_transcripts.size() != mapped_transcripts.size())
     {    
         filtered_gammas.clear();
         
