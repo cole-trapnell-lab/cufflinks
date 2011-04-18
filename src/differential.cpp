@@ -63,7 +63,7 @@ bool test_diffexp(const FPKMContext& curr,
             if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
             {
                 
-                fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc, test.sample_1, test.sample_2);
+                //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
                 p_value = 1.0;
             }
             else

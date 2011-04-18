@@ -151,13 +151,23 @@
 
   	    </ul><br/>
   	  </div>
-  	  
+  	  <h2 id="hssd">What's the difference between FPKM and RPKM?</h2><br/><p> 
+	  They're almost the same thing.  RPKM stands for Reads Per Kilobase of transcript per Million mapped reads.  FPKM stands for Fragments Per Kilobase of transcript per Million mapped reads.  In RNA-Seq, the relative expression of a transcript is proportional to the number of cDNA fragments that originate from it. Paired-end RNA-Seq experiments produce two reads per fragment, but that doesn't necessarily mean that both reads will be mappable.  For example, the second read is of poor quality. If we were to count reads rather than fragments, we might double-count some fragments but not others, leading to a skewed expression value. Thus, FPKM is calculated by counting fragments, not reads.   
+  	  </p><br/>
+
 	  <h2 id="hssd">Can Cufflinks handle strand-specific RNA-Seq data?</h2><br/><p> 
 	  Yes.  If you mapped your reads with TopHat using the strand-specific mode or manually added
   	  XS tags, Cufflinks will automatically treat your data as strand-specific.  If this is not the case,
   	  you should use the <tt>--library-type</tt> option along with the type of strand-specific protocol that
   	  was used to generate your data.  More information can be found <a href=manual.html#library>here</a>.
   	  </p><br/>
+
+	  <h2 id="hssd">Can I use Cufflinks with RNA-Seq data from Bacteria?</h2><br/><p> 
+	  Sure, with one or two caveats.  We don't recommend assembling bacterial transcripts using Cufflinks at first. If you're working on a new bacterial genome, consider using a computational gene finding application such as <a href="http://www.cbcb.umd.edu/software/glimmer/">Glimmer</a>.  These tools are very mature and work well.  With an annotation, you can use Cufflinks and Cuffdiff to profile expression and look for differences.  Also, not that Cufflinks doesn't handle circular genomes in any special way, so make sure your genome and annotation are suitably linearized.</p><br/>
+	
+	  <h2 id="hssd">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</h2><br/><p>
+	  It's possible, but we strongly advise against this.  Current count-based differential expression tools are poorly suited to differential expression analysis in genomes with alternatively spliced genes.  The main reason for this is that when a gene has multiple isoforms, a change in the total number of reads or fragments from that gene doesn't correspond to a change in expression for that gene. 
+	  </p><br/>
 	
 	  <h2 id="hbam">Does Cufflinks support both BAM and SAM?</h2><br/><p> 
 	  Yes. If a SAM is supplied, an error message will be output that the file is not a valid BAM file.
