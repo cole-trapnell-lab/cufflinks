@@ -39,7 +39,6 @@
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-#include "gtf_tracking.h"
 #include "differential.h"
 
 // Need at least this many reads in a locus to do any testing on it

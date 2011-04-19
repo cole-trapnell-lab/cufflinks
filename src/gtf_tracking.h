@@ -1283,7 +1283,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NUL
               bool check_for_dups=false, int qfidx=-1, const char* fname=NULL, 
               bool only_multiexon=false);
 
-void read_transcripts(FILE* f, GList<GSeqData>& seqdata);
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs=true);
 
 bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl=false);
 

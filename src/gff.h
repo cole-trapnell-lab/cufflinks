@@ -30,6 +30,8 @@ extern const uint gfo_flag_CHILDREN_PROMOTED;
 extern const uint gfo_flag_HAS_ERRORS;
 extern const uint gfo_flag_IS_GENE;
 extern const uint gfo_flag_FROM_GFF3; //parsed from GFF3 formatted record
+extern const uint gfo_flag_BY_EXON;  //created by subfeature (exon) directly
+                      //(GTF2 and some chado gff3 dumps with exons given before their mRNA)
 extern const uint gfo_flag_IS_TRANSCRIPT; //recognized as '*RNA' or '*transcript'
 extern const uint gfo_flag_DISCARDED; //should not be printed under the "transcriptsOnly" directive
 extern const uint gfo_flag_LST_KEEP; //GffObj from GffReader::gflst is to be kept (not deallocated)
@@ -419,6 +421,11 @@ public:
   void fromGff3(bool v) {
       if (v) flags |= gfo_flag_FROM_GFF3;
         else flags &= ~gfo_flag_FROM_GFF3;
+      }
+  bool createdByExon() { return ((flags & gfo_flag_BY_EXON)!=0); }
+  void createdByExon(bool v) {
+      if (v) flags |= gfo_flag_BY_EXON;
+        else flags &= ~gfo_flag_BY_EXON;
       }
   bool isGene() { return ((flags & gfo_flag_IS_GENE)!=0); }
   void isGene(bool v) {
@@ -941,6 +948,9 @@ class GffReader {
   GfoHolder* newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr,
                                GffObj* parent=NULL, GffExon* pexon=NULL);
   GfoHolder* replaceGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr, int replaceidx);
+  GfoHolder* updateGffRec(GfoHolder* prevgfo, GffLine* gffline, 
+                                         bool keepAttr, bool noExonAttr);
+  GfoHolder* updateParent(GfoHolder* newgfh, GffObj* parent);
   bool addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr);
   GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
   GffReader(FILE* f=NULL, bool t_only=false, bool sortbyloc=false):discarded_ids(true),

@@ -30,7 +30,6 @@
 #include "genes.h"
 #include "assemble.h"
 #include "biascorrection.h"
-#include "gtf_tracking.h"
 #include "multireads.h"
 
 using namespace std;

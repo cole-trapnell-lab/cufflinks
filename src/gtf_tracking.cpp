@@ -175,16 +175,17 @@ int parse_mRNAs(GfList& mrnas,
 			}
 		GStr feature(m->getFeatureName());
 		feature.lower();
-		bool gene_or_locus=(feature.endsWith("gene") ||feature.index("loc")>=0);
-		if (m->exons.Count()==0 && gene_or_locus) {
+		//bool gene_or_locus=(feature.endsWith("gene") ||feature.index("loc")>=0);
+		//if (m->exons.Count()==0 && gene_or_locus) {
+		if (m->isDiscarded()) {
 			//discard generic "gene" or "locus" features with no other detailed subfeatures
 			//if (gtf_tracking_verbose)
-			//    GMessage("Warning: discarding GFF generic gene/locus container %s\n",m->getID());
+			//   GMessage("Warning: discarding GFF generic gene/locus container %s\n",m->getID());
 			continue;
 			}
 		if (m->exons.Count()==0) {
 				//if (gtf_tracking_verbose)
-				//   GMessage("Warning: %s %s found without exon segments (adding default exon).\n",m->getFeatureName(), m->getID());
+				// GMessage("Warning: %s %s found without exon segments (adding default exon).\n",m->getFeatureName(), m->getID());
 				m->addExon(m->start,m->end);
 				}
 		if (glstdata.Found(&f,i)) gdata=glstdata[i];
@@ -493,13 +494,13 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 	return r;
 }
 
-void read_transcripts(FILE* f, GList<GSeqData>& seqdata) {
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs) {
 	rewind(f);
 	GffReader gffr(f, true); //loading only recognizable transcript features
 	gffr.showWarnings(gtf_tracking_verbose);
 
 	//          keepAttrs   mergeCloseExons   noExonAttrs
-	gffr.readAll(true,          true,        true);
+	gffr.readAll(keepAttrs,          true,        true);
 
 	//                               is_ref?    check_for_dups,
 	parse_mRNAs(gffr.gflst, seqdata, false,       false);
@@ -516,8 +517,8 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	                          //(f, transcripts_only)
 	GffReader* gffr=new GffReader(f, true); //load only transcript annotations
 	gffr->showWarnings(gtf_tracking_verbose);
-	//           keepAttrs   mergeCloseExons   noExonAttrs
-	gffr->readAll(true,          true,        isRefData || gtf_tracking_largeScale);
+	//            keepAttrs   mergeCloseExons   noExonAttrs
+	gffr->readAll(!isRefData,          true,        isRefData || gtf_tracking_largeScale);
 	//so it will read exon attributes only for low number of Cufflinks files
 	
 	int d=parse_mRNAs(gffr->gflst, seqdata, isRefData, check_for_dups, qfidx,only_multiexon);

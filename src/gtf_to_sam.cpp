@@ -28,7 +28,6 @@
 #include "hits.h"
 #include "bundles.h"
 
-#include "gtf_tracking.h"
 #include "scaffolds.h"
 #include "tokenize.h"
 
