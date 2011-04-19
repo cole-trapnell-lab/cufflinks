@@ -409,18 +409,22 @@ void print_FPKM_tracking(FILE* fout,
 		if (all_tss_ids == "")
 			all_tss_ids = "-";
 		
-		fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
-				description.c_str(),
-				track.classcode ? track.classcode : '-',
-				track.ref_match.c_str(),
+        char length_buff[33] = "-";
+        if (track.length)
+            sprintf(length_buff, "%d", track.length);
+        
+        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
+                description.c_str(),
+                track.classcode ? track.classcode : '-',
+                track.ref_match.c_str(),
                 all_gene_ids.c_str(),
-				all_gene_names.c_str(), 
-				all_tss_ids.c_str(),
-				track.locus_tag.c_str(),
-                "-",
+                all_gene_names.c_str(), 
+                all_tss_ids.c_str(),
+                track.locus_tag.c_str(),
+                length_buff,
                 "-",
                 status == NUMERIC_FAIL ? "FAIL" : "OK");
-		
+       		
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
 			double fpkm = fpkms[i].FPKM;

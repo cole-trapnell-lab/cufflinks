@@ -126,6 +126,7 @@ struct FPKMTracking
 	set<string> protein_ids;
 	string description; // isoforms or tss groups (e.g.) involved in this test
 	string ref_match;
+    int length;
 	
 	TestStatus test_status;
 	

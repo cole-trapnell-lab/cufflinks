@@ -367,6 +367,14 @@ void add_to_tracking_table(size_t sample_index,
 			fpkm_track.classcode = 0;
 			fpkm_track.ref_match = "-";
 		}
+        if (transfrag)
+        {
+            fpkm_track.length = transfrag->length(); 
+        }
+        else
+        {
+            fpkm_track.length = 0;
+        }
 	}
 	
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
