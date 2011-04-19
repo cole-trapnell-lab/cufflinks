@@ -166,6 +166,7 @@
 				<li><a href="#cds_diff">Differential coding sequence output</a></li>
 			</ul>
  	    </ul>
+ 	    <li><a href="#tracking_format">FPKM Tracking Format</a></li>
 		<li><a href="#library">Library Types</a></li>
 
   	    </ul><br/>
@@ -581,17 +582,14 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  </tr>
 	  </table>
 	  <br/>
-	<h2 id="transexpr">2) transcripts.expr</h2>
+	<h2 id="transexpr">2) isoforms.fpkm_tracking</h2>
 	<p>
-	This file is simply a tab delimited file containing one row per transcript
-	and with columns containing the attributes above.  There are a few 
-	additional attributes not in the table above, but these are reserved for 
-	debugging, and may change or disappear in the future.
+	This file contains the estimated isoform-level expression values in the generic <a href="#tracking_format">FPKM Tracking Format</a>.  Note, however that as there is only one sample, the "q" format is not used.
 	</p>
 	<br/>
-	<h2 id="geneexpr">3) genes.expr</h2>
+	<h2 id="geneexpr">3) genes.fpkm_tracking</h2>
 	<p>
-	This file contains gene-level coordinates and expression values.
+	This file contains the estimated gene-level expression values in the generic <a href="#tracking_format">FPKM Tracking Format</a>.  Note, however that as there is only one sample, the "q" format is not used.
 	</p>
 	<br/>
 	</ol>
@@ -1286,62 +1284,8 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		Cuffdiff calculates the FPKM of each transcript, primary transcript, 
 		and gene in each sample.  Primary transcript and gene FPKMs are computed
 		by summing the FPKMs of transcripts in each primary transcript group 
-		or gene group.  
-		
-		Each FPKM tracking file has the following format:
-		
-		<!-- ref_trans_id	class_code	gene_short_name	tss_id	locus	q0_FPKM	q0_conf_lo	q0_conf_hi	q1_FPKM	q1_conf_lo	q1_conf_hi	q2_FPKM	q2_conf_loq2_conf_hi	q3_FPKM	q3_conf_lo	q3_conf_hi -->
-		
-		<table CELLSPACING=15>
-		  <tr>
-			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>1</td><td VALIGN=top>Tracking id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript) being tested</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>2</td><td VALIGN=top>class_code</td><td VALIGN=top><tt>=</tt></td><td VALIGN=top>The <tt>class_code</tt> attribute for the transcript being tested, or "-" if not a transcript, or if <tt>class_code</tt> isn't present</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>3</td><td VALIGN=top>nearest_ref_id</td><td VALIGN=top><tt>NM_008866</tt></td><td VALIGN=top>The reference transcript to which the class code refers, if any</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>4</td><td VALIGN=top>Gene name</td><td VALIGN=top><tt>Lypla1</tt></td><td VALIGN=top>The <tt>gene_name</tt>(s) or <tt>gene_id</tt>(s) being tested</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>5</td><td VALIGN=top>TSS ID</td><td VALIGN=top><tt>TSS1</tt></td><td VALIGN=top>The <tt>tss_id</tt> attribute for the transcript/primary transcript being tested, or "-" if not a transcript/primary transcript, or if <tt>tss_id</tt> isn't present</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:4797771-4835363</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the genes or transcripts being tested.</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>7</td><td VALIGN=top>q0_FPKM</td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the object in sample 0</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>8</td><td VALIGN=top>q0_FPKM_lo</td><td VALIGN=top><tt>7.03583</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>9</td><td VALIGN=top>q0_FPKM_hi</td><td VALIGN=top><tt>8.98595</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>10</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>11</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>12<td VALIGN=top>q1_FPKM_hi</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>3<em>N</em> + 7</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>3<em>N</em> + 8</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>3<em>N</em> + 9</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
-		  </tr>
-		  </table>
+		or gene group.  The results are output in FPKM tracking files in the format
+		described <a href="#tracking_format">here</a>.
 		
 		There are <strong>four</strong> FPKM tracking files:
 		
@@ -1582,6 +1526,75 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	</div>
   </div>
   </ol>
+    <h2 id="tracking_format">FPKM Tracking Files</h2><br/>
+
+  FPKM tracking files use a generic format to output estimated expression values.  Each FPKM tracking file has the following format:
+		
+		<!-- ref_trans_id	class_code	gene_short_name	tss_id	locus	q0_FPKM	q0_conf_lo	q0_conf_hi	q1_FPKM	q1_conf_lo	q1_conf_hi	q2_FPKM	q2_conf_loq2_conf_hi	q3_FPKM	q3_conf_lo	q3_conf_hi -->
+		
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>tracking_id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript)</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>class_code</td><td VALIGN=top><tt>=</tt></td><td VALIGN=top>The <tt>class_code</tt> attribute for the object, or "-" if not a transcript, or if <tt>class_code</tt> isn't present</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>nearest_ref_id</td><td VALIGN=top><tt>NM_008866.1</tt></td><td VALIGN=top>The reference transcript to which the class code refers, if any</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>gene_id</td><td VALIGN=top><tt>NM_008866</tt></td><td VALIGN=top>The <tt>gene_id</tt>(s) associated with the object</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>gene_short_name</td><td VALIGN=top><tt>Lypla1</tt></td><td VALIGN=top>The <tt>gene_short_name</tt>(s) associated with the object</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>tss_id</td><td VALIGN=top><tt>TSS1</tt></td><td VALIGN=top>The <tt>tss_id</tt> associated with the object, or "-" if not a transcript/primary transcript, or if <tt>tss_id</tt> isn't present</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:4797771-4835363</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the object</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>8</td><td VALIGN=top>length</td><td VALIGN=top><tt>2447</tt></td><td VALIGN=top>The number of base pairs in the object</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>9</td><td VALIGN=top>coverage</td><td VALIGN=top><tt>43.4279</tt></td><td VALIGN=top>Estimate for the absolute depth of read coverage across the object</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (deconvolution successful), LOWDATA (not enough alignments for deconvolution), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>11</td><td VALIGN=top>q0_FPKM</td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the object in sample 0</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>12</td><td VALIGN=top>q0_FPKM_lo</td><td VALIGN=top><tt>7.03583</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>13</td><td VALIGN=top>q0_FPKM_hi</td><td VALIGN=top><tt>8.98595</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>14</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>15</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>16<td VALIGN=top>q1_FPKM_hi</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 11</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 12</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 13</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  </table>
+		 <br/> 
   <h2 id="library">Library Types</h2><br/>
   <p>
   In cases where Cufflinks cannot determine the platform and protocol used to generate 
