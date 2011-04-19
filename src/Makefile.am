@@ -11,8 +11,8 @@ bin_PROGRAMS = \
 	cuffcompare \
 	cuffdiff \
     gtf_to_sam \
-    compress_gtf
-#   cuffcluster
+    compress_gtf \
+    cuffcluster
 #	gtf_reads
 
 noinst_HEADERS = \
@@ -201,9 +201,9 @@ gtf_to_sam_SOURCES = gtf_to_sam.cpp
 gtf_to_sam_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
 gtf_to_sam_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
-#cuffcluster_SOURCES = cuffcluster.cpp
-#cuffcluster_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
-#cuffcluster_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+cuffcluster_SOURCES = cuffcluster.cpp
+cuffcluster_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
+cuffcluster_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 compress_gtf_SOURCES = compress_gtf.cpp
 compress_gtf_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)

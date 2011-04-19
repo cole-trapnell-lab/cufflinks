@@ -119,6 +119,42 @@
 		9CBCD9E61333ECFD0059FE74 /* c_args.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8A13204FE90031949A /* c_args.c */; };
 		9CBCD9E71333ECFD0059FE74 /* ar_funs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8B13204FE90031949A /* ar_funs.c */; };
 		9CBCD9E81333ECFD0059FE74 /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5913204F180031949A /* cmd.c */; };
+		9CCF1F3C135E29D600D7D6BD /* minmax.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5D13204FE30031949A /* minmax.c */; };
+		9CCF1F3D135E29D600D7D6BD /* locfit.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5E13204FE30031949A /* locfit.c */; };
+		9CCF1F3E135E29D600D7D6BD /* ev_interp.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5F13204FE30031949A /* ev_interp.c */; };
+		9CCF1F3F135E29D600D7D6BD /* ev_atree.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6013204FE30031949A /* ev_atree.c */; };
+		9CCF1F40135E29D600D7D6BD /* weight.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6113204FE30031949A /* weight.c */; };
+		9CCF1F41135E29D600D7D6BD /* wdiag.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6213204FE40031949A /* wdiag.c */; };
+		9CCF1F42135E29D600D7D6BD /* strings.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6313204FE40031949A /* strings.c */; };
+		9CCF1F43135E29D600D7D6BD /* startlf.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6413204FE40031949A /* startlf.c */; };
+		9CCF1F44135E29D600D7D6BD /* solve.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6513204FE40031949A /* solve.c */; };
+		9CCF1F45135E29D600D7D6BD /* simul.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6613204FE40031949A /* simul.c */; };
+		9CCF1F46135E29D700D7D6BD /* preplot.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6713204FE40031949A /* preplot.c */; };
+		9CCF1F47135E29D700D7D6BD /* pcomp.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6813204FE40031949A /* pcomp.c */; };
+		9CCF1F48135E29D700D7D6BD /* nbhd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6913204FE40031949A /* nbhd.c */; };
+		9CCF1F49135E29D700D7D6BD /* math.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6A13204FE40031949A /* math.c */; };
+		9CCF1F4A135E29D700D7D6BD /* m_max.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6B13204FE40031949A /* m_max.c */; };
+		9CCF1F4B135E29D700D7D6BD /* m_eigen.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6C13204FE40031949A /* m_eigen.c */; };
+		9CCF1F4C135E29D700D7D6BD /* linalg.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6D13204FE40031949A /* linalg.c */; };
+		9CCF1F4D135E29D700D7D6BD /* lfstr.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6E13204FE40031949A /* lfstr.c */; };
+		9CCF1F4E135E29D700D7D6BD /* lf_vari.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B6F13204FE40031949A /* lf_vari.c */; };
+		9CCF1F4F135E29D700D7D6BD /* lf_fitfun.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7013204FE50031949A /* lf_fitfun.c */; };
+		9CCF1F50135E29D700D7D6BD /* lf_dercor.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7113204FE50031949A /* lf_dercor.c */; };
+		9CCF1F51135E29D700D7D6BD /* frend.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7213204FE50031949A /* frend.c */; };
+		9CCF1F52135E29D700D7D6BD /* fitted.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7313204FE50031949A /* fitted.c */; };
+		9CCF1F53135E29D700D7D6BD /* family.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7413204FE50031949A /* family.c */; };
+		9CCF1F54135E29D700D7D6BD /* ev_trian.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7513204FE50031949A /* ev_trian.c */; };
+		9CCF1F55135E29D700D7D6BD /* ev_main.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7613204FE50031949A /* ev_main.c */; };
+		9CCF1F56135E29D700D7D6BD /* ev_kdtre.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7713204FE50031949A /* ev_kdtre.c */; };
+		9CCF1F57135E29D700D7D6BD /* scb.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7813204FE60031949A /* scb.c */; };
+		9CCF1F58135E29D700D7D6BD /* scb_cons.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7A13204FE60031949A /* scb_cons.c */; };
+		9CCF1F59135E29E400D7D6BD /* m_jacob.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B7D13204FE60031949A /* m_jacob.c */; };
+		9CCF1F5A135E29E400D7D6BD /* lf_robust.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8313204FE80031949A /* lf_robust.c */; };
+		9CCF1F5B135E29E400D7D6BD /* m_chol.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8413204FE80031949A /* m_chol.c */; };
+		9CCF1F5C135E29E400D7D6BD /* arith.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8913204FE90031949A /* arith.c */; };
+		9CCF1F5D135E29E400D7D6BD /* c_args.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8A13204FE90031949A /* c_args.c */; };
+		9CCF1F5E135E29E400D7D6BD /* ar_funs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8B13204FE90031949A /* ar_funs.c */; };
+		9CCF1F5F135E29E400D7D6BD /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5913204F180031949A /* cmd.c */; };
 		9CD6E8EA13379B7E00CCE1DE /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
 		9CD6E8EB13379B7E00CCE1DE /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
 		9CD6E8EC13379B7E00CCE1DE /* assemble.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151F10C72963000A4F41 /* assemble.cpp */; };
@@ -1515,6 +1551,42 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9CCF1F59135E29E400D7D6BD /* m_jacob.c in Sources */,
+				9CCF1F5A135E29E400D7D6BD /* lf_robust.c in Sources */,
+				9CCF1F5B135E29E400D7D6BD /* m_chol.c in Sources */,
+				9CCF1F5C135E29E400D7D6BD /* arith.c in Sources */,
+				9CCF1F5D135E29E400D7D6BD /* c_args.c in Sources */,
+				9CCF1F5E135E29E400D7D6BD /* ar_funs.c in Sources */,
+				9CCF1F5F135E29E400D7D6BD /* cmd.c in Sources */,
+				9CCF1F3C135E29D600D7D6BD /* minmax.c in Sources */,
+				9CCF1F3D135E29D600D7D6BD /* locfit.c in Sources */,
+				9CCF1F3E135E29D600D7D6BD /* ev_interp.c in Sources */,
+				9CCF1F3F135E29D600D7D6BD /* ev_atree.c in Sources */,
+				9CCF1F40135E29D600D7D6BD /* weight.c in Sources */,
+				9CCF1F41135E29D600D7D6BD /* wdiag.c in Sources */,
+				9CCF1F42135E29D600D7D6BD /* strings.c in Sources */,
+				9CCF1F43135E29D600D7D6BD /* startlf.c in Sources */,
+				9CCF1F44135E29D600D7D6BD /* solve.c in Sources */,
+				9CCF1F45135E29D600D7D6BD /* simul.c in Sources */,
+				9CCF1F46135E29D700D7D6BD /* preplot.c in Sources */,
+				9CCF1F47135E29D700D7D6BD /* pcomp.c in Sources */,
+				9CCF1F48135E29D700D7D6BD /* nbhd.c in Sources */,
+				9CCF1F49135E29D700D7D6BD /* math.c in Sources */,
+				9CCF1F4A135E29D700D7D6BD /* m_max.c in Sources */,
+				9CCF1F4B135E29D700D7D6BD /* m_eigen.c in Sources */,
+				9CCF1F4C135E29D700D7D6BD /* linalg.c in Sources */,
+				9CCF1F4D135E29D700D7D6BD /* lfstr.c in Sources */,
+				9CCF1F4E135E29D700D7D6BD /* lf_vari.c in Sources */,
+				9CCF1F4F135E29D700D7D6BD /* lf_fitfun.c in Sources */,
+				9CCF1F50135E29D700D7D6BD /* lf_dercor.c in Sources */,
+				9CCF1F51135E29D700D7D6BD /* frend.c in Sources */,
+				9CCF1F52135E29D700D7D6BD /* fitted.c in Sources */,
+				9CCF1F53135E29D700D7D6BD /* family.c in Sources */,
+				9CCF1F54135E29D700D7D6BD /* ev_trian.c in Sources */,
+				9CCF1F55135E29D700D7D6BD /* ev_main.c in Sources */,
+				9CCF1F56135E29D700D7D6BD /* ev_kdtre.c in Sources */,
+				9CCF1F57135E29D700D7D6BD /* scb.c in Sources */,
+				9CCF1F58135E29D700D7D6BD /* scb_cons.c in Sources */,
 				EDFE39B6122BE65600F24CD3 /* common.cpp in Sources */,
 				EDFE39C2122BE65600F24CD3 /* tokenize.cpp in Sources */,
 				EDFE39FB122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */,

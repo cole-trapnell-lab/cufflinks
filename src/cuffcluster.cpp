@@ -162,6 +162,10 @@ struct ExprRecord
     string tss_id;
     string locus; 
     
+    string length;
+    string coverage;
+    string status;
+    
     vector<double> FPKMs;
     vector<double> FPKM_conf_los;
     vector<double> FPKM_conf_his;
@@ -573,19 +577,19 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
             vector<string> tokens;
             tokenize(buf, "\t", tokens);
             
-            if (tokens.size() < 12)
+            if (tokens.size() < 16)
             {
                 fprintf(stderr, "Error:  FPKM tracking files must have at least 12 columns\n");
                 exit(1);
             }
             
-            if ((tokens.size() - 6) % 3 != 0)
+            if ((tokens.size() - 10) % 3 != 0)
             {
                 fprintf(stderr, "Error:  FPKM tracking files must have FPKM, FPKM_lo, and FPKM_hi columns for each sample\n");
                 exit(1);
             }
             
-            static const size_t first_sample_idx = 6;
+            static const size_t first_sample_idx = 10;
             
             for (size_t i = first_sample_idx; i < tokens.size(); i += 3)
             {
@@ -625,7 +629,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         vector<string> tokens;
         tokenize(buf, "\t", tokens);
         
-        if (((tokens.size() - 6) / 3) != sample_names.size())
+        if (((tokens.size() - 10) / 3) != sample_names.size())
         {
             fprintf(stderr, "Error:  Line %d has %lu columns, should have %lu\n", line_num, tokens.size(), (sample_names.size() * 3) + 6);
             exit(1);
@@ -641,7 +645,11 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         rec.tss_id = tokens[5];
         rec.locus = tokens[6];
         
-        static const size_t first_sample_idx = 6;
+        rec.length = tokens[7];
+        rec.coverage = tokens[8];
+        rec.status = tokens[9];
+        
+        static const size_t first_sample_idx = 10;
         
         size_t num_samples = sample_names.size();
         ublas::vector<double> u1 = ublas::unit_vector<double>(sample_names.size(), 0);
@@ -792,14 +800,17 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         }
         
         fprintf(spec_out, 
-                "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%lg\t%s",
+                "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%g\t%g\t%g\t%lg\t%s",
                 rec.tracking_id.c_str(),
                 rec.class_code.c_str(),
                 rec.nearest_ref_id.c_str(),
                 rec.gene_id.c_str(),
                 rec.gene_short_name.c_str(),
                 rec.tss_id.c_str(),
-                rec.locus.c_str(), 
+                rec.locus.c_str(),
+                rec.length.c_str(),
+                rec.coverage.c_str(),
+                rec.status.c_str(),
                 rec.total_FPKM,
                 rec.total_FPKM_conf_lo,
                 rec.total_FPKM_conf_hi,
