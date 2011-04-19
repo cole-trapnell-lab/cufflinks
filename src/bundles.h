@@ -76,7 +76,16 @@ public:
 		{
 			delete hit.left_alignment();
 			delete hit.right_alignment();
-		} 
+		}
+        
+        for(OpenMates::iterator itr = _open_mates.begin(); itr != _open_mates.end(); ++itr)
+		{
+			foreach (MateHit& hit,  itr->second)
+            {
+                delete hit.left_alignment();
+                delete hit.right_alignment();
+            }
+		}
 		
     }
 	int left()   const { return _leftmost;  }
@@ -132,7 +141,7 @@ public:
 	
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
-	void add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
+	bool add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                       const ReadHit* bh,
 					  bool expand_by = true);
 	

@@ -281,7 +281,7 @@ bool unmapped_hit(const MateHit& x)
 }
 
 
-void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
+bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                              const ReadHit* bh,
 							 bool expand_by_partner)
 {	
@@ -295,7 +295,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
         if (m.right() - m.left() > max_gene_length)
         {
             fprintf(stderr, "Warning: hit is longer than max_gene_length, skipping\n");
-            return;
+            return false;
         }
 		add_hit(m);
 	}
@@ -304,7 +304,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
         if (abs(bh->right() - bh->partner_pos()+1) > max_gene_length)
         {
             fprintf(stderr, "Warning: hit is longer than max_gene_length, skipping\n");
-            return;
+            return false;
         }
 		if (expand_by_partner)
 			_rightmost = max(max(_rightmost, bh->right()), bh->partner_pos()+1);
@@ -334,6 +334,7 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                 // ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
                 // Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
 				// add_hit(MateHit(rg_props,bh->ref_id(), bh, NULL));
+                return false;
 			}
 		}
 		else
@@ -398,10 +399,12 @@ void HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                     // ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
                     // Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
 					// add_hit(MateHit(rg_props, bh->ref_id(), bh, NULL));
+                    return false;
 				}
 			}
 		}
 	}
+    return true;
 }
 
 void HitBundle::collapse_hits()
@@ -414,16 +417,14 @@ void HitBundle::finalize_open_mates()
     // We don't want to split reads accross boundaries since this would only occur
     // in ref_driven mode and the read shouldn't map to any of the references in this case.
 
-//	for (OpenMates::iterator itr = _open_mates.begin(); 
-//		 itr != _open_mates.end(); 
-//		 ++itr)
-//	{
-//		for (list<MateHit>::iterator mi = itr->second.begin(); mi != itr->second.end(); ++mi)
-//		{
-//             add_hit(*mi);
-//		}
-//        itr->second.clear();
-//	}
+    for(OpenMates::iterator itr = _open_mates.begin(); itr != _open_mates.end(); ++itr)
+    {
+        foreach (MateHit& hit,  itr->second)
+        {
+            delete hit.left_alignment();
+            delete hit.right_alignment();
+        }
+    }
     _open_mates.clear();
 }
 
@@ -758,8 +759,11 @@ bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
 		bundle.add_raw_mass(next_valid_alignment(bh));
 	}
 	
-	bundle.add_open_hit(read_group_properties(), bh);
-	
+	if (!bundle.add_open_hit(read_group_properties(), bh))
+    {
+        delete bh;
+        bh = NULL;
+    }
 	_expand_by_hits(bundle);
 
     assert(bundle.left() != -1);    
@@ -829,7 +833,11 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		
         if (bh->left() >= bundle.left() && bh->right() <= bundle.right())
 		{
-			bundle.add_open_hit(read_group_properties(), bh, false);
+			if (!bundle.add_open_hit(read_group_properties(), bh, false))
+            {
+                delete bh;
+                bh = NULL;
+            }
 		}
 		else if (bh->left() >= bundle.right())
 		{
@@ -889,7 +897,11 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 		
 	if (bh->left() < (*next_ref_scaff)->left())
 	{
-		bundle.add_open_hit(read_group_properties(), bh);
+		if (!bundle.add_open_hit(read_group_properties(), bh))
+        {
+            delete bh;
+            bh = NULL;
+        }
 	}
 	else 
 	{
@@ -958,7 +970,11 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 		
 		if (bh->ref_id() == bundle.ref_id() && bh->left() < bundle.right() + olap_radius)
 		{			
-			bundle.add_open_hit(read_group_properties(), bh);
+			if (!bundle.add_open_hit(read_group_properties(), bh))
+            {
+                delete bh;
+                bh = NULL;
+            }
 		}
 		else
 		{
