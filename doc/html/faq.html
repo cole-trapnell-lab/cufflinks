@@ -68,15 +68,15 @@
 		  <div class="box">
 		    <ul>
 		      <table width="100%">
-				<tr><td>version 0.9.3 (BETA)</td> <td align="right">11/30/2010</td></tr>
+				<tr><td>version 1.0.0</td> <td align="right">4/XX/2010</td></tr>
 				<tr>
-		      		<td><a href="./downloads/cufflinks-0.9.3.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+		      		<td><a href="./downloads/cufflinks-1.0.0.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
 		      	</tr>
 				<tr>
-					<td><a href="./downloads/cufflinks-0.9.3.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+					<td><a href="./downloads/cufflinks-1.0.0.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
 				</tr>
 				<tr>
-					<td><a href="./downloads/cufflinks-0.9.3.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+					<td><a href="./downloads/cufflinks-1.0.0.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
 				</tr>
 			  </table>
 		    </ul>
@@ -131,23 +131,22 @@
  	    <li><a href="#fpkm">What's the difference between FPKM and RPKM?</a></li>
  	    <li><a href="#hssd">Can Cufflinks handle strand-specific RNA-Seq data?</li>
  	  	<li><a href="#bact">Can I use Cufflinks with RNA-Seq data from Bacteria?</a></li>
- 	  	<li><a href="#diff">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</a></li>
-		<li><a href="#hsbi">Will you please report how many fragments come from each transcript in a future release?</a></li>
-		<li><a href="#cdif">How is Cuffdiff different from other differential expression tools?</a></li>
- 	  	<li><a href="#hmul">Can I use Cufflinks to find SNPs or RNA editing sites?</a></li>
-  	  	<li><a href="#hrga">Does Cufflinks discover gene fusions or trans-spliced transcripts?</a></li>
- 	  	<li><a href="#hbam">Does Cufflinks support both BAM and SAM?</a></li>
-	   	<li><a href="#huqn">What does "NOTEST" mean in Cuffdiff's output?</a></li>
-	    <li><a href="#reps">Why does Cufflinks occasionally report "FAIL" for some genes?</a></li>
-	 	<li><a href="#reps">How many replicates do I need?  Do I need technical replicates as well as biological ones?</a></li>
-		<li><a href="#reps">How does Cufflinks calculate its p-values?</a></li>
-		<li><a href="#reps">I'm looking for a GTF file with annotated transcripts.  Do you provide annotation files?</a></li>
-		<li><a href="#h99p">I'm trying to assemble a sample.  Cufflinks is almost done, but it seems to be hanging at "99% complete".  What's going on?</a></li>
-		<li><a href="#reps">Can I use Cuffdiff on time-series data?</a></li>
-		<li><a href="#reps">How can I visualize by Cufflinks and Cuffdiff results?</a></li>
+ 	  	<li><a href="#count">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</a></li>
+		<li><a href="#numfrags">Will you please report how many fragments come from each transcript in a future release?</a></li>
+		<li><a href="#cuffdiff">How is Cuffdiff different from other differential expression tools?</a></li>
+ 	  	<li><a href="#snps">Can I use Cufflinks to find SNPs or RNA editing sites?</a></li>
+  	  	<li><a href="#fusi">Does Cufflinks discover gene fusions or trans-spliced transcripts?</a></li>
+ 	  	<li><a href="#hbam">Do Cufflinks and Cuffdiff support both BAM and SAM?</a></li>
+	   	<li><a href="#notest">What does "NOTEST" mean in Cuffdiff's output?</a></li>
+	    <li><a href="#lowdata">What does "LOWDATA" mean in Cuffdiff's output?</a></li>
+	    <li><a href="#fail">What does "FAIL" mean in Cuffdiff's output?</a></li>
+	 	<!-- <li><a href="#reps">How many replicates do I need?  Do I need technical replicates as well as biological ones?</a></li> -->
+		<li><a href="#pval">How does Cufflinks calculate its p-values?</a></li>
+		<li><a href="#gtfs">I'm looking for a GTF file with annotated transcripts.  Do you provide annotation files?</a></li>
+		<li><a href="#time">Can I use Cuffdiff on time-series data?</a></li>
+		<li><a href="#visi">How can I visualize by Cufflinks and Cuffdiff results?</a></li>
  	    <li><a href="#inst">I'm having trouble installing Cufflinks on my system.  Can you help me?</a></li>
-		<li><a href="#reps">I'm getting a lot of single-exon, low FPKM transfrags in my asssembly.  What are these?</a></li>
-		
+
 
   	    </ul><br/>
   	  </div>
@@ -162,15 +161,33 @@
   	  was used to generate your data.  More information can be found <a href=manual.html#library>here</a>.
   	  </p><br/>
 
+
 	  <h2 id="bact">Can I use Cufflinks with RNA-Seq data from Bacteria?</h2><br/><p> 
-	  Sure, with one or two caveats.  We don't recommend assembling bacterial transcripts using Cufflinks at first. If you're working on a new bacterial genome, consider using a computational gene finding application such as <a href="http://www.cbcb.umd.edu/software/glimmer/">Glimmer</a>.  These tools are very mature and work well.  With an annotation, you can use Cufflinks and Cuffdiff to profile expression and look for differences.  Also, note that Cufflinks doesn't handle circular genomes in any special way, so make sure your genome and annotation are suitably linearized.</p><br/>
-	
-	  <h2 id="diff">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</h2><br/><p>
-	  It's possible, but we strongly advise against this.  Current count-based differential expression tools are poorly suited to differential expression analysis in genomes with alternatively spliced genes.  The main reason for this is that when a gene has multiple isoforms, a change in the total number of reads or fragments from that gene doesn't correspond to a change in expression for that gene. 
+	  Sure, with one or two caveats.  We don't recommend assembling bacterial transcripts using Cufflinks at first. If you're working on a new bacterial genome, consider using a computational gene finding application such as <a href="http://www.cbcb.umd.edu/software/glimmer/">Glimmer</a>.  These tools are very mature and work well.  With an annotation, you can use Cufflinks and Cuffdiff to profile expression and look for differences.  Also, not that Cufflinks doesn't handle circular genomes in any special way, so make sure your genome and annotation are suitably linearized.</p><br/>
+
+	  <h2 id="count">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</h2><br/><p>
+	  It's possible, but we strongly advise against this.  Current count-based differential expression tools are poorly suited to differential expression analysis in genomes with alternatively spliced genes.  The main reason for this is that when a gene has multiple isoforms, a change in the total number of reads or fragments from that gene doesn't always correspond to a change in expression for that gene. Conversely, a gene's expression may change, but the total number of fragments generated by its isoforms may be very similar. In order to detect changes accurately, it's necessary to estimate how many fragments came from each individual splice variant in each sample.  Current count-based tools don't do this (to our knowledge - please send us email if you know of one!).  Even if they did, fragments that come from parts of genes that are shared by more than one splice variant can't generally assigned to a single isoform, so the fragment counts for each isoform are only estimates, and there is some uncertainty in the counts.  Isoforms that are very similar will have a great deal of uncertainty surrounding their fragment counts.  This uncertainty needs to be accounted for when testing for differential expression. So while you could use Cufflinks to estimate isoform-level counts, you'd be throwing away Cufflinks' uncertainty of this uncertainty, and thus have more confidence in the differences you see than you really should.  This will probably lead to many false positives in your analysis.  We strongly encourage you to consider using Cuffdiff to find differentially expressed genes and transcripts.
+
 	  </p><br/>
 	
-	  <h2 id="hbam">Does Cufflinks support both BAM and SAM?</h2><br/><p> 
-	  Yes. If a SAM is supplied, an error message will be output that the file is not a valid BAM file.
+	  <h2 id="numfrags">Will you please report how many fragments come from each transcript in a future release?</h2><br/><p>
+	  For the foreseeable future, we will not be reporting the number of fragments we think originated from each transcript.  People who have asked for this almost always want to use Cufflinks in conjunction with count-based differential expression packages, which is not a good idea.  We're trying to keep our output formats as simple as possible.
+	  </p><br/>
+	
+	  <h2 id="cuffdiff">How is Cuffdiff different from other differential expression tools?</h2><br/><p>
+	  To our knowledge, most other differential expression packages work by counting up the number of fragments that originate from each gene in each sample, looking for differences in the count for each gene across conditions, and testing the observed differences for statistical significance. This approach works well when genes have a single isoform and occur only once in the genome (i.e. aren't members of "gene families").  However, when dealing with genes with more than one isoform, it's generally not possible to tell with certainty which isoform generated each fragment.  This greatly complicates the problem of looking for differentially expressed genes.  As discussed above, lumping fragments from all the isoforms of a gene together and looking for changes in this count between conditions is problematic. Cuffdiff looks for differentially expressed genes by estimating how many fragments came from each isoform and then converting the counts into isoform expression levels. Cuffdiff then looks for differences in these expression levels, rather than for differences in counts.  To find differentially expressed genes, Cuffdiff calculates expression levels in each condition for each gene by adding up the expression levels for each gene's splice isoforms.  Cuffdiff tests for differences in each gene's expression level across conditions.
+	  </p><br/>
+	
+	  <h2 id="snps">Can I use Cufflinks to find SNPs or RNA editing sites?</h2><br/><p>
+	  Not at the moment, because Cufflinks doesn't do any base calling of its own.  We recommend that you check out the <a href="http://samtools.sourceforge.net">samtools</a> for this purpose.
+	  </p><br/>
+	
+	  <h2 id="fusi">Does Cufflinks discover or quantify gene fusions or trans-spliced transcripts?</h2><br/><p>
+	  Not yet, but we will likely support this in a future release (we have no idea how far away that release will be).
+	  </p><br/>
+	
+	  <h2 id="hbam">Do Cufflinks and Cuffdiff support both BAM and SAM?</h2><br/><p> 
+	  Yes. If a SAM is supplied, a message will be output that the file is not a valid BAM file.
 	  However, Cufflinks will recognize this and treat the file as a SAM.  When using a SAM file, you should
 	  include a proper header or ensure that the reads are lexicographically by chromosome and then numerically
 	  by left position.  You can accomplish this sorting with the command <tt>sort -k3,3 -k4,4n in.sam > out.sam</tt>.
@@ -184,6 +201,30 @@
 	  publication.
 	  </p><br/>
 		
+	  <h2 id="notest">What does "NOTEST" mean in Cuffdiff's output?</h2><br/><p>
+	  This status code is used by Cuffdiff to indicate that neither of the conditions contained enough reads in a locus to support a reliable calculation of expression level.  Basically, Cuffdiff wasn't confident that it had enough data in that gene.  You can control Cuffdiff's behavior in this regard by lowering or raising the <tt>-c</tt> option. 
+	  </p><br/>
+	
+	  <h2 id="lowdata">What does "LOWDATA" mean in Cuffdiff's output?</h2><br/><p>
+	  This status code is used by Cuffdiff to indicate that in both conditions, the gene being tested was either too complex or too shallowly sequenced to support a reliable calculation of abundance.  Cuffdiff can often (though not always) tell via some simple linear algebra that it doesn't have enough reads to pick apart expression levels for all of a gene's isoforms, and without these, it can't calculate expression for the gene.  When this happens in both conditions, Cuffdiff marks any observed difference in expression as not statistically signficant and sets the status code as <tt>LOWDATA</tt>.  You should treat any such observed changes as highly unreliable.    
+	  </p><br/>
+	
+	  <h2 id="fail">What does "FAIL" mean in Cuffdiff's output?</h2><br/><p>
+	  This status code is used by Cuffdiff to indicate that in one or both conditions, Cuffdiff encountered a numerical exception while calculating expression levels in the locus.  This can happen because of rounding errors and other "facts of life" when doing math on computers.  Typically, this occurs in very complex genes with relatively low expression levels. When this happens in one or both conditions being tested, Cuffdiff marks any observed difference in expression as not statistically signficant and sets the status code as <tt>FAIL</tt>.  You should treat any such observed changes as highly unreliable.    
+	  </p><br/>
+	
+	  <!-- <h2 id="hssd">How many replicates do I need?  Do I need technical replicates as well as biological ones?</h2><br/><p>
+	  Good question.  The short answer is: don't bother with technical replicates (e.g. multiples libraries made from the same RNA), but get as many biological replicates as you can afford.  Early papers on the technical reproducibility of RNA-Seq have suggested that lane effects are minimal and that relative expression levels between technical replicates are extremely consistent over a very large dynamic range.  However, RNA-Seq won't do anything to remove biological variability, and the degree of variability varies (no pun intended) widely and depends on the experiment.  Just how many replicates are needed is an almost entirely open question at this point.  A related question is: considering that power to detect differences between conditions depends both on number of replicates and overall sequencing depth in each replicate, should we prefer a lot of replicates sequenced at low depth or fewer replicates sequenced very deeply?  We don't have a good answer for this yet either.    
+	  </p><br/> -->
+	
+	  <h2 id="pval">How does cufflinks calculate its p values?</h2><br/><p>
+	  <p>See <a href="howitworks.html#hdif">here</a>
+	  </p><br/>
+	
+	  <h2 id="gtfs">I'm looking for a GTF file with annotated transcripts.  Do you provide annotation files?</h2><br/><p>
+	  <p>No.  Curating these annotation files would be way too much work for us, and organizations like Ensembl and UCSC already do a great job.  We suggest you check out either of these for a high quality annotation GTF for your organism.
+	  </p><br/>
+	
 	  <h2 id="h99p">I'm trying to assemble a sample.  Cufflinks is almost done, but it seems to be hanging at "99% complete".  What's going on?</h2><br/><p> 
 	  Cufflinks spawns threads for each locus to assemble and quantitate the "bundle" of reads in that locus.  Some loci may have more reads and more complicated alternative
 	  splicing than others, which requires more CPU cycles.  These bundles can continue processing long after all others have completed, leading
@@ -197,6 +238,19 @@
 	  Mac we recommend <a href=http://www.macports.org/>MacPorts</a>. For other systems, we encourage you to
 	  visit <a href=http://www.seqanswers.org>SeqAnswers</a> for discussions about installation issues on
 	  various platforms.
+	  </p><br/>
+
+	
+	  <h2 id="time">Can I use Cuffdiff on time-series data?</h2><br/><p>
+	  <p>Yes.  Check out the <tt>-T</tt> option in Cuffdiff.
+	  </p><br/>
+	
+      <h2 id="visi">How can I visualize by Cufflinks and Cuffdiff results?</h2><br/><p>
+	  <p>We like to use the elegant, powerful <a href="http://had.co.nz/ggplot2/">ggplot2</a> library for this.  It's written by Hadley Wickham in R and makes plotting very simple.
+	  </p><br/>
+	
+	  <h2 id="inst">I'm having trouble installing Cufflinks on my system.  Can you help me?</h2><br/><p>
+	  <p>You can try sending email to our <a href="tophat.cufflinks@gmail.com">support address</a>, but please be aware that we get a great deal of email, and requests for installation help are generally the lowest priority for us.
 	  </p><br/>
 
 	
