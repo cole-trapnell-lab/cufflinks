@@ -12,12 +12,13 @@ bin_PROGRAMS = \
 	cuffdiff \
     gtf_to_sam \
     compress_gtf \
-    cuffcluster
+    cuffcluster \
+    gffread
 #	gtf_reads
 
 noinst_HEADERS = \
 	update_check.h \
-    biascorrection.h \
+	biascorrection.h \
 	codons.h \
 	clustering.h \
 	differential.h \
@@ -84,7 +85,7 @@ noinst_HEADERS = \
 	lemon/concepts/heap.h \
 	lemon/concepts/maps.h \
 	lemon/concepts/path.h \
-    lemon/concepts/matrix_maps.h \
+	lemon/concepts/matrix_maps.h \
     locfit/design.h	\
     locfit/lfcons.h	\
     locfit/lfstruc.h \
@@ -192,6 +193,9 @@ cufflinks_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS)
 
 cuffcompare_SOURCES = cuffcompare.cpp
 cuffcompare_LDADD = libgc.a
+
+gffread_SOURCES = gffread.cpp
+gffread_LDADD = libgc.a
 
 cuffdiff_SOURCES = cuffdiff.cpp
 cuffdiff_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)

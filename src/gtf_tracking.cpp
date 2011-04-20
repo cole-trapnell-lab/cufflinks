@@ -173,8 +173,8 @@ int parse_mRNAs(GfList& mrnas,
 		if (only_multiexon && m->exons.Count()<2) {
 			continue;
 			}
-		GStr feature(m->getFeatureName());
-		feature.lower();
+		//GStr feature(m->getFeatureName());
+		//feature.lower();
 		//bool gene_or_locus=(feature.endsWith("gene") ||feature.index("loc")>=0);
 		//if (m->exons.Count()==0 && gene_or_locus) {
 		if (m->isDiscarded()) {
