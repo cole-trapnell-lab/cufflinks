@@ -52,6 +52,8 @@ void TestLauncher::operator()()
             _p_bar->update(_samples->front()->locus_tag.c_str(), 1);
         }
         
+        assert (_samples->size() == _orig_workers);
+        
         // Just verify that all the loci from each factory match up.
         for (size_t i = 1; i < _samples->size(); ++i)
         {
@@ -653,10 +655,16 @@ void sample_worker(const RefSequenceTable& rt,
     HitBundle bundle;
     *non_empty = sample_factory.next_bundle(bundle);
     
-    if (!*non_empty)
-        return;
-    if (!corr_multi && !final_est_run && bundle.ref_scaffolds().size() != 1) // Only learn on single isoforms
+    if (!*non_empty || (!corr_multi && !final_est_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
+    {
+#if !ENABLE_THREADS
+        // If Cuffdiff was built without threads, we need to manually invoke 
+        // the testing functor, which will check to see if all the workers
+        // are done, and if so, perform the cross sample testing.
+        launcher();
+#endif
     	return;
+    }
     
     abundance->cluster_mass = bundle.mass();
     
@@ -703,6 +711,7 @@ void sample_worker(const RefSequenceTable& rt,
 #endif
 }
 
+int total_tests = 0;
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
 					   Tests& tests,
@@ -714,7 +723,10 @@ void test_differential(const string& locus_tag,
     
 #if ENABLE_THREADS
 	test_storage_lock.lock();
+    total_tests++;
 #endif
+    
+    //fprintf(stderr, "\nTesting in %s (%d total tests)\n", locus_tag.c_str(), total_tests);
     
 	// Add all the transcripts, CDS groups, TSS groups, and genes to their
     // respective FPKM tracking table.  Whether this is a time series or an

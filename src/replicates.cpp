@@ -139,10 +139,7 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
             {
                 geom_means[i] = p.second[j];
             }
-            else
-            {
-                assert (false);
-            }
+            
         }
         geom_means[i] = pow(geom_means[i], 1.0/(double)p.second.size());
     }
@@ -213,7 +210,9 @@ fit_dispersion_model(const vector<double>& scale_factors,
     if (raw_means_and_vars.empty())
     {
         fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
+#if ENABLE_THREADS
         _locfit_lock.unlock();
+#endif
         return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
     }
     

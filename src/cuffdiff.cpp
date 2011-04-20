@@ -530,6 +530,9 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     {
         shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
         shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
+        abundances->push_back(s_ab);
+        non_empty_bundle_flags.push_back(sample_non_empty);
+        
 #if ENABLE_THREADS					
         while(1)
         {
@@ -563,9 +566,6 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                       sample_non_empty,
                       launcher);
 #endif
-		
-        abundances->push_back(s_ab);
-        non_empty_bundle_flags.push_back(sample_non_empty);
     }
     
     //test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
@@ -903,7 +903,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 				
 				thread bias(learn_bias_worker, fac);
 #else
-				learn_bias_worker(*fac);
+				learn_bias_worker(fac);
 #endif
 			}
     	}
@@ -1045,6 +1045,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
 	}
 	
+    //fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+    
 	int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
 	fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
 	fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");

@@ -670,12 +670,18 @@ void AbundanceGroup::calculate_conf_intervals()
                 double norm_frag_density = 1000000000;
                 norm_frag_density /= _abundances[j]->effective_length();
                 
-                norm_frag_density *= mass_variance_fraction();
+                norm_frag_density *= mass_fraction();
                 
                 iso_fpkm_var = norm_frag_density * _abundances[j]->gamma();
                 assert (!isnan(_gamma_covariance(j,j)));
                 
                 iso_fpkm_var += norm_frag_density * norm_frag_density * _gamma_covariance(j,j);
+                
+                if (mass_fraction() > 0.0)
+                {
+                    double variance_scale_factor = mass_variance_fraction() / mass_fraction();
+                    iso_fpkm_var *= variance_scale_factor;
+                }
                 
 				double FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(iso_fpkm_var);
 				double FPKM_lo = max(0.0, _abundances[j]->FPKM() - 2 * sqrt(iso_fpkm_var));
@@ -720,11 +726,17 @@ void AbundanceGroup::calculate_conf_intervals()
                 double norm_frag_density = 1000000000;
                 norm_frag_density /= pA->effective_length();
                 
-                norm_frag_density *= mass_variance_fraction();
+                norm_frag_density *= mass_fraction();
                 double fpkm_high = norm_frag_density;
                 
                 double var_fpkm = fpkm_high; 
 				
+                if (mass_fraction() > 0.0)
+                {
+                    double variance_scale_factor = mass_variance_fraction() / mass_fraction();
+                    var_fpkm *= variance_scale_factor;
+                }
+                
 				FPKM_hi = fpkm_high + 2 * sqrt(var_fpkm);
 				FPKM_lo = 0.0;
 				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
@@ -778,11 +790,17 @@ void AbundanceGroup::calculate_FPKM_variance()
         }    
     }
     
-    double mass_coeff = (1000000000 * mass_variance_fraction());
+    double mass_coeff = (1000000000 * mass_fraction());
 	//double left = (mass_coeff * gamma());
     double eff_len = effective_length(); 
     //double right = (mass_coeff * mass_coeff * var_cumul_gamma);
     _FPKM_variance = ((mass_coeff * gamma()) / eff_len) + (mass_coeff * mass_coeff * var_cumul_gamma);
+    if (mass_fraction() > 0.0)
+    {
+        double variance_scale_factor = mass_variance_fraction() / mass_fraction();
+        _FPKM_variance *= variance_scale_factor;
+    }
+    
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
 

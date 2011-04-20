@@ -165,6 +165,7 @@ struct TestLauncher
                  ProgressBar* p_bar) 
     :
     _num_workers(num_workers),
+    _orig_workers(*num_workers),
     _samples(samples),
     _tests(tests),
     _tracking(tracking),
@@ -177,6 +178,7 @@ struct TestLauncher
     
 private:
     shared_ptr<int> _num_workers;
+    int _orig_workers;
     shared_ptr<vector<shared_ptr<SampleAbundances> > const> _samples;
     Tests* _tests;
     Tracking* _tracking;
