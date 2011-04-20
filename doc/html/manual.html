@@ -188,7 +188,7 @@
   	  <h2 id="cufflinks">Running Cufflinks</h2><br/>
 		Run <tt>cufflinks</tt> from the command line as follows:
 	  <blockquote>
- 	   Usage: cufflinks [options]* &lt;aligned_reads.sam&gt;
+ 	   Usage: cufflinks [options]* &lt;aligned_reads.(sam/bam)&gt;
 	  </blockquote>
 	  <p>
 	  The following is a detailed description of the options used to control
@@ -201,7 +201,7 @@
 	  </td><td VALIGN=top>
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>&lt;aligned_reads.sam&gt;</tt>
+	  <tt>&lt;aligned_reads.(sam/bam)&gt;</tt>
 	  </td><td VALIGN=top>
 	  A file of RNA-Seq read alignments in the <a href="http://samtools.sourceforge.net">
 	  SAM format</a>.  SAM is a standard short read alignment, that allows aligners to 
@@ -486,7 +486,7 @@
 	
 	  <h2 id="cufflinks_input">Cufflinks Input</h2><br/>
 	  <p>
-	  	Cufflinks takes a text file of SAM alignments as input.  For more details
+	  	Cufflinks takes a text file of SAM alignments, or a binary SAM (BAM) file as input.  For more details
 	  	on the SAM format, see the <a href="http://samtools.sourceforge.net/SAM1.pdf">
 	  	specification</a>.  The RNA-Seq read mapper <a href="http://tophat.cbcb.umd.edu">TopHat</a>
 	  	produces output in this format, and is
@@ -1088,7 +1088,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		
 		<br/>
 		<h2 id="cuffdiff_input">Cuffdiff Input</h2><br/>
-		Cuffdiff takes a GTF file of transcripts as input, along with two or more 
+		Cuffdiff takes a GTF2/GFF3 file of transcripts as input, along with two or more 
 		SAM files containing the fragment alignments for two or more samples. 
 		It produces a number of output files that contain test results for 
 		changes in expression at the level of transcripts, primary transcripts, 
