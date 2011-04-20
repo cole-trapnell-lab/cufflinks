@@ -803,8 +803,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             for (size_t j = 0; j < sample_count_table.size(); ++j)
             {
                 pair<string, double> counts;
-                string& locus_id = sample_count_table[i].first;
-                double locus_count = sample_count_table[i].second[j];
+                string& locus_id = sample_count_table[j].first;
+                double locus_count = sample_count_table[j].second[i];
                 counts = make_pair(locus_id, locus_count);
                 scaled_counts.push_back(counts);
             }
