@@ -756,19 +756,21 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     if (most_reps == 1 && poisson_dispersion == false)
     {
         vector<pair<string, vector<double> > > sample_count_table;
-        foreach(shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+        for (size_t i = 0; i < all_read_groups.size(); ++i)
         {
+            shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
             const vector<pair<string, double> >& common_count_table = rg_props->common_scale_counts();
             double unscaling_factor = 1.0 / rg_props->mass_scale_factor();
             for (size_t j = 0; j < common_count_table.size(); ++j)
             {
                 if (sample_count_table.size() == j)
                 {
-                    sample_count_table.push_back(make_pair(common_count_table[j].first, vector<double>()));
+                    const string& locus_id = common_count_table[j].first;
+                    sample_count_table.push_back(make_pair(locus_id, vector<double>(all_read_groups.size(), 0.0)));
                 }
                 double scaled = common_count_table[j].second;
-                sample_count_table[j].second.push_back(scaled * unscaling_factor);
-                assert(sample_count_table[j].second.back() >= 0 && !isinf(sample_count_table[j].second.back()));
+                sample_count_table[j].second[i] = scaled * unscaling_factor;
+                assert(sample_count_table[j].second[i] >= 0 && !isinf(sample_count_table[j].second[i]));
             }
         }
         
