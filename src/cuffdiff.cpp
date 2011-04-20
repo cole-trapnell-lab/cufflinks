@@ -289,20 +289,6 @@ int parse_options(int argc, char** argv)
 	return 0;
 }
 
-
-#if ENABLE_THREADS
-mutex locus_thread_pool_lock;
-int locus_curr_threads = 0;
-int locus_num_threads = 0;
-
-void decr_pool_count()
-{
-	locus_thread_pool_lock.lock();
-	locus_curr_threads--;
-	locus_thread_pool_lock.unlock();	
-}
-#endif
-
 void print_tests(FILE* fout,
                  const char* sample_1_label,
                  const char* sample_2_label,
@@ -523,10 +509,22 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 }
 
 bool quantitate_next_locus(const RefSequenceTable& rt,
-                           vector<ReplicatedBundleFactory>& bundle_factories,
-                           vector<shared_ptr<SampleAbundances> >& abundances)
+                           vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
+                           shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances,
+                           Tests* tests,
+                           Tracking* tracking,
+                           ProgressBar* p_bar)
 {
     vector<shared_ptr<bool> > non_empty_bundle_flags;
+    
+    shared_ptr<int> num_outstanding_workers(new int(bundle_factories.size()));
+    TestLauncher launcher(num_outstanding_workers, 
+                          abundances, 
+                          tests, 
+                          tracking,
+                          samples_are_time_series,
+                          p_bar);
+                          
     
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
@@ -554,37 +552,23 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         
         thread quantitate(sample_worker,
                           boost::ref(rt),
-                          boost::ref(bundle_factories[i]),
+                          boost::ref(*(bundle_factories[i])),
                           s_ab,
-                          sample_non_empty);  
+                          sample_non_empty,
+                          launcher);  
 #else
         sample_worker(boost::ref(rt),
-                      boost::ref(bundle_factories[i]),
+                      boost::ref(*(bundle_factories[i])),
                       s_ab,
-                      sample_non_empty);
+                      sample_non_empty,
+                      launcher);
 #endif
 		
-        abundances.push_back(s_ab);
+        abundances->push_back(s_ab);
         non_empty_bundle_flags.push_back(sample_non_empty);
     }
     
-    // wait for the workers to finish up before doing the cross-sample testing.
-#if ENABLE_THREADS	
-    while(1)
-    {
-        locus_thread_pool_lock.lock();
-        if (locus_curr_threads == 0)
-        {
-            locus_thread_pool_lock.unlock();
-            break;
-        }
-        
-        locus_thread_pool_lock.unlock();
-        
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        
-    }
-#endif
+    //test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
     
     bool more_loci_remain = false;
     foreach (shared_ptr<bool> sample_flag, non_empty_bundle_flags)
@@ -609,7 +593,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
 	vector<shared_ptr<Scaffold> > ref_mRNAs;
 	
-	vector<ReplicatedBundleFactory> bundle_factories;
+	vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
     vector<shared_ptr<ReadGroupProperties> > all_read_groups;
     vector<shared_ptr<HitFactory> > all_hit_factories;
     
@@ -664,8 +648,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        ReplicatedBundleFactory rep_factory(replicate_factories);
-        bundle_factories.push_back(rep_factory);
+        bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories)));
 	}
     
     ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
@@ -678,10 +661,11 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
     }
     
-    foreach (ReplicatedBundleFactory& fac, bundle_factories)
+    foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
-        fac.set_ref_rnas(ref_mRNAs);
-        if (mask_gtf) fac.set_mask_rnas(mask_rnas);
+        fac->set_ref_rnas(ref_mRNAs);
+        if (mask_gtf) 
+            fac->set_mask_rnas(mask_rnas);
     }
     
 #if ENABLE_THREADS
@@ -692,7 +676,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	int tmp_max_frag_len = 0;
 	
 	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
-	foreach (ReplicatedBundleFactory& fac, bundle_factories)
+	foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
 #if ENABLE_THREADS	
         while(1)
@@ -713,11 +697,11 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         locus_thread_pool_lock.unlock();
         
         thread inspect(inspect_map_worker,
-                       boost::ref(fac),
+                       boost::ref(*fac),
                        boost::ref(tmp_min_frag_len),
                        boost::ref(tmp_max_frag_len));  
 #else
-        inspect_map_worker(boost::ref(fac),
+        inspect_map_worker(boost::ref(*fac),
                            boost::ref(tmp_min_frag_len),
                            boost::ref(tmp_max_frag_len));
 #endif
@@ -746,7 +730,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
-        ReplicatedBundleFactory& fac = bundle_factories[i];
+        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
         if (fac.num_replicates() > most_reps)
         {
             most_reps = fac.num_replicates();
@@ -760,11 +744,11 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
     if (most_reps != 1 && poisson_dispersion == false)
     {
-        foreach (ReplicatedBundleFactory& fac, bundle_factories)
+        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
         {
-            if (fac.num_replicates() == 1)
+            if (fac->num_replicates() == 1)
             {
-                fac.mass_dispersion_model(bundle_factories[most_reps_idx].mass_dispersion_model());
+                fac->mass_dispersion_model(bundle_factories[most_reps_idx]->mass_dispersion_model());
             }
         }
     }
@@ -816,7 +800,11 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             vector<pair<string, double> > scaled_counts;
             for (size_t j = 0; j < sample_count_table.size(); ++j)
             {
-                scaled_counts.push_back(make_pair(sample_count_table[i].first, sample_count_table[i].second[j]));
+                pair<string, double> counts;
+                string& locus_id = sample_count_table[i].first;
+                double locus_count = sample_count_table[i].second[j];
+                counts = make_pair(locus_id, locus_count);
+                scaled_counts.push_back(counts);
             }
             rg_props->common_scale_counts(scaled_counts);
             // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
@@ -839,7 +827,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	final_est_run = false;
 	
-	double num_bundles = (double)bundle_factories[0].num_bundles();
+	double num_bundles = (double)bundle_factories[0]->num_bundles();
 	
 	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
@@ -853,16 +841,35 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 		while (1) 
 		{
 			p_bar.update("",1);
-			vector<shared_ptr<SampleAbundances> > abundances;
-			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
+			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances, NULL, NULL, &p_bar);
 			
 			if (!more_loci_remain)
+            {
+                // wait for the workers to finish up before breaking out.
+#if ENABLE_THREADS	
+                while(1)
+                {
+                    locus_thread_pool_lock.lock();
+                    if (locus_curr_threads == 0)
+                    {
+                        locus_thread_pool_lock.unlock();
+                        break;
+                    }
+                    
+                    locus_thread_pool_lock.unlock();
+                    
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+                    
+                }
+#endif
 				break;
+            }
 		}
         
-        foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
+        foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
-			rep_fac.reset();
+			rep_fac->reset();
         }
         
 		p_bar.complete();
@@ -870,9 +877,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     if (corr_bias)
     {
         p_bar = ProgressBar("Learning bias parameters.", 0);
-		foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
+		foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
-			foreach (shared_ptr<BundleFactory> fac, rep_fac.factories())
+			foreach (shared_ptr<BundleFactory> fac, rep_fac->factories())
 			{
 #if ENABLE_THREADS	
 				while(1)
@@ -894,7 +901,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 				
 				thread bias(learn_bias_worker, fac);
 #else
-				learn_bias_worker(fac);
+				learn_bias_worker(*fac);
 #endif
 			}
     	}
@@ -915,9 +922,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 		}
 #endif
-        foreach (ReplicatedBundleFactory& rep_fac, bundle_factories)
+        foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
-			rep_fac.reset();
+			rep_fac->reset();
         }
 	}
     
@@ -952,34 +959,31 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
 	while (true)
 	{
-        vector<shared_ptr<SampleAbundances> > abundances;
-        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances);
+        shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances, &tests, &tracking, &p_bar);
         
         if (!more_loci_remain)
-            break;
-        
-        for (size_t i = 1; i < abundances.size(); ++i)
         {
-            const SampleAbundances& curr = *(abundances[i]);
-            const SampleAbundances& prev = *(abundances[i-1]);
-
-            assert (curr.locus_tag == prev.locus_tag);
-            
-            const AbundanceGroup& s1 = curr.transcripts;
-            const AbundanceGroup& s2 =  prev.transcripts;
-            
-            assert (s1.abundances().size() == s2.abundances().size());
-            
-            for (size_t j = 0; j < s1.abundances().size(); ++j)
+            // wait for the workers to finish up before doing the cross-sample testing.
+#if ENABLE_THREADS	
+            while(1)
             {
-                assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
+                locus_thread_pool_lock.lock();
+                if (locus_curr_threads == 0)
+                {
+                    locus_thread_pool_lock.unlock();
+                    break;
+                }
+                
+                locus_thread_pool_lock.unlock();
+                
+                boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+                
             }
+#endif
+            break;
         }
-
-        verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
-		p_bar.update(abundances.front()->locus_tag.c_str(), 1);
-		test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
-	}
+    }
 	
 	p_bar.complete();
 

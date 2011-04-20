@@ -130,7 +130,7 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
         
         for (size_t j = 0; j < p.second.size(); ++j)
         {
-            assert (geom_means.size() > j);
+            //assert (geom_means.size() > j);
             if (geom_means[i] > 0  && p.second[j] > 0)
             {
                 geom_means[i] *= p.second[j];
@@ -138,6 +138,10 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
             else if (p.second[j] > 0)
             {
                 geom_means[i] = p.second[j];
+            }
+            else
+            {
+                assert (false);
             }
         }
         geom_means[i] = pow(geom_means[i], 1.0/(double)p.second.size());

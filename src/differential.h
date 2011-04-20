@@ -155,12 +155,42 @@ struct SampleAbundances
 	double cluster_mass;
 };
 
+struct TestLauncher
+{
+    TestLauncher(shared_ptr<int> num_workers, 
+                 shared_ptr<vector<shared_ptr<SampleAbundances> > const> samples,
+                 Tests* tests,
+                 Tracking* tracking,
+                 bool ts,
+                 ProgressBar* p_bar) 
+    :
+    _num_workers(num_workers),
+    _samples(samples),
+    _tests(tests),
+    _tracking(tracking),
+    _samples_are_time_series(ts),
+    _p_bar(p_bar)
+    {
+    }
+    
+    void operator()();
+    
+private:
+    shared_ptr<int> _num_workers;
+    shared_ptr<vector<shared_ptr<SampleAbundances> > const> _samples;
+    Tests* _tests;
+    Tracking* _tracking;
+    bool _samples_are_time_series;
+    ProgressBar* _p_bar;
+};
+
 extern double min_read_count;
 
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
-                   shared_ptr<bool> non_empty);
+                   shared_ptr<bool> non_empty,
+                   TestLauncher& launcher);
 
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
@@ -170,6 +200,9 @@ void test_differential(const string& locus_tag,
 
 #if ENABLE_THREADS
 void decr_pool_count();
+extern boost::mutex locus_thread_pool_lock;
+extern int locus_curr_threads;
+extern int locus_num_threads;
 #endif
 
 #endif

@@ -988,6 +988,9 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 
 bool BundleFactory::next_bundle(HitBundle& bundle)
 {    
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
 	switch(_bundle_mode)
 	{
 		case HIT_DRIVEN:

@@ -20,6 +20,65 @@ using namespace std;
 
 double min_read_count = 10;
 
+#if ENABLE_THREADS
+
+mutex locus_thread_pool_lock;
+int locus_curr_threads = 0;
+int locus_num_threads = 0;
+
+void decr_pool_count()
+{
+	locus_thread_pool_lock.lock();
+	locus_curr_threads--;
+	locus_thread_pool_lock.unlock();	
+}
+#endif
+
+void TestLauncher::operator()() 
+{    
+#if ENABLE_THREADS
+    locus_thread_pool_lock.lock();
+    locus_curr_threads--;
+#endif
+    (*_num_workers)--;
+    // In some abundance runs, we don't actually want to perform testing 
+    // (eg initial quantification before bias correction).
+    // _tests and _tracking will be NULL in these cases.
+    if (*_num_workers == 0 && _tests != NULL && _tracking != NULL && !_samples->empty())
+    {
+        if (_p_bar)
+        {
+            verbose_msg("Testing for differential expression and regulation in locus [%s]\n", _samples->front()->locus_tag.c_str());
+            _p_bar->update(_samples->front()->locus_tag.c_str(), 1);
+        }
+        
+        // Just verify that all the loci from each factory match up.
+        for (size_t i = 1; i < _samples->size(); ++i)
+        {
+            const SampleAbundances& curr = *((*_samples)[i]);
+            const SampleAbundances& prev = *((*_samples)[i-1]);
+
+            assert (curr.locus_tag == prev.locus_tag);
+            
+            const AbundanceGroup& s1 = curr.transcripts;
+            const AbundanceGroup& s2 =  prev.transcripts;
+            
+            assert (s1.abundances().size() == s2.abundances().size());
+            
+            for (size_t j = 0; j < s1.abundances().size(); ++j)
+            {
+                assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
+            }
+        }
+
+        test_differential(_samples->front()->locus_tag, *_samples, *_tests, *_tracking, _samples_are_time_series);
+    }
+    
+#if ENABLE_THREADS
+    locus_thread_pool_lock.unlock();
+#endif
+}
+
 // This performs a between-group test on an isoform or TSS grouping, on two 
 // different samples.
 bool test_diffexp(const FPKMContext& curr,
@@ -584,10 +643,11 @@ void sample_abundance_worker(const string& locus_tag,
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
-                   shared_ptr<bool> non_empty)
+                   shared_ptr<bool> non_empty,
+                   TestLauncher& launcher)
 {
 #if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_pool_count);
+	boost::this_thread::at_thread_exit(launcher);
 #endif
     
     HitBundle bundle;
@@ -634,6 +694,13 @@ void sample_worker(const RefSequenceTable& rt,
     {
         ref_scaff->clear_hits();
     }
+    
+#if !ENABLE_THREADS
+    // If Cuffdiff was built without threads, we need to manually invoke 
+    // the testing functor, which will check to see if all the workers
+    // are done, and if so, perform the cross sample testing.
+    launcher();
+#endif
 }
 
 void test_differential(const string& locus_tag,

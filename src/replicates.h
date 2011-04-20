@@ -63,6 +63,9 @@ public:
 	
 	bool next_bundle(HitBundle& bundle_out)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         std::vector<HitBundle*> bundles;
         
         bool non_empty_bundle = false;
@@ -111,6 +114,9 @@ public:
 	
 	void reset() 
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
             fac->reset();
@@ -202,6 +208,9 @@ public:
     // samples will clobber each other
     void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         foreach(shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_ref_rnas(mRNAs);
@@ -210,6 +219,9 @@ public:
     
     void set_mask_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         foreach(shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_mask_rnas(mRNAs);
@@ -220,6 +232,9 @@ public:
     
     void mass_dispersion_model(shared_ptr<MassDispersionModel const> disperser)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         foreach(shared_ptr<BundleFactory>& fac, _factories)
         {
             fac->read_group_properties()->mass_dispersion_model(disperser);
@@ -233,4 +248,7 @@ public:
     
 private:
 	vector<shared_ptr<BundleFactory> > _factories;
+#if ENABLE_THREADS
+    boost::mutex _factory_lock;
+#endif
 };

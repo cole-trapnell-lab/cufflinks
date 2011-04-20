@@ -220,6 +220,9 @@ public:
     
 	void reset() 
 	{ 
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
 		//rewind(hit_file); 
 		_hit_fac->reset();
 		next_ref_scaff = ref_mRNAs.begin(); 
@@ -238,6 +241,9 @@ public:
     // samples will clobber each other
     void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         ref_mRNAs.clear();
         for (vector<shared_ptr<Scaffold> >::const_iterator i = mRNAs.begin(); i < mRNAs.end(); ++i)
         {
@@ -259,6 +265,9 @@ public:
     
     void set_mask_rnas(const vector<shared_ptr<Scaffold> >& masks)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         mask_gtf_recs = masks;
         RefID last_id = 0;
         for (vector<shared_ptr<Scaffold> >::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
@@ -275,11 +284,17 @@ public:
         
 	void bad_intron_table(const BadIntronTable& bad_introns) 
 	{ 
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
 		_bad_introns = bad_introns;
 	}
     
     void read_group_properties(shared_ptr<ReadGroupProperties> rg)
     {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
         _rg_props = rg;
     }
     
@@ -323,6 +338,9 @@ private:
     int _prev_pos;
     RefID _prev_ref_id;
     int _num_bundles;
+#if ENABLE_THREADS    
+    boost::mutex _factory_lock;
+#endif
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
