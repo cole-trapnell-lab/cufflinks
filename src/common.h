@@ -71,6 +71,7 @@ extern int overhang_3;
 extern int ref_merge_overhang_tolerance;
 extern int tile_len;
 extern int tile_off;
+extern bool enable_faux_reads;
 
 // Assembly options
 extern uint32_t min_intron_length;
@@ -378,4 +379,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_USE_EM                  275
 #define OPT_COLLAPSE_COND_PROB      276
 #define OPT_RANDOM_SEED             277
+#define OPT_NO_FAUX_READS           278
+#define OPT_3_OVERHANG_TOLERANCE    279
+#define OPT_INTRON_OVERHANG_TOLERANCE 280
 #endif

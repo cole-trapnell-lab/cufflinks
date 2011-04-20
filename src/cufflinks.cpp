@@ -85,6 +85,13 @@ static struct option long_options[] = {
 {"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
 {"trim-3-dropoff-frac",     required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
 {"trim-3-avgcov-thresh",	required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
+    
+{"--3-overhang-tolerance",	required_argument,		 0,			 OPT_3_OVERHANG_TOLERANCE},
+{"--intron-overhang-tolerance",	required_argument,		 0,		 OPT_INTRON_OVERHANG_TOLERANCE},
+{"--no-faux-reads",         no_argument,             0,           OPT_NO_FAUX_READS},
+
+
+
 
 {0, 0, 0, 0} // terminator
 };
@@ -132,6 +139,7 @@ void print_usage()
     fprintf(stderr, "\nAdvanced Reference Annotation Guided Assembly Options:\n");
 //    fprintf(stderr, "  --tile-read-len              length of faux-reads                                  [ default:    405 ]\n");
 //    fprintf(stderr, "  --tile-read-sep              distance between faux-reads                           [ default:     15 ]\n");
+    fprintf(stderr, "  --no-faux-reads              disable tiling by faux reads                          [ default:  FALSE ]\n");
     fprintf(stderr, "  --3-overhang-tolerance       overhang allowed on 3' end when merging with reference[ default:    600 ]\n");
     fprintf(stderr, "  --intron-overhang-tolerance  overhang allowed inside reference intron when merging [ default:     30 ]\n");
     
@@ -326,6 +334,21 @@ int parse_options(int argc, char** argv)
             case OPT_COLLAPSE_COND_PROB:
             {
                 cond_prob_collapse = false;
+                break;
+            }
+            case OPT_NO_FAUX_READS:
+            {
+                enable_faux_reads = false;
+                break;
+            }
+            case OPT_3_OVERHANG_TOLERANCE:
+            {
+                overhang_3 = parseInt(0, "--3-overhang-tolernace must be at least 0", print_usage);
+                break;
+            }
+            case OPT_INTRON_OVERHANG_TOLERANCE:
+            {
+                ref_merge_overhang_tolerance = parseInt(0, "--intron-overhang-tolernace must be at least 0", print_usage);
                 break;
             }
             case OPT_RANDOM_SEED:
@@ -564,7 +587,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
                        true);
     }
     
-	if (ref_guided && !hits.empty())
+	if (ref_guided && enable_faux_reads && !hits.empty())
 	{
 		vector<Scaffold> pseudohits;
 		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)

@@ -423,7 +423,13 @@
 	  transcript.  The default is 0.1.
 	  </t></tr>
 	  
-	  <b>Advanced Reference Annotation Guided Assembly Options:</b>
+	  <tr><td VALIGN=top nowrap>
+	  <b>Advanced Reference Annotation Based Transcript (RABT) Assembly Options:</b>
+	  </td><td VALIGN=top>
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <i>These options have an affect only when used in conjuction with <tt>-g/--GTF-guide</tt>.</i>
 	  </td><td VALIGN=top>
 	  </td></tr>
 	  
@@ -441,6 +447,15 @@
 	  The number of bp allowed to enter the intron of a reference transcript when determining if an 
 	  assembled transcript should be merged with it (ie, the assembled transcript is not novel).  
 	  The default is 50 bp.
+	  </t></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-faux-reads</tt>
+	  </td><td VALIGN=top>
+	  This option disables tiling of the reference transcripts with faux reads.  Use this if you only
+	  want to use sequencing reads in assembly but do not want to output assembled transcripts that lay
+	  within reference transcripts.  All reference transcripts in the input annotation will also 
+	  be included in the output.
 	  </t></tr>
 
 	  <tr><td VALIGN=top>

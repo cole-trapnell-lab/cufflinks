@@ -81,6 +81,7 @@ int overhang_3 = 600;
 int ref_merge_overhang_tolerance = 30;
 int tile_len = 405;
 int tile_off = 15;
+bool enable_faux_reads = true;
 
 // Assembly options
 uint32_t min_intron_length = 50;
