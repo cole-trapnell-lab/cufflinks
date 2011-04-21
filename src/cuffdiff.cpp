@@ -845,7 +845,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 
 		while (1) 
 		{
-			p_bar.update("",1);
+			//p_bar.update("",1);
             test_launcher = shared_ptr<TestLauncher>(new TestLauncher((int)bundle_factories.size(), NULL, NULL, samples_are_time_series, &p_bar));
                                                      
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());

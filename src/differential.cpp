@@ -94,12 +94,6 @@ bool TestLauncher::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >
 // acquire the lock itself. 
 void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abundances)
 {
-    if (_p_bar)
-    {
-        verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
-        _p_bar->update(abundances.front()->locus_tag.c_str(), 1);
-    }
-    
     assert (abundances.size() == _orig_workers);
     
     // Just verify that all the loci from each factory match up.
@@ -129,23 +123,38 @@ void TestLauncher::test_finished_loci()
 #if ENABLE_THREADS
 	boost::mutex::scoped_lock lock(_launcher_lock);
 #endif  
-    // In some abundance runs, we don't actually want to perform testing 
-    // (eg initial quantification before bias correction).
-    // _tests and _tracking will be NULL in these cases.
-    if (_tests != NULL && _tracking != NULL && !_samples.empty())
+
+    launcher_sample_table::iterator itr = _samples.begin(); 
+    while(itr != _samples.end())
     {
-        launcher_sample_table::iterator itr = _samples.begin(); 
-        while(itr != _samples.end())
+        if (all_samples_reported_in(itr->second))
         {
-            if (all_samples_reported_in(itr->second))
+            // In some abundance runs, we don't actually want to perform testing 
+            // (eg initial quantification before bias correction).
+            // _tests and _tracking will be NULL in these cases.
+            if (_tests != NULL && _tracking != NULL)
             {
+                if (_p_bar)
+                {
+                    verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
+                    _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
+                }
                 perform_testing(itr->second);
-                itr = _samples.erase(itr);
             }
             else
             {
-                ++itr;
+                if (_p_bar)
+                {
+                    //verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
+                    _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
+                }
             }
+            itr = _samples.erase(itr);
+        }
+        else
+        {
+            
+            ++itr;
         }
     }
 }
