@@ -21,7 +21,7 @@ using namespace std;
 double min_read_count = 10;
 
 #if ENABLE_THREADS
-
+mutex _launcher_lock;
 mutex locus_thread_pool_lock;
 int locus_curr_threads = 0;
 int locus_num_threads = 0;
@@ -34,51 +34,120 @@ void decr_pool_count()
 }
 #endif
 
-void TestLauncher::operator()() 
-{    
+TestLauncher::launcher_sample_table::iterator TestLauncher::find_locus(const string& locus_id)
+{
+    launcher_sample_table::iterator itr = _samples.begin();
+    for(; itr != _samples.end(); ++itr)
+    {
+        if (itr->first == locus_id)
+            return itr;
+    }
+    return _samples.end();
+}
+
+void TestLauncher::register_locus(const string& locus_id)
+{
 #if ENABLE_THREADS
-    locus_thread_pool_lock.lock();
-    locus_curr_threads--;
-#endif
-    (*_num_workers)--;
+	boost::mutex::scoped_lock lock(_launcher_lock);
+#endif	
+    
+    launcher_sample_table::iterator itr = find_locus(locus_id);
+    if (itr == _samples.end())
+    {
+        pair<launcher_sample_table::iterator, bool> p;
+        vector<shared_ptr<SampleAbundances> >abs(_orig_workers);
+        _samples.push_back(make_pair(locus_id, abs));
+    }
+}
+
+void TestLauncher::abundance_avail(const string& locus_id, 
+                                   shared_ptr<SampleAbundances> ab, 
+                                   size_t factory_id)
+{
+#if ENABLE_THREADS
+	boost::mutex::scoped_lock lock(_launcher_lock);
+#endif	
+    launcher_sample_table::iterator itr = find_locus(locus_id);
+    if (itr == _samples.end())
+    {
+        assert(false);
+    }
+    itr->second[factory_id] = ab;
+    //itr->second(factory_id] = ab;
+}
+
+// Note: this routine should be called under lock - it doesn't
+// acquire the lock itself. 
+bool TestLauncher::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances)
+{    
+    foreach (shared_ptr<SampleAbundances> ab, abundances)
+    {
+        if (!ab)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Note: this routine should be called under lock - it doesn't
+// acquire the lock itself. 
+void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abundances)
+{
+    if (_p_bar)
+    {
+        verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
+        _p_bar->update(abundances.front()->locus_tag.c_str(), 1);
+    }
+    
+    assert (abundances.size() == _orig_workers);
+    
+    // Just verify that all the loci from each factory match up.
+    for (size_t i = 1; i < abundances.size(); ++i)
+    {
+        const SampleAbundances& curr = *(abundances[i]);
+        const SampleAbundances& prev = *(abundances[i-1]);
+        
+        assert (curr.locus_tag == prev.locus_tag);
+        
+        const AbundanceGroup& s1 = curr.transcripts;
+        const AbundanceGroup& s2 =  prev.transcripts;
+        
+        assert (s1.abundances().size() == s2.abundances().size());
+        
+        for (size_t j = 0; j < s1.abundances().size(); ++j)
+        {
+            assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
+        }
+    }
+    
+    test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
+}
+
+void TestLauncher::test_finished_loci()
+{
+#if ENABLE_THREADS
+	boost::mutex::scoped_lock lock(_launcher_lock);
+#endif  
     // In some abundance runs, we don't actually want to perform testing 
     // (eg initial quantification before bias correction).
     // _tests and _tracking will be NULL in these cases.
-    if (*_num_workers == 0 && _tests != NULL && _tracking != NULL && !_samples->empty())
+    if (_tests != NULL && _tracking != NULL && !_samples.empty())
     {
-        if (_p_bar)
+        launcher_sample_table::iterator itr = _samples.begin(); 
+        while(itr != _samples.end())
         {
-            verbose_msg("Testing for differential expression and regulation in locus [%s]\n", _samples->front()->locus_tag.c_str());
-            _p_bar->update(_samples->front()->locus_tag.c_str(), 1);
-        }
-        
-        assert (_samples->size() == _orig_workers);
-        
-        // Just verify that all the loci from each factory match up.
-        for (size_t i = 1; i < _samples->size(); ++i)
-        {
-            const SampleAbundances& curr = *((*_samples)[i]);
-            const SampleAbundances& prev = *((*_samples)[i-1]);
-
-            assert (curr.locus_tag == prev.locus_tag);
-            
-            const AbundanceGroup& s1 = curr.transcripts;
-            const AbundanceGroup& s2 =  prev.transcripts;
-            
-            assert (s1.abundances().size() == s2.abundances().size());
-            
-            for (size_t j = 0; j < s1.abundances().size(); ++j)
+            if (all_samples_reported_in(itr->second))
             {
-                assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
+                perform_testing(itr->second);
+                itr = _samples.erase(itr);
+            }
+            else
+            {
+                ++itr;
             }
         }
-
-        test_differential(_samples->front()->locus_tag, *_samples, *_tests, *_tracking, _samples_are_time_series);
     }
-    
-#if ENABLE_THREADS
-    locus_thread_pool_lock.unlock();
-#endif
 }
 
 // This performs a between-group test on an isoform or TSS grouping, on two 
@@ -645,11 +714,12 @@ void sample_abundance_worker(const string& locus_tag,
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
+                   size_t factory_id,
                    shared_ptr<bool> non_empty,
-                   TestLauncher& launcher)
+                   shared_ptr<TestLauncher> launcher)
 {
 #if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(launcher);
+	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
     
     HitBundle bundle;
@@ -675,6 +745,9 @@ void sample_worker(const RefSequenceTable& rt,
             bundle.left(),
             bundle.right());
     string locus_tag = bundle_label_buf;
+    
+    launcher->register_locus(locus_tag);
+    
     abundance->locus_tag = locus_tag;
     
     bool perform_cds_analysis = final_est_run;
@@ -703,11 +776,14 @@ void sample_worker(const RefSequenceTable& rt,
         ref_scaff->clear_hits();
     }
     
+    launcher->abundance_avail(locus_tag, abundance, factory_id);
+    launcher->test_finished_loci();
+    
 #if !ENABLE_THREADS
     // If Cuffdiff was built without threads, we need to manually invoke 
     // the testing functor, which will check to see if all the workers
     // are done, and if so, perform the cross sample testing.
-    launcher();
+    launcher->test_finished_loci();
 #endif
 }
 

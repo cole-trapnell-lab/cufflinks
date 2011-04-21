@@ -155,18 +155,23 @@ struct SampleAbundances
 	double cluster_mass;
 };
 
+#if ENABLE_THREADS
+    extern boost::mutex _launcher_lock;
+#endif
+
 struct TestLauncher
 {
-    TestLauncher(shared_ptr<int> num_workers, 
-                 shared_ptr<vector<shared_ptr<SampleAbundances> > const> samples,
+private:
+    TestLauncher(TestLauncher& rhs) {}
+    
+public:
+    TestLauncher(int num_samples,
                  Tests* tests,
                  Tracking* tracking,
                  bool ts,
                  ProgressBar* p_bar) 
     :
-    _num_workers(num_workers),
-    _orig_workers(*num_workers),
-    _samples(samples),
+    _orig_workers(num_samples),
     _tests(tests),
     _tracking(tracking),
     _samples_are_time_series(ts),
@@ -176,14 +181,28 @@ struct TestLauncher
     
     void operator()();
     
+    void register_locus(const string& locus_id);
+    void abundance_avail(const string& locus_id, 
+                         shared_ptr<SampleAbundances> ab, 
+                         size_t factory_id);
+    void test_finished_loci();
+    void perform_testing(vector<shared_ptr<SampleAbundances> >& abundances);
+    bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
+    bool all_samples_reported_in(const string& locus_id);
+    
+    typedef list<pair<string, vector<shared_ptr<SampleAbundances> > > > launcher_sample_table;
+    
 private:
-    shared_ptr<int> _num_workers;
+    
+    launcher_sample_table::iterator find_locus(const string& locus_id);
+    
     int _orig_workers;
-    shared_ptr<vector<shared_ptr<SampleAbundances> > const> _samples;
+    launcher_sample_table _samples;
     Tests* _tests;
     Tracking* _tracking;
     bool _samples_are_time_series;
     ProgressBar* _p_bar;
+
 };
 
 extern double min_read_count;
@@ -191,8 +210,9 @@ extern double min_read_count;
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
+                   size_t factory_id,
                    shared_ptr<bool> non_empty,
-                   TestLauncher& launcher);
+                   shared_ptr<TestLauncher> launcher);
 
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,

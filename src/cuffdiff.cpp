@@ -508,29 +508,28 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
 }
 
+
+shared_ptr<TestLauncher> test_launcher;
+
 bool quantitate_next_locus(const RefSequenceTable& rt,
                            vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
-                           shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances,
-                           Tests* tests,
-                           Tracking* tracking,
-                           ProgressBar* p_bar)
+                           shared_ptr<TestLauncher> launcher)
 {
     vector<shared_ptr<bool> > non_empty_bundle_flags;
     
-    shared_ptr<int> num_outstanding_workers(new int(bundle_factories.size()));
-    TestLauncher launcher(num_outstanding_workers, 
-                          abundances, 
-                          tests, 
-                          tracking,
-                          samples_are_time_series,
-                          p_bar);
-                          
+//    shared_ptr<int> num_outstanding_workers(new int(bundle_factories.size()));
+//    TestLauncher launcher(num_outstanding_workers, 
+//                          abundances, 
+//                          tests, 
+//                          tracking,
+//                          samples_are_time_series,
+//                          p_bar);
     
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
         shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
         shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
-        abundances->push_back(s_ab);
+//        abundances.push_back(s_ab);
         non_empty_bundle_flags.push_back(sample_non_empty);
         
 #if ENABLE_THREADS					
@@ -557,12 +556,14 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           boost::ref(rt),
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
+                          i,
                           sample_non_empty,
                           launcher);  
 #else
         sample_worker(boost::ref(rt),
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
+                      i,
                       sample_non_empty,
                       launcher);
 #endif
@@ -831,6 +832,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	double num_bundles = (double)bundle_factories[0]->num_bundles();
 	
+    //test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), &tests, &tracking, samples_are_time_series, p_bar)
+    
 	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
         if (corr_bias && corr_multi)
@@ -843,8 +846,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 		while (1) 
 		{
 			p_bar.update("",1);
+            test_launcher = shared_ptr<TestLauncher>(new TestLauncher((int)bundle_factories.size(), NULL, NULL, samples_are_time_series, &p_bar));
+                                                     
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances, NULL, NULL, &p_bar);
+			bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, test_launcher);
 			
 			if (!more_loci_remain)
             {
@@ -959,10 +964,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
+                                                     
+    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), &tests, &tracking, samples_are_time_series, &p_bar));
+                                                                                              
 	while (true)
 	{
-        shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, abundances, &tests, &tracking, &p_bar);
+        //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, test_launcher);
         
         if (!more_loci_remain)
         {
