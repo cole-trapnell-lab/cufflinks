@@ -18,7 +18,7 @@ void MultiRead::add_hit(RefID r_id, int left, int right)
 
 MultiHit* MultiRead::get_hit(RefID r_id, int left, int right)
 {
-  	while (true)
+    for (size_t i = 0; i < num_hits(); ++i)
 	{
 		MultiHit& hit = _hits[_curr_index];
 		if (hit.r_id == r_id && hit.left == left && hit.right == right)
@@ -27,6 +27,8 @@ MultiHit* MultiRead::get_hit(RefID r_id, int left, int right)
         }
 		_curr_index = (_curr_index + 1) % num_hits();
 	}  
+    fprintf(stderr, "\nERROR: Multi-Hit not found (%d,%d).\n", left, right); 
+    exit(1);
 }
 
 void MultiRead::add_expr(RefID r_id, int left, int right, double expr)
