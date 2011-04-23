@@ -517,14 +517,6 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
 {
     vector<shared_ptr<bool> > non_empty_bundle_flags;
     
-//    shared_ptr<int> num_outstanding_workers(new int(bundle_factories.size()));
-//    TestLauncher launcher(num_outstanding_workers, 
-//                          abundances, 
-//                          tests, 
-//                          tracking,
-//                          samples_are_time_series,
-//                          p_bar);
-    
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
         shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
@@ -538,7 +530,6 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
             locus_thread_pool_lock.lock();
             if (locus_curr_threads < locus_num_threads)
             {
-                locus_thread_pool_lock.unlock();
                 break;
             }
             
@@ -548,7 +539,6 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
             
         }
         
-        locus_thread_pool_lock.lock();
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
@@ -685,7 +675,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             locus_thread_pool_lock.lock();
             if (locus_curr_threads < locus_num_threads)
             {
-                locus_thread_pool_lock.unlock();
                 break;
             }
             
@@ -693,7 +682,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
         }
-        locus_thread_pool_lock.lock();
+        
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
@@ -894,7 +883,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 					locus_thread_pool_lock.lock();
 					if (locus_curr_threads < locus_num_threads)
 					{
-						locus_thread_pool_lock.unlock();
 						break;
 					}
 					
@@ -902,7 +890,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 					
 					boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 				}
-				locus_thread_pool_lock.lock();
 				locus_curr_threads++;
 				locus_thread_pool_lock.unlock();
 				

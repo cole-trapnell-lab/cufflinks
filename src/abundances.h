@@ -71,8 +71,8 @@ public:
     virtual double          mass_fraction() const = 0;
 	virtual void            mass_fraction(double mf) = 0;
     
-    virtual double          mass_variance_fraction() const = 0;
-	virtual void            mass_variance_fraction(double mf) = 0;
+    virtual double          mass_variance() const = 0;
+	virtual void            mass_variance(double mv) = 0;
     
 	virtual double			effective_length() const= 0;
 	virtual void			effective_length(double el) = 0;
@@ -114,7 +114,7 @@ public:
 		_eff_len(0),
 		_cond_probs(NULL),
         _sample_mass_fraction(0.0),
-        _sample_mass_variance_fraction(0.0){}
+        _sample_mass_variance(0.0){}
 	
 	TranscriptAbundance(const TranscriptAbundance& other)
 	{
@@ -127,7 +127,7 @@ public:
 		_eff_len = other._eff_len;
 		_cond_probs = other._cond_probs;
         _sample_mass_fraction = other._sample_mass_fraction;
-        _sample_mass_variance_fraction = other._sample_mass_variance_fraction;
+        _sample_mass_variance = other._sample_mass_variance;
 	}
 	
 	~TranscriptAbundance()
@@ -166,8 +166,8 @@ public:
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
 	
-    double mass_variance_fraction() const			{ return _sample_mass_variance_fraction; }
-	void mass_variance_fraction(double mf)			{ _sample_mass_variance_fraction = mf; }
+    double mass_variance() const			{ return _sample_mass_variance; }
+	void mass_variance(double mv)			{ _sample_mass_variance = mv; }
 	
 	void transfrag(shared_ptr<Scaffold> tf)		{ _transfrag = tf; }
 	shared_ptr<Scaffold> transfrag() const		{ return _transfrag; }
@@ -272,7 +272,7 @@ private:
 	string _ref_tag;
 	
     long double _sample_mass_fraction;
-    long double _sample_mass_variance_fraction;
+    long double _sample_mass_variance;
 };
 
 class AbundanceGroup : public Abundance
@@ -330,8 +330,8 @@ public:
     double mass_fraction() const;
 	void mass_fraction(double mf)			{  }
     
-    double mass_variance_fraction() const;
-	void mass_variance_fraction(double mf)	{  }
+    double mass_variance() const;
+	void mass_variance(double mf)	{  }
 	
 	set<string> gene_id() const;	
 	set<string> gene_name() const;
