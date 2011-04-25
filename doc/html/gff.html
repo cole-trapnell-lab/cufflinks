@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>GFF - accepted formats</title>
+    <title>Cufflinks::GFF</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="css/style.css"
       media="screen">
@@ -25,9 +25,13 @@
                       src="images/UCBerkeley-seal.scaled.gif" border="0"></a>&nbsp;
 
 
+
+
                   <a href="http://www.cbcb.umd.edu/"><img
                       style="vertical-align:middle;padding-top:4px"
                       src="images/cbcb_logo.gif" border="0"></a>&nbsp;&nbsp;
+
+
 
 
                 </td>
@@ -57,6 +61,8 @@
                     <td>New releases and related tools will be announced
                       through the <a
                         href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing
+
+
 
                           list</b></a></td>
                   </tr>
@@ -131,6 +137,8 @@
                   G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a
                       href="http://dx.doi.org/10.1038/nbt.1621">Transcript
 
+
+
                       assembly and quantification by RNA-Seq reveals
                       unannotated transcripts and isoform switching
                       during cell differentiation</a></b> <br>
@@ -142,6 +150,8 @@
                 <p>Roberts A, Trapnell C, Donaghey J, Rinn JL, Pachter
                   L.<b> <a
                       href="http://genomebiology.com/2011/12/3/R22/abstract">Improving
+
+
 
                       RNA-Seq expression estimates by correcting for
                       fragment bias</a></b> <br>
@@ -167,8 +177,12 @@
                   Salzberg</a></li>
               <li><a href="http://biology.caltech.edu/Members/Wold">Barbara
 
+
+
                   Wold</a></li>
               <li><a href="http://www.math.berkeley.edu/%7Elpachter/">Lior
+
+
 
                   Pachter</a></li>
             </ul>
@@ -188,7 +202,7 @@
             <tbody>
               <tr>
                 <td cellpadding="7">
-                  <h1>GFF (General Feature Format)<br>
+                  <h1>GFF files<br>
                   </h1>
                   <br>
                   Some of the Cufflinks modules take as input a file (or
@@ -199,36 +213,55 @@
                   programs in the Tuxedo suite, like Tophat) are GTF2
                   (Gene Transfer Format, described <a
                     href="http://mblab.wustl.edu/GTF2.html">here</a>)
-                  and GFF3 (as defined <a
+                  and GFF3 (defined <a
                     href="http://www.sequenceontology.org/gff3.shtml">here</a>).
-                  <br>
+
+
+                  Here are a few notes about the way these formats are
+                  interpreted by the Cufflinks programs.<br>
                   <br>
                   <h2 id="inst">GTF2</h2>
-                  The <span style="font-weight: bold;">transcript_id</span>
-                  attribute is the only one required by the GFF input of
-                  most Cufflinks programs, but a <span
-                    style="font-weight: bold;">gene_id</span> attribute,
-                  though not strictly required in our programs, is very
-                  useful for grouping alternative transcripts under a
-                  gene/locus identifier. An optional <span
-                    style="font-weight: bold;">gene_name</span>
+                  According to the <a
+                    href="http://mblab.wustl.edu/GTF2.html">GTF2
+                    description</a>, the <span style="font-weight:
+                    bold;">transcript_id</span> attribute is required by
+                  our GFF parser, and a <span style="font-weight:
+                    bold;">gene_id</span> attribute, though not strictly
+                  required in our programs, is very useful for grouping
+                  alternative transcripts under a gene/locus identifier.
+                  An optional <span style="font-weight: bold;">gene_name</span>
                   attribute, if found, will be taken and shown as&nbsp;
                   a symbolic gene name or short-form abbreviation (e.g.
                   gene symbols from HGNC or Entrez Gene). <span
-                    style="font-style: italic;"><br>
-                  </span>Some annotation sources (e.g. Ensembl) place a
-                  "human readable" gene name in that attribute, like a
-                  HUGO symbol (while gene_id might be an automatically
-                  generated, numeric identifier for the gene). <br>
+                    style="font-style: italic;"></span>Some annotation
+                  sources (e.g. Ensembl) place a "human readable" gene
+                  name/symbol in the <span style="font-weight: bold;">gene_name</span>
+                  attribute, like a HUGO symbol (while <span
+                    style="font-weight: bold;">gene_id</span> might be
+                  an automatically generated, numeric identifier for the
+                  gene). <br>
                   <br>
-                  TopHat and Cufflinks generally ignore redundant
-                  features like start_codon, stop_codon when whole "CDS"
-                  features were provided, or UTR features when whole
-                  "exon" features were also given. <br>
+                  TopHat and Cufflinks generally expect <span
+                    style="font-style: italic;">exon</span> features to
+                  define a transcript structure, with optional <span
+                    style="font-style: italic;">CDS</span> feature to
+                  specify the coding segments. Our GFF reader will
+                  ignore redundant features like start_codon, stop_codon
+                  when whole <span style="font-style: italic;">CDS</span>
+                  features were provided, or <span style="font-style:
+                    italic;">*UTR</span> features when whole <span
+                    style="font-style: italic;">exon</span> features
+                  were also given. However, it is still possible to
+                  provide only <span style="font-style: italic;">CDS</span>
+                  and *<span style="font-style: italic;">UTR</span>
+                  features and our GFF parser will reassemble the exonic
+                  structure.<br>
                   <br>
                   <h2 id="inst">GFF3</h2>
                   As defined by the <a
                     href="http://www.sequenceontology.org/gff3.shtml">GFF3
+
+
                     specification</a> , the parent features (usually
                   transcripts, i.e. "mRNA" features) are required to
                   have an <span style="font-weight: bold;">ID</span>
@@ -239,17 +272,69 @@
                   also inferred from the Name or ID attributes of the
                   parent feature of the current parent mRNA feature (if
                   given in the input file). Exon or CDS features are
-                  only required to have a <span style="font-weight:
-                    bold;">Parent</span> attribute, according to the
-                  specification.<br>
+                  required to have a <span style="font-weight: bold;">Parent</span>
+                  attribute whose value must match the value of the <span
+                    style="font-weight: bold;">ID</span> attribute of a
+                  parent transcript feature (usually a "mRNA" feature).<br>
                   <br>
-                  <h2 id="inst">Relaxed requirements for GFF input<br>
+                  <h2 id="inst">Feature restrictions</h2>
+                  For various reasons, we currently assume some maximum
+                  values for the length (genomic span) of various gene
+                  and transcript features provided in the GFF:<br>
+                  <ul>
+                    <li>genes cannot be longer than 7 Megabases</li>
+                    <li>exons cannot be longer than 30 Kilobases</li>
+                    <li>introns cannot be larger than 6 Megabases<br>
+                    </li>
+                  </ul>
+                  Also, transcripts IDs are expected to be unique across
+                  all the provided GFF records (though we relaxed this
+                  restriction by limiting it to a chromosome/contig
+                  scope).<br>
+                  <br>
+                  Due to these requirements, Cufflinks programs may fail
+                  to load the user provided GFF file, and an error
+                  message should specify the offending GFF record. The
+                  user is expected to remove or correct such GFF records
+                  in order to continue the analysis.<br>
+                  <br>
+                  <h2 id="inst">The gffread utility<br>
                   </h2>
                   <br>
-                  <h2 id="inst">gffread utility<br>
-                  </h2>
+                  A program called <span style="font-weight: bold;">gffread</span>
+                  is included with the Cufflinks package and it can be
+                  used to verify or perform various operations on GFF
+                  files. For example, in order to make sure that a GFF
+                  file from a certain annotation source is compatible
+                  with our GFF reader, gffread can be used to load the
+                  transcripts from the file and print these transcripts
+                  back, in either GFF3 (default) or GTF2 format, keeping
+                  only the essential attributes, so the user can verify
+                  if the transcripts in that file were "understood"
+                  correctly. The command line for
+                  such a visual inspection of a given GFF file could be:<br>
                   <br>
-                  <strong></strong><br>
+                  <pre><big>gffread annotation.gff -o- | more</big></pre>
+                  <br>
+                  This will show the minimalist GFF3 re-formatting of
+                  the input file (annotation.gff in this example). In
+                  order to see the GTF2 version of the same transcripts,
+                  the -T option should be specified, like this:<br>
+                  <br>
+                  <pre><big>gffread annotation.gff -T -o- | more</big></pre>
+                  <br>
+                  gffread can also be used to perform other useful
+                  tasks, like generating a FASTA file with the DNA
+                  sequence of all transcripts found in the input GFF
+                  records (given the genomic sequence also). This could
+                  be accomplished with a command line like this:<br>
+                  <br>
+                  <pre><big>gffread -w transcripts.fa -g hg19.fa annotation.gff</big></pre>
+                  <br>
+                  <br>
+                  <br>
+                  <br>
+                  <br>
                   <br>
                   <div id="footer">
                     <table cellspacing="15" width="100%">
