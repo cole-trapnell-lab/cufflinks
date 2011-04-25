@@ -37,6 +37,15 @@ enum TestStatus {
 	FAIL     // numerical exception, test not performed
 }; 
 
+struct SampleDifferenceMetaData
+{
+    string locus_desc;
+    set<string> gene_ids;
+	set<string> gene_names;
+	set<string> protein_ids;
+	string description; // isoforms or tss groups (e.g.) involved in this test
+};
+
 // Stores the differential expression of an isoform or set of isoforms in two
 // different samples, along with a significance test statistic for the difference.
 struct SampleDifference
@@ -65,17 +74,14 @@ struct SampleDifference
 	
 	size_t tested_group_id; // which scaffolds' FPKMs contribute
 	
-	string locus_desc;
-    set<string> gene_ids;
-	set<string> gene_names;
-	set<string> protein_ids;
-	string description; // isoforms or tss groups (e.g.) involved in this test
-	
+    shared_ptr<SampleDifferenceMetaData> meta_data;
+
 	TestStatus test_status;
 	bool significant;
 };
 
 typedef map<string, SampleDifference > SampleDiffs;
+typedef map<string, shared_ptr<SampleDifferenceMetaData> > SampleDiffMetaDataTable;
 
 struct Outfiles
 {

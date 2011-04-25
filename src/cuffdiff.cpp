@@ -300,15 +300,15 @@ void print_tests(FILE* fout,
 	{
 		const SampleDifference& test = itr->second;
         
-        string all_gene_ids = cat_strings(test.gene_ids);
+        string all_gene_ids = cat_strings(test.meta_data->gene_ids);
 		if (all_gene_ids == "")
 			all_gene_ids = "-";
         
-		string all_gene_names = cat_strings(test.gene_names);
+		string all_gene_names = cat_strings(test.meta_data->gene_names);
 		if (all_gene_names == "")
 			all_gene_names = "-";
 		
-		string all_protein_ids = cat_strings(test.protein_ids);	
+		string all_protein_ids = cat_strings(test.meta_data->protein_ids);	
 		if (all_protein_ids == "")
 			all_protein_ids = "-";
 		
@@ -316,7 +316,7 @@ void print_tests(FILE* fout,
                 itr->first.c_str(), 
                 all_gene_ids.c_str(),
                 all_gene_names.c_str(), 
-                test.locus_desc.c_str(),
+                test.meta_data->locus_desc.c_str(),
                 sample_1_label,
                 sample_2_label);
 		

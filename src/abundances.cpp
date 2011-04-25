@@ -28,6 +28,7 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/tools/roots.hpp>
+#include <complex>
 
 #include "filters.h"
 #include "replicates.h"
@@ -785,6 +786,84 @@ private:
     long double _0_coeff;
 };
 
+long double solve_beta(long double A, long double B, long double C)
+{
+    
+    complex<long double> t1 = 2.0*A*A*A*powl(B,12) + 
+                     24.0 * A*A*A*powl(B,10)*C + 
+                     51.0*A*A*A*powl(B,8)*C*C + 
+                     2.0*A*A*A*powl(B,6)*C*C*C - 
+                     33.0*A*A*powl(B,11)*C - 
+                     138.0*A*A*powl(B,9)*C*C - 
+                     6.0*A*A*powl(B,7)*C*C*C;
+    
+    assert(!isnan(t1.real()));
+    
+    complex<long double> t7 = 9.0*A*powl(B,12)*C + 
+                     123.0*A*powl(B,10)*C*C +
+                     6.0*A*powl(B,8)*C*C*C - 
+                     36.0*powl(B,11)*C*C - 
+                     2.0*powl(B,9)*C*C*C;
+    assert(!isnan(t7.real()));
+    
+    complex<long double> t2 = -A*A*powl(B,8) - 
+                     8.0*A*A*powl(B,6)*C - 
+                     A*A*powl(B,4)*C*C + 
+                     11.0*A*powl(B,7)*C + 
+                     2.0*A*powl(B,5)*C*C - 
+                     3.0*powl(B,8)*C - 
+                     powl(B,6)*C*C;
+    assert(!isnan(t2.real()));
+    //assert(powl(t2,3) >= 0);
+    
+    complex<long double> t3 = t1 + t7;
+    assert(!isnan(t3.real()));
+    complex<long double> p_ab = 4 * t2.real()*t2.real()*t2.real() + t3.real()*t3.real();
+    //complex<long double> t4 = sqrtl(p_ab);
+    complex<long double> cp_ab(p_ab);
+    complex<long double> t4 = std::sqrt(cp_ab);
+    //assert(!isnan(t4));
+    
+    
+    complex<long double> t6 = std::pow((t1 + t4 + t7), 1.0/3.0);
+    assert(!isnan(t6.real()));
+    
+    complex<long double> t10 = cbrtl(2.0)*t2 / (3*B*B*B*C*t6);
+    assert(!isnan(t10.real()));
+    
+    complex<long double> t8 = (-A*powl(B,4) - 4*A*B*B*C + 4*B*B*B*C) / (3*B*B*B*C);
+    assert(!isnan(t8.real()));
+    
+    complex<long double> t9 = 1.0/(3*cbrtl(2)*B*B*B*C);
+    assert(!isnan(t9.real()));
+    
+    complex<long double> beta = t9 * t6 - t10 - t8; 
+    assert(!isnan(beta.real()));
+    
+//    fprintf(stderr, "T1 = %Lg\n", t1.real());
+//
+//    fprintf(stderr, "T2 = %Lg\n", t2.real());
+//
+//    fprintf(stderr, "T3 = %Lg\n", t3.real());
+//
+//    fprintf(stderr, "T4 = %Lg\n", t4.real());
+//
+//    fprintf(stderr, "T6 = %Lg\n", t6.real());
+//    
+//    fprintf(stderr, "T7 = %Lg\n", t7.real());
+//
+//    fprintf(stderr, "T8 = %Lg\n", t8.real());
+//    
+//    fprintf(stderr, "T9 = %Lg\n", t9.real());
+//
+//    fprintf(stderr, "T10 = %Lg\n", t10.real());
+//    
+//    fprintf(stderr, "beta = (real : %Lg, imag : %Lg\n", beta.real(), beta.imag());
+
+    
+    return beta.real();
+}
+
 double compute_fpkm_variance(double gamma_t, 
                              double psi_t, 
                              double X_g, 
@@ -817,47 +896,26 @@ double compute_fpkm_variance(double gamma_t,
     }
     else
     {
-        long double max_doub = numeric_limits<long double>::max();
-        assert (psi_t < gamma_t * gamma_t);
+        //long double max_doub = numeric_limits<long double>::max();
+        //assert (psi_t < gamma_t * gamma_t);
         C*= psi_t;
         long double r = (A * A) / (B - A);
-        //double p = (B - A) / B;
         
-        //long double alpha = pow(A, 5.0) / (pow(B, 3.0) * C);
-        
-//        long double alpha = (A * B / C) + (A/B) - 1.0;
-//        alpha += (A / B) - 1.0;
-//        long double beta = A * (A*B/C - (1.0/B));
-        
-        BetaCubic cubic(A,B,C);
-        
-        pair<long double, long double> res;
-        long double eps = numeric_limits<long double>::epsilon();
-        boost::math::tools::eps_tolerance<long double> tol(eps);
-        boost::uintmax_t max_iters = 100000;
-        res = boost::math::tools::bisect<BetaCubic, long double,  boost::math::tools::eps_tolerance<long double> > (cubic, 1.0, 1e4, tol, max_iters);
-        double beta = 0.0;
-        if (tol(res.first, res.second))
-        {
-            beta = res.first;
-        }
-        else
-        {
-            assert (max_iters == 100000);
-            assert (false);
-        }
+        long double beta = solve_beta(A,B,C);
+    
         
         long double alpha = 1.0 - (A/(A-B)) * beta;
         
-        long double mean = r * beta / (alpha - 1.0);
+        assert (beta > 0);
+        assert (alpha > 0);
         
-        //long double p = (B - A) / B;
+        long double mean = r * beta / (alpha - 1.0);
         
         long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
         
         long double variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
         variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
-        assert (FPKM == mean);
+        assert (abs(FPKM - mean) < 1e-3);
         return variance;
     }
 }
@@ -910,112 +968,6 @@ double compute_fpkm_group_variance(const vector<double>& gammas,
     
     return compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M) + cov;
 }
-
-//void AbundanceGroup::calculate_conf_intervals()
-//{        
-//	if (status() == NUMERIC_OK)
-//	{
-//		// This will compute the transcript level FPKM confidence intervals
-//		for (size_t j = 0; j < _abundances.size(); ++j)
-//		{
-//			if (_abundances[j]->effective_length() > 0.0 && mass_fraction() > 0)
-//			{
-//                double iso_fpkm_var = 0.0;
-//                
-//                double norm_frag_density = 1000000000;
-//                norm_frag_density /= _abundances[j]->effective_length();
-//                
-//                norm_frag_density *= mass_fraction();
-//                
-//                iso_fpkm_var = norm_frag_density * _abundances[j]->gamma();
-//                assert (!isnan(_gamma_covariance(j,j)));
-//                
-//                iso_fpkm_var += norm_frag_density * norm_frag_density * _gamma_covariance(j,j);
-//                
-//                if (mass_fraction() > 0.0)
-//                {
-//                    double variance_scale_factor = mass_variance_fraction() / mass_fraction();
-//                    iso_fpkm_var *= variance_scale_factor;
-//                }
-//                
-//				double FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(iso_fpkm_var);
-//				double FPKM_lo = max(0.0, _abundances[j]->FPKM() - 2 * sqrt(iso_fpkm_var));
-//				assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
-//				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
-//				_abundances[j]->FPKM_conf(conf);
-//				_abundances[j]->FPKM_variance(iso_fpkm_var);
-//			}
-//			else
-//			{
-//				_abundances[j]->FPKM_conf(ConfidenceInterval(0.0, 0.0));
-//				_abundances[j]->FPKM_variance(0.0);
-//			}
-//		}
-//		
-//		double group_fpkm = FPKM();
-//		if (group_fpkm > 0.0)
-//		{
-//			calculate_FPKM_variance();
-//			double FPKM_hi = FPKM() + 2 * sqrt(FPKM_variance());
-//			double FPKM_lo = max(0.0, FPKM() - 2 * sqrt(FPKM_variance()));
-//			ConfidenceInterval conf(FPKM_lo, FPKM_hi);
-//			FPKM_conf(conf);
-//		}
-//		else
-//		{
-//			_FPKM_variance = 0.0;
-//			ConfidenceInterval conf(0.0, 0.0);
-//			FPKM_conf(conf);
-//		}
-//	}
-//	else
-//	{
-//		double sum_transfrag_FPKM_hi = 0;
-//        
-//		foreach(shared_ptr<Abundance> pA, _abundances)
-//		{
-//			double FPKM_hi;
-//			double FPKM_lo;
-//			if (pA->effective_length() > 0)
-//			{
-//                double norm_frag_density = 1000000000;
-//                norm_frag_density /= pA->effective_length();
-//                
-//                norm_frag_density *= mass_fraction();
-//                double fpkm_high = norm_frag_density;
-//                
-//                double var_fpkm = fpkm_high; 
-//				
-//                if (mass_fraction() > 0.0)
-//                {
-//                    double variance_scale_factor = mass_variance_fraction() / mass_fraction();
-//                    var_fpkm *= variance_scale_factor;
-//                }
-//                
-//				FPKM_hi = fpkm_high + 2 * sqrt(var_fpkm);
-//				FPKM_lo = 0.0;
-//				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
-//				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
-//				pA->FPKM_conf(conf);
-//                pA->FPKM_variance(var_fpkm);
-//				sum_transfrag_FPKM_hi = max(sum_transfrag_FPKM_hi, FPKM_hi);
-//			}
-//			else
-//			{
-//				FPKM_hi = 0.0;
-//				FPKM_lo = 0.0;
-//				ConfidenceInterval conf(0.0, 0.0);
-//				pA->FPKM_conf(conf);
-//                pA->FPKM_variance(0.0);
-//			}
-//				
-//		}
-//		
-//		// In the case of a numeric failure, the groups error bars need to be 
-//		// set such that 
-//		FPKM_conf(ConfidenceInterval(0.0, sum_transfrag_FPKM_hi));
-//	}
-//}
 
 void AbundanceGroup::calculate_conf_intervals()
 {        

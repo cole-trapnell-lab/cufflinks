@@ -398,7 +398,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
+            if (bundle.ref_scaffolds().size() == 1)
+            {
+                count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
+            }
 		}
         
         if (!valid_bundle)

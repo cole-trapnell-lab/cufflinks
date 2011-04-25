@@ -252,6 +252,21 @@ bool test_diffexp(const FPKMContext& curr,
 	return performed_test;
 }
 
+SampleDiffMetaDataTable meta_data_table;
+#if ENABLE_THREADS
+boost::mutex meta_data_lock;
+#endif
+
+shared_ptr<SampleDifferenceMetaData> get_metadata(const string description)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(meta_data_lock);
+#endif
+    pair<SampleDiffMetaDataTable::iterator, bool> p;
+    p = meta_data_table.insert(make_pair(description, new SampleDifferenceMetaData()));
+    return p.first->second;
+}
+
 // This performs between-group tests on isoforms or TSS groupings in a single
 // locus, on two different samples.
 pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
@@ -263,6 +278,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	int total_iso_de_tests = 0;
 			
 	SampleDifference test;
+    
     
 	pair<SampleDiffs::iterator, bool> inserted;
 //	inserted = de_tests.insert(make_pair(curr_abundance.description(),
@@ -336,11 +352,15 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	inserted = diff_tests.insert(make_pair(name,SampleDifference())); 
 	SampleDifference test;
 	
-    test.gene_ids = curr_abundance.gene_id();
-	test.gene_names = curr_abundance.gene_name();
-	test.protein_ids = curr_abundance.protein_id();
-	test.locus_desc = curr_abundance.locus_tag();
-	test.description = curr_abundance.description();
+    shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(name);
+    
+    meta_data->gene_ids = curr_abundance.gene_id();
+    meta_data->gene_names = curr_abundance.gene_name();
+    meta_data->protein_ids = curr_abundance.protein_id();
+    meta_data->locus_desc = curr_abundance.locus_tag();
+    meta_data->description = curr_abundance.description();
+    
+    test.meta_data = meta_data;
 	
 	test.test_status = NOTEST;
 	
@@ -874,11 +894,14 @@ void test_differential(const string& locus_tag,
                                       tests.isoform_de_tests[i][j],
                                       enough_reads);
                 
-                result.second->second.gene_ids = curr_abundance.gene_id();
-                result.second->second.gene_names = curr_abundance.gene_name();
-                result.second->second.protein_ids = curr_abundance.protein_id();
-                result.second->second.locus_desc = curr_abundance.locus_tag();
-                result.second->second.description = curr_abundance.description();
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = curr_abundance.gene_id();
+                meta_data->gene_names = curr_abundance.gene_name();
+                meta_data->protein_ids = curr_abundance.protein_id();
+                meta_data->locus_desc = curr_abundance.locus_tag();
+                meta_data->description = curr_abundance.description();
+                result.second->second.meta_data = meta_data;
             }
             
             for (size_t k = 0; k < samples[i]->cds.size(); ++k)
@@ -895,11 +918,14 @@ void test_differential(const string& locus_tag,
                              tests.cds_de_tests[i][j],
                              enough_reads);
                 
-                result.second->second.gene_ids = curr_abundance.gene_id();
-                result.second->second.gene_names = curr_abundance.gene_name();
-                result.second->second.protein_ids = curr_abundance.protein_id();
-                result.second->second.locus_desc = curr_abundance.locus_tag();
-                result.second->second.description = curr_abundance.description();
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = curr_abundance.gene_id();
+                meta_data->gene_names = curr_abundance.gene_name();
+                meta_data->protein_ids = curr_abundance.protein_id();
+                meta_data->locus_desc = curr_abundance.locus_tag();
+                meta_data->description = curr_abundance.description();
+                result.second->second.meta_data = meta_data;
             }
             
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
@@ -916,11 +942,14 @@ void test_differential(const string& locus_tag,
                              tests.tss_group_de_tests[i][j],
                              enough_reads);
                 
-                result.second->second.gene_ids = curr_abundance.gene_id();
-                result.second->second.gene_names = curr_abundance.gene_name();
-                result.second->second.protein_ids = curr_abundance.protein_id();
-                result.second->second.locus_desc = curr_abundance.locus_tag();
-                result.second->second.description = curr_abundance.description();
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = curr_abundance.gene_id();
+                meta_data->gene_names = curr_abundance.gene_name();
+                meta_data->protein_ids = curr_abundance.protein_id();
+                meta_data->locus_desc = curr_abundance.locus_tag();
+                meta_data->description = curr_abundance.description();
+                result.second->second.meta_data = meta_data;
             }
             
             for (size_t k = 0; k < samples[i]->genes.size(); ++k)
@@ -937,11 +966,14 @@ void test_differential(const string& locus_tag,
                              tests.gene_de_tests[i][j],
                              enough_reads);
                 
-                result.second->second.gene_ids = curr_abundance.gene_id();
-                result.second->second.gene_names = curr_abundance.gene_name();
-                result.second->second.protein_ids = curr_abundance.protein_id();
-                result.second->second.locus_desc = curr_abundance.locus_tag();
-                result.second->second.description = curr_abundance.description();
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = curr_abundance.gene_id();
+                meta_data->gene_names = curr_abundance.gene_name();
+                meta_data->protein_ids = curr_abundance.protein_id();
+                meta_data->locus_desc = curr_abundance.locus_tag();
+                meta_data->description = curr_abundance.description();
+                result.second->second.meta_data = meta_data;
             }
             
             // FIXME: the code below will not properly test for differential
