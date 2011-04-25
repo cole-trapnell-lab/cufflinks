@@ -201,11 +201,19 @@ class BundleFactory
 public:
     
 	BundleFactory(shared_ptr<HitFactory> fac, BundleMode bm)
-	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0) 
+	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0)
 	{
 		_rg_props = shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
 	}
 
+    bool bundles_remain()  
+    {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+        return _curr_bundle < num_bundles();
+    }
+    
 	bool next_bundle(HitBundle& bundle_out);
 	bool next_bundle_hit_driven(HitBundle& bundle_out);
 	bool next_bundle_ref_driven(HitBundle& bundle_out);
@@ -223,6 +231,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_factory_lock);
 #endif
+        _curr_bundle = 0;
 		//rewind(hit_file); 
 		_hit_fac->reset();
 		next_ref_scaff = ref_mRNAs.begin(); 
@@ -338,6 +347,7 @@ private:
     int _prev_pos;
     RefID _prev_ref_id;
     int _num_bundles;
+    int _curr_bundle;
 #if ENABLE_THREADS    
     boost::mutex _factory_lock;
 #endif

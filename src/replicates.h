@@ -61,6 +61,19 @@ public:
 	int num_bundles() { return _factories[0]->num_bundles(); }
     std::vector<boost::shared_ptr<BundleFactory> > factories() { return _factories; }
 	
+    bool bundles_remain() 
+    {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+        foreach (boost::shared_ptr<BundleFactory> fac, _factories)
+        {
+            if (fac->bundles_remain())
+                return true;
+        }
+        return false;
+    }
+    
 	bool next_bundle(HitBundle& bundle_out)
     {
 #if ENABLE_THREADS

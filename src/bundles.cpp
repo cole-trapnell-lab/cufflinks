@@ -994,12 +994,15 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 	switch(_bundle_mode)
 	{
 		case HIT_DRIVEN:
+            _curr_bundle++;
 			return next_bundle_hit_driven(bundle);
 			break;
 		case REF_DRIVEN:
+            _curr_bundle++;
 			return next_bundle_ref_driven(bundle);
 			break;
 		case REF_GUIDED:
+            _curr_bundle++;
 			return next_bundle_ref_guided(bundle);
 			break;
 	}
