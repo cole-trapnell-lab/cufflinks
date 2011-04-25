@@ -1,400 +1,596 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>Cufflinks :: Center for Bioinformatics and Computational Biology</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
-</head>
-<body>
-<div id="wrap">
-  <div id="top">
-    <div class="lefts">
-    <table width="100%" cellpadding="2">
-      <tr><td>
-        <a href="./index.html"><h1>Cufflinks</h1></a>
-        <h2>Transcript assembly, differential expression, and differential regulation for RNA-Seq</h2>
-      </td><td align="right" valign="middle">
-        <a href="http://www.mcb.berkeley.edu/"><img style="vertical-align:middle;padding-top:4px" border=0 src="images/UCBerkeley-seal.scaled.gif"></img></a>&nbsp;
-        <a href="http://www.cbcb.umd.edu/"><img style="vertical-align:middle;padding-top:4px" border=0 src="images/cbcb_logo.gif"></a>&nbsp;&nbsp;
-      </td></tr>
-    </table>
-    </div>
-  </div>
-  <div id="main">
-    <div id="rightside">
-  		<h2>Site Map</h2>
-		  <div class="box">
-		    <ul>
-		      <li><a href="index.html">Home</a></li>
-		      <li><a href="tutorial.html">Getting started</a></li>
-		      <li><a href="manual.html">Manual</a></li>
-			  <li><a href="howitworks.html">How Cufflinks works</a></li>
-  		      <li><a href="faq.html">FAQ</a></li>
-		    </ul>
-		  </div>
-		
-		  <h2><u>News and updates</u></h2>
-		  <div class="box">
-		    <ul>
-		      <table width="100%">
-				<tr><td>New releases and related tools will be announced through the <a href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing list</b></a></td></tr>
-			  </table>
-		    </ul>
-		  </div>
-		
-		  <h2><u>Getting Help</u></h2>
-		  <div class="box">
-		    <ul>
-		      <table width="100%">
-				<tr><td>Questions about Cufflinks should be sent to <a href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a>.  Please do not email technical questions to Cufflinks contributors directly.</td></tr>
-			  </table>
-		    </ul>
-		  </div>
-		
-		  <a href="./downloads"><h2><u>Releases</u></h2></a>
-		  <div class="box">
-		    <ul>
-		      <table width="100%">
-				<tr><td>version 1.0.0</td> <td align="right">4/XX/2010</td></tr>
-				<tr>
-		      		<td><a href="./downloads/cufflinks-1.0.0.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
-		      	</tr>
-				<tr>
-					<td><a href="./downloads/cufflinks-1.0.0.Linux_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
-				</tr>
-				<tr>
-					<td><a href="./downloads/cufflinks-1.0.0.OSX_x86_64.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks'); ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
-				</tr>
-			  </table>
-		    </ul>
-		  </div>
+  <head>
+    <title>Cufflinks :: Center for Bioinformatics and Computational
+      Biology</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/style.css"
+      media="screen">
+  </head>
+  <body>
+    <div id="wrap">
+      <div id="top">
+        <div class="lefts">
+          <table cellpadding="2" width="100%">
+            <tbody>
+              <tr>
+                <td> <a href="./index.html">
+                    <h1>Cufflinks</h1>
+                  </a>
+                  <h2>Transcript assembly, differential expression, and
+                    differential regulation for RNA-Seq</h2>
+                </td>
+                <td align="right" valign="middle"> <a
+                    href="http://www.mcb.berkeley.edu/"><img
+                      style="vertical-align:middle;padding-top:4px"
+                      src="images/UCBerkeley-seal.scaled.gif" border="0"></a>&nbsp;
 
-		  <h2>Related Tools</h2>
-		  <div class="box">
-		    <ul>
-		      <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>: Alignment of short RNA-Seq reads</li>
-		      <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>: Ultrafast short read alignment</li>
-		    </ul>
-		  </div>
 
-		  <h2>Publications</h2>
-		  <div class="box">
-		    <ul>
-			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a href="http://dx.doi.org/10.1038/nbt.1621">Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation</b></a> <br/><i><a href="http://www.nature.com/nbt">Nature Biotechnology</a></i> doi:10.1038/nbt.1621</p><br/></li>
- 			  <li style="font-size: x-small; line-height: 130%"><p>Roberts A, Trapnell C, Donaghey J, Rinn JL, Pachter L.<b> <a href="http://genomebiology.com/2011/12/3/R22/abstract">Improving RNA-Seq expression estimates by correcting for fragment bias</b></a> <br/><i><a href="http://www.genomebiology.com">Genome Biology</a></i> doi:10.1186/gb-2011-12-3-r22</p><br/></li>
-		    </ul>
-		  </div>
 
-		  <h2>Contributors</h2>
-		  <div class="box">
-		    <ul>
-		      <li><a href="http://www.cs.umd.edu/~cole/">Cole Trapnell</a></li>
-  		      <li><a href="http://www.cs.berkeley.edu/~adarob/">Adam Roberts</a></li>
-			  <li>Geo Pertea</li>
-			  <li>Brian Williams</li>
-			  <li><a href="http://wormlab.caltech.edu/members/">Ali Mortazavi</a></li>
-			  <li>Gordon Kwan</a></li>  
-			  <li>Jeltje van Baren</a></li>
-		      <li><a href="http://www.cbcb.umd.edu/~salzberg/">Steven Salzberg</a></li>
-		      <li><a href="http://biology.caltech.edu/Members/Wold">Barbara Wold</a></li>
-			  <li><a href="http://www.math.berkeley.edu/~lpachter/">Lior Pachter</a></li>
-		    </ul>
-		  </div>
+                  <a href="http://www.cbcb.umd.edu/"><img
+                      style="vertical-align:middle;padding-top:4px"
+                      src="images/cbcb_logo.gif" border="0"></a>&nbsp;&nbsp;
 
-		  <h2>Links</h2>
-		  <div class="box">
-		    <ul>
-		      <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
-		      <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
-			  <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
-		    </ul>
-		  </div>          
 
-    </div> <!-- End of "rightside" -->
-    <div id="leftside">
-  	<table><tr><td cellpadding=7>
-  	<h1> Getting started</h1><br/>
-      <div id="toc">
-		<ul>
-		<li>Setting up Cufflinks</li>
-	  	    <ul>
-	  	    <li><a href="#inst">Install quick-start</a></li>
-			<li><a href="#ref">Test the installation</a></li>
-	  	</ul>
-		
-		<li>Common uses of the Cufflinks package</li>
-		<ul>
-			<li><a href="#discovery">Discovering novel genes and transcripts</a></li>  	    	
-			<li><a href="#differential">Identifying differentially expressed and regulated genes</a></li>
-  	    </ul>
-		</ul>
-		<br/>
-  	  </div>
-	  	
-	<br/>
-  	<h2 id="inst">Install quick-start</h2><br/>
-		<strong>Installing a pre-compiled binary release</strong><br/>
-		<p>In order to make it easy to install Cufflinks, we provide a few binary
-		packages to save users from occasionally frustrating process of building
-		Cufflinks, which requires that you install the Boost libraries.  To use
-		the binary packages, simply download the appropriate one for your machine,
-		untar it, and make sure the <tt>cufflinks</tt>,<tt>cuffdiff</tt> and <tt>cuffcompare</tt> binaries
-		are in a directory in your PATH environment variable.</p><br/>
-		<strong>Building Cufflinks from source</strong><br/>
-		<p>
-		In order to build Cufflinks, you must have the 
-		<a href="http://www.boost.org">Boost C++ libraries</a> (version 1.38 or higher) installed on 
-		your system.  See below for instructions on installing Boost.
-		</p>
-		<br/>
-		<h3 id="boost">Installing Boost</h3><br/>
-		<ol>
-		<li><a href="http://www.boost.org/users/download/">Download</a> Boost 
-			and the <tt>bjam</tt> build engine.</li>
-		<li>Unpack bjam and add it to your PATH.</li>
-		<li>Unpack the Boost tarball and <tt>cd</tt> to the Boost source 
-			directory.  This directory is called the BOOST_ROOT in some Boost
-			installation instructions.</li>
-		<li>Build Boost.  Note that you can specify where to put Boost with 
-			the --prefix option. The default Boost installation directory is 
-			<tt>/usr/local</tt>. Take note of the boost installation directory,
-			because you will need to tell the Cufflinks installer where to find 
-			Boost later on.  
-			<p>If you are on Mac OS X, type (all on one line): <br/>
-			<blockquote>bjam --prefix=&lt;YOUR_BOOST_INSTALL_DIRECTORY&gt; --toolset=darwin architecture=x86 address_model=32_64 link=static runtime-link=static --layout=versioned stage install</blockquote></li>
-			<p>If you are on a 32-bit Linux system, type (all on one line): <br/>
-				<blockquote>bjam --prefix=&lt;YOUR_BOOST_INSTALL_DIRECTORY&gt; --toolset=gcc architecture=x86 address_model=32 link=static runtime-link=static stage install</blockquote></li>
-			<p>If you are on a 64-bit Linux system, type (all on one line): <br/>
-				<blockquote>bjam --prefix=&lt;YOUR_BOOST_INSTALL_DIRECTORY&gt; --toolset=gcc architecture=x86 address_model=64 link=static runtime-link=static stage install</blockquote></li>
-		</ol>
-		</br>
-			<h3 id="boost">Installing the SAM tools</h3><br/>
-			<ol>
-			<li><a href="http://samtools.sourceforge.net/">Download</a> the SAM tools</li>
-			<li>Unpack the SAM tools tarball and <tt>cd</tt> to the SAM tools source 
-				directory.</li>
-			<li>Build the SAM tools by typing <tt>make</tt> at the command line.</li>
-			<li>Choose a directory into which you wish to copy the SAM tools binary, the included library 
-				<tt>libbam.a</tt>, and the library headers.  A common choice is <tt>/usr/local/</tt>.</lt>
-			<li>Copy libbam.a to the <tt>lib/</tt> directory in the folder you've chosen above (e.g. <tt>/usr/local/lib/</tt>)</li>
-			<li>Create a directory called "<tt>bam</tt>" in the <tt>include/</tt> directory (e.g. /usr/local/include/bam)  
-			<li>Copy the headers (files ending in .h) to the <tt>include/bam</tt> directory you've created above (e.g. <tt>/usr/local/include/bam</tt>)
-			<li>Copy the samtools binary to some directory in your PATH.</li>
-			</ol>
-		<br/>
-		<h3 id="boost">Building Cufflinks</h3><br/>
-		<ol>
-			<li>Unpack the Cufflinks source tarball:
-				<blockquote>tar zxvf cufflinks-0.7.0.tar.gz</blockquote></li><br/>
-			<li>Change to the Cufflinks directory:
-				<blockquote>cd cufflinks-0.7.0</blockquote></li><br/>
-			<li>Configure Cufflinks.  If Boost is installed somewhere other than
-				<tt>/usr/local</tt>, you will need to tell the installer where 
-				to find it using the <tt>--with-boost</tt> option.  Specify where
-				to install Cufflinks using the <tt>--prefix</tt> option.
-				<blockquote>./configure --prefix=/path/to/cufflinks/install --with-boost=/path/to/boost</blockquote>
-			    If you see any errors during configuration, verify that you 
-				are using Boost version 1.38 or higher, and that the directory
-				you specified via <tt>--with-boost</tt> contains the boost 
-				header files and libraries.  See the Boost <a href="">Getting started</a> page for more details.  
-				If you copied the SAM tools binaries to someplace other than <tt>/usr/local/</tt>, 
-				you may need to supply the <tt>--with-bam</tt> configuration option. 
-				<li>Finally, make and install Cufflinks.  
-				<blockquote>make</blockquote>
-				<blockquote>make install</blockquote>
-				</blockquote>
-			</li>
-		</ol>
-		
-		
-		<br/>
-		<h2 id="test">Testing the installation</h2><br/>
-		<ol> 
-			<li>Download the <a href="downloads/test_data.sam">test data</a>
-			<li>In the directory where you placed the test file, type:</br>
-				<blockquote>cufflinks ./test_data.sam</blockquote><br/>
-				You should see the following output:
-				<pre>
-[bam_header_read] EOF marker is absent. The input is probably truncated.
+
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="main">
+        <div id="rightside">
+          <h2>Site Map</h2>
+          <div class="box">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li><a href="tutorial.html">Getting started</a></li>
+              <li><a href="manual.html">Manual</a></li>
+              <li><a href="howitworks.html">How Cufflinks works</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+            </ul>
+          </div>
+          <h2><u>News and updates</u></h2>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>New releases and related tools will be announced
+                      through the <a
+                        href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing
+
+
+                          list</b></a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+          <h2><u>Getting Help</u></h2>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>Questions about Cufflinks should be sent to <a
+                        href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a>.
+                      Please do not email technical questions to
+                      Cufflinks contributors directly.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+          <a href="./downloads">
+            <h2><u>Releases</u></h2>
+          </a>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>version 1.0.0</td>
+                    <td align="right">4/XX/2010</td>
+                  </tr>
+                  <tr>
+                    <td><a href="./downloads/cufflinks-1.0.0.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks_source');
+                        ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+                  </tr>
+                  <tr>
+                    <td><a
+                        href="./downloads/cufflinks-1.0.0.Linux_x86_64.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks');
+                        ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+                  </tr>
+                  <tr>
+                    <td><a
+                        href="./downloads/cufflinks-1.0.0.OSX_x86_64.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks');
+                        ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+          <h2>Related Tools</h2>
+          <div class="box">
+            <ul>
+              <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>:
+                Alignment of short RNA-Seq reads</li>
+              <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>:
+                Ultrafast short read alignment</li>
+            </ul>
+          </div>
+          <h2>Publications</h2>
+          <div class="box">
+            <ul>
+              <li style="font-size: x-small; line-height: 130%">
+                <p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan
+                  G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a
+                      href="http://dx.doi.org/10.1038/nbt.1621">Transcript
+
+
+                      assembly and quantification by RNA-Seq reveals
+                      unannotated transcripts and isoform switching
+                      during cell differentiation</a></b> <br>
+                  <i><a href="http://www.nature.com/nbt">Nature
+                      Biotechnology</a></i> doi:10.1038/nbt.1621</p>
+                <br>
+              </li>
+              <li style="font-size: x-small; line-height: 130%">
+                <p>Roberts A, Trapnell C, Donaghey J, Rinn JL, Pachter
+                  L.<b> <a
+                      href="http://genomebiology.com/2011/12/3/R22/abstract">Improving
+
+
+                      RNA-Seq expression estimates by correcting for
+                      fragment bias</a></b> <br>
+                  <i><a href="http://www.genomebiology.com">Genome
+                      Biology</a></i> doi:10.1186/gb-2011-12-3-r22</p>
+                <br>
+              </li>
+            </ul>
+          </div>
+          <h2>Contributors</h2>
+          <div class="box">
+            <ul>
+              <li><a href="http://www.cs.umd.edu/%7Ecole/">Cole Trapnell</a></li>
+              <li><a href="http://www.cs.berkeley.edu/%7Eadarob/">Adam
+                  Roberts</a></li>
+              <li>Geo Pertea</li>
+              <li>Brian Williams</li>
+              <li><a href="http://wormlab.caltech.edu/members/">Ali
+                  Mortazavi</a></li>
+              <li>Gordon Kwan</li>
+              <li>Jeltje van Baren</li>
+              <li><a href="http://www.cbcb.umd.edu/%7Esalzberg/">Steven
+                  Salzberg</a></li>
+              <li><a href="http://biology.caltech.edu/Members/Wold">Barbara
+
+
+                  Wold</a></li>
+              <li><a href="http://www.math.berkeley.edu/%7Elpachter/">Lior
+
+
+                  Pachter</a></li>
+            </ul>
+          </div>
+          <h2>Links</h2>
+          <div class="box">
+            <ul>
+              <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
+              <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
+              <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
+            </ul>
+          </div>
+        </div>
+        <!-- End of "rightside" -->
+        <div id="leftside">
+          <table>
+            <tbody>
+              <tr>
+                <td cellpadding="7">
+                  <h1> Getting started</h1>
+                  <br>
+                  <div id="toc">
+                    <ul>
+                      <li>Setting up Cufflinks</li>
+                      <ul>
+                        <li><a href="#inst">Install quick-start</a></li>
+                        <li><a href="#ref">Test the installation</a></li>
+                      </ul>
+                      <li>Common uses of the Cufflinks package</li>
+                      <ul>
+                        <li><a href="#discovery">Discovering novel genes
+                            and transcripts</a></li>
+                        <li><a href="#differential">Identifying
+                            differentially expressed and regulated genes</a></li>
+                      </ul>
+                    </ul>
+                    <br>
+                  </div>
+                  <br>
+                  <h2 id="inst">Install quick-start</h2>
+                  <br>
+                  <strong>Installing a pre-compiled binary release</strong><br>
+                  <p>In order to make it easy to install Cufflinks, we
+                    provide a few binary packages to save users from
+                    occasionally frustrating process of building
+                    Cufflinks, which requires that you install the Boost
+                    libraries. To use the binary packages, simply
+                    download the appropriate one for your machine, untar
+                    it, and make sure the <tt>cufflinks</tt>,<tt>cuffdiff</tt>
+                    and <tt>cuffcompare</tt> binaries are in a
+                    directory in your PATH environment variable.</p>
+                  <br>
+                  <strong>Building Cufflinks from source</strong><br>
+                  <p> In order to build Cufflinks, you must have the <a
+                      href="http://www.boost.org">Boost C++ libraries</a>
+                    (version 1.38 or higher) installed on your system.
+                    See below for instructions on installing Boost. </p>
+                  <br>
+                  <h3 id="boost">Installing Boost</h3>
+                  <br>
+                  <ol>
+                    <li><a href="http://www.boost.org/users/download/">Download</a>
+                      Boost and the <tt>bjam</tt> build engine.</li>
+                    <li>Unpack bjam and add it to your PATH.</li>
+                    <li>Unpack the Boost tarball and <tt>cd</tt> to the
+                      Boost source directory. This directory is called
+                      the BOOST_ROOT in some Boost installation
+                      instructions.</li>
+                    <li>Build Boost. Note that you can specify where to
+                      put Boost with the --prefix option. The default
+                      Boost installation directory is <tt>/usr/local</tt>.
+                      Take note of the boost installation directory,
+                      because you will need to tell the Cufflinks
+                      installer where to find Boost later on.
+                      <p>If you are on Mac OS X, type (all on one line):
+                        <br>
+                      </p>
+                      <blockquote>bjam
+                        --prefix=&lt;YOUR_BOOST_INSTALL_DIRECTORY&gt;
+                        --toolset=darwin architecture=x86
+                        address_model=32_64 link=static
+                        runtime-link=static --layout=versioned stage
+                        install</blockquote>
+                    </li>
+                    <p>If you are on a 32-bit Linux system, type (all on
+                      one line): <br>
+                    </p>
+                    <blockquote>bjam
+                      --prefix=&lt;YOUR_BOOST_INSTALL_DIRECTORY&gt;
+                      --toolset=gcc architecture=x86 address_model=32
+                      link=static runtime-link=static stage install</blockquote>
+                    <p>If you are on a 64-bit Linux system, type (all on
+                      one line): <br>
+                    </p>
+                    <blockquote>bjam
+                      --prefix=&lt;YOUR_BOOST_INSTALL_DIRECTORY&gt;
+                      --toolset=gcc architecture=x86 address_model=64
+                      link=static runtime-link=static stage install</blockquote>
+                  </ol>
+                  <br>
+                  <h3 id="boost">Installing the SAM tools</h3>
+                  <br>
+                  <ol>
+                    <li><a href="http://samtools.sourceforge.net/">Download</a>
+                      the SAM tools</li>
+                    <li>Unpack the SAM tools tarball and <tt>cd</tt> to
+                      the SAM tools source directory.</li>
+                    <li>Build the SAM tools by typing <tt>make</tt> at
+                      the command line.</li>
+                    <li>Choose a directory into which you wish to copy
+                      the SAM tools binary, the included library <tt>libbam.a</tt>,
+                      and the library headers. A common choice is <tt>/usr/local/</tt>.
+                    </li>
+                    <li>Copy libbam.a to the <tt>lib/</tt> directory in
+                      the folder you've chosen above (e.g. <tt>/usr/local/lib/</tt>)</li>
+                    <li>Create a directory called "<tt>bam</tt>" in the
+                      <tt>include/</tt> directory (e.g.
+                      /usr/local/include/bam) </li>
+                    <li>Copy the headers (files ending in .h) to the <tt>include/bam</tt>
+                      directory you've created above (e.g. <tt>/usr/local/include/bam</tt>)
+                    </li>
+                    <li>Copy the samtools binary to some directory in
+                      your PATH.</li>
+                  </ol>
+                  <br>
+                  <h3 id="boost">Building Cufflinks</h3>
+                  <br>
+                  <ol>
+                    <li>Unpack the Cufflinks source tarball:
+                      <blockquote>tar zxvf cufflinks-0.7.0.tar.gz</blockquote>
+                    </li>
+                    <br>
+                    <li>Change to the Cufflinks directory:
+                      <blockquote>cd cufflinks-0.7.0</blockquote>
+                    </li>
+                    <br>
+                    <li>Configure Cufflinks. If Boost is installed
+                      somewhere other than <tt>/usr/local</tt>, you
+                      will need to tell the installer where to find it
+                      using the <tt>--with-boost</tt> option. Specify
+                      where to install Cufflinks using the <tt>--prefix</tt>
+                      option.
+                      <blockquote>./configure
+                        --prefix=/path/to/cufflinks/install
+                        --with-boost=/path/to/boost</blockquote>
+                      If you see any errors during configuration, verify
+                      that you are using Boost version 1.38 or higher,
+                      and that the directory you specified via <tt>--with-boost</tt>
+                      contains the boost header files and libraries. See
+                      the Boost <a href="">Getting started</a> page for
+                      more details. If you copied the SAM tools binaries
+                      to someplace other than <tt>/usr/local/</tt>, you
+                      may need to supply the <tt>--with-bam</tt>
+                      configuration option. </li>
+                    <li>Finally, make and install Cufflinks.
+                      <blockquote>make</blockquote>
+                      <blockquote>make install</blockquote>
+                    </li>
+                  </ol>
+                  <br>
+                  <h2 id="test">Testing the installation</h2>
+                  <br>
+                  <ol>
+                    <li>Download the <a href="downloads/test_data.sam">test
+
+
+                        data</a> </li>
+                    <li>In the directory where you placed the test file,
+                      type:<br>
+                      <blockquote>cufflinks ./test_data.sam</blockquote>
+                      <br>
+                      You should see the following output:
+                      <pre>[bam_header_read] EOF marker is absent. The input is probably truncated.
 [bam_header_read] invalid BAM binary header (this is not a BAM file).
 File ./test_data.sam doesn't appear to be a valid BAM file, trying SAM...
 [13:23:15] Inspecting reads and determining fragment length distribution.
-> Processed 1 loci.                            [*************************] 100%
-> Map Properties:
->       Total Map Mass: 104.00
->       Read Type: 75bp paired-end
->       Fragment Length Distribution: Gaussian (default)
->                     Estimated Mean: 209.55
->                  Estimated Std Dev: 70.54
+&gt; Processed 1 loci.                            [*************************] 100%
+&gt; Map Properties:
+&gt;       Total Map Mass: 104.00
+&gt;       Read Type: 75bp paired-end
+&gt;       Fragment Length Distribution: Gaussian (default)
+&gt;                     Estimated Mean: 209.55
+&gt;                  Estimated Std Dev: 70.54
 [13:23:15] Assembling transcripts and estimating abundances.
-> Processed 1 loci.                            [*************************] 100%
+&gt; Processed 1 loci.                            [*************************] 100%
 </pre>
-				
-			<li>Verify that the file <tt>transcripts.gtf</tt> is in the current
-				directory and looks like this (your file will have GTF attributes, omitted here for clarity)
-				<pre>
-test_chromosome Cufflinks       exon    53      250     1000    +       . 
+                    </li>
+                    <li>Verify that the file <tt>transcripts.gtf</tt>
+                      is in the current directory and looks like this
+                      (your file will have GTF attributes, omitted here
+                      for clarity)
+                      <pre>test_chromosome Cufflinks       exon    53      250     1000    +       . 
 test_chromosome Cufflinks       exon    351     400     1000    +       . 
 test_chromosome Cufflinks       exon    501     550     1000    +       .
 					
 				</pre>
-				</ol>
-			</li>
-      	<br/>
-		<h2>Common uses of the Cufflinks package</h2><br/>
-		<h2 id="discovery">Discovering novel genes and transcripts</h2><br/>
-		<p> 
-			RNA-Seq is a powerful technology for gene and splice variant discovery.  
-			You can use Cufflinks to help annotate a new genome or find new genes and 
-			splice isoforms of known genes in even well-annotated genomes.  Annotating genomes
-			is a complex and difficult process, but we outline a basic workflow that should get you
-			started here.  The workflow also excludes examples of the commands 
-			you'd run to implement each step in the workflow. 
-			Suppose we have RNA-Seq reads from human liver, brain, and heart.
-		</p>
-		<p>
-			
-			<br/>
-			<ol>
-				<li><strong>Map the reads for each tissue to the reference genome</strong></li>
-				<p>
-				We recommend that you use TopHat to map your reads to the 
-				reference genome. For this example, we'll assume you have paired-end RNA-Seq data. 
-				You can map reads as follows:
-				</p>
-				<p>
-				<blockquote>
-				tophat -r 50 -o tophat_brain /seqdata/indexes/hg19 brain_1.fq brain_2.fq <br/>
-				tophat -r 50 -o tophat_liver /seqdata/indexes/hg19 liver_1.fq liver_2.fq <br/>
-				tophat -r 50 -o tophat_heart /seqdata/indexes/hg19 heart_1.fq heart_2.fq <br/>
-				</blockquote>
-				</p>
-				<p>
-				The commands above are just examples of how to map reads with TopHat. 
-				Please see the <a href="http://tophat.cbcb.umd.edu/manual.html">TopHat manual</a> for more details on RNA-Seq read mapping.
-				</p>
-				<br/>
-				<li><strong>Run Cufflinks on each mapping file</strong></li>
-				<p>
-				The next step is to assemble each tissue sample independently using Cufflinks.  Assemble each tissue like so:
-				<blockquote>
-				cufflinks  -o cufflinks_brain tophat_brain/accepted_hits.bam<br/>
-				cufflinks  -o cufflinks_liver tophat_liver/accepted_hits.bam<br/>
-				cufflinks  -o cufflinks_heart tophat_liver/accepted_hits.bam<br/>
-				</blockquote>
-				<li><strong>Merge the resulting assemblies</strong></li>
-				<tt><b>assemblies.txt:</b></tt>
-				<blockquote>
-				cufflinks_brain/transcripts.gtf<br/>
-				cufflinks_liver/transcripts.gtf<br/>
-				cufflinks_heart/transcripts.gtf<br/>
-				</blockquote>
-				Now run the merge script:
-				<blockquote>
-				merge_cuff_asms.py -s /seqdata/fastafiles/hg19/hg19.fa assemblies.txt<br/>
-				</blockquote>
-				<p>The final, merged annotation will be in the file <tt>merged_asm/merged.gtf</tt>.
-				 At this point, you can use your favorite browser to explore the structure of your genes, or feed this 
-				file into downstream informatic analyses, such as a search for orthologs in other organisms. 
-				You can also explore your samples with Cuffdiff and identify genes that are 
-				significantly differentially expressed between the three conditions.  
-				See the workflows below for more details on how to do this.
-				<li><strong>(optional) Compare the merged assembly with known or annotated genes</strong></li>
-				If you want to discover new genes in a genome that has been annotated, you can use <tt>cuffcompare</tt>
-				to sort out what is new in your assembly from what is already known.  Run cuffcompare like this:
-				<blockquote>
-				cuffcompare -s /seqdata/fastafiles/hg19/hg19.fa -r known_annotation.gtf merged_asm/merged.gtf<br/>
-				</blockquote>
-				
-				Cuffcompare will produce a number of output files that you can parse to select novel genes and isoforms.
-			</ol>
-		</p>
-		<br/>
-		<h2 id="differential">Identifying differentially expressed and regulated genes</h2><br/>
-			<p>
-			There are two workflows you can choose from when looking for differentially expressed and regulated genes using the Cufflinks package.  The first workflow is simpler and is a good choice when you aren't looking for novel genes and transcripts.  This workflow requires that you not only have a reference genome, but also a reference gene annotation in GTF format. The second workflow, which includes steps to discover new genes and new splice variants of known genes, is more complex and requires more computing power.  The second workflow can use and augment a reference gene annotation GTF if one is available.
-			</p> 
-			<br/>
-			<b>Differential analysis without gene and transcript discovery</b>
-			<p>
-				<ol>
-					<li><strong>Map the reads for each condition to the reference genome</strong></li>
-					<p>
-					We recommend that you use TopHat to map your reads to the 
-					reference genome. For this example, we'll assume you have paired-end 
-					RNA-Seq data.  Suppose you have RNA-Seq from a knockdown experiment 
-					where you have two biological replicates of a mock condition as a 
-					control and two replicates of your knockdown. 
-					<p>
-					<b>Note:</b> Cuffdiff will work much better if you map your replicates independently, rather than pooling the replicates from one condition into a single set of reads.
-					<p>
-					<p>
-					<b>Note:</b> While an GTF of known transcripts is not strictly required at this stage, providing one will improve alignment sensitivity, and ultimately, the accuracy of Cuffdiff's analysis.
-					<p>
-					You can map reads as follows:
-					<blockquote>
-					tophat -r 50 -G annotation.gtf -o tophat_mock_rep1 /seqdata/indexes/hg19 	\<br/>
-						&nbsp;&nbsp;mock_rep1_1.fq mock_rep1_2.fq <br/>
-					tophat -r 50 -G annotation.gtf -o tophat_mock_rep2 /seqdata/indexes/hg19 	\<br/>
-						&nbsp;&nbsp;mock_rep2_1.fq mock_rep2_2.fq <br/>
-					tophat -r 50 -G annotation.gtf -o tophat_knockdown_rep1 /seqdata/indexes/hg19 	\<br/>
-						&nbsp;&nbsp;knockdown_rep1_1.fq knockdown_rep1_2.fq <br/>
-					tophat -r 50 -G annotation.gtf -o tophat_knockdown_rep2 /seqdata/indexes/hg19 	\<br/>
-						&nbsp;&nbsp;knockdown_rep2_1.fq knockdown_rep2_2.fq <br/>
-					</blockquote>
-					<li><strong>Run Cuffdiff</strong></li>
-					Take the annotated transcripts for your genome (in GTF format) and provide them to 
-					<tt>cuffdiff</tt> along with the BAM files from TopHat for each replicate:
-					<blockquote>
-					cuffdiff annotation.gtf mock_rep1.bam,mock_rep2.bam \<br/>
-					&nbsp;&nbsp; knockdown_rep1.bam,knockdown_rep2.bam<br/>
-					</blockquote>
-				</ol>
-			</p>
-			<br/>
-			<b>Differential analysis with gene and transcript discovery</b>
-			<p>
-				<ol>
-					<li><strong>Complete steps 1-3 in "Discovering novel genes and transcripts", above</strong></li>
-					<p>Follow the protocol for gene and transcript discovery listed above.  
-				    Be sure to provide TopHat and the assembly merging script with an reference 
-				    annotation if one is available for your organism, to ensure the highest possible quality of differential expression analysis.
-					<li><strong>Run Cuffdiff</strong></li>
-					Take the merged assembly from produced in step 3 of the discovery protocol 
-					and provide it to <tt>cuffdiff</tt> along with the BAM files from TopHat:
-					<blockquote>
-					cuffdiff merged_asm/merged.gtf liver1.bam,liver2.bam brain1.bam,brain2.bam<br/>
-					</blockquote>
-					
-					As shown above, replicate BAM files for each conditions <strong>must</strong> 
-					be given as a comma separated list. If you put spaces between 
-					replicate files instead of commas, cuffdiff will treat 
-					them as independent conditions.  
-				</ol>
-			</p>
-    </div>
-  </div>
-  <div id="footer">
-  	<table width="100%" cellspacing=15><tr><td>
-    	This research was supported in part by NIH grants R01-LM06845 and R01-GM083873, NSF grant CCF-0347992 and the Miller Institute for Basic
-			Research in Science at UC Berkeley.
-    </td><td align=right>
-    Administrator: <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>. Design by <a href="http://www.free-css-templates.com" title="Design by David Herreman">David Herreman</a>
-    </td></tr></table>
-  </div>
-</div>
+                    </li>
+                  </ol>
+                  <br>
+                  <h2>Common uses of the Cufflinks package</h2>
+                  <br>
+                  <h2 id="discovery">Discovering novel genes and
+                    transcripts</h2>
+                  <br>
+                  <p> RNA-Seq is a powerful technology for gene and
+                    splice variant discovery. You can use Cufflinks to
+                    help annotate a new genome or find new genes and
+                    splice isoforms of known genes in even
+                    well-annotated genomes. Annotating genomes is a
+                    complex and difficult process, but we outline a
+                    basic workflow that should get you started here. The
+                    workflow also excludes examples of the commands
+                    you'd run to implement each step in the workflow.
+                    Suppose we have RNA-Seq reads from human liver,
+                    brain, and heart. </p>
+                  <p> <br>
+                  </p>
+                  <ol>
+                    <li><strong>Map the reads for each tissue to the
+                        reference genome</strong></li>
+                    <p> We recommend that you use TopHat to map your
+                      reads to the reference genome. For this example,
+                      we'll assume you have paired-end RNA-Seq data. You
+                      can map reads as follows: </p>
+                    <p> </p>
+                    <blockquote> tophat -r 50 -o tophat_brain
+                      /seqdata/indexes/hg19 brain_1.fq brain_2.fq <br>
+                      tophat -r 50 -o tophat_liver /seqdata/indexes/hg19
+                      liver_1.fq liver_2.fq <br>
+                      tophat -r 50 -o tophat_heart /seqdata/indexes/hg19
+                      heart_1.fq heart_2.fq <br>
+                    </blockquote>
+                    <p> The commands above are just examples of how to
+                      map reads with TopHat. Please see the <a
+                        href="http://tophat.cbcb.umd.edu/manual.html">TopHat
 
-<!-- Google analytics code -->
-<script type="text/javascript">
+
+                        manual</a> for more details on RNA-Seq read
+                      mapping. </p>
+                    <br>
+                    <li><strong>Run Cufflinks on each mapping file</strong></li>
+                    <p> The next step is to assemble each tissue sample
+                      independently using Cufflinks. Assemble each
+                      tissue like so: </p>
+                    <blockquote> cufflinks -o cufflinks_brain
+                      tophat_brain/accepted_hits.bam<br>
+                      cufflinks -o cufflinks_liver
+                      tophat_liver/accepted_hits.bam<br>
+                      cufflinks -o cufflinks_heart
+                      tophat_liver/accepted_hits.bam<br>
+                    </blockquote>
+                    <li><strong>Merge the resulting assemblies</strong></li>
+                    <tt><b>assemblies.txt:</b></tt>
+                    <blockquote> cufflinks_brain/transcripts.gtf<br>
+                      cufflinks_liver/transcripts.gtf<br>
+                      cufflinks_heart/transcripts.gtf<br>
+                    </blockquote>
+                    Now run the merge script:
+                    <blockquote> merge_cuff_asms.py -s
+                      /seqdata/fastafiles/hg19/hg19.fa assemblies.txt<br>
+                    </blockquote>
+                    <p>The final, merged annotation will be in the file
+                      <tt>merged_asm/merged.gtf</tt>. At this point, you
+                      can use your favorite browser to explore the
+                      structure of your genes, or feed this file into
+                      downstream informatic analyses, such as a search
+                      for orthologs in other organisms. You can also
+                      explore your samples with Cuffdiff and identify
+                      genes that are significantly differentially
+                      expressed between the three conditions. See the
+                      workflows below for more details on how to do
+                      this. </p>
+                    <li><strong>(optional) Compare the merged assembly
+                        with known or annotated genes</strong></li>
+                    If you want to discover new genes in a genome that
+                    has been annotated, you can use <tt>cuffcompare</tt>
+                    to sort out what is new in your assembly from what
+                    is already known. Run cuffcompare like this:
+                    <blockquote> cuffcompare -s
+                      /seqdata/fastafiles/hg19/hg19.fa -r
+                      known_annotation.gtf merged_asm/merged.gtf<br>
+                    </blockquote>
+                    Cuffcompare will produce a number of output files
+                    that you can parse to select novel genes and
+                    isoforms.
+                  </ol>
+                  <br>
+                  <h2 id="differential">Identifying differentially
+                    expressed and regulated genes</h2>
+                  <br>
+                  <p> There are two workflows you can choose from when
+                    looking for differentially expressed and regulated
+                    genes using the Cufflinks package. The first
+                    workflow is simpler and is a good choice when you
+                    aren't looking for novel genes and transcripts. This
+                    workflow requires that you not only have a reference
+                    genome, but also a reference gene annotation in GFF
+                    format (GFF3 or GTF2 formats are accepted, see
+                    details <a href="gff.html">here</a>). The second
+                    workflow, which includes steps to discover new genes
+                    and new splice variants of known genes, is more
+                    complex and requires more computing power. The
+                    second workflow can use and augment a reference gene
+                    annotation GFF if one is available. </p>
+                  <br>
+                  <b>Differential analysis without gene and transcript
+                    discovery</b>
+                  <p> </p>
+                  <ol>
+                    <li><strong>Map the reads for each condition to the
+                        reference genome</strong></li>
+                    <p> We recommend that you use TopHat to map your
+                      reads to the reference genome. For this example,
+                      we'll assume you have paired-end RNA-Seq data.
+                      Suppose you have RNA-Seq from a knockdown
+                      experiment where you have two biological
+                      replicates of a mock condition as a control and
+                      two replicates of your knockdown. </p>
+                    <p> <b>Note:</b> Cuffdiff will work much better if
+                      you map your replicates independently, rather than
+                      pooling the replicates from one condition into a
+                      single set of reads. </p>
+                    <p> </p>
+                    <p> <b>Note:</b> While an GTF of known transcripts
+                      is not strictly required at this stage, providing
+                      one will improve alignment sensitivity, and
+                      ultimately, the accuracy of Cuffdiff's analysis. </p>
+                    <p> You can map reads as follows: </p>
+                    <blockquote> tophat -r 50 -G annotation.gtf -o
+                      tophat_mock_rep1 /seqdata/indexes/hg19 \<br>
+                      &nbsp;&nbsp;mock_rep1_1.fq mock_rep1_2.fq <br>
+                      tophat -r 50 -G annotation.gtf -o tophat_mock_rep2
+                      /seqdata/indexes/hg19 \<br>
+                      &nbsp;&nbsp;mock_rep2_1.fq mock_rep2_2.fq <br>
+                      tophat -r 50 -G annotation.gtf -o
+                      tophat_knockdown_rep1 /seqdata/indexes/hg19 \<br>
+                      &nbsp;&nbsp;knockdown_rep1_1.fq
+                      knockdown_rep1_2.fq <br>
+                      tophat -r 50 -G annotation.gtf -o
+                      tophat_knockdown_rep2 /seqdata/indexes/hg19 \<br>
+                      &nbsp;&nbsp;knockdown_rep2_1.fq
+                      knockdown_rep2_2.fq <br>
+                    </blockquote>
+                    <li><strong>Run Cuffdiff</strong></li>
+                    Take the annotated transcripts for your genome (as <a
+                      href="gff.html">GFF or GTF</a>) and provide them
+                    to <tt>cuffdiff</tt> along with the BAM files from
+                    TopHat for each replicate:
+                    <blockquote> cuffdiff annotation.gtf
+                      mock_rep1.bam,mock_rep2.bam \<br>
+                      &nbsp;&nbsp; knockdown_rep1.bam,knockdown_rep2.bam<br>
+                    </blockquote>
+                  </ol>
+                  <br>
+                  <b>Differential analysis with gene and transcript
+                    discovery</b>
+                  <p> </p>
+                  <ol>
+                    <li><strong>Complete steps 1-3 in "Discovering novel
+                        genes and transcripts", above</strong></li>
+                    <p>Follow the protocol for gene and transcript
+                      discovery listed above. Be sure to provide TopHat
+                      and the assembly merging script with an reference
+                      annotation if one is available for your organism,
+                      to ensure the highest possible quality of
+                      differential expression analysis. </p>
+                    <li><strong>Run Cuffdiff</strong></li>
+                    Take the merged assembly from produced in step 3 of
+                    the discovery protocol and provide it to <tt>cuffdiff</tt>
+                    along with the BAM files from TopHat:
+                    <blockquote> cuffdiff merged_asm/merged.gtf
+                      liver1.bam,liver2.bam brain1.bam,brain2.bam<br>
+                    </blockquote>
+                    As shown above, replicate BAM files for each
+                    conditions <strong>must</strong> be given as a
+                    comma separated list. If you put spaces between
+                    replicate files instead of commas, cuffdiff will
+                    treat them as independent conditions.
+                  </ol>
+                  <div id="footer">
+                    <table cellspacing="15" width="100%">
+                      <tbody>
+                        <tr>
+                          <td> This research was supported in part by
+                            NIH grants R01-LM06845 and R01-GM083873, NSF
+                            grant CCF-0347992 and the Miller Institute
+                            for Basic Research in Science at UC
+                            Berkeley. </td>
+                          <td align="right"> Administrator: <a
+                              href="mailto:cole@cs.umd.edu">Cole
+                              Trapnell</a>. Design by <a
+                              href="http://www.free-css-templates.com"
+                              title="Design by David Herreman">David
+                              Herreman</a> </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- Google analytics code -->
+                  <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
-<script type="text/javascript">
+                  <script type="text/javascript">
 try {
 var pageTracker = _gat._getTracker("UA-6101038-2");
 pageTracker._trackPageview();
 } catch(err) {}</script>
-<!-- End google analytics code -->
-
-</body>
+                  <!-- End google analytics code --> </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
