@@ -27,6 +27,7 @@
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <boost/math/tools/roots.hpp>
 
 #include "filters.h"
 #include "replicates.h"
@@ -753,6 +754,37 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 	}
 }
 
+struct BetaCubic
+{
+    
+    BetaCubic (long double a, long double b, long double c):
+        A(a), B(b), C(c) 
+    {
+        _3_coeff = C/B;
+        _2_coeff = (4 * C / B) - (4 * A*C/(B*B));
+        _1_coeff = (5 * A*A*C / (B*B*B)) - (10 * A*C/(B*B)) - A/(A-B) + 5*C/B;
+        _0_coeff = 1 + (2 * C/B) - (6*A*C/(B*B)) + (6*A*A*C)/(B*B*B) - (2*A*A*A*C)/(B*B*B*B);
+    }
+    long double operator()(long double beta)
+    {
+        long double v = 0.0;
+        v += powl(beta,3.0) * _3_coeff;
+        v += powl(beta,2.0) * _2_coeff;
+        v += beta, _1_coeff;
+        v += _0_coeff;
+        return v;
+    }
+    
+private:
+    long double A;
+    long double B;
+    long double C;
+    long double _3_coeff;
+    long double _2_coeff;
+    long double _1_coeff;
+    long double _0_coeff;
+};
+
 double compute_fpkm_variance(double gamma_t, 
                              double psi_t, 
                              double X_g, 
@@ -776,7 +808,7 @@ double compute_fpkm_variance(double gamma_t,
     if (psi_t == 0) 
     {
         // default to regular negative binomial case.
-        assert (gamma_t == 1.0);
+        //assert (gamma_t == 1.0);
         //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
         double variance = 1000000000.0 / (l_t * M);
         variance *= variance;
@@ -793,19 +825,39 @@ double compute_fpkm_variance(double gamma_t,
         
         //long double alpha = pow(A, 5.0) / (pow(B, 3.0) * C);
         
-        long double alpha = (A * B / C) + (A/B) - 1.0;
-        alpha += (A / B) - 1.0;
-        long double beta = A * (A*B/C - (1.0/B));
+//        long double alpha = (A * B / C) + (A/B) - 1.0;
+//        alpha += (A / B) - 1.0;
+//        long double beta = A * (A*B/C - (1.0/B));
+        
+        BetaCubic cubic(A,B,C);
+        
+        pair<long double, long double> res;
+        long double eps = numeric_limits<long double>::epsilon();
+        boost::math::tools::eps_tolerance<long double> tol(eps);
+        boost::uintmax_t max_iters = 100000;
+        res = boost::math::tools::bisect<BetaCubic, long double,  boost::math::tools::eps_tolerance<long double> > (cubic, 1.0, 1e4, tol, max_iters);
+        double beta = 0.0;
+        if (tol(res.first, res.second))
+        {
+            beta = res.first;
+        }
+        else
+        {
+            assert (max_iters == 100000);
+            assert (false);
+        }
+        
+        long double alpha = 1.0 - (A/(A-B)) * beta;
         
         long double mean = r * beta / (alpha - 1.0);
         
-        long double p = (B - A) / B;
+        //long double p = (B - A) / B;
         
         long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
         
         long double variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
         variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
-        //assert (FPKM == mean);
+        assert (FPKM == mean);
         return variance;
     }
 }
