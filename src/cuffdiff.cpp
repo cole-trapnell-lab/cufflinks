@@ -966,8 +966,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	while (true)
 	{
         //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-        bool more_loci_remain = quantitate_next_locus(rt, bundle_factories, test_launcher);
-        
+        quantitate_next_locus(rt, bundle_factories, test_launcher);
+        bool more_loci_remain = false;
+        foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+        {
+            if (rep_fac->bundles_remain())
+            {
+                more_loci_remain = true;
+                break;
+            }
+        }
         if (!more_loci_remain)
         {
             // wait for the workers to finish up before doing the cross-sample testing.
