@@ -935,11 +935,15 @@ double compute_fpkm_group_variance(const vector<double>& gammas,
     double psi_t = 0.0;
     double V_X_g_t = 0.0;
     
+    double total_var = 0.0;
+    
     for (size_t i = 0; i < len; ++i)
     {
-        gamma_t += gammas[i] / ls[i];
-        psi_t += psis(i,i) / (ls[i] * ls[i]);
-        V_X_g_t += V_X_gs[i] / (ls[i] * ls[i]);
+//        gamma_t += gammas[i] / ls[i];
+//        psi_t += psis(i,i) / (ls[i] * ls[i]);
+//        V_X_g_t += V_X_gs[i] / (ls[i] * ls[i]);
+        
+        total_var += compute_fpkm_variance(gammas[i], psis(i,i), X_g, V_X_gs[i], ls[i], M);
     }
     
     double cov = 0.0;
@@ -964,9 +968,11 @@ double compute_fpkm_group_variance(const vector<double>& gammas,
     double C = (1000000000.0 * X_g / M);
     C *= C;
     C *= cov;
-                
+             
+    //double grp_var = compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M); 
+    //assert (grp_var == total_var);
     
-    return compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M) + cov;
+    return total_var + cov;
 }
 
 void AbundanceGroup::calculate_conf_intervals()
@@ -1067,6 +1073,13 @@ void AbundanceGroup::calculate_FPKM_variance()
 		_FPKM_variance = 0.0;
 		return;
 	}
+    foreach(const string& s, gene_id())
+    {
+        if (s == "XLOC_000005")
+        {
+            int a = 5;
+        }
+    }
     
     vector<double> gammas;
     vector<double> ls;

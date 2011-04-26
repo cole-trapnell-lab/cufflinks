@@ -291,6 +291,9 @@ public:
     
     double scale_mass(double unscaled_mass) const 
     { 
+        if (_mass_scaling_factor == 0)
+            return unscaled_mass;
+        
         return unscaled_mass * (1.0 / _mass_scaling_factor);
     }
     
