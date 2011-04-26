@@ -73,6 +73,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         double mean_interp = _scaled_mass_variances[0] - slope*(_scaled_mass_means[0] - scaled_mass);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
+
         assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
     }
@@ -109,6 +110,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         double mean_interp = _scaled_mass_variances[d] + slope*(scaled_mass - _scaled_mass_means[d]);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
+ 
         assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
     }

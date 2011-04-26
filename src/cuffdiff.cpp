@@ -515,14 +515,9 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                            vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
                            shared_ptr<TestLauncher> launcher)
 {
-    vector<shared_ptr<bool> > non_empty_bundle_flags;
-    
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
-        shared_ptr<bool> sample_non_empty = shared_ptr<bool>(new bool);
         shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
-//        abundances.push_back(s_ab);
-        non_empty_bundle_flags.push_back(sample_non_empty);
         
 #if ENABLE_THREADS					
         while(1)
@@ -547,33 +542,15 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
                           i,
-                          sample_non_empty,
                           launcher);  
 #else
         sample_worker(boost::ref(rt),
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
                       i,
-                      sample_non_empty,
                       launcher);
 #endif
     }
-    
-    //test_differential(abundances.front()->locus_tag, abundances, tests, tracking, samples_are_time_series);
-    
-    bool more_loci_remain = false;
-    foreach (shared_ptr<bool> sample_flag, non_empty_bundle_flags)
-    {
-        if (*sample_flag)
-        {
-            more_loci_remain = true;
-            break;
-        }
-    }
-    
-    // There's no more loci to be processed.
-    return more_loci_remain;
-
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)

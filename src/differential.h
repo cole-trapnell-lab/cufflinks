@@ -217,7 +217,6 @@ void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   shared_ptr<bool> non_empty,
                    shared_ptr<TestLauncher> launcher);
 
 void test_differential(const string& locus_tag,

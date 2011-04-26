@@ -228,23 +228,39 @@ bool test_diffexp(const FPKMContext& curr,
 	{
 		if (curr.FPKM > 0.0)
 		{
-			//test = SampleDifference(sample1, sample2, 0, curr.FPKM, DBL_MAX, 0, transcript_group_id); 
-			test.p_value = 0;
+            if (curr.FPKM - 2 * sqrt(curr.FPKM_variance) > 0)
+            {
+                test.p_value = 0;
+                performed_test = true;
+            }
+            else
+            {
+                test.p_value = 1;
+                performed_test = false;
+            }
 			test.differential = numeric_limits<double>::max();;
 			test.test_stat = numeric_limits<double>::max();
 			test.value_1 = 0;
 			test.value_2 = curr.FPKM;
-			performed_test = true;
+			
 		}
 		else if (prev.FPKM > 0.0)
 		{
-			//test = SampleDifference(sample1, sample2, prev.FPKM, 0, -DBL_MAX, 0, transcript_group_id); 
-			test.p_value = 0;
+			
+			if (prev.FPKM - 2 * sqrt(prev.FPKM_variance) > 0)
+            {
+                test.p_value = 0;
+                performed_test = true;
+            }
+            else
+            {
+                test.p_value = 1;
+                performed_test = false;
+            }
 			test.differential = -numeric_limits<double>::max();
 			test.test_stat = -numeric_limits<double>::max();
 			test.value_1 = prev.FPKM;
 			test.value_2 = 0;
-			performed_test = true;
 		}
 	}	
 	
@@ -743,7 +759,6 @@ void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   shared_ptr<bool> non_empty,
                    shared_ptr<TestLauncher> launcher)
 {
 #if ENABLE_THREADS
@@ -751,9 +766,9 @@ void sample_worker(const RefSequenceTable& rt,
 #endif
     
     HitBundle bundle;
-    *non_empty = sample_factory.next_bundle(bundle);
+    bool non_empty = sample_factory.next_bundle(bundle);
     
-    if (!*non_empty || (!corr_multi && !final_est_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
+    if (!non_empty || (!corr_multi && !final_est_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS
         // If Cuffdiff was built without threads, we need to manually invoke 

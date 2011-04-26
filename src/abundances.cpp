@@ -874,25 +874,26 @@ double compute_fpkm_variance(double gamma_t,
     
     if (V_X_g_t < X_g)
         V_X_g_t = X_g;
-    double A = 1000000000.0 * X_g * gamma_t;
+    long double A = 1000000000.0 * X_g * gamma_t;
     A /= (l_t * M);
     
-    double B = 1000000000.0 / (l_t * M);
+    long double B = 1000000000.0 / (l_t * M);
     B *= B;
     B *= V_X_g_t;
     
-    double C = 1000000000.0 * X_g / (l_t * M);
+    long double C = 1000000000.0 * X_g / (l_t * M);
     C *= C;
+    
+    long double variance = 0.0;
     
     if (psi_t == 0) 
     {
         // default to regular negative binomial case.
         //assert (gamma_t == 1.0);
         //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
-        double variance = 1000000000.0 / (l_t * M);
+        variance = 1000000000.0 / (l_t * M);
         variance *= variance;
         variance *= V_X_g_t;
-        return variance;
     }
     else
     {
@@ -916,8 +917,9 @@ double compute_fpkm_variance(double gamma_t,
         long double variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
         variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
         assert (abs(FPKM - mean) < 1e-3);
-        return variance;
     }
+    
+    return variance;
 }
 
 double compute_fpkm_group_variance(const vector<double>& gammas, 
@@ -1073,13 +1075,6 @@ void AbundanceGroup::calculate_FPKM_variance()
 		_FPKM_variance = 0.0;
 		return;
 	}
-    foreach(const string& s, gene_id())
-    {
-        if (s == "XLOC_000005")
-        {
-            int a = 5;
-        }
-    }
     
     vector<double> gammas;
     vector<double> ls;
