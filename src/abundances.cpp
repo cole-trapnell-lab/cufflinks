@@ -864,7 +864,8 @@ long double solve_beta(long double A, long double B, long double C)
     return beta.real();
 }
 
-double compute_fpkm_variance(double gamma_t, 
+bool compute_fpkm_variance(long double& variance,
+                             double gamma_t, 
                              double psi_t, 
                              double X_g, 
                              double V_X_g_t,
@@ -872,8 +873,8 @@ double compute_fpkm_variance(double gamma_t,
                              double M)
 {
     
-    if (V_X_g_t < X_g)
-        V_X_g_t = X_g;
+//    if (V_X_g_t < X_g)
+//        V_X_g_t = X_g;
     long double A = 1000000000.0 * X_g * gamma_t;
     A /= (l_t * M);
     
@@ -884,7 +885,8 @@ double compute_fpkm_variance(double gamma_t,
     long double C = 1000000000.0 * X_g / (l_t * M);
     C *= C;
     
-    long double variance = 0.0;
+    variance = 0.0;
+    bool numeric_ok = true;
     
     if (psi_t == 0) 
     {
@@ -907,45 +909,46 @@ double compute_fpkm_variance(double gamma_t,
         
         long double alpha = 1.0 - (A/(A-B)) * beta;
         
-        assert (beta > 0);
-        assert (alpha > 0);
+        if (beta <= 0)
+            numeric_ok = false;
+        
+        if (alpha <= 0)
+            numeric_ok = false;
         
         long double mean = r * beta / (alpha - 1.0);
         
         long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
         
-        long double variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
+        variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
         variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
         assert (abs(FPKM - mean) < 1e-3);
     }
     
-    return variance;
+    return numeric_ok;
 }
 
-double compute_fpkm_group_variance(const vector<double>& gammas, 
-                                   const ublas::matrix<double>& psis, 
-                                   double X_g, 
-                                   const vector<double>& V_X_gs,
-                                   const vector<double>& ls,
-                                   double M)
+bool compute_fpkm_group_variance(long double& variance,
+                                 const vector<double>& gammas, 
+                                 const ublas::matrix<double>& psis, 
+                                 double X_g, 
+                                 const vector<double>& V_X_gs,
+                                 const vector<double>& ls,
+                                 double M)
 {
     size_t len = gammas.size();
     if (len == 1)
-        return compute_fpkm_variance(gammas.front(), 0.0, X_g, V_X_gs.front(), ls.front(), M);
-    
-    double gamma_t = 0.0;
-    double psi_t = 0.0;
-    double V_X_g_t = 0.0;
+        return compute_fpkm_variance(variance, gammas.front(), 0.0, X_g, V_X_gs.front(), ls.front(), M);
     
     double total_var = 0.0;
-    
+    bool numeric_ok = true;
     for (size_t i = 0; i < len; ++i)
     {
-//        gamma_t += gammas[i] / ls[i];
-//        psi_t += psis(i,i) / (ls[i] * ls[i]);
-//        V_X_g_t += V_X_gs[i] / (ls[i] * ls[i]);
-        
-        total_var += compute_fpkm_variance(gammas[i], psis(i,i), X_g, V_X_gs[i], ls[i], M);
+        bool ok = true;
+        long double var = 0.0;
+        ok = compute_fpkm_variance(var, gammas[i], psis(i,i), X_g, V_X_gs[i], ls[i], M);
+        total_var += var;
+        if (!ok)
+            numeric_ok = false;
     }
     
     double cov = 0.0;
@@ -974,7 +977,8 @@ double compute_fpkm_group_variance(const vector<double>& gammas,
     //double grp_var = compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M); 
     //assert (grp_var == total_var);
     
-    return total_var + cov;
+    variance = total_var + cov;
+    return numeric_ok;
 }
 
 void AbundanceGroup::calculate_conf_intervals()
@@ -988,15 +992,19 @@ void AbundanceGroup::calculate_conf_intervals()
 			{
                 assert (!isnan(_gamma_covariance(j,j)));
                 
-                double fpkm_var = compute_fpkm_variance(_abundances[j]->gamma(),
+                long double fpkm_var = 0.0;
+                bool numerics_ok = compute_fpkm_variance(fpkm_var,
+                                                        _abundances[j]->gamma(),
                                                         _gamma_covariance(j,j),
                                                         num_fragments(),
                                                         _abundances[j]->mass_variance(),
                                                         _abundances[j]->effective_length(),
                                                         num_fragments()/mass_fraction());
+                if (numerics_ok == false)
+                    _abundances[j]->status(NUMERIC_LOW_DATA);
                 
 				double FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
-				double FPKM_lo = max(0.0, _abundances[j]->FPKM() - 2 * sqrt(fpkm_var));
+				double FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
 				assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
 				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
 				_abundances[j]->FPKM_conf(conf);
@@ -1088,13 +1096,16 @@ void AbundanceGroup::calculate_FPKM_variance()
     }
     
     if (status() == NUMERIC_OK)
-    {
-        _FPKM_variance = compute_fpkm_group_variance(gammas,
-                                                     _gamma_covariance,
-                                                     num_fragments(),
-                                                     V_X_gs,
-                                                     ls,
-                                                     num_fragments()/mass_fraction());
+    {   
+        long double var = 0.0;
+        bool numeric_ok = compute_fpkm_group_variance(var,
+                                                      gammas,
+                                                      _gamma_covariance,
+                                                      num_fragments(),
+                                                      V_X_gs,
+                                                      ls,
+                                                      num_fragments()/mass_fraction());
+        _FPKM_variance = var;
     }
     else
     {

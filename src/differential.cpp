@@ -294,7 +294,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	int total_iso_de_tests = 0;
 			
 	SampleDifference test;
-
+    
 	pair<SampleDiffs::iterator, bool> inserted;
 //	inserted = de_tests.insert(make_pair(curr_abundance.description(),
 //										 SampleDifference())); 
