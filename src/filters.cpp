@@ -557,7 +557,8 @@ void filter_hits(int bundle_length,
 
 void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 						  vector<double>& abundances,
-                          const vector<shared_ptr<Abundance> >& mapped_transcripts)
+                          const vector<shared_ptr<Abundance> >& mapped_transcripts,
+                          double locus_mass)
 {
 	//	vector<double>::iterator max_ab = std::max_element(abundances.begin(),
 	//													   abundances.end());
@@ -640,12 +641,8 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
             const vector<double>* cond_probs = (mapped_transcripts[t]->cond_probs());
             if (cond_probs)
             {
-                double supporting_hits = 0.0;
-                foreach(double d, *cond_probs)
-                {
-                    if (d > 0)
-                        supporting_hits += 1;
-                }
+                assert (library_type != "transfrags");
+                double supporting_hits = abundances[t] * locus_mass;
                 if (supporting_hits < min_frags_per_transfrag)
                     chaff[t] = true;
             }

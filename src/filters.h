@@ -19,7 +19,8 @@
 
 void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 						  vector<double>& abundances,
-                          const vector<shared_ptr<Abundance> >& mapped_transcripts);
+                          const vector<shared_ptr<Abundance> >& mapped_transcripts,
+                          double locus_mass);
 
 
 void filter_introns(int bundle_length,

@@ -1228,9 +1228,15 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		}
 	}
 	
+    double locus_mass = 0.0;
+    for (size_t i = 0; i < log_conv_factors.size(); ++i)
+    {
+        locus_mass += exp(log_conv_factors[i]);
+    }
+    
 	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
 	vector<double> filtered_gammas = gammas;
-	filter_junk_isoforms(filtered_transcripts, filtered_gammas, mapped_transcripts);
+	filter_junk_isoforms(filtered_transcripts, filtered_gammas, mapped_transcripts, locus_mass);
 	
 	if (filtered_transcripts.empty())
 	{

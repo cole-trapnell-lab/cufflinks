@@ -848,7 +848,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
         }
         
         vector<shared_ptr<Abundance> > filtered_transcripts = abundances;
-        filter_junk_isoforms(filtered_transcripts, gammas, abundances);
+        filter_junk_isoforms(filtered_transcripts, gammas, abundances, 0);
         vector<bool> to_keep (abundances.size(), false);
         for(size_t i = 0; i < abundances.size(); ++i)
         {
