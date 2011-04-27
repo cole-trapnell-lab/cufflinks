@@ -97,7 +97,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 	if (ref_mRNA_file)
 	{
 		gtf_tracking_verbose=cuff_verbose;
-		read_transcripts(ref_mRNA_file, ref_rnas, loadFPKM);
+		read_transcripts(ref_mRNA_file, ref_rnas, true);
 	}
 	
 	int last_gseq_id = -1;
