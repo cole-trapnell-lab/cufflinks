@@ -237,15 +237,16 @@
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-G/--GTF &lt;reference_annotation.(gtf/gff)&gt;</tt>
 	  </td><td VALIGN=top>
-	  Tells Cufflinks to use the supplied reference annotation to estimate 
-	  isoform expression.  It will not assemble novel transcripts, and the program
-	  will ignore alignments not structurally compatible with any reference transcript.  
+	  Tells Cufflinks to use the supplied reference annotation (<a href="gff.html">a GFF file</a>)
+	  to estimate isoform expression. It will not assemble novel transcripts, and the program
+	  will ignore alignments not structurally compatible with any reference transcript. 
+	  (see what GFF versions
 	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-g/--GTF-guide &lt;reference_annotation.(gtf/gff)&gt;</tt>
 	  </td><td VALIGN=top>
-	  Tells Cufflinks to use the supplied reference annotation to guide <a href=howitworks#hrga>RABT assembly</a>.
+	  Tells Cufflinks to use the supplied reference annotation (<a href="gff.html">GFF</a>) to guide <a href=howitworks#hrga>RABT assembly</a>.
 	  Reference transcripts will be tiled with faux-reads to provide additional information
 	  in assembly. Output will include all reference transcripts as well as any novel
 	  genes and isoforms that are assembled.
@@ -655,7 +656,7 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-r</tt>
 	  </td><td VALIGN=top>
-	  An optional "reference" annotation GTF.  Each sample is matched against
+	  An optional "reference" annotation <a href="gff.html">GFF file</a>. Each sample is matched against
 	  this file, and sample isoforms are tagged as overlapping, matching, or 
 	  novel where appropriate.  See the <a href="#refmap">refmap</a> and 
 	  <a href="#tmap">tmap</a> output file descriptions below.

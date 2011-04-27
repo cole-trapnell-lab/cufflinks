@@ -13,19 +13,21 @@
 //#include "GCdbYank.h"
 
 #define USAGE "Usage:\n\
-gffread <input_gff..> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
- [-o <outfile.gff3>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end>] \n\
- [-CTVNMAFGRUVBHSZWTOE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tran_cds.fa>]\n\
+gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
+ [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end>] \n\
+ [-CTVNMAFGRUVBHSZWTOE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
  [-i <maxintron>] \n\
- Filters and/or converts GFF/GTF records.\n\
+ Filters and/or converts GFF3/GTF2 records.\n\
+ <input_gff> is a GFF file, use '-' if the GFF records will be given at stdin\n\
  \n\
  Options:\n\
   -g  full path to a multi-fasta file with the genomic sequences\n\
-      for all input mappings OR a directory with single-fasta files\n\
+      for all input mappings, OR a directory with single-fasta files\n\
       (one per genomic sequence, with file names matching sequence names)\n\
-  -s  for mRNA/EST/protein mappings a tab-delimited file provides this info\n\
+  -s  <seq_info.fsize> is a tab-delimited file providing this info\n\
       for each of the mapped sequences:\n\
       <seq-name> <seq-length> <seq-description>\n\
+      (useful for mRNA/EST/protein mappings with -A option)\n\
   -i  discard transcripts having an intron larger than <maxintron>\n\
   -r  only show transcripts crossing coordinate range <start>..<end>\n\
       (on chromosome/contig <chr>, strand <strand> if provided)\n\
@@ -36,12 +38,11 @@ gffread <input_gff..> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
   -F  keep all attributes from last column of GFF/GTF\n\
   -G  only parse additional exon attributes from the first exon\n\
       and move them to the mRNA level (useful for GTF input)\n\
-  -A  use the description field from <seq_info.fsize> and add it as\n\
-      a descr=.. attribute to the mRNA and/or Gene record\n\
+  -A  use the description field from <seq_info.fsize> and add it\n\
+      as the value for a 'descr' attribute to the GFF record\n\
   \n\
-  -O  process other (non-mRNA) GFF/GTF records (by default non-mRNA\n\
-      records are ignored). \n\
-      Note: non-mRNA records must have only one subfeature per parent feature\n\
+  -O  process non-transcript GFF records as well (by default non-transcript\
+      records are ignored).\n\
   -V  discard any mRNAs with CDS having in-frame stop codons\n\
   -H  for -V option, check and adjust the starting CDS phase\n\
       if the original phase leads to a translation with an \n\
@@ -57,16 +58,17 @@ gffread <input_gff..> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
   -E  expose (warn about) duplicate transcript IDs and other potential \n\
       problems with the input GFF/GTF records\n\
   -S  sort output GFF records by genomic sequence and start coordinate\n\
-      note that this option is automatically enabled by -g option\n\
-  -Z  merge close exons into a single exon (intron size<4)\n\
-  -t  use <trackname> in the second column of each GFF/GTF output line\n\
-  -w  write a fasta file with spliced exons for each mapping\n\
-  -x  write a fasta file with spliced CDS for each mapping\n\
-  -W  for -w and -x options, also write for each fasta record the exon \n\
+      (this option is automatically enabled by -g option)\n\
+  -Z  merge close exons into a single exon (for intron size<4)\n\
+  -w  write a fasta file with spliced exons for each GFF transcript\n\
+  -x  write a fasta file with spliced CDS for each GFF transcript\n\
+  -W  for -w and -x options, also write for each fasta record the exon\n\
       coordinates projected onto the spliced sequence\n\
-  -y  write a protein fasta file with the CDS translation for each mapping\n\
-  -o  the output gff3 file with the 'filtered' entries\n\
-  -T  output GTF format instead of GFF3\n\
+  -y  write a protein fasta file with the translation of CDS for each record\n\
+  -o  the \"filtered\" GFF records will be written to <outfile.gff>\n\
+      (use -o- for printing to stdout)\n\
+  -t  use <trackname> in the second column of each GFF output line\n\
+  -T  -o option will output GTF format instead of GFF3\n\
  "
 
 FILE* ffasta=NULL;
@@ -751,7 +753,7 @@ void openfw(FILE* &f, GArgs& args, char opt) {
 
 
 int main(int argc, char * const argv[]) {
- GArgs args(argc, argv, "vOUNHWCVMNSXTDAPRZFGEg:i:r:s:t:a:b:o:w:x:y:MINCOV=MINPID=");
+ GArgs args(argc, argv, "hvOUNHWCVMNSXTDAPRZFGEg:i:r:s:t:a:b:o:w:x:y:MINCOV=MINPID=");
  int e;
  if ((e=args.isError())>0)
     GError("%s\nInvalid argument: %s\n", USAGE, argv[e]);
@@ -849,9 +851,10 @@ int main(int argc, char * const argv[]) {
         //GMessage("Given file: %s\n",infile.chars());
         }
  if (!infile.is_empty()) {
-    f_in=fopen(infile, "r");
-    if (f_in==NULL)
-       GError("Cannot open input file %s!\n",infile.chars());
+    if (infile=="-") f_in=stdin;
+      else 
+        if ((f_in=fopen(infile, "r"))==NULL)
+            GError("Cannot open input file %s!\n",infile.chars());
     }
   else
     f_in=stdin;

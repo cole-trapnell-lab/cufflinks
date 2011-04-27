@@ -206,7 +206,15 @@ tt { font-family: "Courier New", Courier, monospace; }
 #main #leftside fieldset { float: left; width: 100%; border: 1px solid #ccc; padding: 10px 8px; margin: 0 10px 8px 0; background: #FFF; color: #000; }
 #main #leftside fieldset p { width: 100%; }
 #main input { padding: 3px; margin: 0; border: 1px solid #bbb }
-p { margin-top: 5px; }
+p { margin-top: 5px; clear:both; }
+.tcode {
+  overflow: auto;
+  white-space: nowrap;
+  font-family: "Courier New", Courier, monospace;
+}
+
+
+
 /*input.search { border: 1px solid #ccc; padding: 4px; width: 160px; }*/
 .comment { background: #FFF; color: #808080; padding: 10px; margin: 0 0 10px 0; border-top: 1px solid #ccc; }
 .commentsbox { background: #FFF; color: #808080; padding: 10px; margin: 0 0 10px 0; border-top: 1px solid #ccc; }
