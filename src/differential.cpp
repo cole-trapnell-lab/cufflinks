@@ -228,16 +228,19 @@ bool test_diffexp(const FPKMContext& curr,
 	{
 		if (curr.FPKM > 0.0)
 		{
-            if (curr.FPKM - 2 * sqrt(curr.FPKM_variance) > 0)
-            {
-                test.p_value = 0;
-                performed_test = true;
-            }
-            else
-            {
-                test.p_value = 1;
-                performed_test = false;
-            }
+            normal norm(curr.FPKM, curr.FPKM_variance);
+            test.p_value = cdf(norm, 0);
+            performed_test = true;
+//            if (curr.FPKM - 2 * sqrt(curr.FPKM_variance) > 0)
+//            {
+//                test.p_value = 0;
+//                performed_test = true;
+//            }
+//            else
+//            {
+//                test.p_value = 1;
+//                performed_test = false;
+//            }
 			test.differential = numeric_limits<double>::max();;
 			test.test_stat = numeric_limits<double>::max();
 			test.value_1 = 0;
@@ -246,17 +249,19 @@ bool test_diffexp(const FPKMContext& curr,
 		}
 		else if (prev.FPKM > 0.0)
 		{
-			
-			if (prev.FPKM - 2 * sqrt(prev.FPKM_variance) > 0)
-            {
-                test.p_value = 0;
-                performed_test = true;
-            }
-            else
-            {
-                test.p_value = 1;
-                performed_test = false;
-            }
+            normal norm(prev.FPKM, prev.FPKM_variance);
+            test.p_value = cdf(norm, 0);
+            performed_test = true;
+//			if (prev.FPKM - 2 * sqrt(prev.FPKM_variance) > 0)
+//            {
+//                test.p_value = 0;
+//                performed_test = true;
+//            }
+//            else
+//            {
+//                test.p_value = 1;
+//                performed_test = false;
+//            }
 			test.differential = -numeric_limits<double>::max();
 			test.test_stat = -numeric_limits<double>::max();
 			test.value_1 = prev.FPKM;
