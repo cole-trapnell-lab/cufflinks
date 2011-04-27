@@ -48,23 +48,28 @@ void calc_scaling_factors(const std::vector<pair<std::string, std::vector<double
                           std::vector<double>& scale_factors);
 
 boost::shared_ptr<MassDispersionModel const> 
-fit_dispersion_model(const std::vector<double>& scale_factors,
+fit_dispersion_model(const string& condition_name,
+                     const std::vector<double>& scale_factors,
                      const std::vector<std::pair<std::string, std::vector<double> > >& sample_count_table);
 
 // This factory merges bundles in a requested locus from several replicates
 class ReplicatedBundleFactory
 {
 public:
-	ReplicatedBundleFactory(const std::vector<shared_ptr<BundleFactory> >& factories)
-    : _factories(factories) {}
+	ReplicatedBundleFactory(const std::vector<shared_ptr<BundleFactory> >& factories, 
+                            const string& condition_name)
+    : _factories(factories), _condition_name(condition_name) {}
 	
 	int num_bundles() { return _factories[0]->num_bundles(); }
     std::vector<boost::shared_ptr<BundleFactory> > factories() { return _factories; }
 	
+    const string& condition_name() const { return _condition_name; }
+    void condition_name(const string& cn) { _condition_name = cn; }
+    
     bool bundles_remain() 
     {
 #if ENABLE_THREADS
-        boost::mutex::scoped_lock lock(_factory_lock);
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         foreach (boost::shared_ptr<BundleFactory> fac, _factories)
         {
@@ -77,7 +82,7 @@ public:
 	bool next_bundle(HitBundle& bundle_out)
     {
 #if ENABLE_THREADS
-        boost::mutex::scoped_lock lock(_factory_lock);
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         std::vector<HitBundle*> bundles;
         
@@ -128,7 +133,7 @@ public:
 	void reset() 
     {
 #if ENABLE_THREADS
-        boost::mutex::scoped_lock lock(_factory_lock);
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
@@ -208,7 +213,7 @@ public:
         }
         
         shared_ptr<MassDispersionModel const> disperser;
-        disperser = fit_dispersion_model(scale_factors, sample_count_table);
+        disperser = fit_dispersion_model(_condition_name,scale_factors, sample_count_table);
         
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
@@ -222,7 +227,7 @@ public:
     void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
 #if ENABLE_THREADS
-        boost::mutex::scoped_lock lock(_factory_lock);
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         foreach(shared_ptr<BundleFactory> fac, _factories)
         {
@@ -233,7 +238,7 @@ public:
     void set_mask_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
     {
 #if ENABLE_THREADS
-        boost::mutex::scoped_lock lock(_factory_lock);
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         foreach(shared_ptr<BundleFactory> fac, _factories)
         {
@@ -246,7 +251,7 @@ public:
     void mass_dispersion_model(shared_ptr<MassDispersionModel const> disperser)
     {
 #if ENABLE_THREADS
-        boost::mutex::scoped_lock lock(_factory_lock);
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         foreach(shared_ptr<BundleFactory>& fac, _factories)
         {
@@ -262,6 +267,7 @@ public:
 private:
 	vector<shared_ptr<BundleFactory> > _factories;
 #if ENABLE_THREADS
-    boost::mutex _factory_lock;
+    boost::mutex _rep_factory_lock;
 #endif
+    string _condition_name; 
 };

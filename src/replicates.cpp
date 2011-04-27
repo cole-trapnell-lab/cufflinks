@@ -167,7 +167,8 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
 }
 
 boost::shared_ptr<MassDispersionModel const> 
-fit_dispersion_model(const vector<double>& scale_factors,
+fit_dispersion_model(const string& condition_name,
+                     const vector<double>& scale_factors,
                      const vector<pair<string, vector<double> > >& sample_count_table)
 {
 //    
@@ -276,23 +277,25 @@ fit_dispersion_model(const vector<double>& scale_factors,
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
 
-//    char sample_name_buf[256];
-//    int sample_id = rand();
-//    sprintf(sample_name_buf, "%d_counts.txt", sample_id);
-//    FILE* sample_count_file = fopen(sample_name_buf, "w");
-//    
-//    if (sample_count_file)
-//    {
-//        fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\n");
-//        for (size_t i = 0; i < raw_means_and_vars.size(); ++i)
-//        {
-//            fprintf(sample_count_file, "%lg\t%lg\t%lg\n", 
-//                    raw_means_and_vars[i].first, 
-//                    raw_means_and_vars[i].second,
-//                    fitted_values[i]);
-//        }
-//        fclose(sample_count_file);
-//    } 
+    if (emit_count_tables)
+    {
+        string cond_count_filename = output_dir + "/" + condition_name + "_counts.txt";
+        
+        FILE* sample_count_file = fopen(cond_count_filename.c_str(), "w");
+        
+        if (sample_count_file)
+        {
+            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\n");
+            for (size_t i = 0; i < raw_means_and_vars.size(); ++i)
+            {
+                fprintf(sample_count_file, "%lg\t%lg\t%lg\n", 
+                        raw_means_and_vars[i].first, 
+                        raw_means_and_vars[i].second,
+                        fitted_values[i]);
+            }
+            fclose(sample_count_file);
+        } 
+    }
 #if ENABLE_THREADS
     _locfit_lock.unlock();
 #endif

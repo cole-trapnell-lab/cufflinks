@@ -104,8 +104,13 @@ double AbundanceGroup::mass_fraction() const
 
 double AbundanceGroup::mass_variance() const
 {
-    assert(false);
-	return 0.0;
+    double mass_var = 0;
+	
+	foreach(shared_ptr<Abundance> ab, _abundances)
+	{
+		mass_var += ab->mass_variance();
+	}
+	return mass_var;
 }
 
 double AbundanceGroup::FPKM() const

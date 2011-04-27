@@ -101,6 +101,8 @@ std::string user_label = "CUFF";
 bool use_em = true;
 bool cond_prob_collapse = true;
 
+bool emit_count_tables = false;
+
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 

@@ -88,6 +88,7 @@ extern double small_anchor_fraction;
 extern double binomial_junc_filter_alpha;
 extern std::string user_label;
 extern long random_seed;
+extern bool emit_count_tables;
 
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
@@ -385,4 +386,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_FAUX_READS           278
 #define OPT_3_OVERHANG_TOLERANCE    279
 #define OPT_INTRON_OVERHANG_TOLERANCE 280
+#define OPT_EMIT_COUNT_TABLES       281
 #endif

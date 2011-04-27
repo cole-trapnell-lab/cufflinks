@@ -87,6 +87,7 @@ static struct option long_options[] = {
 {"poisson-dispersion",		no_argument,             0,		     OPT_POISSON_DISPERSION},
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
 {"no-update-check",         no_argument,             0,          OPT_NO_UPDATE_CHECK},
+{"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
 
 {0, 0, 0, 0} // terminator
 };
@@ -122,6 +123,7 @@ void print_usage()
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
+    fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [ default:  FALSE ]\n");    
     print_library_table();
 }
 
@@ -257,6 +259,11 @@ int parse_options(int argc, char** argv)
                 random_seed = parseInt(0, "--seed must be at least 0", print_usage);
                 break;
             }
+            case OPT_EMIT_COUNT_TABLES:
+            {
+                emit_count_tables = true;
+                break;
+            }    
 			default:
 				print_usage();
 				return 1;
@@ -616,7 +623,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories)));
+        string condition_name = sample_labels[i];
+        bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
     ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
@@ -782,7 +790,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
         
         shared_ptr<MassDispersionModel const> disperser;
-        disperser = fit_dispersion_model(scale_factors, sample_count_table);
+        disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table);
 
         foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
         {
