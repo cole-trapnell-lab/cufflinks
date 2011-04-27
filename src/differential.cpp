@@ -228,7 +228,7 @@ bool test_diffexp(const FPKMContext& curr,
 	{
 		if (curr.FPKM > 0.0 )
 		{
-            if (curr.status != NUMERIC_LOW_DATA)
+            if (curr.status != NUMERIC_LOW_DATA && curr.FPKM_variance > 0.0)
             {
                 normal norm(curr.FPKM, curr.FPKM_variance);
                 test.p_value = cdf(norm, 0);
@@ -250,7 +250,7 @@ bool test_diffexp(const FPKMContext& curr,
 		}
 		else if (prev.FPKM > 0.0)
 		{
-            if (curr.status != NUMERIC_LOW_DATA)
+            if (curr.status != NUMERIC_LOW_DATA &&  prev.FPKM_variance > 0.0)
             {
                 normal norm(prev.FPKM, prev.FPKM_variance);
                 test.p_value = cdf(norm, 0);
