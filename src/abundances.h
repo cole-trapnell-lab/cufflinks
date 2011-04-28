@@ -300,10 +300,13 @@ public:
 		_FPKM_variance(0.0), 
         _max_mass_variance(0.0){}
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
-				   const ublas::matrix<double>& gamma_covariance) :
+				   const ublas::matrix<double>& gamma_covariance,
+                   const long double max_mass_variance) :
 		_abundances(abundances), 
-		_gamma_covariance(gamma_covariance)
+		_gamma_covariance(gamma_covariance),
+        _max_mass_variance(max_mass_variance)
 	{
+        
 		calculate_conf_intervals();
 		calculate_kappas();
 	}

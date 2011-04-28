@@ -230,7 +230,7 @@ bool test_diffexp(const FPKMContext& curr,
 		{
             if (curr.status != NUMERIC_LOW_DATA && curr.FPKM_variance > 0.0)
             {
-                normal norm(curr.FPKM, curr.FPKM_variance);
+                normal norm(curr.FPKM, sqrt(curr.FPKM_variance));
                 test.p_value = cdf(norm, 0);
                 performed_test = true;
                 test.differential = numeric_limits<double>::max();;
@@ -252,7 +252,7 @@ bool test_diffexp(const FPKMContext& curr,
 		{
             if (curr.status != NUMERIC_LOW_DATA &&  prev.FPKM_variance > 0.0)
             {
-                normal norm(prev.FPKM, prev.FPKM_variance);
+                normal norm(prev.FPKM, sqrt(prev.FPKM_variance));
                 test.p_value = cdf(norm, 0);
                 performed_test = true;
                 
@@ -693,12 +693,15 @@ void sample_abundance_worker(const string& locus_tag,
         
         // Group the CDS clusters by gene
         vector<shared_ptr<Abundance> > cds_abundances;
+        double max_cds_mass_variance = 0.0; 
         foreach (AbundanceGroup& ab_group, sample.cds)
         {
             cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+            max_cds_mass_variance = max(ab_group.max_mass_variance(), max_cds_mass_variance);
         }
         AbundanceGroup cds(cds_abundances,
-                           cds_gamma_cov);
+                           cds_gamma_cov,
+                           max_cds_mass_variance);
         
         vector<AbundanceGroup> cds_by_gene;
         
@@ -726,6 +729,7 @@ void sample_abundance_worker(const string& locus_tag,
                                                      transcripts_by_tss,
                                                      &tss_gamma_cov);
         
+       
         foreach(AbundanceGroup& ab_group, transcripts_by_tss)
         {
             ab_group.locus_tag(locus_tag);
@@ -734,19 +738,24 @@ void sample_abundance_worker(const string& locus_tag,
             string desc = *(tss_ids.begin()); 
             assert (desc != "");
             ab_group.description(*(tss_ids.begin()));
+            
         }
         
         sample.primary_transcripts = transcripts_by_tss;
+        double max_tss_mass_variance = 0.0;
         
         // Group TSS clusters by gene
         vector<shared_ptr<Abundance> > primary_transcript_abundances;
         foreach (AbundanceGroup& ab_group, sample.primary_transcripts)
         {
             primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+            max_tss_mass_variance = max(max_tss_mass_variance, ab_group.max_mass_variance());
         }
         
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
-                                           tss_gamma_cov);
+                                           tss_gamma_cov,
+                                           
+                                           max_tss_mass_variance);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
         

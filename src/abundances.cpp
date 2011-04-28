@@ -174,7 +174,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 		}
 	}
 	
-	filtered_group = AbundanceGroup(new_ab, new_cov);
+	filtered_group = AbundanceGroup(new_ab, new_cov, _max_mass_variance);
 }
 
 void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
@@ -455,7 +455,8 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             double scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
             avg_mass_variances[j] += scaled_variance;
         }
-        max_mass_var += disperser->scale_mass_variance(scaled_mass);
+        assert (disperser->scale_mass_variance(scaled_mass) != 0 || scaled_mass == 0); 
+         max_mass_var += disperser->scale_mass_variance(scaled_mass);
         assert (scaled_total_mass != 0.0);
         avg_mass_fraction += (scaled_mass / scaled_total_mass);
     }
@@ -464,7 +465,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
     // and need to bound the group expression.
     if (!count_per_replicate.empty())
         max_mass_var /= count_per_replicate.size();
-    max_mass_variance(max_mass_var);
+    
     
     double num_replicates = count_per_replicate.size();
     
@@ -477,6 +478,9 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             avg_mass_variances[j] /= num_replicates;
         }
     }
+    
+    assert (max_mass_var != 0 || avg_X_g == 0);
+    max_mass_variance(max_mass_var);
     
 	for (size_t j = 0; j < N; ++j)
 	{
@@ -701,6 +705,14 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
 
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 {
+    
+//    foreach (const string& s, gene_id())
+//    {
+//        if (s == "XLOC_000041")
+//        {
+//            int a = 4;
+//        }
+//    }
 	vector<shared_ptr<Abundance> > transcripts;
 	get_transfrags(transcripts);
 	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
@@ -883,7 +895,11 @@ bool compute_fpkm_variance(long double& variance,
                              double l_t,
                              double M)
 {
-    
+    if (l_t == 0)
+    {
+        //assert(X_g * gamma_t == 0);
+        return 0;
+    }
 //    if (V_X_g_t < X_g)
 //        V_X_g_t = X_g;
     long double A = 1000000000.0 * X_g * gamma_t;
@@ -934,6 +950,8 @@ bool compute_fpkm_variance(long double& variance,
         variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
         assert (abs(FPKM - mean) < 1e-3);
     }
+    assert (!isinf(variance) && !isnan(variance));
+    assert (variance != 0 || A == 0);
     
     return numeric_ok;
 }
@@ -989,6 +1007,8 @@ bool compute_fpkm_group_variance(long double& variance,
     //assert (grp_var == total_var);
     
     variance = total_var + cov;
+    assert (!isinf(variance) && !isnan(variance));
+
     return numeric_ok;
 }
 
@@ -1047,7 +1067,8 @@ void AbundanceGroup::calculate_conf_intervals()
 	else
 	{
 		double sum_transfrag_FPKM_hi = 0;
-        
+        double max_fpkm = 0.0;
+        double min_fpkm = 1e100;
 		foreach(shared_ptr<Abundance> pA, _abundances)
 		{
 			double FPKM_hi;
@@ -1068,7 +1089,7 @@ void AbundanceGroup::calculate_conf_intervals()
 				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
 				pA->FPKM_conf(conf);
                 pA->FPKM_variance(var_fpkm);
-				sum_transfrag_FPKM_hi = max(sum_transfrag_FPKM_hi, FPKM_hi);
+				max_fpkm = max(sum_transfrag_FPKM_hi, FPKM_hi);
 			}
 			else
 			{
@@ -1080,16 +1101,17 @@ void AbundanceGroup::calculate_conf_intervals()
 			}
             
 		}
-		
+		calculate_FPKM_variance();
 		// In the case of a numeric failure, the groups error bars need to be 
 		// set such that 
-		FPKM_conf(ConfidenceInterval(0.0, sum_transfrag_FPKM_hi));
+		FPKM_conf(ConfidenceInterval(0.0, max_fpkm + 2 * sqrt(FPKM_variance())));
+        
 	}
 }
 
 void AbundanceGroup::calculate_FPKM_variance()
 {
-	if (mass_fraction() == 0)
+	if (mass_fraction() == 0 || effective_length() == 0)
 	{
 		_FPKM_variance = 0.0;
 		return;
@@ -1125,56 +1147,15 @@ void AbundanceGroup::calculate_FPKM_variance()
         {
             bool ok = true;
             long double var = 0.0;
-            ok = compute_fpkm_variance(var, 1.0, 0.0, num_fragments(), V_X_gs[i], ls[i], num_fragments()/mass_fraction());
+            ok = compute_fpkm_variance(var, 1.0, 0.0, num_fragments(), max_mass_variance(), ls[i], num_fragments()/mass_fraction());
             max_var = max(max_var,var);
         }
         _FPKM_variance = max_var;
+        assert (_FPKM_variance != 0 || FPKM() == 0);
     }
     
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
-
-//void AbundanceGroup::calculate_FPKM_variance()
-//{
-//	if (mass_fraction() == 0)
-//	{
-//		_FPKM_variance = 0.0;
-//		return;
-//	}
-//    
-//    double var_cumul_gamma = 0;
-//    for (size_t i = 0; i < _abundances.size(); ++i)
-//    {
-//        for (size_t j = 0; j < _abundances.size(); ++j)
-//        {
-//            if (_abundances[i]->effective_length() && _abundances[j]->effective_length())
-//            {
-//                assert(!isnan(_gamma_covariance(i,j)));
-//                double L = _abundances[i]->effective_length() * _abundances[j]->effective_length();
-//                assert(!isnan(L)); 
-//                if (L != 0.0)
-//                {
-//                    double g = _gamma_covariance(i,j) / L;
-//                    var_cumul_gamma += g;
-//                }
-//            }
-//        }    
-//    }
-//    
-//    double mass_coeff = (1000000000 * mass_fraction());
-//	//double left = (mass_coeff * gamma());
-//    double eff_len = effective_length(); 
-//    //double right = (mass_coeff * mass_coeff * var_cumul_gamma);
-//    _FPKM_variance = ((mass_coeff * gamma()) / eff_len) + (mass_coeff * mass_coeff * var_cumul_gamma);
-//    if (mass_fraction() > 0.0)
-//    {
-//        double variance_scale_factor = mass_variance_fraction() / mass_fraction();
-//        _FPKM_variance *= variance_scale_factor;
-//    }
-//    
-//    assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
-//}
-
 
 void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 															  vector<shared_ptr<Abundance> >& transcripts,
