@@ -915,40 +915,71 @@ bool compute_fpkm_variance(long double& variance,
     variance = 0.0;
     bool numeric_ok = true;
     
-    if (psi_t == 0) 
-    {
-        // default to regular negative binomial case.
-        //assert (gamma_t == 1.0);
-        //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
-        variance = 1000000000.0 / (l_t * M);
-        variance *= variance;
-        variance *= V_X_g_t;
-    }
-    else
-    {
-        //long double max_doub = numeric_limits<long double>::max();
-        //assert (psi_t < gamma_t * gamma_t);
-        C*= psi_t;
-        long double r = (A * A) / (B - A);
-        
-        long double beta = solve_beta(A,B,C);
+    long double dispersion = V_X_g_t - (X_g * gamma_t);
     
+    if (dispersion < -1)
+    {
+//        printf("Warning: underdispersion detected: A = %Lg, B = %Lg\n", A, B);
+//        printf("\t underdispersion detected: X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+    }
+    else if (abs(dispersion) < 1)
+    {
+        // default to poisson dispersion
+        long double psi_var = X_g * 1000000000.0 / (l_t * M);
+        psi_var *= psi_var;
+        psi_var *= psi_t;
+        variance = A + psi_var;
+    }
+    else // there's some detectable overdispersion here, use mixture of negative binomials
+    {
+        if (psi_t == 0) 
+        {
+            // default to regular negative binomial case.
+            //assert (gamma_t == 1.0);
+            //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
+            variance = 1000000000.0 / (l_t * M);
+            variance *= variance;
+            variance *= V_X_g_t;
+        }
+        else
+        {
+            //long double max_doub = numeric_limits<long double>::max();
+            //assert (psi_t < gamma_t * gamma_t);
+            C*= psi_t;
+            long double r = (A * A) / (B - A);
+            
+            long double beta = solve_beta(A,B,C);
         
-        long double alpha = 1.0 - (A/(A-B)) * beta;
-        
-        if (beta <= 0)
-            numeric_ok = false;
-        
-        if (alpha <= 0)
-            numeric_ok = false;
-        
-        long double mean = r * beta / (alpha - 1.0);
-        
-        long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
-        
-        variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
-        variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
-        assert (abs(FPKM - mean) < 1e-3);
+            
+            long double alpha = 1.0 - (A/(A-B)) * beta;
+            
+            
+            
+            long double mean = r * beta / (alpha - 1.0);
+            
+            long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
+            
+            
+            
+            variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
+            variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
+            
+            if (beta <= 0)
+            {
+//                printf ("Warning: beta for is %Lg\n", beta);
+                numeric_ok = false;
+            }
+            if (alpha <= 0)
+            {
+//                printf("Warning: alpha for is %Lg\n", alpha);
+//                printf("\t A = %Lg, B = %Lg\n", A, B);
+//                printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
+//                printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+                numeric_ok = false;
+            }
+            
+            assert (abs(FPKM - mean) < 1e-3);
+        }
     }
     assert (!isinf(variance) && !isnan(variance));
     assert (variance != 0 || A == 0);

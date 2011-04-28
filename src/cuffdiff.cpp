@@ -558,6 +558,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                       launcher);
 #endif
     }
+    return true;
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
