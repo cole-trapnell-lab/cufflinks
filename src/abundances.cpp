@@ -440,7 +440,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
     // convenient.
     vector<double> avg_mass_variances(N, 0.0);
     
-    
+    double max_mass_var = 0.0;
     for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = count_per_replicate.begin();
          itr != count_per_replicate.end();
          ++itr)
@@ -455,10 +455,16 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             double scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
             avg_mass_variances[j] += scaled_variance;
         }
-        
+        max_mass_var += disperser->scale_mass_variance(scaled_mass);
         assert (scaled_total_mass != 0.0);
         avg_mass_fraction += (scaled_mass / scaled_total_mass);
     }
+    
+    // Set the maximum mass variance in case we get an identifiability failure
+    // and need to bound the group expression.
+    if (!count_per_replicate.empty())
+        max_mass_var /= count_per_replicate.size();
+    max_mass_variance(max_mass_var);
     
     double num_replicates = count_per_replicate.size();
     
@@ -1114,7 +1120,15 @@ void AbundanceGroup::calculate_FPKM_variance()
     }
     else
     {
-        // TODO
+        long double max_var = 0.0;
+        for (size_t i = 0; i < _abundances.size(); ++i)
+        {
+            bool ok = true;
+            long double var = 0.0;
+            ok = compute_fpkm_variance(var, 1.0, 0.0, num_fragments(), V_X_gs[i], ls[i], num_fragments()/mass_fraction());
+            max_var = max(max_var,var);
+        }
+        _FPKM_variance = max_var;
     }
     
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));

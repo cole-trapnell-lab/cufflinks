@@ -278,7 +278,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -289,6 +289,7 @@ public:
 		_kappa_covariance = other._kappa_covariance;
 		_FPKM_variance = other._FPKM_variance;
 		_description = other._description;
+        _max_mass_variance = other._max_mass_variance;
 	}
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -296,7 +297,8 @@ public:
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
-		_FPKM_variance(0.0){}
+		_FPKM_variance(0.0), 
+        _max_mass_variance(0.0){}
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance) :
 		_abundances(abundances), 
@@ -368,6 +370,9 @@ public:
 	
 	void calculate_abundance(const vector<MateHit>& alignments);
 	
+    void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
+    double max_mass_variance() const { return _max_mass_variance; }
+    
 private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
@@ -397,7 +402,7 @@ private:
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
-
+    double _max_mass_variance;  // upper bound on the count variance that could come from this group.
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
