@@ -902,15 +902,21 @@ bool compute_fpkm_variance(long double& variance,
     }
 //    if (V_X_g_t < X_g)
 //        V_X_g_t = X_g;
-    long double A = 1000000000.0 * X_g * gamma_t;
-    A /= (l_t * M);
+//    long double A = 1000000000.0 * X_g * gamma_t;
+//    A /= (l_t * M);
+//    
+//    long double B = 1000000000.0 / (l_t * M);
+//    B *= B;
+//    B *= V_X_g_t;
+//    
+//    long double C = 1000000000.0 * X_g / (l_t * M);
+//    C *= C;
+
+    long double A = X_g * gamma_t;
     
-    long double B = 1000000000.0 / (l_t * M);
-    B *= B;
-    B *= V_X_g_t;
+    long double B = V_X_g_t;
     
-    long double C = 1000000000.0 * X_g / (l_t * M);
-    C *= C;
+    long double C = X_g * X_g;
     
     variance = 0.0;
     bool numeric_ok = true;
@@ -920,29 +926,27 @@ bool compute_fpkm_variance(long double& variance,
     if (dispersion < -1 || abs(dispersion) < 1 || A > B)
     {
         // default to poisson dispersion
-        long double psi_var = X_g * 1000000000.0 / (l_t * M);
+        long double psi_var = X_g;
         psi_var *= psi_var;
         psi_var *= psi_t;
         variance = A + psi_var;
         printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
         printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
         printf("\t A = %Lg, B = %Lg\n", A, B);
-        printf("\t mean = %Lg, variance = %Lg\n", A, variance);
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
-        printf("Warning: Counts are overdispersed, using NB distribution\n");
         if (psi_t == 0) 
         {
+            printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
             //assert (gamma_t == 1.0);
             //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
-            variance = 1000000000.0 / (l_t * M);
-            variance *= variance;
-            variance *= V_X_g_t;
+            variance = V_X_g_t;
         }
         else
         {
+            printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
             //long double max_doub = numeric_limits<long double>::max();
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
@@ -973,17 +977,26 @@ bool compute_fpkm_variance(long double& variance,
             {
                 printf("Warning: alpha for is %Lg\n", alpha);
                 printf("\t A = %Lg, B = %Lg\n", A, B);
-                printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
+                //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
                 printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
                 numeric_ok = false;
             }
             
-            assert (abs(FPKM - mean) < 1e-3);
+            //assert (abs(FPKM - mean) < 1e-3);
         }
+    }
+    
+    double mean = A * (1000000000.0 / (l_t *M));
+    variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
+    assert (!isinf(variance) && !isnan(variance));
+    //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
+    if (variance < mean)
+    {
+        printf ("Warning: mean > variance!\n");
+        
     }
     assert (!isinf(variance) && !isnan(variance));
     assert (variance != 0 || A == 0);
-    
     return numeric_ok;
 }
 
