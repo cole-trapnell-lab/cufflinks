@@ -87,8 +87,11 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         int d = lb - _scaled_mass_means.begin();
         if (*lb == scaled_mass)
         {
-            assert (!isnan(_scaled_mass_variances[d]) && !isinf(_scaled_mass_variances[d]));
-            return _scaled_mass_variances[d];
+            double var = _scaled_mass_variances[d];
+            if (var < scaled_mass) // revert to poisson if underdispersed
+                var = scaled_mass;
+            assert (!isnan(var) && !isinf(var));
+            return var;
         }
         
         //in between two points on the scale.
@@ -108,7 +111,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
             assert (false); // should have a unique'd table
         }
         double mean_interp = _scaled_mass_variances[d] + slope*(scaled_mass - _scaled_mass_means[d]);
-        if (mean_interp < scaled_mass)
+        if (mean_interp < scaled_mass) // revert to poisson if underdispersed
             mean_interp = scaled_mass;
  
         assert (!isnan(mean_interp) && !isinf(mean_interp));
