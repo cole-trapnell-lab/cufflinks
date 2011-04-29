@@ -917,21 +917,21 @@ bool compute_fpkm_variance(long double& variance,
     
     long double dispersion = V_X_g_t - (X_g * gamma_t);
     
-    if (dispersion < -1)
-    {
-        printf("Warning: underdispersion detected: A = %Lg, B = %Lg\n", A, B);
-        printf("\t underdispersion detected: X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
-    }
-    else if (abs(dispersion) < 1)
+    if (dispersion < -1 || abs(dispersion) < 1 || A > B)
     {
         // default to poisson dispersion
         long double psi_var = X_g * 1000000000.0 / (l_t * M);
         psi_var *= psi_var;
         psi_var *= psi_t;
         variance = A + psi_var;
+        printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
+        printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+        printf("\t A = %Lg, B = %Lg\n", A, B);
+        printf("\t mean = %Lg, variance = %Lg\n", A, variance);
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
+        printf("Warning: Counts are overdispersed, using NB distribution\n");
         if (psi_t == 0) 
         {
             // default to regular negative binomial case.
