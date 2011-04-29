@@ -941,7 +941,7 @@ bool compute_fpkm_variance(long double& variance,
     {
         if (psi_t == 0) 
         {
-            //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
+            printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
             //assert (gamma_t == 1.0);
             //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
@@ -949,7 +949,7 @@ bool compute_fpkm_variance(long double& variance,
         }
         else
         {
-            //printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
+            printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
             //long double max_doub = numeric_limits<long double>::max();
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
