@@ -923,22 +923,25 @@ bool compute_fpkm_variance(long double& variance,
     
     long double dispersion = V_X_g_t - (X_g * gamma_t);
     
-    if (dispersion < -1 || abs(dispersion) < 1 || A > B)
+    if (dispersion < -1 || abs(dispersion) < 1)
     {
         // default to poisson dispersion
         long double psi_var = X_g;
         psi_var *= psi_var;
         psi_var *= psi_t;
-        variance = A + psi_var;
+        // we multiply A with the constants here to make things work out 
+        // at the end of the routine when we multiply by the square of those
+        // constants
+        variance = (l_t * M * A / 1000000000.0) + psi_var;
         printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
-        printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
-        printf("\t A = %Lg, B = %Lg\n", A, B);
+        //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+        //printf("\t A = %Lg, B = %Lg\n", A, B);
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
         if (psi_t == 0) 
         {
-            printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
+            //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
             //assert (gamma_t == 1.0);
             //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
@@ -946,7 +949,7 @@ bool compute_fpkm_variance(long double& variance,
         }
         else
         {
-            printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
+            //printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
             //long double max_doub = numeric_limits<long double>::max();
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
@@ -954,16 +957,11 @@ bool compute_fpkm_variance(long double& variance,
             
             long double beta = solve_beta(A,B,C);
         
-            
             long double alpha = 1.0 - (A/(A-B)) * beta;
-            
-            
             
             long double mean = r * beta / (alpha - 1.0);
             
             long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
-            
-            
             
             variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
             variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
@@ -989,7 +987,7 @@ bool compute_fpkm_variance(long double& variance,
     double mean = A * (1000000000.0 / (l_t *M));
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
     assert (!isinf(variance) && !isnan(variance));
-    //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
+    printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
     if (variance < mean)
     {
         printf ("Warning: mean > variance!\n");
