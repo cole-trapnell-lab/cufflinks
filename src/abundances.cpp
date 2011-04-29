@@ -919,8 +919,8 @@ bool compute_fpkm_variance(long double& variance,
     
     if (dispersion < -1)
     {
-//        printf("Warning: underdispersion detected: A = %Lg, B = %Lg\n", A, B);
-//        printf("\t underdispersion detected: X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+        printf("Warning: underdispersion detected: A = %Lg, B = %Lg\n", A, B);
+        printf("\t underdispersion detected: X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
     }
     else if (abs(dispersion) < 1)
     {
@@ -966,15 +966,15 @@ bool compute_fpkm_variance(long double& variance,
             
             if (beta <= 0)
             {
-//                printf ("Warning: beta for is %Lg\n", beta);
+                printf ("Warning: beta for is %Lg\n", beta);
                 numeric_ok = false;
             }
             if (alpha <= 0)
             {
-//                printf("Warning: alpha for is %Lg\n", alpha);
-//                printf("\t A = %Lg, B = %Lg\n", A, B);
-//                printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
-//                printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+                printf("Warning: alpha for is %Lg\n", alpha);
+                printf("\t A = %Lg, B = %Lg\n", A, B);
+                printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
+                printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
                 numeric_ok = false;
             }
             
