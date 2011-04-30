@@ -12,8 +12,8 @@ bin_PROGRAMS = \
 	cuffdiff \
     gtf_to_sam \
     compress_gtf \
-#    cuffcluster \
     gffread
+#    cuffcluster \
 #	gtf_reads
 
 noinst_HEADERS = \
