@@ -288,23 +288,16 @@ ctg123	example	CDS	5000	5500	.	+	1	Parent=t_012143
 ctg123	example	CDS	7000	7600	.	+	1	Parent=t_012143</textarea>
                   </div>
                   <br>
+
+                  <h2 id="inst">The gffread utility</h2>
                   
-                  <br>
-                  <h2 id="inst">The gffread utility<br>
-                  </h2>
-                  <br>
                   A program called <b>gffread</b>
                   is included with the Cufflinks package and it can be used to verify or perform various operations on GFF
-                  files (use <pre><big>gffread -h</big></pre> to see the
- various usage options). Because the program shares the same 
-                  GFF parser code with Cufflinks and other programs in 
-the Tuxedo suite, it could be used to verify that a GFF file 
-                  from a certain annotation source is correctly 
-"understood" by these programs. Thus the gffread utility can be used 
-                  to simply read the transcripts from the file and print
- these transcripts back, in either GFF3 (default) or GTF2 format 
-                  (-T option), discarding any extra attributes and 
-keeping only the essential ones, so the user can quickly verify if 
+                  files (use <span class="tcode">gffread -h</span> to see the various usage options). Because the program 
+                  shares the same  GFF parser code with Cufflinks and other programs in the Tuxedo suite, it could be used to verify that a GFF file 
+                  from a certain annotation source is correctly "understood" by these programs. Thus the gffread utility can be used 
+                  to simply read the transcripts from the file and print these transcripts back, in either GFF3 (default) or GTF2 format 
+                  (-T option), discarding any extra attributes and keeping only the essential ones, so the user can quickly verify if 
                   the transcripts in that file are properly parsed by 
 the GFF reader code.  The command line for such a quick cleanup and 
                   visual inspection of a given GFF file could be:<br>
@@ -314,9 +307,9 @@ the GFF reader code.  The command line for such a quick cleanup and
                   This will show the minimalist GFF3 re-formatting of 
 the transcript records given in the input file (annotation.gff in this 
 example).
-                  The -E option directs gffread to "expose" (print 
+                  The -E option directs gffread to "expose" (display 
 warnings about) any potential issues encountered while parsing the given
- GFF file, 
+ GFF file.<br>
                                     
                   In order to see the GTF2 version of the same 
 transcripts the -T option should be added:<br>
@@ -324,7 +317,7 @@ transcripts the -T option should be added:<br>
                   <pre><big>gffread -E annotation.gff -T -o- | more</big></pre>
                   <br>
                   
-                  From these examples it can be seen that gffread can be used to convert a file between GTF2 and GFF3 formats.
+                  From these examples it can be seen that gffread can also be used to convert a file between GTF2 and GFF3 formats.
 <br>
                   
                   <strong><br>
@@ -340,7 +333,7 @@ sequences have to be provided as well.
 this:<br>
                   <br>
                   <pre><big>gffread -w transcripts.fa -g /path/to/genome.fa transcripts.gtf</big></pre>
-                  
+                  <br>
                   The file genome.fa in this example would be a multi 
 fasta file with the genomic sequences of the 
                   target genome.  This also requires that every contig 
@@ -358,7 +351,6 @@ directory with the genomic fasta file. Such an index file can be created
  
                   with samtools prior to running gffread, like this:
                   <br><br>
-
                   <pre><big>samtools faidx genome.fa</big></pre>
                   <br>
                   Then in subsequent runs using the -g option gffread 
