@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>howitworks.html</string>
+	<string>tutorial.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -16,9 +16,7 @@
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2011-04-28T17:54:35Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2011-04-29T22:22:24Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -36,7 +34,9 @@
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2011-04-19T00:07:38Z</date>
+			<date>2011-04-29T22:22:24Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -125,6 +125,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{321, 489}, {977, 689}}</string>
+	<string>{{321, 339}, {977, 689}}</string>
 </dict>
 </plist>

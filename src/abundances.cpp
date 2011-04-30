@@ -933,7 +933,7 @@ bool compute_fpkm_variance(long double& variance,
         // at the end of the routine when we multiply by the square of those
         // constants
         variance = A + psi_var;
-        printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
+        //printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
         //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
         //printf("\t A = %Lg, B = %Lg\n", A, B);
     }
@@ -941,7 +941,7 @@ bool compute_fpkm_variance(long double& variance,
     {
         if (psi_t == 0) 
         {
-            printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
+            //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
             //assert (gamma_t == 1.0);
             //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
@@ -949,7 +949,7 @@ bool compute_fpkm_variance(long double& variance,
         }
         else
         {
-            printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
+            //printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
             //long double max_doub = numeric_limits<long double>::max();
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
@@ -976,7 +976,7 @@ bool compute_fpkm_variance(long double& variance,
                 printf("Warning: alpha for is %Lg\n", alpha);
                 printf("\t A = %Lg, B = %Lg\n", A, B);
                 //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
-                printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+                //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
                 numeric_ok = false;
             }
             
