@@ -932,7 +932,7 @@ bool compute_fpkm_variance(long double& variance,
         // we multiply A with the constants here to make things work out 
         // at the end of the routine when we multiply by the square of those
         // constants
-        variance = (l_t * M * A / 1000000000.0) + psi_var;
+        variance = A + psi_var;
         printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
         //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
         //printf("\t A = %Lg, B = %Lg\n", A, B);
@@ -988,11 +988,11 @@ bool compute_fpkm_variance(long double& variance,
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
     assert (!isinf(variance) && !isnan(variance));
     printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
-    if (variance < mean)
-    {
-        printf ("Warning: mean > variance!\n");
-        
-    }
+//    if (variance < mean)
+//    {
+//        printf ("Warning: mean > variance!\n");
+//        
+//    }
     assert (!isinf(variance) && !isnan(variance));
     assert (variance != 0 || A == 0);
     return numeric_ok;
