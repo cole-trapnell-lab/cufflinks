@@ -987,7 +987,7 @@ bool compute_fpkm_variance(long double& variance,
     double mean = A * (1000000000.0 / (l_t *M));
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
     assert (!isinf(variance) && !isnan(variance));
-    printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
+    //printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
 //    if (variance < mean)
 //    {
 //        printf ("Warning: mean > variance!\n");
