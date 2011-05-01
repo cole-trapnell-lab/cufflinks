@@ -214,6 +214,10 @@
 	  This status code is used by Cuffdiff to indicate that in one or both conditions, Cuffdiff encountered a numerical exception while calculating expression levels in the locus.  This can happen because of rounding errors and other "facts of life" when doing math on computers.  Typically, this occurs in very complex genes with relatively low expression levels. When this happens in one or both conditions being tested, Cuffdiff marks any observed difference in expression as not statistically signficant and sets the status code as <tt>FAIL</tt>.  You should treat any such observed changes as highly unreliable.    
 	  </p><br/>
 	
+	 <h2 id="exon">Can Cufflinks/Cuffdiff give me FPKM for each exon or splicing event?</h2><br/><p>
+	 For the foreseeable future, no.    
+	  </p><br/>
+	
 	  <!-- <h2 id="hssd">How many replicates do I need?  Do I need technical replicates as well as biological ones?</h2><br/><p>
 	  Good question.  The short answer is: don't bother with technical replicates (e.g. multiples libraries made from the same RNA), but get as many biological replicates as you can afford.  Early papers on the technical reproducibility of RNA-Seq have suggested that lane effects are minimal and that relative expression levels between technical replicates are extremely consistent over a very large dynamic range.  However, RNA-Seq won't do anything to remove biological variability, and the degree of variability varies (no pun intended) widely and depends on the experiment.  Just how many replicates are needed is an almost entirely open question at this point.  A related question is: considering that power to detect differences between conditions depends both on number of replicates and overall sequencing depth in each replicate, should we prefer a lot of replicates sequenced at low depth or fewer replicates sequenced very deeply?  We don't have a good answer for this yet either.    
 	  </p><br/> -->

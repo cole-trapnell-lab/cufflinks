@@ -447,22 +447,52 @@
 
 		<p>Where 
 		<p style="text-align: center;">
-		<img border=0 src="images/var_gene_count.png"></img>
-		<p>is the variance in the number of fragments that come from the gene across replicates
+		<img border=0 src="images/var_transcript_count.png"></img> 
+		<p>is the variance in the number of fragments that come from the transcirpt across replicates
 		in the experiment. If there are no replicates, this count is assumed to be Poisson
 		distributed, meaning the the variance is equal to the mean of the count.  In general,
 		this is not a great model, because the variance across biological replicates tends
-		to be greater than the mean.  When you provide replicates to Cuffdiff, the variances in the fragment counts
-		are estimated empirically using a nonlinear regression, as described <a href="#reps">below</a>.  
-		The value <img border=0 src="images/gamma_t.png"></img> is the estimated fraction of
-		the gene's sequencing fragments that came from transcript <em>t</em>.  The value 
+		to be greater than the mean. However, if your experiment has replicates for each 
+		condition, Cuffdiff can better estimate the variance for fragment counts and thus
+		 provides more accurate differential expression calls. For single isoform genes, 
+		Cuffdiff models the variance in fragment counts across replicates using the negative
+		binomial distribution, similar to the method described by Anders and Huber (2010). 
+		 When a gene has multiple isoforms, Cuffdiff must incorporate its own uncertainty 
+		in how it assigns fragment to transcripts in its estimate of the variance for the 
+		counts.  Cuffdiff uses the beta negative binomial to model overdispersion and 
+		fragment assignment uncertainty simultaneously.  The beta negative binomial is a 
+		distribution that arises when mixing several negative binomials, so in a sense, 
+		Cuffdiff generalizes previous count based methods that use the negative binomial 
+		distribution.  For each gene, Cuffdiff fits the parameters of the beta negative 
+		binomial  (called <em>&alpha;</em>, <em>&beta;</em>, and <emph>r<emph>) by solving
+		the following system of equations:
+		
+		<p style="text-align: center;">
+		<img border=0 src="images/count_var_system.png"></img>
+		
+		<p>
+		Where A,B, and C are defined as:
+		
+		<p style="text-align: center;">
+		<img border=0 src="images/ABC.png"></img>
+		
+		<p>
+		And <em>p</em> is:
+		<p style="text-align: center;">
+		<img border=0 src="images/p_alpha_beta.png"></img>
+		
+		<p> 
+		In the above equations, <em>X<sub>g</sub></em> is the number of 
+		fragments that fall on any isoform of the gene <emph>g<emph> that transcript 
+		<emph>t<emph> belongs to. The value <img border=0 src="images/gamma_t.png"></img> 
+		is the estimated fraction ofthe gene's sequencing fra gments that came from transcript <em>t</em>.  The value 
 		<img border=0 src="images/psi_t_t.png"></img> is the algorithm's uncertainty in 
-		its own estimate of <img border=0 src="images/gamma_t.png"></img>. The other terms in the equation 
-        are described in detail in the supplemental material for the Cufflinks paper.  
+		its own estimate of <img border=0 src="images/gamma_t.png"></img>. B is the count variance for transcripts that have a mean count similar to <emph>t</emph>. When you provide replicates to Cuffdiff, the fragment counts
+		are modeled using a nonlinear regression, as described <a href="#reps">below</a>. 
 		 
 		<p>
-		Once we have an estimate of the variance of expression levels in each condition, 
-		we can calculate the test statistic. Since the test statistic T is approximately 
+		Once we have an estimate of the variance of a transcript's abudance in each condition, 
+		we can calculate the test statistic. Also, given the variance for the abundance for each isoform of a gene, we can calculate the variance of the <em>gene's'</em> abundance. Since the test statistic T is approximately 
 		normally distributed, we can use a (two tailed) Student's t-test to find genes 
 		and transcripts that are differentially expressed.  When looking for genes with 
 		statistically significant changes in absolute expression, Cufflinks uses a 
@@ -471,17 +501,10 @@
 		<p>
 		As mentioned above, Cufflinks also looks for changes in <em>relative</em> 
 		isoform abundance within biologically interesting groups of transcripts. 
-		One simple type of relative change in isoform abundance is the "switching"
-		of major isoforms.  In one condition, some alternative splice variant <em>X</em>
-		of a gene is produced at low abundance relative to others of that gene.
-		In another condition, <em>X</em> is the most abundant isoform.  However,
-		when more than two isoforms are present in both conditions, it's 
-		possible to see far more complex and subtle patterns of changes in the
-		relative abundances of isoforms. We refer to these complex changes as 
-		"overloaded expression" a term meant to generalize the concept of major-minor 
-		switches in relative expression. By grouping the transcripts in biologically-meaningful 
-		ways and measuring the amount of overloading within these groups, we
-		can make a hypothesis about what regulatory mechanism is producing these
+		One simple type of relative change in isoform abundance is when a gene with multiple promoters switches between them across conditions.  Another type is the inclusion or exclusion of alternative exons.
+	 	By grouping the transcripts together by their promoters  
+		ways and looking for changes within and between these groups, we
+		can make a hypothesis about what regulatory mechanism (trancriptional, splicing, etc.) is producing these
 		changes.
 		
 		<p>
@@ -497,8 +520,7 @@
 		of interest.  Further, observed overloading is tested for 
 		statistical significance, which is possible because of the way Cuffdiff
 		measures it. They are quantified by the square 
-		root of the <em>Jensen-Shannon divergence</em>, which was recently proved to 
-		be a metric, and has some key properties needed here.  
+		root of the <em>Jensen-Shannon divergence</em> which has some key properties needed here.  
 		
 		For a group of transcripts, we can write their relative abundances 
 		<em>p<sub>1</sub></em>,<em>p<sub>2</sub></em>,...,<em>p<sub><em>n</em></sub></em> 
@@ -522,8 +544,7 @@
 		<br/>
 	  <h2 id="huqn">How does upper-quartile normalization work?</h2><br/>
 	  <p>
-	  It has been demonstrated that in differential expression analyses, low-count isoforms can be biased. Upper-quartile normalization
-	  was shown to be a good method for increasing sensitivity for these isoforms in
+	  As discussed in the paper listed below, a small number of abundant, differentially expressed genes can create the (incorrect) impression that less abundant genes are also differentially expressed.  This issue can be mitigated by excluding these genes when normalizing expression values for the number of mapped reads in each sample. One method for doing this, called "upper-quartile normalization" was shown to be a good method for increasing the accuracy of differential analysis in
 	  </p>
 		<br/>
 	 
