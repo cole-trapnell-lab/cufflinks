@@ -52,9 +52,9 @@ using namespace boost;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvu";
+const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:";
 #else
-const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvu";
+const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:";
 #endif
 
 
@@ -76,6 +76,7 @@ static struct option long_options[] = {
 {"multi-read-correct",      no_argument,			 0,			 'u'},
 {"time-series",             no_argument,             0,			 'T'},
 {"upper-quartile-norm",     no_argument,	 		 0,	         'N'},
+{"min-isoform-fraction",    required_argument,       0,          'F'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
@@ -157,6 +158,9 @@ int parse_options(int argc, char** argv)
 				break;
 			case 'p':
 				num_threads = (uint32_t)parseInt(1, "-p/--num-threads arg must be at least 1", print_usage);
+				break;
+            case 'F':
+				min_isoform_fraction = parseFloat(0, 1.0, "-F/--min-isoform-fraction must be between 0 and 1.0", print_usage);
 				break;
             case 'L':
 				sample_label_list = optarg;
@@ -293,7 +297,7 @@ int parse_options(int argc, char** argv)
             global_read_properties = &lib_itr->second;
         }
     }
-	
+    
     tokenize(sample_label_list, ",", sample_labels);
     
 	allow_junk_filtering = false;
@@ -1168,6 +1172,8 @@ int main(int argc, char** argv)
 {
     init_library_table();
     
+    min_isoform_fraction = 1e-5;
+    
 	int parse_ret = parse_options(argc,argv);
     if (parse_ret)
         return parse_ret;
@@ -1247,7 +1253,7 @@ int main(int argc, char** argv)
 	
 	// Note: we don't want the assembly filters interfering with calculations 
 	// here
-	min_isoform_fraction = 0.0;
+	
 	pre_mrna_fraction = 0.0;
     olap_radius = 0;
 	

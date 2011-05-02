@@ -2628,7 +2628,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
     double num_good = 0;
     foreach (double& g, gammas)
     {
-        if (g < 1e-10)
+        if (g < min_isoform_fraction)
         {
             round_err += g;
             g = 0.0;
