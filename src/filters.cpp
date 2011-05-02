@@ -647,6 +647,11 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
                     chaff[t] = true;
             }
 		}
+        else // we should still filter things that are zero to improve robustness of MAP estimation
+        {
+            if (abundances[t] == 0.0)
+                too_rare[t] = true;
+        }
 	}
 	
 	vector<shared_ptr<Abundance> > non_junk_transcripts;

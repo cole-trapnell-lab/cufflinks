@@ -2624,12 +2624,36 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		gammas = vector<double>(N, 0.0);
 	}
     
+    double round_err = 0.0;
+    double num_good = 0;
+    foreach (double& g, gammas)
+    {
+        if (g < 1e-10)
+        {
+            round_err += g;
+            g = 0.0;
+        }
+        else
+        {
+            num_good += 1;
+        }
+    }
+    foreach (double& g, gammas)
+    {
+        if (g != 0)
+        {
+            g += (round_err/num_good);
+        }
+    }
+    
     if (converged && identifiable)
         return NUMERIC_OK;
     else
     {
+        // FIXME:
         if (!identifiable)
-            return NUMERIC_LOW_DATA;
+            //return NUMERIC_LOW_DATA;
+            return NUMERIC_OK;
         else
             return NUMERIC_FAIL;
     }

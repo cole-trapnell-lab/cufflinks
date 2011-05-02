@@ -546,7 +546,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	
     norm_map_mass = map_mass;
     
-	if (use_quartile_norm)
+	if (use_quartile_norm && mass_dist.size() > 0)
 	{
 		sort(mass_dist.begin(),mass_dist.end());
 		int upper_quart_index = mass_dist.size() * 0.75;

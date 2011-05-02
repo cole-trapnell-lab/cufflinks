@@ -81,7 +81,7 @@ static struct option long_options[] = {
 #endif
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
-
+{"no-collapse-cond-prob",   no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"poisson-dispersion",		no_argument,             0,		     OPT_POISSON_DISPERSION},
@@ -264,6 +264,11 @@ int parse_options(int argc, char** argv)
                 emit_count_tables = true;
                 break;
             }    
+            case OPT_COLLAPSE_COND_PROB:
+            {
+                cond_prob_collapse = false;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;

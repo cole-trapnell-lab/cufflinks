@@ -165,7 +165,7 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
         if (!tmp_counts.empty())
             scale_factors[j] = tmp_counts[tmp_counts.size()/2];
         else
-            scale_factors[j] = 0.0;
+            scale_factors[j] = 1.0;
     }
 }
 

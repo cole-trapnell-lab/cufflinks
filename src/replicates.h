@@ -187,6 +187,7 @@ public:
         for (size_t i = 0; i < scale_factors.size(); ++i)
         {
             shared_ptr<ReadGroupProperties> rg_props = _factories[i]->read_group_properties();
+            assert (scale_factors[i] != 0);
             rg_props->mass_scale_factor(scale_factors[i]);
         }
         
