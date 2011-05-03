@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-merge_cuff_asms.py
+cuffmerge.py
 
 Created by Cole Trapnell on 2011-03-17.
 Copyright (c) 2011 Cole Trapnell. All rights reserved.
@@ -19,13 +19,22 @@ import warnings
 import types
 
 help_message = '''
-merge_cuff_asms takes two or more Cufflinks GTF files and merges them into a 
+cuffmerge takes two or more Cufflinks GTF files and merges them into a 
 single unified transcript catalog.  Optionally, you can provide the script 
 with a reference GTF, and the script will use it to attach gene names and other
 metadata to the merged catalog.
 
-usage:
-    merge_cuff_asms [-r reference.gtf] <cuff_asm_1.gtf> ... <cuff_asm_N.gtf>
+Usage:
+    cuffmerge [Options] <assembly_GTF_list.txt>
+
+Options:
+    -h/--help                               Prints the help message and exits
+    -o                     <output_dir>     Directory where merged assembly will be written  [ default: ./merged_asm  ]
+    -r/--ref-gtf                            An optional "reference" annotation GTF.  
+    -s/--ref-sequence      <seq_dir>/<seq_fasta> Genomic DNA sequences for the reference. 
+    --min-isoform-fraction <0-1.0>          Discard isoforms with abundance below this       [ default:           0.5 ]
+    -p/--num-threads       <int>            Use this many threads to merge assemblies.       [ default:             1 ]
+    --keep-tmp                              Keep all intermediate files during merge
 '''
 
 output_dir = "./merged_asm/"
@@ -65,7 +74,6 @@ class TestParams:
                                                False)           # keep_tmp
         self.ref_gtf = None
         self.fasta = None
-        self.out_prefix=""
         self.min_isoform_frac = 0.05
     
     def check(self):
@@ -81,7 +89,6 @@ class TestParams:
                                         "ref-gtf=",
                                         "output-dir=",
                                         "num-threads=",
-                                        "out-prefix=",
                                         "keep-tmp",
                                         "min-isoform-fraction="])
         except getopt.error, msg:
@@ -104,8 +111,6 @@ class TestParams:
                 self.ref_gtf = value
             if option in ("-s", "--ref-sequence"):
                 self.fasta = value
-            if option == "--out-prefix":
-                self.out_prefix = value
             if option in ("-F", "--min-isoform-fraction"):
                 self.min_isoform_frac = float(value)
             if option in ("-o", "--output-dir"):
@@ -467,6 +472,9 @@ def main(argv=None):
         run_cmd = " ".join(argv)
         print >> run_log, run_cmd
         
+        if len(args) < 1:
+            raise(Usage(help_message))
+    
         transfrag_list_file = open(args[0], "r")
 
         if params.ref_gtf != None:

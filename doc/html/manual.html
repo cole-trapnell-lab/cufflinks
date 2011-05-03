@@ -150,7 +150,7 @@
 			</ul>
 			<li><a href="#class_codes">Transfrag class codes</a></li>
  	    </ul>
-		<li><a href="#merge_cuff_asm">Merging assemblies with merge_cuff_asms.py</a></li>
+		<li><a href="#cuffmerge">Merging assemblies with cuffmerge</a></li>
 		<ul>
   	      <li><a href="#merger_input">Input Files</a></li>
   	  	  <li><a href="#merger_output">Output Files</a></li>
@@ -1002,19 +1002,26 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		
 		<br/>
 		</ol>
-		<h2 id="cuffcompare">Running merge_cuff_asm.py</h2><br/>
+		<h2 id="cuffmerge">Merging assemblies with cuffmerge</h2><br/>
 		<p>
-		Cufflinks includes a script called merge_cuff_asms.py that you can use to merge together several Cufflinks assemblies.  It handles also handles running Cuffcompare for you, and automatically filters a number of transfrags that are probably artfifacts.  If you have a reference GTF file available, you can provide it to the script in order to gracefully merge novel isoforms and known isoforms and maximize overall assembly quality.  The main purpose of this script is to make it easier to make an assembly GTF file suitable for use with Cuffdiff.   
+		Cufflinks includes a script called cuffmerge that you can use to merge 
+		together several Cufflinks assemblies.  It handles also handles running
+		 Cuffcompare for you, and automatically filters a number of transfrags 
+		that are probably artfifacts.  If you have a reference GTF file available,
+		 you can provide it to the script in order to gracefully merge novel 
+		isoforms and known isoforms and maximize overall assembly quality.  
+		The main purpose of this script is to make it easier to make an assembly 
+		GTF file suitable for use with Cuffdiff.   
 		
 		From the command line, run <tt>merge_cuff_asms.py</tt> as follows:
 		<p>
 		  <blockquote>
-		   merge_cuff_asms.py [options]* &lt;assembly_list.txt&gt;
+		   cuffmerge [options]* &lt;assembly_GTF_list.txt&gt;
 		  </blockquote>
 
 		<br/>
 		<h2 id="cuffcomp_input">merge_cuff_asm.py Input</h2><br/>
-		merge_cuff_asms.py takes several assembly GTF files from Cufflinks' as input.  Input GTF files must be specified in a "manifest" file listing full paths to the files. 
+	    cuffmerge takes several assembly GTF files from Cufflinks' as input.  Input GTF files must be specified in a "manifest" file listing full paths to the files. 
 		<br/>
 
 		  <table CELLSPACING=15>

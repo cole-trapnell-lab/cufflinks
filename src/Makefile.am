@@ -1,4 +1,4 @@
-include $(top_srcdir)/build-aux/cufflinks.mk
+#include $(top_srcdir)/build-aux/cufflinks.mk
 
 AM_CPPFLAGS = -I$(top_srcdir)/src 
 
@@ -184,8 +184,14 @@ libgc_a_SOURCES = \
 	gtf_tracking.cpp 
 
 #-- scripts to be installed in $prefix/bin
-dist_bin_SCRIPTS = \
-    merge_cuff_asms.py
+bin_SCRIPTS = \
+	cuffmerge
+
+CLEANFILES = $(bin_SCRIPTS)
+
+SUFFIXES = .py
+.py:
+	(echo '#!$(PYTHON)'; sed '/^#!/d' $<) > $@
 
 cufflinks_SOURCES = cufflinks.cpp  
 cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 

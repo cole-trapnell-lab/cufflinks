@@ -48,7 +48,7 @@ bool get_current_version(char* curr_version)
     if (sockfd < 0) 
         return error("ERROR opening socket");
 	
-    server = gethostbyname("lmcb.math.berkeley.edu");
+    server = gethostbyname("cufflinks.cbcb.umd.edu");
     if (server == NULL) 
         return error("ERROR, no such host");
 
@@ -71,7 +71,7 @@ bool get_current_version(char* curr_version)
 	}
 	
 	char buffer[1024];
-	strcpy(buffer, "GET /~adarob/curr_cuff_version HTTP/1.1\nHost: lmcb.math.berkeley.edu\n\n");
+	strcpy(buffer, "GET /curr_cuff_version HTTP/1.1\nHost: cufflinks.cbcb.umd.edu\n\n");
 	n = write(sockfd,buffer,1024);
 	
     if (n < 0) 
@@ -101,11 +101,11 @@ void check_version(const char* this_version)
 		if (strcmp(curr_version, this_version)==0)
 			fprintf(stderr, "You are using Cufflinks v%s, which is the most recent release.\n", PACKAGE_VERSION);
 		else
-			fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date. It is recommended that you upgrade to Cufflinks v%s to benefit from the most recent features and bug fixes (http://bio.math.berkeley.edu/cufflinks).\n", curr_version);
+			fprintf(stderr, "Warning: Your version of Cufflinks is not up-to-date. It is recommended that you upgrade to Cufflinks v%s to benefit from the most recent features and bug fixes (http://cufflinks.cbcb.umd.edu).\n", curr_version);
 		
 	}
 	else 
 	{
-		fprintf(stderr, "Warning: Could not connect to update server to verify current version. Please check at the Cufflinks website (http://bio.math.berkeley.edu/cufflinks).\n");
+		fprintf(stderr, "Warning: Could not connect to update server to verify current version. Please check at the Cufflinks website (http://cufflinks.cbcb.umd.edu).\n");
 	}
 }

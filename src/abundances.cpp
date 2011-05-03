@@ -968,13 +968,13 @@ bool compute_fpkm_variance(long double& variance,
             
             if (beta <= 0)
             {
-                printf ("Warning: beta for is %Lg\n", beta);
+                //printf ("Warning: beta for is %Lg\n", beta);
                 numeric_ok = false;
             }
             if (alpha <= 0)
             {
-                printf("Warning: alpha for is %Lg\n", alpha);
-                printf("\t A = %Lg, B = %Lg\n", A, B);
+                //printf("Warning: alpha for is %Lg\n", alpha);
+                //printf("\t A = %Lg, B = %Lg\n", A, B);
                 //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
                 //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
                 numeric_ok = false;
@@ -2583,18 +2583,40 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
             for (size_t i = 0; i < M; ++i)
             {
                 if (cond_probs[j][i])
-                    compat(i,j) = 1;
+                    compat(i,j) = cond_probs[j][i];
             }
         }
+        
+        vector<size_t> transcripts_with_frags;
+        for (size_t j = 0; j < N; ++j)
+        {
+            bool has_fragment = false;
+            for (size_t i = 0; i < M; ++i)
+            {
+                if (compat(i,j))
+                {
+                    has_fragment = true;
+                    break;
+                }
+            }
+            if (has_fragment)
+                transcripts_with_frags.push_back(j);
+        }
+        ublas::matrix<double> reduced_compat = ublas::zero_matrix<double>(M,transcripts_with_frags.size());
+        for (size_t j = 0; j < transcripts_with_frags.size(); ++j)
+        {
+            column(reduced_compat, j) = column(compat, transcripts_with_frags[j]);
+        }
+        
         
         typedef ublas::permutation_matrix<std::size_t> pmatrix;
         
         // create a permutation matrix for the LU-factorization
-        pmatrix pm(compat.size1());
+        pmatrix pm(reduced_compat.size1());
         
-        // cerr << compat <<endl;
+        // cerr << compat.size2() <<endl;
         // perform LU-factorization
-        identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(compat,pm);
+        identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(reduced_compat,pm);
 
         
 		vector<double> u(M);
@@ -2650,10 +2672,9 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
         return NUMERIC_OK;
     else
     {
-        // FIXME:
         if (!identifiable)
-            //return NUMERIC_LOW_DATA;
-            return NUMERIC_OK;
+            return NUMERIC_LOW_DATA;
+            //return NUMERIC_OK;
         else
             return NUMERIC_FAIL;
     }
