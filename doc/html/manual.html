@@ -1297,6 +1297,31 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	  Turns off the automatic routine that contacts the Cufflinks server to check for a more 
 	  recent version.
 	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--poisson-dispersion</tt>
+	  </td><td VALIGN=top>
+	  Use the Poisson fragment dispersion model instead of learning one 
+	  in each condition.
+	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--emit-count-tables</tt>
+	  </td><td VALIGN=top>
+	  Cuffdiff will output a file for each condition (called &lt;sample&gt;_counts.txt)
+	  containing the fragment counts, fragment count variances, and fitted
+	  variance model.
+	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-F/--min-isoform-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  Cuffdiff will round down to zero the abundance of alternative isoforms quantified at below 
+	  the specified fraction of the major isoforms. This is done after MLE estimation
+      but before MAP estimation to improve robustness of confidence interval
+      generation and differential expression analysis.  The default is 1e-5, and 
+      we recommend you not alter this parameter. 
+	  </td></tr>
 	  
 		  </table><br/>
 	  <h2 id="cuffdiff_output">Cuffdiff Output</h2><br/>
