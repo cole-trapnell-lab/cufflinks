@@ -268,7 +268,7 @@ bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 
 CuffStrand use_stranded_protocol(uint32_t sam_flag, bool antisense_aln, MateStrandMapping msm)
 {
-	if (((sam_flag & BAM_FPAIRED) && (sam_flag & BAM_FREAD1)) || !(sam_flag & BAM_FPAIRED)) // left-most read or single-end
+	if (((sam_flag & BAM_FPAIRED) && (sam_flag & BAM_FREAD1)) || !(sam_flag & BAM_FPAIRED)) // first-in-pair or single-end
 	{
 		switch(msm)
 		{
@@ -282,7 +282,7 @@ CuffStrand use_stranded_protocol(uint32_t sam_flag, bool antisense_aln, MateStra
 				break;
 		}
 	}
-	else // right-most read
+	else // second-in-pair read
 	{
 		switch (msm)
 		{

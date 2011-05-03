@@ -363,7 +363,7 @@ int parse_options(int argc, char** argv)
     } while(next_option != -1);
 	
     
-	if (ref_gtf_filename != "")
+	if (bundle_mode == REF_DRIVEN)
 	{
         if (!F_set)
         {
