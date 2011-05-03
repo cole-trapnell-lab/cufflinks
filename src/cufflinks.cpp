@@ -86,11 +86,9 @@ static struct option long_options[] = {
 {"trim-3-dropoff-frac",     required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
 {"trim-3-avgcov-thresh",	required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
     
-{"--3-overhang-tolerance",	required_argument,		 0,			 OPT_3_OVERHANG_TOLERANCE},
-{"--intron-overhang-tolerance",	required_argument,		 0,		 OPT_INTRON_OVERHANG_TOLERANCE},
-{"--no-faux-reads",         no_argument,             0,           OPT_NO_FAUX_READS},
-
-
+{"3-overhang-tolerance",	required_argument,		 0,			 OPT_3_OVERHANG_TOLERANCE},
+{"intron-overhang-tolerance",	required_argument,		 0,		 OPT_INTRON_OVERHANG_TOLERANCE},
+{"no-faux-reads",         no_argument,             0,           OPT_NO_FAUX_READS},
 
 
 {0, 0, 0, 0} // terminator
