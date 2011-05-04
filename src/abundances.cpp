@@ -620,6 +620,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                     double ratio =  (*cond_probs_k)[j] / cond_probs_i[j];
                     if (last_cond_prob == -1)
                     {
+                        //assert(ratio < 5);
                         last_cond_prob = ratio;
                     }
                     else
@@ -650,6 +651,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 assert (last_cond_prob > 0);
                 //double mass_muliplier = sqrt(last_cond_prob);
                 double mass_multiplier = log(last_cond_prob);
+                //assert(last_cond_prob < 5);
                 assert (!isinf(mass_multiplier) && !isnan(mass_multiplier));
                 log_conv_factors[log_conv_factors.size() - 1] += mass_multiplier; 
                 replaced[k] = true;
@@ -1271,9 +1273,11 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	}
 	
     double locus_mass = 0.0;
-    for (size_t i = 0; i < log_conv_factors.size(); ++i)
+   
+    for (size_t i = 0; i < nr_alignments.size(); ++i)
     {
-        locus_mass += exp(log_conv_factors[i]);
+        const MateHit& alignment = nr_alignments[i];
+        locus_mass += alignment.collapse_mass();
     }
     
 	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
