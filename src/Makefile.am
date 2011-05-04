@@ -2,7 +2,9 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)/src 
 
-EXTRA_DIST = $(top_srcdir)/AUTHORS $(top_srcdir)/make_bin.sh
+EXTRA_DIST = \
+    cuffmerge.py \
+    $(top_srcdir)/AUTHORS $(top_srcdir)/make_bin.sh
 
 AM_CXXFLAGS =
 
