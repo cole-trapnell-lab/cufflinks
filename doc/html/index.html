@@ -121,7 +121,7 @@
                 <tbody>
                   <tr>
                     <td>version 1.0.0</td>
-                    <td align="right">4/XX/2010</td>
+                    <td align="right">5/5/2011</td>
                   </tr>
                   <tr>
                     <td><a href="./downloads/cufflinks-1.0.0.tar.gz"
@@ -213,7 +213,7 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
-          <h2>1.0.0 release - 4/XX/2011</h2>
+          <h2>1.0.0 release - 5/5/2011</h2>
           <p>This release represents a huge leap for Cufflinks in terms
             of performance and features. It is highly recommended that
             all users upgrade to this version of Cufflinks. Updates and
@@ -223,12 +223,12 @@
               assembly mode has been added. More details can be found in
               the <a href="howitworks.html#hmul">How Cufflinks Works</a>
               section. </li>
-            <li>Handling of replicates in Cuffdiff have been
+            <li>Major improvements to Cuffdiff. Handling of replicates in Cuffdiff have been
               dramatically overhauled. Cuffdiff now models fragment
-              count overdispersion in each condition prior to testing.
+              count overdispersion with a beta negative binomial distribution in each condition prior to testing.
               See the substantially updated page on <a
                 href="howitworks.html#hdif">How Cufflinks works</a> for
-              more details. </li>
+              more details.</li>
             <li>Bias correction described <a
                 href="http://genomebiology.com/2011/12/3/R22/">here</a>
               is now enabled with the <tt>-b/--frag-bias-correct</tt>
@@ -242,26 +242,26 @@
             <li>Trimming has been instituted to more accurately locate
               the 3' ends of transcripts during assembly based on
               coverage.</li>
-            <li>Cufflinks now includes a new tool to help merge
+            <li>Cufflinks now includes a new tool called Cuffmerge to help merge
               assemblies from multiple samples into a single GTF for use
               with Cuffdiff. The tool also helps integrate a reference
               annotation file. See the <a href="tutorial.html">Getting
                 Started</a> page for more details. </li>
             <li>Output file formats have been made consistent between
               Cufflinks and Cuffdiff. See the <a href="manual.html">Manual</a>
-              for more details.</li>
+              for more details on the new formats.</li>
             <li>Both GFF3 and GTF2.2 annotations are now fully supported
               as input to all programs (see <a href="gff.html">here</a>).</li>
             <li>Improved reporting of map properties.</li>
-            <li>Added automatic update availability check.</li>
-            <li>Upper-quartile normalizaion (<tt>-N/--upper-quartile-norm</tt>)
-              now calculated correctly.</li>
+            <li>The programs now check for available updates automatically on launch.</li>
+            <li>Upper-quartile normalizaion has been fixed to be consistent with published literature (enable with <tt>-N/--upper-quartile-norm</tt>).</li>
             <li>Fixed a bug where some splice-junction reads were lost
               in quantitation.</li>
             <li>Fixed a bug where reads landing in introns were
               over-filtered in assembly.</li>
             <li>Numerous improvements in speed for both assembly and
               quantitation.</li>
+			<li>Cuffdiff now uses dramatically less memory.  Cufflinks' memory footprint has also shrunk.</li>
             <li>Numerous minor bug fixes.</li>
           </ul>
           <p></p>

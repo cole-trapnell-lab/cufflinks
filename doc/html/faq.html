@@ -68,7 +68,7 @@
 		  <div class="box">
 		    <ul>
 		      <table width="100%">
-				<tr><td>version 1.0.0</td> <td align="right">4/XX/2010</td></tr>
+				<tr><td>version 1.0.0</td> <td align="right">5/5/2011</td></tr>
 				<tr>
 		      		<td><a href="./downloads/cufflinks-1.0.0.tar.gz" onClick="javascript: pageTracker._trackPageview('/downloads/cufflinks_source'); ">&nbsp;&nbsp;&nbsp;Source code</a></td>
 		      	</tr>
@@ -142,6 +142,7 @@
 	    <li><a href="#fail">What does "FAIL" mean in Cuffdiff's output?</a></li>
      	<li><a href="#exon">Can Cufflinks/Cuffdiff give me FPKM for each exon or splicing event?</a></li>
 	 	<!-- <li><a href="#reps">How many replicates do I need?  Do I need technical replicates as well as biological ones?</a></li> -->
+		<li><a href="#gene">How do I find differentially expressed genes with Cuffdiff?</a></li>
 		<li><a href="#pval">How does Cufflinks calculate its p-values?</a></li>
 		<li><a href="#gtfs">I'm looking for a GTF file with annotated transcripts.  Do you provide annotation files?</a></li>
 		<li><a href="#time">Can I use Cuffdiff on time-series data?</a></li>
@@ -176,8 +177,14 @@
 	  </p><br/>
 	
 	  <h2 id="cuffdiff">How is Cuffdiff different from other differential expression tools?</h2><br/><p>
-	  To our knowledge, most other differential expression packages work by counting up the number of fragments that originate from each gene in each sample, looking for differences in the count for each gene across conditions, and testing the observed differences for statistical significance. This approach works well when genes have a single isoform and occur only once in the genome (i.e. aren't members of "gene families").  However, when dealing with genes with more than one isoform, it's generally not possible to tell with certainty which isoform generated each fragment.  This greatly complicates the problem of looking for differentially expressed genes.  As discussed above, lumping fragments from all the isoforms of a gene together and looking for changes in this count between conditions is problematic. Cuffdiff looks for differentially expressed genes by estimating how many fragments came from each isoform and then converting the counts into isoform expression levels. Cuffdiff then looks for differences in these expression levels, rather than for differences in counts.  To find differentially expressed genes, Cuffdiff calculates expression levels in each condition for each gene by adding up the expression levels for each gene's splice isoforms.  Cuffdiff tests for differences in each gene's expression level across conditions.
-	  </p><br/>
+	  To our knowledge, most other differential expression packages work by counting up the number of fragments that originate from each gene in each sample, looking for differences in the count for each gene across conditions, and testing the observed differences for statistical significance. This approach works well when genes have a single isoform and occur only once in the genome (i.e. aren't members of "gene families").  However, when dealing with genes with more than one isoform, it's generally not possible to tell with certainty which isoform generated each fragment.  This greatly complicates the problem of looking for differentially expressed genes.  
+	  </p>
+		<p>
+		Most differential expression packages count reads at a gene level and look for differences in these counts directly.  However, this approach can be very inaccurate for genes that have multiple isoforms, because a change in relative abundance of the isoforms can change overall gene abundance <emph>without generating a large change in the number of reads from that gene</emph>.  Conversely, a change in overall gene counts does not necessarily imply a similar fold-change in gene expression.  For example, suppose a gene has two isoforms, one which is twice as long as the other.  At equal abundance, the longer one will produce twice as many reads.  Consider two RNA-Seq samples, where only the shorter isoform is present in the first sample, and only the longer isoform is present in the second sample.  If the abundance of each isoform is the same in the two conditions, the second sample will have twice as many reads from the gene!  Thus, simply looking for differences in the overall number of reads from a gene may lead to the incorrect conclusion that it is differentially expessed.
+		<p>
+		Cuffdiff looks for differentially expressed genes by estimating how many fragments came from each isoform and then converting the counts into isoform expression levels.  To find differentially expressed genes, Cuffdiff calculates expression levels in each condition for each gene by adding up the expression levels for each gene's splice isoforms.  Cuffdiff tests for differences in each gene's expression level across conditions.  See <a href="howitworks.html#hdif">here</a> for more details about how this works.
+		</p>
+	<br/>
 	
 	  <h2 id="snps">Can I use Cufflinks to find SNPs or RNA editing sites?</h2><br/><p>
 	  Not at the moment, because Cufflinks doesn't do any base calling of its own.  We recommend that you check out the <a href="http://samtools.sourceforge.net">samtools</a> for this purpose.
@@ -222,9 +229,14 @@
 	  Good question.  The short answer is: don't bother with technical replicates (e.g. multiples libraries made from the same RNA), but get as many biological replicates as you can afford.  Early papers on the technical reproducibility of RNA-Seq have suggested that lane effects are minimal and that relative expression levels between technical replicates are extremely consistent over a very large dynamic range.  However, RNA-Seq won't do anything to remove biological variability, and the degree of variability varies (no pun intended) widely and depends on the experiment.  Just how many replicates are needed is an almost entirely open question at this point.  A related question is: considering that power to detect differences between conditions depends both on number of replicates and overall sequencing depth in each replicate, should we prefer a lot of replicates sequenced at low depth or fewer replicates sequenced very deeply?  We don't have a good answer for this yet either.    
 	  </p><br/> -->
 	
-	  <h2 id="pval">How does cufflinks calculate its p values?</h2><br/><p>
+	  <h2 id="gene">How does cufflinks calculate its p values?</h2><br/><p>
+	  <p>Run Cuffdiff (see <a href="tutorial.html#differential">here</a> for an example) and look at the <tt>gene_exp.diff</tt> output file.</a>
+	  </p><br/>
+	
+	  <h2 id="pval">How do I find differentially expressed genes with Cuffdiff?</h2><br/><p>
 	  <p>See <a href="howitworks.html#hdif">here</a>
 	  </p><br/>
+	  
 	
 	  <h2 id="gtfs">I'm looking for a GTF file with annotated transcripts.  Do you provide annotation files?</h2><br/><p>
 	  <p>No.  Curating these annotation files would be way too much work for us, and organizations like Ensembl and UCSC already do a great job.  We suggest you check out either of these for a high quality annotation GTF for your organism.
