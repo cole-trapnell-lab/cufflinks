@@ -3,40 +3,40 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>index.html</string>
+	<string>manual.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-03T17:50:59Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2011-05-05T16:58:02Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-03T17:49:53Z</date>
+			<date>2011-05-06T18:58:28Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>manual.html</string>
 			<key>lastUsed</key>
-			<date>2011-04-28T18:30:20Z</date>
+			<date>2011-05-06T18:58:28Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>faq.html</string>
 			<key>lastUsed</key>
-			<date>2011-04-28T18:30:16Z</date>
+			<date>2011-05-05T16:58:06Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2011-04-28T18:29:36Z</date>
+			<date>2011-05-05T16:58:13Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -61,7 +61,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>82</integer>
+			<integer>0</integer>
 		</dict>
 		<key>gff.html</key>
 		<dict>
@@ -77,56 +77,42 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>howitworks.html</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>70</integer>
-				<key>line</key>
-				<integer>27</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>index.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>15</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>133</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>116</integer>
+			<integer>46</integer>
 		</dict>
 		<key>manual.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>10</integer>
+				<integer>13</integer>
 				<key>line</key>
-				<integer>82</integer>
+				<integer>37</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>47</integer>
+			<integer>22</integer>
 		</dict>
 		<key>tutorial.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>10</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>69</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -140,12 +126,11 @@
 		<string>faq.html</string>
 		<string>index.html</string>
 		<string>manual.html</string>
-		<string>howitworks.html</string>
 		<string>gff.html</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{333, 102}, {1060, 1316}}</string>
+	<string>{{1213, 102}, {1060, 1316}}</string>
 </dict>
 </plist>

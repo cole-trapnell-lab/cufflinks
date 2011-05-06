@@ -34,8 +34,8 @@ class BiasLearner{
 	static const int pow4[];
 	static const int MAX_SLICE;
 	static const int CENTER;
-	static const int _M;
-	static const int _N;
+	static const int _m;
+	static const int _n;
 	
 	static const int lengthBins[];
 	static const double positionBins[];

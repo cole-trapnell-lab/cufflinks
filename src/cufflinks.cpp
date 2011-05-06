@@ -778,8 +778,8 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 //static long double min_abundance = 0.000001;
 
 #if ENABLE_THREADS
-mutex out_file_lock;
-mutex thread_pool_lock;
+boost::mutex out_file_lock;
+boost::mutex thread_pool_lock;
 int curr_threads = 0;
 
 void decr_pool_count()

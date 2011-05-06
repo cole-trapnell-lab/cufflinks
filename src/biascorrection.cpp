@@ -145,8 +145,8 @@ const int BiasLearner::siteSpec[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 const int BiasLearner::vlmmSpec[] = {1,1,1,1,1,2,2,2,3,3,3,3,3,3,3,3,2,2,2,1,1}; //Length of connections at each position in the window
 const int BiasLearner::MAX_SLICE = 3; // Maximum connection length
 const int BiasLearner::CENTER = 8; //Index in paramTypes[] of first element in read
-const int BiasLearner::_M = 21; //Number of positions spanned by window
-const int BiasLearner::_N = 64; //Length of maximum connection in VLMM
+const int BiasLearner::_m = 21; //Number of positions spanned by window
+const int BiasLearner::_n = 64; //Length of maximum connection in VLMM
 const int BiasLearner::lengthBins[] = {791,1265,1707,2433}; //Quantiles derived from human mRNA length distribution in UCSC genome browser
 const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.3,.4,.5,.6,.7,.8,.85,.9,.92,.94,.96,.98,1};
 
@@ -158,10 +158,10 @@ BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 		paramTypes = siteSpec;
 	}
 	_frag_len_dist = frag_len_dist;
-	_startSeqParams = ublas::zero_matrix<long double>(_M,_N);
-	_startSeqExp = ublas::zero_matrix<long double>(_M,_N);
-	_endSeqParams = ublas::zero_matrix<long double>(_M,_N);
-	_endSeqExp = ublas::zero_matrix<long double>(_M,_N);
+	_startSeqParams = ublas::zero_matrix<long double>(_m,_n);
+	_startSeqExp = ublas::zero_matrix<long double>(_m,_n);
+	_endSeqParams = ublas::zero_matrix<long double>(_m,_n);
+	_endSeqExp = ublas::zero_matrix<long double>(_m,_n);
 	_startPosParams = ublas::zero_matrix<long double>(20,5);
 	_startPosExp = ublas::zero_matrix<long double>(20,5);
 	_endPosParams = ublas::zero_matrix<long double>(20,5);
@@ -269,14 +269,14 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 		_endPosExp(currEndBin, lenClass) += !(_frag_len_dist->too_short(i+1));
 
 		
-		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
-		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen;
+		bool start_in_bounds = i-CENTER >= 0 && i+(_m-1)-CENTER < seqLen;
+		bool end_in_bounds = i+CENTER-(_m-1) >= 0 && i+CENTER < seqLen;
 		
 		if (!start_in_bounds && !end_in_bounds) // Make sure we are in bounds of the sequence
 			continue;
 		
 		//Sequence Bias
-		for(int j=0; j < _M; j++)
+		for(int j=0; j < _m; j++)
 		{
 			// Start Bias
 			if (start_in_bounds) // Make sure we are in bounds of the sequence
@@ -364,12 +364,12 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 		
 		//Sequence Bias
 		
-		bool start_in_bounds = i-CENTER >= 0 && i+(_M-1)-CENTER < seqLen;
-		bool end_in_bounds = i+CENTER-(_M-1) >= 0 && i+CENTER < seqLen - _frag_len_dist->mean(); // don't count bias near end since we're over-counting these fragments
+		bool start_in_bounds = i-CENTER >= 0 && i+(_m-1)-CENTER < seqLen;
+		bool end_in_bounds = i+CENTER-(_m-1) >= 0 && i+CENTER < seqLen - _frag_len_dist->mean(); // don't count bias near end since we're over-counting these fragments
 		
 		if (start_in_bounds || end_in_bounds) // Make sure we are in bounds of the sequence
 		{
-			for(int j=0; j < _M; j++)
+			for(int j=0; j < _m; j++)
 			{
 				// Start Bias
 				if (start_in_bounds) // Make sure we are in bounds of the sequence
@@ -506,7 +506,7 @@ void BiasLearner::normalizeParameters()
 	fourSums(_endSeqExp, endSeqExp_sums); 
 	
 	//Normalize sequence parameters
-	for(int i=0; i < _M; i++)
+	for(int i=0; i < _m; i++)
 	{
 		for(int j=0; j < pow4[paramTypes[i]]; j++)
 		{
@@ -558,18 +558,18 @@ void BiasLearner::output()
 	myfile1.open (filename.c_str());
 	
 	// StartSeq
-	for (int i = 0; i < _N; ++i)
+	for (int i = 0; i < _n; ++i)
 	{
-		for(int j = 0; j < _M; ++j)
+		for(int j = 0; j < _m; ++j)
 			myfile1 << _startSeqParams(j,i) <<",";
 		myfile1 << endl;
 	}
 	myfile1 << endl;
 	
 	// EndSeq
-	for (int i = 0; i < _N; ++i)
+	for (int i = 0; i < _n; ++i)
 	{
-		for(int j = 0; j < _M; ++j)
+		for(int j = 0; j < _m; ++j)
 			myfile1 << _endSeqParams(j,i) <<",";
 		myfile1 << endl;
 	}

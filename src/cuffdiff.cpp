@@ -487,7 +487,7 @@ void extract_sample_diffs(SampleDiffs& diff_map,
 }
 
 #if ENABLE_THREADS
-mutex inspect_lock;
+boost::mutex inspect_lock;
 #endif
 
 void inspect_map_worker(ReplicatedBundleFactory& fac,
@@ -1099,7 +1099,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	int splicing_tests = fdr_significance(FDR, splicing_diffs);
 	fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
-	fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tsignificant\n");
+	fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
