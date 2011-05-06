@@ -12,6 +12,8 @@ cp src/cufflinks $1
 cp src/cuffcompare $1
 cp src/cuffdiff $1
 cp src/cuffmerge.py $1/cuffmerge
+cp src/gffread $1
+cp src/gtf_to_sam $1
 cp README $1
 cp LICENSE $1
 cp AUTHORS $1
