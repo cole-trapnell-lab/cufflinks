@@ -30,7 +30,7 @@ Usage:
 Options:
     -h/--help                               Prints the help message and exits
     -o                     <output_dir>     Directory where merged assembly will be written  [ default: ./merged_asm  ]
-    -r/--ref-gtf                            An optional "reference" annotation GTF.  
+    -g/--ref-gtf                            An optional "reference" annotation GTF.  
     -s/--ref-sequence      <seq_dir>/<seq_fasta> Genomic DNA sequences for the reference. 
     --min-isoform-fraction <0-1.0>          Discard isoforms with abundance below this       [ default:           0.5 ]
     -p/--num-threads       <int>            Use this many threads to merge assemblies.       [ default:             1 ]
