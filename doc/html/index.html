@@ -120,25 +120,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.0.0</td>
-                    <td align="right">5/5/2011</td>
+                    <td>version 1.0.1</td>
+                    <td align="right">5/6/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.0.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.0.1.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.0.1.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.0.1.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -213,6 +213,16 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+		  <h2>1.0.1 release - 5/6/2011</h2>
+		  <p>This fix release corrects several issues introduced with 1.0.0:
+	  	  <ul>
+			<li>The binary packages for 1.0.0 failed to include gtf_to_sam and gffread, causing cuffmerge to fail.
+			<li>Cuffdiff's <tt>splicing.diff</tt> was missing the <tt>q_value</tt> column header
+			<li>Several portability issues have been fixed (thanks to Nathan Weeks for the patches)
+			<li>Cuffmerge's help message incorrectly listed several options.
+		  </ul>
+		  </p>
+		  <br/>
           <h2>1.0.0 release - 5/5/2011</h2>
           <p>This release represents a huge leap for Cufflinks in terms
             of performance and features. It is highly recommended that

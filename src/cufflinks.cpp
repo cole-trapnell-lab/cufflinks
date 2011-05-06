@@ -63,7 +63,7 @@ static struct option long_options[] = {
 {"frag-len-mean",			required_argument,       0,          'm'},
 {"frag-len-std-dev",		required_argument,       0,          's'},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
-{"quartile-normalization",  no_argument,	 		 0,	         'N'},
+{"upper-quartile-normalization",  no_argument,	 		 0,	         'N'},
 {"frag-bias-correct",       required_argument,		 0,			 'b'},
 {"multi-read-correct",      no_argument,			 0,			 'u'},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
