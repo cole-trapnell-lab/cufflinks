@@ -507,7 +507,6 @@
 		0ACD78C612E6647B00310E07 /* update_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = update_check.h; path = src/update_check.h; sourceTree = "<group>"; };
 		9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_scaffolds.cpp; sourceTree = "<group>"; };
 		9C29C3E31339285000EC6E65 /* vari.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = vari.hpp; sourceTree = "<group>"; };
-		9CAB363D1332794000455316 /* cufflinks.mk */ = {isa = PBXFileReference; lastKnownFileType = text; name = cufflinks.mk; path = "build-aux/cufflinks.mk"; sourceTree = "<group>"; };
 		9CC50B5913204F180031949A /* cmd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = cmd.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		9CC50B5D13204FE30031949A /* minmax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = minmax.c; sourceTree = "<group>"; };
 		9CC50B5E13204FE30031949A /* locfit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = locfit.c; sourceTree = "<group>"; };
@@ -931,7 +930,6 @@
 				EDEBCDF8112DFD7600E2479E /* configure.ac */,
 				EDD6A7A0115562EE00D3F668 /* Makefile.am */,
 				ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */,
-				9CAB363D1332794000455316 /* cufflinks.mk */,
 			);
 			name = Autotools;
 			sourceTree = "<group>";
