@@ -10,19 +10,19 @@
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-05T16:58:02Z</date>
+			<date>2011-05-07T15:18:27Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-06T18:58:28Z</date>
+			<date>2011-05-07T15:11:00Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>manual.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-06T18:58:28Z</date>
+			<date>2011-05-07T15:21:16Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
@@ -30,19 +30,19 @@
 			<key>filename</key>
 			<string>faq.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-05T16:58:06Z</date>
+			<date>2011-05-07T15:19:46Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-05T16:58:13Z</date>
+			<date>2011-05-07T15:20:42Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>gff.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-03T17:50:59Z</date>
+			<date>2011-05-07T15:21:16Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -54,23 +54,53 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>24</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>142</integer>
+				<integer>5</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>157</integer>
+				<key>line</key>
+				<integer>5</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>5</integer>
+			</dict>
 		</dict>
 		<key>gff.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>89</integer>
 				<key>line</key>
-				<integer>13</integer>
+				<integer>5</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>howitworks.html</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>52</integer>
+				<key>line</key>
+				<integer>3</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -82,42 +112,74 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>45</integer>
 				<key>line</key>
-				<integer>0</integer>
+				<integer>7</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>46</integer>
+			<integer>0</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>1</integer>
+				<key>line</key>
+				<integer>6</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>45</integer>
+				<key>line</key>
+				<integer>7</integer>
+			</dict>
 		</dict>
 		<key>manual.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>13</integer>
+				<integer>122</integer>
 				<key>line</key>
-				<integer>37</integer>
+				<integer>5</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>22</integer>
+			<integer>0</integer>
 		</dict>
 		<key>tutorial.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>126</integer>
 				<key>line</key>
-				<integer>0</integer>
+				<integer>5</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>34</integer>
+			<integer>0</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>1</integer>
+				<key>line</key>
+				<integer>5</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>126</integer>
+				<key>line</key>
+				<integer>5</integer>
+			</dict>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
@@ -125,12 +187,13 @@
 		<string>tutorial.html</string>
 		<string>faq.html</string>
 		<string>index.html</string>
+		<string>howitworks.html</string>
 		<string>manual.html</string>
 		<string>gff.html</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{1213, 102}, {1060, 1316}}</string>
+	<string>{{620, 74}, {1060, 954}}</string>
 </dict>
 </plist>
