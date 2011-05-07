@@ -71,7 +71,8 @@ static struct option long_options[] = {
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
 {"use-grad-ascent",         no_argument,             0,			 OPT_USE_EM},
 {"no-collapse-cond-prob",   no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
-
+{"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
+{"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
     
 // assembly
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
@@ -412,7 +413,7 @@ int parse_options(int argc, char** argv)
     }
     if (use_compat_mass && bundle_mode != REF_DRIVEN)
     {
-        fprintf (stderr, "Error: cannot use --compatible-hits-norm and --GTF togethe\nr");
+        fprintf (stderr, "Error: cannot use --compatible-hits-norm without --GTF\n");
         exit(1);
     }
 	
@@ -1517,10 +1518,10 @@ int main(int argc, char** argv)
     if (parse_ret)
         return parse_ret;
 	
-    if (!use_total_mass && !use_compatible_mass)
+    if (!use_total_mass && !use_compat_mass)
     {
         use_total_mass = true;
-        use_compatible_mass = false;   
+        use_compat_mass = false;   
     }
     
     if(optind >= argc)

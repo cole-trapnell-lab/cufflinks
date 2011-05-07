@@ -389,4 +389,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_3_OVERHANG_TOLERANCE    279
 #define OPT_INTRON_OVERHANG_TOLERANCE 280
 #define OPT_EMIT_COUNT_TABLES       281
+#define OPT_USE_COMPAT_MASS         282
+#define OPT_USE_TOTAL_MASS          283
 #endif

@@ -1198,10 +1198,10 @@ int main(int argc, char** argv)
     if (parse_ret)
         return parse_ret;
 	
-    if (!use_total_mass && !use_compatible_mass)
+    if (!use_total_mass && !use_compat_mass)
     {
         use_total_mass = false;
-        use_compatible_mass = true;   
+        use_compat_mass = true;   
     }
     
 	if(optind >= argc)
