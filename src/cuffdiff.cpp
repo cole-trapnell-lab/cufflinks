@@ -89,6 +89,8 @@ static struct option long_options[] = {
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
 {"no-update-check",         no_argument,             0,          OPT_NO_UPDATE_CHECK},
 {"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
+{"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
+{"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
 
 {0, 0, 0, 0} // terminator
 };
@@ -120,7 +122,9 @@ void print_usage()
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
 	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion                   [ default:  FALSE ]\n");
+    fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  TRUE  ]\n");
+    fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
+    fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion          [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
@@ -273,6 +277,16 @@ int parse_options(int argc, char** argv)
                 cond_prob_collapse = false;
                 break;
             }
+            case OPT_USE_COMPAT_MASS:
+            {
+                use_compat_mass = true;
+                break;
+            }
+            case OPT_USE_TOTAL_MASS:
+            {
+                use_total_mass = true;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -296,6 +310,12 @@ int parse_options(int argc, char** argv)
             }
             global_read_properties = &lib_itr->second;
         }
+    }
+    
+    if (use_total_mass && use_compat_mass)
+    {
+        fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
+        exit(1);
     }
     
     tokenize(sample_label_list, ",", sample_labels);
@@ -1178,6 +1198,12 @@ int main(int argc, char** argv)
     if (parse_ret)
         return parse_ret;
 	
+    if (!use_total_mass && !use_compatible_mass)
+    {
+        use_total_mass = false;
+        use_compatible_mass = true;   
+    }
+    
 	if(optind >= argc)
     {
         print_usage();

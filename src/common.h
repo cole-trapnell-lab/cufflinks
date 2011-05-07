@@ -65,6 +65,8 @@ extern int num_importance_samples;
 extern float min_isoform_fraction;
 extern bool use_em;
 extern bool cond_prob_collapse;
+extern bool use_compat_mass;
+extern bool use_total_mass;
 
 // Ref-guided assembly options
 extern int overhang_3;

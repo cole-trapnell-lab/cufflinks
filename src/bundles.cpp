@@ -595,6 +595,8 @@ void HitBundle::finalize(bool is_combined)
 		_ref_scaffs[j]->clear_hits();
 	}
     
+    _compatible_mass = 0.0;
+    
 	for (size_t i = 0; i < _hits.size(); ++i)
 	{
 		MateHit& hit = _hits[i];
@@ -616,6 +618,10 @@ void HitBundle::finalize(bool is_combined)
                     hit.is_mapped(true);
 			}
 		}
+        if (hit.is_mapped())
+        {
+            _compatible_mass += hit.mass();
+        }
 	}
     
 }

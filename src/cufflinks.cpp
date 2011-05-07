@@ -119,6 +119,8 @@ void print_usage()
     fprintf(stderr, "  --upper-quartile-norm        use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+    fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  FALSE ]\n");
+    fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  TRUE  ]\n");
     
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
@@ -354,6 +356,16 @@ int parse_options(int argc, char** argv)
                 random_seed = parseInt(0, "--seed must be at least 0", print_usage);
                 break;
             }
+            case OPT_USE_COMPAT_MASS:
+            {
+                use_compat_mass = true;
+                break;
+            }
+            case OPT_USE_TOTAL_MASS:
+            {
+                use_total_mass = true;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -391,6 +403,17 @@ int parse_options(int argc, char** argv)
 //            }
             global_read_properties = &lib_itr->second;
         }
+    }
+    
+    if (use_total_mass && use_compat_mass)
+    {
+        fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
+        exit(1);
+    }
+    if (use_compat_mass && bundle_mode != REF_DRIVEN)
+    {
+        fprintf (stderr, "Error: cannot use --compatible-hits-norm and --GTF togethe\nr");
+        exit(1);
     }
 	
     return 0;
@@ -1487,15 +1510,19 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 }
 
 int main(int argc, char** argv)
-{
-
-	
+{	
     init_library_table();
     
 	int parse_ret = parse_options(argc,argv);
     if (parse_ret)
         return parse_ret;
 	
+    if (!use_total_mass && !use_compatible_mass)
+    {
+        use_total_mass = true;
+        use_compatible_mass = false;   
+    }
+    
     if(optind >= argc)
     {
         print_usage();

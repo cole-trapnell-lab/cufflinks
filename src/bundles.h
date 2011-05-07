@@ -51,7 +51,7 @@ private:
     HitBundle(const HitBundle& rhs) {} 
 public:
 	HitBundle() 
-    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _ref_id(0), _raw_mass(0.0), _num_replicates(1) {}
+    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _ref_id(0), _raw_mass(0.0), _num_replicates(1), _compatible_mass(0.0) {}
 	
     ~HitBundle()
     {
@@ -101,6 +101,11 @@ public:
 	void add_raw_mass(double rm) { _raw_mass += rm; }
 	void rem_raw_mass(double rm) { _raw_mass -= rm; }
 	double raw_mass() { return _raw_mass; }
+    
+    double compatible_mass() const 
+    {
+        return _compatible_mass;
+    }
     
 	void clear_hits() 
     {
@@ -188,6 +193,7 @@ private:
 	typedef map<int, list<MateHit> > OpenMates;
 	OpenMates _open_mates;
     int _num_replicates;
+    double _compatible_mass;
 };
 
 void load_ref_rnas(FILE* ref_mRNA_file, 
@@ -396,10 +402,33 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		bool valid_bundle = bundle_factory.next_bundle(*bundle_ptr);
 		HitBundle& bundle = *bundle_ptr;
 
-		// Take raw mass even if bundle is "empty", since we could be out of refs
-		// with remaining hits
-		map_mass += bundle.raw_mass();
-		if (use_quartile_norm && bundle.raw_mass() > 0) mass_dist.push_back(bundle.raw_mass());
+        if (use_compat_mass) //only count hits that are compatible with ref transcripts
+        {
+            // Take raw mass even if bundle is "empty", since we could be out of refs
+            // with remaining hits
+            map_mass += bundle.compatible_mass();
+            if (use_quartile_norm && bundle.compatible_mass() > 0) 
+            {
+                mass_dist.push_back(bundle.compatible_mass());
+            }
+        }
+        else if (use_total_mass) //use all raw mass
+        { 
+            
+            // Take raw mass even if bundle is "empty", since we could be out of refs
+            // with remaining hits
+            map_mass += bundle.raw_mass();
+            if (use_quartile_norm && bundle.raw_mass() > 0) 
+            {
+                mass_dist.push_back(bundle.raw_mass());
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Error: hit counting scheme for normalization is not set!\n");
+            assert(false);
+            exit(1);
+        }
 		
 		const RefSequenceTable& rt = bundle_factory.ref_table();
 		const char* chrom = rt.get_name(bundle.ref_id());
@@ -408,10 +437,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            //if (bundle.ref_scaffolds().size() == 1)
-            {
-                count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
-            }
+            count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
 		}
         
         if (!valid_bundle)
