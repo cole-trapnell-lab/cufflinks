@@ -145,6 +145,7 @@
       <div id="toc">
   	    <ul>
  	    <li><a href="#fpkm">What's the difference between FPKM and RPKM?</a></li>
+ 	    <li><a href="#upquart">Why are my FPKM values so large when I use upper-quartile normalization?</li>
  	    <li><a href="#hssd">Can Cufflinks handle strand-specific RNA-Seq data?</li>
  	  	<li><a href="#bact">Can I use Cufflinks with RNA-Seq data from Bacteria?</a></li>
  	  	<li><a href="#count">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</a></li>
@@ -178,6 +179,14 @@
   	  you should use the <tt>--library-type</tt> option along with the type of strand-specific protocol that
   	  was used to generate your data.  More information can be found <a href=manual.html#library>here</a>.
   	  </p><br/>
+
+ 	  <h2 id="upquart">Why are my FPKM values so large when I use upper-quartile normalization?</h2><br/><p>
+ 	  When using upper-quartile normalization, instead of dividng by the total number of mapped fragments, Cufflinks
+ 	  will divide by the number of fragments mapping to the upper-quartile locus. Thus, your FPKM values will appear
+ 	  inflated in comparison to FPKM values normalized in the usual way. Comparisons should therefore be made only to other
+ 	  datasets normalized with the upper-quartile.  More information on upper-quartile normalization can be found More information can be found <a href=howitworks.html#huqn>here</a>.
+ 	  
+ 	  </p><br/>
 
 
 	  <h2 id="bact">Can I use Cufflinks with RNA-Seq data from Bacteria?</h2><br/><p> 
