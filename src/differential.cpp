@@ -465,14 +465,14 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			}
 			else
 			{
-                // We're dealing with a standard normal that's been truncated below zero, so
-                // we need to multiply the baseline pdf and cdf by 2.0.
+                // We're dealing with a standard normal that's been truncated below zero
+                // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
                 
 				normal test_dist(0,1.0);
 				//double denom = sqrt(js_var);
 				double p = js/sqrt(js_var);
                 test.test_stat = 2 * pdf(test_dist, p);
-				test.p_value = cdf(test_dist, p);
+				test.p_value = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
 				test.value_1 = 0;
 				test.value_2 = 0;
 				test.differential = js;

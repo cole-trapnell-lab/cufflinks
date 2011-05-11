@@ -143,11 +143,13 @@ struct AugmentedCuffOp
     
     static void merge_ops(const std::vector<AugmentedCuffOp>& ops, 
 						  vector<AugmentedCuffOp>& merged,
-						  bool introns_overwrite_matches);
+						  bool introns_overwrite_matches,
+                          bool allow_flank_introns = false);
     
     static void fill_interstices(vector<AugmentedCuffOp>& to_fill,
 								 const vector<AugmentedCuffOp>& filler,
-								 bool allow_flank_fill);
+								 bool allow_flank_fill,
+                                 bool allow_flank_introns);
 	
 	CuffOpCode opcode;
 	int genomic_offset;

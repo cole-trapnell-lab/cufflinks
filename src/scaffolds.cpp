@@ -137,7 +137,8 @@ void record_gaps(const vector<AugmentedCuffOp>& to_fill,
 // this function
 void AugmentedCuffOp::fill_interstices(vector<AugmentedCuffOp>& to_fill,
                                        const vector<AugmentedCuffOp>& filler,
-                                       bool allow_flank_fill)
+                                       bool allow_flank_fill,
+                                       bool allow_flanking_introns)
 {
 	vector<AugmentedCuffOp> filled = to_fill;
 	vector<pair<int, int> > gaps;
@@ -281,20 +282,21 @@ void AugmentedCuffOp::fill_interstices(vector<AugmentedCuffOp>& to_fill,
 	}
     
 	sort(filled.begin(), filled.end(), g_left_lt);
-    
-    for (size_t i = 0; i < filled.size(); ++i)
+    if (!allow_flanking_introns)
     {
-        if (filled[i].opcode == CUFF_INTRON)
+        for (size_t i = 0; i < filled.size(); ++i)
         {
-            assert (i > 0);
-            assert (i < filled.size() -1);
-            assert (filled[i-1].opcode == CUFF_MATCH);
-            assert (filled[i+1].opcode == CUFF_MATCH);
-            assert (filled[i-1].g_right() == filled[i].g_left());
-            assert (filled[i+1].g_left() == filled[i].g_right());
+            if (filled[i].opcode == CUFF_INTRON)
+            {
+                assert (i > 0);
+                assert (i < filled.size() -1);
+                assert (filled[i-1].opcode == CUFF_MATCH);
+                assert (filled[i+1].opcode == CUFF_MATCH);
+                assert (filled[i-1].g_right() == filled[i].g_left());
+                assert (filled[i+1].g_left() == filled[i].g_right());
+            }
         }
     }
-    
 	to_fill = filled;
 }
 
@@ -303,7 +305,8 @@ void AugmentedCuffOp::fill_interstices(vector<AugmentedCuffOp>& to_fill,
 // ops is assumed to be sorted
 void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops, 
                                 vector<AugmentedCuffOp>& merged,
-                                bool introns_overwrite_matches)
+                                bool introns_overwrite_matches,
+                                bool allow_flank_introns)
 {	
 #if DEBUG
 	//assert(std::adjacent_find(ops.begin(), ops.end(), g_left_lt) == ops.end());
@@ -382,25 +385,27 @@ void AugmentedCuffOp::merge_ops(const vector<AugmentedCuffOp>& ops,
 	if (introns_overwrite_matches)
 	{
 		merged = introns;
-		fill_interstices(merged, matches, true);
+		fill_interstices(merged, matches, true, allow_flank_introns);
 		vector<pair<int, int> > gaps;
 		record_gaps(merged, gaps);
 		if (!gaps.empty())
-			fill_interstices(merged, unknowns, false); 
+			fill_interstices(merged, unknowns, false, allow_flank_introns); 
 	}
 	else
 	{
 		merged = matches;
-		fill_interstices(merged, introns, false);
+		fill_interstices(merged, introns, false, allow_flank_introns);
 		vector<pair<int, int> > gaps;
 		record_gaps(merged, gaps);
 		if (!gaps.empty())
-			fill_interstices(merged, unknowns, false); 
+			fill_interstices(merged, unknowns, false, allow_flank_introns); 
 	}
 
-    assert (merged.front().opcode == CUFF_MATCH);
-    assert (merged.back().opcode == CUFF_MATCH);
-    
+    if (!allow_flank_introns)
+    {
+        assert (merged.front().opcode == CUFF_MATCH);
+        assert (merged.back().opcode == CUFF_MATCH);
+    }
     for (size_t i = 1; i < merged.size(); ++i)
     {
 		assert(merged[i-1].g_right() == merged[i].g_left());

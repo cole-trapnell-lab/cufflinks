@@ -219,42 +219,95 @@ void compress_genes(FILE* ftranscripts,
                 Scaffold::merge(gene_scaffs, smashed_gene, false);
             else if (proj_intersection)
             {
-                vector<vector<AugmentedCuffOp> > iso_ops;
+                vector<AugmentedCuffOp> iso_ops;
+                
+                int gmax = -1;
+                int gmin = numeric_limits<int>::max();
+                
                 foreach (shared_ptr<Scaffold> s, gene)
                 {
-                    iso_ops.push_back(s->augmented_ops());
-                    sort (iso_ops.back().begin(), iso_ops.back().end());
+                    //iso_ops.push_back(s->augmented_ops());
+                    //sort (iso_ops.back().begin(), iso_ops.back().end());
+                    if (s->left() < gmin)
+                        gmin = s->left();
+                    if (s->right() > gmax)
+                        gmax = s->right();
                 }
                 
-                vector<AugmentedCuffOp> intersect = iso_ops.front();
-                for (size_t j = 1; j < iso_ops.size(); ++j)
+                foreach (shared_ptr<Scaffold> s, gene)
                 {
-                    vector<AugmentedCuffOp> tmp;
-                    const vector<AugmentedCuffOp>& iso_ops_j = iso_ops[j];
-                    set_intersection(intersect.begin(), intersect.end(), iso_ops_j.begin(), iso_ops_j.end(), back_inserter(tmp));
-                    assert (tmp.size() <= intersect.size());
-                    intersect = tmp;
-                    sort(intersect.begin(), intersect.end());
+                    if (s->left() > gmin)
+                    {
+                        iso_ops.push_back(AugmentedCuffOp(CUFF_INTRON, gmin, s->left() - gmin)); 
+                    }
+                    if (s->right() < gmax)
+                    {
+                        iso_ops.push_back(AugmentedCuffOp(CUFF_INTRON, s->right(), gmax - s->right())); 
+                    }
+                    iso_ops.insert(iso_ops.end(), s->augmented_ops().begin(), s->augmented_ops().end());
                 }
-                
-                sort(intersect.begin(), intersect.end(), AugmentedCuffOp::g_left_lt);
-                
-                while (!intersect.empty() && intersect.front().opcode != CUFF_MATCH)
-                {
-                    intersect.erase(intersect.begin());
-                }
-                
-                while (!intersect.empty() && intersect.back().opcode != CUFF_MATCH)
-                {
-                    intersect.pop_back();
-                }
-                
-                if (intersect.empty())
-                    continue;
+//                vector<AugmentedCuffOp> intersect = iso_ops.front();
+//                for (size_t j = 1; j < iso_ops.size(); ++j)
+//                {
+//                    vector<AugmentedCuffOp> tmp;
+//                    const vector<AugmentedCuffOp>& iso_ops_j = iso_ops[j];
+//                    //set_intersection(intersect.begin(), intersect.end(), iso_ops_j.begin(), iso_ops_j.end(), back_inserter(tmp));
+//                    intersect.insert(intersect.end(), iso_ops_j.begin(), iso_ops_j.end());
+//                    
+//                    intersect.push_back(
+//                    assert (tmp.size() <= intersect.size());
+//                    //intersect = tmp;
+//                    //sort(intersect.begin(), intersect.end());
+//                }
+//                
+                sort(iso_ops.begin(), iso_ops.end(), AugmentedCuffOp::g_left_lt);
+//                
+//                while (!intersect.empty() && intersect.front().opcode != CUFF_MATCH)
+//                {
+//                    intersect.erase(intersect.begin());
+//                }
+//                
+//                while (!intersect.empty() && intersect.back().opcode != CUFF_MATCH)
+//                {
+//                    intersect.pop_back();
+//                }
+//                
+//                if (intersect.empty())
+//                    continue;
                 
                 vector<AugmentedCuffOp> merged_ops;
-                AugmentedCuffOp::merge_ops(intersect, merged_ops, true);
-                smashed_gene = Scaffold(gene.front()->ref_id(), gene.front()->strand(), merged_ops);
+                AugmentedCuffOp::merge_ops(iso_ops, merged_ops, true, true);
+                vector<AugmentedCuffOp>::iterator first_match = merged_ops.begin();
+                vector<AugmentedCuffOp>::iterator last_match = merged_ops.end();
+                last_match--;
+                while(first_match < merged_ops.end())
+                {
+                    if (first_match->opcode == CUFF_MATCH)
+                        break;
+                    first_match++;
+                }
+                while(last_match >= merged_ops.begin() && last_match< merged_ops.end())
+                {
+                    if (last_match->opcode == CUFF_MATCH)
+                        break;
+                    last_match--;
+                }
+                
+                vector<AugmentedCuffOp> internal_matches;
+                if (last_match >= first_match && last_match < merged_ops.end())
+                {
+                    last_match++;
+                    
+                    internal_matches.insert(internal_matches.end(), first_match, last_match);
+                    smashed_gene = Scaffold(gene.front()->ref_id(), gene.front()->strand(), internal_matches);
+                }
+                else
+                {
+                    
+                    fprintf(stderr, "Could not find consitutive region for %s\n", gene_id.c_str());
+                    continue;
+                }
+                
             }
             else
                 assert(false);
