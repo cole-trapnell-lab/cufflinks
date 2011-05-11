@@ -286,8 +286,16 @@ if (reader->transcriptsOnly && !is_t_data) {
          ID=Parent;
          Parent=NULL;
          }
-     //check for gene_id
-     gname=extractAttr("gene_id");
+     gname=extractAttr("gene_name");
+     if (gname==NULL) {
+           gname=extractAttr("gene");
+           if (gname==NULL) {
+               gname=extractAttr("gene_sym");
+               if (gname==NULL) {
+                   gname=extractAttr("gene_id");
+                   }
+               }
+           }
      //prepare for parseAttr by adding '=' character instead of spaces for all attributes
      //after the attribute name
      p=info;

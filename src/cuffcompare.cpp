@@ -734,6 +734,18 @@ const char* getGeneID(GffObj& gfobj) {
  return getGeneID(&gfobj);
 }
 
+const char* getGeneName(GffObj& gfobj) {
+ const char* s=gfobj.getGene();
+ if (s) return s;
+   else return NULL;
+}
+
+const char* getGeneName(GffObj* gfobj) {
+ return getGeneName(*gfobj);
+}
+
+
+
 void writeLoci(FILE* f, GList<GLocus> & loci) {
  for (int l=0;l<loci.Count();l++) {
    GLocus& loc=*(loci[l]);
@@ -934,9 +946,12 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
      xc->tcons->getGSeqName(),xc->tcons->getTrackName(),xc->tcons->exons[i]->start, xc->tcons->exons[i]->end, xc->tcons->strand,
        xlocnum, cprefix, xc->id, i+1);
     //if (i==0) {
-   if (xc->ref && xc->ref->getGene()) {
-       fprintf (fc, " gene_name \"%s\";", xc->ref->getGene());
+  if (xc->ref) {
+   const char* gene_name=getGeneName(xc->ref);
+   if (gene_name) {
+       fprintf (fc, " gene_name \"%s\";", gene_name);
        }
+   }    
    fprintf(fc, " oId \"%s\";",xc->tcons->getID());
    if (xc->contained) {
      fprintf(fc, " contained_in \"%s_%08d\";", cprefix, xc->contained->id);
