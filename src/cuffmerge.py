@@ -294,11 +294,19 @@ def convert_gtf_to_sam(gtf_filename_list):
         sys.exit(1)
     return sam_input_filenames
 
-def merge_sam_inputs(sam_input_list):
+def merge_sam_inputs(sam_input_list, header):
     sorted_map_name = tmp_name( "mergeSam_")
 
     sorted_map = open(sorted_map_name, "w")
-
+    
+    #print header
+    
+    # The header was built from a dict keyed by chrom, so
+    # the records will be lexicographically ordered and 
+    # should match the BAM after the sort below.
+    print >> sorted_map, header,
+    
+    sorted_map.close()
     sort_cmd =["sort",
                "-k",
                "3,3",
@@ -306,10 +314,10 @@ def merge_sam_inputs(sam_input_list):
                "4,4n",
                "--temporary-directory="+tmp_dir]
     sort_cmd.extend(sam_input_list)
-
+    
     print >> run_log, " ".join(sort_cmd), ">", sorted_map_name
     subprocess.call(sort_cmd,
-                   stdout=open(sorted_map_name, "w"))
+                   stdout=open(sorted_map_name, "a"))
     return sorted_map_name
 
 def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
@@ -442,6 +450,38 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
 def get_version():
     return "1.0.0"
 
+def get_gtf_chrom_info(gtf_filename, known_chrom_info=None):
+    gtf_file = open(gtf_filename)
+    if known_chrom_info == None:
+        chroms = {}
+    else:
+        chroms = known_chrom_info
+    for line in gtf_file:
+        line = line.strip()
+        if line[0] == "#":
+            continue
+        cols = line.split('\t')
+        if len(cols) < 8:
+            continue
+        chrom = cols[0]
+        left = int(cols[3])
+        right = int(cols[4])
+        bounds = chroms.setdefault(chrom, [9999999999,-1])
+        if bounds[0] > left:
+            bounds[0] = left
+        if bounds[1] < right:
+            bounds[1] = right
+    return chroms
+    
+def header_for_chrom_info(chrom_info):
+    header_strs = ["""@HD\tVN:1.0\tSO:coordinate"""]
+    for chrom, limits in chrom_info.iteritems():
+        line = "@SQ\tSN:%s\tLN:\t%d" % (chrom, limits[1]) 
+        header_strs.append(line)
+    header_strs.append("@PG\tID:cuffmerge\tVN:1.0.0\n")
+    header = "\n".join(header_strs)
+    return header
+    
 def main(argv=None):
     
     warnings.filterwarnings("ignore", "tmpnam is a potential security risk")
@@ -485,13 +525,23 @@ def main(argv=None):
         # Check that all the primary assemblies are accessible before starting the time consuming stuff
         gtf_input_files = test_input_files(transfrag_list_file)
         
+        all_gtfs = []
+        all_gtfs.extend(gtf_input_files)
+        if params.ref_gtf != None:
+            all_gtfs.append(params.ref_gtf)
+        chrom_info = {}
+        for gtf in all_gtfs:
+            chrom_info = get_gtf_chrom_info(gtf, chrom_info)
+        
+        header = header_for_chrom_info(chrom_info)
+        
         #Meta assembly option:
         global run_meta_assembly
         if run_meta_assembly:
             # Convert the primary assemblies to SAM format
             sam_input_files = convert_gtf_to_sam(gtf_input_files)
             # Merge the primary assembly SAMs into a single input SAM file
-            merged_sam_filename = merge_sam_inputs(sam_input_files)
+            merged_sam_filename = merge_sam_inputs(sam_input_files, header)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
             cufflinks(params, output_dir, merged_sam_filename, params.min_isoform_frac, params.ref_gtf)
             compare_meta_asm_against_ref(params.ref_gtf, params.fasta, output_dir+"/transcripts.gtf")

@@ -81,7 +81,7 @@ static struct option long_options[] = {
 {"max-intron-length",		required_argument,		 0,			 'I'},
 {"label",					required_argument,		 0,			 'L'},
 {"overhang-tolerance",      required_argument,		 0,			 OPT_OVERHANG_TOLERANCE},
-{"min-frags-per-transfrags",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
+{"min-frags-per-transfrag",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
 {"min-intron-length",       required_argument,	     0,			 OPT_MIN_INTRON_LENGTH},
 {"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
 {"trim-3-dropoff-frac",     required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
