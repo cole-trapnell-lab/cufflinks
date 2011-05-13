@@ -215,14 +215,14 @@ int parse_mRNAs(GfList& mrnas,
 		       //but let's keep the gene_name if present
 		       refdiscarded++;
 		       if (rp->track_id <= m->track_id) {
-		           if (rp->getGene()==NULL && m->getGene()!=NULL) {
-		                  rp->setGene(m->getGene());
+		           if (rp->getGeneName()==NULL && m->getGeneName()!=NULL) {
+		                  rp->setGeneName(m->getGeneName());
 		                  }
 		           continue;
 		           }
 		         else {
-		           if (m->getGene()==NULL && rp->getGene()!=NULL) {
-		                  m->setGene(rp->getGene());
+		           if (m->getGeneName()==NULL && rp->getGeneName()!=NULL) {
+		                  m->setGeneName(rp->getGeneName());
 		                  }
 		           ((CTData*)(rp->uptr))->mrna=NULL;
 		           rp->isUsed(false);

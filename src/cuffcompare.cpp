@@ -717,34 +717,28 @@ GSeqData* getQryData(int gid, GList<GSeqData>& qdata) {
 const char* findDescr(GffObj* gfobj) {
   if (refdescr.Count()==0) return NULL;
   GStr* s=refdescr.Find(gfobj->getID());
-  if (s==NULL) s=refdescr.Find(gfobj->getGene());
-  if (s!=NULL) 
+  if (s==NULL) {
+       s=refdescr.Find(gfobj->getGeneName());
+       if (s==NULL) s=refdescr.Find(gfobj->getGeneID());
+       }
+  if (s!=NULL)
      return s->chars();
   return NULL;
 }
 
 const char* getGeneID(GffObj* gfobj) {
- const char* s=gfobj->getGene();
+ //returns anything that might resemble a gene identifier for this transcript
+ //or, if everything fails, returns the transcript ID
+ const char* s=gfobj->getGeneName();
  if (s) return s;
- s=gfobj->getAttr("Name");
- return (s==NULL) ? gfobj->getID() : s;
+ if ((s=gfobj->getGeneID())) return s;
+ if ((s=gfobj->getAttr("Name"))) return s;
+ return gfobj->getID();
 }
 
 const char* getGeneID(GffObj& gfobj) {
  return getGeneID(&gfobj);
 }
-
-const char* getGeneName(GffObj& gfobj) {
- const char* s=gfobj.getGene();
- if (s) return s;
-   else return NULL;
-}
-
-const char* getGeneName(GffObj* gfobj) {
- return getGeneName(*gfobj);
-}
-
-
 
 void writeLoci(FILE* f, GList<GLocus> & loci) {
  for (int l=0;l<loci.Count();l++) {
@@ -947,7 +941,8 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
        xlocnum, cprefix, xc->id, i+1);
     //if (i==0) {
   if (xc->ref) {
-   const char* gene_name=getGeneName(xc->ref);
+   const char* gene_name=xc->ref->getGeneName();
+   if (gene_name==NULL) gene_name=xc->ref->getGeneID();
    if (gene_name) {
        fprintf (fc, " gene_name \"%s\";", gene_name);
        }

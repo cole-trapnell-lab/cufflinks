@@ -178,12 +178,11 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					ref_scaff.annotated_trans_id(rna.getID());
 				
 				
-				if (rna.getGene())
-					ref_scaff.annotated_gene_id(rna.getGene());
+				if (rna.getGeneID())
+					ref_scaff.annotated_gene_id(rna.getGeneID());
 				
-				char* short_name = rna.getAttr("gene_name");
-				if (short_name)
-					ref_scaff.annotated_gene_name(short_name);
+				if (rna.getGeneName())
+					ref_scaff.annotated_gene_name(rna.getGeneName());
 				
 				
 				char* nearest_ref_match = rna.getAttr("nearest_ref");

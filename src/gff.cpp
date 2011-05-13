@@ -76,18 +76,27 @@ char* GffLine::extractAttr(const char* pre, bool caseStrict, bool enforce_GTF2) 
     }
  if (pos==NULL) return NULL;
  char* vp=pos+lpre;
- while (*vp!=';' && *vp!=0 && (*vp==' ' || *vp=='"')) vp++;
+ while (*vp==' ') vp++;
  if (*vp==';' || *vp==0)
       GError("Error parsing value of GFF attribute \"%s\", line:\n%s\n", pre, dupline);
- if (enforce_GTF2 && *(vp-1)!='"')
+ bool dq_enclosed=false; //value string enclosed by double quotes
+ if (*vp=='"') {
+     dq_enclosed=true;
+     vp++;
+     }
+ if (enforce_GTF2 && !dq_enclosed)
       GError(GTF2_ERR,pre, dupline);
  char* vend=vp;
- while (*vend!=';' && *vend!=0 && *vend!='"') vend++;
+ if (dq_enclosed) {
+    while (*vend!='"' && *vend!=';' && *vend!=0) vend++;
+    }
+ else {
+    while (*vend!=';' && *vend!=0) vend++;
+    }
  if (enforce_GTF2 && *vend!='"')
      GError(GTF2_ERR, pre, dupline);
  char *r=Gstrdup(vp, vend-1);
  //-- now remove this attribute from the info string
- //while (pos>info && *pos==' ') pos--;
  while (*vend!=0 && (*vend=='"' || *vend==';' || *vend==' ')) vend++;
  if (*vend==0) vend--;
  for (char *src=vend, *dest=pos;;src++,dest++) {
@@ -120,7 +129,8 @@ GffLine::GffLine(GffReader* reader, const char* l) {
  is_exon=false;
  is_gene=false;
  exontype=0;
- gname=NULL;
+ gene_id=NULL;
+ gene_name=NULL;
  qstart=0;
  qend=0;
  qlen=0;
@@ -227,25 +237,30 @@ if (reader->transcriptsOnly && !is_t_data) {
     if (ID!=NULL) {
        //has ID attr so it's likely to be a parent feature
        //look for explicit gene name
-       gname=extractAttr("gene_name=",false);
-       if (gname==NULL) {
-           gname=extractAttr("gene_id=",false);
-           if (gname==NULL) {
-               gname=extractAttr("gene=",false);
-               if (gname==NULL) {
-                   gname=extractAttr("geneid=",false);
+       gene_name=extractAttr("gene_name=",false);
+       if (gene_name==NULL) {
+           gene_name=extractAttr("geneName=",false);
+           if (gene_name==NULL) {
+               gene_name=extractAttr("gene_sym=",false);
+               if (gene_name==NULL) {
+                   gene_name=extractAttr("gene=",false);
                    }
                }
            }
-       if (gname==NULL && is_gene) {
-          //special case: take Name= attribute as the gene name, if it exists
-          gname=extractAttr("Name=");
-          if (gname==NULL) {//no Name attribute, use the ID
-             gname=Gstrdup(ID);
-             }
-          skip=false;
-          return;
+       gene_id=extractAttr("geneID=",false);
+       if (gene_id==NULL) {
+          gene_id=extractAttr("gene_id=",false);
           }
+       if (is_gene) {
+         //special case: keep the Name and ID attributes of the gene feature
+         if (gene_name==NULL)
+              gene_name=extractAttr("Name=");
+         if (gene_id==NULL) //the ID is also gene_id in this case
+              gene_id=Gstrdup(ID);
+         //skip=false;
+         //return;
+         GFREE(Parent); //TMI, we really don't care about gene Parents?
+         } //gene feature
        }// has GFF3 ID
    if (Parent!=NULL) {
         //keep Parent attr
@@ -276,7 +291,7 @@ if (reader->transcriptsOnly && !is_t_data) {
                  }
               }
            }
-         }
+         } //has Parent field
    } //GFF3
   else { // GTF-like expected
    Parent=extractAttr("transcript_id");
@@ -286,15 +301,12 @@ if (reader->transcriptsOnly && !is_t_data) {
          ID=Parent;
          Parent=NULL;
          }
-     gname=extractAttr("gene_name");
-     if (gname==NULL) {
-           gname=extractAttr("gene");
-           if (gname==NULL) {
-               gname=extractAttr("gene_sym");
-               if (gname==NULL) {
-                   gname=extractAttr("gene_id");
-                   }
-               }
+     gene_id=extractAttr("gene_id"); // for GTF this is the only attribute accepted as geneID
+     gene_name=extractAttr("gene_name");
+     if (gene_name==NULL) {
+           gene_name=extractAttr("gene_sym");
+           if (gene_name==NULL)
+               gene_name=extractAttr("gene");
            }
      //prepare for parseAttr by adding '=' character instead of spaces for all attributes
      //after the attribute name
@@ -664,7 +676,8 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
   CDstart=0;
   CDend=0;
   CDphase=0;
-  gname=NULL;
+  geneID=NULL;
+  gene_name=NULL;
   attrs=NULL;
   gffID=NULL;
   track_id=-1;
@@ -742,8 +755,11 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
     if (keepAttr) this->parseAttrs(attrs, gffline->info, noExonAttr);
     }//no parent
 
-  if (gffline->gname!=NULL) {
-     gname=Gstrdup(gffline->gname);
+  if (gffline->gene_name!=NULL) {
+     gene_name=Gstrdup(gffline->gene_name);
+     }
+  if (gffline->gene_id!=NULL) {
+     geneID=Gstrdup(gffline->gene_id);
      }
 
   GSeqStat* gsd=gfrd->gseqstats.AddIfNew(new GSeqStat(gseq_id,names->gseqs.lastNameUsed()),true);
@@ -849,8 +865,13 @@ GfoHolder* GffReader::updateParent(GfoHolder* newgfh, GffObj* parent) {
   parent->children.Add(newgfh->gffobj);
   if (newgfh->gffobj->parent==NULL) newgfh->gffobj->parent=parent;
   newgfh->gffobj->setLevel(parent->getLevel()+1);
-  if (parent->isGene() && parent->gname!=NULL && newgfh->gffobj->gname==NULL)
-       newgfh->gffobj->gname=Gstrdup(parent->gname);
+  if (parent->isGene()) {
+      if (parent->gene_name!=NULL && newgfh->gffobj->gene_name==NULL)
+        newgfh->gffobj->gene_name=Gstrdup(parent->gene_name);
+      if (parent->geneID!=NULL && newgfh->gffobj->geneID==NULL)
+        newgfh->gffobj->geneID=Gstrdup(parent->geneID);
+      }
+
   return newgfh;
 }
 
@@ -1503,29 +1524,29 @@ void GffObj::printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
          }
     fprintf(fout, "\n");
     } //GFF
-  else {//for GTF -- we print only transcripts here
-    char* geneid=(gname!=NULL)? gname : gffID;
-    fprintf(fout, "%s\t%s\t%s\t%d\t%d\t%s\t%c\t%c\t",
-           gseqname, tlabel, ftype, segstart, segend, scorestr, strand, phase);
+  else {//for GTF -- we print only transcripts
     //if (isValidTranscript())
-    fprintf(fout,"gene_id \"%s\"; transcript_id \"%s\";", geneid, gffID);
-    bool gene_name_attr=false;
+    fprintf(fout, "%s\t%s\t%s\t%d\t%d\t%s\t%c\t%c\ttranscript_id \"%s\";",
+           gseqname, tlabel, ftype, segstart, segend, scorestr, strand, phase, gffID);
+    //char* geneid=(geneID!=NULL)? geneID : gffID;
+    if (geneID)
+      fprintf(fout," gene_id \"%s\";",geneID);
+    if (gene_name!=NULL) {
+       //fprintf(fout, " gene_name ");
+       //if (gene_name[0]=='"') fprintf (fout, "%s;",gene_name);
+       //              else fprintf(fout, "\"%s\";",gene_name);
+       fprintf(fout," gene_name \"%s\";",gene_name);
+       }
     if (xattrs!=NULL) {
           for (int i=0;i<xattrs->Count();i++) {
             if (xattrs->Get(i)->attr_val==NULL) continue;
             const char* attrname=names->attrs.getName(xattrs->Get(i)->attr_id);
             fprintf(fout, " %s ",attrname);
-            if (strcmp(attrname, "gene_name")==0) gene_name_attr=true;
             if (xattrs->Get(i)->attr_val[0]=='"')
                      fprintf(fout, "%s;",xattrs->Get(i)->attr_val);
                 else fprintf(fout, "\"%s\";",xattrs->Get(i)->attr_val);
              }
           }
-    if (gname!=NULL && !gene_name_attr) {
-       fprintf(fout, " gene_name ");
-       if (gname[0]=='"') fprintf (fout, "%s;",gname);
-                     else fprintf(fout, "\"%s\";",gname);
-       }
     fprintf(fout, "\n");
     }//GTF
 }
@@ -1560,17 +1581,17 @@ void GffObj::printGxf(FILE* fout, GffPrintMode gffp, char* tlabel) {
    if (CDstart>0 && !showCDS && !isCDS) fprintf(fout,";CDS=%d-%d",CDstart,CDend);
    if (parent!=NULL && !parent->isDiscarded())
        fprintf(fout, ";Parent=%s",parent->getID());
-   bool gene_name_attr=false;
+   if (geneID!=NULL)
+      fprintf(fout, ";geneID=%s",geneID);
+   if (gene_name!=NULL)
+      fprintf(fout, ";gene_name=%s",gene_name);
    if (attrs!=NULL) {
       for (int i=0;i<attrs->Count();i++) {
         const char* attrname=names->attrs.getName(attrs->Get(i)->attr_id);
-        if (strcmp("gene_name",attrname)==0) gene_name_attr=true;
         fprintf(fout,";%s=%s", attrname,
                attrs->Get(i)->attr_val);
         }
       }
-    if (gname!=NULL && !gene_name_attr)
-       fprintf(fout, ";gene_name=%s",gname);
     fprintf(fout,"\n");
    }// gff3 mRNA line
  if (showExon) {

@@ -85,8 +85,8 @@ class GffLine {
     bool is_gene; //if current feature is *gene
     char phase;  // '.' , '0', '1' or '2'
     // -- allocated strings:
-    char* gname; //value of gene_name attribute (if present) or Name attribute for GFF3 gene features
-                 //(for grouping isoforms)
+    char* gene_name; //value of gene_name attribute (GTF) if present or Name attribute of a gene feature (GFF3)
+    char* gene_id; //value of gene_id attribute (GTF) if present or ID attribute of a gene feature (GFF3)
     //
     char** parents; //for GTF only parents[0] is used
     int num_parents;
@@ -123,8 +123,10 @@ class GffLine {
          }
       //-- allocated string copies:
       ID=Gstrdup(l->ID);
-      if (l->gname!=NULL)
-          gname=Gstrdup(l->gname);
+      if (l->gene_name!=NULL)
+          gene_name=Gstrdup(l->gene_name);
+      if (l->gene_id!=NULL)
+          gene_id=Gstrdup(l->gene_id);
       }
     GffLine() {
       line=NULL;
@@ -140,7 +142,8 @@ class GffLine {
       parents=NULL;
       num_parents=0;
       ID=NULL;
-      gname=NULL;
+      gene_name=NULL;
+      gene_id=NULL;
       skip=true;
       qstart=0;
       qend=0;
@@ -158,7 +161,8 @@ class GffLine {
       GFREE(_parents);
       GFREE(parents);
       GFREE(ID);
-      GFREE(gname);
+      GFREE(gene_name);
+      GFREE(gene_id);
      }
 };
 
@@ -388,7 +392,8 @@ class GffObj:public GSeg {
             //'-' : (start,end) are relative to the reverse complement of xstart..xend region
    //--
    char* gffID; // ID name for mRNA (parent) feature
-   char* gname; // value of "gene_id" or "gene_name" attribute (if found)
+   char* gene_name; //value of gene_name attribute (GTF) if present or Name attribute of the parent gene feature (GFF3)
+   char* geneID; //value of gene_id attribute (GTF) if present or ID attribute of a parent gene feature (GFF3)
    unsigned int flags;
    //-- friends:
    friend class GffReader;
@@ -533,11 +538,13 @@ public:
        uscore=0;
        attrs=NULL;
        covlen=0;
-       gname=NULL;
+       gene_name=NULL;
+       geneID=NULL;
        }
    ~GffObj() {
        GFREE(gffID);
-       GFREE(gname);
+       GFREE(gene_name);
+       GFREE(geneID);
        clearAttrs();
        gffnames_unref(names);
        }
@@ -764,10 +771,15 @@ public:
         } else return (start<d.start);
      }
    char* getID() { return gffID; }
-   char* getGene() { return gname; }
-   void setGene(const char* gene_name) {
-        GFREE(gname);
-        gname=Gstrdup(gene_name);
+   char* getGeneID() { return geneID; }
+   char* getGeneName() { return gene_name; }
+   void setGeneName(const char* gname) {
+        GFREE(gene_name);
+        if (gname) gene_name=Gstrdup(gname);
+        }
+   void setGeneID(const char* gene_id) {
+        GFREE(geneID);
+        if (gene_id) geneID=Gstrdup(gene_id);
         }
    int addSeg(GffLine* gfline);
    int addSeg(int fnid, GffLine* gfline);

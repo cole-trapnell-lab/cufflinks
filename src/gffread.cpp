@@ -493,17 +493,18 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
             else mrna.printGff(f_out, tracklabel);
      return;
      }
- GStr gene(mrna.getGene());
+ char* gname=mrna.getGeneName();
+ if (gname==NULL) gname=mrna.getGeneID();
  GStr defline(mrna.getID());
- if (!gene.is_empty() && strcmp(gene.chars(),mrna.getID())!=0) {
-   int* isonum=isoCounter.Find(gene.chars());
-   if (isonum==NULL) {
-      isonum=new int(1);
-      isoCounter.Add(mrna.getGene(),isonum);
-      }
-     else (*isonum)++;
-  defline.appendfmt(" gene=%s", gene.chars());
-  }
+ if (gname && strcmp(gname,mrna.getID())!=0) {
+   int* isonum=isoCounter.Find(gname);
+   if  (isonum==NULL) {
+       isonum=new int(1);
+       isoCounter.Add(gname,isonum);
+       }
+      else (*isonum)++;
+   defline.appendfmt(" gene=%s", gname);
+   }
   int seqlen=0;
 
   const char* tlabel=tracklabel;
