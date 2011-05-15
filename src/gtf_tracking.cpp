@@ -131,14 +131,13 @@ bool t_contains(GffObj& a, GffObj& b) {
   else return false;
  }
 
-int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool& m_smaller) {
+int is_Redundant(GffObj*m, GList<GffObj>* mrnas) {
  //first locate the list index of the mrna starting just ABOVE
  //the end of this mrna
  if (mrnas->Count()==0) return -1;
  int nidx=qsearch_mrnas(m->end, *mrnas);
  if (nidx==0) return -1;
  if (nidx==-1) nidx=mrnas->Count();//all can overlap
- m_smaller=true;
  for (int i=nidx-1;i>=0;i--) {
      GffObj& omrna=*mrnas->Get(i);
      if (m->start>omrna.end) {
@@ -151,6 +150,15 @@ int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool& m_smaller) {
      }
  return -1;
 }
+
+bool t_dominates(GffObj* a, GffObj* b) {
+ // for redundant / intron compatible transfrags:
+ // returns true if a "dominates" b, i.e. a has more exons or is longer
+ if (a->exons.Count()==b->exons.Count())
+         return (a->covlen>b->covlen);
+    else return (a->exons.Count()>b->exons.Count());
+}
+
 
 int parse_mRNAs(GfList& mrnas,
 				 GList<GSeqData>& glstdata,
@@ -238,11 +246,10 @@ int parse_mRNAs(GfList& mrnas,
 		        else { m->strand='.'; target_mrnas=&(gdata->umrnas); }
 		   if (check_for_dups) { //check for redundancy
 		     // check if there is a redundancy between this and another already loaded Cufflinks transcript
-		     bool m_smaller=false;
-		     int cidx =  is_Redundant(m, target_mrnas, m_smaller);
+		     int cidx =  is_Redundant(m, target_mrnas);
 		     if (cidx>=0) {
-		        //always discard the "shorter" transcript of the redundant pair
-		        if (target_mrnas->Get(cidx)->covlen>m->covlen) {
+		        //always discard the redundant transcript with the fewer exons OR shorter
+		        if (t_dominates(target_mrnas->Get(cidx),m)) {
 		            //new transcript is shorter, discard it
 		            continue;
 		            } 
