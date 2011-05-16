@@ -16,14 +16,14 @@
 
 #define USAGE "Usage:\n\
 cuffcompare [-r <reference_mrna.gtf>] [-R] [-T] [-V] [-s <seq_path>] \n\
-    [-o <stats.txt>] [-p <cprefix>] \n\
+    [-o <outprefix>] [-p <cprefix>] \n\
     {-i <input_gtf_list> | <input1.gtf> [<input2.gtf> .. <inputN.gtf>]}\n\
 \n\
  Cuffcompare provides classification, reference annotation mapping and various\n\
  statistics for Cufflinks transfrags.\n\
  Cuffcompare clusters and tracks transfrags across multiple samples, writing\n\
- matching transcripts (intron chains) into <stats>.tracking, and a GTF\n\
- file <stats>.combined.gtf containing a nonredundant set of transcripts \n\
+ matching transcripts (intron chains) into <outprefix>.tracking, and a GTF\n\
+ file <outprefix>.combined.gtf containing a nonredundant set of transcripts \n\
  across all input files (with a single representative transfrag chosen\n\
  for each clique of matching transfrags across samples).\n\
 \n\
@@ -46,10 +46,10 @@ Options:\n\
 \n\
 -d  max distance (range) for grouping transcript start sites (100)\n\
 -p  the name prefix to use for consensus transcripts in the \n\
-    <stats>.combined.gtf file (default: 'TCONS')\n\
+    <outprefix>.combined.gtf file (default: 'TCONS')\n\
 -C  include the \"contained\" transcripts in the .combined.gtf file\n\
 -G  generic GFF input file(s) (do not assume Cufflinks GTF)\n\
--T  do not generate .tmap and .refmap files for each query file\n\
+-T  do not generate .tmap and .refmap files for each input file\n\
 -V  verbose processing mode (showing all GFF parsing warnings)\n\
 "
 bool debug=false;
@@ -59,7 +59,6 @@ bool showContained=false; // -C
 bool reduceRefs=false;
 bool checkFasta=false;
 bool tmapFiles=true;
-bool debugExit=false;
 bool only_spliced_refs=false;
 int debugCounter=0;
 
@@ -123,7 +122,7 @@ class GSeqTrack {
 char* getFastaFile(int gseq_id);
 
 // ref globals
-bool haveRefs=false;  //if a reference is given => full metrics generated
+bool haveRefs=false;  //true if a reference annotation (-r) is provide
 
 GList<GSeqData> ref_data(true,true,true); //list of reference mRNAs and loci data for each genomic seq
               //each locus will keep track of any superloci which includes it, formed during the analysis
@@ -172,9 +171,8 @@ int main(int argc, char * const argv[]) {
     show_usage();
     exit(1);
     }
-  debugExit=(args.getOpt('X')!=NULL);
   showContained=(args.getOpt('C')!=NULL);
-  debug=(args.getOpt('D')!=NULL || debugExit);
+  debug=(args.getOpt('D')!=NULL);
   tmapFiles=(args.getOpt('T')==NULL);
   multiexon_only=(args.getOpt('M')!=NULL);
   multiexonrefs_only=(args.getOpt('N')!=NULL); 
@@ -257,36 +255,51 @@ int main(int argc, char * const argv[]) {
   bool discard_redundant=true; //discard redundant input transfrags
   generic_GFF=args.getOpt('G');
   if (generic_GFF) discard_redundant=false; //generic GTF, don't try to discard "redundant" transcripts
-  s=args.getOpt('o'); //if a full pathname is given
-   //the other common output files will still be created in the current directory
-  if (s.is_empty()) s="stdout";
-  else {
-    int sp=s.rindex(CHPATHSEP);
-    if (sp>=0) s.cut(0,sp+1);
-    //if (di>0) s.cut(di);
-    int di=s.rindex('.');
-    if (di>0 && di>s.length()-5) s.cut(di); // meh, not really needed/wanted?
+  //if a full pathname is given
+  //the other common output files will still be created in the current directory:
+  // .loci, .tracking, .stats
+  GStr outbasename; //include path, if provided
+  GStr outprefix; //without path and/or extension
+  GStr outstats=args.getOpt('o');
+  if (outstats.is_empty()) {
+       outstats="cuffcmp";
+       }
+  outbasename=outstats;
+  GStr outext(getFileExt(outstats.chars()));
+  if (outext.is_empty()) {
+    outext="stats";
+    outstats.append(".stats");
+    outbasename=outstats;
     }
-  GStr fbasename=s;
-  if (debug) { //create a few more files potentially useful for debugging
-             s.append(".missed_introns.gtf");
-             
-             f_mintr=fopen(s.chars(),"w");
-             if (f_mintr==NULL) GError("Error creating file %s!\n",s.chars());
-             
-             /*
-             s=fbasename;
-             s.append(".noTP_introns.gtf");
-             f_nintr=fopen(s.chars(),"w");
-             s=fbasename;
-             s.append(".wrong_Qintrons.gtf");
-             f_qintr=fopen(s.chars(),"w");
-             */
-          }
+    else outext.lower();
+  if (outext=="txt" || outext=="out" || outext=="stats" || outext=="summary") {
+      outbasename.cut(outbasename.length()-outext.length()-1);
+      }
 
-  //bool reportLoci=(args.getOpt('L')!=NULL);
-  openfwrite(f_out, args, 'o');
-  if (f_out==NULL) f_out=stdout;
+  outprefix=outbasename;
+  int di=outprefix.rindex(CHPATHSEP);
+  if (di>=0) outprefix.cut(0,di+1);
+  
+  if (debug) { //create a few more files potentially useful for debugging
+        s=outbasename;
+        s.append(".missed_introns.gtf");
+        f_mintr=fopen(s.chars(),"w");
+        if (f_mintr==NULL) GError("Error creating file %s!\n",s.chars());
+        /*
+        s=outbasename;
+        s.append(".noTP_introns.gtf");
+        f_nintr=fopen(s.chars(),"w");
+        s=outbasename;
+        s.append(".wrong_Qintrons.gtf");
+        f_qintr=fopen(s.chars(),"w");
+        */
+        }
+
+  //openfwrite(f_out, args, 'o');
+  //if (f_out==NULL) f_out=stdout;
+  f_out=fopen(outstats, "w");
+  if (f_out==NULL) GError("Error creating output file %s!\n", outstats.chars());
+  GMessage("Cuffcompare prefix for output files: %s\n", outprefix.chars());
   fprintf(f_out, "# Cuffcompare v%s | Command line was:\n#", PACKAGE_VERSION);
   for (int i=0;i<argc-1;i++) 
     fprintf(f_out, "%s ", argv[i]);
@@ -298,42 +311,55 @@ int main(int argc, char * const argv[]) {
   GMALLOC(qrysdata, numqryfiles*sizeof(GList<GSeqData>*));
   if (tmapFiles) {
       GMALLOC(tfiles, numqryfiles*sizeof(FILE*));
-      GMALLOC(rtfiles, numqryfiles*sizeof(FILE*));
+      if (haveRefs) {
+          GMALLOC(rtfiles, numqryfiles*sizeof(FILE*));
+          }
       }
   for (int fi=0;fi<qryfiles.Count();fi++) {
-  //while ((infile=args.nextNonOpt())!=NULL) {
-    GStr infname(qryfiles[fi]->chars());
-    if (debug || (gtf_tracking_verbose && !gtf_tracking_largeScale)) 
-        GMessage("Processing qfile #%d: %s\n",fi+1, infname.chars());
-    if (debugExit) continue;
-    if (infname=="-") { f_in=stdin; infname="stdin"; }
+    GStr in_file(qryfiles[fi]->chars());
+    GStr infname(getFileName(qryfiles[fi]->chars())); //file name only
+    GStr indir(qryfiles[fi]->chars());
+    di=indir.rindex(CHPATHSEP);
+    if (di>=0) indir.cut(di+1); //directory path for this input file
+          else indir=""; //current directory
+    
+    if (debug || (gtf_tracking_verbose && !gtf_tracking_largeScale))
+        GMessage("Processing qfile #%d: %s\n",fi+1, in_file.chars());
+    if (in_file=="-") { f_in=stdin; in_file="stdin"; }
       else {
-        f_in=fopen(infname.chars(),"r");
-        if (f_in==NULL) GError("Cannot open input file %s!\n",infname.chars());
-      }
-    //f_in is the opened gff file to process
+        f_in=fopen(in_file.chars(),"r");
+        if (f_in==NULL) 
+            GError("Cannot open input file %s!\n",in_file.chars());
+        }
+    //f_in is the query gff file to process
+    
+    GStr sbase(indir);
+    sbase.append(outprefix);
+    sbase.append(".");
+    sbase.append(infname);
     if (tmapFiles) {
-        s=infname;
-        int di=s.rindex(CHPATHSEP);
-        if (di>=0) s.cut(0,di+1);
-        GStr sbase(s);
+        //-- we should keep the infname path, otherwise the remaining file names 
+        //   may be the same and clobber each other
+        s=sbase;
         s.append(".tmap");
         tfiles[fi]=fopen(s.chars(),"w");
         if (tfiles[fi]==NULL)
           GError("Error creating file '%s'!\n",s.chars());
         fprintf(tfiles[fi],"ref_gene_id\tref_id\tclass_code\tcuff_gene_id\tcuff_id\tFMI\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tcov\tlen\tmajor_iso_id\tref_match_len\n");
-        s=sbase;
-        s.append(".refmap");
-        rtfiles[fi]=fopen(s.chars(),"w");
-        if (rtfiles[fi]==NULL)
-          GError("Error creating file '%s'!\n",s.chars());
-        fprintf(rtfiles[fi],"ref_gene_id\tref_id\tclass_code\tcuff_id_list\n");
-      }
+        if (haveRefs) {
+          s=sbase;
+          s.append(".refmap");
+          rtfiles[fi]=fopen(s.chars(),"w");
+          if (rtfiles[fi]==NULL)
+             GError("Error creating file '%s'!\n",s.chars());
+          fprintf(rtfiles[fi],"ref_gene_id\tref_id\tclass_code\tcuff_id_list\n");
+          }
+        }
 
       GList<GSeqData>* pdata=new GList<GSeqData>(true,true,true);
       qrysdata[fi]=pdata;
-      if (gtf_tracking_verbose) GMessage("Loading transcripts from %s..\n",infname.chars());
-      read_mRNAs(f_in, *pdata, &ref_data, discard_redundant, fi, infname.chars(), multiexon_only);
+      if (gtf_tracking_verbose) GMessage("Loading transcripts from %s..\n",in_file.chars());
+      read_mRNAs(f_in, *pdata, &ref_data, discard_redundant, fi, in_file.chars(), multiexon_only);
       GSuperLocus gstats;
       GFaSeqGet *faseq=NULL;
       for (int g=0;g<pdata->Count();g++) { //for each seqdata related to a genomic sequence
@@ -365,14 +391,13 @@ int main(int argc, char * const argv[]) {
         }
       }
       //now report the summary:
-      if (!gtf_tracking_largeScale) reportStats(f_out, infname.chars(), gstats);
+      if (!gtf_tracking_largeScale) reportStats(f_out, in_file.chars(), gstats);
       if (f_in!=stdin) fclose(f_in);
       //qfileno++;
   }//for each input file
-        if (f_mintr!=NULL) fclose(f_mintr);
-  if (debugExit) exit(0x200);
+  if (f_mintr!=NULL) fclose(f_mintr);
   if (gtf_tracking_verbose) GMessage("Tracking transcripts across %d query files..\n", numqryfiles);
-  trackGData(numqryfiles, gseqtracks, fbasename, tfiles, rtfiles);
+  trackGData(numqryfiles, gseqtracks, outbasename, tfiles, rtfiles);
   fprintf(f_out, "\n Total union super-loci across all input datasets: %d \n", xlocnum);
   if (numqryfiles>1) {
       fprintf(f_out, "  (%d multi-transcript, ~%.1f transcripts per locus)\n",
@@ -2535,14 +2560,17 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
     printXLoci(f_xloci, f_ctrack, qcount, gseqtrack.xloci_f, faseq);
     printXLoci(f_xloci, f_ctrack, qcount, gseqtrack.xloci_r, faseq);
     printXLoci(f_xloci, f_ctrack, qcount, gseqtrack.xloci_u, faseq);
-    if (tmapFiles) {
+    if (tmapFiles && haveRefs) {
       printRefMap(frs, qcount, gseqtrack.rloci_f);
       printRefMap(frs, qcount, gseqtrack.rloci_r);
       }
     delete faseq;
     }
   if (tmapFiles) {
-   for (int q=0;q<qcount;q++) { fclose(ftr[q]); fclose(frs[q]); }
+   for (int q=0;q<qcount;q++) {
+        fclose(ftr[q]); 
+        if (haveRefs) fclose(frs[q]); 
+        }
    }
   if (f_ltrack!=NULL) fclose(f_ltrack);
   if (f_itrack!=NULL) fclose(f_itrack);

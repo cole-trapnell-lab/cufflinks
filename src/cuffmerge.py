@@ -19,8 +19,8 @@ import warnings
 import types
 
 help_message = '''
-cuffmerge takes two or more Cufflinks GTF files and merges them into a 
-single unified transcript catalog.  Optionally, you can provide the script 
+cuffmerge takes two or more Cufflinks GTF files and merges them into a
+single unified transcript catalog.  Optionally, you can provide the script
 with a reference GTF, and the script will use it to attach gene names and other
 metadata to the merged catalog.
 
@@ -30,8 +30,8 @@ Usage:
 Options:
     -h/--help                               Prints the help message and exits
     -o                     <output_dir>     Directory where merged assembly will be written  [ default: ./merged_asm  ]
-    -g/--ref-gtf                            An optional "reference" annotation GTF.  
-    -s/--ref-sequence      <seq_dir>/<seq_fasta> Genomic DNA sequences for the reference. 
+    -g/--ref-gtf                            An optional "reference" annotation GTF.
+    -s/--ref-sequence      <seq_dir>/<seq_fasta> Genomic DNA sequences for the reference.
     --min-isoform-fraction <0-1.0>          Discard isoforms with abundance below this       [ default:           0.5 ]
     -p/--num-threads       <int>            Use this many threads to merge assemblies.       [ default:             1 ]
     --keep-tmp                              Keep all intermediate files during merge
@@ -45,6 +45,7 @@ tmp_dir = output_dir + "/meta_asm_tmp/"
 bin_dir = sys.path[0] + "/"
 run_meta_assembly = True
 fail_str = "\t[FAILED]\n"
+params = None
 
 class Usage(Exception):
     def __init__(self, msg):
@@ -75,7 +76,7 @@ class TestParams:
         self.ref_gtf = None
         self.fasta = None
         self.min_isoform_frac = 0.05
-    
+
     def check(self):
         self.system_params.check()
 
@@ -106,7 +107,7 @@ class TestParams:
                 print "merge_cuff_asms v%s" % (get_version())
                 exit(0)
             if option in ("-h", "--help"):
-                raise Usage(use_message)
+                raise Usage(help_message)
             if option in ("-g", "--ref-gtf"):
                 self.ref_gtf = value
             if option in ("-s", "--ref-sequence"):
@@ -159,8 +160,7 @@ def tmp_name(prefix):
         os.mkdir(tmp_root)
     return tmp_root + prefix + os.tmpnam().split('/')[-1]
 
-def cufflinks(params,
-              out_dir,
+def cufflinks(out_dir,
               sam_file,
               min_isoform_frac,
               gtf_file=None,
@@ -176,7 +176,7 @@ def cufflinks(params,
 
     if out_dir != None and out_dir != "":
         cmd.extend(["-o", out_dir])
-           
+
     cmd.extend(["-F", str(min_isoform_frac)])
 
     if gtf_file != None:
@@ -184,7 +184,7 @@ def cufflinks(params,
 
     if extra_opts != None:
         cmd.extend(extra_opts)
-
+    global params
     # Run Cufflinks with more than one thread?
     cmd.extend(["-p", str(params.system_params.threads)])
 
@@ -202,7 +202,7 @@ def cufflinks(params,
             print >> sys.stderr, fail_str, "Error: cufflinks not found on this system.  Did you forget to include it in your PATH?"
         exit(1)
 
-def cuffcompare(params, prefix, ref_gtf, fasta, cuff_gtf):
+def cuffcompare(prefix, ref_gtf, fasta, cuff_gtf):
 
     print >> sys.stderr, "[%s] Comparing reference %s to assembly %s" % (right_now(), ref_gtf, cuff_gtf)
     cmd = ["cuffcompare"]
@@ -272,7 +272,7 @@ def test_input_files(filename_list):
             if o.errno == errno.ENOTDIR or o.errno == errno.ENOENT:
                 print >> sys.stderr, fail_str, "Error: could not open %s" % line
             OK = False
-    if OK == False:
+    if not OK:
         sys.exit(1)
     return input_files
 
@@ -290,7 +290,7 @@ def convert_gtf_to_sam(gtf_filename_list):
             if o.errno == errno.ENOTDIR or o.errno == errno.ENOENT:
                 print >> sys.stderr, fail_str, "Error: could not open %s" % line
             OK = False
-    if OK == False:
+    if not OK:
         sys.exit(1)
     return sam_input_filenames
 
@@ -298,14 +298,14 @@ def merge_sam_inputs(sam_input_list, header):
     sorted_map_name = tmp_name( "mergeSam_")
 
     sorted_map = open(sorted_map_name, "w")
-    
+
     #print header
-    
+
     # The header was built from a dict keyed by chrom, so
-    # the records will be lexicographically ordered and 
+    # the records will be lexicographically ordered and
     # should match the BAM after the sort below.
     print >> sorted_map, header,
-    
+
     sorted_map.close()
     sort_cmd =["sort",
                "-k",
@@ -314,7 +314,7 @@ def merge_sam_inputs(sam_input_list, header):
                "4,4n",
                "--temporary-directory="+tmp_dir]
     sort_cmd.extend(sam_input_list)
-    
+
     print >> run_log, " ".join(sort_cmd), ">", sorted_map_name
     subprocess.call(sort_cmd,
                    stdout=open(sorted_map_name, "a"))
@@ -325,7 +325,7 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
     ref_str = ""
     if ref_gtf != None:
         ref_str = " -r %s " % ref_gtf
-    
+
     if fasta != None:
         comp_cmd = '''cuffcompare -o tmp_meta_asm %s -s %s %s %s''' % (ref_str, fasta, meta_asm_gtf, meta_asm_gtf)
     else:
@@ -340,14 +340,17 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
         if ret != 0:
             print >> sys.stderr, fail_str, "Error: could not execute cuffcompare"
             exit(1)
-        tmap_out = meta_asm_gtf.split("/")[-1] + ".tmap"
+        #tmap_out = meta_asm_gtf.split("/")[-1] + ".tmap"
+        tfpath, tfname = os.path.split(meta_asm_gtf)
+        if tfpath: tfpath+='/'
+        tmap_out = tfpath+'tmp_meta_asm.'+tfname+".tmap"
         return tmap_out
     # cuffcompare not found
     except OSError, o:
         if o.errno == errno.ENOTDIR or o.errno == errno.ENOENT:
             print >> sys.stderr, fail_str, "Error: cuffcompare not found on this system.  Did you forget to include it in your PATH?"
         exit(1)
-        
+
 def select_gtf(gtf_in_filename, ids, gtf_out_filename):
     f_gtf = open(gtf_in_filename)
     #print >> sys.stderr, "Select GTF: Ids are: "
@@ -399,9 +402,9 @@ def merge_gtfs(gtf_filenames, merged_gtf, ref_gtf=None):
 
 def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_codes=["c", "i", "r", "p", "e"]):
     #print >> sys.stderr, "Cuffcmpare all assemblies GTFs"
-    
+
     tmap = compare_to_reference(gtf_input_file, ref_gtf, fasta_file)
-    
+
     #print >> sys.stderr, "Cuffcmpare all assemblies GTFs : filter %s" % ",".join(class_codes)
     selected_ids= set([])
     f_tmap = open(tmap)
@@ -415,31 +418,28 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
         name = cols[4]
         if class_code not in class_codes:
             selected_ids.add(name)
-    
+
     global output_dir
     asm_dir = output_dir
-    
+
     if os.path.exists(asm_dir):
         pass
     else:
         os.mkdir(asm_dir)
     current_asm_gtf = output_dir +"transcripts.gtf"
     select_gtf(current_asm_gtf, selected_ids, output_dir + "/merged.gtf")
-            #os.remove("transcripts.gtf.tmap")
-            #os.remove("transcripts.gtf.refmap")
-    tmap = compare_to_reference(output_dir + "/merged.gtf", ref_gtf, fasta_file)
-    os.remove("merged.gtf.tmap")
-    os.remove("merged.gtf.refmap")
+    mtmap = compare_to_reference(output_dir + "/merged.gtf", ref_gtf, fasta_file)
+    os.remove(mtmap)
+    os.remove(mtmap.split(".tmap")[0]+".refmap")
     shutil.move("tmp_meta_asm.combined.gtf", output_dir + "/merged.gtf")
 
-#os.remove(tmap)
 #    os.remove("tmp_meta_asm.combined.gtf")
     os.remove("tmp_meta_asm.loci")
     os.remove("tmp_meta_asm.tracking")
-    os.remove("transcripts.gtf.refmap")
-    os.remove("transcripts.gtf.tmap")
-    os.remove("tmp_meta_asm")
-    tmp_dir = asm_dir
+    os.remove("tmp_meta_asm.stats")
+    os.remove(tmap)
+    os.remove(tmap.split(".tmap")[0]+".refmap")
+    #tmp_dir = asm_dir
     #tmp_files = os.listdir(tmp_dir)
     #for t in tmp_files:
     #    os.remove(tmp_dir+t)
@@ -472,31 +472,31 @@ def get_gtf_chrom_info(gtf_filename, known_chrom_info=None):
         if bounds[1] < right:
             bounds[1] = right
     return chroms
-    
+
 def header_for_chrom_info(chrom_info):
     header_strs = ["""@HD\tVN:1.0\tSO:coordinate"""]
     for chrom, limits in chrom_info.iteritems():
-        line = "@SQ\tSN:%s\tLN:\t%d" % (chrom, limits[1]) 
+        line = "@SQ\tSN:%s\tLN:\t%d" % (chrom, limits[1])
         header_strs.append(line)
     header_strs.append("@PG\tID:cuffmerge\tVN:1.0.0\n")
     header = "\n".join(header_strs)
     return header
-    
+
 def main(argv=None):
-    
+
     warnings.filterwarnings("ignore", "tmpnam is a potential security risk")
     global params
     params = TestParams()
 
-    try:  
+    try:
         if argv is None:
             argv = sys.argv
             args = params.parse_options(argv)
             params.check()
-        
+
         #if len(args) < 2:
         #    raise Usage(help_message)
-           
+
         global run_log
         global run_cmd
 
@@ -504,17 +504,17 @@ def main(argv=None):
         print >> sys.stderr, "[%s] Beginning transcriptome assembly merge" % (right_now())
         print >> sys.stderr, "-------------------------------------------"
         print >> sys.stderr
-        
+
         start_time = datetime.now()
         prepare_output_dir()
-        
+
         run_log = open(logging_dir + "run.log", "w", 0)
         run_cmd = " ".join(argv)
         print >> run_log, run_cmd
-        
+
         if len(args) < 1:
             raise(Usage(help_message))
-    
+
         transfrag_list_file = open(args[0], "r")
 
         if params.ref_gtf != None:
@@ -524,7 +524,7 @@ def main(argv=None):
 
         # Check that all the primary assemblies are accessible before starting the time consuming stuff
         gtf_input_files = test_input_files(transfrag_list_file)
-        
+
         all_gtfs = []
         all_gtfs.extend(gtf_input_files)
         if params.ref_gtf != None:
@@ -532,9 +532,9 @@ def main(argv=None):
         chrom_info = {}
         for gtf in all_gtfs:
             chrom_info = get_gtf_chrom_info(gtf, chrom_info)
-        
+
         header = header_for_chrom_info(chrom_info)
-        
+
         #Meta assembly option:
         global run_meta_assembly
         if run_meta_assembly:
@@ -543,12 +543,13 @@ def main(argv=None):
             # Merge the primary assembly SAMs into a single input SAM file
             merged_sam_filename = merge_sam_inputs(sam_input_files, header)
             # Run cufflinks on the primary assembly transfrags to generate a meta-assembly
-            cufflinks(params, output_dir, merged_sam_filename, params.min_isoform_frac, params.ref_gtf)
+            cufflinks(output_dir, merged_sam_filename, params.min_isoform_frac, params.ref_gtf)
             compare_meta_asm_against_ref(params.ref_gtf, params.fasta, output_dir+"/transcripts.gtf")
         #Meta Cuffcompare option:
         else:
-            cuffcompare_all_assemblies(gtf_input_files)
-    
+            cuffcompare_all_assemblies(gtf_input_files) #FIXME: where is this function ?
+            
+
         if not params.system_params.keep_tmp:
             tmp_files = os.listdir(tmp_dir)
             for t in tmp_files:
