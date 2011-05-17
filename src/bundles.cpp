@@ -659,7 +659,7 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
         if (!_hit_fac->get_hit_from_buf(hit_buf, tmp, false))
             continue;
         
-		if (tmp.ref_id() == 84696373)  // corresponds to SAM "*" under FNV hash. unaligned read record 
+		if (tmp.ref_id() == 12638153115695167477)  // corresponds to SAM "*" under FNV hash. unaligned read record 
             continue;
 	
 		raw_mass += tmp.mass();

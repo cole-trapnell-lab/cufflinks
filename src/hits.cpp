@@ -889,7 +889,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 				}
 				else if (!strcmp(first_token, "NH"))
 				{
-					num_hits = atoi(third_token);
+                    num_hits = atoi(third_token);
 				}
                 else if (!strcmp(first_token, "ZF"))
 				{
