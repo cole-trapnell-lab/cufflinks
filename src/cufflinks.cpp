@@ -918,6 +918,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 			
 			int gene_id = -1;
 			int num_ref_gene_ids = 0;
+            bool has_novel_isoform = false;
 			string ref_gene_id = "";
 			
 			double major_isoform_FPKM = 0;
@@ -931,6 +932,10 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 						num_ref_gene_ids++;
 					}
 				}
+                else
+                {
+                    has_novel_isoform = true;
+                }
 				major_isoform_FPKM = max(iso_ab->FPKM(), major_isoform_FPKM);
 			}
 			
@@ -955,7 +960,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				
 				if (!allow_junk_filtering || transfrag->is_ref() || density_score > min_isoform_fraction)
 				{
-					if (gene_id == -1 && num_ref_gene_ids != 1)
+					if (gene_id == -1 && (has_novel_isoform || num_ref_gene_ids > 1))
 						gene_id = get_next_gene_id();
 					
 					isoforms.push_back(Isoform(*transfrag,
