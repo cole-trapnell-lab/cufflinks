@@ -828,7 +828,23 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
 
     }
+
+    long double total_norm_mass = 0.0;
+    long double total_mass = 0.0;
+    foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    {
+        total_norm_mass += rg_props->normalized_map_mass();
+        total_mass += rg_props->total_map_mass();
+    }
     
+    // scale the normalized masses so that both quantile total count normalization
+    // are roughly on the same numerical scale
+    foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    {
+        long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
+        rg_props->normalized_map_mass(new_norm);
+    }
+
 	min_frag_len = tmp_min_frag_len;
     max_frag_len = tmp_max_frag_len;
 	
