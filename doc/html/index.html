@@ -114,6 +114,7 @@
               </table>
             </ul>
           </div>
+       
           <a href="./downloads">
             <h2><u>Releases</u></h2>
           </a>
@@ -122,25 +123,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.0.1</td>
-                    <td align="right">5/6/2011</td>
+                    <td>version 1.0.2</td>
+                    <td align="right">5/22/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.0.1.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.0.2.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.1.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.0.2.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.1.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.0.2.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -215,6 +216,20 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+		  <h2>1.0.2 release - 5/22/2011</h2>
+		  <p>This release fixes several bugs and adds a few enhancements:
+	  	  <ul>
+			<li>The differential splicing and promoter and cds use testing in 1.0.0 and later was broken, resulting in very few (often zero) differentially regulated genes. This has been fixed.
+			<li>Many users were confused about the magnitude of quartile-normalized FPKM values in Cuffdiff.  Now, quartile normalized FPKM values are scaled by a constant such that they are numerically in roughly the same range as non-quartile normalized FPKMs.  Thanks to Ariel Schwartz for suggesting this change.
+			<li>A performance issue when processing BAMs with many unmapped reads has been fixed.
+			<li>Cuffcompare now creates <tt>.tmap</tt> and <tt>.refmap</tt> in the directory of the input file(s)
+				with the same prefix as given by -o
+			<li>An issue that caused cuffmerge to fail with a message about improperly sorted SAM files has been corrected.
+			<li>Improved cuffcompare GFF support.
+			<li>Cuffdiff and Cufflinks now accept new options controlling whether all hits are counted towards the FPKM denominator, or only those compatible with some transcript in the reference annotation.  Counting only compatible hits avoids certain types of bias that arise when one sample contains far more hits that aren't compatible with any transcript than the other sample does.  For example, if one sample contains vastly more mapped ribosomal RNA hits, FPKM values will appear lower in that sample, potentially leading to false positive differential expression calls.  Cuffdiff by default now uses only compatible hits.  Cufflinks still uses total hits by default, as using compatible hit accounting requires a reference GTF. 
+		  </ul>
+		  </p>
+		  <br/>
 		  <h2>1.0.1 release - 5/6/2011</h2>
 		  <p>This fix release corrects several issues introduced with 1.0.0:
 	  	  <ul>
