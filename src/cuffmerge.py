@@ -458,7 +458,8 @@ def get_gtf_chrom_info(gtf_filename, known_chrom_info=None):
         chroms = known_chrom_info
     for line in gtf_file:
         line = line.strip()
-        if line[0] == "#":
+        
+        if len(line) == 0 or line[0] == "#":
             continue
         cols = line.split('\t')
         if len(cols) < 8:

@@ -728,6 +728,29 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     }
 #endif
     
+    
+    if (use_quartile_norm)
+    {
+        long double total_mass = 0.0;
+        long double total_norm_mass = 0.0;
+        foreach (shared_ptr<ReadGroupProperties> rg, all_read_groups)
+        {
+            total_mass += rg->total_map_mass();
+            total_norm_mass += rg->normalized_map_mass();
+        }
+        
+        if (total_mass > 0)
+        {
+            double scaling_factor = total_mass / total_norm_mass;
+            foreach (shared_ptr<ReadGroupProperties> rg, all_read_groups)
+            {
+                double scaled_mass = scaling_factor * rg->normalized_map_mass();
+                
+                rg->normalized_map_mass(scaled_mass);
+            }
+        }
+    }
+    
     int most_reps = -1;
     int most_reps_idx = 0;
     
