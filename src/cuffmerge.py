@@ -327,9 +327,9 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
         ref_str = " -r %s " % ref_gtf
 
     if fasta != None:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm %s -s %s %s %s''' % (ref_str, fasta, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm %s -s %s %s''' % (ref_str, fasta, meta_asm_gtf)
     else:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm %s %s %s''' % (ref_str, meta_asm_gtf, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm %s %s''' % (ref_str, meta_asm_gtf)
 
     #cmd = bsub_cmd(comp_cmd, "/gencode_cmp", True, job_mem=8)
     cmd = comp_cmd
@@ -485,8 +485,9 @@ def get_gtf_chrom_info(gtf_filename, known_chrom_info=None):
 def header_for_chrom_info(chrom_info):
     header_strs = ["""@HD\tVN:1.0\tSO:coordinate"""]
     chrom_list = [(chrom, limits) for chrom, limits in chrom_info.iteritems()]
-    chrom_list.sort(lambda x,y: x[0] < y[0])
-    for chrom, limits in chrom_info.iteritems():
+    chrom_list.sort(lambda x,y: cmp(x[0],y[0]))
+    #print chrom_list
+    for chrom, limits in chrom_list:
         line = "@SQ\tSN:%s\tLN:\t%d" % (chrom, limits[1])
         header_strs.append(line)
     header_strs.append("@PG\tID:cuffmerge\tVN:1.0.0\n")

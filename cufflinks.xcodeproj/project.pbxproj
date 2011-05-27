@@ -382,7 +382,6 @@
 		EDD6A9C311598AB900D3F668 /* GArgs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152710C72963000A4F41 /* GArgs.cpp */; };
 		EDD6A9C411598AB900D3F668 /* GBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152810C72963000A4F41 /* GBase.cpp */; };
 		EDD6A9C511598AB900D3F668 /* gdna.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152910C72963000A4F41 /* gdna.cpp */; };
-		EDD6A9C611598AB900D3F668 /* genes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152A10C72963000A4F41 /* genes.cpp */; };
 		EDD6A9C711598AB900D3F668 /* GFaSeqGet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152B10C72963000A4F41 /* GFaSeqGet.cpp */; };
 		EDD6A9C811598AB900D3F668 /* gff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152C10C72963000A4F41 /* gff.cpp */; };
 		EDD6A9C911598AB900D3F668 /* GStr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152D10C72963000A4F41 /* GStr.cpp */; };
@@ -1440,7 +1439,6 @@
 				EDD6A9C311598AB900D3F668 /* GArgs.cpp in Sources */,
 				EDD6A9C411598AB900D3F668 /* GBase.cpp in Sources */,
 				EDD6A9C511598AB900D3F668 /* gdna.cpp in Sources */,
-				EDD6A9C611598AB900D3F668 /* genes.cpp in Sources */,
 				EDD6A9C711598AB900D3F668 /* GFaSeqGet.cpp in Sources */,
 				EDD6A9C811598AB900D3F668 /* gff.cpp in Sources */,
 				EDD6A9C911598AB900D3F668 /* GStr.cpp in Sources */,
