@@ -3,46 +3,46 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>manual.html</string>
+	<string>index.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-06T20:11:29Z</date>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>howitworks.html</string>
-			<key>lastUsed</key>
-			<date>2011-05-06T20:06:46Z</date>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>manual.html</string>
-			<key>lastUsed</key>
-			<date>2011-05-06T20:11:29Z</date>
+			<date>2011-05-23T00:45:50Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
+			<string>howitworks.html</string>
+			<key>lastUsed</key>
+			<date>2011-05-23T00:35:00Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>manual.html</string>
+			<key>lastUsed</key>
+			<date>2011-05-23T00:45:50Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
 			<string>faq.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-06T20:06:23Z</date>
+			<date>2011-05-23T00:35:17Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-06T20:06:22Z</date>
+			<date>2011-05-23T00:35:25Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>gff.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-06T20:05:55Z</date>
+			<date>2011-05-23T00:35:39Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -56,21 +56,21 @@
 				<key>column</key>
 				<integer>16</integer>
 				<key>line</key>
-				<integer>97</integer>
+				<integer>101</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
-			<integer>0</integer>
+			<integer>76</integer>
 			<key>firstVisibleLine</key>
-			<integer>26</integer>
+			<integer>53</integer>
 		</dict>
 		<key>gff.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>41</integer>
+				<integer>42</integer>
 				<key>line</key>
-				<integer>100</integer>
+				<integer>78</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -82,56 +82,72 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>22</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>70</integer>
+				<integer>66</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>13</integer>
+			<integer>49</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>16</integer>
+				<key>line</key>
+				<integer>100</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>66</integer>
+			</dict>
 		</dict>
 		<key>index.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>8</integer>
+				<integer>16</integer>
 				<key>line</key>
-				<integer>224</integer>
+				<integer>115</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>174</integer>
+			<integer>93</integer>
 		</dict>
 		<key>manual.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>58</integer>
 				<key>line</key>
-				<integer>0</integer>
+				<integer>342</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>311</integer>
 		</dict>
 		<key>tutorial.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>10</integer>
+				<integer>16</integer>
 				<key>line</key>
-				<integer>88</integer>
+				<integer>119</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>54</integer>
+			<integer>77</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
@@ -146,6 +162,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{1113, 88}, {1060, 1316}}</string>
+	<string>{{620, 74}, {1060, 954}}</string>
 </dict>
 </plist>

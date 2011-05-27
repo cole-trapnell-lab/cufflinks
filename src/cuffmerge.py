@@ -429,16 +429,24 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
     current_asm_gtf = output_dir +"transcripts.gtf"
     select_gtf(current_asm_gtf, selected_ids, output_dir + "/merged.gtf")
     mtmap = compare_to_reference(output_dir + "/merged.gtf", ref_gtf, fasta_file)
-    os.remove(mtmap)
-    os.remove(mtmap.split(".tmap")[0]+".refmap")
+    if os.path.exists(mtmap):
+        os.remove(mtmap)
+    if os.path.exists(mtmap.split(".tmap")[0]+".refmap"):
+        os.remove(mtmap.split(".tmap")[0]+".refmap")
+
     shutil.move("tmp_meta_asm.combined.gtf", output_dir + "/merged.gtf")
 
 #    os.remove("tmp_meta_asm.combined.gtf")
-    os.remove("tmp_meta_asm.loci")
-    os.remove("tmp_meta_asm.tracking")
-    os.remove("tmp_meta_asm.stats")
-    os.remove(tmap)
-    os.remove(tmap.split(".tmap")[0]+".refmap")
+    if os.path.exists("tmp_meta_asm.loci"):
+        os.remove("tmp_meta_asm.loci")
+    if os.path.exists("tmp_meta_asm.tracking"):
+        os.remove("tmp_meta_asm.tracking")
+    if os.path.exists("tmp_meta_asm.stats"):
+        os.remove("tmp_meta_asm.stats")
+    if os.path.exists(tmap):
+        os.remove(tmap)
+    if os.path.exists(tmap.split(".tmap")[0]+".refmap"):
+        os.remove(tmap.split(".tmap")[0]+".refmap")
     #tmp_dir = asm_dir
     #tmp_files = os.listdir(tmp_dir)
     #for t in tmp_files:
@@ -476,6 +484,8 @@ def get_gtf_chrom_info(gtf_filename, known_chrom_info=None):
 
 def header_for_chrom_info(chrom_info):
     header_strs = ["""@HD\tVN:1.0\tSO:coordinate"""]
+    chrom_list = [(chrom, limits) for chrom, limits in chrom_info.iteritems()]
+    chrom_list.sort(lambda x,y: x[0] < y[0])
     for chrom, limits in chrom_info.iteritems():
         line = "@SQ\tSN:%s\tLN:\t%d" % (chrom, limits[1])
         header_strs.append(line)
