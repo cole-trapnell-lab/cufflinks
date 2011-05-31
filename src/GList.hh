@@ -160,6 +160,7 @@ template <class OBJ> class GPVec {
     int Push(OBJ* item) { return Add(item); }
     OBJ* Pop();// Stack use; removes and returns last item,but does NOT FREE it
     OBJ* Shift(); //Queue use: removes and returns first item, but does NOT FREE it
+    void deallocate_item(OBJ* item); //forcefully call fFreeProc or delete on item
     void Clear();
     void Exchange(int idx1, int idx2);
     OBJ* First() { return (fCount>0)?fList[0]:NULL; }
@@ -224,6 +225,11 @@ template <class OBJ> class GList:public GPVec<OBJ> {
     // default: delete item if Found() (and pointers are not equal)!
     //returns the equal (==) object if it's in the list already
     //or the item itself if it is unique and actually added
+
+    int AddedIfNew(OBJ* item);
+    // if Found(item) (and pointers are not equal) delete item and returns -1
+    // if added, returns the new item index
+
 
     int Unique() { return fUnique; }
     //this will reject identical items in sorted lists only!
@@ -878,6 +884,16 @@ template <class OBJ> void GPVec<OBJ>::setCapacity(int NewCapacity) {
    }
 }
 
+template <class OBJ> void GPVec<OBJ>::deallocate_item(OBJ* item) {
+ if (item==NULL) return;
+ if (FREEDATA) {
+   (*fFreeProc)(item);
+   }
+ else {
+  delete item;
+  }
+}
+
 template <class OBJ> void GPVec<OBJ>::Clear() {
  if (FREEDATA) {
    for (int i=0; i<fCount; i++) {
@@ -1034,7 +1050,9 @@ template <class OBJ> OBJ* GList<OBJ>::AddIfNew(OBJ* item,
                                      bool deleteIfFound, int* fidx) {
  int r;
  if (Found(item, r)) {
-    if (deleteIfFound && (pointer)item != (pointer)(this->fList[r])) delete item;
+    if (deleteIfFound && (pointer)item != (pointer)(this->fList[r])) {
+       this->deallocate_item(item);
+       }
     if (fidx!=NULL) *fidx=r;
     return this->fList[r]; //found
     }
@@ -1052,6 +1070,31 @@ template <class OBJ> OBJ* GList<OBJ>::AddIfNew(OBJ* item,
  if (fidx!=NULL) *fidx=r;
  return item;
 }
+
+//if item is found already in the list DELETE it and return -1
+//otherwise the item is added and its index is returned
+template <class OBJ> int GList<OBJ>::AddedIfNew(OBJ* item) {
+ int r;
+ if (Found(item, r)) {
+    if ((pointer)item != (pointer)(this->fList[r])) {
+        this->deallocate_item(item);
+        }
+    return -1;
+    }
+ //not found:
+ if (SORTED) {
+   //Found() set r to the position where the item should be inserted:
+   sortInsert(r, item);
+   }
+  else {
+   r = this->fCount;
+   if (r==this->fCapacity) GPVec<OBJ>::Grow();
+   this->fList[r]=item;
+   this->fCount++;
+   }
+ return r;
+}
+
 
 template <class OBJ> bool GList<OBJ>::Found(OBJ* item, int& idx) {
  //search the list by using CompareProc (if defined)

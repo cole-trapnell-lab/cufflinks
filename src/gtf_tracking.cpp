@@ -362,11 +362,11 @@ void cluster_mRNAs(GList<GffObj> & mrnas, GList<GLocus> & loci, int qfidx) {
 			if (loci[l]->end<mrna->exons.First()->start) continue;
 			if (loci[l]->start>mrna->exons.Last()->end) break; */
 		 for (int l=loci.Count()-1;l>=0;l--) {
-           if (loci[l]->end<mrna->exons.First()->start) {
-               if (mrna->exons.First()->start-loci[l]->start > GFF_MAX_LOCUS) break;
-               continue;
-               }
-           if (loci[l]->start>mrna->exons.Last()->end) continue;
+		   if (loci[l]->end<mrna->exons.First()->start) {
+		       if (mrna->exons.First()->start-loci[l]->start > GFF_MAX_LOCUS) break;
+		       continue;
+		       }
+		   if (loci[l]->start>mrna->exons.Last()->end) continue;
 			//here we have mrna overlapping loci[l]
 			if (loci[l]->add_mRNA(mrna)) {
 				//a parent locus was found

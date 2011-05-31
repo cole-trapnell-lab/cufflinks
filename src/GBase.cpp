@@ -372,13 +372,13 @@ char* GLineReader::getLine(FILE* stream, off_t& f_pos) {
 
 
 //strchr but with a set of chars instead of only one
-char* strchrs(char* s, const char* chrs) {
+char* strchrs(const char* s, const char* chrs) {
   if (s==NULL || chrs==NULL || *chrs=='\0' || *s=='\0')
          return NULL;
   unsigned int l=strlen(s);
   unsigned int r=strcspn(s, chrs);
   if (r==l) return NULL;
-  return (s+r);
+  return ((char*)s+r);
 }
 
 char* upCase(const char* str) {
@@ -418,9 +418,9 @@ char* strupper(char * str) {//changes string in place
 
 
 //test if a char is in a given string (set)
-bool chrInStr(char c, char* str) {
+bool chrInStr(char c, const char* str) {
  if (str==NULL || *str=='\0') return false;
- for (char* p=str; (*p)!='\0'; p++) {
+ for (const char* p=str; (*p)!='\0'; p++) {
    if ((*p)==c) return true;
    }
  return false;
@@ -428,13 +428,13 @@ bool chrInStr(char c, char* str) {
 
 
 
-char* rstrfind(char* str, const char* substr) {
+char* rstrfind(const char* str, const char* substr) {
 /* like rindex() for a string */
  int l,i;
  if (str==NULL || *str=='\0') return NULL;
  if (substr==NULL || *substr=='\0') return NULL;
  l=strlen(substr);
- char* p=str+strlen(str)-l;
+ char* p=(char*)str+strlen(str)-l;
    //rightmost position that could match
 
  while (p>=str) {
@@ -446,15 +446,15 @@ char* rstrfind(char* str, const char* substr) {
 }
 
 
-char* strifind(char* str,  const char* substr) {
+char* strifind(const char* str,  const char* substr) {
  // the case insensitive version of strstr -- finding a string within a strin
   int l,i;
   if (str==NULL || *str==0) return NULL;
   if (substr==NULL || *substr==0) return NULL;
   l=strlen(substr);
-  char* smax=str+strlen(str)-l;
+  char* smax=(char*)str+strlen(str)-l;
   //rightmost position that could match
-  char* p=str;
+  char* p=(char*)str;
   while (p<=smax) {
      for (i=0; i<l && tolower(*(p+i))==tolower(*(substr+i)); i++) ;
      if (i==l) return p; //found!
@@ -500,13 +500,13 @@ char* reverseChars(char* str, int slen) {
 }
 
 
-char* rstrstr(char* rstart, char *lend, char* substr) {  /*like strstr, but starts searching
+char* rstrstr(const char* rstart, const char *lend, const char* substr) {  /*like strstr, but starts searching
  from right end, going up to lend and returns a pointer to the last (right)
  matching character in str */
  char *p;
  int l,i;
  l=strlen(substr);
- p=rstart-l+1;
+ p=(char*)rstart-l+1;
  while (p>=lend) {
     for (i=0;i<l;i++) if (*(p+i) != *(substr+i)) break;
     if (i==l) return p+l-1;

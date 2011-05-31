@@ -73,7 +73,7 @@ void GStr::replace_data(Data *data) {
     my_data = data;
 }
 
-void GStr::make_unique() {//make sure is not a reference to other string
+void GStr::make_unique() {//make sure it's not a reference to other string
     if (my_data->ref_count > 1) {
         Data *data = new_data(length());
         ::memcpy(data->chars, chars(), length());

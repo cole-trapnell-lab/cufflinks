@@ -1,10 +1,5 @@
-#include "gff.h"
-#include "GStr.h"
+#include "gff_utils.h"
 #include "GArgs.h"
-#include "GHash.hh"
-#include "GList.hh"
-#include "GFastaIndex.h"
-#include "GFaSeqGet.h"
 #include <ctype.h>
 // don't care about cdb compression
 //#ifdef ENABLE_COMPRESSION
@@ -15,7 +10,7 @@
 #define USAGE "Usage:\n\
 gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
  [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end>] \n\
- [-CTVNMAFGRUVBHSZWTOE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
+ [-CTVNJMAFGRUVBHSZWTOLE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
  [-i <maxintron>] \n\
  Filters and/or converts GFF3/GTF2 records.\n\
  <input_gff> is a GFF file, use '-' if the GFF records will be given at stdin\n\
@@ -27,49 +22,91 @@ gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
   -s  <seq_info.fsize> is a tab-delimited file providing this info\n\
       for each of the mapped sequences:\n\
       <seq-name> <seq-length> <seq-description>\n\
-      (useful for mRNA/EST/protein mappings with -A option)\n\
+      (useful for -A option with mRNA/EST/protein mappings)\n\
   -i  discard transcripts having an intron larger than <maxintron>\n\
   -r  only show transcripts crossing coordinate range <start>..<end>\n\
       (on chromosome/contig <chr>, strand <strand> if provided)\n\
   -R  for -r option, discard all transcripts that are not fully \n\
       contained within given range\n\
   -U  discard single-exon transcripts\n\
-  -C  discard mRNAs that have no CDS feature\n\
-  -F  keep all attributes from last column of GFF/GTF\n\
+  -C  coding only: discard mRNAs that have no CDS feature\n\
+  -F  full GFF attribute preservation (all attributes are shown)\n\
   -G  only parse additional exon attributes from the first exon\n\
       and move them to the mRNA level (useful for GTF input)\n\
   -A  use the description field from <seq_info.fsize> and add it\n\
       as the value for a 'descr' attribute to the GFF record\n\
   \n\
-  -O  process non-transcript GFF records as well (by default non-transcript\
-      records are ignored).\n\
+  -O  process also non-transcript GFF records (by default non-transcript\n\
+      records are ignored)\n\
   -V  discard any mRNAs with CDS having in-frame stop codons\n\
   -H  for -V option, check and adjust the starting CDS phase\n\
       if the original phase leads to a translation with an \n\
       in-frame stop codon\n\
   -B  for -V option, single-exon transcripts are also checked on the\n\
       opposite strand\n\
-  -N  only show multi-exon mRNAs if all their introns have the \n\
-      typical splice site consensus ( GT-AG, GC-AG or AT-AC )\n\
-  -M  discard any mRNAs that either lack initial START codon\n\
+  -N  discard multi-exon mRNAs that have any intron with a non-canonical\n\
+      splice site consensus (i.e. not GT-AG, GC-AG or AT-AC)\n\
+  -J  discard any mRNAs that either lack initial START codon\n\
       or the terminal STOP codon, or have an in-frame stop codon\n\
       (only print mRNAs with a fulll, valid CDS)\n\
  \n\
+  -M/--merge : cluster the input transcripts into loci, collapsing matching\n\
+       transcripts (those with the same intron chain)\n\
+  --cluster-only: same as --merge but without collapsing matching transcripts\n\
+  -K  for -M option, also collapse contained transcripts\n\
+ \n\
   -E  expose (warn about) duplicate transcript IDs and other potential \n\
-      problems with the input GFF/GTF records\n\
+      problems with the given GFF/GTF records\n\
   -S  sort output GFF records by genomic sequence and start coordinate\n\
-      (this option is automatically enabled by -g option)\n\
+      (automatically enabled by -g and -L options)\n\
   -Z  merge close exons into a single exon (for intron size<4)\n\
   -w  write a fasta file with spliced exons for each GFF transcript\n\
   -x  write a fasta file with spliced CDS for each GFF transcript\n\
   -W  for -w and -x options, also write for each fasta record the exon\n\
       coordinates projected onto the spliced sequence\n\
   -y  write a protein fasta file with the translation of CDS for each record\n\
+  -L  Ensembl GTF to GFF3 conversion (implies -F; should be used with -m)\n\
+  -m  <chr_replace> is a reference (genomic) sequence replacement table with\n\
+      this format:\n\
+      <original_ref_ID> <new_ref_ID>\n\
+      GFF records on reference sequences that are not found among the\n\
+      <original_ref_ID> entries in this file will be filtered out\n\
   -o  the \"filtered\" GFF records will be written to <outfile.gff>\n\
       (use -o- for printing to stdout)\n\
   -t  use <trackname> in the second column of each GFF output line\n\
   -T  -o option will output GTF format instead of GFF3\n\
  "
+
+
+class SeqInfo { //populated from the -s option of gffread
+ public:
+  int len;
+  char* descr;
+  SeqInfo( int l, char* s) {
+   len=l;
+   if (s==NULL) {
+     descr=NULL;
+     }   else {
+     descr=Gstrdup(s);
+     }
+   }
+  ~SeqInfo() {
+   GFREE(descr);
+   }
+};
+
+class RefTran {
+ public:
+   char* new_name;
+   RefTran(char *ns) {
+      new_name=NULL;
+      if (ns!=NULL)
+         new_name=Gstrdup(ns);
+      }
+   ~RefTran() {
+      GFREE(new_name);
+      }
+};
 
 FILE* ffasta=NULL;
 FILE* f_in=NULL;
@@ -89,6 +126,9 @@ bool spliceCheck=false; //only known splice-sites
 bool fullCDSonly=false; // starts with START, ends with STOP codon
 bool fullattr=false;
 bool sortByLoc=false; // if the GFF output should be sorted by location
+bool ensembl_convert=false; //-L, assisst in converting Ensembl GTF to GFF3
+
+
 //GStr gseqpath;
 //GStr gcdbfa;
 //bool multiGSeq=false; //if a directory or a .cidx file was given to -g option
@@ -110,246 +150,66 @@ uint rfltStart=0;
 uint rfltEnd=MAX_UINT;
 bool rfltWithin=false; //check for full containment within given range
 bool noExonAttr=false;
-class SeqInfo {
- public:
-  int len;
-  char* descr;
-  SeqInfo( int l, char* s) {
-   len=l;
-   if (s==NULL) {
-     descr=NULL;
-     }   else {
-     descr=Gstrdup(s);
-     }
-   }
-  ~SeqInfo() {
-   GFREE(descr);
-   }
-};
 
-char* getGSeqName(int gseq_id) {
- return GffObj::names->gseqs.getName(gseq_id);
-}
+bool doCluster=false;
+bool doCollapseMatching=false;
 
-//genomic fasta sequence handling
-class GFastaHandler {
- public:
-  char* fastaPath;
-  GFastaIndex* faIdx; //could be a cdb .cidx file
-  int last_fetchid;
-  GFaSeqGet* faseq;
-  //GCdbYank* gcdb;
-  char* getFastaFile(int gseq_id) {
-     if (fastaPath==NULL) return NULL;
-     GStr s(fastaPath);
-     s.trimR('/');
-     s.appendfmt("/%s",getGSeqName(gseq_id));
-     GStr sbase(s);
-     if (!fileExists(s.chars())) s.append(".fa");
-     if (!fileExists(s.chars())) s.append("sta");
-     if (fileExists(s.chars())) return Gstrdup(s.chars());
-         else {
-             GMessage("Warning: cannot find genomic sequence file %s{.fa,.fasta}\n",sbase.chars());
-             return NULL;
-             }
-     }
-
-   GFastaHandler(const char* fpath=NULL) {
-     //gcdb=NULL;
-     fastaPath=NULL;
-     faseq=NULL;
-     faIdx=NULL;
-     init(fpath);
-     }
-
-   void init(const char* fpath) {
-     if (fpath==NULL || fpath[0]==0) return;
-     last_fetchid=-1;
-     if (!fileExists(fpath))
-       GError("Error: file/directory %s does not exist!\n",fpath);
-     fastaPath=Gstrdup(fpath);
-     GStr gseqpath(fpath);
-     /*
-     if (gseqpath.rindex(".cidx")==gseqpath.length()-5) {
-        //cdbyank index given directly
-        gcdb=new GCdbYank(gseqpath.chars());
-        if (fileExists(gcdb->getDbName())) {
-            gseqpath=gcdb->getDbName();
-            } else {
-            gseqpath.chomp(".cidx");
-            if (!fileExists(gseqpath.chars()))
-                GError("Error: cannot locate the fasta file for index %s.cidx !\n",gseqpath.chars());
-            }
-        GFREE(fastaPath);
-        fastaPath=Gstrdup(gseqpath.chars());
-        return;
-        }
-        */
-     if (fileExists(fastaPath)>1) { //exists and it's not a directory
-            GStr fainame(fastaPath);
-            if (fainame.rindex(".fai")==fainame.length()-4) {
-               //.fai index file given directly
-               fastaPath[fainame.length()-4]=0;
-               if (!fileExists(fastaPath))
-                  GError("Error: cannot find fasta file for index %s !\n", fastaPath);
-               }
-              else fainame.append(".fai");
-            //GMessage("creating GFastaIndex with fastaPath=%s, fainame=%s\n", fastaPath, fainame.chars());
-            faIdx=new GFastaIndex(fastaPath,fainame.chars());
-            GStr fainamecwd(fainame);
-            int ip=-1;
-            if ((ip=fainamecwd.rindex(CHPATHSEP))>=0)
-               fainamecwd.cut(0,ip+1);
-            if (!faIdx->hasIndex()) { //could not load index
-               //try current directory
-                  if (fainame!=fainamecwd) {
-                    if (fileExists(fainamecwd.chars())>1) {
-                       faIdx->loadIndex(fainamecwd.chars());
-                       }
-                    }
-                  } //tried to load index
-            if (!faIdx->hasIndex()) {
-                 GMessage("No fasta index found for %s. Rebuilding, please wait..\n",fastaPath);
-                 faIdx->buildIndex();
-                 if (faIdx->getCount()==0) GError("Error: no fasta records found!\n");
-                 GMessage("Fasta index rebuilt.\n");
-                 FILE* fcreate=fopen(fainame.chars(), "w");
-                 if (fcreate==NULL) {
-                   GMessage("Warning: cannot create fasta index %s! (permissions?)\n", fainame.chars());
-                   if (fainame!=fainamecwd) fcreate=fopen(fainamecwd.chars(), "w");
-                   if (fcreate==NULL)
-                      GError("Error: cannot create fasta index %s!\n", fainamecwd.chars());
-                   }
-                 if (faIdx->storeIndex(fcreate)<faIdx->getCount())
-                     GMessage("Warning: error writing the index file!\n");
-                 } //index created and attempted to store it
-            } //multi-fasta
-     }
-   GFaSeqGet* fetch(int gseq_id, bool checkFasta=false) {
-     if (fastaPath==NULL) return NULL;
-     if (gseq_id==last_fetchid && faseq!=NULL) return faseq;
-     delete faseq;
-     faseq=NULL;
-     last_fetchid=-1;
-     char* gseqname=getGSeqName(gseq_id);
-     // DEBUG:
-     //GMessage("..processing transcripts on: %s\n",gseqname);
-     //genomic sequence given
-     /*
-     if (gcdb!=NULL) {
-       uint32 reclen=0;
-       off_t rpos=gcdb->getRecordPos(gseqname, &reclen);
-       if (rpos<0) // genomic sequence not found
-          GError("Error: cannot find genomic sequence '%s' in %s\n",gseqname, fastaPath);
-       // WARNING: does not validate FASTA line-len uniformity!
-       faseq=new GFaSeqGet(fastaPath,rpos, false);
-       faseq->loadall(reclen); //load the whole sequence, it's faster
-       last_fetchid=gseq_id;
-       return faseq;
-       }
-       */
-     if (faIdx!=NULL) { //fastaPath was the multi-fasta file name
-        GFastaRec* farec=faIdx->getRecord(gseqname);
-        if (farec!=NULL) {
-             faseq=new GFaSeqGet(fastaPath,farec->seqlen, farec->fpos,
-                               farec->line_len, farec->line_blen);
-             faseq->loadall(); //just cache the whole sequence, it's faster
-             last_fetchid=gseq_id;
-             }
-        else {
-          GMessage("Warning: couldn't find fasta record for '%s'!\n",gseqname);
-          return NULL;
-          }
-        }
-     else {
-         char* sfile=getFastaFile(gseq_id);
-         if (sfile!=NULL) {
-            faseq=new GFaSeqGet(sfile,checkFasta);
-            faseq->loadall();
-            last_fetchid=gseq_id;
-            GFREE(sfile);
-            }
-         } //one fasta file per contig
-       return faseq;
-     }
-
-   ~GFastaHandler() {
-     GFREE(fastaPath);
-     //delete gcdb;
-     delete faIdx;
-     delete faseq;
-     }
-};
-
-
-class GSpliceSite {
- public:
-  char nt[3];
-  GSpliceSite(const char* c, bool revc=false) {
-    nt[2]=0;
-    if (c==NULL) {
-      nt[0]=0;
-      nt[1]=0;
-      return;
-      }
-    if (revc) {
-      nt[0]=toupper(ntComplement(c[1]));
-      nt[1]=toupper(ntComplement(c[0]));
-      }
-    else {
-      nt[0]=toupper(c[0]);
-      nt[1]=toupper(c[1]);
-      }
-    }
-
-  GSpliceSite(const char* intron, int intronlen, bool getAcceptor, bool revc=false) {
-    nt[2]=0;
-    if (intron==NULL || intronlen==0)
-       GError("Error: invalid intron or intron len for GSpliceSite()!\n");
-    const char* c=intron;
-    if (revc) {
-      if (!getAcceptor) c+=intronlen-2;
-      nt[0]=toupper(ntComplement(c[1]));
-      nt[1]=toupper(ntComplement(c[0]));
-      }
-    else { //on forward strand
-      if (getAcceptor) c+=intronlen-2;
-      nt[0]=toupper(c[0]);
-      nt[1]=toupper(c[1]);
-      }//forward strand
-    }
-
-  GSpliceSite(const char n1, const char n2) {
-    nt[2]=0;
-    nt[0]=toupper(n1);
-    nt[1]=toupper(n2);
-    }
-  bool canonicalDonor() {
-    return (nt[0]=='G' && (nt[1]=='C' || nt[1]=='T'));
-    }
-  bool operator==(GSpliceSite& c) {
-    return (c.nt[0]==nt[0] && c.nt[1]==nt[1]);
-    }
-  bool operator==(GSpliceSite* c) {
-    return (c->nt[0]==nt[0] && c->nt[1]==nt[1]);
-    }
-  bool operator==(const char* c) {
-    //return (nt[0]==toupper(c[0]) && nt[1]==toupper(c[1]));
-    //assumes given const nucleotides are uppercase already!
-    return (nt[0]==c[0] && nt[1]==c[1]);
-    }
-  bool operator!=(const char* c) {
-    //assumes given const nucleotides are uppercase already!
-    return (nt[0]!=c[0] || nt[1]!=c[1]);
-    }
-};
+GList<GenomicSeqData> g_data(true,true,true); //list of GFF records by genomic seq
 
 //hash with sequence info
 GHash<SeqInfo> seqinfo;
 GHash<int> isoCounter; //counts the valid isoforms
+GHash<RefTran> reftbl;
+GHash<GeneInfo> gene_ids; 
+  //min-max gene span associated to chr|gene_id (mostly for Ensembl conversion)
 
-//bool debugMode=false;
+bool debugMode=false;
 bool verbose=false;
+
+void loadSeqInfo(FILE* f, GHash<SeqInfo> &si) {
+  GLineReader fr(f);
+  while (!fr.isEof()) {
+      char* line=fr.getLine();
+      if (line==NULL) break;
+      char* id=line;
+      char* lenstr=NULL;
+      char* text=NULL;
+      char* p=line;
+      while (*p!=0 && !isspace(*p)) p++;
+      if (*p==0) continue;
+      *p=0;p++;
+      while (*p==' ' || *p=='\t') p++;
+      if (*p==0) continue;
+      lenstr=p;
+      while (*p!=0 && !isspace(*p)) p++;
+      if (*p!=0) { *p=0;p++; }
+      while (*p==' ' || *p=='\t') p++;
+      if (*p!=0) text=p; //else text remains NULL
+      int len=0;
+      if (!parseInt(lenstr,len)) {
+         GMessage("Warning: could not parse sequence length: %s %s\n",
+                  id, lenstr);
+         continue;
+         }
+      // --- here we have finished parsing the line
+      si.Add(id, new SeqInfo(len,text));
+      } //while lines
+}
+
+void loadRefTable(FILE* f, GHash<RefTran>& rt) {
+  GLineReader fr(f);
+  char* line=NULL;
+  while ((line=fr.getLine())) {
+      char* orig_id=line;
+      char* p=line;
+      while (*p!=0 && !isspace(*p)) p++;
+      if (*p==0) continue;
+      *p=0;p++;//split the line here
+      while (*p==' ' || *p=='\t') p++;
+      if (*p==0) continue;
+      rt.Add(orig_id, new RefTran(p));
+      } //while lines
+}
 
 char* getSeqDescr(char* seqid) {
  static char charbuf[128];
@@ -390,113 +250,91 @@ char* getSeqName(char* seqid) {
   return charbuf;
 }
 
-void printFasta(FILE* f, GStr& defline, char* seq, int seqlen=-1) {
- if (seq==NULL) return;
- int len=(seqlen>0)?seqlen:strlen(seq);
- if (len<=0) return;
- if (!defline.is_empty())
-     fprintf(f, ">%s\n",defline.chars());
- int ilen=0;
- for (int i=0; i < len; i++, ilen++) {
-   if (ilen == 70) {
-     fputc('\n', f);
-     ilen = 0;
-     }
-   putc(seq[i], f);
-   } //for
- fputc('\n', f);
-}
-
-void loadSeqInfo(FILE* f, GHash<SeqInfo> &si) {
-  GLineReader fr(f);
-  while (!fr.isEof()) {
-      char* line=fr.getLine();
-      if (line==NULL) break;
-      char* id=line;
-      char* lenstr=NULL;
-      char* text=NULL;
-      char* p=line;
-      while (*p!=0 && !isspace(*p)) p++;
-      if (*p==0) continue;
-      *p=0;p++;
-      while (*p==' ' || *p=='\t') p++;
-      if (*p==0) continue;
-      lenstr=p;
-      while (*p!=0 && !isspace(*p)) p++;
-      if (*p!=0) { *p=0;p++; }
-      while (*p==' ' || *p=='\t') p++;
-      if (*p!=0) text=p; //else text remains NULL
-      int len=0;
-      if (!parseInt(lenstr,len)) {
-         GMessage("Warning: could not parse sequence length: %s %s\n",
-                  id, lenstr);
-         continue;
-         }
-      // --- here we have finished parsing the line
-      si.Add(id, new SeqInfo(len,text));
-      } //while lines
-}
-
-GFaSeqGet* fastaSeqGet(GFastaHandler& gfasta, GffObj& mrna) {
+GFaSeqGet* fastaSeqGet(GFastaHandler& gfasta, GffObj& gffrec) {
   if (gfasta.fastaPath==NULL) return NULL;
-  return gfasta.fetch(mrna.gseq_id);
+  return gfasta.fetch(gffrec.gseq_id);
 }
 
-int adjust_stopcodon(GffObj& mrna, int adj, GList<GSeg>* seglst=NULL) {
+
+int adjust_stopcodon(GffObj& gffrec, int adj, GList<GSeg>* seglst=NULL) {
  //adj>0 => extedn CDS,  adj<0 => shrink CDS
  //when CDS is expanded, exons have to be checked too and 
  // expanded accordingly if they had the same boundary
   int realadj=0;
-  if (mrna.strand=='-') {
-       if ((int)mrna.CDstart>adj) {
+  if (gffrec.strand=='-') {
+       if ((int)gffrec.CDstart>adj) {
 
-           mrna.CDstart-=adj;
+           gffrec.CDstart-=adj;
            realadj=adj;
            if (adj<0) { //restore
-              if (mrna.exons.First()->start==mrna.CDstart+adj) {
-                 mrna.exons.First()->start-=adj;
-                 mrna.start=mrna.exons.First()->start;
-                 mrna.covlen+=adj;
+              if (gffrec.exons.First()->start==gffrec.CDstart+adj) {
+                 gffrec.exons.First()->start-=adj;
+                 gffrec.start=gffrec.exons.First()->start;
+                 gffrec.covlen+=adj;
                  }
               }
-           else if (mrna.exons.First()->start>=mrna.CDstart) {
-                 mrna.exons.First()->start-=adj;
-                 mrna.start=mrna.exons.First()->start;
-                 mrna.covlen+=adj;
+           else if (gffrec.exons.First()->start>=gffrec.CDstart) {
+                 gffrec.exons.First()->start-=adj;
+                 gffrec.start=gffrec.exons.First()->start;
+                 gffrec.covlen+=adj;
                  }
              }
           }
         else {
          realadj=adj;
-         mrna.CDend+=adj;
+         gffrec.CDend+=adj;
          if (adj<0) {//restore
-           if (mrna.exons.Last()->end==mrna.CDend-adj) {
-                        mrna.exons.Last()->end+=adj;
-                        mrna.end=mrna.exons.Last()->end;
-                        mrna.covlen+=adj;
+           if (gffrec.exons.Last()->end==gffrec.CDend-adj) {
+                        gffrec.exons.Last()->end+=adj;
+                        gffrec.end=gffrec.exons.Last()->end;
+                        gffrec.covlen+=adj;
                         }
           }
-         else if (mrna.exons.Last()->end<=mrna.CDend) {
-             mrna.exons.Last()->end+=adj;
-             mrna.end=mrna.exons.Last()->end;
-             mrna.covlen+=adj;
+         else if (gffrec.exons.Last()->end<=gffrec.CDend) {
+             gffrec.exons.Last()->end+=adj;
+             gffrec.end=gffrec.exons.Last()->end;
+             gffrec.covlen+=adj;
              }
          }
   if (seglst!=NULL) seglst->Last()->end+=adj;
   return realadj;
  }
 
-void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
-  if (f_out!=NULL && !mRNAOnly && mrna.exons.Count()==0) {
-     //a gene or other generic feature without exons
-     if (fmtGTF) mrna.printGtf(f_out, tracklabel);
-            else mrna.printGff(f_out, tracklabel);
-     return;
+bool process_transcript(GFastaHandler& gfasta, GffObj& gffrec) {
+ //returns true if the transcript passed the filter
+ char* gname=gffrec.getGeneName();
+ if (gname==NULL) gname=gffrec.getGeneID();
+ GStr defline(gffrec.getID());
+ if (f_out && !fmtGTF) {
+     const char* tn=NULL;
+     if ((tn=gffrec.getAttr("transcript_name"))!=NULL) {
+        gffrec.addAttr("Name", tn);
+        gffrec.removeAttr("transcript_name");
+        }
      }
- char* gname=mrna.getGeneName();
- if (gname==NULL) gname=mrna.getGeneID();
- GStr defline(mrna.getID());
- if (gname && strcmp(gname,mrna.getID())!=0) {
+ if (ensembl_convert && startsWith(gffrec.getID(), "ENS")) {
+      const char* tn=gffrec.getTrackName();
+      gffrec.addAttr("type", tn);
+      //bool is_gene=false;
+      bool is_pseudo=false;
+      if (strcmp(tn, "protein_coding")==0 || gffrec.hasCDS())
+                gffrec.setFeatureName("mRNA");
+       else {
+          if (strcmp(tn, "processed_transcript")==0) 
+              gffrec.setFeatureName("proc_RNA");
+            else {
+              //is_gene=endsWith(tn, "gene");
+              is_pseudo=strifind(tn, "pseudo");
+              if (is_pseudo) {
+                   gffrec.setFeatureName("pseudo_RNA");
+                   }
+                else if (endsWith(tn, "RNA")) {
+                   gffrec.setFeatureName(tn);
+                   } else gffrec.setFeatureName("misc_RNA");
+              }
+          }
+      }
+ if (gname && strcmp(gname, gffrec.getID())!=0) {
    int* isonum=isoCounter.Find(gname);
    if  (isonum==NULL) {
        isonum=new int(1);
@@ -508,36 +346,36 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
   int seqlen=0;
 
   const char* tlabel=tracklabel;
-  if (tlabel==NULL) tlabel=mrna.getTrackName();
+  if (tlabel==NULL) tlabel=gffrec.getTrackName();
   //defline.appendfmt(" track:%s",tlabel);
   char* cdsnt = NULL;
   char* cdsaa = NULL;
   int aalen=0;
-  for (int i=1;i<mrna.exons.Count();i++) {
-     int ilen=mrna.exons[i]->start-mrna.exons[i-1]->end-1;
-     if (ilen>2000000) 
+  for (int i=1;i<gffrec.exons.Count();i++) {
+     int ilen=gffrec.exons[i]->start-gffrec.exons[i-1]->end-1;
+     if (ilen>4000000) 
             GMessage("Warning: very large intron (%d) for transcript %s\n",
-                           ilen, mrna.getID());
+                           ilen, gffrec.getID());
      if (ilen>maxintron) {
-         return;
+         return false;
          }
      }
   GList<GSeg> seglst(false,true);
-  GFaSeqGet* faseq=fastaSeqGet(gfasta, mrna);
-  if (spliceCheck && mrna.exons.Count()>1) {
+  GFaSeqGet* faseq=fastaSeqGet(gfasta, gffrec);
+  if (spliceCheck && gffrec.exons.Count()>1) {
     //check introns for splice site consensi ( GT-AG, GC-AG or AT-AC )
     if (faseq==NULL) GError("Error: no genomic sequence available!\n");
-    int glen=mrna.end-mrna.start+1;
-    const char* gseq=faseq->subseq(mrna.start, glen);
-    bool revcompl=(mrna.strand=='-');
+    int glen=gffrec.end-gffrec.start+1;
+    const char* gseq=faseq->subseq(gffrec.start, glen);
+    bool revcompl=(gffrec.strand=='-');
     bool ssValid=true;
-    for (int e=1;e<mrna.exons.Count();e++) {
-      const char* intron=gseq+mrna.exons[e-1]->end+1-mrna.start;
-      int intronlen=mrna.exons[e]->start-mrna.exons[e-1]->end-1;
+    for (int e=1;e<gffrec.exons.Count();e++) {
+      const char* intron=gseq+gffrec.exons[e-1]->end+1-gffrec.start;
+      int intronlen=gffrec.exons[e]->start-gffrec.exons[e-1]->end-1;
       GSpliceSite acceptorSite(intron,intronlen,true, revcompl);
       GSpliceSite    donorSite(intron,intronlen, false, revcompl);
       //GMessage("%c intron %d-%d : %s .. %s\n",
-      //           mrna.strand, istart, iend, donorSite.nt, acceptorSite.nt);
+      //           gffrec.strand, istart, iend, donorSite.nt, acceptorSite.nt);
       if (acceptorSite=="AG") { // GT-AG or GC-AG
          if (!donorSite.canonicalDonor()) {
             ssValid=false;break;
@@ -551,8 +389,8 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
     //GFREE(gseq);
     if (!ssValid) {
       if (verbose)
-         GMessage("Invalid splice sites found for '%s'\n",mrna.getID());
-      return; //don't print this one!
+         GMessage("Invalid splice sites found for '%s'\n",gffrec.getID());
+      return false; //don't print this one!
       }
     }
 
@@ -560,21 +398,21 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
   int stopCodonAdjust=0;
   int mCDphase=0;
   bool hasStop=false;
-  if (mrna.CDphase=='1' || mrna.CDphase=='2')
-      mCDphase = mrna.CDphase-'0';
+  if (gffrec.CDphase=='1' || gffrec.CDphase=='2')
+      mCDphase = gffrec.CDphase-'0';
   if (f_y!=NULL || f_x!=NULL || validCDSonly) {
     if (faseq==NULL) GError("Error: no genomic sequence provided!\n");
     //if (protmap && fullCDSonly) {
-    //if (protmap && (fullCDSonly ||  (mrna.qlen>0 && mrna.qend==mrna.qlen))) {
+    //if (protmap && (fullCDSonly ||  (gffrec.qlen>0 && gffrec.qend==gffrec.qlen))) {
     
     if (validCDSonly) { //make sure the stop codon is always included 
-      //adjust_stopcodon(mrna,3);
-      stopCodonAdjust=adjust_stopcodon(mrna,3);
+      //adjust_stopcodon(gffrec,3);
+      stopCodonAdjust=adjust_stopcodon(gffrec,3);
       }
     int strandNum=0;
     int phaseNum=0;
   CDS_CHECK:
-    cdsnt=mrna.getSpliced(faseq, true, &seqlen,NULL,NULL,&seglst);
+    cdsnt=gffrec.getSpliced(faseq, true, &seqlen,NULL,NULL,&seglst);
     if (cdsnt==NULL) trprint=false;
     if (validCDSonly) {
        cdsaa=translateDNA(cdsnt, aalen, seqlen);
@@ -587,7 +425,7 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
                     if (aalen-2==p-cdsaa) {
                       //previous to last codon is the stop codon
                       //so correct the CDS stop accordingly
-                      adjust_stopcodon(mrna,-3, &seglst);
+                      adjust_stopcodon(gffrec,-3, &seglst);
                       stopCodonAdjust=0; //clear artificial stop adjustment
                       seqlen-=3;
                       cdsnt[seqlen]=0;
@@ -602,20 +440,20 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
          //in-frame stop codon found
          if (altPhases && phaseNum<3) {
             phaseNum++;
-            mrna.CDphase = '0'+((mCDphase+phaseNum)%3);
+            gffrec.CDphase = '0'+((mCDphase+phaseNum)%3);
             GFREE(cdsaa);
             goto CDS_CHECK;
             }
-         if (mrna.exons.Count()==1 && bothStrands) {
+         if (gffrec.exons.Count()==1 && bothStrands) {
             strandNum++;
             phaseNum=0;
             if (strandNum<2) {
                GFREE(cdsaa);
-               mrna.strand = (mrna.strand=='-') ? '+':'-';
+               gffrec.strand = (gffrec.strand=='-') ? '+':'-';
                goto CDS_CHECK; //repeat the CDS check for a different frame
                }
             }
-         if (verbose) GMessage("In-frame STOP found for '%s'\n",mrna.getID());
+         if (verbose) GMessage("In-frame STOP found for '%s'\n",gffrec.getID());
          } //has in-frame STOP
        if (fullCDSonly) {
            if (!hasStop || cdsaa[0]!='M') trprint=false;
@@ -625,11 +463,11 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
   if (!trprint) {
     GFREE(cdsnt);
     GFREE(cdsaa);
-    return;
+    return false;
     }
   if (stopCodonAdjust>0 && !hasStop) {
           //restore stop codon location
-          adjust_stopcodon(mrna, -stopCodonAdjust, &seglst);
+          adjust_stopcodon(gffrec, -stopCodonAdjust, &seglst);
           if (cdsnt!=NULL && seqlen>0) {
              seqlen-=stopCodonAdjust;
              cdsnt[seqlen]=0;
@@ -637,22 +475,18 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
           if (cdsaa!=NULL) aalen--;
           }
 
-  if (f_out!=NULL) {
-     if (fmtGTF) mrna.printGtf(f_out, tracklabel);
-            else mrna.printGff(f_out, tracklabel);
-     }
   if (f_y!=NULL) { //CDS translation fasta output requested
          //char* 
          if (cdsaa==NULL) { //translate now if not done before
            cdsaa=translateDNA(cdsnt, aalen, seqlen);
            }
-         if (fullattr && mrna.attrs!=NULL) {
+         if (fullattr && gffrec.attrs!=NULL) {
              //append all attributes found for each transcripts
-              for (int i=0;i<mrna.attrs->Count();i++) {
+              for (int i=0;i<gffrec.attrs->Count();i++) {
                 defline.append(" ");
-                defline.append(mrna.getAttrName(i));
+                defline.append(gffrec.getAttrName(i));
                 defline.append("=");
-                defline.append(mrna.getAttrValue(i));
+                defline.append(gffrec.getAttrValue(i));
                 }
               }
          printFasta(f_y, defline, cdsaa, aalen);
@@ -660,12 +494,12 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
    if (f_x!=NULL) { //CDS only
          if (writeExonSegs) {
               defline.append(" loc:");
-              defline.append(mrna.getGSeqName());
-              defline.appendfmt("(%c)",mrna.strand);
+              defline.append(gffrec.getGSeqName());
+              defline.appendfmt("(%c)",gffrec.strand);
               //warning: not CDS coordinates are written here, but the exon ones
-              defline+=(int)mrna.start;
+              defline+=(int)gffrec.start;
               defline+=(char)'-';
-              defline+=(int)mrna.end;
+              defline+=(int)gffrec.end;
               // -- here these are CDS substring coordinates on the spliced sequence:
               defline.append(" segs:");
               for (int i=0;i<seglst.Count();i++) {
@@ -675,13 +509,13 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
                   defline+=(int)seglst[i]->end;
                   }
               }
-         if (fullattr && mrna.attrs!=NULL) {
+         if (fullattr && gffrec.attrs!=NULL) {
              //append all attributes found for each transcript
-              for (int i=0;i<mrna.attrs->Count();i++) {
+              for (int i=0;i<gffrec.attrs->Count();i++) {
                 defline.append(" ");
-                defline.append(mrna.getAttrName(i));
+                defline.append(gffrec.getAttrName(i));
                 defline.append("=");
-                defline.append(mrna.getAttrValue(i));
+                defline.append(gffrec.getAttrValue(i));
                 }
               }
          printFasta(f_x, defline, cdsnt, seqlen);
@@ -692,26 +526,26 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
     uint cds_start=0;
     uint cds_end=0;
     seglst.Clear();
-    char* exont=mrna.getSpliced(faseq, false, &seqlen, &cds_start, &cds_end, &seglst);
+    char* exont=gffrec.getSpliced(faseq, false, &seqlen, &cds_start, &cds_end, &seglst);
     if (exont!=NULL) {
-    if (mrna.CDstart>0) {
+    if (gffrec.CDstart>0) {
         defline.appendfmt(" CDS=%d-%d", cds_start, cds_end);
         }
       if (writeExonSegs) {
         defline.append(" loc:");
-        defline.append(mrna.getGSeqName());
+        defline.append(gffrec.getGSeqName());
         defline+=(char)'|';
-        defline+=(int)mrna.start;
+        defline+=(int)gffrec.start;
         defline+=(char)'-';
-        defline+=(int)mrna.end;
+        defline+=(int)gffrec.end;
         defline+=(char)'|';
-        defline+=(char)mrna.strand;
+        defline+=(char)gffrec.strand;
         defline.append(" exons:");
-        for (int i=0;i<mrna.exons.Count();i++) {
+        for (int i=0;i<gffrec.exons.Count();i++) {
                 if (i>0) defline.append(",");
-                defline+=(int)mrna.exons[i]->start;
+                defline+=(int)gffrec.exons[i]->start;
                 defline.append("-");
-                defline+=(int)mrna.exons[i]->end;
+                defline+=(int)gffrec.exons[i]->end;
                 }
         defline.append(" segs:");
         for (int i=0;i<seglst.Count();i++) {
@@ -721,20 +555,20 @@ void process_mRNA(GFastaHandler& gfasta, GffObj& mrna) {
             defline+=(int)seglst[i]->end;
             }
         }
-      if (fullattr && mrna.attrs!=NULL) {
+      if (fullattr && gffrec.attrs!=NULL) {
        //append all attributes found for each transcripts
-        for (int i=0;i<mrna.attrs->Count();i++) {
+        for (int i=0;i<gffrec.attrs->Count();i++) {
           defline.append(" ");
-          defline.append(mrna.getAttrName(i));
+          defline.append(gffrec.getAttrName(i));
           defline.append("=");
-          defline.append(mrna.getAttrValue(i));
+          defline.append(gffrec.getAttrValue(i));
           }
         }
       printFasta(f_w, defline, exont, seqlen);
       GFREE(exont);
       }
     } //writing f_w (spliced exons)
- return;
+ return true;
 }
 
 void openfw(FILE* &f, GArgs& args, char opt) {
@@ -752,14 +586,88 @@ void openfw(FILE* &f, GArgs& args, char opt) {
 #define FWCLOSE(fh) if (fh!=NULL && fh!=stdout) fclose(fh)
 #define FRCLOSE(fh) if (fh!=NULL && fh!=stdin) fclose(fh)
 
+bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
+  if (reftbl.Count()>0) {
+        GStr refname(gffrec->getRefName());
+        RefTran* rt=reftbl.Find(refname.chars());
+        if (rt==NULL && refname[-2]=='.' && isdigit(refname[-1])) {
+           //try removing the version
+           refname.cut(-2);
+           //GMessage("[DEBUG] Trying ref name '%s'...\n", refname.chars());
+           rt=reftbl.Find(refname.chars());
+           }
+        if (rt) {
+          gffrec->setRefName(rt->new_name);
+          }
+         else return false; //discard, ref seq not in the given translation table 
+        }
+      if (mRNAOnly && gffrec->isDiscarded()) {
+       //discard generic "gene" or "locus" features with no other detailed subfeatures
+       //GMessage("Warning: discarding %s GFF generic gene/locus container %s\n",m->getID());
+       return false;
+       }
+      /* 
+      if (gffrec->exons.Count()==0  && gffrec->children.Count()==0)) {
+        //a non-mRNA feature with no subfeatures
+        //just so we get some sequence functions working, add a dummy "exon"-like subfeature here
+        //--this could be a single "pseudogene" entry or another genomic region without exons
+        //
+        gffrec->addExon(gffrec->start,gffrec->end);
+        }
+      */  
+     if (rfltGSeq!=NULL) { //filter by gseqName
+        if (strcmp(gffrec->getGSeqName(),rfltGSeq)!=0) {
+          return false;
+          }
+        }
+     if (rfltStrand>0 && gffrec->strand !=rfltStrand) {
+        return false;
+        }
+     //check coordinates
+     if (rfltStart!=0 || rfltEnd!=MAX_UINT) {
+       if (rfltWithin) {
+         if (gffrec->start<rfltStart || gffrec->end>rfltEnd) {
+            return false;
+            }
+         }
+       else {
+         if (gffrec->start>rfltEnd || gffrec->end<rfltStart) {
+           return false;
+           }
+         }
+       }
+     if (multiExon && gffrec->exons.Count()<=1) {
+         return false;
+         }
+   if (wCDSonly && gffrec->CDstart==0) {
+         return false;
+         }
+   if (ensembl_convert && startsWith(gffrec->getID(), "ENS")) {
+       //keep track of chr|gene_id data -- coordinate range
+       char* geneid=gffrec->getGeneID();
+       if (geneid!=NULL) {
+         GeneInfo* ginfo=gene_ids.Find(geneid);
+         if (ginfo==NULL) {//first time seeing this gene ID
+                   GeneInfo* geneinfo=new GeneInfo(gffrec, ensembl_convert);
+                   gene_ids.Add(geneid, geneinfo);
+                   if (gfnew!=NULL) gfnew->Add(geneinfo->gf);
+                   }
+             else ginfo->update(gffrec);
+         }
+       }
+  return true;
+}
+
 
 int main(int argc, char * const argv[]) {
- GArgs args(argc, argv, "hvOUNHWCVMNSXTDAPRZFGEg:i:r:s:t:a:b:o:w:x:y:MINCOV=MINPID=");
- int e;
- if ((e=args.isError())>0)
-    GError("%s\nInvalid argument: %s\n", USAGE, argv[e]);
- if (args.getOpt('h')!=NULL) GError("%s\n", USAGE);
- //debugMode=(args.getOpt('D')!=NULL);
+ GArgs args(argc, argv, 
+   "debug;merge;cluster-only;help;MINCOV=MINPID=hvOUNHWCVJMKNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
+ args.printError(USAGE, true);
+ if (args.getOpt('h') || args.getOpt("help")) {
+    GMessage("%s",USAGE);
+    exit(1);
+    }
+ debugMode=(args.getOpt("debug")!=NULL);
  mRNAOnly=(args.getOpt('O')==NULL);
  sortByLoc=(args.getOpt('S')!=NULL);
  addDescr=(args.getOpt('A')!=NULL);
@@ -769,10 +677,22 @@ int main(int argc, char * const argv[]) {
  altPhases=(args.getOpt('H')!=NULL);
  fmtGTF=(args.getOpt('T')!=NULL); //switch output format to GTF
  bothStrands=(args.getOpt('B')!=NULL);
- fullCDSonly=(args.getOpt('M')!=NULL);
+ fullCDSonly=(args.getOpt('J')!=NULL);
  spliceCheck=(args.getOpt('N')!=NULL);
+ bool collapseContained=(args.getOpt('K')!=NULL);
+ if (args.getOpt('M') || args.getOpt("merge")) {
+    doCluster=true;
+    doCollapseMatching=true;
+    }
+ if (args.getOpt("cluster-only")) {
+    doCluster=true;
+    doCollapseMatching=false;
+    }
  //protmap=(args.getOpt('P')!=NULL);
  if (fullCDSonly) validCDSonly=true;
+ fprintf(stderr, "Command line was:\n");
+ args.printCmdLine(stderr);
+
  fullattr=(args.getOpt('F')!=NULL);
  if (args.getOpt('G')==NULL) 
     noExonAttr=!fullattr;
@@ -780,14 +700,33 @@ int main(int argc, char * const argv[]) {
      noExonAttr=true;
      fullattr=true;
      }
+ ensembl_convert=(args.getOpt('L')!=NULL);
+ if (ensembl_convert) {
+    fullattr=true;
+    noExonAttr=false;
+    sortByLoc=true;
+    }
+    
  mergeCloseExons=(args.getOpt('Z')!=NULL);
  multiExon=(args.getOpt('U')!=NULL);
  writeExonSegs=(args.getOpt('W')!=NULL);
  tracklabel=args.getOpt('t');
  GFastaHandler gfasta(args.getOpt('g'));
- if (gfasta.fastaPath!=NULL) sortByLoc=true; //enforce sorting by chromosome/contig
+ if (gfasta.fastaPath!=NULL)
+     sortByLoc=true; //enforce sorting by chromosome/contig
  GStr s=args.getOpt('i');
  if (!s.is_empty()) maxintron=s.asInt();
+ 
+ FILE* f_repl=NULL;
+ s=args.getOpt('d');
+ if (!s.is_empty()) {
+   if (s=="-") f_repl=stdout;
+     else {
+       f_repl=fopen(s.chars(), "w");
+       if (f_repl==NULL) GError("Error creating file %s\n", s.chars());
+       }
+   }
+ 
  rfltWithin=(args.getOpt('R')!=NULL);
  s=args.getOpt('r');
  if (!s.is_empty()) {
@@ -826,16 +765,21 @@ int main(int argc, char * const argv[]) {
    if (rfltWithin)
      GError("Error: option -R doesn't make sense without -r!\n");
    }
+ s=args.getOpt('m');
+ if (!s.is_empty()) {
+   FILE* ft=fopen(s,"r");
+   if (ft==NULL) GError("Error opening reference table: %s\n",s.chars());
+   loadRefTable(ft, reftbl);
+   fclose(ft);
+   }
  s=args.getOpt('s');
  if (!s.is_empty()) {
-  FILE* fsize=fopen(s,"r");
-  if (fsize==NULL) GError("Error opening info file: %s\n",s.chars());
-  loadSeqInfo(fsize, seqinfo);
- }
- /*
- openfw(fgtfok, args, 'a');
- openfw(fgtfbad, args, 'b');
- */
+   FILE* fsize=fopen(s,"r");
+   if (fsize==NULL) GError("Error opening info file: %s\n",s.chars());
+   loadSeqInfo(fsize, seqinfo);
+   fclose(fsize);
+   }
+
  openfw(f_out, args, 'o');
  //if (f_out==NULL) f_out=stdout;
  if (gfasta.fastaPath==NULL && (validCDSonly || spliceCheck || args.getOpt('w')!=NULL || args.getOpt('x')!=NULL || args.getOpt('y')!=NULL))
@@ -846,90 +790,174 @@ int main(int argc, char * const argv[]) {
  openfw(f_y, args, 'y');
  if (f_y!=NULL || f_x!=NULL) wCDSonly=true;
  //useBadCDS=useBadCDS || (fgtfok==NULL && fgtfbad==NULL && f_y==NULL && f_x==NULL);
- GStr infile;
- if (args.startNonOpt()) {
-        infile=args.nextNonOpt();
-        //GMessage("Given file: %s\n",infile.chars());
-        }
- if (!infile.is_empty()) {
-    if (infile=="-") f_in=stdin;
-      else 
-        if ((f_in=fopen(infile, "r"))==NULL)
-            GError("Cannot open input file %s!\n",infile.chars());
-    }
-  else
-    f_in=stdin;
-
- //GffReader* gfreader=new GffReader(f_in,true);
- GffReader* gfreader=new GffReader(f_in, mRNAOnly, sortByLoc);
- if (args.getOpt('E')!=NULL) gfreader->showWarnings(true);
- gfreader->readAll(fullattr, mergeCloseExons, noExonAttr);
-
- //if (debugMode) GMessage("[D] gff data loaded, now processing each entry\n");
- //GList<GffObj> mrnas(true,true,false);
- for (int m=0;m<gfreader->gflst.Count();m++) {
-   GffObj* mrna=gfreader->gflst[m];
-   if (mrna->hasErrors() || (mrna->len()+500>GFF_MAX_LOCUS)) { //should probably report these in a file too..
-			GMessage("Warning: transcript %s discarded (structural errors found, length=%d).\n", 
-			                                        mrna->getID(), mrna->len());
-			//gfreader->gflst.freeItem(m);
-			continue;
-			}
-	//GStr feature(mrna->getFeatureName());
-	//feature.lower();
-	//bool gene_or_locus=(feature.endsWith("gene") ||feature.index("loc")>=0);
-	
-	//if (mRNAOnly && mrna->monoFeature() && !mrna->isTranscript() &&
-	//     (mrna->exons.Count()==0 || gene_or_locus)) {
-    if (mRNAOnly && mrna->isDiscarded()) {
-	   //discard generic "gene" or "locus" features with no other detailed subfeatures
-	   //GMessage("Warning: discarding %s GFF generic gene/locus container %s\n",m->getID());
-	   continue;
-	   }
-   //if (mrna->exons.Count()==0 && (mrna->isTranscript() ||
-    //    (!mRNAOnly && !gene_or_locus))) {
-    if (mrna->exons.Count()==0) {
-      //a non-mRNA feature with no subfeatures
-      //just so we get some sequence functions working, add a dummy "exon"-like subfeature here
-      mrna->addExon(mrna->start,mrna->end);
-      }
-   if (rfltGSeq!=NULL) { //filter by gseqName
-      if (strcmp(mrna->getGSeqName(),rfltGSeq)!=0) {
-        continue;
-        }
-      }
-   if (rfltStrand>0 && mrna->strand !=rfltStrand) {
-      continue;
-      }
-   //check coordinates
-   if (rfltStart!=0 || rfltEnd!=MAX_UINT) {
-     if (rfltWithin) {
-       if (mrna->start<rfltStart || mrna->end>rfltEnd) {
-          continue;
+ 
+ int numfiles = args.startNonOpt();
+ //GList<GffObj> gfkept(false,true); //unsorted, free items on delete
+ while (true) {
+   GStr infile;
+   if (numfiles) {
+          infile=args.nextNonOpt();
+          if (infile.is_empty()) break;
+          if (infile=="-") { f_in=stdin; infile="stdin"; }
+               else 
+                 if ((f_in=fopen(infile, "r"))==NULL)
+                    GError("Error: cannot open input file %s!\n",infile.chars());
           }
-       }
-     else {
-       if (mrna->start>rfltEnd || mrna->end<rfltStart) {
-         continue;
-         }
-       }
-     }
-   if (multiExon && mrna->exons.Count()<=1) {
-       continue;
-       }
-   if (wCDSonly && mrna->CDstart==0) {
-       continue;
-       }
-   /* if (validCDSonly && mrna->hasErrors) {
-       delete mrna;
-       gfreader->gflst.Forget(m);
-       continue;
-       }
-   */
-   process_mRNA(gfasta, *mrna);
+        else 
+          infile="-";
+   GffLoader gffloader(infile.chars());
+   gffloader.transcriptsOnly=mRNAOnly;
+   gffloader.fullAttributes=fullattr;
+   gffloader.noExonAttrs=noExonAttr;
+   gffloader.mergeCloseExons=mergeCloseExons;
+   gffloader.showWarnings=(args.getOpt('E')!=NULL);
+   gffloader.load(g_data, &validateGffRec, doCluster, doCollapseMatching, collapseContained);
+   if (doCluster) 
+     collectLocusData(g_data);
+   if (numfiles==0) break;
    }
- // M_END:
- delete gfreader;
+   
+ GStr loctrack("gffcl");
+ if (tracklabel) loctrack=tracklabel;
+ if (doCluster) {
+   //grouped in loci
+   for (int g=0;g<g_data.Count();g++) {
+     GenomicSeqData* gdata=g_data[g];
+     for (int l=0;l<gdata->loci.Count();l++) {
+       GffLocus& loc=*(gdata->loci[l]);
+       //check all non-replaced transcripts in this locus:
+       int numvalid=0;
+       int idxfirstvalid=-1;
+       for (int i=0;i<loc.rnas.Count();i++) {
+         GffObj& t=*(loc.rnas[i]);
+         GTData* tdata=(GTData*)(t.uptr);
+         if (tdata->replaced_by!=NULL) {
+            if (f_repl && (t.udata & 8)==0) {
+               //t.udata|=8;
+               fprintf(f_repl, "%s", t.getID());
+               GTData* rby=tdata;
+               while (rby->replaced_by!=NULL) {
+                  fprintf(f_repl," => %s", rby->replaced_by->getID());
+                  rby->rna->udata|=8;
+                  rby=(GTData*)(rby->replaced_by->uptr);
+                  }
+               fprintf(f_repl, "\n");
+               }
+            continue;
+            }
+         if (process_transcript(gfasta, t)) {
+             t.udata|=4; //tag it as valid
+             numvalid++;
+             if (idxfirstvalid<0) idxfirstvalid=i;
+             }
+         }
+       
+       if (f_out && numvalid>0) {
+         GStr locname("RLOC_");
+         locname.appendfmt("%08d",loc.locus_num);
+         if (!fmtGTF) {
+           fprintf(f_out,"%s\t%s\tlocus\t%d\t%d\t.\t%c\t.\tID=%s;locus=%s",
+                    loc.rnas[0]->getGSeqName(), loctrack.chars(), loc.start, loc.end, loc.strand,
+                     locname.chars(), locname.chars());
+           //const char* loc_gname=loc.getGeneName();
+           if (loc.gene_names.Count()>0) { //print all gene names associated to this locus
+              fprintf(f_out, ";genes=%s",loc.gene_names.First()->name.chars());
+              for (int i=1;i<loc.gene_names.Count();i++) {
+                fprintf(f_out, ",%s",loc.gene_names[i]->name.chars());
+                }
+              }
+           if (loc.gene_ids.Count()>0) { //print all GeneIDs names associated to this locus
+              fprintf(f_out, ";geneIDs=%s",loc.gene_ids.First()->name.chars());
+              for (int i=1;i<loc.gene_ids.Count();i++) {
+                fprintf(f_out, ",%s",loc.gene_ids[i]->name.chars());
+                }
+              }
+           fprintf(f_out, ";transcripts=%s",loc.rnas[idxfirstvalid]->getID());
+           for (int i=idxfirstvalid+1;i<loc.rnas.Count();i++) {
+              fprintf(f_out, ",%s",loc.rnas[i]->getID());
+              }
+           fprintf(f_out, "\n");
+           }
+         //now print all valid, non-replaced transcripts in this locus:
+         for (int i=0;i<loc.rnas.Count();i++) {
+           GffObj& t=*(loc.rnas[i]);
+           GTData* tdata=(GTData*)(t.uptr);
+           if (tdata->replaced_by!=NULL || ((t.udata & 4)==0)) continue;
+           t.addAttr("locus", locname.chars());
+           if (fmtGTF) t.printGtf(f_out, tracklabel);
+               else {
+                //print the parent first, if any
+                if (t.parent!=NULL && ((t.parent->udata & 4)==0)) {
+                    GTData* pdata=(GTData*)(t.parent->uptr);
+                    if (pdata->geneinfo!=NULL) 
+                         pdata->geneinfo->finalize();
+                    t.parent->addAttr("locus", locname.chars());
+                    t.parent->printGff(f_out, tracklabel);
+                    t.parent->udata|=4;
+                    }
+                t.printGff(f_out, tracklabel);
+                }
+            }
+          } //have valid transcripts to print
+       }//for each locus
+     if (f_out && !mRNAOnly) {
+       //final pass through the non-transcripts, in case any of them were not printed
+       //TODO: order broken, these should be interspersed among the rnas in the correct order!
+       for (int m=0;m<gdata->gfs.Count();m++) {
+         GffObj& t=*(gdata->gfs[m]);
+         if ((t.udata&4)==0) { //never printed
+           t.udata|=4;
+           if (fmtGTF) t.printGtf(f_out, tracklabel);
+              else t.printGff(f_out, tracklabel);
+           }
+         } //for each non-transcript
+       }
+     } //for each genomic sequence
+   }
+  else { 
+   //not grouped into loci, print the rnas with their parents, if any
+   int numvalid=0;
+   for (int g=0;g<g_data.Count();g++) {
+     GenomicSeqData* gdata=g_data[g];
+     for (int m=0;m<gdata->rnas.Count();m++) {
+        GffObj& t=*(gdata->rnas[m]);
+        GTData* tdata=(GTData*)(t.uptr);
+        if (tdata->replaced_by!=NULL) continue;
+        if (process_transcript(gfasta, t)) {
+           t.udata|=4; //tag it as valid
+           numvalid++;
+           if (f_out && tdata->geneinfo) {
+             tdata->geneinfo->finalize();
+             }
+           if (fmtGTF) t.printGtf(f_out, tracklabel);
+               else {
+                //print the parent first, if any
+                if (t.parent!=NULL && ((t.parent->udata & 4)==0)) {
+                    GTData* pdata=(GTData*)(t.parent->uptr);
+                    if (pdata->geneinfo!=NULL) 
+                         pdata->geneinfo->finalize();
+                    t.parent->printGff(f_out, tracklabel);
+                    t.parent->udata|=4;
+                    }
+                t.printGff(f_out, tracklabel);
+                }
+           } //valid transcript
+        } //for each rna
+     if (f_out && !mRNAOnly) {
+       //final pass through the non-transcripts, in case any of them were not printed
+       //TODO: order broken, these should be interspersed among the rnas in the correct order!
+       for (int m=0;m<gdata->gfs.Count();m++) {
+         GffObj& t=*(gdata->gfs[m]);
+         if ((t.udata&4)==0) { //never printed
+           t.udata|=4;
+           if (fmtGTF) t.printGtf(f_out, tracklabel);
+              else t.printGff(f_out, tracklabel);
+           }
+         } //for each non-transcript
+       }
+     } //for each genomic seq
+   }
+ if (f_repl && f_repl!=stdout) fclose(f_repl);
  seqinfo.Clear();
  //if (faseq!=NULL) delete faseq;
  //if (gcdb!=NULL) delete gcdb;

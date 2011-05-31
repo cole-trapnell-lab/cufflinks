@@ -259,27 +259,27 @@ void* Gmemscan(void *mem, unsigned int len,
                   void *part, unsigned int partlen);
 
 // test if a char is in a string:
-bool chrInStr(char c, char* str);
+bool chrInStr(char c, const char* str);
 
 char* rstrchr(char* str, char ch);
 /* returns a pointer to the rightmost
   occurence of ch in str - like rindex for platforms missing it*/
 
-char* strchrs(char* s, const char* chrs);
+char* strchrs(const char* s, const char* chrs);
 //strchr but with a set of chars instead of only one
 
-char* rstrfind(char* str, const char *substr); /* like rindex() but for strings
+char* rstrfind(const char* str, const char *substr); /* like rindex() but for strings
 or like the right side version of strstr()
 */
 //reverse character string or
 char* reverseChars(char* str, int slen=0);
 
-char* rstrstr(char* rstart, char *lend, char* substr);
+char* rstrstr(const char* rstart, const char *lend, const char* substr);
 /*the reversed, rightside equivalent of strstr: starts searching
  from right end (rstart), going back to left end (lend) and returns
  a pointer to the last (right) matching character in str */
 
-char* strifind(char* str,  const char* substr);
+char* strifind(const char* str,  const char* substr);
 // the case insensitive version of strstr -- finding a string within a strin
 
 

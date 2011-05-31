@@ -43,6 +43,7 @@ noinst_HEADERS = \
 	genes.h \
 	transitive_closure.h \
 	transitive_reduction.h \
+	gff_utils.h \
 	gtf_tracking.h \
 	progressbar.h \
 	bundles.h \
@@ -183,6 +184,7 @@ libgc_a_SOURCES = \
 	GFaSeqGet.cpp \
 	GFastaIndex.cpp \
 	gff.cpp \
+	gff_utils.cpp \
 	gtf_tracking.cpp 
 
 #-- scripts to be installed in $prefix/bin

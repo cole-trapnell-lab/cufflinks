@@ -173,22 +173,34 @@ class GffAttr {
    GffAttr(int an_id, const char* av=NULL) {
      attr_id=an_id;
      attr_val=NULL;
-     if (av!=NULL) {
-       char* lastch = (char*)(av+strlen(av)-1);
-       //remove spaces at the end:
-       while (*lastch==' ' && lastch!=av) lastch--;
-       lastch[1]=0;
-       //practical usage: if it doesn't have any spaces just strip those useless double quotes
-       if (av[0]=='"' && strpbrk(av+1," ;")==NULL) {
-               if (*lastch=='"') *lastch=0;
-               attr_val=Gstrdup(av+1);
-               }
-          else attr_val=Gstrdup(av);
-       }
-
+     setValue(av);
      }
   ~GffAttr() {
      GFREE(attr_val);
+     }
+  void setValue(const char* av) {
+     if (attr_val!=NULL) {
+        GFREE(attr_val);
+        }
+     if (av==NULL || av[0]==0) return;
+     //trim spaces
+     const char* vstart=av;
+     while (*vstart==' ') av++;
+     const char* vend=vstart;
+     bool keep_dq=false;
+     while (vend[1]!=0) {
+        if (*vend==' ' && vend[1]!=' ') keep_dq=true;
+          else if (*vend==';') keep_dq=true;
+        vend++;
+        }
+     //remove spaces at the end:
+     while (*vend==' ' && vend!=vstart) vend--;
+     //practical clean-up: if it doesn't have any internal spaces just strip those useless double quotes
+     if (!keep_dq && *vstart=='"' && *vend=='"') {
+               vend--;
+               vstart++;
+               }
+     attr_val=Gstrdup(vstart, vend);
      }
   bool operator==(GffAttr& d){
       return (this==&d);
@@ -208,7 +220,6 @@ class GffNames;
 class GffNameInfo {
   friend class GffNameList;
 protected:
-   //unsigned char shared;
    int idx;
  public:
    char* name;
@@ -216,10 +227,10 @@ protected:
    GffNameInfo(const char* n) {
      name=Gstrdup(n);
      }
+
    ~GffNameInfo() {
-      //if (shared==0)
-          GFREE(name);
-    }
+      GFREE(name);
+     }
 
    bool operator==(GffNameInfo& d){
        return (strcmp(this->name, d.name)==0);
@@ -272,6 +283,15 @@ public:
    idlast=fidx;
    return fidx;
    }
+
+ int addNewName(const char* tname) {
+    GffNameInfo* f=new GffNameInfo(tname);
+    int fidx=this->Add(f);
+    f->idx=fidx;
+    byName.shkAdd(f->name,f);
+    return fidx;
+    }
+
  int getId(const char* tname) { //only returns a name id# if found
     GffNameInfo* f=byName.Find(tname);
     if (f==NULL) return -1;
@@ -318,8 +338,33 @@ enum GffPrintMode {
 class GffAttrs:public GList<GffAttr> {
   public:
     GffAttrs():GList<GffAttr>(false,true,false) { }
+    void add_or_update(GffNames* names, const char* attrname, const char* val) {
+      int aid=names->attrs.getId(attrname);
+      if (aid>=0) {
+         //attribute found in the dictionary
+         for (int i=0;i<Count();i++) {
+            //do we have it?
+            if (aid==Get(i)->attr_id) {
+                //update the value
+                Get(i)->setValue(val);
+                return;
+                }
+            }
+         }
+        else {
+         aid=names->attrs.addNewName(attrname);
+         }
+      this->Add(new GffAttr(aid, val));
+      }
+      
     char* getAttr(GffNames* names, const char* attrname) {
       int aid=names->attrs.getId(attrname);
+      if (aid>=0)
+        for (int i=0;i<Count();i++)
+          if (aid==Get(i)->attr_id) return Get(i)->attr_val;
+      return NULL;
+      }
+    char* getAttr(int aid) {
       if (aid>=0)
         for (int i=0;i<Count();i++)
           if (aid==Get(i)->attr_id) return Get(i)->attr_val;
@@ -366,6 +411,11 @@ class GffExon : public GSeg {
    return attrs->getAttr(names, atrname);
    }
 
+ char* getAttr(int aid) {
+   if (attrs==NULL) return NULL;
+   return attrs->getAttr(aid);
+   }
+
  ~GffExon() { //destructor
    if (attrs!=NULL) delete attrs;
    }
@@ -399,7 +449,7 @@ class GffObj:public GSeg {
    friend class GffReader;
    friend class GffExon;
 public:
-  static GffNames* names; // common string storage that holds the various attribute names etc.
+  static GffNames* names; // dictionary storage that holds the various attribute names etc.
   int track_id; // index of track name in names->tracks
   int gseq_id; // index of genomic sequence name in names->gseqs
   int ftype_id; // index of this record's feature name in names->feats, or the special gff_fid_mRNA value
@@ -549,8 +599,10 @@ public:
        gffnames_unref(names);
        }
    //--------------
-   GffObj* finalize(GffReader* gfr, bool mergeCloseExons=false); //finalize parsing: must be called in order to merge adjacent/close proximity subfeatures
-   void parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr=false);
+   GffObj* finalize(GffReader* gfr, bool mergeCloseExons=false, 
+               bool keepAttrs=false, bool noExonAttr=true); 
+               //complete parsing: must be called in order to merge adjacent/close proximity subfeatures
+   void parseAttrs(GffAttrs*& atrlist, char* info, bool isExon=false);
    const char* getSubfName() { //returns the generic feature type of the entries in exons array
      int sid=exon_ftype_id;
      if (sid==gff_fid_exon && isCDS) sid=gff_fid_CDS;
@@ -560,11 +612,19 @@ public:
      return (exons.Count()==0 || 
           (exons.Count()==1 && exon_ftype_id==ftype_id));
      }
+
+   bool hasCDS() { return (CDstart>0); }
+
    const char* getFeatureName() {
      return names->feats.getName(ftype_id);
      }
-   void addAttr(const char* attrname, char* attrvalue);
+   void setFeatureName(const char* feature);
+   
+   void addAttr(const char* attrname, const char* attrvalue);
    int removeAttr(const char* attrname, const char* attrval=NULL);
+   int removeAttr(int aid, const char* attrval=NULL);
+   int removeExonAttr(GffExon& exon, const char* attrname, const char* attrval=NULL);
+   int removeExonAttr(GffExon& exon, int aid, const char* attrval=NULL);
    const char* getAttrName(int i) {
      if (attrs==NULL) return NULL;
      return names->attrs.getName(attrs->Get(i)->attr_id);
@@ -600,6 +660,12 @@ public:
    const char* getGSeqName() {
      return names->gseqs.getName(gseq_id);
      }
+
+   const char* getRefName() {
+     return names->gseqs.getName(gseq_id);
+     }
+   void setRefName(const char* newname);
+   
    const char* getTrackName() {
      return names->tracks.getName(track_id);
      }
@@ -787,18 +853,21 @@ public:
 
    void updateExonPhase(); //for CDS-only features, updates GExon::phase
 
-   void printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
-                                uint segstart, uint segend, int exidx, char phase, bool gff3);
-   void printGxf(FILE* fout, GffPrintMode gffp=pgffExon, char* tlabel=NULL);
-   void printGtf(FILE* fout, char* tlabel=NULL) {
+   void printGxfLine(FILE* fout, const char* tlabel, const char* gseqname, 
+          bool iscds, uint segstart, uint segend, int exidx, char phase, bool gff3);
+   void printGxf(FILE* fout, GffPrintMode gffp=pgffExon, 
+             const char* tlabel=NULL, const char* gfparent=NULL);
+   void printGtf(FILE* fout, const char* tlabel=NULL) {
       printGxf(fout, pgtfAny, tlabel);
       }
-   void printGff(FILE* fout, char* tlabel=NULL) {
-      printGxf(fout, pgffAny, tlabel);
+   void printGff(FILE* fout, const char* tlabel=NULL,
+                                const char* gfparent=NULL) {
+      printGxf(fout, pgffAny, tlabel, gfparent);
       }
-   void printTranscriptGff(FILE* fout, char* tlabel=NULL, bool showCDS=false) {
+   void printTranscriptGff(FILE* fout, char* tlabel=NULL,
+                            bool showCDS=false, const char* gfparent=NULL) {
       if (isValidTranscript())
-         printGxf(fout, showCDS ? pgffBoth : pgffExon, tlabel);
+         printGxf(fout, showCDS ? pgffBoth : pgffExon, tlabel, gfparent);
       }
    void printSummary(FILE* fout=NULL);
    void getCDS_ends(uint& cds_start, uint& cds_end);
@@ -868,15 +937,16 @@ class GfList: public GList<GffObj> {
        this->setSorted((GCompareProc*)gfo_cmpByLoc);
        }
      }
-   void finalize(GffReader* gfr, bool mergeCloseExons) { //if set, enforce sort by locus
+   void finalize(GffReader* gfr, bool mergeCloseExons, 
+                bool keepAttrs=false, bool noExonAttr=true) { //if set, enforce sort by locus
      if (mustSort) { //force (re-)sorting
         this->setSorted(false);
         this->setSorted((GCompareProc*)gfo_cmpByLoc);
         }
      int delcount=0;
      for (int i=0;i<Count();i++) {
-       //finalize the parsing for each GffObj
-       fList[i]->finalize(gfr, mergeCloseExons);
+       //finish the parsing for each GffObj
+       fList[i]->finalize(gfr, mergeCloseExons, keepAttrs, noExonAttr);
        }
      if (delcount>0) this->Pack();
      }
@@ -961,7 +1031,7 @@ class GffReader {
                                GffObj* parent=NULL, GffExon* pexon=NULL);
   GfoHolder* replaceGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr, int replaceidx);
   GfoHolder* updateGffRec(GfoHolder* prevgfo, GffLine* gffline, 
-                                         bool keepAttr, bool noExonAttr);
+                                         bool keepAttr);
   GfoHolder* updateParent(GfoHolder* newgfh, GffObj* parent);
   bool addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr);
   GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats

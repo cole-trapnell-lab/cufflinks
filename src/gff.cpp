@@ -458,10 +458,10 @@ int GffObj::addExon(GffReader* reader, GffLine* gl, bool keepAttr, bool noExonAt
   if (keepAttr) {
      if (noExonAttr) { 
          if (attrs==NULL) //place the parsed attributes directly at transcript level
-           parseAttrs(attrs, gl->info, noExonAttr);
+           parseAttrs(attrs, gl->info);
          }
        else { //need all exon-level attributes
-         parseAttrs(exons[eidx]->attrs, gl->info, noExonAttr);
+         parseAttrs(exons[eidx]->attrs, gl->info, true);
          }
       }
   return eidx;
@@ -736,7 +736,7 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
              }
             else { //unrecognized non-exon feature ? use the ID instead
              gffID=Gstrdup(gffline->ID);
-             if (keepAttr) this->parseAttrs(attrs, gffline->info, noExonAttr);
+             if (keepAttr) this->parseAttrs(attrs, gffline->info);
              }
         }
     } //subfeature given directly
@@ -752,7 +752,7 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
     if (gffline->is_transcript)
       exon_ftype_id=gff_fid_exon;
 
-    if (keepAttr) this->parseAttrs(attrs, gffline->info, noExonAttr);
+    if (keepAttr) this->parseAttrs(attrs, gffline->info);
     }//no parent
 
   if (gffline->gene_name!=NULL) {
@@ -899,7 +899,7 @@ GfoHolder* GffReader::newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr
 }
 
 GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline, 
-                                         bool keepAttr, bool noExonAttr) {
+                                         bool keepAttr) {
  if (prevgfo==NULL) return NULL;
  prevgfo->gffobj->createdByExon(false);
  prevgfo->gffobj->ftype_id=prevgfo->gffobj->names->feats.addName(gffline->ftype);
@@ -910,7 +910,7 @@ GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline,
  prevgfo->gffobj->fromGff3(gffline->is_gff3);
  if (keepAttr) {
    if (prevgfo->gffobj->attrs!=NULL) prevgfo->gffobj->attrs->Clear();
-   prevgfo->gffobj->parseAttrs(prevgfo->gffobj->attrs, gffline->info, noExonAttr);
+   prevgfo->gffobj->parseAttrs(prevgfo->gffobj->attrs, gffline->info);
    }
  return prevgfo;
 }
@@ -988,7 +988,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
          prevseen=gfoFind(gffline->ID, gffline->gseqname);
      if (prevseen!=NULL) {
             if (prevseen->gffobj->createdByExon()) {
-                updateGffRec(prevseen, gffline, keepAttr, noExonAttr);
+                updateGffRec(prevseen, gffline, keepAttr);
                 }
              else {
                 GMessage("Error: duplicate GFF ID '%s' encountered!\n",gffline->ID);
@@ -1053,7 +1053,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
       delete gffline;
       gffline=NULL;
       }//while gff lines
-  gflst.finalize(this, mergeCloseExons); //force sorting by locus if so constructed
+  gflst.finalize(this, mergeCloseExons, keepAttr, noExonAttr); //force sorting by locus if so constructed
  // all gff records are now loaded in GList gflst
  // so we can free the hash
   phash.Clear();
@@ -1063,7 +1063,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
     }
 }
 
-GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons) {
+GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons, bool keepAttrs, bool noExonAttr) {
  //merge
  //always merge adjacent or overlapping segments
  //but if mergeCloseExons then merge even when distance is up to 5 bases
@@ -1105,10 +1105,38 @@ GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons) {
        } //check for merge with next exon
      } //for each exon
    }
+ //attribute reduction for GTF records
+ if (keepAttrs && !noExonAttr && !fromGff3() 
+          && exons.Count()>0 && exons[0]->attrs!=NULL) {
+   bool attrs_discarded=false;
+   for (int a=0;a<exons[0]->attrs->Count();a++) {
+      int attr_name_id=exons[0]->attrs->Get(a)->attr_id;
+      char* attr_name=names->attrs.getName(attr_name_id);
+      char* attr_val =exons[0]->attrs->Get(a)->attr_val;
+      bool sameExonAttr=true;
+      for (int i=1;i<exons.Count();i++) {
+         char* ov=exons[i]->getAttr(attr_name_id);
+         if (ov==NULL || (strcmp(ov,attr_val)!=0)) { 
+             sameExonAttr=false; 
+             break;
+             }
+         }
+      if (sameExonAttr) {
+             //delete this attribute from exons level
+             attrs_discarded=true;
+             this->addAttr(attr_name, attr_val);
+             for (int i=1;i<exons.Count();i++) {
+                 removeExonAttr(*(exons[i]), attr_name_id);
+                 }
+             exons[0]->attrs->freeItem(a);
+             }
+      }
+   if (attrs_discarded) exons[0]->attrs->Pack();
+   }
  return this;
 }
 
-void GffObj::parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr) {
+void GffObj::parseAttrs(GffAttrs*& atrlist, char* info, bool isExon) {
   if (names==NULL)
      GError(ERR_NULL_GFNAMES, "parseAttrs()");
   if (atrlist==NULL)
@@ -1128,15 +1156,21 @@ void GffObj::parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr) {
     char* ech=strchr(start,'=');
     if (ech!=NULL) { // attr=value format found
        *ech='\0';
-       /*
-       if (strcmp(start, "Target")==0 || strcmp(start,"Parent")==0 ||
-           strcmp(start,"transcript_id")==0 || strcmp(start,"gene_id")==0)
-            { start=pch; continue; } //skip these already parsed attributes
-       */
-       if (noExonAttr && (strcmp(start, "exon_number")==0 || strcmp(start, "exon")==0)) { start=pch; continue; }
+       //if (noExonAttr && (strcmp(start, "exon_number")==0 || strcmp(start, "exon")==0)) { start=pch; continue; }
+       if (strcmp(start, "exon_number")==0 || strcmp(start, "exon")==0 ||
+              strcmp(start, "exon_id")==0)
+           { start=pch; continue; }
        ech++;
        while (*ech==' ' && ech<endinfo) ech++;//skip extra spaces after the '='
-       atrlist->Add(new GffAttr(names->attrs.addName(start),ech));
+       //atrlist->Add(new GffAttr(names->attrs.addName(start),ech));
+       //make sure we don't add the same attribute more than once
+       if (isExon && (strcmp(start, "protein_id")==0)) {
+             //Ensembl special case
+             this->addAttr(start, ech);
+             start=pch;
+             continue;
+             }
+       atrlist->add_or_update(names, start, ech);
        }
       /*
       else { //not an attr=value format
@@ -1148,11 +1182,29 @@ void GffObj::parseAttrs(GffAttrs*& atrlist, char* info, bool noExonAttr) {
   if (atrlist->Count()==0) { delete atrlist; atrlist=NULL; }
 }
 
-void GffObj::addAttr(const char* attrname, char* attrvalue) {
+void GffObj::addAttr(const char* attrname, const char* attrvalue) {
   if (this->attrs==NULL)
       this->attrs=new GffAttrs();
-  this->attrs->Add(new GffAttr(names->attrs.addName(attrname),attrvalue));
+  //this->attrs->Add(new GffAttr(names->attrs.addName(attrname),attrvalue));
+  this->attrs->add_or_update(names, attrname, attrvalue);
 }
+
+
+void GffObj::setFeatureName(const char* feature) {
+ //change the feature name/type for a transcript
+ int fid=names->feats.addName(feature);
+ if (monoFeature() && exons.Count()>0) 
+    this->exon_ftype_id=fid;
+ this->ftype_id=fid;
+}
+
+void GffObj::setRefName(const char* newname) {
+ //change the feature name/type for a transcript
+ int rid=names->gseqs.addName(newname);
+ this->gseq_id=rid;
+}
+
+
 
 int GffObj::removeAttr(const char* attrname, const char* attrval) {
   if (this->attrs==NULL || attrname==NULL || attrname[0]==0) return 0;
@@ -1171,6 +1223,58 @@ int GffObj::removeAttr(const char* attrname, const char* attrval) {
   if (delcount>0) this->attrs->Pack(); 
   return delcount;
 }
+
+int GffObj::removeAttr(int aid, const char* attrval) {
+  if (this->attrs==NULL || aid<0) return 0;
+  int delcount=0;  //could be more than one ?
+  for (int i=0;i<this->attrs->Count();i++) {
+     if (aid==this->attrs->Get(i)->attr_id) {
+       if (attrval==NULL || 
+          strcmp(attrval, this->attrs->Get(i)->attr_val)==0) {
+             delcount++;
+             this->attrs->freeItem(i);
+             }
+       }
+     }
+  if (delcount>0) this->attrs->Pack(); 
+  return delcount;
+}
+
+
+int GffObj::removeExonAttr(GffExon& exon, const char* attrname, const char* attrval) {
+  if (exon.attrs==NULL || attrname==NULL || attrname[0]==0) return 0;
+  int aid=this->names->attrs.getId(attrname);
+  if (aid<0) return 0;
+  int delcount=0;  //could be more than one
+  for (int i=0;i<exon.attrs->Count();i++) {
+     if (aid==exon.attrs->Get(i)->attr_id) {
+       if (attrval==NULL || 
+          strcmp(attrval, exon.attrs->Get(i)->attr_val)==0) {
+             delcount++;
+             exon.attrs->freeItem(i);
+             }
+       }
+     }
+  if (delcount>0) exon.attrs->Pack(); 
+  return delcount;
+}
+
+int GffObj::removeExonAttr(GffExon& exon, int aid, const char* attrval) {
+  if (exon.attrs==NULL || aid<0) return 0;
+  int delcount=0;  //could be more than one
+  for (int i=0;i<exon.attrs->Count();i++) {
+     if (aid==exon.attrs->Get(i)->attr_id) {
+       if (attrval==NULL || 
+          strcmp(attrval, exon.attrs->Get(i)->attr_val)==0) {
+             delcount++;
+             exon.attrs->freeItem(i);
+             }
+       }
+     }
+  if (delcount>0) exon.attrs->Pack(); 
+  return delcount;
+}
+
 
 void GffObj::getCDS_ends(uint& cds_start, uint& cds_end) {
   cds_start=0;
@@ -1501,7 +1605,7 @@ void GffObj::printSummary(FILE* fout) {
           strand, start, end, gscore, (float)qcov/10.0);
 }
 
-void GffObj::printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
+void GffObj::printGxfLine(FILE* fout, const char* tlabel, const char* gseqname, bool iscds,
                              uint segstart, uint segend, int exidx, char phase, bool gff3) {
   static char scorestr[14];
   strcpy(scorestr,".");
@@ -1547,11 +1651,23 @@ void GffObj::printGxfLine(FILE* fout, char* tlabel, char* gseqname, bool iscds,
                 else fprintf(fout, "\"%s\";",xattrs->Get(i)->attr_val);
              }
           }
+    //for GTF, also append the GffObj attributes to each exon line
+    if ((xattrs=this->attrs)!=NULL) {
+          for (int i=0;i<xattrs->Count();i++) {
+            if (xattrs->Get(i)->attr_val==NULL) continue;
+            const char* attrname=names->attrs.getName(xattrs->Get(i)->attr_id);
+            fprintf(fout, " %s ",attrname);
+            if (xattrs->Get(i)->attr_val[0]=='"')
+                     fprintf(fout, "%s;",xattrs->Get(i)->attr_val);
+                else fprintf(fout, "\"%s\";",xattrs->Get(i)->attr_val);
+             }
+           }
     fprintf(fout, "\n");
     }//GTF
 }
 
-void GffObj::printGxf(FILE* fout, GffPrintMode gffp, char* tlabel) {
+void GffObj::printGxf(FILE* fout, GffPrintMode gffp, 
+                   const char* tlabel, const char* gfparent) {
  static char tmpstr[255];
  if (tlabel==NULL) {
     tlabel=track_id>=0 ? names->tracks.Get(track_id)->name :
@@ -1559,7 +1675,7 @@ void GffObj::printGxf(FILE* fout, GffPrintMode gffp, char* tlabel) {
     }
  unxcoord();
  //if (exons.Count()==0) return;
- char* gseqname=names->gseqs.Get(gseq_id)->name;
+ const char* gseqname=names->gseqs.Get(gseq_id)->name;
  bool gff3 = (gffp>=pgffAny);
  bool showCDS = (gffp==pgtfAny || gffp==pgtfCDS || gffp==pgffCDS || gffp==pgffAny || gffp==pgffBoth);
  bool showExon = (gffp<=pgtfExon || gffp==pgffAny || gffp==pgffExon || gffp==pgffBoth);
@@ -1579,8 +1695,14 @@ void GffObj::printGxf(FILE* fout, GffPrintMode gffp, char* tlabel) {
      "%s\t%s\t%s\t%d\t%d\t%s\t%c\t.\tID=%s",
      gseqname, tlabel, ftype, pstart, pend, tmpstr, strand, gffID);
    if (CDstart>0 && !showCDS && !isCDS) fprintf(fout,";CDS=%d-%d",CDstart,CDend);
-   if (parent!=NULL && !parent->isDiscarded())
-       fprintf(fout, ";Parent=%s",parent->getID());
+   if (gfparent!=NULL) {
+      //parent override
+      fprintf(fout, ";Parent=%s",gfparent);
+      }
+     else {
+       if (parent!=NULL && !parent->isDiscarded())
+           fprintf(fout, ";Parent=%s",parent->getID());
+       }
    if (geneID!=NULL)
       fprintf(fout, ";geneID=%s",geneID);
    if (gene_name!=NULL)

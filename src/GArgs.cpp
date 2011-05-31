@@ -3,14 +3,10 @@
 #include <ctype.h>
 
 GArgs::GArgs(int argc, char* const argv[], const char* format, bool nodigitopts) {
-   /* format is:
-       <letter>[:]    for e.g. p:hT    <-  -p testing -ptesting -h -T
-       <string>=      for e.g. PID=S=  <-  PID=50 S=3.5
-   This means that the = options, if present, must NEVER be given after 
-   dashed switches (non-value) directly
+   /* format can be:
+      <string>{;|=} e.g. disable-test;PID=S= for --disable-test PID=50 (or --PID 50) S=3.5 etc.
+      <letter>[:]  e.g. p:hT  for -p testing (or -ptesting) -h -T
    */
-  
-//parse format string first:
 const char* fstr=format;
 fmtcount=0;
 count=0;
@@ -18,19 +14,24 @@ nonOptCount=0;
 nonOptPos=0;
 optPos=0;
 errarg=0;
+err_valmissing=false;
 args=NULL;
 fmt=NULL;
+_argc=argc;
+_argv=argv;
 int fmtlen=strlen(format);
+//---- first parse the format string
 while (fstr-format < fmtlen ) {
-  int l=strcspn(fstr, ":=");
-  if (fstr[l]=='\0') { //end of string reached
+  int l=strcspn(fstr, ";=:");
+  if (fstr[l]==0) { //end of string reached
       //all previous chars are just switches:
        GREALLOC(fmt, (fmtcount+l)*sizeof(fmtdef));
-       //store each switches
+       //store each switch
        for (int i=0; i<l;i++) { 
-         GCALLOC(fmt[fmtcount+i].opt, 2); //one char length
-         fmt[fmtcount+i].opt[0]=fstr[i];
-         fmt[fmtcount+i].type = 0;
+         fmt[fmtcount+i].longopt=NULL;
+         fmt[fmtcount+i].opt=fstr[i];
+         fmt[fmtcount+i].req_value = false;
+         fmt[fmtcount+i].code=fmtcount+i+1;
          }
        fmtcount+=l;
        break;
@@ -39,160 +40,257 @@ while (fstr-format < fmtlen ) {
      if (fstr[l]==':') {
          //fstr[l-1] is an argument, but all the previous are just switches
          GREALLOC(fmt, (fmtcount+l)*sizeof(fmtdef));
-         //store each switches AND the option
+         //store each switch AND the option
          for (int i=0; i<l;i++) { 
-           GCALLOC(fmt[fmtcount+i].opt, 2); //one char length
-           fmt[fmtcount+i].opt[0]=fstr[i];
-           fmt[fmtcount+i].type = (i==l-1)?1:0;
+           fmt[fmtcount+i].longopt=NULL; //one char length
+           fmt[fmtcount+i].opt=fstr[i];
+           fmt[fmtcount+i].req_value = (i==l-1);
+           fmt[fmtcount+i].code=fmtcount+i+1;
            }
          fmtcount+=l;
          }
-      else { // fstr[l]=='=' case!
-         //all these chars are one = style argument
+      else { // fstr[l]=='=' or ';' 
          GREALLOC(fmt, (fmtcount+1)*sizeof(fmtdef));
-         GMALLOC(fmt[fmtcount].opt, l+1);
-         strncpy(fmt[fmtcount].opt, fstr, l);
-         fmt[fmtcount].opt[l]='\0';
-         fmt[fmtcount].type=2;
+         fmt[fmtcount].longopt=Gstrdup(fstr, fstr+l-1);
+         fmt[fmtcount].opt=0;
+         fmt[fmtcount].req_value=(fstr[l]=='=');
+         fmt[fmtcount].code=fmtcount+1;
          fmtcount++;
          }
      fstr+=l+1;
      }
   }
-//---- that was the parsing of the format string
-//now parse the arguments based on given format specification
-int p=1; //skip program name
-int f=0;
-//GMessage("argc=%d\n", argc);
-while (p<argc) {
- if (argv[p][0]=='-') { //dashed argument ?
-   int cpos=1;
-   char c=argv[p][cpos];
-   if (c==0 || (nodigitopts && isdigit(c))) { 
-      //special case: plain argument '-' or negative number
-      GREALLOC(args, (count+1)*sizeof(argdata));
-      args[count].opt=NULL;
-      if (c==0) {
-        GCALLOC(args[count].value, 2);
-        args[count].value[0]='-';
+ //-- now parse the arguments based on the given format specification
+ parseArgs(nodigitopts);
+ }
+ 
+int GArgs::parseArgs(bool nodigitopts) {
+  int p=1; //skip program name
+  int f=0;
+  while (p<_argc) {
+   if (_argv[p][0]=='-' && (_argv[p][1]==0 || _argv[p][1]!='-')) { 
+     //single-dash argument
+     int cpos=1;
+     char c=_argv[p][cpos];
+     if (c==0 || (nodigitopts && isdigit(c)) || 
+            (c=='.' && isdigit(_argv[p][cpos+1]))) { 
+        //special case: plain argument '-' or just a negative number
+        GREALLOC(args, (count+1)*sizeof(argdata));
+        args[count].opt=NULL;
+        args[count].fmti=-1;
+        if (c==0) {
+          GCALLOC(args[count].value, 2);
+          args[count].value[0]='-';
+          }
+         else { //negative number given
+          args[count].value=Gstrdup(_argv[p]);
+          }
+        count++;
+        nonOptCount++;
         }
-       else {
-        args[count].value=Gstrdup(argv[p]);
-        }
-      count++;
-      nonOptCount++;
-      }
-    else { //dashed argument or switch
-     COLLAPSED:
-      if ((f=validOpt(c))>=0) {
-        if (fmt[f].type==0) {//switch type
+      else { //single-dash argument or switch
+       COLLAPSED:
+        if ((f=validShortOpt(c))>=0) {
           GREALLOC(args, (count+1)*sizeof(argdata));
           GCALLOC(args[count].opt, 2);
           args[count].opt[0]=c;
-          GCALLOC(args[count].value, 1);
-          count++;
-          // only switches can be grouped with some other switches or options
-          if (argv[p][cpos+1]!='\0') {
-             cpos++;
-             c=argv[p][cpos];
-             goto COLLAPSED;
-             }
-          }
-         else 
-           if (fmt[f].type==1) { //dash argument
-            GREALLOC(args, (count+1)*sizeof(argdata));
-            GCALLOC(args[count].opt, 2);
-            args[count].opt[0]=c;
-            if (argv[p][cpos+1]=='\0') {
-              if (p+1<argc) { //value is the whole next argument
-                 p++;
-                 GMALLOC(args[count].value, strlen(argv[p])+1);
-                 strcpy(args[count].value, argv[p]);
-                 }
-               else {
-                 errarg=p;
-                 return;
-                 }
-              }
-             else { //value immediately follows the dash-option
-                GMALLOC(args[count].value, strlen(argv[p])-cpos);
-                strcpy(args[count].value, (argv[p]+cpos+1));
-                //GMessage("args[%d].value = '%s'",count, args[count].value);
-              }
+          args[count].fmti=f;
+          if (!fmt[f].req_value) {//switch type
+            GCALLOC(args[count].value,1);//so getOpt() functions would not return NULL
             count++;
-            }
-           else {//inconsistent type
-             errarg=p;
-             return;
-             } 
-        } //was validOpt
-       else { //option not found in format definition!
-         errarg=p;
-         return;
-         }
-      }
-   }
- else {//not a dashed argument
-   char* e=strchr(argv[p],'=');
-   if (e!=NULL && strchr(format,'=')!=NULL && e!=argv[p] && *(e-1)!='\\') { 
-     //this must be an '=' option
-     //yet the '=' char can be preceded by a '\' in order to not be parsed
-     //as a = option
-     char part[128];
-     strncpy(part, argv[p], e-argv[p]);
-     part[e-argv[p]]='\0';
-     if ((f=validOpt(part))>=0 && fmt[f].type==2) {
-          GREALLOC(args, (count+1)*sizeof(argdata));
-          args[count].opt=Gstrdup(part);
-          if (strlen(argv[p])-strlen(part)>0) {
-            GMALLOC(args[count].value, strlen(argv[p])-strlen(part)+1);
-            strcpy(args[count].value, e+1);
+            // only switches can be grouped with some other switches or options
+            if (_argv[p][cpos+1]!='\0') {
+               cpos++;
+               c=_argv[p][cpos];
+               goto COLLAPSED;
+               }
             }
            else {
-            args[count].value=NULL;
-            } 
-          count++;
+              //single-dash argument followed by a value
+            if (_argv[p][cpos+1]=='\0') {
+                if (p+1<_argc && _argv[p+1][0]!=0) { //value is the whole next argument
+                   p++;
+                   args[count].value=Gstrdup(_argv[p]);
+                   }
+                  else {
+                   errarg=p;
+                   err_valmissing=true;
+                   return errarg;
+                   }
+                }
+               else { //value immediately follows the dash-option
+                args[count].value=Gstrdup(_argv[p]+cpos+1);
+                }
+            count++;
+            }
+          } //was validShortOpt
+         else { //option not found in format definition!
+           errarg=p;
+           return errarg;
+           }
+        }
+     } //-single-dash
+   else {//not a single-dash argument
+     char* ap=_argv[p];
+     bool is_longopt=false;
+     if (*ap=='-' && ap[1]=='-') {
+        is_longopt=true;
+        ap+=2;
+        }
+     char* e=strchr(ap+1,'=');
+     while (e!=NULL && *(e-1)=='\\') e=strchr(e,'=');
+     if (e==NULL && is_longopt) {
+        e=ap;
+        while (*e!=0 && *e!=' ') e++;
+        //e will be on eos or next space
+        }
+     if (e!=NULL && e>ap) {
+       //this must be a long option
+       //e is on eos, space or '='
+       if ((f=validLongOpt(ap,e-1))>=0) {
+            GREALLOC(args, (count+1)*sizeof(argdata));
+            args[count].opt=Gstrdup(ap,e-1);
+            args[count].fmti=f;
+            if (fmt[f].req_value) {
+               if (*e==0) {
+                   //value is the next argument
+                   if (p+1<_argc && _argv[p+1][0]!=0) {
+                      p++;
+                      args[count].value=Gstrdup(_argv[p]);
+                      }
+                    else {
+                      errarg=p;
+                      err_valmissing=true;
+                      return errarg;
+                      }
+                   }
+                else { //value is in the same argument
+                   //while (*e!=0 && (*e==' ' || *e=='=')) e++;
+                   if (*e=='=') e++;
+                   if (*e==0) {
+                      errarg=p;
+                      err_valmissing=true;
+                      return errarg;
+                      }
+                   args[count].value=Gstrdup(e);
+                   }
+               } //value required
+              else { //no value expected
+               GCALLOC(args[count].value,1); //do not return NULL
+               }
+            count++;
+            }
+          else { //error - this long argument not recognized
+           errarg=p;
+           return errarg;
+           }
+        }
+      else { //just a plain non-option argument
+       if (e==ap) { //i.e. just "--"
+          errarg=p;
+          return errarg;
           }
-        else { //error - format does not match this '=' argument
-         errarg=p;
-         return;        
-         }
-      }
-    else { //it seems it's just a plain argument, like a filename, etc.
-     GREALLOC(args, (count+1)*sizeof(argdata));
-     args[count].opt=NULL; //it's not an option
-     args[count].value=Gstrdup(argv[p]);
-     count++;
-     nonOptCount++;
+       GREALLOC(args, (count+1)*sizeof(argdata));
+       args[count].opt=NULL; //it's not an option
+       args[count].value=Gstrdup(_argv[p]);
+       args[count].fmti=-1;
+       count++;
+       nonOptCount++;
+       }
      }
-   }
- p++;//check next arg string
- }
+   p++;//check next arg string
+   } //while arguments
+ return errarg;
 }
+
+void GArgs::printError(FILE* fout, const char* usage, bool exitProgram) {
+ if (errarg==0) return;
+ if (usage) fprintf(fout, "%s\n", usage);
+ if (err_valmissing) 
+     fprintf(fout, "Error: value required for option '%s'\n", _argv[errarg]);
+    else 
+     fprintf(fout, "Error: invalid argument '%s'\n", _argv[errarg]);
+ if (exitProgram)
+     exit(1);
+}
+
+void GArgs::printError(const char* usage, bool exitProgram) {
+ printError(stderr, usage, exitProgram);
+}
+
+void GArgs::printCmdLine(FILE* fout) {
+ if (_argv==NULL) return;
+ for (int i=0;i<_argc;i++) {
+   fprintf(fout, "%s%c", _argv[i], (i==_argc-1)?'\n':' ');
+   }
+}
+
+GArgs::GArgs(int argc, char* const argv[], const GArgsDef fmtrecs[], bool nodigitopts) {
+ fmtcount=0;
+ count=0;
+ nonOptCount=0;
+ nonOptPos=0;
+ optPos=0;
+ errarg=0;
+ err_valmissing=false;
+ args=NULL;
+ fmt=NULL;
+ _argc=argc;
+ _argv=argv;
+ if (fmtrecs==NULL) return;
+ 
+ const GArgsDef* frec=fmtrecs;
+ while ((frec->longopt || frec->opt) && fmtcount<255) {
+     fmtcount++;
+     frec=&(fmtrecs[fmtcount]);
+     }
+ GCALLOC(fmt, fmtcount*sizeof(fmtdef));
+ for (int i=0;i<fmtcount;i++) {
+   fmt[i].longopt=Gstrdup(fmtrecs[i].longopt); //do we need to use Gstrdup here?
+   fmt[i].opt=fmtrecs[i].opt;
+   fmt[i].req_value=fmtrecs[i].req_value;
+   fmt[i].code=fmtrecs[i].code;
+   }
+ parseArgs(nodigitopts);
+}
+
 
 GArgs::~GArgs() {
  int i;
  for (i=0; i<fmtcount; i++)
-    GFREE(fmt[i].opt);
+    GFREE(fmt[i].longopt);
  GFREE(fmt);
  for (i=0; i<count; i++) {
   GFREE(args[i].opt);
   GFREE(args[i].value);
   }
- GFREE(args);  
+ GFREE(args);
 }
 
-int GArgs::validOpt(char o) {
+int GArgs::validShortOpt(char o) {
  for (int i=0; i<fmtcount; i++) 
-  if (fmt[i].opt[0]==o && fmt[i].opt[1]=='\0') return i;
+  if (fmt[i].opt==o) return i;
  return -1; 
 }
 
-int GArgs::validOpt(char* o) {
- for (int i=0; i<fmtcount; i++) 
-  if (strcmp(fmt[i].opt, o)==0) return i;
+int GArgs::validLongOpt(char* o, char* to) {
+ char* pstr=Gstrdup(o,to);
+ for (int i=0; i<fmtcount; i++) {
+  if (fmt[i].longopt && strcmp(fmt[i].longopt, pstr)==0) {
+       GFREE(pstr);
+       return i;
+       }
+  }
+ GFREE(pstr); 
  return -1;
 }
+
+int GArgs::validOpt(int code) {
+ for (int i=0; i<fmtcount; i++) 
+   if (fmt[i].code==code) return i;
+ return -1;
+}
+
 
 int GArgs::isError() { // returns the offending argv position or 0 if no error
  return errarg;
@@ -207,7 +305,7 @@ char* GArgs::getOpt(const char* o) { /* retrieve the value for option o
  for (int i=0; i<count; i++) 
   if (args[i].opt!=NULL && strcmp(args[i].opt, o)==0) 
            return args[i].value;
- return NULL;                    
+ return NULL;
 }
 
 char* GArgs::getOpt(const char o) {
@@ -217,8 +315,23 @@ char* GArgs::getOpt(const char o) {
  return NULL;
 }
 
-int GArgs::startNonOpt(){ //reset iteration through non-dashed arguments
-   //returns the number of non-dashed arguments
+char* GArgs::getOpt(int c) {
+ for (int i=0; i<count; i++) 
+  if (args[i].fmti>=0 && fmt[args[i].fmti].code==c)
+      return args[i].value;
+ return NULL;
+}
+
+char* GArgs::getOptName(int c) {
+ for (int i=0; i<count; i++) 
+  if (args[i].fmti>=0 && fmt[args[i].fmti].code==c)
+      return args[i].opt;
+ return NULL;
+}
+
+
+int GArgs::startNonOpt(){ //reset iteration through non-option arguments
+   //returns the number of non-option arguments
 nonOptPos=0;
 return nonOptCount;   
 }
@@ -234,8 +347,8 @@ for (int i=nonOptPos;i<count;i++)
 return NULL;
 }
 
-int GArgs::startOpt(){ //reset iteration through non-dashed arguments
-   //returns the number of non-dashed arguments
+int GArgs::startOpt(){ //reset iteration through option arguments
+   //returns the number of option arguments
 optPos=0;
 return count-nonOptCount;
 }
@@ -250,3 +363,14 @@ for (int i=optPos;i<count;i++)
       }
 return NULL;
 }
+
+int GArgs::nextCode() { //get the next non-dashed argument
+               //or NULL if no more 
+for (int i=optPos;i<count;i++)
+ if (args[i].opt!=NULL && args[i].fmti>=0) {
+      optPos=i+1;
+      return fmt[args[i].fmti].code;
+      }
+return 0; //must make sure that codes are > 0 for this to work properly
+}
+
