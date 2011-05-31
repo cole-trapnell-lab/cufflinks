@@ -10,7 +10,7 @@
 #define USAGE "Usage:\n\
 gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
  [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end>] \n\
- [-CTVNJMAFGRUVBHSZWTOLE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
+ [-CTVNJMAFGRUVBHZWTOLE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
  [-i <maxintron>] \n\
  Filters and/or converts GFF3/GTF2 records.\n\
  <input_gff> is a GFF file, use '-' if the GFF records will be given at stdin\n\
@@ -57,8 +57,6 @@ gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
  \n\
   -E  expose (warn about) duplicate transcript IDs and other potential \n\
       problems with the given GFF/GTF records\n\
-  -S  sort output GFF records by genomic sequence and start coordinate\n\
-      (automatically enabled by -g and -L options)\n\
   -Z  merge close exons into a single exon (for intron size<4)\n\
   -w  write a fasta file with spliced exons for each GFF transcript\n\
   -x  write a fasta file with spliced CDS for each GFF transcript\n\
@@ -125,7 +123,7 @@ bool spliceCheck=false; //only known splice-sites
 
 bool fullCDSonly=false; // starts with START, ends with STOP codon
 bool fullattr=false;
-bool sortByLoc=false; // if the GFF output should be sorted by location
+//bool sortByLoc=false; // if the GFF output should be sorted by location
 bool ensembl_convert=false; //-L, assisst in converting Ensembl GTF to GFF3
 
 
@@ -586,6 +584,15 @@ void openfw(FILE* &f, GArgs& args, char opt) {
 #define FWCLOSE(fh) if (fh!=NULL && fh!=stdout) fclose(fh)
 #define FRCLOSE(fh) if (fh!=NULL && fh!=stdin) fclose(fh)
 
+void printGff3Header(FILE* f, GArgs& args) {
+  fprintf(f, "# ");
+  args.printCmdLine(f);
+  fprintf(f, "##gff-version 3\n");
+  //for (int i=0;i<gseqdata.Count();i++) {
+  //
+  //}
+  }
+
 bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
   if (reftbl.Count()>0) {
         GStr refname(gffrec->getRefName());
@@ -669,7 +676,7 @@ int main(int argc, char * const argv[]) {
     }
  debugMode=(args.getOpt("debug")!=NULL);
  mRNAOnly=(args.getOpt('O')==NULL);
- sortByLoc=(args.getOpt('S')!=NULL);
+ //sortByLoc=(args.getOpt('S')!=NULL);
  addDescr=(args.getOpt('A')!=NULL);
  verbose=(args.getOpt('v')!=NULL);
  wCDSonly=(args.getOpt('C')!=NULL);
@@ -690,8 +697,10 @@ int main(int argc, char * const argv[]) {
     }
  //protmap=(args.getOpt('P')!=NULL);
  if (fullCDSonly) validCDSonly=true;
- fprintf(stderr, "Command line was:\n");
- args.printCmdLine(stderr);
+ if (verbose) { 
+     fprintf(stderr, "Command line was:\n");
+     args.printCmdLine(stderr);
+     }
 
  fullattr=(args.getOpt('F')!=NULL);
  if (args.getOpt('G')==NULL) 
@@ -704,7 +713,7 @@ int main(int argc, char * const argv[]) {
  if (ensembl_convert) {
     fullattr=true;
     noExonAttr=false;
-    sortByLoc=true;
+    //sortByLoc=true;
     }
     
  mergeCloseExons=(args.getOpt('Z')!=NULL);
@@ -712,8 +721,8 @@ int main(int argc, char * const argv[]) {
  writeExonSegs=(args.getOpt('W')!=NULL);
  tracklabel=args.getOpt('t');
  GFastaHandler gfasta(args.getOpt('g'));
- if (gfasta.fastaPath!=NULL)
-     sortByLoc=true; //enforce sorting by chromosome/contig
+ //if (gfasta.fastaPath!=NULL)
+ //    sortByLoc=true; //enforce sorting by chromosome/contig
  GStr s=args.getOpt('i');
  if (!s.is_empty()) maxintron=s.asInt();
  
@@ -793,6 +802,7 @@ int main(int argc, char * const argv[]) {
  
  int numfiles = args.startNonOpt();
  //GList<GffObj> gfkept(false,true); //unsorted, free items on delete
+ int out_counter=0; //number of records printed
  while (true) {
    GStr infile;
    if (numfiles) {
@@ -819,6 +829,7 @@ int main(int argc, char * const argv[]) {
    
  GStr loctrack("gffcl");
  if (tracklabel) loctrack=tracklabel;
+ g_data.setSorted(&gseqCmpName);
  if (doCluster) {
    //grouped in loci
    for (int g=0;g<g_data.Count();g++) {
@@ -856,6 +867,8 @@ int main(int argc, char * const argv[]) {
          GStr locname("RLOC_");
          locname.appendfmt("%08d",loc.locus_num);
          if (!fmtGTF) {
+           if (out_counter==0)
+              printGff3Header(f_out, args);
            fprintf(f_out,"%s\t%s\tlocus\t%d\t%d\t.\t%c\t.\tID=%s;locus=%s",
                     loc.rnas[0]->getGSeqName(), loctrack.chars(), loc.start, loc.end, loc.strand,
                      locname.chars(), locname.chars());
@@ -884,6 +897,7 @@ int main(int argc, char * const argv[]) {
            GTData* tdata=(GTData*)(t.uptr);
            if (tdata->replaced_by!=NULL || ((t.udata & 4)==0)) continue;
            t.addAttr("locus", locname.chars());
+           out_counter++;
            if (fmtGTF) t.printGtf(f_out, tracklabel);
                else {
                 //print the parent first, if any
@@ -929,8 +943,11 @@ int main(int argc, char * const argv[]) {
            if (f_out && tdata->geneinfo) {
              tdata->geneinfo->finalize();
              }
+           out_counter++;
            if (fmtGTF) t.printGtf(f_out, tracklabel);
                else {
+                if (out_counter==1)
+                  printGff3Header(f_out, args);
                 //print the parent first, if any
                 if (t.parent!=NULL && ((t.parent->udata & 4)==0)) {
                     GTData* pdata=(GTData*)(t.parent->uptr);

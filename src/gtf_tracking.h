@@ -826,8 +826,9 @@ public:
 };
 
 class GSeqData {
-public:
 	int gseq_id;
+public:
+    const char* gseq_name;
     GList<GffObj> refs_f; //forward strand mRNAs
     GList<GffObj> refs_r; //reverse strand mRNAs
 	GList<GffObj> mrnas_f; //forward strand mRNAs
@@ -843,6 +844,9 @@ public:
 	GList<GLocus> nloci_u; //"novel" loci with no orientation found
 	
 	GList<CTData> tdata; //transcript data (uptr holder for all mrnas here)
+
+	int get_gseqid() { return gseq_id; }
+
 	//--<
 	GSeqData(int gid=-1):mrnas_f(true,true,false),mrnas_r(true,true,false),
 	loci_f(true,true,true),loci_r(true,true,true),
@@ -850,6 +854,8 @@ public:
 	nloci_f(true,false,true), nloci_r(true,false,true),
 	umrnas(true,true,false), nloci_u(true,true,true), tdata(false,true,false) {
 		gseq_id=gid;
+		if (gseq_id>=0) 
+		  gseq_name=GffObj::names->gseqs.getName(gseq_id);
 	}
 	bool operator==(GSeqData& d){
 		return (gseq_id==d.gseq_id);
@@ -1284,6 +1290,8 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NUL
               bool only_multiexon=false);
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs=true);
+void sort_GSeqs_byName(GList<GSeqData>& seqdata);
+
 
 bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl=false);
 

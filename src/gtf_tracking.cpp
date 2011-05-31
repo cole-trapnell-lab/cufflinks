@@ -513,6 +513,13 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs) {
 	parse_mRNAs(gffr.gflst, seqdata, false,       false);
 }
 
+int cmpGSeqByName(const pointer p1, const pointer p2) {
+ return strcmp(((GSeqData*)p1)->gseq_name, ((GSeqData*)p2)->gseq_name);
+}
+
+void sort_GSeqs_byName(GList<GSeqData>& seqdata) {
+  seqdata.setSorted(&cmpGSeqByName);
+}
 
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	         bool check_for_dups, int qfidx, const char* fname, bool only_multiexon) {
@@ -552,7 +559,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 
 	for (int g=0;g<seqdata.Count();g++) {
 		//find the corresponding refseqdata with the same gseq_id
-		int gseq_id=seqdata[g]->gseq_id;
+		int gseq_id=seqdata[g]->get_gseqid();
 		if (!isRefData) { //cufflinks data, find corresponding ref data
 			GSeqData* rdata=getRefData(gseq_id, *ref_data);
 			if (rdata!=NULL && seqdata[g]->umrnas.Count()>0) {

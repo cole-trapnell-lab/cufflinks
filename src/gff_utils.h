@@ -492,8 +492,9 @@ public:
 };
 
 class GenomicSeqData {
- public:
   int gseq_id;
+ public:
+  const char* gseq_name;
   GList<GffObj> gfs; //all non-transcript features -> usually gene features
   GList<GffObj> rnas; //all transcripts on this genomic sequence
   GList<GffLocus> loci; //all loci clusters
@@ -502,9 +503,12 @@ class GenomicSeqData {
   GenomicSeqData(int gid=-1):gfs(true, true, false),rnas((GCompareProc*)gfo_cmpByLoc),loci(true,true,false),
        tdata(false,true,false) {
   gseq_id=gid;
+  if (gseq_id>=0) 
+    gseq_name=GffObj::names->gseqs.getName(gseq_id);
+  
   }
   bool operator==(GenomicSeqData& d){
-    return (gseq_id==d.gseq_id);
+    return gseq_id==d.gseq_id;
   }
   bool operator>(GenomicSeqData& d){
     return (gseq_id>d.gseq_id);
@@ -513,6 +517,8 @@ class GenomicSeqData {
     return (gseq_id<d.gseq_id);
   }
 };
+
+int gseqCmpName(const pointer p1, const pointer p2);
 
 class GSpliceSite {
  public:

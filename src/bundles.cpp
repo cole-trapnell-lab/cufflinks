@@ -108,13 +108,13 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 	{
 		for (int j = 0; j < ref_rnas.Count(); ++j) 
 		{    //ref data is grouped by genomic sequence
-			char* name = GffObj::names->gseqs.getName(ref_rnas[j]->gseq_id);
+			//const char* name = ref_rnas[j]->gseq_name;
 			
 			int f = 0;
 			int r = 0;
 			int u  = 0;
 			GffObj* rna_p;
-			RefID ref_id = rt.get_id(name, NULL);
+			RefID ref_id = rt.get_id(ref_rnas[j]->gseq_name, NULL);
 			int f_count = ref_rnas[j]->mrnas_f.Count();
 			int r_count = ref_rnas[j]->mrnas_r.Count();
 			int u_count = ref_rnas[j]->umrnas.Count();

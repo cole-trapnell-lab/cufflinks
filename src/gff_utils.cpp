@@ -245,6 +245,12 @@ bool redundantTranscripts(GffObj& ti, GffObj&  tj, bool fullmatchonly) {
  return true;
 }
 
+
+int gseqCmpName(const pointer p1, const pointer p2) {
+ return strcmp(((GenomicSeqData*)p1)->gseq_name, ((GenomicSeqData*)p2)->gseq_name);
+}
+
+
 void printLocus(GffLocus* loc, const char* pre=NULL) {
   if (pre!=NULL) fprintf(stderr, "%s", pre);
   GMessage(" [%d-%d] : ", loc->start, loc->end);

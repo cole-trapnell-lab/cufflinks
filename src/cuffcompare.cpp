@@ -92,8 +92,9 @@ void openfwrite(FILE* &f, GArgs& args, char opt) {
 
 //-- structure to keep track of data from multiple qry input files for a single genomic seq
 class GSeqTrack {
- public:
   int gseq_id;
+ public:
+  const char* gseq_name;
   GList<GLocus>* rloci_f; //reference loci for this genomic sequence
   GList<GLocus>* rloci_r;
   GList<GXLocus> xloci_f; // extended super-loci across all qry datasets
@@ -101,9 +102,13 @@ class GSeqTrack {
   GList<GXLocus> xloci_u; // extended super-loci across all qry datasets
   GSeqData* qdata[MAX_QFILES]; //fixed order array with GSeqData for each qry input
                  //element in array is NULL if a qry file has no transcripts on this genomic sequence
+  int get_gseqid() { return gseq_id; }
   GSeqTrack(int gid=-1):xloci_f(true,true,false),
         xloci_r(true,true,false), xloci_u(true,true,false) {
     gseq_id=gid;
+    if (gseq_id>=0) {
+      gseq_name=GffObj::names->gseqs.getName(gseq_id);
+      }
     rloci_f=NULL;
     rloci_r=NULL;
     for (int i=0;i<MAX_QFILES;i++) qdata[i]=NULL;
@@ -151,6 +156,11 @@ GList<GStr> qryfiles(false,true,false);
 //list of GSeqTrack data, sorted by gseq_id
 GList<GSeqTrack> gseqtracks(true,true,true);
 GSeqTrack* findGSeqTrack(int gsid);
+
+
+int cmpGTrackByName(const pointer p1, const pointer p2) {
+ return strcmp(((GSeqTrack*)p1)->gseq_name, ((GSeqTrack*)p2)->gseq_name);
+}
 
 
 void show_usage() {
@@ -299,7 +309,7 @@ int main(int argc, char * const argv[]) {
   //if (f_out==NULL) f_out=stdout;
   f_out=fopen(outstats, "w");
   if (f_out==NULL) GError("Error creating output file %s!\n", outstats.chars());
-  GMessage("Cuffcompare prefix for output files: %s\n", outprefix.chars());
+  if (gtf_tracking_verbose) GMessage("Prefix for output files: %s\n", outprefix.chars());
   fprintf(f_out, "# Cuffcompare v%s | Command line was:\n#", PACKAGE_VERSION);
   for (int i=0;i<argc-1;i++) 
     fprintf(f_out, "%s ", argv[i]);
@@ -363,7 +373,7 @@ int main(int argc, char * const argv[]) {
       GSuperLocus gstats;
       GFaSeqGet *faseq=NULL;
       for (int g=0;g<pdata->Count();g++) { //for each seqdata related to a genomic sequence
-        int gsid=pdata->Get(g)->gseq_id;
+        int gsid=pdata->Get(g)->get_gseqid();
         GSeqData* refdata=getRefData(gsid, ref_data);//ref data for this contig
         if (!gtf_tracking_largeScale)
           processLoci(*(pdata->Get(g)), refdata, fi);
@@ -384,7 +394,7 @@ int main(int argc, char * const argv[]) {
       if (haveRefs && !reduceRefs && !gtf_tracking_largeScale) {
         for (int r=0;r<ref_data.Count();r++) {
           GSeqData* refdata=ref_data[r];
-          int gsid=refdata->gseq_id;
+          int gsid=refdata->get_gseqid();
           if (getQryData(gsid, *pdata)==NULL) {
             reportStats(f_out, getGSeqName(gsid), gstats, NULL, refdata);
             }//completely missed all refdata on this contig
@@ -396,6 +406,7 @@ int main(int argc, char * const argv[]) {
       //qfileno++;
   }//for each input file
   if (f_mintr!=NULL) fclose(f_mintr);
+  gseqtracks.setSorted(&cmpGTrackByName);
   if (gtf_tracking_verbose) GMessage("Tracking transcripts across %d query files..\n", numqryfiles);
   trackGData(numqryfiles, gseqtracks, outbasename, tfiles, rtfiles);
   fprintf(f_out, "\n Total union super-loci across all input datasets: %d \n", xlocnum);
@@ -2507,6 +2518,8 @@ void printRefMap(FILE** frs, int qcount, GList<GLocus>* rloci) {
   }//ref locus loop
 }
 
+
+
 void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** ftr, FILE** frs) {
   FILE* f_ltrack=NULL;
   FILE* f_itrack=NULL;
@@ -2528,7 +2541,6 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
   s.append(".loci");
   f_xloci=fopen(s.chars(),"w");
   if (f_xloci==NULL) GError("Error creating file %s !\n",s.chars());
-
   for (int g=0;g<gtracks.Count();g++) { //for each genomic sequence
     GSeqTrack& gseqtrack=*gtracks[g];
 
@@ -2542,7 +2554,7 @@ void trackGData(int qcount, GList<GSeqTrack>& gtracks, GStr& fbasename, FILE** f
     //transcript accounting: for all those transcripts with 'u' or 0 class code
     // we have to check for polymerase runs 'p' or repeats 'r'
 
-    GFaSeqGet *faseq=gfasta.fetch(gseqtrack.gseq_id, checkFasta);
+    GFaSeqGet *faseq=gfasta.fetch(gseqtrack.get_gseqid(), checkFasta);
 
     umrnaReclass(qcount, gseqtrack, ftr, faseq);
 
