@@ -123,25 +123,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.0.2</td>
-                    <td align="right">5/22/2011</td>
+                    <td>version 1.0.3</td>
+                    <td align="right">6/1/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.0.2.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.0.3.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.2.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.0.3.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.2.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.0.3.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -216,6 +216,17 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+			<h2>1.0.3 release - 6/1//2011</h2>
+			  <p>This is a fix release to address several issues reported by our users:
+		  	  <ul>
+				<li>Several Cuffmerge bugs have been fixed.  One of these caused Cuffmerge to fail with a message about chromosome sort ordering.
+				<li>Gffread now includes the same transcript redudancy and clustering capabilities as Cuffcompare improve consistency in how they process GTF files.
+				<li>A comment parsing issue in Cuffmerge has been fixed.
+				<li>GTF files emitted by Cuffcompare are now lexicographically sorted by chromosome.
+				<li>The header size limit in Cufflinks' BAM parser used to have a 4 megabyte limit.  This has been removed to allow Cufflinks to be used on assemblies with many contigs.
+			  </ul>
+			  </p>
+			  <br/>
 		  <h2>1.0.2 release - 5/22/2011</h2>
 		  <p>This release fixes several bugs and adds a few enhancements:
 	  	  <ul>

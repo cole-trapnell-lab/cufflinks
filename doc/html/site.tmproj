@@ -3,16 +3,14 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>index.html</string>
+	<string>faq.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-23T00:45:50Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2011-06-01T13:03:32Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -30,7 +28,9 @@
 			<key>filename</key>
 			<string>faq.html</string>
 			<key>lastUsed</key>
-			<date>2011-05-23T00:35:17Z</date>
+			<date>2011-06-01T13:03:40Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -107,20 +107,6 @@
 				<integer>66</integer>
 			</dict>
 		</dict>
-		<key>index.html</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>16</integer>
-				<key>line</key>
-				<integer>115</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>93</integer>
-		</dict>
 		<key>manual.html</key>
 		<dict>
 			<key>caret</key>
@@ -154,7 +140,6 @@
 	<array>
 		<string>tutorial.html</string>
 		<string>faq.html</string>
-		<string>index.html</string>
 		<string>manual.html</string>
 		<string>howitworks.html</string>
 		<string>gff.html</string>
