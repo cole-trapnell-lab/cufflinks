@@ -10,7 +10,7 @@
 #define USAGE "Usage:\n\
 gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
  [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end>] \n\
- [-CTVNJMAFGRUVBHZWTOLE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
+ [-CTVNJMKQAFGRUVBHZWTOLE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
  [-i <maxintron>] \n\
  Filters and/or converts GFF3/GTF2 records.\n\
  <input_gff> is a GFF file, use '-' if the GFF records will be given at stdin\n\
@@ -51,9 +51,13 @@ gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
       (only print mRNAs with a fulll, valid CDS)\n\
  \n\
   -M/--merge : cluster the input transcripts into loci, collapsing matching\n\
-       transcripts (those with the same intron chain)\n\
+       transcripts (those with the same exact introns and fully contained)\n\
   --cluster-only: same as --merge but without collapsing matching transcripts\n\
-  -K  for -M option, also collapse contained transcripts\n\
+  -K  for -M option: also collapse shorter, fully contained transcripts\n\
+      with fewer introns than the container\n\
+  -Q  for -M option, remove the containment restriction:\n\
+      (multi-exon transcripts will be collapsed if just their introns match,\n\
+      while single-exon transcripts can partially overlap (80%))\n\
  \n\
   -E  expose (warn about) duplicate transcript IDs and other potential \n\
       problems with the given GFF/GTF records\n\
@@ -150,7 +154,7 @@ bool rfltWithin=false; //check for full containment within given range
 bool noExonAttr=false;
 
 bool doCluster=false;
-bool doCollapseMatching=false;
+bool doCollapseRedundant=false;
 
 GList<GenomicSeqData> g_data(true,true,true); //list of GFF records by genomic seq
 
@@ -248,7 +252,7 @@ char* getSeqName(char* seqid) {
   return charbuf;
 }
 
-GFaSeqGet* fastaSeqGet(GFastaHandler& gfasta, GffObj& gffrec) {
+GFaSeqGet* fastaSeqGet(GFastaDb& gfasta, GffObj& gffrec) {
   if (gfasta.fastaPath==NULL) return NULL;
   return gfasta.fetch(gffrec.gseq_id);
 }
@@ -298,7 +302,7 @@ int adjust_stopcodon(GffObj& gffrec, int adj, GList<GSeg>* seglst=NULL) {
   return realadj;
  }
 
-bool process_transcript(GFastaHandler& gfasta, GffObj& gffrec) {
+bool process_transcript(GFastaDb& gfasta, GffObj& gffrec) {
  //returns true if the transcript passed the filter
  char* gname=gffrec.getGeneName();
  if (gname==NULL) gname=gffrec.getGeneID();
@@ -668,7 +672,7 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
 
 int main(int argc, char * const argv[]) {
  GArgs args(argc, argv, 
-   "debug;merge;cluster-only;help;MINCOV=MINPID=hvOUNHWCVJMKNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
+   "debug;merge;cluster-only;help;MINCOV=MINPID=hvOUNHWCVJMKQNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
  args.printError(USAGE, true);
  if (args.getOpt('h') || args.getOpt("help")) {
     GMessage("%s",USAGE);
@@ -686,14 +690,27 @@ int main(int argc, char * const argv[]) {
  bothStrands=(args.getOpt('B')!=NULL);
  fullCDSonly=(args.getOpt('J')!=NULL);
  spliceCheck=(args.getOpt('N')!=NULL);
- bool collapseContained=(args.getOpt('K')!=NULL);
+ bool matchAllIntrons=(args.getOpt('K')==NULL);
+ bool fuzzSpan=(args.getOpt('Q')!=NULL);
  if (args.getOpt('M') || args.getOpt("merge")) {
     doCluster=true;
-    doCollapseMatching=true;
+    doCollapseRedundant=true;
+    }
+   else {
+    if (!matchAllIntrons || fuzzSpan) {
+      GMessage("%s",USAGE);
+      GMessage("Error: -K or -Q options require -M/--merge option!\n");
+      exit(1);
+      }
     }
  if (args.getOpt("cluster-only")) {
     doCluster=true;
-    doCollapseMatching=false;
+    doCollapseRedundant=false;
+    if (!matchAllIntrons || fuzzSpan) {
+      GMessage("%s",USAGE);
+      GMessage("Error: -K or -Q options have no effect with --cluster-only.\n");
+      exit(1);
+      }
     }
  //protmap=(args.getOpt('P')!=NULL);
  if (fullCDSonly) validCDSonly=true;
@@ -720,7 +737,7 @@ int main(int argc, char * const argv[]) {
  multiExon=(args.getOpt('U')!=NULL);
  writeExonSegs=(args.getOpt('W')!=NULL);
  tracklabel=args.getOpt('t');
- GFastaHandler gfasta(args.getOpt('g'));
+ GFastaDb gfasta(args.getOpt('g'));
  //if (gfasta.fastaPath!=NULL)
  //    sortByLoc=true; //enforce sorting by chromosome/contig
  GStr s=args.getOpt('i');
@@ -821,7 +838,8 @@ int main(int argc, char * const argv[]) {
    gffloader.noExonAttrs=noExonAttr;
    gffloader.mergeCloseExons=mergeCloseExons;
    gffloader.showWarnings=(args.getOpt('E')!=NULL);
-   gffloader.load(g_data, &validateGffRec, doCluster, doCollapseMatching, collapseContained);
+   gffloader.load(g_data, &validateGffRec, doCluster, doCollapseRedundant, 
+                             matchAllIntrons, fuzzSpan);
    if (doCluster) 
      collectLocusData(g_data);
    if (numfiles==0) break;

@@ -52,7 +52,7 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
   // is a sub-chain of the other's
  int imax=ti.exons.Count()-1;
  int jmax=tj.exons.Count()-1;
- if (imax==0 || jmax==0) return false; //don't care about single-exon transcripts
+ if (imax==0 || jmax==0) return false; //don't deal with single-exon transcripts here
  if (ti.exons[imax]->start<tj.exons[0]->end ||
      tj.exons[jmax]->start<ti.exons[0]->end )
          return false; //intron chains do not overlap at all

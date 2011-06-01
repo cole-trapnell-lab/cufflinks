@@ -103,9 +103,6 @@ bool tMatch(GffObj& a, GffObj& b) {
   int jmax=b.exons.Count()-1;
   int ovlen=0;
   if (imax!=jmax) return false; //different number of introns
-  if ( a.exons[imax]->start<b.exons[0]->end ||
-   b.exons[jmax]->start<a.exons[0]->end )
-   return false; //intron chains do not overlap at all
 
   if (imax==0) { //single-exon mRNAs
     //if (equnspl) {
@@ -137,57 +134,124 @@ bool tMatch(GffObj& a, GffObj& b) {
 }
 
 
-bool unsplContained(GffObj& ti, int imax, GffObj&  tj, int jmax) {
+bool unsplContained(GffObj& ti, GffObj&  tj, bool fuzzSpan) {
  //returns true only if ti (which MUST be single-exon) is "almost" contained in any of tj's exons
- //but it does not cross any intron-exon boundary of tj!
-  if (imax>0) GError("Error: bad unsplContained() call, 1st param must be single-exon\n");
-  int tilen=ti.exons[0]->len();
-  for (int j=0;j<=jmax;j++) {
+ //but it does not cross any intron-exon boundary of tj
+  int imax=ti.exons.Count()-1;
+  int jmax=tj.exons.Count()-1;
+  if (imax>0) GError("Error: bad unsplContained() call, 1st param must be single-exon transcript!\n");
+  int minovl = (int)(0.8 * ti.len()); //minimum overlap for fuzzSpan
+  if (fuzzSpan) {
+    for (int j=0;j<=jmax;j++) {
        //must NOT overlap the introns
        if ((j>0 && ti.start<tj.exons[j]->start) 
           || (j<jmax && ti.end>tj.exons[j]->end))
          return false;
-       if (ti.exons[0]->overlapLen(tj.exons[j])>=tilen*0.8) {
+       if (ti.exons[0]->overlapLen(tj.exons[j])>=minovl)
               return true;
-              }
        }
+      } else {
+    for (int j=0;j<=jmax;j++) {
+       //must NOT overlap the introns
+       if ((j>0 && ti.start<tj.exons[j]->start) 
+          || (j<jmax && ti.end>tj.exons[j]->end))
+         return false;
+         //strict containment
+       if (ti.end<=tj.exons[j]->end && ti.start>=tj.exons[j]->start) 
+            return true;
+       }
+      }
  return false;
 }
 
-bool redundantTranscripts(GffObj& ti, GffObj&  tj, bool fullmatchonly) {
-  //two transcripts are "intron redundant" iff one transcript's intron chain
-  // is a sub-chain of the other's
+GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons, bool fuzzSpan) {
+  // matchAllIntrons==true:  transcripts are considered "redundant" only if
+  //                   they have the exact same number of introns and same splice sites (or none)
+  //                 (single-exon transcripts can be also fully contained to be considered matching)
+  // matchAllIntrons==false: an intron chain could be a subset of a "container" chain, 
+  //                   as long as no intron-exon boundaries are violated; also, a single-exon 
+  //                   transcript will be collapsed if it's contained in one of the exons of the other
+  // fuzzSpan==false: the genomic span of one transcript must be contained in or equal with the genomic 
+  //                  span of the other 
+  // 
+  // fuzzSpan==true: then genomic spans of transcripts are no longer required to be fully contained 
+  //                 (i.e. they may extend each-other in opposite directions)
   
+  //if redundancy is found, the "bigger" transcript is returned (otherwise NULL is returned)
+ if (ti.start>=tj.end || tj.start>=ti.end || tj.strand!=ti.strand) return NULL; //no span overlap at all
  int imax=ti.exons.Count()-1;
  int jmax=tj.exons.Count()-1;
+ GffObj* bigger=NULL;
+ GffObj* smaller=NULL;
+ if (matchAllIntrons) {
+   if (imax!=jmax) return false;
+   if (ti.covlen>tj.covlen) {
+       bigger=&ti;
+       if (!fuzzSpan && (ti.start>tj.start || ti.end<tj.end)) return NULL;
+       }
+     else { //ti.covlen<=tj.covlen
+       bigger=&tj;
+       if (!fuzzSpan && (tj.start>ti.start || tj.end<ti.end)) return NULL;
+       }
+   //check that all introns really match
+   for (int i=0;i<imax;i++) {
+     if (ti.exons[i]->end!=tj.exons[i]->end || 
+         ti.exons[i+1]->start!=tj.exons[i+1]->start) return NULL;
+     }
+   return bigger;
+   }
+ //--- matchAllIntrons==false: intron-chain containment is also considered redundancy
+ int maxlen=0;
+ int minlen=0;
+ if (ti.covlen>tj.covlen) {
+      if (tj.exons.Count()>ti.exons.Count()) {
+          //exon count override
+          bigger=&tj;
+          smaller=&ti;
+          }
+        else {
+          bigger=&ti;
+          smaller=&tj;
+          }
+      maxlen=ti.covlen;
+      minlen=tj.covlen;
+      }
+   else { //tj has more bases
+      if (ti.exons.Count()>tj.exons.Count()) {
+          //exon count override
+          bigger=&ti;
+          smaller=&tj;
+          }
+        else {
+          bigger=&tj;
+          smaller=&ti;
+          }
+      maxlen=tj.covlen;
+      minlen=ti.covlen;
+      }
+ if (imax==0 && jmax==0) {
+     //single-exon transcripts: if fuzzSpan, at least 80% of the shortest one must be overlapped by the other
+     if (fuzzSpan) {
+         return (ti.exons[0]->overlapLen(tj.exons[0])>=minlen*0.8) ? bigger : NULL;
+         }
+       else {
+         return (smaller->start>=bigger->start && smaller->end<=bigger->end) ? bigger : NULL;
+         }
+     }
+ //containment is also considered redundancy
+ if (smaller->exons.Count()==1) {
+   //check if this single exon is contained in any of tj exons
+   //without violating any intron-exon boundaries
+   return (unsplContained(*smaller, *bigger, fuzzSpan) ? bigger : NULL);
+   }
+
+ //--from here on: both are multi-exon transcripts, imax>0 && jmax>0
   if (ti.exons[imax]->start<tj.exons[0]->end ||
      tj.exons[jmax]->start<ti.exons[0]->end )
-         return false; //intron chains do not overlap at all
- if (fullmatchonly) { 
-   if (imax!=jmax) return false;
-   if (imax==0) {
-     //single-exon transcripts: at least 80% of the longest one is overlapped by the other
-     int ovlen=ti.exons[0]->overlapLen(tj.exons[0]);
-     int maxlen=GMAX(ti.covlen,tj.covlen);
-     return (ovlen>=maxlen*0.8);
-     }
-   for (int i=1;i<=imax;i++) {
-        if ((ti.exons[i-1]->end!=tj.exons[i-1]->end) ||
-            (ti.exons[i]->start!=tj.exons[i]->start)) {
-            return false; //intron mismatch
-            }
-        }
-   return true;
-   }
- //containment is also considered redundancy
- if (imax==0) {
-   //check if this single exon is contained in any of tj exons
-   return unsplContained(ti, imax, tj, jmax);
-   }
- if (jmax==0) {
-   return unsplContained(tj,jmax,ti,imax);
-   }
- //full intron chain containment is also considered redundancy
+         return NULL; //intron chains do not overlap at all
+ 
+ 
+ //checking full intron chain containment
  uint eistart=0, eiend=0, ejstart=0, ejend=0; //exon boundaries
  int i=1; //exon idx to the right of the current intron of ti
  int j=1; //exon idx to the right of the current intron of tj
@@ -202,34 +266,34 @@ bool redundantTranscripts(GffObj& ti, GffObj&  tj, bool fullmatchonly) {
     //we found an intron overlap
     break;
     }
-
+ if (!fuzzSpan && (bigger->start>smaller->start || bigger->end < smaller->end)) return NULL;
  if ((i>1 && j>1) || i>imax || j>jmax) {
-     return false; //either no intron overlaps found at all
+     return NULL; //either no intron overlaps found at all
                   //or it's not the first intron for at least one of the transcripts
      }
- if (eistart!=ejstart || eiend!=ejend) return false; //not an exact intron match
+ if (eistart!=ejstart || eiend!=ejend) return NULL; //not an exact intron match
  if (j>i) {
    //i==1, ti's start must not conflict with the previous intron of tj
-   if (ti.start<tj.exons[j-1]->start) return false;
+   if (ti.start<tj.exons[j-1]->start) return NULL;
    //so i's first intron starts AFTER j's first intron
    // then j must contain i, so i's last intron must end with or before j's last intron
-   if (ti.exons[imax]->start>tj.exons[jmax]->start) return false;
+   if (ti.exons[imax]->start>tj.exons[jmax]->start) return NULL;
       //comment out the line above if you just want "intron compatibility" (i.e. extension of intron chains )
    }
   else if (i>j) {
-   //j==1, tj's start must not conflict with the previous intron of ti
-   if (tj.start<ti.exons[i-1]->start) return false;
-   //so j's intron chain starts AFTER i's
-   // then i must contain j, so j's last intron must end with or before j's last intron
-   if (tj.exons[jmax]->start>ti.exons[imax]->start) return false;
-      //comment out the line above for just "intronCompatible()" check (allowing extension of intron chain)
-   }
+     //j==1, tj's start must not conflict with the previous intron of ti
+     if (tj.start<ti.exons[i-1]->start) return NULL;
+     //so j's intron chain starts AFTER i's
+     // then i must contain j, so j's last intron must end with or before j's last intron
+     if (tj.exons[jmax]->start>ti.exons[imax]->start) return NULL;
+        //comment out the line above for just "intronCompatible()" check (allowing extension of intron chain)
+     }
  //now check if the rest of the introns overlap, in the same sequence
  i++;
  j++;
  while (i<=imax && j<=jmax) {
   if (ti.exons[i-1]->end!=tj.exons[j-1]->end ||
-      ti.exons[i]->start!=tj.exons[j]->start) return false;
+      ti.exons[i]->start!=tj.exons[j]->start) return NULL;
   i++;
   j++;
   }
@@ -237,12 +301,12 @@ bool redundantTranscripts(GffObj& ti, GffObj&  tj, bool fullmatchonly) {
  j--;
  if (i==imax && j<jmax) {
    // tj has more introns to the right, check if ti's end doesn't conflict with the current tj exon boundary
-   if (ti.end>tj.exons[j]->end) return false;
+   if (ti.end>tj.exons[j]->end) return NULL;
    }
  else if (j==jmax && i<imax) {
-   if (tj.end>ti.exons[i]->end) return false;
+   if (tj.end>ti.exons[i]->end) return NULL;
    }
- return true;
+ return bigger;
 }
 
 
@@ -261,7 +325,7 @@ void printLocus(GffLocus* loc, const char* pre=NULL) {
   GMessage("\n");
 }
 
-void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant, bool collapseContained) {
+void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant, bool matchAllIntrons, bool fuzzSpan) {
   //GMessage(">>Placing transcript %s\n", t->getID());
   GTData* tdata=new GTData(t);
   gdata->tdata.Add(tdata);
@@ -317,8 +381,10 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
                  if (loc.rnas[ti]==t) continue;
                  GTData* odata=(GTData*)(loc.rnas[ti]->uptr);
                  //GMessage("  ..redundant check vs overlapping transcript %s\n",loc.rnas[ti]->getID());
-                 if (odata->replaced_by==NULL && redundantTranscripts(*t, *(loc.rnas[ti]), !collapseContained)) {
-                     if (cmpRedundant(*t, *(loc.rnas[ti]))>0) {
+                 GffObj* container=NULL;
+                 if (odata->replaced_by==NULL && 
+                      (container=redundantTranscripts(*t, *(loc.rnas[ti]), matchAllIntrons, fuzzSpan))!=NULL) {
+                     if (container==t) {
                         odata->replaced_by=t;
                         }
                      else {
@@ -389,7 +455,7 @@ void collectLocusData(GList<GenomicSeqData>& ref_data) {
          int* gfreq=NULL;
          char* key=NULL;
          while ((gfreq=gnames.NextData(key))!=NULL) {
-            loc.gene_names.Add(new CGeneSym(key,*gfreq));
+            loc.gene_names.AddIfNew(new CGeneSym(key,*gfreq));
             }
          } //added collected gene_names
       if (loc.gene_ids.Count()>0) { //collect all GeneIDs names associated to this locus
@@ -397,7 +463,7 @@ void collectLocusData(GList<GenomicSeqData>& ref_data) {
          int* gfreq=NULL;
          char* key=NULL;
          while ((gfreq=geneids.NextData(key))!=NULL) {
-           loc.gene_ids.Add(new CGeneSym(key,*gfreq));
+           loc.gene_ids.AddIfNew(new CGeneSym(key,*gfreq));
             }
           }
       } //for each locus
@@ -406,7 +472,7 @@ void collectLocusData(GList<GenomicSeqData>& ref_data) {
 
 
 void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate, 
-                              bool doCluster, bool doCollapseRedundant, bool collapseContained) {
+                              bool doCluster, bool doCollapseRedundant, bool matchAllIntrons, bool fuzzSpan) {
    GffReader* gffr=new GffReader(f, this->transcriptsOnly, false); //not only mRNA features, not sorted
    gffr->showWarnings(this->showWarnings);
    //           keepAttrs   mergeCloseExons  noExonAttr
@@ -446,9 +512,9 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
            seqdata.Add(gdata);
            }
     for (int k=0;k<gfadd.Count();k++) {
-      placeGf(gfadd[k], gdata, doCluster, doCollapseRedundant, collapseContained);
+      placeGf(gfadd[k], gdata, doCluster, doCollapseRedundant, matchAllIntrons, fuzzSpan);
       }
-    placeGf(m, gdata, doCluster, doCollapseRedundant, collapseContained);
+    placeGf(m, gdata, doCluster, doCollapseRedundant, matchAllIntrons, fuzzSpan);
     } //for each read gffObj
    //if (verbose) GMessage("  .. %d records from %s clustered into loci.\n", gffr->gflst.Count(), fname.chars());
    if (f!=stdin) { fclose(f); f=NULL; }

@@ -1556,7 +1556,7 @@ char getOvlCode(GffObj& m, GffObj& r, int& ovlen) {
            return 'i';
      }
   //> check if m's intron chain is a subset of  r's intron chain
-  int imax=m.exons.Count()-1;
+  int imax=m.exons.Count()-1;// imax>0 here
   if (m.exons[imax]->start<r.exons[0]->end ||
       r.exons[jmax]->start<m.exons[0]->end ) //intron chains do not overlap at all
            return 'o'; //but terminal exons do, otherwise we wouldn't be here

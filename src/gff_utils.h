@@ -90,7 +90,7 @@ class GeneInfo { //for Ensembl GTF conversion
 };
 
 //genomic fasta sequence handling
-class GFastaHandler {
+class GFastaDb {
  public:
   char* fastaPath;
   GFastaIndex* faIdx; //could be a cdb .cidx file
@@ -112,7 +112,7 @@ class GFastaHandler {
              }
      }
 
-   GFastaHandler(const char* fpath=NULL) {
+   GFastaDb(const char* fpath=NULL) {
      //gcdb=NULL;
      fastaPath=NULL;
      faseq=NULL;
@@ -215,7 +215,7 @@ class GFastaHandler {
        return faseq;
      }
 
-   ~GFastaHandler() {
+   ~GFastaDb() {
      GFREE(fastaPath);
      //delete gcdb;
      delete faIdx;
@@ -263,7 +263,7 @@ class CGeneSym {
      return (freq==b.freq)? ( (name.length()==b.name.length()) ? (name<b.name) :
          (name.length()<b.name.length()) ) : ( freq>b.freq );
      }
-  bool operator==(CGeneSym& b) { return freq==b.freq && name==b.name; }
+  bool operator==(CGeneSym& b) { return name==b.name; }
 };
 
 const char* getGeneDescr(const char* gsym);
@@ -591,7 +591,7 @@ struct GffLoader {
   bool mergeCloseExons;
   bool showWarnings;
   void load(GList<GenomicSeqData>&seqdata, GFValidateFunc* gf_validate=NULL, 
-                           bool doCluster=true, bool doCollapseRedundant=true, bool collapseContained=false);
+                      bool doCluster=true, bool doCollapseRedundant=true, bool matchAllIntrons=true, bool fuzzSpan=false);
   GffLoader(const char* filename):fname(filename) {
       f=NULL;
       transcriptsOnly=true;
@@ -623,9 +623,10 @@ void printFasta(FILE* f, GStr& defline, char* seq, int seqlen=-1);
 int qsearch_rnas(uint x, GList<GffObj>& rnas);
 int qsearch_gloci(uint x, GList<GffLocus>& loci);
 
-bool redundantTranscripts(GffObj& ti, GffObj&  tj, bool fullmatchonly=true);
+GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons=true, bool fuzzSpan=false);
 
-void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster=true, bool collapseRedundant=true, bool collapseContained=false);
+void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster=true, bool collapseRedundant=true, 
+                                  bool matchAllIntrons=true, bool fuzzSpan=false);
 //void loadGFF(FILE* f, GList<GenomicSeqData>& seqdata, const char* fname);
 
 void collectLocusData(GList<GenomicSeqData>& ref_data);
