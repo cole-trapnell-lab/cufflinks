@@ -674,14 +674,15 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  </td><td VALIGN=top>
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-h/--help</tt>
+	  <tt>-h</tt>
 	  </td><td VALIGN=top>
 	  Prints the help message and exits   
 	  </td></tr> 
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-o &lt;outprefix&gt;</tt>
 	  </td><td VALIGN=top>
-	  Write the summary stats into the text output file &lt;outprefix&gt;(instead of stdout)
+	  All output files created by Cuffcompare will have this prefix (e.g. &lt;outprefix&gt;.loci, &lt;outprefix&gt;.tracking, etc.).
+	  If this option is not provided the default output prefix being used is: "cuffcmp"
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-r</tt>
@@ -713,9 +714,17 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
+	  <tt>-C</tt>
+	  </td><td VALIGN=top>
+	   Enables the "contained" transcripts to be also written in the <i>&lt;outprefix&gt;.combined.gtf</i>file, with the attribute "contained_in" 
+	   showing the first container transfrag found. By default, without this option, <tt>cuffcompare</tt> does not write in that file isoforms that were found to be 
+	   fully contained/covered (with the same compatible intron structure) by other transfrags in the same locus. 
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
 	  <tt>-V</tt>
 	  </td><td VALIGN=top>
-	  (Mildly) more verbose processing mode  
+	   Cuffcompare is a little more verbose about what it's doing, printing messages to stderr, and it will also show warning messages about any inconsistencies or potential issues 
+	   found while reading the given GFF file(s).
 	  </td></tr>
 	  </table><br/>
   <h2 id="cuffcomp_output">Cuffcompare Output</h2><br/>
@@ -724,7 +733,7 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	</p>
 	<br/>
 	<ol>
-	<h2 id="stats">1) &lt;outprefix&gt;</h2>
+	<h2 id="stats">1) &lt;outprefix&gt;.stats</h2>
 	<p>
 	Cuffcompare reports various statistics related to the "accuracy" of the transcripts 
 	in each sample when compared to the reference annotation data. The typical gene finding measures of "sensitivity"
@@ -733,8 +742,7 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
         are calculated at various levels (nucleotide, exon, intron, transcript, gene) for each input file and reported in this file.
         The <b>Sn</b> and <b>Sp</b> columns show specificity and sensitivity values at each level, while the <i>fSn</i> and <i>fSp</i> columns 
         are "fuzzy" variants of these same accuracy calculations, allowing for a very small variation in exon boundaries to still be counted as a "match".
-        (If the -o option was not given, these stats will be shown at the standard output and the &lt;outprefix&gt; used for the other output file names below will 
-        become "stdout")
+        (If the -o option was not given the default prefix "cuffcmp" is used and these stats will be printed into a file named <i>cuffcmp.stats</i> in the current directory)
 	<br/>
 	<br/>
 	<h2 id="combin">2) &lt;outprefix&gt;.combined.gtf</h2>
@@ -831,7 +839,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		file. A sample not containing a transcript will have a "-" in its entry
 		in the row for that transcript.
 	<br/>
-	<br/>(The following output files are created for each of the &lt;cuff_in&gt; file given)
+	<br/>(The following output files are created for each of the &lt;cuff_in&gt; file given, in the same directories where the &lt;cuff_in&gt; files reside)
 	<br/>
 	<br/>
 	<h2 id="refmap">4) &lt;cuff_in&gt;.refmap</h2>
@@ -1043,14 +1051,14 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		The main purpose of this script is to make it easier to make an assembly 
 		GTF file suitable for use with Cuffdiff.   
 		
-		From the command line, run <tt>merge_cuff_asms.py</tt> as follows:
+		From the command line, run <tt>cuffmerge</tt> as follows:
 		<p>
 		  <blockquote>
 		   cuffmerge [options]* &lt;assembly_GTF_list.txt&gt;
 		  </blockquote>
 
 		<br/>
-		<h2 id="cuffcomp_input">merge_cuff_asm.py Input</h2><br/>
+		<h2 id="merger_input">cuffmerge Input</h2><br/>
 	    cuffmerge takes several assembly GTF files from Cufflinks' as input.  Input GTF files must be specified in a "manifest" file listing full paths to the files. 
 		<br/>
 
@@ -1103,9 +1111,9 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
 		  </td></tr>
 		  </table><br/>
-	  <h2 id="merger_output">merge_cuff_asms.py Output</h2><br/>
+	  <h2 id="merger_output">cuffmerge Output</h2><br/>
 		<p>
-	      merge_cuff_asms.py produces a single GTF file that contains an assembly that merges together the input assemblies.
+	      cuffmerge produces a GTF file that contains an assembly that merges together the input assemblies.
 		</p>
 		<br/>
 		<ol>
