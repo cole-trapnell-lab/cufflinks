@@ -38,7 +38,7 @@ Options:
 '''
 
 output_dir = "./merged_asm/"
-logging_dir = output_dir + "/logs/merge_asm_logs/"
+logging_dir = output_dir + "logs/"
 run_log = None
 run_cmd = None
 tmp_dir = output_dir + "/meta_asm_tmp/"
@@ -466,7 +466,7 @@ def get_gtf_chrom_info(gtf_filename, known_chrom_info=None):
         chroms = known_chrom_info
     for line in gtf_file:
         line = line.strip()
-        
+
         if len(line) == 0 or line[0] == "#":
             continue
         cols = line.split('\t')
@@ -506,8 +506,8 @@ def main(argv=None):
             args = params.parse_options(argv)
             params.check()
 
-        #if len(args) < 2:
-        #    raise Usage(help_message)
+        if len(args) < 1:
+            raise(Usage(help_message))
 
         global run_log
         global run_cmd
@@ -523,9 +523,6 @@ def main(argv=None):
         run_log = open(logging_dir + "run.log", "w", 0)
         run_cmd = " ".join(argv)
         print >> run_log, run_cmd
-
-        if len(args) < 1:
-            raise(Usage(help_message))
 
         transfrag_list_file = open(args[0], "r")
 
@@ -560,7 +557,7 @@ def main(argv=None):
         #Meta Cuffcompare option:
         else:
             cuffcompare_all_assemblies(gtf_input_files) #FIXME: where is this function ?
-            
+
 
         if not params.system_params.keep_tmp:
             tmp_files = os.listdir(tmp_dir)
