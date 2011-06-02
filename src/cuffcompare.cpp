@@ -305,8 +305,6 @@ int main(int argc, char * const argv[]) {
         */
         }
 
-  //openfwrite(f_out, args, 'o');
-  //if (f_out==NULL) f_out=stdout;
   f_out=fopen(outstats, "w");
   if (f_out==NULL) GError("Error creating output file %s!\n", outstats.chars());
   if (gtf_tracking_verbose) GMessage("Prefix for output files: %s\n", outprefix.chars());

@@ -958,11 +958,10 @@ int main(int argc, char * const argv[]) {
         if (process_transcript(gfasta, t)) {
            t.udata|=4; //tag it as valid
            numvalid++;
-           if (f_out && tdata->geneinfo) {
-             tdata->geneinfo->finalize();
-             }
-           out_counter++;
-           if (fmtGTF) t.printGtf(f_out, tracklabel);
+           if (f_out) {
+             if (tdata->geneinfo) tdata->geneinfo->finalize();
+             out_counter++;
+             if (fmtGTF) t.printGtf(f_out, tracklabel);
                else {
                 if (out_counter==1)
                   printGff3Header(f_out, args);
@@ -976,6 +975,7 @@ int main(int argc, char * const argv[]) {
                     }
                 t.printGff(f_out, tracklabel);
                 }
+             }//GFF/GTF output requested
            } //valid transcript
         } //for each rna
      if (f_out && !mRNAOnly) {
