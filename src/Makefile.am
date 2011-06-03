@@ -193,9 +193,9 @@ bin_SCRIPTS = \
 
 CLEANFILES = $(bin_SCRIPTS)
 
-SUFFIXES = .py
-.py:
-	(echo '#!$(PYTHON)'; sed '/^#!/d' $<) > $@
+#SUFFIXES = .py
+#.py:
+#	(echo '#!$(PYTHON)'; sed '/^#!/d' $<) > $@
 
 cufflinks_SOURCES = cufflinks.cpp  
 cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 
