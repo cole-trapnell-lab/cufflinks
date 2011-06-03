@@ -187,7 +187,7 @@ libgc_a_SOURCES = \
 	gtf_tracking.cpp 
 
 #-- scripts to be installed in $prefix/bin
-bin_SCRIPTS = \
+dist_bin_SCRIPTS = \
 	cuffmerge
 
 CLEANFILES = $(bin_SCRIPTS)
