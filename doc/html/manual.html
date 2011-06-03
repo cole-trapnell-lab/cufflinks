@@ -1162,13 +1162,14 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>tss_id</td>
 			<td VALIGN=top>The ID of this transcript's inferred start site.  
 				Determines which primary transcript this processed transcript 
-				is believed to come from.</td>
+				is believed to come from. Cuffcompare appends this attribute to
+				every transcript reported in the <i>.combined.gtf</i> file.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>p_id</td>
-			<td VALIGN=top>The ID of the coding sequence this transcript contains. This is 
-				attribute is attached to Cuffcompare output by Cuffcompare only 
-				when it is run with a reference annotation that include CDS 
+			<td VALIGN=top>The ID of the coding sequence this transcript contains. This
+				attribute is attached by Cuffcompare to the <i>.combined.gtf</i> records
+				only  when it is run with a reference annotation that include CDS 
 				records.  Further, differential CDS analysis is <b>only</b> 
 				performed when all isoforms of a gene have <tt>p_id</tt> 
 				attributes, because neither Cufflinks nor Cuffcompare attempt to
@@ -1176,6 +1177,23 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </tr>
 		  </table>
 		<p>
+        <p>
+        <ul><b>Note: </b>
+        If an arbitrary GTF/GFF3 file is used as input (instead of the <i>.combined.gtf</i> file produced by 
+        Cuffcompare), these attributes will not be present, but Cuffcompare can still be used to obtain these
+        attributes with a command like this:
+        <br/><br/>
+        <ul>
+        <tt>        
+        cuffcompare -s /path/to/genome_seqs.fa -r annotation.gtf annotation.gtf
+        </tt>
+        </ul>
+        <br>
+        
+        The resulting <tt>cuffcmp.combined.gtf</tt> file created by this command will have the <tt>tss_id</tt> and 
+        <tt>p_id</tt> attributes added to each record and this file can be used as input for <tt>cuffdiff</tt>.
+        </ul>
+        <p>
 			
 		  <table CELLSPACING=15>
 		  <tr><td VALIGN=top>
