@@ -21,7 +21,7 @@
                     differential regulation for RNA-Seq</h2>
                 </td>
                 <td align="right" valign="middle"> <a
-                    href="http://www.mcb.berkeley.edu/"><img
+                    href="http://bio.math.berkeley.edu/"><img
                       style="vertical-align:middle;padding-top:4px"
                       src="images/UCBerkeley-seal.scaled.gif" border="0"></a>&nbsp;
 
@@ -354,12 +354,13 @@
 File ./test_data.sam doesn't appear to be a valid BAM file, trying SAM...
 [13:23:15] Inspecting reads and determining fragment length distribution.
 &gt; Processed 1 loci.                            [*************************] 100%
+Warning: Using default Gaussian distribution due to insufficient paired-end reads in open ranges.  It is recommended that correct paramaters (--frag-len-mean and --frag-len-std-dev) be provided.
 &gt; Map Properties:
-&gt;       Total Map Mass: 104.00
-&gt;       Read Type: 75bp paired-end
-&gt;       Fragment Length Distribution: Gaussian (default)
-&gt;                     Estimated Mean: 209.55
-&gt;                  Estimated Std Dev: 70.54
+&gt;       Total Map Mass: 102.50
+&gt;       Read Type: 75bp x 75bp
+&gt;       Fragment Length Distribution: Truncated Gaussian (default)
+&gt;                     Estimated Mean: 200
+&gt;                  Estimated Std Dev: 80
 [13:23:15] Assembling transcripts and estimating abundances.
 &gt; Processed 1 loci.                            [*************************] 100%
 </pre>

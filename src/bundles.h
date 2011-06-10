@@ -612,9 +612,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	
 	if (!has_pairs || tot_count < 10000)
 	{
-		if (!user_provided_fld)
+		if (has_pairs && !user_provided_fld)
 		{
-			fprintf(stderr, "Warning: Using default Gaussian distribution due to insufficient paired-end reads in open ranges.  It is recommended that correct paramaters (--frag-len-mean and --frag-len-std-dev) be provided.\n");
+			fprintf(stderr, "Warning: Using default Gaussian distribution due to insufficient paired-end reads in open ranges.  It is recommended that correct parameters (--frag-len-mean and --frag-len-std-dev) be provided.\n");
 		}
 		tot_count = 0;
 		normal frag_len_norm(def_frag_len_mean, def_frag_len_std_dev);
