@@ -469,11 +469,10 @@
 		<p>Where 
 		<p style="text-align: center;">
 		<img border=0 src="images/var_transcript_count.png"></img> 
-		<p>is the variance in the number of fragments that come from the transcirpt across replicates
-		in the experiment. If there are no replicates, this count is assumed to be Poisson
-		distributed, meaning the the variance is equal to the mean of the count.  In general,
-		this is not a great model, because the variance across biological replicates tends
-		to be greater than the mean. However, if your experiment has replicates for each 
+		<p>is the variance in the number of fragments that come from the transcript across replicates
+		in the experiment. If there are no replicates, the variance is measured accross the conditions
+		under the assumption that most transcripts are not differentially expressed. 
+		However, if your experiment has replicates for each 
 		condition, Cuffdiff can better estimate the variance for fragment counts and thus
 		 provides more accurate differential expression calls. For single isoform genes, 
 		Cuffdiff models the variance in fragment counts across replicates using the negative
