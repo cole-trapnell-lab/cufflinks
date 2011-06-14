@@ -14,7 +14,7 @@ GArgs is a quick'n'dirty object oriented replacement for the standard
 #include <config.h>
 #endif
 
-#include <cstdio>
+#include <stdio.h>
 
 struct GArgsDef {
   const char* longopt;
@@ -86,9 +86,10 @@ class GArgs {
    char* nextOpt(); //get next option argument's string
    int nextCode(); //get next option argument's code
 
-   int startNonOpt(); //init iteration through non-option arguments
+   int startNonOpt(void); //init iteration through non-option arguments
              // returns the number of non-option arguments
-   void printError(FILE* fout, const char* usage=NULL, bool exitProgram=false);
+   void printError(FILE* fout, const char* usage=NULL,
+                      bool exitProgram=false);
    void printError(const char* usage=NULL, bool exitProgram=false);
    void printCmdLine(FILE* fout);
    char* nextNonOpt(); //get the next non-option argument

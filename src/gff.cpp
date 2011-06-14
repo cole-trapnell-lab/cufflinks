@@ -504,21 +504,28 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
   if (qs || qe) {
     if (qs>qe) swap(qs,qe);
     if (qs==0) qs=1;
-    }
+	}
+  int ovlen=0;
   if (exontype>0) { //check for overlaps between exon-type segments
-      int ovlen=0;
       int oi=exonOverlapIdx(segstart, segend, &ovlen);
       if (oi>=0) { //overlap existing segment
          if (ovlen==0) {
-              //adjacent segments will be merged
-              if ((exons[oi]->exontype==exgffUTR && exontype==exgffCDS) ||
-                  (exons[oi]->exontype==exgffCDS && exontype==exgffUTR)) {
-                    expandExon(oi, segstart, segend, exgffCDSUTR, sc, fr, qs, qe);
-                    return oi;
-                    }
+			  //adjacent segments will be merged
+			  //e.g. CDS to (UTR|exon)
+			  if ((exons[oi]->exontype>=exgffUTR && exontype==exgffCDS) ||
+				  (exons[oi]->exontype==exgffCDS && exontype>=exgffUTR)) {
+					expandExon(oi, segstart, segend, exgffCDSUTR, sc, fr, qs, qe);
+					return oi;
+					}
+			  //CDS adjacent to stop_codon: UCSC does (did?) this
+			  if ((exons[oi]->exontype==exgffStop && exontype==exgffCDS) ||
+				  (exons[oi]->exontype==exgffCDS && exontype==exgffStop)) {
+					expandExon(oi, segstart, segend, exgffCDS, sc, fr, qs, qe);
+					return oi;
+					}
              }
-         //only allow this for CDS within exon, stop_codon within exon, stop_codon within UTR,
-         //                   start_codon within CDS or stop_codon within CDS
+		 //only allow this for CDS within exon, stop_codon within (CDS|UTR|exon),
+         //                   start_codon within (CDS|exon)
         if (exons[oi]->exontype>exontype && 
              exons[oi]->start<=segstart && exons[oi]->end>=segend &&
              !(exons[oi]->exontype==exgffUTR && exontype==exgffCDS)) {
@@ -529,26 +536,36 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
              segstart<=exons[oi]->start && segend>=exons[oi]->end &&
              !(exontype==exgffUTR && exons[oi]->exontype==exgffCDS)) {
                //smaller segment given first, so we have to enlarge it
-              expandExon(oi, segstart, segend, exontype, sc, fr, qs, qe); 
-                //this should also check for overlapping next exon (oi+1) ?
+			  expandExon(oi, segstart, segend, exontype, sc, fr, qs, qe);
+				//this should also check for overlapping next exon (oi+1) ?
               return oi;
               }
         //there is also the special case of "ribosomal slippage exception" (programmed frameshift)
         //where two CDS segments may actually overlap for 1 or 2 bases, but there should be only one encompassing exon
-        //if (ovlen>2 || exons[oi]->exontype!=exgffCDS || exontype!=exgffCDS) {
-        // --> had to relax this because of some weird UCSC annotations with exons partially overlapping the CDS segments
-        if (ovlen>2 && exons[oi]->exontype!=exgffUTR && exontype!=exgffUTR) {
-           //important structural warning, will always print:
-           if (gff_show_warnings) 
-               GMessage("GFF Warning: discarding overlapping feature segment (%d-%d) (vs %d-%d (%s)) for GFF ID %s on %s\n", 
-               segstart, segend, exons[oi]->start, exons[oi]->end, getSubfName(), gffID, getGSeqName());
-           hasErrors(true);
-           return -1; //segment NOT added
-           }
-          // else add the segment if the overlap is small and between two CDS segments
-          //TODO: we might want to add an attribute here with the slippage coordinate and size?
-        }//overlap of existing segment
-       } //check for overlap
+		//if (ovlen>2 || exons[oi]->exontype!=exgffCDS || exontype!=exgffCDS) {
+		// had to relax this because of some weird UCSC annotations with exons partially overlapping the CDS segments
+		/*
+		if (ovlen>2 && exons[oi]->exontype!=exgffUTR && exontype!=exgffUTR) {
+		   if (gff_show_warnings)
+			   GMessage("GFF Warning: discarding overlapping feature segment (%d-%d) (vs %d-%d (%s)) for GFF ID %s on %s\n",
+			   segstart, segend, exons[oi]->start, exons[oi]->end, getSubfName(), gffID, getGSeqName());
+		   hasErrors(true);
+		   return -1; //segment NOT added
+		   }
+		*/
+
+		 if ((ovlen>2 || ovlen==0) || exons[oi]->exontype!=exgffCDS || exontype!=exgffCDS) {
+		  if (gff_show_warnings)
+			 GMessage("GFF Warning: merging overlapping/adjacent feature segment (%d-%d) into (%d-%d) (%s) for GFF ID %s on %s\n",
+				 segstart, segend, exons[oi]->start, exons[oi]->end, getSubfName(), gffID, getGSeqName());
+			expandExon(oi, segstart, segend, exontype, sc, fr, qs, qe);
+			return oi;
+		 }
+		// else add the segment if the overlap is small and between two CDS segments
+		//TODO: we might want to add an attribute here with the slippage coordinate and size?
+        covlen-=ovlen;
+		}//overlap or adjacent to existing segment
+	   } //check for overlap
    // --- no overlap, or accepted micro-overlap (ribosomal slippage)
    // create & add the new segment
    GffExon* enew=new GffExon(segstart, segend, sc, fr, qs, qe, exontype);

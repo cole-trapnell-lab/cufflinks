@@ -760,8 +760,8 @@ const char* getGeneID(GffObj* gfobj) {
  //or, if everything fails, returns the transcript ID
  const char* s=gfobj->getGeneName();
  if (s) return s;
- if ((s=gfobj->getGeneID())) return s;
- if ((s=gfobj->getAttr("Name"))) return s;
+ if ((s=gfobj->getGeneID())!=NULL) return s;
+ if ((s=gfobj->getAttr("Name"))!=NULL) return s;
  return gfobj->getID();
 }
 
@@ -1004,7 +1004,7 @@ void tssCluster(GXLocus& xloc) {
   GList<GTssCl> xpcls(true,true,false);
   for (int i=0;i<xloc.tcons.Count();i++) {
     GXConsensus* c=xloc.tcons[i];
-    if (c->tcons->exons.Count()<2) continue;  //skip single-exon transcripts (?)
+    //if (c->tcons->exons.Count()<2) continue;  //should we skip single-exon transcripts ??
     GArray<int> mrgloci(true);
     int lfound=0;
     for (int l=0;l<xpcls.Count();l++) {
@@ -1084,7 +1084,6 @@ void protCluster(GXLocus& xloc, GFaSeqGet *faseq) {
    if (c->aa!=NULL) { GFREE(c->aa); }
    }
 }
-
 
 void printXLoci(FILE* f, FILE* fc, int qcount, GList<GXLocus>& xloci, GFaSeqGet *faseq) {
   for (int l=0;l<xloci.Count();l++) {
@@ -1486,14 +1485,17 @@ GffObj* findRefMatch(GffObj& m, GLocus& rloc, int& ovlen) {
  GffObj* ret=NULL;
  for (int r=0;r<rloc.mrnas.Count();r++) {
     int olen=0;
-    if (tMatch(m, *(rloc.mrnas[r]),olen, true)) { //return rloc->mrnas[r];
-      if (ovlen<olen) {
-          ovlen=olen;
-          ret=rloc.mrnas[r]; //keep the longest matching ref
-             //but this is unnecessary, there can be only one matching ref (?)
-             // (because ref "duplicates" were discarded)
-          }
-      mdata->addOvl('=',rloc.mrnas[r], olen);
+	if (tMatch(m, *(rloc.mrnas[r]),olen, true)) { //return rloc->mrnas[r];
+	  /*
+	  if (ovlen<olen) {
+		  ovlen=olen;
+		  ret=rloc.mrnas[r]; //keep the longest matching ref
+			 //but this is unnecessary, there can be only one matching ref
+			 // because duplicate refs were discarded (unless -G was used)
+		  }
+	  */
+	  mdata->addOvl('=',rloc.mrnas[r], olen);
+	  ret=mdata->ovls.First()->mrna;
       //this must be called only for the head of an equivalency chain
       CTData* rdata=(CTData*)rloc.mrnas[r]->uptr;
       rdata->addOvl('=',&m,olen);
@@ -2052,7 +2054,7 @@ CTData* getBestOvl(GffObj& m) {
 
 void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
   //checking for relationship with ref transcripts on opposite strand
-  if (rloci==NULL or rloci->Count()<1) return;
+  if (rloci==NULL || rloci->Count()<1) return;
   int j=0;//current rloci index
   for (int i=0;i<mrnas.Count();i++) {
      GffObj& m=*mrnas[i];

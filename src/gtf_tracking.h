@@ -141,6 +141,10 @@ class GFastaHandler {
      }
 };
 
+
+
+bool betterRef(GffObj* a, GffObj* b); //for better CovLink reference ranking
+
 class GLocus;
 
 class COvLink {
@@ -174,12 +178,12 @@ public:
 	}
     bool operator<(COvLink& b) {
 		if (rank==b.rank)
-			return (ovlen==b.ovlen)? (mrna>b.mrna) : (ovlen>b.ovlen);
+			return (ovlen==b.ovlen)? betterRef(mrna, b.mrna) : (ovlen>b.ovlen);
 		else return rank<b.rank;
 	}
     bool operator>(COvLink& b) {
 		if (rank==b.rank)
-			return (ovlen==b.ovlen)? (mrna<b.mrna) : (ovlen<b.ovlen);
+			return (ovlen==b.ovlen)? betterRef(b.mrna, mrna) : (ovlen<b.ovlen);
 		else return rank>b.rank;
 	}
     bool operator==(COvLink& b) {

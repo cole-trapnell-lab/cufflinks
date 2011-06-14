@@ -22,6 +22,17 @@ int cmpByPtr(const pointer p1, const pointer p2) {
   return (p1>p2) ? 1: ((p1==p2)? 0 : -1);
   }
 
+bool betterRef(GffObj* a, GffObj* b) {
+ if (a==NULL || b==NULL) return (a!=NULL);
+ if (a->exons.Count()!=b->exons.Count()) return (a->exons.Count()>b->exons.Count());
+ if (a->hasCDS() && !b->hasCDS())
+        return true;
+   else {
+     if (b->hasCDS() && !a->hasCDS()) return false;
+     return (a->covlen>b->covlen);
+     }
+ }
+
 GffObj* is_RefDup(GffObj* m, GList<GffObj>& mrnas, int& dupidx) {
  //mrnas MUST be sorted by start coordinate
   int ovlen=0;
@@ -159,6 +170,15 @@ bool t_dominates(GffObj* a, GffObj* b) {
     else return (a->exons.Count()>b->exons.Count());
 }
 
+bool betterDupRef(GffObj* a, GffObj* b) {
+if (a->exons.Count()!=b->exons.Count())
+  return (a->exons.Count()>b->exons.Count());
+if (a->hasCDS()!=b->hasCDS())
+   return (a->hasCDS()>b->hasCDS());
+ if (a->track_id != b->track_id)
+   return (a->track_id < b->track_id);
+return (a->covlen > b->covlen);
+}
 
 int parse_mRNAs(GfList& mrnas,
 				 GList<GSeqData>& glstdata,
@@ -221,8 +241,9 @@ int parse_mRNAs(GfList& mrnas,
 		     if (rp!=NULL) { //duplicate found
 		       //discard the one that was seen "later" (higher track_id)
 		       //but let's keep the gene_name if present
-		       refdiscarded++;
-		       if (rp->track_id <= m->track_id) {
+			   refdiscarded++;
+
+			   if (betterDupRef(rp, m)) {
 		           if (rp->getGeneName()==NULL && m->getGeneName()!=NULL) {
 		                  rp->setGeneName(m->getGeneName());
 		                  }
