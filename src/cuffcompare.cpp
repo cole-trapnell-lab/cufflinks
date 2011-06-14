@@ -1476,8 +1476,7 @@ GffObj* findRefMatch(GffObj& m, GLocus& rloc, int& ovlen) {
  ovlen=0;
  CTData* mdata=((CTData*)m.uptr);
  if (mdata->eqref!=NULL && ((CTData*)(mdata->eqref->uptr))->locus==&rloc) {
-
-      mdata->eqref=mdata->ovls.First()->mrna; //this should be unnecessary
+	  mdata->eqref=mdata->ovls.First()->mrna; //this should be unnecessary
       //check it?
       return mdata->ovls.First()->mrna;
       }
@@ -1815,9 +1814,10 @@ void printITrack(FILE* ft, GList<GffObj>& mrnas, int qcount, int& cnum) {
    if (qtdata->ovls.Count()>0 && qtdata->ovls[0]->mrna!=NULL) {
        //if it has ovlcode with a ref
        ref=qtdata->ovls[0]->mrna;
-       //consistency check: qtdata->ovls[0]->code==ovlcode
-       tcons=eqref;
-       if (tcons!=NULL) tmaxcov=tcons->covlen;
+	   //consistency check: qtdata->ovls[0]->code==ovlcode
+	   // -- let tcons be a transfrag, not a ref transcript
+	   //tcons=eqref;
+       //if (tcons!=NULL) tmaxcov=tcons->covlen;
        }
    //chain pre-check
    if (tcons==NULL || mrnas[i]->covlen>tmaxcov) {
