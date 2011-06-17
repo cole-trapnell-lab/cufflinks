@@ -233,17 +233,16 @@ int parse_mRNAs(GfList& mrnas,
 		     //unknown strand - discard from reference set (!)
 		     continue;
 		     }
+		   target_mrnas=(m->strand=='+') ? &(gdata->mrnas_f) : &(gdata->mrnas_r);
 		   if (check_for_dups) {
 		     //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
-		     target_mrnas=(m->strand=='+') ? &(gdata->mrnas_f) : &(gdata->mrnas_r);
 		     int rpidx=-1;
 		     GffObj* rp= is_RefDup(m, *target_mrnas, rpidx);
 		     if (rp!=NULL) { //duplicate found
 		       //discard the one that was seen "later" (higher track_id)
 		       //but let's keep the gene_name if present
-			   refdiscarded++;
-
-			   if (betterDupRef(rp, m)) {
+		     refdiscarded++;
+		     if (betterDupRef(rp, m)) {
 		           if (rp->getGeneName()==NULL && m->getGeneName()!=NULL) {
 		                  rp->setGeneName(m->getGeneName());
 		                  }
@@ -287,29 +286,33 @@ int parse_mRNAs(GfList& mrnas,
 		     }// redundant transfrag check
 		   if (m->gscore==0.0)   
 		     m->gscore=m->exons[0]->score; //Cufflinks exon score = isoform abundance
-		   //parse attributes from the 1st exon
-		   const char* expr = (gtf_tracking_largeScale) ? m->getAttr("FPKM") : m->exons[0]->getAttr(m->names,"FPKM");
+		   //const char* expr = (gtf_tracking_largeScale) ? m->getAttr("FPKM") : m->exons[0]->getAttr(m->names,"FPKM");
+		   const char* expr = m->getAttr("FPKM");
 		   if (expr!=NULL) {
 		       if (expr[0]=='"') expr++;
 		       fpkm=strtod(expr, NULL);
 		       } else { //backward compatibility: read RPKM if FPKM not found
-		       expr=(gtf_tracking_largeScale) ? m->getAttr("RPKM") : m->exons[0]->getAttr(m->names,"RPKM");
+		       //expr=(gtf_tracking_largeScale) ? m->getAttr("RPKM") : m->exons[0]->getAttr(m->names,"RPKM");
+		       expr=m->getAttr("RPKM");
 		       if (expr!=NULL) {
 		           if (expr[0]=='"') expr++;
 		           fpkm=strtod(expr, NULL);
 		           }
 		       }
-		   const char* scov=(gtf_tracking_largeScale) ? m->getAttr("cov") : m->exons[0]->getAttr(m->names,"cov");
+		   //const char* scov=(gtf_tracking_largeScale) ? m->getAttr("cov") : m->exons[0]->getAttr(m->names,"cov");
+		   const char* scov=m->getAttr("cov");
 		   if (scov!=NULL) {
 		       if (scov[0]=='"') scov++; 
 		       cov=strtod(scov, NULL);
 		       }
-		   const char* sconf_hi=(gtf_tracking_largeScale) ? m->getAttr("conf_hi") : m->exons[0]->getAttr(m->names,"conf_hi");
+		   //const char* sconf_hi=(gtf_tracking_largeScale) ? m->getAttr("conf_hi") : m->exons[0]->getAttr(m->names,"conf_hi");
+		   const char* sconf_hi=m->getAttr("conf_hi");
 		   if (sconf_hi!=NULL){
 		       if (sconf_hi[0]=='"') sconf_hi++;
 		       conf_hi=strtod(sconf_hi, NULL);
 		       }
-		   const char* sconf_lo=(gtf_tracking_largeScale) ? m->getAttr("conf_lo") : m->exons[0]->getAttr(m->names,"conf_lo");
+		   //const char* sconf_lo=(gtf_tracking_largeScale) ? m->getAttr("conf_lo") : m->exons[0]->getAttr(m->names,"conf_lo");
+		   const char* sconf_lo=m->getAttr("conf_lo");
 		   if (sconf_lo!=NULL) {
 		       if (sconf_lo[0]=='"') sconf_lo++;
 		       conf_lo=strtod(sconf_lo, NULL);
@@ -527,7 +530,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs) {
 	GffReader gffr(f, true); //loading only recognizable transcript features
 	gffr.showWarnings(gtf_tracking_verbose);
 
-	//          keepAttrs   mergeCloseExons   noExonAttrs
+	//          keepAttrs    mergeCloseExons   noExonAttrs
 	gffr.readAll(keepAttrs,          true,        true);
 
 	//                               is_ref?    check_for_dups,
