@@ -1344,20 +1344,24 @@ void AbundanceGroup::calculate_kappas()
 	
 	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
 	
-	double Z_kappa = 0.0;
+	double S_FPKM = 0.0;
+    double Z_kappa = 0.0;
+    double X_S = 0.0;
 	foreach (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pA->effective_length() > 0)
 		{
-			Z_kappa += pA->gamma() / pA->effective_length();
+			S_FPKM += pA->FPKM();
+            Z_kappa += pA->num_fragments() / pA->effective_length();
+            X_S += pA->num_fragments();
 		}
 	}
 	
 	foreach (shared_ptr<Abundance> pA, _abundances)
 	{
-		if (pA->effective_length() > 0)
+		if (S_FPKM > 0)
 		{
-			pA->kappa((pA->gamma() / pA->effective_length()) / Z_kappa);
+			pA->kappa(pA->FPKM() / S_FPKM);
 		}
 		else
 		{
@@ -1369,17 +1373,41 @@ void AbundanceGroup::calculate_kappas()
 	{
 		for (size_t m = 0; m < num_members; ++m)
 		{
-			_kappa_covariance(k,m) = _gamma_covariance(k, m);
-			double L = _abundances[k]->effective_length() * 
-					   _abundances[m]->effective_length();
-			if (L > 0.0)
-			{
-				_kappa_covariance(k,m) /= (L * Z_kappa * Z_kappa);
-			}
-			else
-			{
-				_kappa_covariance(k,m) = 0.0;
-			}
+            double L = _abundances[k]->effective_length() * 
+            					   _abundances[m]->effective_length();
+            if (L == 0.0)
+            {
+                _kappa_covariance(k,m) = 0.0;
+            }
+            else if (m == k)
+            {
+                // Use the modeled count variance here instead
+                double l_t = _abundances[k]->effective_length();
+                double M = num_fragments()/mass_fraction();
+                double den = (1000000000.0 / (l_t * M));
+                double count_var = _abundances[k]->FPKM_variance() / (den*den);
+                
+                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
+                double old_gamma =  _gamma_covariance(k, m) / (L * Z_kappa * Z_kappa);
+                _kappa_covariance(k,m) = kappa_var;
+            }
+            else
+            {
+                double kappa_covar = X_S * X_S * _gamma_covariance(k, m) / (L * Z_kappa * Z_kappa);
+                _kappa_covariance(k,m) = kappa_covar;
+            }
+            
+//			_kappa_covariance(k,m) = _gamma_covariance(k, m);
+//			double L = _abundances[k]->effective_length() * 
+//					   _abundances[m]->effective_length();
+//			if (L > 0.0)
+//			{
+//				_kappa_covariance(k,m) /= (L * Z_kappa * Z_kappa);
+//			}
+//			else
+//			{
+//				_kappa_covariance(k,m) = 0.0;
+//			}
 		}
 	}
 }

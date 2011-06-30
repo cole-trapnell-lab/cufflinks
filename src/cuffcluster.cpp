@@ -610,7 +610,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         line_num++;
     }
     
-    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_id\tgene_short_name\ttss_id\tlength\tcoverage\tstatus\tlocus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi\tmax_FPKM\tcluster_id");
+    fprintf(spec_out, "tracking_id\tclass_code\tnearest_ref\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus\ttotal_FPKM\ttotal_FPKM_lo\ttotal_FPKM_hi\tmax_FPKM\tcluster_id");
 
     for (size_t i = 0; i < sample_names.size(); ++i)
     {
