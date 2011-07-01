@@ -690,37 +690,6 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 	}
 }
 
-struct BetaCubic
-{
-    
-    BetaCubic (long double a, long double b, long double c):
-        A(a), B(b), C(c) 
-    {
-        _3_coeff = C/B;
-        _2_coeff = (4 * C / B) - (4 * A*C/(B*B));
-        _1_coeff = (5 * A*A*C / (B*B*B)) - (10 * A*C/(B*B)) - A/(A-B) + 5*C/B;
-        _0_coeff = 1 + (2 * C/B) - (6*A*C/(B*B)) + (6*A*A*C)/(B*B*B) - (2*A*A*A*C)/(B*B*B*B);
-    }
-    long double operator()(long double beta)
-    {
-        long double v = 0.0;
-        v += powl(beta,3.0) * _3_coeff;
-        v += powl(beta,2.0) * _2_coeff;
-        v += beta, _1_coeff;
-        v += _0_coeff;
-        return v;
-    }
-    
-private:
-    long double A;
-    long double B;
-    long double C;
-    long double _3_coeff;
-    long double _2_coeff;
-    long double _1_coeff;
-    long double _0_coeff;
-};
-
 long double solve_beta(long double A, long double B, long double C)
 {
     
@@ -1675,7 +1644,7 @@ double EM (int N, int M, vector<double> & newP,
 //	cout << endl;
 	//#endif
 
-	static const double ACCURACY = 1e-3; // convergence for EM
+	static const double ACCURACY = 1e-6; // convergence for EM
 	
 	while (((iter <= 2) || (abs(ell - newEll) > ACCURACY)) && (iter < max_mle_iterations)) {
 		if (iter > 0) {
