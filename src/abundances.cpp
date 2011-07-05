@@ -558,6 +558,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
             // can collapse k into i via the mass.
             if (equiv && last_cond_prob > 0.0)
             {
+                assert(curr_align->read_group_props() == alignments[k].read_group_props());
                 assert (last_cond_prob > 0);
                 //double mass_muliplier = sqrt(last_cond_prob);
                 double mass_multiplier = log(last_cond_prob);
@@ -638,12 +639,12 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     {
         collapse_equivalent_hits(nr_alignments, transcripts, mapped_transcripts, non_equiv_alignments, log_conv_factors);
         assert (non_equiv_alignments.size() == log_conv_factors.size());
+        log_conv_factors = vector<double>(nr_alignments.size(), 0);
         nr_alignments.clear();
     }
     else
     {
         non_equiv_alignments = nr_alignments;
-        log_conv_factors = vector<double>(nr_alignments.size(), 0);
         compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
         
@@ -2137,7 +2138,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
         vector<double> rep_log_conv_factors;
         for (size_t i = 0; i < M; ++i)
         {
-            if (nr_alignments[i].read_group_props() != *itr)
+            if (nr_alignments[i].read_group_props() == *itr)
             {
                 rep_hits.push_back(nr_alignments[i]);
                 rep_log_conv_factors.push_back(log_conv_factors[i]);
@@ -2165,6 +2166,19 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             return mle_success;
         }
     }
+    
+    
+    vector<double> all_rep_gamma = gamma_map_estimate;
+    
+    AbundanceStatus mle_success = gamma_mle(transcripts,
+                                            nr_alignments,
+                                            log_conv_factors, 
+                                            all_rep_gamma);
+    
+    ublas::vector<double> arp = ublas::zero_vector<double>(N);
+    std::copy(all_rep_gamma.begin(), all_rep_gamma.end(), arp.begin());
+    
+    cerr << "ALL REP MLE: " << arp << endl;
     
     gamma_covariance = ublas::zero_matrix<double>(N,N);
     ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
@@ -2524,6 +2538,11 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//cerr << revised_cov << endl;
 	gamma_covariance = revised_cov;
 	
+    cerr << "MLE: " << expectation << endl;
+    cerr << "COV:" << endl;
+    cerr << gamma_covariance << endl;
+    cerr << "*************" << endl;
+    
 	return NUMERIC_OK;
 }
 

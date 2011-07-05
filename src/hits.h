@@ -1038,6 +1038,7 @@ bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs);
 bool hits_eq_mod_id(const ReadHit& lhs, const ReadHit& rhs);
 
 bool hits_eq_non_multi(const MateHit& lhs, const MateHit& rhs);
+bool hits_eq_non_multi_non_replicate(const MateHit& lhs, const MateHit& rhs);
 
 bool hits_equals(const MateHit& lhs, const MateHit& rhs);
 

@@ -46,13 +46,24 @@ bool hits_eq_mod_id(const ReadHit& lhs, const ReadHit& rhs)
 			lhs.cigar() == rhs.cigar());
 }
 
+// Compares for structural equality, but won't declare multihits equal to one another
 bool hits_eq_non_multi(const MateHit& lhs, const MateHit& rhs)
 {
-	if ((lhs.is_multi() || rhs.is_multi()) && lhs.insert_id() != rhs.insert_id())
+	if ((lhs.is_multi() || rhs.is_multi() ) && lhs.insert_id() != rhs.insert_id())
 		return false;
 	return hits_equals(lhs, rhs);
 }
 
+// Compares for structural equality, but won't declare multihits equal to one another
+// and won't return true for hits from different read groups (e.g. replicate samples)
+bool hits_eq_non_multi_non_replicate(const MateHit& lhs, const MateHit& rhs)
+{
+	if ((lhs.is_multi() || rhs.is_multi() || lhs.read_group_props() != rhs.read_group_props()) && lhs.insert_id() != rhs.insert_id())
+		return false;
+	return hits_equals(lhs, rhs);
+}
+    
+// Does NOT care about the read group this hit came from.
 bool hits_equals(const MateHit& lhs, const MateHit& rhs) 
 {
 	if (lhs.ref_id() != rhs.ref_id())
@@ -88,7 +99,7 @@ void collapse_hits(const vector<MateHit>& hits,
 	copy(hits.begin(), hits.end(), back_inserter(non_redundant));
 	vector<MateHit>::iterator new_end = unique(non_redundant.begin(), 
 											   non_redundant.end(), 
-											   hits_eq_non_multi);
+											   hits_eq_non_multi_non_replicate);
 	non_redundant.erase(new_end, non_redundant.end());
     non_redundant.resize(non_redundant.size());
 	
@@ -99,7 +110,7 @@ void collapse_hits(const vector<MateHit>& hits,
 	size_t curr_unique_aln = 0;
 	while (curr_aln < hits.size())
 	{
-		if (hits_eq_non_multi(non_redundant[curr_unique_aln], hits[curr_aln]) || hits_eq_non_multi(non_redundant[++curr_unique_aln], hits[curr_aln]))
+		if (hits_eq_non_multi_non_replicate(non_redundant[curr_unique_aln], hits[curr_aln]) || hits_eq_non_multi_non_replicate(non_redundant[++curr_unique_aln], hits[curr_aln]))
 		{
             double more_mass = hits[curr_aln].common_scale_mass();
 			//assert(non_redundant[curr_unique_aln].collapse_mass() == 0 || !non_redundant[curr_unique_aln].is_multi());
