@@ -2201,6 +2201,11 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//cerr << "COV^-1" << inv_cov << endl;
 	//cerr << "COV * COV^-1" << prod(covariance,inv_cov) << endl;
 	
+    covariance_chol *= 10.0;
+    
+    cerr << "*************"<<endl;
+    cerr << "MLE" << MLE << endl;
+    cerr << "COV" << endl << covariance_chol << endl;
 	multinormal_generator<double> generator(MLE, covariance_chol);
 	
 	vector<ublas::vector<double> > samples;
