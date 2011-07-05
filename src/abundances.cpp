@@ -2133,6 +2133,8 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	
 	fisher += epsilon; // modify matrix to avoid problems during inverse
 	
+    fisher *= 10.0;
+    
 	ublas::matrix<double> fisher_chol = fisher;
 	
 	//matrix_type test_fisher(fisher);
@@ -2201,7 +2203,7 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 	//cerr << "COV^-1" << inv_cov << endl;
 	//cerr << "COV * COV^-1" << prod(covariance,inv_cov) << endl;
 	
-    covariance_chol *= 10.0;
+    //covariance_chol *= 10.0;
     
     cerr << "*************"<<endl;
     cerr << "MLE" << MLE << endl;
