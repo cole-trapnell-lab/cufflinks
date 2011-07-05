@@ -415,6 +415,12 @@ void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
 								   vector<MateHit>& alignments);
 
+AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+                                                   const vector<MateHit>& nr_alignments,
+                                                   const vector<double>& log_conv_factors,
+                                                   vector<double>& gamma_map_estimate,
+                                                   ublas::matrix<double>& gamma_covariance);
+
 AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
