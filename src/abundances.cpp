@@ -2138,10 +2138,13 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
         vector<double> rep_log_conv_factors;
         for (size_t i = 0; i < M; ++i)
         {
-            if (nr_alignments[i].read_group_props() == *itr)
+            rep_hits.push_back(nr_alignments[i]);
+            rep_log_conv_factors.push_back(log_conv_factors[i]);
+
+            if (nr_alignments[i].read_group_props() != *itr)
             {
-                rep_hits.push_back(nr_alignments[i]);
-                rep_log_conv_factors.push_back(log_conv_factors[i]);
+                rep_hits.back().collapse_mass(0);
+                rep_log_conv_factors[rep_log_conv_factors.size() - 1] = 0;
             }
         }
         
