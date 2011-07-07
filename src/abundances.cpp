@@ -2453,7 +2453,7 @@ AbundanceStatus revise_map_mean_and_cov_estimate(double log_total_weight,
                                                  ublas::vector<double>& gamma_map_estimate,
                                                  ublas::matrix<double>& gamma_map_covariance)
 {
-    int N = gamma_map_estimate.size();
+    int N = expectation.size();
     
 	// revise gamma by setting it to the posterior expectation computed via the
 	// importance sampling
@@ -2566,8 +2566,8 @@ AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts
 		return NUMERIC_FAIL;
 	}
     
-    cerr << "Cholesky decomposed proposal covariance" << endl;
-    cerr << covariance_chol << endl;
+    //cerr << "Cholesky decomposed proposal covariance" << endl;
+    //cerr << covariance_chol << endl;
     
 	multinormal_generator<double> generator(proposal_gamma_mean, covariance_chol);
     vector<ublas::vector<double> > samples;
