@@ -91,6 +91,7 @@ static struct option long_options[] = {
 {"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
 {"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
 {"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
+{"fisher-covariance",       no_argument,	 		 0,	         OPT_USE_FISHER_COVARIANCE},
 
 {0, 0, 0, 0} // terminator
 };
@@ -285,6 +286,11 @@ int parse_options(int argc, char** argv)
             case OPT_USE_TOTAL_MASS:
             {
                 use_total_mass = true;
+                break;
+            }
+            case OPT_USE_FISHER_COVARIANCE:
+            {
+                use_fisher_covariance = true;
                 break;
             }
 			default:

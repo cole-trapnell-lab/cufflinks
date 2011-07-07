@@ -91,6 +91,7 @@ extern double binomial_junc_filter_alpha;
 extern std::string user_label;
 extern long random_seed;
 extern bool emit_count_tables;
+extern bool use_fisher_covariance;
 
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
@@ -391,4 +392,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_EMIT_COUNT_TABLES       281
 #define OPT_USE_COMPAT_MASS         282
 #define OPT_USE_TOTAL_MASS          283
+#define OPT_USE_FISHER_COVARIANCE   284
 #endif

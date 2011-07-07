@@ -418,14 +418,37 @@ void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundan
 AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
-                                                   vector<double>& gamma_map_estimate,
+                                                   ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance);
 
-AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-                          const vector<MateHit>& nr_alignments,
-                          const vector<double>& log_conv_factors,
-                          vector<double>& gamma_map_estimate,
-                          ublas::matrix<double>& gamma_covariance);
+AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+                                              const vector<MateHit>& nr_alignments,
+                                              const vector<double>& log_conv_factors,
+                                              ublas::vector<double>& gamma_map_estimate,
+                                              ublas::matrix<double>& gamma_map_covariance);
+
+AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+                                 const vector<MateHit>& nr_alignments,
+                                 const vector<double>& log_conv_factors,
+                                 const ublas::vector<double>& gamma_mle,
+                                 ublas::vector<double>& gamma_map_estimate,
+                                 ublas::matrix<double>& gamma_map_covariance);
+
+
+
+AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts,
+                               const vector<MateHit>& alignments,
+                               const vector<double>& log_conv_factors,
+                               const ublas::vector<double>&  proposal_gamma_mean,
+                               const ublas::matrix<double>& proposal_gamma_covariance,
+                               ublas::vector<double>& gamma_map_estimate,
+                               ublas::matrix<double>& gamma_map_covariance);
+
+//AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
+//                          const vector<MateHit>& nr_alignments,
+//                          const vector<double>& log_conv_factors,
+//                          vector<double>& gamma_map_estimate,
+//                          ublas::matrix<double>& gamma_covariance);
 
 AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,

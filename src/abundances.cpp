@@ -1081,17 +1081,20 @@ void AbundanceGroup::calculate_FPKM_variance()
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
 
+
+
 void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 															  vector<shared_ptr<Abundance> >& transcripts,
 															  vector<shared_ptr<Abundance> >& mapped_transcripts)
-{																	
+{		
 	int N = transcripts.size();
 	int M = alignments.size();
 
 	vector<vector<char> > compatibilities(N, vector<char>(M,0));
 	compute_compatibilities(transcripts, alignments, compatibilities);
 
-	for (int j = 0; j < N; ++j) {
+	for (int j = 0; j < N; ++j) 
+    {
 		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
 		vector<double>& cond_probs = *(new vector<double>(M,0));
 		
@@ -1196,8 +1199,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		}
 	}
 	
-	verbose_msg( "Importance sampling posterior distribution\n");
-	
 	size_t N = transcripts.size();
 	
     set<shared_ptr<ReadGroupProperties const> > rg_props;
@@ -1209,24 +1210,35 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
     AbundanceStatus map_success = NUMERIC_OK;
 	if (final_est_run) // Only on last estimation run.
 	{
+        ublas::vector<double> gamma_mle(filtered_gammas.size());
+        std::copy(filtered_gammas.begin(), filtered_gammas.end(), gamma_mle.begin());
+        
+        ublas::vector<double> gamma_map_estimate = ublas::zero_vector<double>(N);
+        ublas::matrix<double> gamma_map_covariance = _gamma_covariance;
+        
         // If we have multiple replicates, estimate covariance from them via a MLE computation on each replicate
-        if (rg_props.size() > 1)
+        if (!use_fisher_covariance && rg_props.size() > 1)
         {
-            map_success = empirical_mean_replicate_gamma_mle(filtered_transcripts,
+            verbose_msg( "Calculating empirical gamma MLE and covariances\n");
+            map_success = empirical_replicate_gammas(filtered_transcripts,
                                                              nr_alignments,
                                                              log_conv_factors,
-                                                             filtered_gammas,
+                                                             gamma_map_estimate,
                                                              _gamma_covariance);
         }
         else
         {
-            map_success = gamma_map(filtered_transcripts,
-                                    nr_alignments,
-                                    log_conv_factors,
-                                    filtered_gammas,
-                                    _gamma_covariance);
+            verbose_msg( "Importance sampling posterior distribution\n");
+            map_success = bayesian_gammas(filtered_transcripts,
+                                           nr_alignments,
+                                           log_conv_factors,
+                                           gamma_mle,
+                                           gamma_map_estimate,
+                                           gamma_map_covariance);
         }
         
+        std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+        _gamma_covariance = gamma_map_covariance;
 	}
 	else 
 	{
@@ -1694,7 +1706,7 @@ double EM (int N, int M, vector<double> & newP,
 }
 
 void compute_fisher(const vector<shared_ptr<Abundance> >& transcripts,
-					const vector<double>& abundances,
+					const ublas::vector<double>& abundances,
 					const vector<MateHit>& alignments,
 					const vector<double>& u,
 					boost::numeric::ublas::matrix<double>& fisher)
@@ -1714,7 +1726,7 @@ void compute_fisher(const vector<shared_ptr<Abundance> >& transcripts,
 				continue;
 			long double alpha = 0.0;
 			alpha = cond_probs_j[x];
-			alpha *= abundances[j];
+			alpha *= abundances(j);
 			denoms[x] += alpha;
 		}
 	}
@@ -2089,11 +2101,16 @@ void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
 	}
 }
 
-void compute_posterior_expectation(const vector<ublas::vector<double> >& weighted_samples,
-								   const vector<pair<size_t, double> >& sample_weights,
-								   ublas::vector<double>& log_expectation,
-								   long double& log_total_weight)
+AbundanceStatus compute_posterior_expectation(const vector<ublas::vector<double> >& weighted_samples,
+                                              const vector<pair<size_t, double> >& sample_weights,
+                                              ublas::vector<double>& expectation,
+                                              long double& log_total_weight)
 {
+    ublas::vector<double> log_expectation(expectation.size());
+    log_total_weight = 0.0;
+    
+    // compute the weighted sum of the samples from the proposal distribution,
+    // but keep the result in log space to avoid underflow.
 	for (size_t i = 0; i < weighted_samples.size(); ++i)
 	{
 		const ublas::vector<double>& scaled_sample = weighted_samples[i];
@@ -2112,12 +2129,53 @@ void compute_posterior_expectation(const vector<ublas::vector<double> >& weighte
 			log_total_weight = log_space_add<long double>(log_total_weight, log_weight);
 		}	
 	}
+    
+    if (log_total_weight == 0 || sample_weights.size() < 100)
+	{
+		verbose_msg("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
+		return NUMERIC_FAIL;
+	}
+	
+    // compute the weighted mean, and transform back out of log space
+    for (size_t e = 0; e < expectation.size(); ++e)
+	{
+		expectation(e) = (long double)log_expectation(e) - log_total_weight;
+		expectation(e) = exp(expectation(e));
+	}
+	
+	for (size_t e = 0; e < expectation.size(); ++e)
+	{
+		if (isinf(expectation(e)) || isnan(expectation(e)))
+		{
+			verbose_msg("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
+			return NUMERIC_FAIL;
+		}
+	}
+	
+	for (size_t j = 0; j < expectation.size(); ++j) 
+	{
+		if (expectation(j) < 0)
+			expectation(j) = 0;
+	}
+	
+	long double m = sum(expectation);
+	
+	if (m == 0 || isinf(m) || isnan(m))
+	{
+		verbose_msg("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
+		return NUMERIC_FAIL;
+	}
+	
+	for (size_t j = 0; j < expectation.size(); ++j) {
+		expectation(j) = expectation(j) / m;
+	}
+    return NUMERIC_OK;
 }
 
 AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
-                                                   vector<double>& gamma_map_estimate,
+                                                   ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance)
 {
     size_t N = transcripts.size();	
@@ -2148,8 +2206,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             }
         }
         
-        fprintf(stderr,"Replicate # %lu has %lu fragments \n", mle_gammas.size(), rep_hits.size());
-        vector<double> rep_gammas = gamma_map_estimate;
+        //fprintf(stderr,"Replicate # %lu has %lu fragments \n", mle_gammas.size(), rep_hits.size());
+        vector<double> rep_gammas(0.0, transcripts.size());
         
         AbundanceStatus mle_success = gamma_mle(transcripts,
                                                 rep_hits,
@@ -2169,19 +2227,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             return mle_success;
         }
     }
-    
-    
-    vector<double> all_rep_gamma = gamma_map_estimate;
-    
-    AbundanceStatus mle_success = gamma_mle(transcripts,
-                                            nr_alignments,
-                                            log_conv_factors, 
-                                            all_rep_gamma);
-    
-    ublas::vector<double> arp = ublas::zero_vector<double>(N);
-    std::copy(all_rep_gamma.begin(), all_rep_gamma.end(), arp.begin());
-    
-    cerr << "ALL REP MLE: " << arp << endl;
+
     
     gamma_covariance = ublas::zero_matrix<double>(N,N);
     ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
@@ -2189,8 +2235,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
     int MLENUM = 0;
     foreach(ublas::vector<double>& mle, mle_gammas)
     {
-        cerr << "MLE # "<< MLENUM++ << endl;
-        cerr << mle << endl;
+        //cerr << "MLE # "<< MLENUM++ << endl;
+        //cerr << mle << endl;
         expected_mle_gamma += mle;
     }
     expected_mle_gamma /= mle_gammas.size();
@@ -2208,51 +2254,41 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
     }
     
     gamma_covariance /= mle_gammas.size();
+    gamma_map_estimate = expected_mle_gamma;
     
-    for(size_t i = 0; i < N; ++i)
-    {
-        gamma_map_estimate[i] = expected_mle_gamma(i);
-    }
-    
-    cerr << "MLE: " << expected_mle_gamma << endl;
-    cerr << "COV:" << endl;
-    cerr << gamma_covariance << endl;
-    cerr << "*************" << endl;
+    //cerr << "MLE: " << expected_mle_gamma << endl;
+    //cerr << "COV:" << endl;
+    //cerr << gamma_covariance << endl;
+    //cerr << "*************" << endl;
     return NUMERIC_OK;
 }
 
-AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-                          const vector<MateHit>& nr_alignments,
-                          const vector<double>& log_conv_factors,
-                          vector<double>& gamma_map_estimate,
-                          ublas::matrix<double>& gamma_covariance)
-{	
-	size_t N = transcripts.size();	
-	size_t M = nr_alignments.size();
+AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& transcripts,
+                                         const vector<MateHit>& alignments,
+                                         const ublas::vector<double>& gamma_mean,
+                                         ublas::matrix<double>& inverse_fisher)
+{
+//    size_t N = gamma_covariance.size1();	
 	
-	gamma_covariance = ublas::zero_matrix<double>(N);
-	
-	if (N == 1 || M == 0)
-	{
-		return NUMERIC_OK;
-	}
-
+//	gamma_map_covariance = ublas::zero_matrix<double>(N);
+    
 	typedef ublas::matrix<double> matrix_type;
-	matrix_type fisher = ublas::zero_matrix<double>(N,N);
+	matrix_type fisher = ublas::zero_matrix<double>(gamma_mean.size(),gamma_mean.size());
 	
-	vector<double> u(M);
-	for (size_t i = 0; i < M; ++i)
+	vector<double> u(alignments.size());
+	for (size_t i = 0; i < alignments.size(); ++i)
 	{
-		u[i] = nr_alignments[i].collapse_mass();
+		u[i] = alignments[i].collapse_mass();
 	}
+    
 	compute_fisher(transcripts,
-				   gamma_map_estimate,
-				   nr_alignments,
+				   gamma_mean,
+				   alignments,
 				   u,
 				   fisher);
 	
-	ublas::matrix<double> epsilon = ublas::zero_matrix<double>(N,N);
-	for (size_t i = 0; i < N; ++i)
+	ublas::matrix<double> epsilon = ublas::zero_matrix<double>(gamma_mean.size(),gamma_mean.size());
+	for (size_t i = 0; i < gamma_mean.size(); ++i)
 	{
 		epsilon(i,i) = 1e-6;
 	}
@@ -2261,10 +2297,6 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
     
 	ublas::matrix<double> fisher_chol = fisher;
 	
-	//matrix_type test_fisher(fisher);
-	
-	//cerr << "FISHER" << fisher << endl << endl;
-	
 	double ch = cholesky_factorize(fisher_chol);
 	if (ch != 0.0)
 	{
@@ -2272,79 +2304,115 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		return NUMERIC_FAIL;
 	}
 	
-	//cerr << "FISHER" << fisher << endl << endl;
-	
-	//cerr << "CHOLESKY" << endl;
-	//cerr << test_fisher << endl << endl;
-	
-	ublas::matrix<double> inv_fisher = ublas::zero_matrix<double>(N,N);
-	bool invertible = chol_invert_matrix(fisher_chol, inv_fisher);
-	//bool invertible = lu_invert_matrix(fisher, inv_fisher);
-	
-	//cerr << "FISHER^-1"<< inv_fisher << endl << endl;
-	
-	//cerr << "FISHER * FISHER^-1" << prod(fisher,inv_fisher) << endl;
-	
-	//inv_fisher += epsilon;
-	gamma_covariance = inv_fisher;
-	
-	ublas::matrix<double> test_fisher = inv_fisher;
+	inverse_fisher = ublas::zero_matrix<double>(gamma_mean.size(),gamma_mean.size());
+	bool invertible = chol_invert_matrix(fisher_chol, inverse_fisher);
+    
+    ublas::matrix<double> test_fisher = inverse_fisher;
 	ch = cholesky_factorize(test_fisher);
 	if (ch != 0.0 || !invertible)
 	{
-		verbose_msg("Warning: Inverse fisher matrix is not positive definite (bad element: %lg)\n", ch);
+		verbose_msg("Warning: Fisher matrix is not inverible\n", ch);
 		return NUMERIC_FAIL;
 	}
-	
-	ublas::vector<double> MLE(N);
-	for (size_t i = 0; i < N; ++i)
-	{
-		MLE(i) = gamma_map_estimate[i];
-	}
-	
-	//cerr << "MEAN: "<< MLE << endl;
-	
-	ublas::matrix<double> covariance = inv_fisher;
-	
-//	ublas::matrix_vector_range<matrix_type> diag(covariance, ublas::range (0,N), ublas::range (0,N));
-//	covariance = 4 * (covariance + (sum(diag) * ublas::identity_matrix<double>(N)));
-	
-	
-	ublas::matrix<double> inv_cov = ublas::zero_matrix<double>(N,N);
-	
-	ublas::matrix<double> covariance_chol = covariance;
-	ch = cholesky_factorize(covariance_chol);
-	
-	if (ch != 0.0)
-	{
-		verbose_msg("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
-		return NUMERIC_FAIL;
-	}
-	
-	invertible = chol_invert_matrix(covariance_chol, inv_cov);
-	
-	//cerr << "COV" << endl << covariance << endl;
-	//cerr << "COV^-1" << inv_cov << endl;
-	//cerr << "COV * COV^-1" << prod(covariance,inv_cov) << endl;
-	
-    //covariance_chol *= 10.0;
     
-    cerr << "*************"<<endl;
-    cerr << "MLE" << MLE << endl;
-    cerr << "COV" << endl << covariance_chol << endl;
-	multinormal_generator<double> generator(MLE, covariance_chol);
-	
-	vector<ublas::vector<double> > samples;
+    return NUMERIC_OK;
+}
+
+AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+                                 const vector<MateHit>& nr_alignments,
+                                 const vector<double>& log_conv_factors,
+                                 const ublas::vector<double>& gamma_mle,
+                                 ublas::vector<double>& gamma_map_estimate,
+                                 ublas::matrix<double>& gamma_map_covariance)
+{
+    
+    ublas::matrix<double> inverse_fisher = gamma_map_covariance;
+    
+    // Calculate the mean gamma MLE and covariance matrix across replicates, so
+    // we can use it as the proposal distribution for importance sampling.  This will
+    // make the Bayesian prior more conservative than using the inverse of the 
+    // Fisher Information matrix on the mixed likelihood function.
+    AbundanceStatus fisher_status = calculate_inverse_fisher(transcripts,
+                                                             nr_alignments,
+                                                             gamma_mle,
+                                                             inverse_fisher);
+    if (fisher_status != NUMERIC_OK)
+        return fisher_status;
+    
+    AbundanceStatus map_status = map_estimation(transcripts,
+                                                nr_alignments,
+                                                log_conv_factors,
+                                                gamma_mle,
+                                                inverse_fisher,
+                                                gamma_map_estimate,
+                                                gamma_map_covariance);
+    return map_status;
+}
+
+AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+                                              const vector<MateHit>& nr_alignments,
+                                              const vector<double>& log_conv_factors,
+                                              ublas::vector<double>& gamma_estimate,
+                                              ublas::matrix<double>& gamma_covariance)
+{
+    ublas::vector<double> empirical_gamma_mle = gamma_estimate;
+    ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
+    
+    // Calculate the mean gamma MLE and covariance matrix across replicates, so
+    // we can use it as the proposal distribution for importance sampling.  This will
+    // make the Bayesian prior more conservative than using the inverse of the 
+    // Fisher Information matrix on the mixed likelihood function.
+    AbundanceStatus empirical_mle_status = empirical_mean_replicate_gamma_mle(transcripts,
+                                                                              nr_alignments,
+                                                                              log_conv_factors,
+                                                                              empirical_gamma_mle,
+                                                                              empirical_gamma_covariance);
+    
+    
+    if (empirical_mle_status != NUMERIC_OK)
+        return empirical_mle_status;
+    
+    gamma_estimate = empirical_gamma_mle;
+    gamma_covariance = empirical_gamma_covariance;
+
+#if 0
+    // Perform a bayesian estimation to improve the gamma estimate and their covariances 
+    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(empirical_gamma_mle.size(),empirical_gamma_mle.size());
+	for (size_t i = 0; i < empirical_gamma_mle.size(); ++i)
+	{
+		epsilon(i,i) = 1e-6;
+	}
+    
+    empirical_gamma_covariance += epsilon;
+    
+    AbundanceStatus map_status = map_estimation(transcripts,
+                                                nr_alignments,
+                                                log_conv_factors,
+                                                empirical_gamma_mle,
+                                                empirical_gamma_covariance,
+                                                gamma_map_estimate,
+                                                gamma_map_covariance);
+    if (map_status != NUMERIC_OK)
+        return map_status;
+#endif
+    return NUMERIC_OK;
+}
+
+void generate_importance_samples(multinormal_generator<double>& generator,
+                                 vector<ublas::vector<double> >& samples)
+{
 	//int num_samples = std::min((int)N * 1000, num_importance_samples);
     int num_samples = num_importance_samples;
+    
 	for (int i = 0; i < num_samples; ++i)
 	{
 		ublas::vector<double> r = generator.next_rand();
+        
 		ublas::vector<double> scaled_sample = r;
 		
-		for (size_t j = 0; j < N; ++j) {
-//			if (scaled_sample(j) < 0)
-//				scaled_sample(j) = 1e-10;
+		for (size_t j = 0; j < scaled_sample.size(); ++j) {
+            //			if (scaled_sample(j) < 0)
+            //				scaled_sample(j) = 1e-10;
             if (scaled_sample(j) < 0)
                 scaled_sample(j) = -scaled_sample(j);
 		}
@@ -2352,7 +2420,7 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		double m = sum(scaled_sample);
 		if (m && !isnan(m))
 		{
-			for (size_t j = 0; j < N; ++j) {
+			for (size_t j = 0; j < scaled_sample.size(); ++j) {
 				scaled_sample(j) = scaled_sample(j) / m;
 			}
 			
@@ -2376,18 +2444,89 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 			//cerr << scaled_sample << endl;
 		}
 	}
+}
+
+AbundanceStatus revise_map_mean_and_cov_estimate(double log_total_weight,
+                                                 const ublas::vector<double>& expectation,
+                                                 const vector<pair<size_t, double> >& sample_weights,
+                                                 const vector<ublas::vector<double> >& weighted_samples,
+                                                 ublas::vector<double>& gamma_map_estimate,
+                                                 ublas::matrix<double>& gamma_map_covariance)
+{
+    int N = gamma_map_estimate.size();
+    
+	// revise gamma by setting it to the posterior expectation computed via the
+	// importance sampling
+	gamma_map_estimate = expectation;
+    
+	// calculate the sample - mean vectors, store them in log space
+	vector<ublas::vector<double> > sample_expectation_diffs;
 	
-	if (samples.size() < 100)
+    ublas::vector<double> check_expectation = ublas::zero_vector<double>(expectation.size());
+    
+	for (size_t j = 0; j < weighted_samples.size(); ++j)
 	{
-		verbose_msg("Warning: not-enough samples for MAP re-estimation\n");
-		return NUMERIC_FAIL;
+		ublas::vector<double> sample = weighted_samples[j];
+		double log_sample_weight = sample_weights[j].second;
+        
+		for (size_t e = 0; e < expectation.size(); ++e)
+		{
+			// sample is already log transformed after it was weighted, so we
+			// need to divide by the sample weight to recover the original sample
+			// value, then undo the log transform, then subtract the mean from it
+			sample(e) = (exp(((long double)sample(e) - log_sample_weight)) - expectation(e));
+			//sample(e) *= exp((log_sample_weight - log_total_weight));
+		}
+		//cerr << sample << endl;
+		sample_expectation_diffs.push_back(sample);
 	}
+     
+    // We want to revise the covariance matrix from the samples, since we'll 
+    // need it later for the CIs.
+    ublas::matrix<double> revised_cov = ublas::zero_matrix<double>(N,N);
+    
+    // accumulate the contributions from the other samples (doing one cell of 
+	// covariance matrix per outer (i x j) loop iteration.
+    
+    for (size_t j = 0; j < sample_expectation_diffs.size(); ++j)
+    {
+        double log_sample_weight = sample_weights[j].second;
+        double w = exp((log_sample_weight - log_total_weight));
+        ublas::vector<double> sample = weighted_samples[j];
+        
+        for (size_t e = 0; e < expectation.size(); ++e)
+		{
+			// sample is already log transformed after it was weighted, so we
+			// need to divide by the sample weight to recover the original sample
+			// value, then undo the log transform, then subtract the mean from it
+			sample(e) = exp(sample(e) - log_sample_weight);
+			//sample(e) *= exp((log_sample_weight - log_total_weight));
+		}
+        
+        revised_cov += w * (outer_prod(sample,sample));
+	}
+    
+    revised_cov -= outer_prod(expectation,expectation);
+    
+	//cerr << "Revised COV" << endl;
+	//cerr << revised_cov << endl;
+	gamma_map_covariance = revised_cov;
 	
-	double det = determinant(covariance_chol);
-	
-	double denom = pow(2.0*boost::math::constants::pi<double>(), N/2.0);
+    //cerr << "Revised MAP estimate: " << expectation << endl;
+    //cerr << "Revised Covariance matrix:" << endl;
+    //cerr << gamma_map_covariance << endl;
+    //cerr << "*************" << endl;
+    
+    return NUMERIC_OK;
+}
+
+AbundanceStatus calc_is_scale_factor(const ublas::matrix<double>& covariance_chol,
+                                     double& is_scale_factor)
+{
+    double det = determinant(covariance_chol);
+    is_scale_factor = pow(2.0*boost::math::constants::pi<double>(), covariance_chol.size1()/2.0);
 	double s = sqrt(det);
-	denom *= s;
+	is_scale_factor *= s;
 	
 	//assert (det);
 	if (s == 0.0)
@@ -2397,154 +2536,100 @@ AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
 		return NUMERIC_FAIL;
 	}
 	assert (s);
-	assert (denom);
+	assert (is_scale_factor);
+    return NUMERIC_OK;
+}
+
+AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts,
+                               const vector<MateHit>& alignments,
+                               const vector<double>& log_conv_factors,
+                               const ublas::vector<double>&  proposal_gamma_mean,
+                               const ublas::matrix<double>& proposal_gamma_covariance,
+                               ublas::vector<double>& gamma_map_estimate,
+                               ublas::matrix<double>& gamma_map_covariance)
+{
+    ublas::matrix<double> covariance_chol = proposal_gamma_covariance;
+    ublas::matrix<double> inv_cov = covariance_chol;
+	double ch = cholesky_factorize(covariance_chol);
 	
-	//double scale = 1.0 / (denom); 
-	
-	if (!invertible)
+	if (ch != 0.0)
 	{
-		verbose_msg("Warning: covariance matrix is not invertible, probability interval is not available\n");
+		verbose_msg("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
 		return NUMERIC_FAIL;
 	}
 	
-	long double log_total_weight = 0.0;
+	bool invertible = chol_invert_matrix(covariance_chol, inv_cov);
+	
+    if (!invertible)
+	{
+		verbose_msg("Warning: Covariance matrix is not invertible\n");
+		return NUMERIC_FAIL;
+	}
+    
+    cerr << "Cholesky decomposed proposal covariance" << endl;
+    cerr << covariance_chol << endl;
+    
+	multinormal_generator<double> generator(proposal_gamma_mean, covariance_chol);
+    vector<ublas::vector<double> > samples;
+    
+	generate_importance_samples(generator, samples);
+	
+	if (samples.size() < 100)
+	{
+		verbose_msg("Warning: not-enough samples for MAP re-estimation\n");
+		return NUMERIC_FAIL;
+	}
+	
+    double is_scale_factor = 0.0; 
+    
+    // Calculate the scaling factor for correcting the proposal distribution bias 
+    // during importance sampling
+	calc_is_scale_factor(covariance_chol, is_scale_factor);
+	
 	vector<pair<size_t, double> > sample_weights;
 	
-	ublas::vector<double> log_expectation(N);
+	ublas::vector<double> expectation(transcripts.size());
 	vector<ublas::vector<double> > weighted_samples;
 	
-	vector<vector<double> > cond_probs(N, vector<double>());
-	for(size_t j = 0; j < N; ++j)
+	vector<vector<double> > cond_probs(transcripts.size(), vector<double>());
+	for(size_t j = 0; j < transcripts.size(); ++j)
 	{
 		cond_probs[j]= *(transcripts[j]->cond_probs());
 	}
+    
+    vector<double> u(alignments.size());
+	for (size_t i = 0; i < alignments.size(); ++i)
+	{
+		u[i] = alignments[i].collapse_mass();
+	}
 	
-	compute_sample_weights(fisher,
+	compute_sample_weights(proposal_gamma_covariance,
 						   cond_probs,
 						   samples,
 						   u,
                            log_conv_factors,
-						   denom,
-						   MLE,
+						   is_scale_factor,
+						   proposal_gamma_mean,
 						   weighted_samples,
 						   sample_weights);
 	
-	compute_posterior_expectation(weighted_samples,
-								  sample_weights,
-								  log_expectation,
-								  log_total_weight);
+    long double log_total_weight = 0.0;
+    
+	AbundanceStatus expectation_ok = compute_posterior_expectation(weighted_samples,
+                                                                   sample_weights,
+                                                                   expectation,
+                                                                   log_total_weight);
+    if (expectation_ok != NUMERIC_OK)
+    {
+        return expectation_ok;
+    }
 	
-	if (log_total_weight == 0 || sample_weights.size() < 100)
-	{
-		verbose_msg("Warning: restimation failed, importance samples have zero weight.\n\tResorting to MLE and observed Fisher\n");
-		return NUMERIC_FAIL;
-	}
-	
-	ublas::vector<long double> expectation(N);
-	for (size_t e = 0; e < expectation.size(); ++e)
-	{
-		expectation(e) = (long double)log_expectation(e) - log_total_weight;
-		expectation(e) = exp(expectation(e));
-	}
-	
-	for (size_t e = 0; e < expectation.size(); ++e)
-	{
-		if (isinf(expectation(e)) || isnan(expectation(e)))
-		{
-			verbose_msg("Warning: isoform abundance is NaN, restimation failed.\n\tResorting to MLE and observed Fisher.");
-			return NUMERIC_FAIL;
-		}
-	}
-	
-	//fprintf(stderr, "%d valid samples\n", num_valid_samples);
-	//cerr << "e = " << log_expectation << " e / w = ";
-	//expectation /= total_weight;
-	//cerr << expectation << endl;
-	
-	for (size_t j = 0; j < N; ++j) 
-	{
-		if (expectation(j) < 0)
-			expectation(j) = 0;
-	}
-	
-	long double m = sum(expectation);
-	
-	if (m == 0 || isinf(m) || isnan(m))
-	{
-		verbose_msg("Warning: restimation failed, could not renormalize MAP estimate\n\tResorting to MLE and observed Fisher.");
-		return NUMERIC_FAIL;
-	}
-	
-	for (size_t j = 0; j < N; ++j) {
-		expectation(j) = expectation(j) / m;
-	}
-	
-	// revise gamma by setting it to the posterior expectation computed via the
-	// importance sampling
-	gamma_map_estimate = vector<double>(expectation.begin(), expectation.end());
-	
-	// calculate the sample - mean vectors, store them in log space
-	vector<ublas::vector<double> > sample_expectation_diffs;
-	
-	for (size_t j = 0; j < weighted_samples.size(); ++j)
-	{
-		ublas::vector<double> sample = weighted_samples[j];
-		double log_sample_weight = sample_weights[j].second;
-		for (size_t e = 0; e < expectation.size(); ++e)
-		{
-			// sample is already log transformed after it was weighted, so we
-			// need to divide by the sample weight to recover the original sample
-			// value, then undo the log transform, then subtract the mean from it
-			sample(e) = (exp(sample(e) - log_sample_weight) - expectation(e));
-			//sample(e) *= exp((log_sample_weight - log_total_weight));
-		}
-		//cerr << sample << endl;
-		sample_expectation_diffs.push_back(sample);
-	}
-	
-	// We want to revise the covariance matrix from the samples, since we'll 
-	// need it later for the CIs.
-	ublas::matrix<double> revised_cov = ublas::zero_matrix<double>(N,N);
-	
-	// initialize the revised covariance with the values from the first sample
-	for (size_t k = 0; k < N; ++k)
-	{
-		for (size_t i = 0; i < N; ++i)
-		{
-			double log_sample_weight = sample_weights[0].second;
-			double x = sample_expectation_diffs[0](k);
-			double z = sample_expectation_diffs[0](i);
-			revised_cov(k,i) = x * z;
-			//cerr << x * z<<",";
-			revised_cov(k,i) *= exp((log_sample_weight - log_total_weight));
-			//cerr << exp((log_sample_weight - log_total_weight))<<endl;
-		}
-	}
-	
-	// accumulate the contributions from the other samples (doing one cell of 
-	// covariance matrix per outer (i x j) loop iteration.
-	for (size_t k = 0; k < N; ++k)
-	{
-		for (size_t i = 0; i < N; ++i)
-		{
-			for (size_t j = 1; j < sample_expectation_diffs.size(); ++j)
-			{
-				double x = sample_expectation_diffs[j](k);
-				double z = sample_expectation_diffs[j](i);
-				double log_sample_weight = sample_weights[j].second;
-				revised_cov(k,i) += exp((log_sample_weight - log_total_weight)) * x * z;
-			}			
-		}
-	}
-
-	//cerr << "Revised COV" << endl;
-	//cerr << revised_cov << endl;
-	gamma_covariance = revised_cov;
-	
-    cerr << "MLE: " << expectation << endl;
-    cerr << "COV:" << endl;
-    cerr << gamma_covariance << endl;
-    cerr << "*************" << endl;
+    revise_map_mean_and_cov_estimate(log_total_weight,
+                                     expectation, 
+                                     sample_weights, 
+                                     weighted_samples,
+                                     gamma_map_estimate, 
+                                     gamma_map_covariance);
     
 	return NUMERIC_OK;
 }
