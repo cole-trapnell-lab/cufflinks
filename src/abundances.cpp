@@ -1213,8 +1213,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         ublas::vector<double> gamma_mle(filtered_gammas.size());
         std::copy(filtered_gammas.begin(), filtered_gammas.end(), gamma_mle.begin());
         
-        ublas::vector<double> gamma_map_estimate = ublas::zero_vector<double>(N);
-        ublas::matrix<double> gamma_map_covariance = _gamma_covariance;
+        ublas::vector<double> gamma_map_estimate = ublas::zero_vector<double>(filtered_gammas.size());
+        ublas::matrix<double> gamma_map_covariance = ublas::zero_matrix<double>(N,N);
         
         // If we have multiple replicates, estimate covariance from them via a MLE computation on each replicate
         if (!use_fisher_covariance && rg_props.size() > 1)
@@ -1224,7 +1224,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                                              nr_alignments,
                                                              log_conv_factors,
                                                              gamma_map_estimate,
-                                                             _gamma_covariance);
+                                                             gamma_map_covariance);
         }
         else
         {
@@ -2326,7 +2326,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
                                  ublas::matrix<double>& gamma_map_covariance)
 {
     
-    ublas::matrix<double> inverse_fisher = gamma_map_covariance;
+    ublas::matrix<double> inverse_fisher;
     
     // Calculate the mean gamma MLE and covariance matrix across replicates, so
     // we can use it as the proposal distribution for importance sampling.  This will
