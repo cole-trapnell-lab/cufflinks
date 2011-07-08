@@ -2770,7 +2770,10 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		
 		for (size_t i = 0; i < gammas.size(); ++i)
 		{
-			assert (!isnan(gammas[i]));
+			if (isnan(gammas[i]) || isinf(gammas[i]))
+            {
+                return NUMERIC_FAIL;
+            }
 		}
 	}
 	else
