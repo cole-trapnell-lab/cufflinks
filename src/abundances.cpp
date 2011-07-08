@@ -923,10 +923,13 @@ bool compute_fpkm_group_variance(long double& variance,
             }
         }    
     }
+    
     double C = (1000000000.0 * X_g / M);
     C *= C;
-    C *= cov;
-             
+    cov *= C;
+    
+    assert (cov >= 0.0);
+    
     //double grp_var = compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M); 
     //assert (grp_var == total_var);
     

@@ -754,7 +754,6 @@ void sample_abundance_worker(const string& locus_tag,
         
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
                                            tss_gamma_cov,
-                                           
                                            max_tss_mass_variance);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
@@ -766,6 +765,14 @@ void sample_abundance_worker(const string& locus_tag,
         {
             ab_group.locus_tag(locus_tag);
             set<string> gene_ids = ab_group.gene_id();
+            if (gene_ids.size() > 1)
+            {
+                foreach (string st, gene_ids)
+                {
+                    fprintf(stderr, "%s\n", st.c_str());
+                }
+                ab_group.gene_id();
+            }
             assert (gene_ids.size() == 1);
             ab_group.description(*(gene_ids.begin()));
         }
