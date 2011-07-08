@@ -1504,7 +1504,7 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 	}
 	else
 	{
-		assert(false);
+		p[j] = 0.0;
 	}
 }
  
