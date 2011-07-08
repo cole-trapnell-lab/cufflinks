@@ -506,6 +506,7 @@
 		0ACD78C612E6647B00310E07 /* update_check.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = update_check.h; path = src/update_check.h; sourceTree = "<group>"; };
 		9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_scaffolds.cpp; sourceTree = "<group>"; };
 		9C29C3E31339285000EC6E65 /* vari.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = vari.hpp; sourceTree = "<group>"; };
+		9C40F31B13C78FEF00515339 /* cuffmerge */ = {isa = PBXFileReference; explicitFileType = text.script.python; name = cuffmerge; path = src/cuffmerge; sourceTree = "<group>"; };
 		9CC50B5913204F180031949A /* cmd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = cmd.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		9CC50B5D13204FE30031949A /* minmax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = minmax.c; sourceTree = "<group>"; };
 		9CC50B5E13204FE30031949A /* locfit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = locfit.c; sourceTree = "<group>"; };
@@ -550,7 +551,6 @@
 		9CC50B8B13204FE90031949A /* ar_funs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ar_funs.c; sourceTree = "<group>"; };
 		9CC50B8E13204FEA0031949A /* lfwin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lfwin.h; sourceTree = "<group>"; };
 		9CC50B8F13204FEA0031949A /* imatlb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imatlb.h; sourceTree = "<group>"; };
-		9CC778E113707BEB0093BA5B /* cuffmerge.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = cuffmerge.py; path = src/cuffmerge.py; sourceTree = "<group>"; };
 		9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = compress_gtf.cpp; path = src/compress_gtf.cpp; sourceTree = "<group>"; };
 		9CD6E93F13379B7E00CCE1DE /* compress_gtf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compress_gtf; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
@@ -825,7 +825,7 @@
 				0ACD78C612E6647B00310E07 /* update_check.h */,
 				ED677C0D132A3D83000CFDC8 /* replicates.cpp */,
 				ED677C0E132A3D83000CFDC8 /* replicates.h */,
-				9CC778E113707BEB0093BA5B /* cuffmerge.py */,
+				9C40F31B13C78FEF00515339 /* cuffmerge */,
 			);
 			name = src;
 			sourceTree = "<group>";

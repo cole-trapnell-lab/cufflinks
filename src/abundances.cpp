@@ -928,6 +928,13 @@ bool compute_fpkm_group_variance(long double& variance,
     C *= C;
     cov *= C;
     
+    if (cov < 0)
+    {
+        //cerr << psis << endl;
+        assert (cov >= -1e-6);
+        cov = 0.0;
+    }
+    
     assert (cov >= 0.0);
     
     //double grp_var = compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M); 
