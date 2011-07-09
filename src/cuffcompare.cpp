@@ -890,13 +890,13 @@ class GTssCl:public GSeg { //experiment cluster of ref loci (isoforms)
         nfstart=c->tcons->exons.Last()->start;
         nfend=c->tcons->exons.Last()->end;
         //proximity check for the transcript start:
-        if (nfend>fend+tssDist || fend>nfend+tssDist) return false;
+        if (nfend>fend+tssDist || fend>nfend+tssDist || strcmp(tsscl[0].tcons->geneID, c->tcons->geneID)) return false;
         }
       else {
         //if (!c->tcons->exons.First()->overlap(fstart,fend)) return false;
         nfstart=c->tcons->exons.First()->start;
         nfend=c->tcons->exons.First()->end;
-        if (nfstart>fstart+tssDist || fstart>nfstart+tssDist) return false;
+        if (nfstart>fstart+tssDist || fstart>nfstart+tssDist || strcmp(tsscl[0].tcons->geneID, c->tcons->geneID)) return false;
         }
      // -- if we are here, we can add to tss cluster
 
@@ -1000,40 +1000,52 @@ void printConsGTF(FILE* fc, GXConsensus* xc, int xlocnum) {
    }
 }
 
-void tssCluster(GXLocus& xloc) {
-  GList<GTssCl> xpcls(true,true,false);
-  for (int i=0;i<xloc.tcons.Count();i++) {
-    GXConsensus* c=xloc.tcons[i];
-    //if (c->tcons->exons.Count()<2) continue;  //should we skip single-exon transcripts ??
-    GArray<int> mrgloci(true);
-    int lfound=0;
-    for (int l=0;l<xpcls.Count();l++) {
-        if (xpcls[l]->end<c->tcons->exons.First()->start) continue;
-        if (xpcls[l]->start>c->tcons->exons.Last()->end) break;
-        if (xpcls[l]->add_Xcons(c)) {
-            lfound++;
-            mrgloci.Add(l);
+void tssCluster(GXLocus& xloc) 
+{
+    GList<GTssCl> xpcls(true,true,false);
+    for (int i=0;i<xloc.tcons.Count();i++) 
+    {
+        GXConsensus* c=xloc.tcons[i];
+        //if (c->tcons->exons.Count()<2) continue;  //should we skip single-exon transcripts ??
+        GArray<int> mrgloci(true);
+        int lfound=0;
+        for (int l=0;l<xpcls.Count();l++) 
+        {
+            if (xpcls[l]->end<c->tcons->exons.First()->start) continue;
+            if (xpcls[l]->start>c->tcons->exons.Last()->end) break;
+            if (xpcls[l]->add_Xcons(c)) 
+            {
+                lfound++;
+                mrgloci.Add(l);
+                
             }
+            
         } // for each xpcluster
-    if (lfound==0) {
-        //create a xpcl with only this xconsensus
-        xpcls.Add(new GTssCl(c));
+        if (lfound==0) 
+        {
+            //create a xpcl with only this xconsensus
+            xpcls.Add(new GTssCl(c));
+            
         }
-      else if (lfound>1) {
-        for (int l=1;l<lfound;l++) {
-              int mlidx=mrgloci[l]-l+1;
-              xpcls[mrgloci[0]]->addMerge(*xpcls[mlidx], c);
-              xpcls.Delete(mlidx);
-              }
+        else if (lfound>1) 
+        {
+            for (int l=1;l<lfound;l++) 
+            {
+                int mlidx=mrgloci[l]-l+1;
+                xpcls[mrgloci[0]]->addMerge(*xpcls[mlidx], c);
+                xpcls.Delete(mlidx);
+            }
         }
+        
     }//for each xconsensus in this xlocus
- for (int l=0;l<xpcls.Count();l++) {
-      //if (xpcls[l]->tsscl.Count()<2) continue;
-      tsscl_num++;
-      for (int i=0;i<xpcls[l]->tsscl.Count();i++)
-           xpcls[l]->tsscl[i]->tss_id=tsscl_num;
-      //processTssCl(xcds_num, xpcls[l], faseq);
-      }
+    for (int l=0;l<xpcls.Count();l++) 
+    {
+        //if (xpcls[l]->tsscl.Count()<2) continue;
+        tsscl_num++;
+        for (int i=0;i<xpcls[l]->tsscl.Count();i++)
+            xpcls[l]->tsscl[i]->tss_id=tsscl_num;
+        //processTssCl(xcds_num, xpcls[l], faseq);
+    }
 }
 
 void protCluster(GXLocus& xloc, GFaSeqGet *faseq) {

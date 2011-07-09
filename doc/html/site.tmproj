@@ -16,7 +16,7 @@
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2011-06-13T12:00:46Z</date>
+			<date>2011-07-09T15:58:36Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
@@ -90,20 +90,6 @@
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>462</integer>
-		</dict>
-		<key>index.html</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>60</integer>
-				<key>line</key>
-				<integer>222</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>187</integer>
 		</dict>
 		<key>index.html</key>
 		<dict>
