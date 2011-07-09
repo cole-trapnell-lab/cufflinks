@@ -805,7 +805,7 @@ bool compute_fpkm_variance(long double& variance,
     
     long double dispersion = V_X_g_t - (X_g * gamma_t);
     
-    assert (pst_t >= 0);
+    assert (psi_t >= 0);
     
     if (dispersion < -1 || abs(dispersion) < 1)
     {
