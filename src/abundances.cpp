@@ -845,6 +845,11 @@ bool compute_fpkm_variance(long double& variance,
             
             long double r = (A * A) / (B - A);
             
+            if (r < 0)
+            {
+                numeric_ok = false;
+            }
+            
             long double beta = solve_beta(A,B,C);
         
             long double alpha = 1.0 - (A/(A-B)) * beta;
@@ -867,6 +872,11 @@ bool compute_fpkm_variance(long double& variance,
                 //printf("\t A = %Lg, B = %Lg\n", A, B);
                 //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
                 //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
+                numeric_ok = false;
+            }
+            
+            if (variance < 0)
+            {
                 numeric_ok = false;
             }
             
