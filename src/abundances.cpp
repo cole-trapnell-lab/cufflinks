@@ -805,7 +805,7 @@ bool compute_fpkm_variance(long double& variance,
     
     long double dispersion = V_X_g_t - (X_g * gamma_t);
     
-    if (psi_t <= 0)
+    if (psi_t < 0)
     {
         fprintf (stderr, "Warning: psi_t is negative! (psi_t = %lf)\n", psi_t);
         psi_t = 0;
