@@ -828,7 +828,7 @@ bool compute_fpkm_variance(long double& variance,
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
-        if (psi_t == 0) 
+        if (psi_t <= 0) 
         {
             //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
