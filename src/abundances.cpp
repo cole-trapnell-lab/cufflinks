@@ -870,7 +870,7 @@ bool compute_fpkm_variance(long double& variance,
                 numeric_ok = false;
             }
             
-            assert (variance >= 0);
+            assert (!numeric_ok || variance >= 0);
             
             //assert (abs(FPKM - mean) < 1e-3);
         }
@@ -940,12 +940,11 @@ bool compute_fpkm_group_variance(long double& variance,
     
     if (cov < 0)
     {
-        //cerr << psis << endl;
-        assert (cov >= -1e-6);
-        cov = 0.0;
+        fprintf (stderr, "Warning: cov is negative! (cov = %lf)\n", cov);
+        cov = 0;
     }
     
-    assert (cov >= 0.0);
+    assert (!numeric_ok || cov >= 0.0);
     
     //double grp_var = compute_fpkm_variance(gamma_t, psi_t, X_g, V_X_g_t, 1.0, M); 
     //assert (grp_var == total_var);
