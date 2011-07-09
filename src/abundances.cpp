@@ -805,6 +805,8 @@ bool compute_fpkm_variance(long double& variance,
     
     long double dispersion = V_X_g_t - (X_g * gamma_t);
     
+    assert (pst_t >= 0);
+    
     if (dispersion < -1 || abs(dispersion) < 1)
     {
         // default to poisson dispersion
@@ -835,6 +837,7 @@ bool compute_fpkm_variance(long double& variance,
             //long double max_doub = numeric_limits<long double>::max();
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
+            
             long double r = (A * A) / (B - A);
             
             long double beta = solve_beta(A,B,C);
@@ -861,6 +864,8 @@ bool compute_fpkm_variance(long double& variance,
                 //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
                 numeric_ok = false;
             }
+            
+            assert (variance >= 0);
             
             //assert (abs(FPKM - mean) < 1e-3);
         }
