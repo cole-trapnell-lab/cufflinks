@@ -822,9 +822,9 @@ bool compute_fpkm_variance(long double& variance,
         // at the end of the routine when we multiply by the square of those
         // constants
         variance = A + psi_var;
-        if (variance <= 0)
+        if (variance < 0)
         {
-            fprintf(stderr, "Warning: negative variance in case 1: (A = %lf, psi_var = %lf)\n", A, psi_var);
+            fprintf(stderr, "Warning: negative variance in case 1: (A = %Lf, psi_var = %Lf, gamma_t = %lf)\n", A, psi_var, gamma_t);
         }
         //printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
         //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
