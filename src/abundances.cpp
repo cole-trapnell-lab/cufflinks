@@ -987,7 +987,10 @@ void AbundanceGroup::calculate_conf_intervals()
                 if (numerics_ok == false)
                     _abundances[j]->status(NUMERIC_LOW_DATA);
                 
-                assert (fpkm_var >= 0);
+                if (fpkm_var < 0)
+                {
+                    fprintf(stderr, "Warning: FPKM variance < 0 (FPKM = %lf, FPKM variance = %lf\n", _abundances[j]->FPKM(), fpkm_var);
+                }
                 
 				double FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
 				double FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
