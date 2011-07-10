@@ -362,7 +362,8 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
         shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
         for (size_t j = 0; j < N; ++j)
         {
-            double scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
+            //double scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
+            double scaled_variance = disperser->scale_mass_variance(scaled_mass) * _abundances[j]->gamma();
             avg_mass_variances[j] += scaled_variance;
         }
         assert (disperser->scale_mass_variance(scaled_mass) != 0 || scaled_mass == 0); 
