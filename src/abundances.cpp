@@ -891,7 +891,7 @@ bool compute_fpkm_variance(long double& variance,
             
             if (variance <= 0)
             {
-                fprintf(stderr, "Warning: negative variance in case 3: (r = %lf, alpha = %lf, beta = %lf)\n", r, alpha, beta);
+                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
             }
             
             assert (!numeric_ok || variance >= 0);
