@@ -789,22 +789,23 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
     if (most_reps == 1 && poisson_dispersion == false)
     {
-        vector<pair<string, vector<double> > > sample_count_table;
+        vector<LocusCountList> sample_count_table;
         for (size_t i = 0; i < all_read_groups.size(); ++i)
         {
             shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            const vector<pair<string, double> >& common_count_table = rg_props->common_scale_counts();
+            const vector<LocusCount>& common_count_table = rg_props->common_scale_counts();
             double unscaling_factor = 1.0 / rg_props->mass_scale_factor();
             for (size_t j = 0; j < common_count_table.size(); ++j)
             {
                 if (sample_count_table.size() == j)
                 {
-                    const string& locus_id = common_count_table[j].first;
-                    sample_count_table.push_back(make_pair(locus_id, vector<double>(all_read_groups.size(), 0.0)));
+                    const string& locus_id = common_count_table[j].locus_desc;
+                    int num_transcripts = common_count_table[j].num_transcripts;
+                    sample_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
                 }
-                double scaled = common_count_table[j].second;
-                sample_count_table[j].second[i] = scaled * unscaling_factor;
-                assert(sample_count_table[j].second[i] >= 0 && !isinf(sample_count_table[j].second[i]));
+                double scaled = common_count_table[j].count;
+                sample_count_table[j].counts[i] = scaled * unscaling_factor;
+                assert(sample_count_table[j].counts[i] >= 0 && !isinf(sample_count_table[j].counts[i]));
             }
         }
         
@@ -822,25 +823,25 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         // Transform raw counts to the common scale
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
-            pair<string, vector<double> >& p = sample_count_table[i];
-            for (size_t j = 0; j < p.second.size(); ++j)
+            LocusCountList& p = sample_count_table[i];
+            for (size_t j = 0; j < p.counts.size(); ++j)
             {
                 assert (scale_factors.size() > j);
-                p.second[j] *= (1.0 / scale_factors[j]);
+                p.counts[j] *= (1.0 / scale_factors[j]);
             }
         }
         
         for (size_t i = 0; i < all_read_groups.size(); ++i)
         {
             shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            vector<pair<string, double> > scaled_counts;
+            vector<LocusCount> scaled_counts;
             for (size_t j = 0; j < sample_count_table.size(); ++j)
             {
-                pair<string, double> counts;
-                string& locus_id = sample_count_table[j].first;
-                double locus_count = sample_count_table[j].second[i];
-                counts = make_pair(locus_id, locus_count);
-                scaled_counts.push_back(counts);
+                string& locus_id = sample_count_table[j].locus_desc;
+                double count = sample_count_table[j].counts[i];
+                int num_transcripts = sample_count_table[j].num_transcripts;
+                LocusCount locus_count(locus_id, count, num_transcripts);
+                scaled_counts.push_back(locus_count);
             }
             rg_props->common_scale_counts(scaled_counts);
             // revert each read group back to native scaling to avoid a systematic fold change toward the mean.

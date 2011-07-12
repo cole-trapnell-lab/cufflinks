@@ -1443,7 +1443,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    vector<pair<string, double> > count_table;
+    vector<LocusCount> count_table;
     if (bundle_mode != HIT_DRIVEN)
         inspect_map(bundle_factory, NULL, count_table);
     else 

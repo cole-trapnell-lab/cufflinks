@@ -256,6 +256,14 @@ class MultiReadTable;
 
 class MassDispersionModel;
 
+struct LocusCount
+{
+    LocusCount(std::string ld, double c, int nt) : 
+        locus_desc(ld), count(c), num_transcripts(nt) {}
+    std::string locus_desc;
+    double count;
+    int num_transcripts;
+};
 
 class ReadGroupProperties
 {
@@ -311,8 +319,8 @@ public:
         _mass_dispersion_model = nm; 
     }
     
-    const std::vector<std::pair<std::string, double> >& common_scale_counts() { return _common_scale_counts; }
-    void common_scale_counts(const std::vector<std::pair<std::string, double> >& counts) { _common_scale_counts = counts; }
+    const std::vector<LocusCount>& common_scale_counts() { return _common_scale_counts; }
+    void common_scale_counts(const std::vector<LocusCount>& counts) { _common_scale_counts = counts; }
     
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
@@ -331,7 +339,7 @@ private:
     
     double _mass_scaling_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
-    std::vector<std::pair<std::string, double> > _common_scale_counts;
+    std::vector<LocusCount> _common_scale_counts;
     
     bool _complete_fragments;
 };

@@ -365,7 +365,7 @@ void identify_bad_splices(const HitBundle& bundle,
 template<class BundleFactoryType>
 void inspect_map(BundleFactoryType& bundle_factory,
                  BadIntronTable* bad_introns,
-                 vector<pair<string, double> >& count_table,
+                 vector<LocusCount>& count_table,
                  bool progress_bar = true)
 {
 
@@ -437,7 +437,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            count_table.push_back(make_pair(bundle_label_buf, bundle.raw_mass()));
+            count_table.push_back(LocusCount(bundle_label_buf, bundle.raw_mass(), bundle.ref_scaffolds().size()));
 		}
         
         if (!valid_bundle)

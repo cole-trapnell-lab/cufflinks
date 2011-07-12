@@ -124,29 +124,29 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     }
 }
 
-void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_count_table,
+void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
                           vector<double>& scale_factors)
 {
     vector<double> geom_means(sample_count_table.size(), 0.0);
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
-        const pair<string, vector<double> >& p = sample_count_table[i];
+        const LocusCountList& p = sample_count_table[i];
         
-        for (size_t j = 0; j < p.second.size(); ++j)
+        for (size_t j = 0; j < p.counts.size(); ++j)
         {
             //assert (geom_means.size() > j);
-            if (geom_means[i] > 0  && p.second[j] > 0)
+            if (geom_means[i] > 0  && p.counts[j] > 0)
             {
-                geom_means[i] *= p.second[j];
+                geom_means[i] *= p.counts[j];
             }
-            else if (p.second[j] > 0)
+            else if (p.counts[j] > 0)
             {
-                geom_means[i] = p.second[j];
+                geom_means[i] = p.counts[j];
             }
             
         }
-        geom_means[i] = pow(geom_means[i], 1.0/(double)p.second.size());
+        geom_means[i] = pow(geom_means[i], 1.0/(double)p.counts.size());
     }
     
     for (size_t j = 0; j < scale_factors.size(); ++j)
@@ -154,9 +154,9 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
         vector<double> tmp_counts;
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
-            if (geom_means[i] && !isinf(geom_means[i]) && !isnan(geom_means[i]) && sample_count_table[i].second[j])
+            if (geom_means[i] && !isinf(geom_means[i]) && !isnan(geom_means[i]) && sample_count_table[i].counts[j])
             {
-                double gm = (double)sample_count_table[i].second[j] / geom_means[i];
+                double gm = (double)sample_count_table[i].counts[j] / geom_means[i];
                 assert (!isinf(gm));
                 tmp_counts.push_back(gm);
             }
@@ -169,56 +169,36 @@ void calc_scaling_factors(const vector<pair<string, vector<double> > >& sample_c
     }
 }
 
+static const int min_loci_for_fitting = 30;
+
 boost::shared_ptr<MassDispersionModel const> 
-fit_dispersion_model(const string& condition_name,
-                     const vector<double>& scale_factors,
-                     const vector<pair<string, vector<double> > >& sample_count_table)
+fit_dispersion_model_helper(const string& condition_name,
+                            const vector<double>& scale_factors,
+                            const vector<LocusCountList>& sample_count_table)
 {
-//    
-//#if ENABLE_THREADS
-//	boost::mutex::scoped_lock lock(_locfit_lock);
-//#endif
-    
     vector<pair<double, double> > raw_means_and_vars;
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
-        if (sample_count_table[i].second.size() <= 1)
-        {
-            // only one replicate - no point in fitting variance
-            return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
-        }
-    }
-#if ENABLE_THREADS
-    _locfit_lock.lock();
-#endif
-    
-    ProgressBar p_bar("Modeling fragment count overdispersion.",0);
-    
-    for (size_t i = 0; i < sample_count_table.size(); ++i)
-    {
-        const pair<string, vector<double> >& p = sample_count_table[i];
-        double mean = accumulate(p.second.begin(), p.second.end(), 0.0);
-        if (mean > 0.0 && p.second.size() > 0)
-            mean /= p.second.size();
+        const LocusCountList& p = sample_count_table[i];
+        double mean = accumulate(p.counts.begin(), p.counts.end(), 0.0);
+        if (mean > 0.0 && p.counts.size() > 0)
+            mean /= p.counts.size();
         
         double var = 0.0;
-        foreach (double d, p.second)
+        foreach (double d, p.counts)
         {
             var += (d - mean) * (d - mean);
         }
-        if (var > 0.0 && p.second.size())
-            var /= p.second.size();
+        if (var > 0.0 && p.counts.size())
+            var /= p.counts.size();
         if (mean > 0 && var > 0.0)
             raw_means_and_vars.push_back(make_pair(mean, var));
     }
     
-    if (raw_means_and_vars.empty())
+    if (raw_means_and_vars.size() < min_loci_for_fitting)
     {
-        fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
-#if ENABLE_THREADS
-        _locfit_lock.unlock();
-#endif
+        //fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
         return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
     }
     
@@ -279,7 +259,68 @@ fit_dispersion_model(const string& condition_name,
     disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
+    return disperser;
+}
 
+boost::shared_ptr<MassDispersionModel const> 
+fit_dispersion_model(const string& condition_name,
+                     const vector<double>& scale_factors,
+                     const vector<LocusCountList>& sample_count_table)
+{
+//    
+//#if ENABLE_THREADS
+//	boost::mutex::scoped_lock lock(_locfit_lock);
+//#endif
+    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    {
+        if (sample_count_table[i].counts.size() <= 1)
+        {
+            // only one replicate - no point in fitting variance
+            return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
+        }
+    }
+#if ENABLE_THREADS
+    _locfit_lock.lock();
+#endif
+    
+    ProgressBar p_bar("Modeling fragment count overdispersion.",0);
+    
+    int max_transcripts = 0;
+    foreach(const LocusCountList& L, sample_count_table)
+    {
+        if (L.num_transcripts > max_transcripts)
+        {
+            max_transcripts = L.num_transcripts;
+        }
+    }
+    
+    // This vector holds a dispersion model for each transcript multiplicity. 
+    // The model for multiplicity is fitted to all the data, and lives at index 0 in the 
+    // vector below.
+    vector<boost::shared_ptr<MassDispersionModel const> > disp_models(max_transcripts+1);
+
+    for (size_t i = 0; i < max_transcripts; i++)
+    {
+        boost::shared_ptr<MassDispersionModel const> model;
+        if (i != 0)
+        {
+            vector<LocusCountList> sample_count_subtable;
+            foreach(const LocusCountList& L, sample_count_table)
+            {
+                if (L.num_transcripts == i)
+                {
+                    sample_count_subtable.push_back(L);
+                }
+            }
+            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_subtable);
+        }
+        else
+        {
+            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_table);
+        }
+        disp_models[i] = model;
+    }
+    
     if (emit_count_tables)
     {
         string cond_count_filename = output_dir + "/" + condition_name + "_counts.txt";
@@ -288,19 +329,28 @@ fit_dispersion_model(const string& condition_name,
         
         if (sample_count_file)
         {
-            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\n");
-            for (size_t i = 0; i < raw_means_and_vars.size(); ++i)
+            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\tnum_transcripts\n");
+            for (size_t j = 0; j < max_transcripts; j++)
             {
-                fprintf(sample_count_file, "%lg\t%lg\t%lg\n", 
-                        raw_means_and_vars[i].first, 
-                        raw_means_and_vars[i].second,
-                        fitted_values[i]);
+                boost::shared_ptr<MassDispersionModel const> model = disp_models[j];
+                const vector<double>& means = model->scaled_mass_means();
+                const vector<double>& vars  = model->scaled_mass_variances();
+                
+                for (size_t i = 0; i < means.size(); ++i)
+                {
+                    fprintf(sample_count_file, "%lg\t%lg\t%lg\t%lu\n", 
+                            means[i], 
+                            vars[i],
+                            model->scale_mass_variance(means[i]),
+                            j);
+                }
             }
             fclose(sample_count_file);
         } 
     }
+
 #if ENABLE_THREADS
     _locfit_lock.unlock();
 #endif
-    return disperser;
+    return disp_models[0];
 }

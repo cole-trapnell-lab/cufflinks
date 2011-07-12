@@ -29,6 +29,9 @@ public:
     
     virtual double scale_mass_variance(double scaled_mass) const;
     
+    const vector<double>& scaled_mass_means() const { return _scaled_mass_means; }
+    const vector<double>& scaled_mass_variances() const { return _scaled_mass_variances; }
+    
 private:
     std::vector<double> _scaled_mass_means;
     std::vector<double> _scaled_mass_variances;
@@ -44,13 +47,23 @@ public:
     }
 };
 
-void calc_scaling_factors(const std::vector<pair<std::string, std::vector<double> > >& sample_count_table,
+struct LocusCountList
+{
+    LocusCountList(std::string ld, int num_reps, int nt) : 
+    locus_desc(ld), counts(std::vector<double>(num_reps, 0)), num_transcripts(nt) {}
+    std::string locus_desc;
+    std::vector<double> counts;
+    int num_transcripts;
+};
+
+void calc_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
                           std::vector<double>& scale_factors);
+
 
 boost::shared_ptr<MassDispersionModel const> 
 fit_dispersion_model(const string& condition_name,
                      const std::vector<double>& scale_factors,
-                     const std::vector<std::pair<std::string, std::vector<double> > >& sample_count_table);
+                     const std::vector<LocusCountList>& sample_count_table);
 
 // This factory merges bundles in a requested locus from several replicates
 class ReplicatedBundleFactory
@@ -143,36 +156,38 @@ public:
     
     void inspect_replicate_maps(int& min_len, int& max_len)
     {
-        vector<pair<string, vector<double> > > sample_count_table;
+        vector<LocusCountList> sample_count_table;
         vector<double> sample_masses;
         
-        foreach (shared_ptr<BundleFactory> fac, _factories)
+        for (size_t fac_idx = 0; fac_idx < _factories.size(); ++fac_idx)
         {
+            shared_ptr<BundleFactory> fac = _factories[fac_idx];        
             BadIntronTable bad_introns;
             
-            vector<pair<string, double> > count_table;
+            vector<LocusCount> count_table;
             inspect_map(*fac, NULL, count_table, false);
             
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             
             for (size_t i = 0; i < count_table.size(); ++i)
             {
-                pair<string, double>& c = count_table[i];
-                double raw_count = c.second;
+                LocusCount& c = count_table[i];
+                double raw_count = c.count;
                 
                 if (i >= sample_count_table.size())
                 {
-                    sample_count_table.push_back(make_pair(c.first, vector<double>()));
-                    sample_count_table.back().second.push_back(raw_count);
+                    LocusCountList locus_count(c.locus_desc, _factories.size(), c.num_transcripts); 
+                    sample_count_table.push_back(locus_count);
+                    sample_count_table.back().counts[0] = raw_count;
                 }
                 else
                 {
-                    if (sample_count_table[i].first != c.first)
+                    if (sample_count_table[i].locus_desc != c.locus_desc)
                     {
                         fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
                         exit(1);
                     }
-                    sample_count_table[i].second.push_back(raw_count);
+                    sample_count_table[i].counts[fac_idx] = raw_count;
                 }
             }
             sample_masses.push_back(rg_props->total_map_mass());
@@ -194,21 +209,21 @@ public:
         // Transform raw counts to the common scale
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
-            pair<string, vector<double> >& p = sample_count_table[i];
-            for (size_t j = 0; j < p.second.size(); ++j)
+            LocusCountList& p = sample_count_table[i];
+            for (size_t j = 0; j < p.counts.size(); ++j)
             {
                 assert (scale_factors.size() > j);
-                p.second[j] *= (1.0 / scale_factors[j]);
+                p.counts[j] *= (1.0 / scale_factors[j]);
             }
         }
         
         for (size_t i = 0; i < _factories.size(); ++i)
         {
             shared_ptr<ReadGroupProperties> rg_props = _factories[i]->read_group_properties();
-            vector<pair<string, double> > scaled_counts;
+            vector<LocusCount> scaled_counts;
             for (size_t j = 0; j < sample_count_table.size(); ++j)
             {
-                scaled_counts.push_back(make_pair(sample_count_table[j].first, sample_count_table[j].second[i]));
+                scaled_counts.push_back(LocusCount(sample_count_table[j].locus_desc, sample_count_table[j].counts[i], sample_count_table[j].num_transcripts));
             }
             rg_props->common_scale_counts(scaled_counts);
         }
