@@ -771,6 +771,10 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
     
 	assert(!isinf(cond_prob));
 	assert(!isnan(cond_prob));
+    
+    if (isinf(cond_prob) || isnan(cond_prob)
+        cond_prob = 0.0;
+    
 	return cond_prob;
 }
 
