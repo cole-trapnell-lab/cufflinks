@@ -256,7 +256,7 @@ fit_dispersion_model_helper(const string& condition_name,
     }
     
     shared_ptr<MassDispersionModel> disperser;
-    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, fitted_values));
+    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, raw_variances, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
     return disperser;
@@ -334,13 +334,13 @@ fit_dispersion_model(const string& condition_name,
             {
                 boost::shared_ptr<MassDispersionModel const> model = disp_models[j];
                 const vector<double>& means = model->scaled_mass_means();
-                const vector<double>& vars  = model->scaled_mass_variances();
+                const vector<double>& raw_vars  = model->scaled_raw_variances();
                 
                 for (size_t i = 0; i < means.size(); ++i)
                 {
                     fprintf(sample_count_file, "%lg\t%lg\t%lg\t%lu\n", 
                             means[i], 
-                            vars[i],
+                            raw_vars[i],
                             model->scale_mass_variance(means[i]),
                             j);
                 }

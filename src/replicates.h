@@ -16,12 +16,17 @@ class MassDispersionModel
 public:
     MassDispersionModel() {}
     MassDispersionModel(const std::vector<double>& scaled_mass_means, 
+                        const std::vector<double>& scaled_raw_variances,
                         const std::vector<double>& scaled_mass_variances) :
     _scaled_mass_means(scaled_mass_means),
+    _scaled_raw_variances(scaled_raw_variances),
     _scaled_mass_variances(scaled_mass_variances) 
     {
         std::vector<double>::iterator new_end = unique(_scaled_mass_means.begin(), _scaled_mass_means.end());
         _scaled_mass_means.erase(new_end, _scaled_mass_means.end());
+        
+        new_end = unique(_scaled_raw_variances.begin(), _scaled_raw_variances.end());
+        _scaled_raw_variances.erase(new_end, _scaled_raw_variances.end());
         
         new_end = unique(_scaled_mass_variances.begin(), _scaled_mass_variances.end());
         _scaled_mass_variances.erase(new_end, _scaled_mass_variances.end());
@@ -30,10 +35,12 @@ public:
     virtual double scale_mass_variance(double scaled_mass) const;
     
     const vector<double>& scaled_mass_means() const { return _scaled_mass_means; }
+    const vector<double>& scaled_raw_variances() const { return _scaled_raw_variances; }
     const vector<double>& scaled_mass_variances() const { return _scaled_mass_variances; }
     
 private:
     std::vector<double> _scaled_mass_means;
+    std::vector<double> _scaled_raw_variances;
     std::vector<double> _scaled_mass_variances;
 };
 
