@@ -1472,6 +1472,11 @@ int main(int argc, char** argv)
 	
     driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
 	
+    if (emit_count_tables)
+    {
+        dump_locus_variance_info("locus_var.txt");
+    }
+    
 	return 0;
 }
 

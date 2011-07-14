@@ -10,6 +10,7 @@
 #include "bundles.h"
 #include <vector>
 #include <algorithm>
+#include <map>
 
 class MassDispersionModel
 {
@@ -38,10 +39,29 @@ public:
     const vector<double>& scaled_raw_variances() const { return _scaled_raw_variances; }
     const vector<double>& scaled_mass_variances() const { return _scaled_mass_variances; }
     
+    std::pair<double, double> get_raw_mean_and_var(const std::string& locus_desc) const
+    {
+        std::map<std::string, std::pair<double, double> >::const_iterator itr;
+        itr = _raw_mv_by_locus.find(locus_desc);
+        std::pair<double, double> p = make_pair<double, double>(0.0,0.0);
+        if (itr != _raw_mv_by_locus.end())
+        {
+            p = itr->second;
+        }
+        return p;
+    }
+    
+    void set_raw_mean_and_var(const std::string& locus_desc, const std::pair<double, double>& p) 
+    {
+        _raw_mv_by_locus[locus_desc] = p;
+    }
+    
 private:
     std::vector<double> _scaled_mass_means;
     std::vector<double> _scaled_raw_variances;
     std::vector<double> _scaled_mass_variances;
+    
+    std::map<std::string, std::pair<double, double> > _raw_mv_by_locus;
 };
 
 class PoissonDispersionModel : public MassDispersionModel

@@ -177,6 +177,7 @@ fit_dispersion_model_helper(const string& condition_name,
                             const vector<LocusCountList>& sample_count_table)
 {
     vector<pair<double, double> > raw_means_and_vars;
+    map<string, pair<double, double> > labeled_mv_table;
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
@@ -193,7 +194,11 @@ fit_dispersion_model_helper(const string& condition_name,
         if (var > 0.0 && p.counts.size())
             var /= p.counts.size();
         if (mean > 0 && var > 0.0)
+        {
+            //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
+            labeled_mv_table[p.locus_desc] = make_pair(mean, var);
             raw_means_and_vars.push_back(make_pair(mean, var));
+        }
     }
     
     if (raw_means_and_vars.size() < min_loci_for_fitting)
@@ -259,6 +264,18 @@ fit_dispersion_model_helper(const string& condition_name,
     disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, raw_variances, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
+    
+    for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
+         itr != labeled_mv_table.end();
+         ++itr)
+    {
+        string label = itr->first;
+        pair<double, double> p = itr->second;
+        disperser->set_raw_mean_and_var(itr->first, itr->second);
+    }
+    
+    //pair<double, double> p = disperser->get_raw_mean_and_var("chr1:11873-29961");
+    
     return disperser;
 }
 

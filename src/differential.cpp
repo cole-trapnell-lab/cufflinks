@@ -781,6 +781,21 @@ void sample_abundance_worker(const string& locus_tag,
     }
 }
 
+struct LocusVarianceInfo
+{
+    double mean_count;
+    double count_empir_var;
+    double locus_count_fitted_var;
+    double isoform_fitted_var_sum;
+};
+
+#if ENABLE_THREADS
+mutex variance_info_lock; // don't modify the above struct without locking here
+#endif
+
+vector<LocusVarianceInfo> locus_variance_info_table;
+
+
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
@@ -842,6 +857,42 @@ void sample_worker(const RefSequenceTable& rt,
                             perform_cds_analysis,
                             perform_tss_analysis);
     
+#if ENABLE_THREADS
+    variance_info_lock.lock();
+#endif
+    
+    ///////////////////////////////////////////////
+    shared_ptr<MassDispersionModel const> disperser = sample_factory.mass_dispersion_model();
+    pair<double, double> locus_mv = disperser->get_raw_mean_and_var(locus_tag);
+    if (locus_mv.first != 0 && locus_mv.second != 0)
+    {
+
+        LocusVarianceInfo info;
+        info.mean_count = locus_mv.first;
+        info.count_empir_var = locus_mv.second;
+        info.locus_count_fitted_var = disperser->scale_mass_variance(info.mean_count);
+        double total_iso_scaled_var = 0.0;
+        const AbundanceGroup& ab_group = abundance->transcripts;
+		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
+		{
+            double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
+			total_iso_scaled_var += scaled_var;
+		}
+        
+        //assert (abundance->cluster_mass == locus_mv.first);
+        //assert (total_iso_scaled_var >= info.mean_count);
+        
+        info.isoform_fitted_var_sum = total_iso_scaled_var;
+        locus_variance_info_table.push_back(info);
+    }
+    
+#if ENABLE_THREADS
+    variance_info_lock.unlock();
+#endif
+    
+    ///////////////////////////////////////////////
+    
+    
     foreach(shared_ptr<Scaffold> ref_scaff,  bundle.ref_scaffolds())
     {
         ref_scaff->clear_hits();
@@ -855,6 +906,25 @@ void sample_worker(const RefSequenceTable& rt,
     // the testing functor, which will check to see if all the workers
     // are done, and if so, perform the cross sample testing.
     //launcher->test_finished_loci();
+#endif
+}
+
+void dump_locus_variance_info(const string& filename)
+{
+#if ENABLE_THREADS
+    variance_info_lock.lock();
+#endif
+    
+    FILE* fdump = fopen(filename.c_str(), "w");
+    
+    fprintf(fdump, "mean\tempir_var\tlocus_fit_var\tsum_iso_fit_var\n");
+    foreach(LocusVarianceInfo& L, locus_variance_info_table)
+    {
+        fprintf(fdump, "%lf\t%lf\t%lf\t%lf\n", L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum);
+    }
+    
+#if ENABLE_THREADS
+    variance_info_lock.unlock();
 #endif
 }
 

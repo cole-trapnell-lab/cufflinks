@@ -225,6 +225,8 @@ void test_differential(const string& locus_tag,
 					   Tracking& tracking,
                        bool samples_are_time_series);
 
+void dump_locus_variance_info(const string& filename);
+
 #if ENABLE_THREADS
 void decr_pool_count();
 extern boost::mutex locus_thread_pool_lock;

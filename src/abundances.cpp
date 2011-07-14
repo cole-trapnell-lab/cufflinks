@@ -808,7 +808,7 @@ bool compute_fpkm_variance(long double& variance,
     
     if (psi_t < 0)
     {
-        fprintf (stderr, "Warning: psi_t is negative! (psi_t = %lf)\n", psi_t);
+        //fprintf (stderr, "Warning: psi_t is negative! (psi_t = %lf)\n", psi_t);
         psi_t = 0;
     }
     assert (psi_t >= 0);
@@ -823,10 +823,10 @@ bool compute_fpkm_variance(long double& variance,
         // at the end of the routine when we multiply by the square of those
         // constants
         variance = A + psi_var;
-        if (variance < 0)
-        {
-            fprintf(stderr, "Warning: negative variance in case 1: (A = %Lf, psi_var = %Lf, gamma_t = %lf)\n", A, psi_var, gamma_t);
-        }
+//        if (variance < 0)
+//        {
+//            fprintf(stderr, "Warning: negative variance in case 1: (A = %Lf, psi_var = %Lf, gamma_t = %lf)\n", A, psi_var, gamma_t);
+//        }
         //printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
         //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
         //printf("\t A = %Lg, B = %Lg\n", A, B);
@@ -841,10 +841,10 @@ bool compute_fpkm_variance(long double& variance,
             //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
             variance = V_X_g_t;
             
-            if (variance <= 0)
-            {
-                fprintf(stderr, "Warning: negative variance in case 2: (V_X_g_t = )\n", A, V_X_g_t);
-            }
+//            if (variance <= 0)
+//            {
+//                fprintf(stderr, "Warning: negative variance in case 2: (V_X_g_t = )\n", A, V_X_g_t);
+//            }
         }
         else
         {
@@ -890,10 +890,10 @@ bool compute_fpkm_variance(long double& variance,
                 numeric_ok = false;
             }
             
-            if (variance <= 0)
-            {
-                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
-            }
+//            if (variance <= 0)
+//            {
+//                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
+//            }
             
             assert (!numeric_ok || variance >= 0);
             
