@@ -92,6 +92,7 @@ extern std::string user_label;
 extern long random_seed;
 extern bool emit_count_tables;
 extern bool use_fisher_covariance;
+extern bool split_variance;
 
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
@@ -401,4 +402,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_USE_COMPAT_MASS         282
 #define OPT_USE_TOTAL_MASS          283
 #define OPT_USE_FISHER_COVARIANCE   284
+#define OPT_USE_EMPIRICAL_COVARIANCE   285
+#define OPT_SPLIT_MASS  286
+#define OPT_SPLIT_VARIANCE  287
 #endif
