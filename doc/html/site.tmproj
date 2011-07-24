@@ -3,28 +3,26 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>howitworks.html</string>
+	<string>igenomes.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2011-06-13T12:00:15Z</date>
+			<date>2011-07-24T15:28:22Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2011-07-09T15:58:36Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2011-07-24T15:59:11Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>manual.html</string>
 			<key>lastUsed</key>
-			<date>2011-06-13T12:00:46Z</date>
+			<date>2011-07-24T15:21:52Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -36,13 +34,21 @@
 			<key>filename</key>
 			<string>tutorial.html</string>
 			<key>lastUsed</key>
-			<date>2011-06-01T13:04:48Z</date>
+			<date>2011-07-24T15:59:19Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>gff.html</string>
 			<key>lastUsed</key>
-			<date>2011-06-01T13:04:55Z</date>
+			<date>2011-07-24T15:02:23Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>igenomes.html</string>
+			<key>lastUsed</key>
+			<date>2011-07-24T15:59:19Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -75,79 +81,109 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>64</integer>
+			<integer>294</integer>
 		</dict>
 		<key>howitworks.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>75</integer>
+				<integer>176</integer>
 				<key>line</key>
-				<integer>472</integer>
+				<integer>606</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>462</integer>
-		</dict>
-		<key>index.html</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>16</integer>
-				<key>line</key>
-				<integer>115</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
 			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>99</integer>
 		</dict>
-		<key>manual.html</key>
+		<key>igenomes.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>18</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>1369</integer>
+				<integer>187</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>1338</integer>
+			<integer>159</integer>
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>11</integer>
+				<integer>20</integer>
 				<key>line</key>
-				<integer>1369</integer>
+				<integer>190</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>18</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>1369</integer>
+				<integer>187</integer>
 			</dict>
+		</dict>
+		<key>index.html</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>576</integer>
+			</dict>
+			<key>columnSelection</key>
+			<false/>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>546</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>12</integer>
+				<key>line</key>
+				<integer>577</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>576</integer>
+			</dict>
+		</dict>
+		<key>manual.html</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>23</integer>
+				<key>line</key>
+				<integer>1371</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>720</integer>
 		</dict>
 		<key>tutorial.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>16</integer>
+				<integer>12</integer>
 				<key>line</key>
-				<integer>119</integer>
+				<integer>133</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>77</integer>
+			<integer>0</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
@@ -157,11 +193,12 @@
 		<string>index.html</string>
 		<string>manual.html</string>
 		<string>howitworks.html</string>
+		<string>igenomes.html</string>
 		<string>gff.html</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{620, 74}, {1060, 954}}</string>
+	<string>{{406, 74}, {1060, 954}}</string>
 </dict>
 </plist>

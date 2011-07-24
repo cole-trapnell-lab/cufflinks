@@ -278,7 +278,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _cross_rep_js(0.0) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -290,6 +290,7 @@ public:
 		_FPKM_variance = other._FPKM_variance;
 		_description = other._description;
         _max_mass_variance = other._max_mass_variance;
+        _cross_rep_js = other._cross_rep_js;
 	}
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -298,13 +299,15 @@ public:
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
-        _max_mass_variance(0.0){}
+        _max_mass_variance(0.0),
+        _cross_rep_js(0.0) {}
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
                    const long double max_mass_variance) :
 		_abundances(abundances), 
 		_gamma_covariance(gamma_covariance),
-        _max_mass_variance(max_mass_variance)
+        _max_mass_variance(max_mass_variance),
+        _cross_rep_js(0.0)
 	{
         
 		calculate_conf_intervals();
@@ -376,6 +379,9 @@ public:
     void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
     double max_mass_variance() const { return _max_mass_variance; }
     
+    double cross_rep_js() const { return _cross_rep_js; }
+    void cross_rep_js(double js) { _cross_rep_js = js; }
+    
 private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
@@ -406,6 +412,7 @@ private:
 	double _FPKM_variance;
 	string _description;
     double _max_mass_variance;  // upper bound on the count variance that could come from this group.
+    double _cross_rep_js;
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
@@ -419,13 +426,15 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
-                                                   ublas::matrix<double>& gamma_covariance);
+                                                   ublas::matrix<double>& gamma_covariance,
+                                                   double& cross_replicate_js);
 
 AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                              const vector<MateHit>& nr_alignments,
-                                              const vector<double>& log_conv_factors,
-                                              ublas::vector<double>& gamma_map_estimate,
-                                              ublas::matrix<double>& gamma_map_covariance);
+                                           const vector<MateHit>& nr_alignments,
+                                           const vector<double>& log_conv_factors,
+                                           ublas::vector<double>& gamma_map_estimate,
+                                           ublas::matrix<double>& gamma_map_covariance,
+                                           double& cross_replicate_js);
 
 AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
                                  const vector<MateHit>& nr_alignments,

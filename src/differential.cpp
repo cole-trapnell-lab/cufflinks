@@ -787,6 +787,7 @@ struct LocusVarianceInfo
     double count_empir_var;
     double locus_count_fitted_var;
     double isoform_fitted_var_sum;
+    double cross_replicate_js;
 };
 
 #if ENABLE_THREADS
@@ -879,6 +880,7 @@ void sample_worker(const RefSequenceTable& rt,
 			total_iso_scaled_var += scaled_var;
 		}
         
+        info.cross_replicate_js = ab_group.cross_rep_js();
         //assert (abundance->cluster_mass == locus_mv.first);
         //assert (total_iso_scaled_var >= info.mean_count);
         
@@ -917,10 +919,10 @@ void dump_locus_variance_info(const string& filename)
     
     FILE* fdump = fopen(filename.c_str(), "w");
     
-    fprintf(fdump, "mean\tempir_var\tlocus_fit_var\tsum_iso_fit_var\n");
-    foreach(LocusVarianceInfo& L, locus_variance_info_table)
+    fprintf(fdump, "mean\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\n");
+    foreach (LocusVarianceInfo& L, locus_variance_info_table)
     {
-        fprintf(fdump, "%lf\t%lf\t%lf\t%lf\n", L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum);
+        fprintf(fdump, "%lf\t%lf\t%lf\t%lf\t%lf\n", L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js);
     }
     
 #if ENABLE_THREADS

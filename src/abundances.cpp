@@ -32,6 +32,8 @@
 
 #include "filters.h"
 #include "replicates.h"
+#include "jensen_shannon.h"
+
 
 //#define USE_LOG_CACHE
 
@@ -974,7 +976,7 @@ bool compute_fpkm_group_variance(long double& variance,
     
     if (cov < 0)
     {
-        fprintf (stderr, "Warning: cov is negative! (cov = %lf)\n", cov);
+        //fprintf (stderr, "Warning: cov is negative! (cov = %lf)\n", cov);
         cov = 0;
     }
     
@@ -1273,16 +1275,19 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         
         ublas::vector<double> gamma_map_estimate = ublas::zero_vector<double>(filtered_gammas.size());
         ublas::matrix<double> gamma_map_covariance = ublas::zero_matrix<double>(N,N);
-        
+        double cross_replicate_js = 0.0;
         // If we have multiple replicates, estimate covariance from them via a MLE computation on each replicate
         if (!use_fisher_covariance && rg_props.size() > 1)
         {
             verbose_msg( "Calculating empirical gamma MLE and covariances\n");
+            
             map_success = empirical_replicate_gammas(filtered_transcripts,
-                                                             nr_alignments,
-                                                             log_conv_factors,
-                                                             gamma_map_estimate,
-                                                             gamma_map_covariance);
+                                                     nr_alignments,
+                                                     log_conv_factors,
+                                                     gamma_map_estimate,
+                                                     gamma_map_covariance,
+                                                     cross_replicate_js);
+            cross_rep_js(cross_replicate_js);
         }
         else
         {
@@ -2234,7 +2239,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
-                                                   ublas::matrix<double>& gamma_covariance)
+                                                   ublas::matrix<double>& gamma_covariance,
+                                                   double& cross_replicate_js)
 {
     size_t N = transcripts.size();	
 	size_t M = nr_alignments.size();
@@ -2310,6 +2316,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             }
         }
     }
+    
+    cross_replicate_js = jensen_shannon_div(mle_gammas);
     
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;
@@ -2408,10 +2416,11 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
 }
 
 AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                              const vector<MateHit>& nr_alignments,
-                                              const vector<double>& log_conv_factors,
-                                              ublas::vector<double>& gamma_estimate,
-                                              ublas::matrix<double>& gamma_covariance)
+                                           const vector<MateHit>& nr_alignments,
+                                           const vector<double>& log_conv_factors,
+                                           ublas::vector<double>& gamma_estimate,
+                                           ublas::matrix<double>& gamma_covariance,
+                                           double& cross_replicate_js)
 {
     ublas::vector<double> empirical_gamma_mle = gamma_estimate;
     ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
@@ -2424,7 +2433,8 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
                                                                               nr_alignments,
                                                                               log_conv_factors,
                                                                               empirical_gamma_mle,
-                                                                              empirical_gamma_covariance);
+                                                                              empirical_gamma_covariance,
+                                                                              cross_replicate_js);
     
     
     if (empirical_mle_status != NUMERIC_OK)

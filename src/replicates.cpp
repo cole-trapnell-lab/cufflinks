@@ -321,15 +321,15 @@ fit_dispersion_model(const string& condition_name,
         boost::shared_ptr<MassDispersionModel const> model;
         if (i != 0)
         {
-            vector<LocusCountList> sample_count_subtable;
-            foreach(const LocusCountList& L, sample_count_table)
-            {
-                if (L.num_transcripts == i)
-                {
-                    sample_count_subtable.push_back(L);
-                }
-            }
-            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_subtable);
+//            vector<LocusCountList> sample_count_subtable;
+//            foreach(const LocusCountList& L, sample_count_table)
+//            {
+//                if (L.num_transcripts == i)
+//                {
+//                    sample_count_subtable.push_back(L);
+//                }
+//            }
+//            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_subtable);
         }
         else
         {
@@ -340,27 +340,49 @@ fit_dispersion_model(const string& condition_name,
     
     if (emit_count_tables)
     {
+//        string cond_count_filename = output_dir + "/" + condition_name + "_counts.txt";
+//        
+//        FILE* sample_count_file = fopen(cond_count_filename.c_str(), "w");
+//        
+//        if (sample_count_file)
+//        {
+//            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\tnum_transcripts\n");
+//            for (size_t j = 0; j < max_transcripts; j++)
+//            {
+//                boost::shared_ptr<MassDispersionModel const> model = disp_models[j];
+//                const vector<double>& means = model->scaled_mass_means();
+//                const vector<double>& raw_vars  = model->scaled_raw_variances();
+//                
+//                for (size_t i = 0; i < means.size(); ++i)
+//                {
+//                    fprintf(sample_count_file, "%lg\t%lg\t%lg\t%lu\n", 
+//                            means[i], 
+//                            raw_vars[i],
+//                            model->scale_mass_variance(means[i]),
+//                            j);
+//                }
+//            }
+//            fclose(sample_count_file);
+//        } 
+
         string cond_count_filename = output_dir + "/" + condition_name + "_counts.txt";
         
         FILE* sample_count_file = fopen(cond_count_filename.c_str(), "w");
         
         if (sample_count_file)
         {
-            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\tnum_transcripts\n");
-            for (size_t j = 0; j < max_transcripts; j++)
+            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\n");
+            
+            boost::shared_ptr<MassDispersionModel const> model = disp_models[0];
+            const vector<double>& means = model->scaled_mass_means();
+            const vector<double>& raw_vars  = model->scaled_raw_variances();
+            
+            for (size_t i = 0; i < means.size(); ++i)
             {
-                boost::shared_ptr<MassDispersionModel const> model = disp_models[j];
-                const vector<double>& means = model->scaled_mass_means();
-                const vector<double>& raw_vars  = model->scaled_raw_variances();
-                
-                for (size_t i = 0; i < means.size(); ++i)
-                {
-                    fprintf(sample_count_file, "%lg\t%lg\t%lg\t%lu\n", 
-                            means[i], 
-                            raw_vars[i],
-                            model->scale_mass_variance(means[i]),
-                            j);
-                }
+                fprintf(sample_count_file, "%lg\t%lg\t%lg\n", 
+                        means[i], 
+                        raw_vars[i],
+                        model->scale_mass_variance(means[i]));
             }
             fclose(sample_count_file);
         } 
