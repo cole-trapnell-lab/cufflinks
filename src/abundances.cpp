@@ -661,12 +661,20 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     }
         
 	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);		
-	
+
+    // FIXME: THIS IS A HACK, for testing only.  take it out before release!!!
+    if (num_fragments() < 1000)
+    {
+        ublas::matrix<double> H = ublas::identity_matrix<double>(transcripts.size());
+        H = 0.1L * H;
+        _gamma_covariance += H;
+    }
+    
     //non_equiv_alignments.clear();
 	//collapse_hits(alignments, nr_alignments);
     // This will also compute the transcript level FPKMs
     calculate_counts(non_equiv_alignments, transcripts);  
-
+    
 	if(corr_multi && !final_est_run)
 	{
 		update_multi_reads(non_equiv_alignments, mapped_transcripts);
