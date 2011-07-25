@@ -660,15 +660,19 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
         
-	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);		
-
-    // FIXME: THIS IS A HACK, for testing only.  take it out before release!!!
-    if (num_fragments() < 1000)
-    {
-        ublas::matrix<double> H = ublas::identity_matrix<double>(transcripts.size());
-        H = 0.1L * H;
-        _gamma_covariance += H;
-    }
+	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);
+    
+//
+//    // FIXME: THIS IS A HACK, for testing only.  take it out before release!!!
+//    if (num_fragments() < 1000 && transcripts.size() > 1)
+//    {
+//        ublas::matrix<double> H = ublas::identity_matrix<double>(transcripts.size());
+//        H = 0.05L * H;
+//        cerr << H << endl;
+//        cerr << _gamma_covariance << endl;
+//        //_gamma_covariance += H;
+//        cerr << _gamma_covariance << endl;
+//    }
     
     //non_equiv_alignments.clear();
 	//collapse_hits(alignments, nr_alignments);
@@ -711,60 +715,149 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 	}
 }
 
+
 long double solve_beta(long double A, long double B, long double C)
 {
+//    long double a = C/B;
+//    long double b = ((4*C/B) - 4*A*C/(B*B));
+//    long double c = 5*A*A*C/(B*B*B) - 10*A*C/(B*B) - A/(A-B) + 5*C/B;
+//    long double d = 1 + 2*C/B - 6*A*C/(B*B) + 6*A*A*C/(B*B*B) - 2*A*A*A*C/(B*B*B*B);
+
+    long double a = -C/B;
+    long double b = (A + 4*A*C/(B*B) - (4*C/B));
+    long double c = -A + B - 5*A*A*C/(B*B*B) + 10*A*C/(B*B) - 5*C/B;
+    long double d = 2*A*A*A*C/(B*B*B*B) - 6*A*A*C/(B*B*B) + 6*A*C/(B*B) - 2*C/B;
     
-    complex<long double> t1 = 2.0*A*A*A*powl(B,12) + 
-                     24.0 * A*A*A*powl(B,10)*C + 
-                     51.0*A*A*A*powl(B,8)*C*C + 
-                     2.0*A*A*A*powl(B,6)*C*C*C - 
-                     33.0*A*A*powl(B,11)*C - 
-                     138.0*A*A*powl(B,9)*C*C - 
-                     6.0*A*A*powl(B,7)*C*C*C;
+    b/= a;
+    c /= a;
+    d /= a;
+    complex<long double> q(c/3.0 - b*b/9.0,0);
+    complex<long double> r((c*b - 3*d)/6.0 - b*b*b/27.0,0);
     
-    assert(!isnan(t1.real()));
+    long double s1 = cbrt((r + std::sqrt(q*q*q + r*r)).real());
+    long double s2 = cbrt((r - std::sqrt(q*q*q + r*r)).real());
     
-    complex<long double> t7 = 9.0*A*powl(B,12)*C + 
-                     123.0*A*powl(B,10)*C*C +
-                     6.0*A*powl(B,8)*C*C*C - 
-                     36.0*powl(B,11)*C*C - 
-                     2.0*powl(B,9)*C*C*C;
-    assert(!isnan(t7.real()));
+    complex<long double> R1(s1+s2 - b/3.0,0);
+    complex<long double> R2(-(s1+s2)/2.0 - b/3.0,sqrt(3.0)*(s1-s2)/2.0);
+    complex<long double> R3(-(s1+s2)/2.0 - b/3.0,-sqrt(3.0)*(s1-s2)/2.0);
     
-    complex<long double> t2 = -A*A*powl(B,8) - 
-                     8.0*A*A*powl(B,6)*C - 
-                     A*A*powl(B,4)*C*C + 
-                     11.0*A*powl(B,7)*C + 
-                     2.0*A*powl(B,5)*C*C - 
-                     3.0*powl(B,8)*C - 
-                     powl(B,6)*C*C;
-    assert(!isnan(t2.real()));
-    //assert(powl(t2,3) >= 0);
+//    cerr << R1 << endl;
+//    cerr << R2 << endl;
+//    cerr << R3 << endl;
     
-    complex<long double> t3 = t1 + t7;
-    assert(!isnan(t3.real()));
-    complex<long double> p_ab = 4 * t2.real()*t2.real()*t2.real() + t3.real()*t3.real();
-    //complex<long double> t4 = sqrtl(p_ab);
-    complex<long double> cp_ab(p_ab);
-    complex<long double> t4 = std::sqrt(cp_ab);
-    //assert(!isnan(t4));
+    vector<long double> roots;
+    if (R1.imag() == 0)
+        roots.push_back(R1.real());
+    if (R2.imag() == 0)
+        roots.push_back(R2.real());
+    if (R3.imag() == 0)
+        roots.push_back(R3.real());
+    sort(roots.begin(), roots.end());
+    long double root = roots.back();
+    
+//    long double discrim = 18*a*b*c*d - 4*b*b*b*d + b*b*c*c - 4*a*c*c*c - 27*a*a*d*d;
+//    
+//    //assert(discrim < 0);
+//    
+//    complex<long double> h = complex<long double>(2*b*b*b - 9*a*b*c + 27*a*a*d, 0);
+//    complex<long double> f = complex<long double>(b*b - 3*a*c, 0);
+//    complex<long double> t = std::sqrt(h*h - complex<long double>(4,0)*f*f*f);
+//    cerr << t << endl;
+//    
+//    long double root = 0.0;
+////    root = -b / (3*a);
+////    root -= (1.0/(3*a)) * cbrtl((h + t)/2.0);
+////    root -= (1.0/(3*a)) * cbrtl((h - t)/2.0);
+//    complex<long double> hpt = h + t;
+//    complex<long double> hmt = h - t;
+//    
+//    cerr << hpt << endl;
+//    cerr << hmt << endl;
+//    
+//    long double r1 = -b / (3.0*a) - (1.0/(3.0*a)) * cbrtl((hpt.real())/2.0) - (1.0/(3.0*a)) * cbrtl((hmt.real())/2.0);
+//    long double r2 = -b / (3.0*a) - (1.0/(3.0*a)) * cbrtl((hmt.real())/2.0) - (1.0/(3.0*a)) * cbrtl((hmt.real())/2.0);
+//    long double r3 = -b / (3.0*a) - (1.0/(3.0*a)) * cbrtl((hpt.real())/2.0) - (1.0/(3.0*a)) * cbrtl((hpt.real())/2.0);
+//    
+//    vector<long double> roots;
+//    if (R1.imag() == 0)
+//        roots.push_back(R1.real()); 
+//    
+//    roots.push_back(r1);
+//    roots.push_back(r2);
+//    roots.push_back(r3);
+//    sort(roots.begin(), roots.end());
+//    root = roots.back();
     
     
-    complex<long double> t6 = std::pow((t1 + t4 + t7), 1.0/3.0);
-    assert(!isnan(t6.real()));
+//    // cardano:
+//    long double p = -b/(3*a);
+//    long double q = p*p*p + (b*c - 3*a*d)/(6*a*a);
+//    long double r = c/(3*a);
+//    root = cbrtl(q + sqrtl(q*q + powl(r - p*p, 3))) + 
+//        cbrtl(q - sqrtl(q*q + powl(r - p*p, 3))) + p; 
     
-    complex<long double> t10 = cbrtl(2.0)*t2 / (3*B*B*B*C*t6);
-    assert(!isnan(t10.real()));
-    
-    complex<long double> t8 = (-A*powl(B,4) - 4*A*B*B*C + 4*B*B*B*C) / (3*B*B*B*C);
-    assert(!isnan(t8.real()));
-    
-    complex<long double> t9 = 1.0/(3*cbrtl(2)*B*B*B*C);
-    assert(!isnan(t9.real()));
-    
-    complex<long double> beta = t9 * t6 - t10 - t8; 
-    assert(!isnan(beta.real()));
-    
+//    long double test = a*root*root*root + b*root*root + c*root + d;
+    return root;
+}
+
+//
+//long double solve_beta(long double A, long double B, long double C)
+//{
+//    
+//    complex<long double> t1 = 2.0*A*A*A*powl(B,12) + 
+//                     24.0 * A*A*A*powl(B,10)*C + 
+//                     51.0*A*A*A*powl(B,8)*C*C + 
+//                     2.0*A*A*A*powl(B,6)*C*C*C - 
+//                     33.0*A*A*powl(B,11)*C - 
+//                     138.0*A*A*powl(B,9)*C*C - 
+//                     6.0*A*A*powl(B,7)*C*C*C;
+//    
+//    assert(!isnan(t1.real()));
+//    
+//    complex<long double> t7 = 9.0*A*powl(B,12)*C + 
+//                     123.0*A*powl(B,10)*C*C +
+//                     6.0*A*powl(B,8)*C*C*C - 
+//                     36.0*powl(B,11)*C*C - 
+//                     2.0*powl(B,9)*C*C*C;
+//    assert(!isnan(t7.real()));
+//    
+//    complex<long double> t2 = -A*A*powl(B,8) - 
+//                     8.0*A*A*powl(B,6)*C - 
+//                     A*A*powl(B,4)*C*C + 
+//                     11.0*A*powl(B,7)*C + 
+//                     2.0*A*powl(B,5)*C*C - 
+//                     3.0*powl(B,8)*C - 
+//                     powl(B,6)*C*C;
+//    assert(!isnan(t2.real()));
+//    //assert(powl(t2,3) >= 0);
+//    
+//    complex<long double> t3 = t1 + t7;
+//    assert(!isnan(t3.real()));
+//    complex<long double> p_ab = 4 * t2.real()*t2.real()*t2.real() + t3.real()*t3.real();
+//    //complex<long double> p_ab2 = complex<long double>(4,0) * t2*t2*t2 + t3*t3;
+//    //complex<long double> t4_2 = std::sqrt(p_ab2);
+//    
+//    //complex<long double> t4 = sqrtl(p_ab);
+//    complex<long double> cp_ab(p_ab);
+//    complex<long double> t4 = std::sqrt(cp_ab);
+//    //assert(!isnan(t4));
+//    
+//    
+//    complex<long double> t6 = std::pow((t1 + t4 + t7), 1.0/3.0);
+//    assert(!isnan(t6.real()));
+//    
+//    complex<long double> t10 = cbrtl(2.0)*t2 / (3*B*B*B*C*t6);
+//    assert(!isnan(t10.real()));
+//    
+//    complex<long double> t8 = (-A*powl(B,4) - 4*A*B*B*C + 4*B*B*B*C) / (3*B*B*B*C);
+//    assert(!isnan(t8.real()));
+//    
+//    complex<long double> t9 = 1.0/(3*cbrtl(2)*B*B*B*C);
+//    assert(!isnan(t9.real()));
+//    
+//    complex<long double> beta = t9 * t6 - t10 - t8; 
+//    assert(!isnan(beta.real()));
+//    
 //    fprintf(stderr, "T1 = %Lg\n", t1.real());
 //
 //    fprintf(stderr, "T2 = %Lg\n", t2.real());
@@ -784,10 +877,10 @@ long double solve_beta(long double A, long double B, long double C)
 //    fprintf(stderr, "T10 = %Lg\n", t10.real());
 //    
 //    fprintf(stderr, "beta = (real : %Lg, imag : %Lg\n", beta.real(), beta.imag());
-
-    
-    return beta.real();
-}
+//
+//    
+//    return beta.real();
+//}
 
 bool compute_fpkm_variance(long double& variance,
                              double gamma_t, 
@@ -832,16 +925,18 @@ bool compute_fpkm_variance(long double& variance,
     }
     assert (psi_t >= 0);
     
+    long double psi_var = X_g;
+    psi_var *= psi_var;
+    psi_var *= psi_t;
+    // we multiply A with the constants here to make things work out 
+    // at the end of the routine when we multiply by the square of those
+    // constants
+    long double poisson_variance = A + psi_var;
+    
     if (dispersion < -1 || abs(dispersion) < 1)
     {
         // default to poisson dispersion
-        long double psi_var = X_g;
-        psi_var *= psi_var;
-        psi_var *= psi_t;
-        // we multiply A with the constants here to make things work out 
-        // at the end of the routine when we multiply by the square of those
-        // constants
-        variance = A + psi_var;
+        variance = poisson_variance;
 //        if (variance < 0)
 //        {
 //            fprintf(stderr, "Warning: negative variance in case 1: (A = %Lf, psi_var = %Lf, gamma_t = %lf)\n", A, psi_var, gamma_t);
@@ -872,7 +967,7 @@ bool compute_fpkm_variance(long double& variance,
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
             
-            long double r = (A * A) / (B - A);
+            long long r = (A * A) / (B - A);
             
             if (r < 0)
             {
@@ -880,7 +975,20 @@ bool compute_fpkm_variance(long double& variance,
             }
             
             long double beta = solve_beta(A,B,C);
-        
+//        
+//            long double test_beta = (C/B)*beta*beta*beta;
+//            test_beta += ((4.0*C/B) - (4*A*C/(B*B)))*beta*beta;
+//            test_beta += ((5*A*A*C/(B*B*B)) - (10*A*C/(B*B)) - (A/(A-B)) + (5*C/B))*beta;
+//            test_beta += (1 + (2*C/B) - (6*A*C/(B*B)) + (6*A*A*C/(B*B*B)) - (2*A*A*A*C/(B*B*B*B)));
+
+//            long double test_beta = (C/B)*beta*beta*beta;
+//            test_beta += ((4.0*C/B) - (4*A*C/(B*B)))*beta*beta;
+//            test_beta += ((5*A*A*C/(B*B*B)) - (10*A*C/(B*B)) - (A/(A-B)) + (5*C/B))*beta;
+//            test_beta += (1 + (2*C/B) - (6*A*C/(B*B)) + (6*A*A*C/(B*B*B)) - (2*A*A*A*C/(B*B*B*B)));
+            
+            //long double test_beta = solve_beta(A,B,0.0);
+            //long double test_beta2 = solve_beta(A,B, X_g * X_g);
+            
             long double alpha = 1.0 - (A/(A-B)) * beta;
             
             long double mean = r * beta / (alpha - 1.0);
@@ -890,12 +998,12 @@ bool compute_fpkm_variance(long double& variance,
             variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
             variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
             
-            if (beta <= 0)
+            if (beta <= 2)
             {
                 //printf ("Warning: beta for is %Lg\n", beta);
                 numeric_ok = false;
             }
-            if (alpha <= 0)
+            if (alpha <= 1)
             {
                 //printf("Warning: alpha for is %Lg\n", alpha);
                 //printf("\t A = %Lg, B = %Lg\n", A, B);
@@ -904,9 +1012,15 @@ bool compute_fpkm_variance(long double& variance,
                 numeric_ok = false;
             }
             
+            
             if (variance < 0)
             {
                 numeric_ok = false;
+            }
+            
+            if (variance == 0 && A != 0)
+            {
+                variance = poisson_variance;
             }
             
 //            if (variance <= 0)
@@ -914,13 +1028,21 @@ bool compute_fpkm_variance(long double& variance,
 //                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
 //            }
             
-            assert (!numeric_ok || variance >= 0);
+//            fprintf (stderr, "****************\n");
+//            fprintf (stderr, "psi_t = %lf\n", psi_t);
+//            fprintf (stderr, "beta = %Lf\n", beta);
+//            fprintf (stderr, "alpha = %Lf\n", alpha);
+//            fprintf (stderr, "r = %Ld\n", r);
+//            fprintf (stderr, "mean = %Lf\n", mean);
+//            fprintf (stderr, "variance = %Lf\n", variance);
+            
+            assert (!numeric_ok || variance >= poisson_variance);
             
             //assert (abs(FPKM - mean) < 1e-3);
         }
     }
     
-    double mean = A * (1000000000.0 / (l_t *M));
+    long double mean_frags = A * (1000000000.0 / (l_t *M));
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
     assert (!isinf(variance) && !isnan(variance));
     //printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
@@ -929,8 +1051,8 @@ bool compute_fpkm_variance(long double& variance,
 //        printf ("Warning: mean > variance!\n");
 //        
 //    }
-    assert (!isinf(variance) && !isnan(variance));
-    assert (variance != 0 || A == 0);
+    assert (!numeric_ok || (!isinf(variance) && !isnan(variance)));
+    assert (!numeric_ok || variance != 0 || A == 0);
     return numeric_ok;
 }
 
