@@ -2782,8 +2782,10 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
         {
             for (size_t i = 0; i < M; ++i)
             {
-                if (cond_probs[j][i])
-                    compat(i,j) = cond_probs[j][i];
+//                if (cond_probs[j][i])
+//                    compat(i,j) = cond_probs[j][i];
+                  if (cond_probs[j][i])
+                      compat(i,j) = 1;
             }
         }
         
