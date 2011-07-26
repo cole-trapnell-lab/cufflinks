@@ -662,14 +662,20 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         
 	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);
     
-//
+
 //    // FIXME: THIS IS A HACK, for testing only.  take it out before release!!!
 //    if (num_fragments() < 1000 && transcripts.size() > 1)
 //    {
 //        ublas::matrix<double> H = ublas::identity_matrix<double>(transcripts.size());
-//        H = 0.05L * H;
-//        cerr << H << endl;
-//        cerr << _gamma_covariance << endl;
+//        //H = 0.01L * H;
+//        //cerr << H << endl;
+//        cerr << endl << _gamma_covariance << endl;
+//        
+//        for (size_t i = 0; i < transcripts.size(); ++i)
+//        {
+//            _gamma_covariance(i,i) = min(1.0, _gamma_covariance(i,i) * 1.50);
+//        }
+//        
 //        //_gamma_covariance += H;
 //        cerr << _gamma_covariance << endl;
 //    }
@@ -728,23 +734,55 @@ long double solve_beta(long double A, long double B, long double C)
     long double c = -A + B - 5*A*A*C/(B*B*B) + 10*A*C/(B*B) - 5*C/B;
     long double d = 2*A*A*A*C/(B*B*B*B) - 6*A*A*C/(B*B*B) + 6*A*C/(B*B) - 2*C/B;
     
-    b/= a;
-    c /= a;
-    d /= a;
-    complex<long double> q(c/3.0 - b*b/9.0,0);
-    complex<long double> r((c*b - 3*d)/6.0 - b*b*b/27.0,0);
+//    b/= a;
+//    c /= a;
+//    d /= a;
+    complex<long double> q((3*a*c - b*b)/(a*a*9.0));
+    complex<long double> r((9.0*a*c*b - 27.0*a*a*d - 2.0*b*b*b)/(a*a*a*54.0));
     
-    long double s1 = cbrt((r + std::sqrt(q*q*q + r*r)).real());
-    long double s2 = cbrt((r - std::sqrt(q*q*q + r*r)).real());
+    long double disc = (q*q*q + r*r).real();
     
-    complex<long double> R1(s1+s2 - b/3.0,0);
-    complex<long double> R2(-(s1+s2)/2.0 - b/3.0,sqrt(3.0)*(s1-s2)/2.0);
-    complex<long double> R3(-(s1+s2)/2.0 - b/3.0,-sqrt(3.0)*(s1-s2)/2.0);
+    complex<long double> s1 = std::pow((r + std::sqrt(q*q*q + r*r)),complex<long double>(1/3.0));
+    complex<long double> s2 = std::pow((r - std::sqrt(q*q*q + r*r)),complex<long double>(1/3.0));
     
+//    cerr << "***********"<< endl;
+//    cerr << std::sqrt(q*q*q + r*r) << endl;
+//    cerr << s1 << endl;
+//    cerr << s2 << endl;
+//    cerr << r << endl;
+//    cerr << (r + std::sqrt(q*q*q + r*r)) << endl;
+//    cerr << pow(r + std::sqrt(q*q*q + r*r), complex<long double>(1/3.0)) << endl;
+//    cerr << s1 - s2 << endl;
+//    cerr << s1 + s2 << endl;
+//    cerr << (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0) << endl;
+    
+    complex<long double> R1 = s1 + s2 - complex<long double>(b/(a*3.0));
+    //R1 -= ;
+    
+//    complex<long double> R2 = -(s1+s2);
+//    R2 /= complex<long double>(2.0);
+//    R2 -= complex<long double>(b/3.0);
+//    R2 += (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
+    
+    complex<long double> R2 = -(s1+s2)/complex<long double>(2.0) - complex<long double>(b/(a*3.0)) + (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
+        
+//    complex<long double> R3 = -(s1+s2);
+//    R3 /= complex<long double>(2.0);
+//    R3 -= complex<long double>(b/3.0);
+//    R3 -= (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
+    
+    complex<long double> R3 = -(s1+s2)/complex<long double>(2.0) - complex<long double>(b/(a*3.0)) - (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
+    
+    
+    //cerr <<  complex<long double>(1,1) * complex<long double>(sqrt(3.0)/2.0) << endl;
+    
+//    complex<long double> R2(-(s1+s2)/2.0 - b/3.0,(s1-s2)*sqrt(3.0)/2.0);
+//    complex<long double> R3(-(s1+s2)/2.0 - b/3.0,-sqrt(3.0)*(s1-s2)/2.0);
+//    
 //    cerr << R1 << endl;
 //    cerr << R2 << endl;
 //    cerr << R3 << endl;
-    
+//    
     vector<long double> roots;
     if (R1.imag() == 0)
         roots.push_back(R1.real());
@@ -753,6 +791,11 @@ long double solve_beta(long double A, long double B, long double C)
     if (R3.imag() == 0)
         roots.push_back(R3.real());
     sort(roots.begin(), roots.end());
+
+    //assert (roots.empty() == false);
+    if (roots.empty())
+        return 0;
+    
     long double root = roots.back();
     
 //    long double discrim = 18*a*b*c*d - 4*b*b*b*d + b*b*c*c - 4*a*c*c*c - 27*a*a*d*d;
@@ -1044,7 +1087,7 @@ bool compute_fpkm_variance(long double& variance,
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
-    assert (!isinf(variance) && !isnan(variance));
+    
     //printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
 //    if (variance < mean)
 //    {
