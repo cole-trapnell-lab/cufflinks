@@ -1071,13 +1071,14 @@ bool compute_fpkm_variance(long double& variance,
 //                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
 //            }
             
-//            fprintf (stderr, "****************\n");
-//            fprintf (stderr, "psi_t = %lf\n", psi_t);
-//            fprintf (stderr, "beta = %Lf\n", beta);
-//            fprintf (stderr, "alpha = %Lf\n", alpha);
-//            fprintf (stderr, "r = %Ld\n", r);
-//            fprintf (stderr, "mean = %Lf\n", mean);
-//            fprintf (stderr, "variance = %Lf\n", variance);
+            fprintf (stderr, "****************\n");
+            fprintf (stderr, "gamma_t = %lf\n", gamma_t);
+            fprintf (stderr, "psi_t = %lf\n", psi_t);
+            fprintf (stderr, "beta = %Lf\n", beta);
+            fprintf (stderr, "alpha = %Lf\n", alpha);
+            fprintf (stderr, "r = %Ld\n", r);
+            fprintf (stderr, "mean = %Lf\n", mean);
+            fprintf (stderr, "variance = %Lf\n", variance);
             
             assert (!numeric_ok || variance >= poisson_variance);
             
@@ -2575,6 +2576,18 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
                                                              nr_alignments,
                                                              gamma_mle,
                                                              inverse_fisher);
+    
+    
+    double trace = 0.0;
+    for (size_t i = 0; i < gamma_mle.size(); ++i)
+    {
+        trace += inverse_fisher(i,i);
+    }
+    
+    ublas::matrix<double> proposal = inverse_fisher;
+    proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
+    proposal *= 4.0;
+    
     if (fisher_status != NUMERIC_OK)
         return fisher_status;
     
@@ -2582,7 +2595,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
                                                 nr_alignments,
                                                 log_conv_factors,
                                                 gamma_mle,
-                                                inverse_fisher,
+                                                proposal,
                                                 gamma_map_estimate,
                                                 gamma_map_covariance);
     return map_status;

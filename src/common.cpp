@@ -116,7 +116,7 @@ boost::thread_specific_ptr<std::string> bundle_label;
 boost::shared_ptr<std::string> bundle_label;
 #endif
 
-long random_seed = -1;
+long random_seed = 0;
 
 extern void print_usage();
 

@@ -68,6 +68,7 @@ static struct option long_options[] = {
 {"labels",					required_argument,		 0,			 'L'},
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
+{"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 {"mask-gtf",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
@@ -313,6 +314,7 @@ int parse_options(int argc, char** argv)
                 split_variance = true;
                 break;
             }
+
 			default:
 				print_usage();
 				return 1;
