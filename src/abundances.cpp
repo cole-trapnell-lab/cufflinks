@@ -840,6 +840,10 @@ long double solve_beta(long double A, long double B, long double C)
 //        cbrtl(q - sqrtl(q*q + powl(r - p*p, 3))) + p; 
     
 //    long double test = a*root*root*root + b*root*root + c*root + d;
+    
+    long double test_root = (a*root*root*root) + (b*root*root) + (c*root) + d;
+    assert (abs(test_root) < 1e-1);
+    
     return root;
 }
 
@@ -975,6 +979,10 @@ bool compute_fpkm_variance(long double& variance,
     // at the end of the routine when we multiply by the square of those
     // constants
     long double poisson_variance = A + psi_var;
+    long double alpha = 0.0;
+    long double beta = 0.0;
+    long double bnb_mean = 0.0;
+    long long r = 0.0;
     
     if (dispersion < -1 || abs(dispersion) < 1)
     {
@@ -990,7 +998,7 @@ bool compute_fpkm_variance(long double& variance,
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
-        if (psi_t <= 0) 
+        if (psi_t < 1e-6) 
         {
             //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
@@ -1010,14 +1018,14 @@ bool compute_fpkm_variance(long double& variance,
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
             
-            long long r = (A * A) / (B - A);
+            r = (A * A) / (B - A);
             
             if (r < 0)
             {
                 numeric_ok = false;
             }
             
-            long double beta = solve_beta(A,B,C);
+            beta = solve_beta(A,B,C);
 //        
 //            long double test_beta = (C/B)*beta*beta*beta;
 //            test_beta += ((4.0*C/B) - (4*A*C/(B*B)))*beta*beta;
@@ -1032,11 +1040,9 @@ bool compute_fpkm_variance(long double& variance,
             //long double test_beta = solve_beta(A,B,0.0);
             //long double test_beta2 = solve_beta(A,B, X_g * X_g);
             
-            long double alpha = 1.0 - (A/(A-B)) * beta;
+            alpha = 1.0 - (A/(A-B)) * beta;
             
-            long double mean = r * beta / (alpha - 1.0);
-            
-            long double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
+            bnb_mean = r * beta / (alpha - 1.0);
             
             variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
             variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
@@ -1071,20 +1077,21 @@ bool compute_fpkm_variance(long double& variance,
 //                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
 //            }
             
-            fprintf (stderr, "****************\n");
-            fprintf (stderr, "gamma_t = %lf\n", gamma_t);
-            fprintf (stderr, "psi_t = %lf\n", psi_t);
-            fprintf (stderr, "beta = %Lf\n", beta);
-            fprintf (stderr, "alpha = %Lf\n", alpha);
-            fprintf (stderr, "r = %Ld\n", r);
-            fprintf (stderr, "mean = %Lf\n", mean);
-            fprintf (stderr, "variance = %Lf\n", variance);
-            
             assert (!numeric_ok || variance >= poisson_variance);
             
             //assert (abs(FPKM - mean) < 1e-3);
         }
     }
+    
+    
+    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
+    fprintf (stderr, "psi_t = %lf\n", psi_t);
+    fprintf (stderr, "beta = %Lf\n", beta);
+    fprintf (stderr, "alpha = %Lf\n", alpha);
+    fprintf (stderr, "r = %Ld\n", r);
+    fprintf (stderr, "mean = %Lf\n", bnb_mean);
+    fprintf (stderr, "variance = %Lf\n", variance);
+    fprintf (stderr, "****************\n");
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
@@ -1172,11 +1179,13 @@ void AbundanceGroup::calculate_conf_intervals()
 		// This will compute the transcript level FPKM confidence intervals
 		for (size_t j = 0; j < _abundances.size(); ++j)
 		{
+            fprintf(stderr, "%s\n", _abundances[j]->description().c_str());
 			if (_abundances[j]->effective_length() > 0.0 && mass_fraction() > 0)
 			{
                 assert (!isnan(_gamma_covariance(j,j)));
                 
                 long double fpkm_var = 0.0;
+                
                 bool numerics_ok = compute_fpkm_variance(fpkm_var,
                                                         _abundances[j]->gamma(),
                                                         _gamma_covariance(j,j),
@@ -2585,8 +2594,11 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
     }
     
     ublas::matrix<double> proposal = inverse_fisher;
+
+#if 0
     proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
     proposal *= 4.0;
+#endif
     
     if (fisher_status != NUMERIC_OK)
         return fisher_status;
@@ -2630,22 +2642,22 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
     gamma_covariance = empirical_gamma_covariance;
 
 #if 0
-    // Perform a bayesian estimation to improve the gamma estimate and their covariances 
-    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(empirical_gamma_mle.size(),empirical_gamma_mle.size());
-	for (size_t i = 0; i < empirical_gamma_mle.size(); ++i)
-	{
-		epsilon(i,i) = 1e-6;
-	}
-    
-    empirical_gamma_covariance += epsilon;
+//    // Perform a bayesian estimation to improve the gamma estimate and their covariances 
+//    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(empirical_gamma_mle.size(),empirical_gamma_mle.size());
+//	for (size_t i = 0; i < empirical_gamma_mle.size(); ++i)
+//	{
+//		epsilon(i,i) = 1e-6;
+//	}
+//    
+//    empirical_gamma_covariance += epsilon;
     
     AbundanceStatus map_status = map_estimation(transcripts,
                                                 nr_alignments,
                                                 log_conv_factors,
                                                 empirical_gamma_mle,
                                                 empirical_gamma_covariance,
-                                                gamma_map_estimate,
-                                                gamma_map_covariance);
+                                                gamma_estimate,
+                                                gamma_covariance);
     if (map_status != NUMERIC_OK)
         return map_status;
 #endif
@@ -2838,8 +2850,13 @@ AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts
     
     // Calculate the scaling factor for correcting the proposal distribution bias 
     // during importance sampling
-	calc_is_scale_factor(covariance_chol, is_scale_factor);
+	AbundanceStatus scale_status = calc_is_scale_factor(covariance_chol, is_scale_factor);
 	
+    if (scale_status == NUMERIC_FAIL)
+    {
+        return NUMERIC_FAIL;
+    }
+    
 	vector<pair<size_t, double> > sample_weights;
 	
 	ublas::vector<double> expectation(transcripts.size());
