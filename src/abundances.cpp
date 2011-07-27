@@ -1498,7 +1498,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             empir_gamma_var_trace(trace(gamma_map_covariance));
             bayes_gamma_var_trace(trace(bayes_covariance));
             double gap = abs(empir_gamma_var_trace() - bayes_gamma_var_trace());
-            if (gap > 0.01)
+            if (gap > 0.005)
                 map_success = NUMERIC_LOW_DATA;
             
             gamma_map_estimate = bayes_estimate;
