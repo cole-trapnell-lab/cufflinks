@@ -25,6 +25,7 @@
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/tools/roots.hpp>
@@ -1498,13 +1499,22 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             empir_gamma_var_trace(trace(gamma_map_covariance));
             bayes_gamma_var_trace(trace(bayes_covariance));
             double gap = abs(empir_gamma_var_trace() - bayes_gamma_var_trace());
-            if (gap > 0.005)
-                map_success = NUMERIC_LOW_DATA;
-            
-            gamma_map_estimate = bayes_estimate;
-            gamma_map_covariance = bayes_covariance;
+//            if (gap > 0.005)
+//                map_success = NUMERIC_LOW_DATA;
+//            
+//            gamma_map_estimate = bayes_estimate;
+//            gamma_map_covariance = bayes_covariance;
             
             cross_rep_js(cross_replicate_js);
+        }
+        else if (bootstrap == true)
+        {
+            bootstrap_gammas(filtered_transcripts,
+                             nr_alignments,
+                             log_conv_factors,
+                             gamma_map_estimate,
+                             gamma_map_covariance,
+                             cross_replicate_js);
         }
         else
         {
@@ -2651,6 +2661,166 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
     return map_status;
 }
 
+AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+                                    const vector<MateHit>& nr_alignments,
+                                    const vector<double>& log_conv_factors,
+                                    ublas::vector<double>& gamma_map_estimate,
+                                    ublas::matrix<double>& gamma_covariance,
+                                    double& cross_replicate_js)
+{
+    size_t N = transcripts.size();	
+	size_t M = nr_alignments.size();
+    
+    // FIXME:
+    if (N == 1)
+    {
+        gamma_map_estimate = ublas::vector<double>(1);
+        gamma_map_estimate(0) = 1.0;
+        gamma_covariance = ublas::matrix<double>(1,1);
+        gamma_covariance(0,0) = 0.0;
+        return NUMERIC_OK;
+    }
+
+    vector<MateHit> alignments = nr_alignments;
+    vector<double>  unscaled_masses;
+    double num_uncollapsed_frags = 0.0;
+    for (size_t i = 0; i < M; ++i)
+    {
+        double uncollapsed_mass = alignments[i].collapse_mass() / alignments[i].common_scale_mass();
+        num_uncollapsed_frags += (uncollapsed_mass);
+        unscaled_masses.push_back(alignments[i].collapse_mass());
+        alignments[i].collapse_mass(uncollapsed_mass);
+    }
+    
+    std::vector<ublas::vector<double> > mle_gammas;
+    
+    boost::uniform_int<> uniform_dist(0,num_uncollapsed_frags-1);
+    boost::mt19937 rng; 
+    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > uniform_gen(rng, uniform_dist); 
+    
+    size_t num_bootstrap_samples = 20;
+    for (size_t i = 0; i < num_bootstrap_samples; ++i)
+    {
+        
+        vector<int> sample_idxs;
+        for (size_t j = 0; j < num_uncollapsed_frags; ++j)
+        {
+            sample_idxs.push_back(uniform_gen());
+        }
+        sort (sample_idxs.begin(), sample_idxs.end());
+        assert (sample_idxs.empty() == false);
+        
+        size_t curr_sample = 0;
+        size_t processed_hits = 0;
+        for (size_t j = 0; j < alignments.size(); ++j)
+        {
+            int adjusted_mass = 0.0;
+            while (sample_idxs[curr_sample] >= processed_hits &&
+                   sample_idxs[curr_sample] < processed_hits + alignments[j].collapse_mass() &&
+                   curr_sample < sample_idxs.size())
+            {
+                adjusted_mass++;
+                curr_sample++;
+            }
+            processed_hits += alignments[j].collapse_mass();
+            alignments[j].collapse_mass(adjusted_mass);
+        }
+        
+        for (size_t j = 0; j < alignments.size(); ++j)
+        {
+            alignments[j].collapse_mass(alignments[j].collapse_mass() * alignments[j].common_scale_mass());
+        }
+        
+        vector<double> bs_gammas(0.0, transcripts.size());
+        
+        //FIXME: Suppress identifiability checks here.
+        AbundanceStatus mle_success = gamma_mle(transcripts,
+                                                alignments,
+                                                log_conv_factors, 
+                                                bs_gammas,
+                                                false);
+        if (mle_success == NUMERIC_OK)
+        {
+            ublas::vector<double> mle = ublas::zero_vector<double>(N);
+            for(size_t j = 0; j < N; ++j)
+            {
+                mle(j) = bs_gammas[j];
+            }
+            mle_gammas.push_back(mle);
+        }
+    }
+    
+    if (mle_gammas.empty())
+        return NUMERIC_FAIL;
+    
+    gamma_covariance = ublas::zero_matrix<double>(N,N);
+    ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
+    
+    int MLENUM = 0;
+    foreach(ublas::vector<double>& mle, mle_gammas)
+    {
+        //cerr << "MLE # "<< MLENUM++ << endl;
+        //cerr << mle << endl;
+        expected_mle_gamma += mle;
+    }
+    expected_mle_gamma /= mle_gammas.size();
+    
+    for (size_t i = 0; i < N; ++i)
+    {
+        for (size_t j = 0; j < N; ++j)
+        {
+            for (size_t k = 0 ; k < mle_gammas.size(); ++k)
+            {
+                double c = (mle_gammas[k](i) - expected_mle_gamma(i)) * (mle_gammas[k](j) - expected_mle_gamma(j));
+                gamma_covariance(i,j) += c;
+            }
+        }
+    }
+    
+    cross_replicate_js = jensen_shannon_div(mle_gammas);
+    
+    gamma_covariance /= mle_gammas.size();
+    gamma_map_estimate = expected_mle_gamma;
+    
+    cerr << "MLE: " << expected_mle_gamma << endl;
+    cerr << "COV:" << endl;
+    cerr << gamma_covariance << endl;
+    cerr << "*************" << endl;
+    return NUMERIC_OK;
+}
+
+AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+                                 const vector<MateHit>& nr_alignments,
+                                 const vector<double>& log_conv_factors,
+                                 ublas::vector<double>& gamma_estimate,
+                                 ublas::matrix<double>& gamma_covariance,
+                                 double& cross_replicate_js)
+{
+    ublas::vector<double> empirical_gamma_mle = gamma_estimate;
+    ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
+    
+    // Calculate the mean gamma MLE and covariance matrix across replicates, so
+    // we can use it as the proposal distribution for importance sampling.  This will
+    // make the Bayesian prior more conservative than using the inverse of the 
+    // Fisher Information matrix on the mixed likelihood function.
+    AbundanceStatus empirical_mle_status = bootstrap_gamma_mle(transcripts,
+                                                               nr_alignments,
+                                                               log_conv_factors,
+                                                               empirical_gamma_mle,
+                                                               empirical_gamma_covariance,
+                                                               cross_replicate_js);
+    
+    
+    if (empirical_mle_status != NUMERIC_OK)
+        return empirical_mle_status;
+    
+    gamma_estimate = empirical_gamma_mle;
+    gamma_covariance = empirical_gamma_covariance;
+    
+
+    return NUMERIC_OK;
+}
+
 AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,
                                            const vector<double>& log_conv_factors,
@@ -2979,7 +3149,8 @@ bool is_identifiable(M &m, PM &pm)
 AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
-                          vector<double>& gammas)
+                          vector<double>& gammas,
+                          bool check_identifiability)
 {
 	gammas.clear();
 	if (transcripts.empty())
@@ -3017,48 +3188,50 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 			cond_probs[j] = *(transcripts[j]->cond_probs());
 		}
         
-        ublas::matrix<double> compat = ublas::zero_matrix<double>(M,N);
-        
-        for (size_t j = 0; j < N; ++j)
+        if (check_identifiability)
         {
-            for (size_t i = 0; i < M; ++i)
+            ublas::matrix<double> compat = ublas::zero_matrix<double>(M,N);
+            
+            for (size_t j = 0; j < N; ++j)
             {
-                if (cond_probs[j][i])
-                    compat(i,j) = cond_probs[j][i];
-            }
-        }
-        
-        vector<size_t> transcripts_with_frags;
-        for (size_t j = 0; j < N; ++j)
-        {
-            bool has_fragment = false;
-            for (size_t i = 0; i < M; ++i)
-            {
-                if (compat(i,j))
+                for (size_t i = 0; i < M; ++i)
                 {
-                    has_fragment = true;
-                    break;
+                    if (cond_probs[j][i])
+                        compat(i,j) = cond_probs[j][i];
                 }
             }
-            if (has_fragment)
-                transcripts_with_frags.push_back(j);
+            
+            vector<size_t> transcripts_with_frags;
+            for (size_t j = 0; j < N; ++j)
+            {
+                bool has_fragment = false;
+                for (size_t i = 0; i < M; ++i)
+                {
+                    if (compat(i,j))
+                    {
+                        has_fragment = true;
+                        break;
+                    }
+                }
+                if (has_fragment)
+                    transcripts_with_frags.push_back(j);
+            }
+            ublas::matrix<double> reduced_compat = ublas::zero_matrix<double>(M,transcripts_with_frags.size());
+            for (size_t j = 0; j < transcripts_with_frags.size(); ++j)
+            {
+                column(reduced_compat, j) = column(compat, transcripts_with_frags[j]);
+            }
+            
+            
+            typedef ublas::permutation_matrix<std::size_t> pmatrix;
+            
+            // create a permutation matrix for the LU-factorization
+            pmatrix pm(reduced_compat.size1());
+            
+            // cerr << compat.size2() <<endl;
+            // perform LU-factorization
+            identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(reduced_compat,pm);
         }
-        ublas::matrix<double> reduced_compat = ublas::zero_matrix<double>(M,transcripts_with_frags.size());
-        for (size_t j = 0; j < transcripts_with_frags.size(); ++j)
-        {
-            column(reduced_compat, j) = column(compat, transcripts_with_frags[j]);
-        }
-        
-        
-        typedef ublas::permutation_matrix<std::size_t> pmatrix;
-        
-        // create a permutation matrix for the LU-factorization
-        pmatrix pm(reduced_compat.size1());
-        
-        // cerr << compat.size2() <<endl;
-        // perform LU-factorization
-        identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(reduced_compat,pm);
-
         
 		vector<double> u(M);
 		for (size_t i = 0; i < M; ++i)

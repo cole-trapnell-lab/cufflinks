@@ -448,14 +448,26 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
                                            ublas::matrix<double>& gamma_map_covariance,
                                            double& cross_replicate_js);
 
+AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+                                    const vector<MateHit>& nr_alignments,
+                                    const vector<double>& log_conv_factors,
+                                    ublas::vector<double>& gamma_map_estimate,
+                                    ublas::matrix<double>& gamma_covariance,
+                                    double& cross_replicate_js);
+
+AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+                                 const vector<MateHit>& nr_alignments,
+                                 const vector<double>& log_conv_factors,
+                                 ublas::vector<double>& gamma_map_estimate,
+                                 ublas::matrix<double>& gamma_map_covariance,
+                                 double& cross_replicate_js);
+
 AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
                                  const vector<MateHit>& nr_alignments,
                                  const vector<double>& log_conv_factors,
                                  const ublas::vector<double>& gamma_mle,
                                  ublas::vector<double>& gamma_map_estimate,
                                  ublas::matrix<double>& gamma_map_covariance);
-
-
 
 AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts,
                                const vector<MateHit>& alignments,
@@ -474,7 +486,8 @@ AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts
 AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
-                          vector<double>& gammas);
+                          vector<double>& gammas,
+                          bool check_identifiability = true);
 
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,
