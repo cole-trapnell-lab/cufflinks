@@ -884,19 +884,29 @@ class GTssCl:public GSeg { //experiment cluster of ref loci (isoforms)
      //check if it can be added to existing xconsensi
      uint nfend=0;
      uint nfstart=0;
+     if (tsscl.Get(0)->tcons->getGeneID()!=NULL && 
+             c->tcons->getGeneID()!=NULL && 
+            strcmp(tsscl.Get(0)->tcons->getGeneID(), c->tcons->getGeneID()))
+        //don't tss cluster if they don't have the same GeneID (?)
+        //FIXME: we might not want this if input files are not from Cufflinks
+        //       and they could simply lack proper GeneID
+          return false;
+            
      if (c->tcons->strand=='-') {
         //no, the first exons don't have to overlap
         //if (!c->tcons->exons.Last()->overlap(fstart,fend)) return false;
         nfstart=c->tcons->exons.Last()->start;
         nfend=c->tcons->exons.Last()->end;
         //proximity check for the transcript start:
-        if (nfend>fend+tssDist || fend>nfend+tssDist || strcmp(tsscl.Get(0)->tcons->getGeneID(), c->tcons->getGeneID())) return false;
+        if (nfend>fend+tssDist || fend>nfend+tssDist)
+                return false;
         }
       else {
         //if (!c->tcons->exons.First()->overlap(fstart,fend)) return false;
         nfstart=c->tcons->exons.First()->start;
         nfend=c->tcons->exons.First()->end;
-        if (nfstart>fstart+tssDist || fstart>nfstart+tssDist || strcmp(tsscl.Get(0)->tcons->getGeneID(), c->tcons->getGeneID())) return false;
+        if (nfstart>fstart+tssDist || fstart>nfstart+tssDist)
+            return false;
         }
      // -- if we are here, we can add to tss cluster
 
