@@ -1179,7 +1179,7 @@ void AbundanceGroup::calculate_conf_intervals()
 		// This will compute the transcript level FPKM confidence intervals
 		for (size_t j = 0; j < _abundances.size(); ++j)
 		{
-            fprintf(stderr, "%s\n", _abundances[j]->description().c_str());
+            //fprintf(stderr, "%s\n", _abundances[j]->description().c_str());
 			if (_abundances[j]->effective_length() > 0.0 && mass_fraction() > 0)
 			{
                 assert (!isnan(_gamma_covariance(j,j)));
@@ -1494,9 +1494,13 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                             bayes_estimate,
                             bayes_covariance);
             
+            gamma_map_estimate = bayes_estimate;
+            gamma_map_covariance = bayes_covariance;
             empir_gamma_var_trace(trace(gamma_map_covariance));
             bayes_gamma_var_trace(trace(bayes_covariance));
             
+            if (abs(empir_gamma_var_trace() - bayes_gamma_var_trace()) > 0.01)
+                map_success = NUMERIC_LOW_DATA;
             
             cross_rep_js(cross_replicate_js);
         }
