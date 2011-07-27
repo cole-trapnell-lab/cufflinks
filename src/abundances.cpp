@@ -1509,20 +1509,22 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         }
         else if (bootstrap == true)
         {
-            map_success = empirical_replicate_gammas(filtered_transcripts,
-                                                     nr_alignments,
-                                                     log_conv_factors,
-                                                     gamma_map_estimate,
-                                                     gamma_map_covariance,
-                                                     cross_replicate_js);
-            empir_gamma_var_trace(trace(gamma_map_covariance));
+            map_success = bayesian_gammas(filtered_transcripts,
+                                          nr_alignments,
+                                          log_conv_factors,
+                                          gamma_mle,
+                                          gamma_map_estimate,
+                                          gamma_map_covariance);
+            bayes_gamma_var_trace(trace(gamma_map_covariance));
+            
             map_success  = bootstrap_gammas(filtered_transcripts,
                                             nr_alignments,
                                             log_conv_factors,
                                             gamma_map_estimate,
                                             gamma_map_covariance,
                                             cross_replicate_js);
-            bayes_gamma_var_trace(trace(gamma_map_covariance));
+            empir_gamma_var_trace(trace(gamma_map_covariance));
+            
         }
         else
         {
@@ -2726,7 +2728,6 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     boost::mt19937 rng; 
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > uniform_gen(rng, uniform_dist); 
     
-    size_t num_bootstrap_samples = 20;
     for (size_t i = 0; i < num_bootstrap_samples; ++i)
     {
         vector<int> sample_idxs;

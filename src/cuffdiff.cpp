@@ -98,6 +98,7 @@ static struct option long_options[] = {
 {"empirical-covariance",    no_argument,	 		 0,	         OPT_USE_EMPIRICAL_COVARIANCE},
 {"split-mass",              no_argument,	 		 0,	         OPT_SPLIT_MASS},
 {"split-variance",          no_argument,	 		 0,	         OPT_SPLIT_VARIANCE},
+{"num-bootstrap-samples",          no_argument,	 		 0,	     OPT_NUM_BOOTSTRAP_SAMPLES},
 
 {0, 0, 0, 0} // terminator
 };
@@ -312,6 +313,11 @@ int parse_options(int argc, char** argv)
             case OPT_SPLIT_VARIANCE:
             {
                 split_variance = true;
+                break;
+            }
+            case OPT_NUM_BOOTSTRAP_SAMPLES:
+            {
+                num_bootstrap_samples = parseInt(1, "--num-bootstrap-samples must be at least 1", print_usage);
                 break;
             }
 

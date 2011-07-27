@@ -107,6 +107,7 @@ bool emit_count_tables = false;
 bool use_fisher_covariance = true;
 bool split_variance = false;
 bool bootstrap = true;
+int num_bootstrap_samples = 200;
 
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
