@@ -1498,8 +1498,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             gamma_map_covariance = bayes_covariance;
             empir_gamma_var_trace(trace(gamma_map_covariance));
             bayes_gamma_var_trace(trace(bayes_covariance));
-            
-            if (abs(empir_gamma_var_trace() - bayes_gamma_var_trace()) > 0.01)
+            double gap = abs(empir_gamma_var_trace() - bayes_gamma_var_trace());
+            if (gap > 0.01)
                 map_success = NUMERIC_LOW_DATA;
             
             cross_rep_js(cross_replicate_js);
@@ -1593,6 +1593,10 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         if (map_success == NUMERIC_FAIL)
         {
             numeric_status = NUMERIC_FAIL;
+        }
+        else if (map_success == NUMERIC_LOW_DATA)
+        {
+            numeric_status = NUMERIC_LOW_DATA;
         }
         // otherwise, we're cool.
     }
