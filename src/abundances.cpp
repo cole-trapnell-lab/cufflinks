@@ -1950,7 +1950,8 @@ double EM (int N, int M, vector<double> & newP,
 		   const vector<vector<double> >& cond_prob, 
 		   vector<double> const & u,
            vector<double> const & log_conv_factors,
-           bool& converged) 
+           bool& converged,
+           vector<double>* p_hint) 
 {
     converged = true;
 	//double sum = 0;
@@ -1960,12 +1961,21 @@ double EM (int N, int M, vector<double> & newP,
 	double ell = 0; 
 	int iter = 0;
 	int j;
-	
-	for (j = 0; j < N; ++j) {
-		//p[j] = drand48();
-		//sum += p[j];
-        p[j] = 1.0/(double)N;
-	}
+    
+	if (p_hint == NULL)
+    {
+        for (j = 0; j < N; ++j) {
+            //p[j] = drand48();
+            //sum += p[j];
+            p[j] = 1.0/(double)N;
+        }
+    }
+    else
+    {
+        assert (p_hint->size() == N);
+        p = *p_hint;
+    }
+    
 //	for (j = 0; j < N; ++j) {
 //		p[j] = p[j] / sum;
 //	}
@@ -2690,15 +2700,25 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     }
 
     vector<MateHit> alignments = nr_alignments;
+    vector<double>  scaled_masses;
     vector<double>  unscaled_masses;
     double num_uncollapsed_frags = 0.0;
     for (size_t i = 0; i < M; ++i)
     {
         double uncollapsed_mass = alignments[i].collapse_mass() / alignments[i].common_scale_mass();
         num_uncollapsed_frags += (uncollapsed_mass);
-        unscaled_masses.push_back(alignments[i].collapse_mass());
+        scaled_masses.push_back(alignments[i].collapse_mass());
+        unscaled_masses.push_back(uncollapsed_mass);
         alignments[i].collapse_mass(uncollapsed_mass);
     }
+    
+    // FIXME: this has already been computed above, so just pass it in.
+    vector<double> orig_gammas(0.0, transcripts.size());
+    gamma_mle(transcripts,
+              nr_alignments,
+              log_conv_factors, 
+              orig_gammas,
+              false);
     
     std::vector<ublas::vector<double> > mle_gammas;
     
@@ -2709,7 +2729,6 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     size_t num_bootstrap_samples = 20;
     for (size_t i = 0; i < num_bootstrap_samples; ++i)
     {
-        
         vector<int> sample_idxs;
         for (size_t j = 0; j < num_uncollapsed_frags; ++j)
         {
@@ -2745,7 +2764,8 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
                                                 alignments,
                                                 log_conv_factors, 
                                                 bs_gammas,
-                                                false);
+                                                false,
+                                                &orig_gammas);
         if (mle_success == NUMERIC_OK)
         {
             ublas::vector<double> mle = ublas::zero_vector<double>(N);
@@ -2754,6 +2774,11 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
                 mle(j) = bs_gammas[j];
             }
             mle_gammas.push_back(mle);
+        }
+        
+        for (size_t j = 0; j < alignments.size(); ++j)
+        {
+            alignments[j].collapse_mass(unscaled_masses[j]);
         }
     }
     
@@ -3157,7 +3182,8 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
                           vector<double>& gammas,
-                          bool check_identifiability)
+                          bool check_identifiability,
+                          vector<double>* p_hint)
 {
 	gammas.clear();
 	if (transcripts.empty())
@@ -3248,7 +3274,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
         		
         if (use_em)
         {
-            logL = EM(N, M, prob, cond_probs, u, log_conv_factors, converged);
+            logL = EM(N, M, prob, cond_probs, u, log_conv_factors, converged, p_hint);
         }
 		else
         {

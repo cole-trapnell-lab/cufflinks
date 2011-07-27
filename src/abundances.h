@@ -487,7 +487,8 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
                           vector<double>& gammas,
-                          bool check_identifiability = true);
+                          bool check_identifiability = true,
+                          vector<double>* p_hint = NULL);
 
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,
