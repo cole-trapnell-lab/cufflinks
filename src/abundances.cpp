@@ -1509,12 +1509,20 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         }
         else if (bootstrap == true)
         {
-            bootstrap_gammas(filtered_transcripts,
-                             nr_alignments,
-                             log_conv_factors,
-                             gamma_map_estimate,
-                             gamma_map_covariance,
-                             cross_replicate_js);
+            map_success = empirical_replicate_gammas(filtered_transcripts,
+                                                     nr_alignments,
+                                                     log_conv_factors,
+                                                     gamma_map_estimate,
+                                                     gamma_map_covariance,
+                                                     cross_replicate_js);
+            empir_gamma_var_trace(trace(gamma_map_covariance));
+            map_success  = bootstrap_gammas(filtered_transcripts,
+                                            nr_alignments,
+                                            log_conv_factors,
+                                            gamma_map_estimate,
+                                            gamma_map_covariance,
+                                            cross_replicate_js);
+            bayes_gamma_var_trace(trace(gamma_map_covariance));
         }
         else
         {
@@ -2733,7 +2741,6 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
         
         vector<double> bs_gammas(0.0, transcripts.size());
         
-        //FIXME: Suppress identifiability checks here.
         AbundanceStatus mle_success = gamma_mle(transcripts,
                                                 alignments,
                                                 log_conv_factors, 
@@ -2777,15 +2784,15 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
         }
     }
     
-    cross_replicate_js = jensen_shannon_div(mle_gammas);
+    //cross_replicate_js = jensen_shannon_div(mle_gammas);
     
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;
     
-    cerr << "MLE: " << expected_mle_gamma << endl;
-    cerr << "COV:" << endl;
-    cerr << gamma_covariance << endl;
-    cerr << "*************" << endl;
+    //cerr << "MLE: " << expected_mle_gamma << endl;
+    //cerr << "COV:" << endl;
+    //cerr << gamma_covariance << endl;
+    //cerr << "*************" << endl;
     return NUMERIC_OK;
 }
 
