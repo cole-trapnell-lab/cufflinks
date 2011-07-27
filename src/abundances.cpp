@@ -842,7 +842,7 @@ long double solve_beta(long double A, long double B, long double C)
 //    long double test = a*root*root*root + b*root*root + c*root + d;
     
     long double test_root = (a*root*root*root) + (b*root*root) + (c*root) + d;
-    assert (abs(test_root) < 1e-1);
+    //assert (abs(test_root) < 1e-1);
     
     return root;
 }
@@ -998,7 +998,7 @@ bool compute_fpkm_variance(long double& variance,
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
-        if (psi_t < 1e-6) 
+        if (psi_t < 1e-5) 
         {
             //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
@@ -1084,14 +1084,14 @@ bool compute_fpkm_variance(long double& variance,
     }
     
     
-    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
-    fprintf (stderr, "psi_t = %lf\n", psi_t);
-    fprintf (stderr, "beta = %Lf\n", beta);
-    fprintf (stderr, "alpha = %Lf\n", alpha);
-    fprintf (stderr, "r = %Ld\n", r);
-    fprintf (stderr, "mean = %Lf\n", bnb_mean);
-    fprintf (stderr, "variance = %Lf\n", variance);
-    fprintf (stderr, "****************\n");
+//    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
+//    fprintf (stderr, "psi_t = %lf\n", psi_t);
+//    fprintf (stderr, "beta = %Lf\n", beta);
+//    fprintf (stderr, "alpha = %Lf\n", alpha);
+//    fprintf (stderr, "r = %Ld\n", r);
+//    fprintf (stderr, "mean = %Lf\n", bnb_mean);
+//    fprintf (stderr, "variance = %Lf\n", variance);
+//    fprintf (stderr, "****************\n");
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
@@ -1360,6 +1360,20 @@ void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateH
 	}
 }
 
+
+double trace(const ublas::matrix<double>& m)
+{
+    
+    double t = 0.0;
+    for (size_t i = 0.0; i < m.size1(); ++i)
+    {
+        t += m(i,i);
+    }
+    
+    return t;
+}
+
+
 // FIXME: This function doesn't really need to copy the transcripts out of 
 // the cluster.  Needs refactoring
 bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments, 
@@ -1470,6 +1484,20 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                                      gamma_map_estimate,
                                                      gamma_map_covariance,
                                                      cross_replicate_js);
+            
+            ublas::vector<double> bayes_estimate = ublas::zero_vector<double>(filtered_gammas.size());
+            ublas::matrix<double> bayes_covariance = ublas::zero_matrix<double>(N,N);
+            bayesian_gammas(filtered_transcripts,
+                            nr_alignments,
+                            log_conv_factors,
+                            gamma_mle,
+                            bayes_estimate,
+                            bayes_covariance);
+            
+            empir_gamma_var_trace(trace(gamma_map_covariance));
+            bayes_gamma_var_trace(trace(bayes_covariance));
+            
+            
             cross_rep_js(cross_replicate_js);
         }
         else
@@ -2595,7 +2623,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
     
     ublas::matrix<double> proposal = inverse_fisher;
 
-#if 0
+#if 1
     proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
     proposal *= 4.0;
 #endif
@@ -2641,7 +2669,7 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
     gamma_estimate = empirical_gamma_mle;
     gamma_covariance = empirical_gamma_covariance;
 
-#if 0
+#if 1
 //    // Perform a bayesian estimation to improve the gamma estimate and their covariances 
 //    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(empirical_gamma_mle.size(),empirical_gamma_mle.size());
 //	for (size_t i = 0; i < empirical_gamma_mle.size(); ++i)

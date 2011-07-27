@@ -278,7 +278,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _cross_rep_js(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _cross_rep_js(0.0),_empir_gamma_var_trace(0.0),_bayes_gamma_var_trace(0.0) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -291,6 +291,8 @@ public:
 		_description = other._description;
         _max_mass_variance = other._max_mass_variance;
         _cross_rep_js = other._cross_rep_js;
+        _empir_gamma_var_trace = other._empir_gamma_var_trace;
+        _bayes_gamma_var_trace = other._bayes_gamma_var_trace;
 	}
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -300,14 +302,16 @@ public:
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
         _max_mass_variance(0.0),
-        _cross_rep_js(0.0) {}
+        _cross_rep_js(0.0),
+        _empir_gamma_var_trace(0.0),
+        _bayes_gamma_var_trace(0.0) {}
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
                    const long double max_mass_variance) :
 		_abundances(abundances), 
 		_gamma_covariance(gamma_covariance),
         _max_mass_variance(max_mass_variance),
-        _cross_rep_js(0.0)
+        _cross_rep_js(0.0),_empir_gamma_var_trace(0.0),_bayes_gamma_var_trace(0.0)
 	{
         
 		calculate_conf_intervals();
@@ -382,6 +386,12 @@ public:
     double cross_rep_js() const { return _cross_rep_js; }
     void cross_rep_js(double js) { _cross_rep_js = js; }
     
+    double empir_gamma_var_trace() const { return _empir_gamma_var_trace; }
+    void empir_gamma_var_trace(double v) { _empir_gamma_var_trace = v; }
+    
+    double bayes_gamma_var_trace() const { return _bayes_gamma_var_trace; }
+    void bayes_gamma_var_trace(double v) { _bayes_gamma_var_trace = v; }
+    
 private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
@@ -413,6 +423,8 @@ private:
 	string _description;
     double _max_mass_variance;  // upper bound on the count variance that could come from this group.
     double _cross_rep_js;
+    double _bayes_gamma_var_trace;
+    double _empir_gamma_var_trace;
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,

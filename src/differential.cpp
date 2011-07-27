@@ -792,8 +792,8 @@ struct LocusVarianceInfo
     double isoform_fitted_var_sum;
     double cross_replicate_js;
     int num_transcripts;
-    double gamma_trace;
-    double gamma_var;
+    double bayes_gamma_trace;
+    double empir_gamma_trace;
 };
 
 #if ENABLE_THREADS
@@ -891,17 +891,9 @@ void sample_worker(const RefSequenceTable& rt,
         //assert (total_iso_scaled_var >= info.mean_count);
         
         info.isoform_fitted_var_sum = total_iso_scaled_var;
-        double gamma_tr = 0.0;
-        double gamma_var = 0.0;
-        
-        const ublas::matrix<double>& gamma_cov = ab_group.gamma_cov();
-        for (size_t i = 0; i < gamma_cov.size1(); ++i)
-        {
-            gamma_tr += gamma_cov(i,i);
-        }
         info.num_transcripts = ab_group.abundances().size();
-        info.gamma_trace = gamma_tr;
-        info.gamma_var = gamma_tr / info.num_transcripts;
+        info.bayes_gamma_trace = ab_group.bayes_gamma_var_trace();
+        info.empir_gamma_trace = ab_group.empir_gamma_var_trace();
         locus_variance_info_table.push_back(info);
     }
     
@@ -936,10 +928,10 @@ void dump_locus_variance_info(const string& filename)
     
     FILE* fdump = fopen(filename.c_str(), "w");
     
-    fprintf(fdump, "mean\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tgamma_trace\tgamma_var\n");
+    fprintf(fdump, "mean\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\n");
     foreach (LocusVarianceInfo& L, locus_variance_info_table)
     {
-        fprintf(fdump, "%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\n", L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.gamma_trace, L.gamma_var);
+        fprintf(fdump, "%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\n", L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace);
     }
     
 #if ENABLE_THREADS
