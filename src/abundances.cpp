@@ -1487,12 +1487,12 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             
             ublas::vector<double> bayes_estimate = ublas::zero_vector<double>(filtered_gammas.size());
             ublas::matrix<double> bayes_covariance = ublas::zero_matrix<double>(N,N);
-            bayesian_gammas(filtered_transcripts,
-                            nr_alignments,
-                            log_conv_factors,
-                            gamma_mle,
-                            bayes_estimate,
-                            bayes_covariance);
+            map_success = bayesian_gammas(filtered_transcripts,
+                                          nr_alignments,
+                                          log_conv_factors,
+                                          gamma_mle,
+                                          bayes_estimate,
+                                          bayes_covariance);
             
 
             empir_gamma_var_trace(trace(gamma_map_covariance));
@@ -2679,7 +2679,7 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
     gamma_estimate = empirical_gamma_mle;
     gamma_covariance = empirical_gamma_covariance;
 
-#if 1
+#if 0
 //    // Perform a bayesian estimation to improve the gamma estimate and their covariances 
 //    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(empirical_gamma_mle.size(),empirical_gamma_mle.size());
 //	for (size_t i = 0; i < empirical_gamma_mle.size(); ++i)
