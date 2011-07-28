@@ -48,6 +48,12 @@
   #include <unistd.h>
 #endif
 
+#ifndef fseeko
+ #define fseeko fseek
+#endif
+#ifndef ftello
+ #define ftello ftell
+#endif
 
 #ifdef DEBUG
 #undef NDEBUG
