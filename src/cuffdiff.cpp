@@ -98,7 +98,8 @@ static struct option long_options[] = {
 {"empirical-covariance",    no_argument,	 		 0,	         OPT_USE_EMPIRICAL_COVARIANCE},
 {"split-mass",              no_argument,	 		 0,	         OPT_SPLIT_MASS},
 {"split-variance",          no_argument,	 		 0,	         OPT_SPLIT_VARIANCE},
-{"num-bootstrap-samples",          no_argument,	 		 0,	     OPT_NUM_BOOTSTRAP_SAMPLES},
+{"num-bootstrap-samples",   required_argument,	 		 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
+{"bootstrap-fraction",      required_argument,	 		 0,          OPT_BOOTSTRAP_FRACTION},
 
 {0, 0, 0, 0} // terminator
 };
@@ -320,6 +321,11 @@ int parse_options(int argc, char** argv)
                 num_bootstrap_samples = parseInt(1, "--num-bootstrap-samples must be at least 1", print_usage);
                 break;
             }
+            case OPT_BOOTSTRAP_FRACTION:
+            {
+                bootstrap_fraction = parseFloat(0, 1.0, "--bootstrap-fraction must be between 0 and 1.0", print_usage);
+                break;
+            }
 
 			default:
 				print_usage();
@@ -390,37 +396,30 @@ void print_tests(FILE* fout,
                 sample_1_label,
                 sample_2_label);
 		
-		if (test.test_status != FAIL)
-		{
-			double t = test.test_stat;
-			double r1 = test.value_1;
-			double r2 = test.value_2;
-			double d = test.differential;
-			double p = test.p_value;
-			double q = test.corrected_p;
-			const char* sig;
-			if (test.significant && test.test_status == OK)
-				sig = "yes";
-			else
-				sig = "no";
-			
-			const char* status;
-			if (test.test_status == OK)
-				status = "OK";
-			else if (test.test_status == LOWDATA)
-                status = "LOWDATA";
-            else if (test.test_status == NOTEST)
-				status = "NOTEST";
-            else
-                assert(false);
-			
-			fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
-			fprintf(fout, "\n");
-		}
-		else
-		{
-			fprintf(fout, "\tFAIL\t0.0\t0.0\t0.0\t0.0\t1.0\t1.0\tno\n");
-		}
+        double t = test.test_stat;
+        double r1 = test.value_1;
+        double r2 = test.value_2;
+        double d = test.differential;
+        double p = test.p_value;
+        double q = test.corrected_p;
+        const char* sig;
+        if (test.significant && test.test_status == OK)
+            sig = "yes";
+        else
+            sig = "no";
+        
+        const char* status;
+        if (test.test_status == OK)
+            status = "OK";
+        else if (test.test_status == LOWDATA)
+            status = "LOWDATA";
+        else if (test.test_status == NOTEST)
+            status = "NOTEST";
+        else
+            status = "FAIL";
+        
+        fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
+        fprintf(fout, "\n");
 	}
 }
 

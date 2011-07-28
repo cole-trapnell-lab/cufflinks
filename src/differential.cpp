@@ -320,6 +320,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	if (curr_abundance.status == NUMERIC_FAIL || 
         prev_abundance.status == NUMERIC_FAIL)
     {
+        test_diffexp(r1, r2, test);
         test.test_stat = 0;
 		test.p_value = 1.0;
 		test.differential = 0.0;

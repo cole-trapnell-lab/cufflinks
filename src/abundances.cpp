@@ -1043,29 +1043,24 @@ bool compute_fpkm_variance(long double& variance,
             
             alpha = 1.0 - (A/(A-B)) * beta;
             
-            bnb_mean = r * beta / (alpha - 1.0);
+
             
-            variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
-            variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
-            
-            if (beta <= 2)
+            if (beta <= 2 || alpha <= 1)
             {
                 //printf ("Warning: beta for is %Lg\n", beta);
                 numeric_ok = false;
+                variance = V_X_g_t;
             }
-            if (alpha <= 1)
-            {
-                //printf("Warning: alpha for is %Lg\n", alpha);
-                //printf("\t A = %Lg, B = %Lg\n", A, B);
-                //printf("\t mean = %Lg, variance = %Lg\n", mean, variance);
-                //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
-                numeric_ok = false;
+            else
+            {                
+                bnb_mean = r * beta / (alpha - 1.0);
+                variance = r * (alpha + r - 1.0) * beta * (alpha + beta - 1);
+                variance /= (alpha - 2.0) * (alpha - 1.0) * (alpha - 1.0);
             }
-            
-            
             if (variance < 0)
             {
                 numeric_ok = false;
+                variance = V_X_g_t;
             }
             
             if (variance == 0 && A != 0)
@@ -1078,13 +1073,16 @@ bool compute_fpkm_variance(long double& variance,
 //                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
 //            }
             
+            if (isnan(bnb_mean) || isnan(variance))
+            {
+                int  a = 4;
+            }
             assert (!numeric_ok || variance >= poisson_variance);
             
             //assert (abs(FPKM - mean) < 1e-3);
         }
     }
-    
-    
+        
 //    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
 //    fprintf (stderr, "psi_t = %lf\n", psi_t);
 //    fprintf (stderr, "beta = %Lf\n", beta);
@@ -1095,6 +1093,9 @@ bool compute_fpkm_variance(long double& variance,
 //    fprintf (stderr, "****************\n");
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
+    
+    variance = ceil(variance);
+    
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
     
     //printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
@@ -1186,7 +1187,8 @@ void AbundanceGroup::calculate_conf_intervals()
                 assert (!isnan(_gamma_covariance(j,j)));
                 
                 long double fpkm_var = 0.0;
-                
+                double FPKM_hi = 0.0;      
+                double FPKM_lo = 0.0;
                 bool numerics_ok = compute_fpkm_variance(fpkm_var,
                                                         _abundances[j]->gamma(),
                                                         _gamma_covariance(j,j),
@@ -1195,15 +1197,17 @@ void AbundanceGroup::calculate_conf_intervals()
                                                         _abundances[j]->effective_length(),
                                                         num_fragments()/mass_fraction());
                 if (numerics_ok == false)
-                    _abundances[j]->status(NUMERIC_LOW_DATA);
+                {
+                    _abundances[j]->status(NUMERIC_FAIL);
+                }
                 
                 if (fpkm_var < 0)
                 {
                     //fprintf(stderr, "Warning: FPKM variance < 0 (FPKM = %lf, FPKM variance = %Lf\n", _abundances[j]->FPKM(), fpkm_var);
                 }
                 
-				double FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
-				double FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
+				FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
+                FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
 				assert (!numerics_ok || FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
 				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
 				_abundances[j]->FPKM_conf(conf);
@@ -1509,13 +1513,13 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         }
         else if (bootstrap == true)
         {
-            map_success = bayesian_gammas(filtered_transcripts,
-                                          nr_alignments,
-                                          log_conv_factors,
-                                          gamma_mle,
-                                          gamma_map_estimate,
-                                          gamma_map_covariance);
-            bayes_gamma_var_trace(trace(gamma_map_covariance));
+//            map_success = bayesian_gammas(filtered_transcripts,
+//                                          nr_alignments,
+//                                          log_conv_factors,
+//                                          gamma_mle,
+//                                          gamma_map_estimate,
+//                                          gamma_map_covariance);
+//            bayes_gamma_var_trace(trace(gamma_map_covariance));
             
             map_success  = bootstrap_gammas(filtered_transcripts,
                                             nr_alignments,
@@ -2728,10 +2732,12 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     boost::mt19937 rng; 
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > uniform_gen(rng, uniform_dist); 
     
+    int num_sample_frags = floor(num_uncollapsed_frags * bootstrap_fraction);
+    
     for (size_t i = 0; i < num_bootstrap_samples; ++i)
     {
         vector<int> sample_idxs;
-        for (size_t j = 0; j < num_uncollapsed_frags; ++j)
+        for (size_t j = 0; j < num_sample_frags; ++j)
         {
             sample_idxs.push_back(uniform_gen());
         }
@@ -2850,6 +2856,11 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     gamma_estimate = empirical_gamma_mle;
     gamma_covariance = empirical_gamma_covariance;
     
+//    
+//    for (size_t i = 0; i < gamma_covariance.size1(); ++i)
+//    {
+//        gamma_covariance(i,i) = min(1.0, 15 * gamma_covariance(i,i));
+//    }
 
     return NUMERIC_OK;
 }

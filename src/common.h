@@ -95,6 +95,7 @@ extern bool use_fisher_covariance;
 extern bool split_variance;
 extern bool bootstrap;
 extern int num_bootstrap_samples;
+extern double bootstrap_fraction;
 
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
@@ -405,8 +406,9 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_USE_TOTAL_MASS          283
 #define OPT_USE_FISHER_COVARIANCE   284
 #define OPT_USE_EMPIRICAL_COVARIANCE   285
-#define OPT_SPLIT_MASS  286
-#define OPT_SPLIT_VARIANCE  287
+#define OPT_SPLIT_MASS              286
+#define OPT_SPLIT_VARIANCE          287
 #define OPT_BOOTSTRAP               288
 #define OPT_NUM_BOOTSTRAP_SAMPLES   289
+#define OPT_BOOTSTRAP_FRACTION      290
 #endif
