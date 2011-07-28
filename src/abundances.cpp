@@ -2734,6 +2734,11 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     
     int num_sample_frags = floor(num_uncollapsed_frags * bootstrap_fraction);
     
+    if (num_sample_frags <= 0)
+    {
+        return NUMERIC_FAIL;
+    }
+    
     for (size_t i = 0; i < num_bootstrap_samples; ++i)
     {
         vector<int> sample_idxs;
