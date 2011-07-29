@@ -1026,23 +1026,11 @@ bool compute_fpkm_variance(long double& variance,
                 numeric_ok = false;
             }
             
-            beta = solve_beta(A,B,C);
-//        
-//            long double test_beta = (C/B)*beta*beta*beta;
-//            test_beta += ((4.0*C/B) - (4*A*C/(B*B)))*beta*beta;
-//            test_beta += ((5*A*A*C/(B*B*B)) - (10*A*C/(B*B)) - (A/(A-B)) + (5*C/B))*beta;
-//            test_beta += (1 + (2*C/B) - (6*A*C/(B*B)) + (6*A*A*C/(B*B*B)) - (2*A*A*A*C/(B*B*B*B)));
+//            beta = solve_beta(A,B,C
+//            alpha = 1.0 - (A/(A-B)) * beta;
 
-//            long double test_beta = (C/B)*beta*beta*beta;
-//            test_beta += ((4.0*C/B) - (4*A*C/(B*B)))*beta*beta;
-//            test_beta += ((5*A*A*C/(B*B*B)) - (10*A*C/(B*B)) - (A/(A-B)) + (5*C/B))*beta;
-//            test_beta += (1 + (2*C/B) - (6*A*C/(B*B)) + (6*A*A*C/(B*B*B)) - (2*A*A*A*C/(B*B*B*B)));
-            
-            //long double test_beta = solve_beta(A,B,0.0);
-            //long double test_beta2 = solve_beta(A,B, X_g * X_g);
-            
-            alpha = 1.0 - (A/(A-B)) * beta;
-            
+            beta = (A*B)/C-(B-A)/B;
+            alpha = (A/(B-A))*beta;
 
             
             if (beta <= 2 || alpha <= 1)
@@ -1189,6 +1177,14 @@ void AbundanceGroup::calculate_conf_intervals()
                 long double fpkm_var = 0.0;
                 double FPKM_hi = 0.0;      
                 double FPKM_lo = 0.0;
+//                bool numerics_ok = compute_fpkm_variance(fpkm_var,
+//                                                        _abundances[j]->gamma(),
+//                                                        0,
+//                                                        num_fragments(),
+//                                                        _abundances[j]->mass_variance(),
+//                                                        _abundances[j]->effective_length(),
+//                                                        num_fragments()/mass_fraction());
+
                 bool numerics_ok = compute_fpkm_variance(fpkm_var,
                                                         _abundances[j]->gamma(),
                                                         _gamma_covariance(j,j),
