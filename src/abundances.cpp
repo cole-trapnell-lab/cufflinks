@@ -1019,7 +1019,7 @@ bool compute_fpkm_variance(long double& variance,
             //assert (psi_t < gamma_t * gamma_t);
             C*= psi_t;
             
-            r = (A * A) / (B - A);
+            r = ceil((A * A) / (B - A));
             
             if (r < 0)
             {
@@ -1066,6 +1066,7 @@ bool compute_fpkm_variance(long double& variance,
                 int  a = 4;
             }
             assert (!numeric_ok || variance >= poisson_variance);
+            assert (!numeric_ok || variance >= V_X_g_t);
             
             //assert (abs(FPKM - mean) < 1e-3);
         }
