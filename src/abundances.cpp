@@ -1072,14 +1072,14 @@ bool compute_fpkm_variance(long double& variance,
         }
     }
         
-    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
-    fprintf (stderr, "psi_t = %lf\n", psi_t);
-    fprintf (stderr, "beta = %Lf\n", beta);
-    fprintf (stderr, "alpha = %Lf\n", alpha);
-    fprintf (stderr, "r = %Ld\n", r);
-    fprintf (stderr, "mean = %Lf\n", bnb_mean);
-    fprintf (stderr, "variance = %Lf\n", variance);
-    fprintf (stderr, "****************\n");
+//    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
+//    fprintf (stderr, "psi_t = %lf\n", psi_t);
+//    fprintf (stderr, "beta = %Lf\n", beta);
+//    fprintf (stderr, "alpha = %Lf\n", alpha);
+//    fprintf (stderr, "r = %Ld\n", r);
+//    fprintf (stderr, "mean = %Lf\n", bnb_mean);
+//    fprintf (stderr, "variance = %Lf\n", variance);
+//    fprintf (stderr, "****************\n");
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
     
