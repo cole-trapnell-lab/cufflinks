@@ -983,7 +983,7 @@ bool compute_fpkm_variance(long double& variance,
     long double alpha = 0.0;
     long double beta = 0.0;
     long double bnb_mean = 0.0;
-    long long r = 0.0;
+    long double r = 0.0;
     
     if (dispersion < -1 || abs(dispersion) < 1)
     {
@@ -1076,7 +1076,7 @@ bool compute_fpkm_variance(long double& variance,
 //    fprintf (stderr, "psi_t = %lf\n", psi_t);
 //    fprintf (stderr, "beta = %Lf\n", beta);
 //    fprintf (stderr, "alpha = %Lf\n", alpha);
-//    fprintf (stderr, "r = %Ld\n", r);
+//    fprintf (stderr, "r = %Lf\n", r);
 //    fprintf (stderr, "mean = %Lf\n", bnb_mean);
 //    fprintf (stderr, "variance = %Lf\n", variance);
 //    fprintf (stderr, "****************\n");
