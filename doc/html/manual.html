@@ -347,8 +347,20 @@
   	  <tr><td VALIGN=top nowrap>
 	  <tt>--num-importance-samples &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
+	  This parameter is now deprecated, since the importance sampling procedure has been replaced with a Monte Carlo sampling (bootstrap) procedure.
 	  </td></tr> 
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--bootstrap-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  The size of each Monte Carlo sample as a fraction of the total number fragments in a locus. Default is 1.0
+	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--num-bootstrap-samples &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  The number of bootstrap replicates performed during isoform expression level variance estimation.  The default is 20.
+	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>--max-mle-iterations &lt;int&gt;</tt>

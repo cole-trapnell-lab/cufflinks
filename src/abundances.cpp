@@ -1026,11 +1026,12 @@ bool compute_fpkm_variance(long double& variance,
                 numeric_ok = false;
             }
             
-//            beta = solve_beta(A,B,C
-//            alpha = 1.0 - (A/(A-B)) * beta;
+            beta = solve_beta(A,B,C);
+            alpha = 1.0 - (A/(A-B)) * beta;
 
-            beta = (A*B)/C-(B-A)/B;
-            alpha = (A/(B-A))*beta;
+            // Working approximation:
+//            beta = (A*B)/C-(B-A)/B;
+//            alpha = (A/(B-A))*beta;
 
             
             if (beta <= 2 || alpha <= 1)
@@ -1061,10 +1062,6 @@ bool compute_fpkm_variance(long double& variance,
 //                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
 //            }
             
-            if (isnan(bnb_mean) || isnan(variance))
-            {
-                int  a = 4;
-            }
             assert (!numeric_ok || variance >= poisson_variance);
             assert (!numeric_ok || variance >= V_X_g_t);
             
@@ -2692,7 +2689,6 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     size_t N = transcripts.size();	
 	size_t M = nr_alignments.size();
     
-    // FIXME:
     if (N == 1)
     {
         gamma_map_estimate = ublas::vector<double>(1);
