@@ -114,6 +114,7 @@ void print_usage()
 	fprintf(stderr, "   Supply replicate SAMs as comma separated lists for each condition: sample1_rep1.sam,sample1_rep2.sam,...sample1_repM.sam\n");
     fprintf(stderr, "General Options:\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
+    fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
     fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
 	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
@@ -129,8 +130,10 @@ void print_usage()
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
-	fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
+    fprintf(stderr, "  --num-importance-samples     deprecated (no effect)\n");
+	fprintf(stderr, "  --num-bootstrap-samples      Number of bootstrap replications                      [ default:   20   ]\n");
+    fprintf(stderr, "  --bootstrap-fraction         Fraction of fragments in each bootstrap sample        [ default:   1.0   ]\n");
+    fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  TRUE  ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion          [ default:  FALSE ]\n");

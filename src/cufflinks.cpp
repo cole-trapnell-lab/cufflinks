@@ -107,6 +107,7 @@ void print_usage()
 #if ENABLE_THREADS
     fprintf(stderr, "  -p/--num-threads             number of threads used during analysis                [ default:      1 ]\n");
 #endif    
+    fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
     fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotation to guide assembly                   \n");
     fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");

@@ -1026,12 +1026,12 @@ bool compute_fpkm_variance(long double& variance,
                 numeric_ok = false;
             }
             
-            beta = solve_beta(A,B,C);
-            alpha = 1.0 - (A/(A-B)) * beta;
+//            beta = solve_beta(A,B,C);
+//            alpha = 1.0 - (A/(A-B)) * beta;
 
             // Working approximation:
-//            beta = (A*B)/C-(B-A)/B;
-//            alpha = (A/(B-A))*beta;
+            beta = (A*B)/C-(B-A)/B;
+            alpha = (A/(B-A))*beta;
 
             
             if (beta <= 2 || alpha <= 1)
