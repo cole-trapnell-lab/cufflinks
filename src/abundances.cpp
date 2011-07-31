@@ -1025,13 +1025,14 @@ bool compute_fpkm_variance(long double& variance,
             {
                 numeric_ok = false;
             }
-            
-//            beta = solve_beta(A,B,C);
-//            alpha = 1.0 - (A/(A-B)) * beta;
+
+            // exact cubic
+            beta = solve_beta(A,B,C);
+            alpha = 1.0 - (A/(A-B)) * beta;
 
             // Working approximation:
-            beta = (A*B)/C-(B-A)/B;
-            alpha = (A/(B-A))*beta;
+//            beta = (A*B)/C-(B-A)/B;
+//            alpha = (A/(B-A))*beta;
 
             
             if (beta <= 2 || alpha <= 1)
@@ -1192,7 +1193,7 @@ void AbundanceGroup::calculate_conf_intervals()
                                                         num_fragments()/mass_fraction());
                 if (numerics_ok == false)
                 {
-                    _abundances[j]->status(NUMERIC_FAIL);
+                    _abundances[j]->status(NUMERIC_LOW_DATA);
                 }
                 
                 if (fpkm_var < 0)
