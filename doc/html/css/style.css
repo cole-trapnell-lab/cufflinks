@@ -1,3 +1,8 @@
+/* 
+Stylesheet for the free sNews15_1 template
+from http://www.free-css-templates.com
+*/
+
 /* Reset all margins and paddings for browsers */
 * { 
 	padding: 0;
@@ -57,8 +62,8 @@ body {
  }
 
 #subheader { 
-	clear: both;
-	border-top: 1px dotted #888;
+	clear: both; 
+	border-top: 1px dotted #888;	
 	border-bottom: 1px dotted #888;
 	background: #eaeaea;
 	color: #505050;
@@ -196,18 +201,77 @@ tt { font-family: "Courier New", Courier, monospace; }
 #leftside #txt {width: 100%; height: 10em; padding: 3px 3px 3px 6px; margin-left:0em;}
 #leftside textarea { border: 1px solid #bbb; width: 100%;  }
 
+
 /* SNEWS */
 #main #leftside fieldset { float: left; width: 100%; border: 1px solid #ccc; padding: 10px 8px; margin: 0 10px 8px 0; background: #FFF; color: #000; }
 #main #leftside fieldset p { width: 100%; }
 #main input { padding: 3px; margin: 0; border: 1px solid #bbb }
 p { margin-top: 5px; }
-
-.tcode {
-  overflow: auto;
-  white-space: nowrap;
-  font-family: "Courier New", Courier, monospace;
-}
-
 /*input.search { border: 1px solid #ccc; padding: 4px; width: 160px; }*/
 .comment { background: #FFF; color: #808080; padding: 10px; margin: 0 0 10px 0; border-top: 1px solid #ccc; }
 .commentsbox { background: #FFF; color: #808080; padding: 10px; margin: 0 0 10px 0; border-top: 1px solid #ccc; }
+
+
+#box-table-a
+{
+	font-family: .8em Verdana, Arial, Sans-Serif; 
+	/*font-size: 12px;*/
+	margin: 45px;
+	width: 600px;
+	text-align: left;
+	border-collapse: collapse;
+}
+#box-table-a th
+{
+	font-size: 13px;
+	font-weight: normal;
+	padding: 8px;
+	background: #b9c9fe;
+	border-top: 4px solid #aabcfe;
+	border-bottom: 1px solid #fff;
+	color: #039;
+}
+#box-table-a td
+{
+	padding: 8px;
+	background: #e8edff; 
+	border-bottom: 2px solid #fff;
+	color: #669;
+	border-top: 2px solid transparent;
+}
+#box-table-a tr:hover td
+{
+	background: #d0dafd;
+	color: #339;
+}
+
+
+#box-table-b
+{
+	font-family: .8em Verdana, Arial, Sans-Serif; 
+	/*font-size: 12px;*/
+	margin: 45px;
+	width: 480px;
+	text-align: center;
+	border-collapse: collapse;
+	border-top: 7px solid #9baff1;
+	border-bottom: 7px solid #9baff1;
+}
+#box-table-b th
+{
+	font-size: 13px;
+	font-weight: normal;
+	padding: 8px;
+	background: #e8edff;
+	border-right: 1px solid #9baff1;
+	border-left: 1px solid #9baff1;
+	color: #039;
+}
+#box-table-b td
+{
+	padding: 8px;
+	background: #e8edff; 
+	border-right: 1px solid #aabcfe;
+	border-left: 1px solid #aabcfe;
+	color: #669;
+}
