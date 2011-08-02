@@ -437,7 +437,7 @@ void print_FPKM_tracking(FILE* fout,
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
-			fprintf(fout, "\t%s_FPKM\t%s_conf_lo\t%s_conf_hi", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+			fprintf(fout, "\t%s_FPKM\t%s_conf_lo\t%s_conf_hi\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
 		}
 	}
 	fprintf(fout, "\n");
@@ -470,6 +470,24 @@ void print_FPKM_tracking(FILE* fout,
         if (track.length)
             sprintf(length_buff, "%d", track.length);
         
+        const char* status_str = "OK";
+        if (status == NUMERIC_OK)
+        {
+            status_str = "OK";
+        }
+        else if (status == NUMERIC_FAIL)
+        {
+            status_str = "FAIL";
+        }
+        else if (status == NUMERIC_LOW_DATA)
+        {
+            status_str = "LOWDATA";
+        }
+        else
+        {
+            assert(false);
+        }
+        
         fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
                 description.c_str(),
                 track.classcode ? track.classcode : '-',
@@ -480,7 +498,7 @@ void print_FPKM_tracking(FILE* fout,
                 track.locus_tag.c_str(),
                 length_buff,
                 "-",
-                status == NUMERIC_FAIL ? "FAIL" : "OK");
+                status_str);
        		
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
@@ -488,7 +506,26 @@ void print_FPKM_tracking(FILE* fout,
 			double std_dev = sqrt(fpkms[i].FPKM_variance);
 			double fpkm_conf_hi = fpkm + 2.0 * std_dev;
 			double fpkm_conf_lo = max(0.0, fpkm - 2.0 * std_dev);
-			fprintf(fout, "\t%lg\t%lg\t%lg", fpkm, fpkm_conf_lo, fpkm_conf_hi);
+            const char* status_str = "OK";
+            
+            if (fpkms[i].status == NUMERIC_OK)
+            {
+                status_str = "OK";
+            }
+            else if (fpkms[i].status == NUMERIC_FAIL)
+            {
+                status_str = "FAIL";
+            }
+            else if (fpkms[i].status == NUMERIC_LOW_DATA)
+            {
+                status_str = "LOWDATA";
+            }
+            else
+            {
+                assert(false);
+            }
+            
+			fprintf(fout, "\t%lg\t%lg\t%lg\t%s", fpkm, fpkm_conf_lo, fpkm_conf_hi, status_str);
 		}
 		
 		fprintf(fout, "\n");
