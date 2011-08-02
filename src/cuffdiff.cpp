@@ -1143,7 +1143,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
 	fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
-    fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+    fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
 	for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
@@ -1165,7 +1165,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
 	fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
-    fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+    fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
 	for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)
@@ -1189,7 +1189,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
 	int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
 	fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
-	fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+	fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
 	{        
         for (size_t j = 0; j < i; ++j)
@@ -1210,7 +1210,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
 	int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
 	fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
-	fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tln(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+	fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
 	{
         for (size_t j = 0; j < i; ++j)

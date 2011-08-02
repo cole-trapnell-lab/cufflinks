@@ -216,7 +216,7 @@ bool test_diffexp(const FPKMContext& curr,
             }
         }
 		
-		double differential = log(curr.FPKM) - log(prev.FPKM);
+		double differential = log2(curr.FPKM) - log2(prev.FPKM);
 		
 		//test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
 		test.p_value = p_value;
