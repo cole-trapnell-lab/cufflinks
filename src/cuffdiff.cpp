@@ -429,7 +429,7 @@ void print_tests(FILE* fout,
 void print_FPKM_tracking(FILE* fout, 
 						 const FPKMTrackingTable& tracking)
 {
-	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tstatus");
+	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
 	if (first_itr != tracking.end())
 	{
@@ -470,25 +470,7 @@ void print_FPKM_tracking(FILE* fout,
         if (track.length)
             sprintf(length_buff, "%d", track.length);
         
-        const char* status_str = "OK";
-        if (status == NUMERIC_OK)
-        {
-            status_str = "OK";
-        }
-        else if (status == NUMERIC_FAIL)
-        {
-            status_str = "FAIL";
-        }
-        else if (status == NUMERIC_LOW_DATA)
-        {
-            status_str = "LOWDATA";
-        }
-        else
-        {
-            assert(false);
-        }
-        
-        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
+        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
                 description.c_str(),
                 track.classcode ? track.classcode : '-',
                 track.ref_match.c_str(),
@@ -497,8 +479,7 @@ void print_FPKM_tracking(FILE* fout,
                 all_tss_ids.c_str(),
                 track.locus_tag.c_str(),
                 length_buff,
-                "-",
-                status_str);
+                "-");
        		
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
