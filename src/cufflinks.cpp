@@ -1203,7 +1203,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 			num_scaffs_reported++;
 		}
 		
-		const char* status;
+		const char* status = "OK";
         if (gene.status()==NUMERIC_OK) 
             status = "OK";
         else if (gene.status() == NUMERIC_LOW_DATA)
