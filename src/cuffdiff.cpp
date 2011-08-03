@@ -1394,9 +1394,11 @@ int main(int argc, char** argv)
         }
     }
     
-    char out_file_prefix[64];
+    static const int filename_buf_size = 2048;
+    
+    char out_file_prefix[filename_buf_size];
     sprintf(out_file_prefix, "%s/", output_dir.c_str());
-    char iso_out_file_name[256];
+    char iso_out_file_name[filename_buf_size];
     sprintf(iso_out_file_name, "%sisoform_exp.diff", out_file_prefix);
     FILE* iso_out = fopen(iso_out_file_name, "w");
     if (!iso_out)
@@ -1406,7 +1408,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    char group_out_file_name[256];
+    char group_out_file_name[filename_buf_size];
     sprintf(group_out_file_name, "%stss_group_exp.diff", out_file_prefix);
     FILE* group_out = fopen(group_out_file_name, "w");
     if (!group_out)
@@ -1416,7 +1418,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    char gene_out_file_name[256];
+    char gene_out_file_name[filename_buf_size];
     sprintf(gene_out_file_name, "%sgene_exp.diff", out_file_prefix);
     FILE* gene_out = fopen(gene_out_file_name, "w");
     if (!group_out)
@@ -1426,7 +1428,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    char cds_out_file_name[256];
+    char cds_out_file_name[filename_buf_size];
     sprintf(cds_out_file_name, "%scds_exp.diff", out_file_prefix);
     FILE* cds_out = fopen(cds_out_file_name, "w");
     if (!cds_out)
@@ -1436,7 +1438,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    char diff_splicing_out_file_name[256];
+    char diff_splicing_out_file_name[filename_buf_size];
     sprintf(diff_splicing_out_file_name, "%ssplicing.diff", out_file_prefix);
     FILE* diff_splicing_out = fopen(diff_splicing_out_file_name, "w");
     if (!diff_splicing_out)
@@ -1446,7 +1448,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    char diff_promoter_out_file_name[256];
+    char diff_promoter_out_file_name[filename_buf_size];
     sprintf(diff_promoter_out_file_name, "%spromoters.diff", out_file_prefix);
     FILE* diff_promoter_out = fopen(diff_promoter_out_file_name, "w");
     if (!diff_promoter_out)
@@ -1456,7 +1458,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     
-    char diff_cds_out_file_name[256];
+    char diff_cds_out_file_name[filename_buf_size];
     sprintf(diff_cds_out_file_name, "%scds.diff", out_file_prefix);
     FILE* diff_cds_out = fopen(diff_cds_out_file_name, "w");
     if (!diff_cds_out)
@@ -1474,7 +1476,7 @@ int main(int argc, char** argv)
     outfiles.diff_promoter_outfile = diff_promoter_out;
     outfiles.diff_cds_outfile = diff_cds_out;
 	
-	char isoform_fpkm_tracking_name[256];
+	char isoform_fpkm_tracking_name[filename_buf_size];
 	sprintf(isoform_fpkm_tracking_name, "%s/isoforms.fpkm_tracking", output_dir.c_str());
 	FILE* isoform_fpkm_out = fopen(isoform_fpkm_tracking_name, "w");
 	if (!isoform_fpkm_out)
@@ -1485,7 +1487,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.isoform_fpkm_tracking_out = isoform_fpkm_out;
 
-	char tss_group_fpkm_tracking_name[256];
+	char tss_group_fpkm_tracking_name[filename_buf_size];
 	sprintf(tss_group_fpkm_tracking_name, "%s/tss_groups.fpkm_tracking", output_dir.c_str());
 	FILE* tss_group_fpkm_out = fopen(tss_group_fpkm_tracking_name, "w");
 	if (!tss_group_fpkm_out)
@@ -1496,7 +1498,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.tss_group_fpkm_tracking_out = tss_group_fpkm_out;
 
-	char cds_fpkm_tracking_name[256];
+	char cds_fpkm_tracking_name[filename_buf_size];
 	sprintf(cds_fpkm_tracking_name, "%s/cds.fpkm_tracking", output_dir.c_str());
 	FILE* cds_fpkm_out = fopen(cds_fpkm_tracking_name, "w");
 	if (!cds_fpkm_out)
@@ -1507,7 +1509,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.cds_fpkm_tracking_out = cds_fpkm_out;
 	
-	char gene_fpkm_tracking_name[256];
+	char gene_fpkm_tracking_name[filename_buf_size];
 	sprintf(gene_fpkm_tracking_name, "%s/genes.fpkm_tracking", output_dir.c_str());
 	FILE* gene_fpkm_out = fopen(gene_fpkm_tracking_name, "w");
 	if (!gene_fpkm_out)
