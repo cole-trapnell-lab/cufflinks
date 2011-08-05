@@ -225,6 +225,22 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+	
+			<h2>1.1 release - 8/XX/2011</h2>
+			  <p>This is a fix release to address several issues reported by our users:
+				  <ul>
+				<li>Variance on isoform abundances is now estimated by bootstrapping rather than importance sampling, which substantially improves the accuracy of differential expression analysis in loci with low to medium sequencing depth
+				<li>A bug in the calculation of the parameters for the beta negative binomial distribution used during variance estimation has been fixed.
+				</ul>
+				<p><b>FILE FORMAT CHANGES</b>
+				<ul>
+				<li>By popular request, fold changes are now reported log2, rather than ln
+				<li>The status column in fpkm tracking files has been replaced by a per-condition quantification status column
+				<li>The header size limit in Cufflinks' BAM parser used to have a 4 megabyte limit.  This has been removed to allow Cufflinks to be used on assemblies with many contigs.
+			  </ul>
+			  </p>
+			  <br/>
+			
 			<h2>iGenomes index and annotation packages available for download - 7/31/2011</h2>
 			  <p> Illumina has generously provided a set of freely downloadable packages that contain everything you need to get started working with TopHat and Cufflinks.  These packages contain Bowtie indexes for the human, mouse, and fly genomes as well as many others.  The packages also contain annotation files (in GTF format) from UCSC, Ensembl, NCBI, and other sources.  These files are augmented with the special attributes Cufflinks needs to perform differential splicing and promoter analysis.  We strongly encourage users to download and try these packages!
 			  <p></p>
