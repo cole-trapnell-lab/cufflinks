@@ -1622,13 +1622,13 @@ char getOvlCode(GffObj& m, GffObj& r, int& ovlen) {
   if (icmatch && imend==imax) { // qry intron chain match
      if (jmstart==1 && jmend==jmax) return '='; //identical intron chains
      // -- qry intron chain is shorter than ref intron chain --
-     int l_iovl=0;   // overlap the ref intron to the left of ichain alignment
-     int r_iovl=0;   // overlap the ref intron to the right of ichain alignment
-     if (jmstart>1) 
-        l_iovl=m.exons[0]->overlapLen(r.exons[jmstart-1]->end+1,r.exons[jmstart]->start-1);
-     if (jmend<jmax)
-        r_iovl=m.exons[imax]->overlapLen(r.exons[jmend]->end+1,r.exons[jmend+1]->start-1);
-     if (l_iovl<4 && r_iovl<4) return 'c';
+     int l_iovh=0;   // overhang of leftmost q exon left boundary beyond the end of ref intron to the left
+     int r_iovh=0;   // same type of overhang through the ref intron on the right
+     if (jmstart>1 && r.exons[jmstart-1]->start>m.start) 
+        l_iovh = r.exons[jmstart-1]->start - m.start;
+     if (jmend<jmax && m.end > r.exons[jmend]->end)
+        r_iovh = m.end - r.exons[jmend]->end;
+     if (l_iovh<4 && r_iovh<4) return 'c';
      //TODO? check if any x_iovl>10 and return 'e' to signal an "unspliced intron" ?
      // or we can check if any of them are >= the length of the corresponding ref intron on that side
      return 'j';
