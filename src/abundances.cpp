@@ -663,24 +663,6 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         
 	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);
     
-
-//    // FIXME: THIS IS A HACK, for testing only.  take it out before release!!!
-//    if (num_fragments() < 1000 && transcripts.size() > 1)
-//    {
-//        ublas::matrix<double> H = ublas::identity_matrix<double>(transcripts.size());
-//        //H = 0.01L * H;
-//        //cerr << H << endl;
-//        cerr << endl << _gamma_covariance << endl;
-//        
-//        for (size_t i = 0; i < transcripts.size(); ++i)
-//        {
-//            _gamma_covariance(i,i) = min(1.0, _gamma_covariance(i,i) * 1.50);
-//        }
-//        
-//        //_gamma_covariance += H;
-//        cerr << _gamma_covariance << endl;
-//    }
-    
     //non_equiv_alignments.clear();
 	//collapse_hits(alignments, nr_alignments);
     // This will also compute the transcript level FPKMs
@@ -932,7 +914,7 @@ long double solve_beta(long double A, long double B, long double C)
 
 bool compute_fpkm_variance(long double& variance,
                              double gamma_t, 
-                             double psi_t, 
+                             double psi_t_count_var, 
                              double X_g, 
                              double V_X_g_t,
                              double l_t,
@@ -940,46 +922,31 @@ bool compute_fpkm_variance(long double& variance,
 {
     if (l_t == 0)
     {
-        //assert(X_g * gamma_t == 0);
         return 0;
     }
-//    if (V_X_g_t < X_g)
-//        V_X_g_t = X_g;
-//    long double A = 1000000000.0 * X_g * gamma_t;
-//    A /= (l_t * M);
-//    
-//    long double B = 1000000000.0 / (l_t * M);
-//    B *= B;
-//    B *= V_X_g_t;
-//    
-//    long double C = 1000000000.0 * X_g / (l_t * M);
-//    C *= C;
 
     long double A = X_g * gamma_t;
     
     long double B = V_X_g_t;
     
-    long double C = X_g * X_g;
+    long double C = psi_t_count_var;
     
     variance = 0.0;
     bool numeric_ok = true;
     
     long double dispersion = V_X_g_t - (X_g * gamma_t);
     
-    if (psi_t < 0)
+    if (psi_t_count_var < 0)
     {
         //fprintf (stderr, "Warning: psi_t is negative! (psi_t = %lf)\n", psi_t);
-        psi_t = 0;
+        psi_t_count_var = 0;
     }
-    assert (psi_t >= 0);
+    assert (psi_t_count_var >= 0);
     
-    long double psi_var = X_g;
-    psi_var *= psi_var;
-    psi_var *= psi_t;
     // we multiply A with the constants here to make things work out 
     // at the end of the routine when we multiply by the square of those
     // constants
-    long double poisson_variance = A + psi_var;
+    long double poisson_variance = A + psi_t_count_var;
     long double alpha = 0.0;
     long double beta = 0.0;
     long double bnb_mean = 0.0;
@@ -999,7 +966,7 @@ bool compute_fpkm_variance(long double& variance,
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
-        if (psi_t < 1e-5) 
+        if (psi_t_count_var < 1) 
         {
             //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
@@ -1014,11 +981,6 @@ bool compute_fpkm_variance(long double& variance,
         }
         else
         {
-            //printf("Warning: Counts are overdispersed, using multi-isoform NB distribution\n");
-            //long double max_doub = numeric_limits<long double>::max();
-            //assert (psi_t < gamma_t * gamma_t);
-            C*= psi_t;
-            
             r = ceil((A * A) / (B - A));
             
             if (r < 0)
@@ -1058,11 +1020,6 @@ bool compute_fpkm_variance(long double& variance,
                 variance = poisson_variance;
             }
             
-//            if (variance <= 0)
-//            {
-//                fprintf(stderr, "Warning: negative variance in case 3: (r = %Lf, alpha = %Lf, beta = %Lf)\n", r, alpha, beta);
-//            }
-            
             assert (!numeric_ok || variance >= poisson_variance);
             assert (!numeric_ok || variance >= V_X_g_t);
             
@@ -1070,14 +1027,14 @@ bool compute_fpkm_variance(long double& variance,
         }
     }
         
-//    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
-//    fprintf (stderr, "psi_t = %lf\n", psi_t);
-//    fprintf (stderr, "beta = %Lf\n", beta);
-//    fprintf (stderr, "alpha = %Lf\n", alpha);
-//    fprintf (stderr, "r = %Lf\n", r);
-//    fprintf (stderr, "mean = %Lf\n", bnb_mean);
-//    fprintf (stderr, "variance = %Lf\n", variance);
-//    fprintf (stderr, "****************\n");
+    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
+    fprintf (stderr, "psi_t = %lf\n", psi_t_count_var);
+    fprintf (stderr, "beta = %Lf\n", beta);
+    fprintf (stderr, "alpha = %Lf\n", alpha);
+    fprintf (stderr, "r = %Lf\n", r);
+    fprintf (stderr, "mean = %Lf\n", bnb_mean);
+    fprintf (stderr, "variance = %Lf\n", variance);
+    fprintf (stderr, "****************\n");
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
     
@@ -1140,7 +1097,7 @@ bool compute_fpkm_group_variance(long double& variance,
         }    
     }
     
-    double C = (1000000000.0 * X_g / M);
+    double C = (1000000000.0 / M);
     C *= C;
     cov *= C;
     
@@ -1506,7 +1463,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             
             cross_rep_js(cross_replicate_js);
         }
-        else if (bootstrap == true)
+        else if (bootstrap == true && !use_fisher_covariance)
         {
 //            map_success = bayesian_gammas(filtered_transcripts,
 //                                          nr_alignments,
@@ -1696,7 +1653,7 @@ void AbundanceGroup::calculate_kappas()
             }
             else
             {
-                double kappa_covar = X_S * X_S * _gamma_covariance(k, m) / (L * Z_kappa * Z_kappa);
+                double kappa_covar = _gamma_covariance(k, m) / (L * Z_kappa * Z_kappa);
                 _kappa_covariance(k,m) = kappa_covar;
             }
             
@@ -2635,7 +2592,7 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
 }
 
 AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& nr_alignments,
+                                 const vector<MateHit>& alignments,
                                  const vector<double>& log_conv_factors,
                                  const ublas::vector<double>& gamma_mle,
                                  ublas::vector<double>& gamma_map_estimate,
@@ -2649,7 +2606,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
     // make the Bayesian prior more conservative than using the inverse of the 
     // Fisher Information matrix on the mixed likelihood function.
     AbundanceStatus fisher_status = calculate_inverse_fisher(transcripts,
-                                                             nr_alignments,
+                                                             alignments,
                                                              gamma_mle,
                                                              inverse_fisher);
     
@@ -2671,6 +2628,122 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
         return fisher_status;
     
     AbundanceStatus map_status = map_estimation(transcripts,
+                                                alignments,
+                                                log_conv_factors,
+                                                gamma_mle,
+                                                proposal,
+                                                gamma_map_estimate,
+                                                gamma_map_covariance);
+    
+    
+    
+    vector<vector<double> > cond_probs(transcripts.size(), vector<double>());
+	for(size_t j = 0; j < transcripts.size(); ++j)
+	{
+		cond_probs[j]= *(transcripts[j]->cond_probs());
+	}
+    
+    vector<double> u(alignments.size());
+	for (size_t i = 0; i < alignments.size(); ++i)
+	{
+		u[i] = alignments[i].collapse_mass();
+	}
+    
+    gamma_map_covariance = ublas::zero_matrix<double>(gamma_map_covariance.size1(), gamma_map_covariance.size2());
+    
+    ublas::vector<double> total_cond_prob = ublas::zero_vector<double>(alignments.size());
+    
+    for (size_t i = 0; i < alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            total_cond_prob(i) += cond_probs[j][i];
+        }
+    }
+    
+    // Compute the marginal conditional probability for each fragment against each isoform
+    ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcripts.size(), alignments.size());
+    
+    for (size_t i = 0; i < alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            if (total_cond_prob(i))
+            {
+                marg_cond_prob(j,i) = cond_probs[j][i] / total_cond_prob(i);
+            }
+        }
+    }
+    
+    double total_var = 0.0;
+    
+    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
+    {
+        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+        {
+            for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
+            {
+                if (j == k)
+                {
+                    double var = u[i] * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
+                    gamma_map_covariance(k,k) += var;
+                    total_var += var;
+                }
+                else
+                {
+                    double covar = -u[i] * marg_cond_prob(k,i) * marg_cond_prob(j,i);
+                    gamma_map_covariance(k,j) += covar;
+                }
+            }
+        }
+    }
+    
+    //cerr << gamma_map_covariance << endl;
+    
+    //gamma_map_covariance /= total_var;
+    
+    //cerr << gamma_map_covariance << endl;
+    
+    return map_status;
+}
+
+AbundanceStatus bayesian_gammas_exact(const vector<shared_ptr<Abundance> >& transcripts,
+                                      const vector<MateHit>& nr_alignments,
+                                      const vector<double>& log_conv_factors,
+                                      const ublas::vector<double>& gamma_mle,
+                                      ublas::vector<double>& gamma_map_estimate,
+                                      ublas::matrix<double>& gamma_map_covariance)
+{
+    
+    ublas::matrix<double> inverse_fisher;
+    
+    // Calculate the mean gamma MLE and covariance matrix across replicates, so
+    // we can use it as the proposal distribution for importance sampling.  This will
+    // make the Bayesian prior more conservative than using the inverse of the 
+    // Fisher Information matrix on the mixed likelihood function.
+    AbundanceStatus fisher_status = calculate_inverse_fisher(transcripts,
+                                                             nr_alignments,
+                                                             gamma_mle,
+                                                             inverse_fisher);
+    
+    
+    double trace = 0.0;
+    for (size_t i = 0; i < gamma_mle.size(); ++i)
+    {
+        trace += inverse_fisher(i,i);
+    }
+    
+    ublas::matrix<double> proposal = inverse_fisher;
+    
+#if 1
+    proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
+    proposal *= 4.0;
+#endif
+    
+    if (fisher_status != NUMERIC_OK)
+        return fisher_status;
+    
+    AbundanceStatus map_status = map_estimation(transcripts,
                                                 nr_alignments,
                                                 log_conv_factors,
                                                 gamma_mle,
@@ -2679,6 +2752,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
                                                 gamma_map_covariance);
     return map_status;
 }
+
 
 AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                                     const vector<MateHit>& nr_alignments,
