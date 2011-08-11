@@ -104,7 +104,7 @@ bool use_em = true;
 bool cond_prob_collapse = true;
 
 bool emit_count_tables = false;
-bool use_fisher_covariance = true;
+bool use_fisher_covariance = false;
 bool split_variance = false;
 bool bootstrap = true;
 int num_bootstrap_samples = 20;
