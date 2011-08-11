@@ -2625,7 +2625,8 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
     {
         for (size_t j = 0; j < cond_probs.size(); ++j)
         {
-            total_cond_prob(i) += gamma_map_estimate(j);
+            if (cond_probs[j][i] > 0)
+                total_cond_prob(i) += gamma_map_estimate(j);
         }
     }
     
@@ -2917,7 +2918,8 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     {
         for (size_t j = 0; j < cond_probs.size(); ++j)
         {
-            total_cond_prob(i) += gamma_estimate(j);
+            if (cond_probs[j][i] > 0)
+                total_cond_prob(i) += gamma_estimate(j);
         }
     }
     
