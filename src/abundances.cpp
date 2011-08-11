@@ -1027,14 +1027,14 @@ bool compute_fpkm_variance(long double& variance,
         }
     }
         
-    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
-    fprintf (stderr, "psi_t = %lf\n", psi_t_count_var);
-    fprintf (stderr, "beta = %Lf\n", beta);
-    fprintf (stderr, "alpha = %Lf\n", alpha);
-    fprintf (stderr, "r = %Lf\n", r);
-    fprintf (stderr, "mean = %Lf\n", bnb_mean);
-    fprintf (stderr, "variance = %Lf\n", variance);
-    fprintf (stderr, "****************\n");
+//    fprintf (stderr, "gamma_t = %lf\n", gamma_t);
+//    fprintf (stderr, "psi_t = %lf\n", psi_t_count_var);
+//    fprintf (stderr, "beta = %Lf\n", beta);
+//    fprintf (stderr, "alpha = %Lf\n", alpha);
+//    fprintf (stderr, "r = %Lf\n", r);
+//    fprintf (stderr, "mean = %Lf\n", bnb_mean);
+//    fprintf (stderr, "variance = %Lf\n", variance);
+//    fprintf (stderr, "****************\n");
     
     long double mean_frags = A * (1000000000.0 / (l_t *M));
     
@@ -2902,7 +2902,7 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
 }
 
 AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& nr_alignments,
+                                 const vector<MateHit>& alignments,
                                  const vector<double>& log_conv_factors,
                                  ublas::vector<double>& gamma_estimate,
                                  ublas::matrix<double>& gamma_covariance,
@@ -2916,18 +2916,80 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     // make the Bayesian prior more conservative than using the inverse of the 
     // Fisher Information matrix on the mixed likelihood function.
     AbundanceStatus empirical_mle_status = bootstrap_gamma_mle(transcripts,
-                                                               nr_alignments,
+                                                               alignments,
                                                                log_conv_factors,
                                                                empirical_gamma_mle,
                                                                empirical_gamma_covariance,
                                                                cross_replicate_js);
-    
     
     if (empirical_mle_status != NUMERIC_OK)
         return empirical_mle_status;
     
     gamma_estimate = empirical_gamma_mle;
     gamma_covariance = empirical_gamma_covariance;
+    
+    // Now calculate the exact variances
+    vector<vector<double> > cond_probs(transcripts.size(), vector<double>());
+	for(size_t j = 0; j < transcripts.size(); ++j)
+	{
+		cond_probs[j]= *(transcripts[j]->cond_probs());
+	}
+    
+    vector<double> u(alignments.size());
+	for (size_t i = 0; i < alignments.size(); ++i)
+	{
+		u[i] = alignments[i].collapse_mass();
+	}
+    
+    gamma_covariance = ublas::zero_matrix<double>(gamma_covariance.size1(), gamma_covariance.size2());
+    
+    ublas::vector<double> total_cond_prob = ublas::zero_vector<double>(alignments.size());
+    
+    for (size_t i = 0; i < alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            total_cond_prob(i) += cond_probs[j][i];
+        }
+    }
+    
+    // Compute the marginal conditional probability for each fragment against each isoform
+    ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcripts.size(), alignments.size());
+    
+    for (size_t i = 0; i < alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            if (total_cond_prob(i))
+            {
+                marg_cond_prob(j,i) = cond_probs[j][i] / total_cond_prob(i);
+            }
+        }
+    }
+    
+    double total_var = 0.0;
+    
+    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
+    {
+        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+        {
+            for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
+            {
+                if (j == k)
+                {
+                    double var = u[i] * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
+                    gamma_covariance(k,k) += var;
+                    total_var += var;
+                }
+                else
+                {
+                    double covar = -u[i] * marg_cond_prob(k,i) * marg_cond_prob(j,i);
+                    gamma_covariance(k,j) += covar;
+                }
+            }
+        }
+    }
+    
     
 //    
 //    for (size_t i = 0; i < gamma_covariance.size1(); ++i)
