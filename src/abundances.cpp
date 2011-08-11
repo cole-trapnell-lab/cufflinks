@@ -2625,7 +2625,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
     {
         for (size_t j = 0; j < cond_probs.size(); ++j)
         {
-            total_cond_prob(i) += cond_probs[j][i];
+            total_cond_prob(i) += cond_probs[j][i] * gamma_map_estimate(j);
         }
     }
     
@@ -2638,7 +2638,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
         {
             if (total_cond_prob(i))
             {
-                marg_cond_prob(j,i) = cond_probs[j][i] / total_cond_prob(i);
+                marg_cond_prob(j,i) = cond_probs[j][i] * gamma_map_estimate(j)/ total_cond_prob(i);
             }
         }
     }
@@ -2917,7 +2917,7 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     {
         for (size_t j = 0; j < cond_probs.size(); ++j)
         {
-            total_cond_prob(i) += cond_probs[j][i];
+            total_cond_prob(i) += cond_probs[j][i] * gamma_estimate(j);
         }
     }
     
@@ -2930,7 +2930,7 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
         {
             if (total_cond_prob(i))
             {
-                marg_cond_prob(j,i) = cond_probs[j][i] / total_cond_prob(i);
+                marg_cond_prob(j,i) = cond_probs[j][i] * gamma_estimate(j)/ total_cond_prob(i);
             }
         }
     }
