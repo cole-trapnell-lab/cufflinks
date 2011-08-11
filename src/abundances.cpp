@@ -2667,11 +2667,20 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
         }
     }
     
-    //cerr << gamma_map_covariance << endl;
+    ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
+    double total_counts = 0.0;
+    for (size_t i = 0; i < alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            double expected = u[i] * marg_cond_prob(j,i);
+            expected_counts(j) += expected;
+            total_counts += expected;
+        }
+    }
     
-    //gamma_map_covariance /= total_var;
-    
-    //cerr << gamma_map_covariance << endl;
+    expected_counts /= total_counts;
+    gamma_map_estimate = expected_counts;
     
     return map_status;
 }
@@ -2960,6 +2969,20 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
         }
     }
     
+    ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
+    double total_counts = 0.0;
+    for (size_t i = 0; i < alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            double expected = u[i] * marg_cond_prob(j,i);
+            expected_counts(j) += expected;
+            total_counts += expected;
+        }
+    }
+    
+    expected_counts /= total_counts;
+    gamma_estimate = expected_counts;
     
 //    
 //    for (size_t i = 0; i < gamma_covariance.size1(); ++i)
