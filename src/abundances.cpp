@@ -1431,39 +1431,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         ublas::matrix<double> gamma_map_covariance = ublas::zero_matrix<double>(N,N);
         double cross_replicate_js = 0.0;
         // If we have multiple replicates, estimate covariance from them via a MLE computation on each replicate
-        if (!use_fisher_covariance && rg_props.size() > 1)
-        {
-            verbose_msg( "Calculating empirical gamma MLE and covariances\n");
-            
-            map_success = empirical_replicate_gammas(filtered_transcripts,
-                                                     nr_alignments,
-                                                     log_conv_factors,
-                                                     gamma_map_estimate,
-                                                     gamma_map_covariance,
-                                                     cross_replicate_js);
-            
-            ublas::vector<double> bayes_estimate = ublas::zero_vector<double>(filtered_gammas.size());
-            ublas::matrix<double> bayes_covariance = ublas::zero_matrix<double>(N,N);
-            map_success = bayesian_gammas(filtered_transcripts,
-                                          nr_alignments,
-                                          log_conv_factors,
-                                          gamma_mle,
-                                          bayes_estimate,
-                                          bayes_covariance);
-            
-
-            empir_gamma_var_trace(trace(gamma_map_covariance));
-            bayes_gamma_var_trace(trace(bayes_covariance));
-            double gap = abs(empir_gamma_var_trace() - bayes_gamma_var_trace());
-//            if (gap > 0.005)
-//                map_success = NUMERIC_LOW_DATA;
-//            
-//            gamma_map_estimate = bayes_estimate;
-//            gamma_map_covariance = bayes_covariance;
-            
-            cross_rep_js(cross_replicate_js);
-        }
-        else if (bootstrap == true && !use_fisher_covariance)
+        if (bootstrap == true && !use_fisher_covariance)
         {
 //            map_success = bayesian_gammas(filtered_transcripts,
 //                                          nr_alignments,
