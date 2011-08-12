@@ -2939,9 +2939,12 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     {
         for (size_t j = 0; j < cond_probs.size(); ++j)
         {
-            if (total_cond_prob(i))
+            if (total_cond_prob(i) > 0)
             {
-                marg_cond_prob(j,i) = gamma_estimate(j)/ total_cond_prob(i);
+                if (cond_probs[j][i] > 0)
+                {
+                    marg_cond_prob(j,i) = gamma_estimate(j) / total_cond_prob(i);
+                }
             }
         }
     }
@@ -2979,16 +2982,25 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
             expected_counts(j) += expected;
             total_counts += expected;
         }
+        
+        ublas::matrix_column<ublas::matrix<double> > mr (marg_cond_prob, i);
+        //cerr << mr << endl;
     }
     
     expected_counts /= total_counts;
+    
+//    cerr << gamma_estimate << endl;
+    
     gamma_estimate = expected_counts;
     
+//    cerr << gamma_estimate << endl;
 //    
 //    for (size_t i = 0; i < gamma_covariance.size1(); ++i)
 //    {
 //        gamma_covariance(i,i) = min(1.0, 15 * gamma_covariance(i,i));
 //    }
+    
+    
 
     return NUMERIC_OK;
 }
