@@ -2639,7 +2639,10 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
         {
             if (total_cond_prob(i))
             {
-                marg_cond_prob(j,i) = gamma_map_estimate(j)/ total_cond_prob(i);
+                if (cond_probs[j][i] > 0)
+                {
+                    marg_cond_prob(j,i) = gamma_map_estimate(j)/ total_cond_prob(i);
+                }
             }
         }
     }
