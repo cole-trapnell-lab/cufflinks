@@ -29,7 +29,7 @@ double entropy(const ublas::vector<double>& p)
 	return e;
 }
 
-double jensen_shannon_div(vector<ublas::vector<double> >& sample_kappas)
+double jensen_shannon_div(std::vector<ublas::vector<double> >& sample_kappas)
 {
 	assert (sample_kappas.size() > 1);
 	

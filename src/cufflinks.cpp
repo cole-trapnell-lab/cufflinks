@@ -89,9 +89,9 @@ static struct option long_options[] = {
     
 {"3-overhang-tolerance",	required_argument,		 0,			 OPT_3_OVERHANG_TOLERANCE},
 {"intron-overhang-tolerance",	required_argument,		 0,		 OPT_INTRON_OVERHANG_TOLERANCE},
-{"no-faux-reads",         no_argument,             0,           OPT_NO_FAUX_READS},
-
-
+{"no-faux-reads",           no_argument,             0,          OPT_NO_FAUX_READS},
+{"tile-read-len",           required_argument,        0,          OPT_TILE_LEN}, 
+{"tile-read-sep",           required_argument,        0,          OPT_TILE_SEP}, 
 {0, 0, 0, 0} // terminator
 };
 
@@ -346,6 +346,16 @@ int parse_options(int argc, char** argv)
             case OPT_3_OVERHANG_TOLERANCE:
             {
                 overhang_3 = parseInt(0, "--3-overhang-tolernace must be at least 0", print_usage);
+                break;
+            }
+            case OPT_TILE_LEN:
+            {
+                tile_len = parseInt(0, "--tile-read-len must be at least 0", print_usage);
+                break;
+            }
+            case OPT_TILE_SEP:
+            {
+                tile_off = parseInt(0, "--tile-read-sep must be at least 0", print_usage);
                 break;
             }
             case OPT_INTRON_OVERHANG_TOLERANCE:

@@ -168,7 +168,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 				
 				Scaffold ref_scaff(ref_id, strand, ops, true);
 				
-				char* rna_seq;
+				char* rna_seq = 0;
 				int seqlen=0;
 				if (loadSeqs && faseq){ 
 					rna_seq = rna.getSpliced(faseq, false, &seqlen);

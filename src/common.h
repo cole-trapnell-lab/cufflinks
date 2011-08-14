@@ -411,4 +411,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_BOOTSTRAP               288
 #define OPT_NUM_BOOTSTRAP_SAMPLES   289
 #define OPT_BOOTSTRAP_FRACTION      290
+#define OPT_TILE_LEN                291
+#define OPT_TILE_SEP                292
 #endif
