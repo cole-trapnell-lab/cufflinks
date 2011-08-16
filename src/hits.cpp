@@ -345,7 +345,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 
 	//header->target_name[c->tid]
 	
-	if (target_id < 0)
+	if (sam_flag & 0x4 || target_id < 0)
 	{
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(bam1_qname(hit_buf),
@@ -768,12 +768,12 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	{
 		error_prob = 1.0;
 	}
-	
-	if (!strcmp(text_name, "*"))
+    
+    if ((sam_flag & 0x4) ||!strcmp(text_name, "*"))
 	{
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
 		bh = create_hit(name,
-						text_name,
+						"*",
 						0, // SAM files are 1-indexed
 						0,
 						false,
