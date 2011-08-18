@@ -21,7 +21,7 @@
 
 using namespace std;
 
-double min_read_count = 10;
+double min_read_count = 100;
 
 #if ENABLE_THREADS
 mutex _launcher_lock;
@@ -998,17 +998,30 @@ void test_differential(const string& locus_tag,
         
         for (size_t j = sample_to_start_test_against; j < i; ++j)
         {
-            bool enough_reads = (samples[i]->cluster_mass >= min_read_count ||
-                                 samples[j]->cluster_mass >= min_read_count);
+//            bool enough_reads = (samples[i]->cluster_mass >= min_read_count ||
+//                                 samples[j]->cluster_mass >= min_read_count);
             assert (samples[i]->transcripts.abundances().size() == 
                     samples[j]->transcripts.abundances().size());
             for (size_t k = 0; k < samples[i]->transcripts.abundances().size(); ++k)
             {
                 const Abundance& curr_abundance = *(samples[j]->transcripts.abundances()[k]);
+                const Abundance& prev_abundance = *(samples[i]->transcripts.abundances()[k]);
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.isoform_fpkm_tracking.find(desc);
                 assert (itr != tracking.isoform_fpkm_tracking.end());
                 
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+
                 pair<int, SampleDiffs::iterator> result;
                 result = get_de_tests(desc,
                                       itr->second.fpkm_series[j], 
@@ -1029,9 +1042,23 @@ void test_differential(const string& locus_tag,
             for (size_t k = 0; k < samples[i]->cds.size(); ++k)
             {
                 const Abundance& curr_abundance = samples[j]->cds[k];
+                const Abundance& prev_abundance = samples[i]->cds[k];
+                
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.cds_fpkm_tracking.find(desc);
                 assert (itr != tracking.cds_fpkm_tracking.end());
+                
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
                 
                 pair<int, SampleDiffs::iterator> result;
                 result = get_de_tests(desc,
@@ -1053,9 +1080,23 @@ void test_differential(const string& locus_tag,
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
                 const Abundance& curr_abundance = samples[j]->primary_transcripts[k];
+                const Abundance& prev_abundance = samples[i]->primary_transcripts[k];
+                
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.tss_group_fpkm_tracking.find(desc);
                 assert (itr != tracking.tss_group_fpkm_tracking.end());
+                
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
                 
                 pair<int, SampleDiffs::iterator> result;
                 result = get_de_tests(desc,
@@ -1077,9 +1118,22 @@ void test_differential(const string& locus_tag,
             for (size_t k = 0; k < samples[i]->genes.size(); ++k)
             {
                 const Abundance& curr_abundance = samples[j]->genes[k];
+                const Abundance& prev_abundance = samples[i]->genes[k];
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.gene_fpkm_tracking.find(desc);
                 assert (itr != tracking.gene_fpkm_tracking.end());
+                
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
                 
                 pair<int, SampleDiffs::iterator> result;
                 result = get_de_tests(desc,
@@ -1106,6 +1160,21 @@ void test_differential(const string& locus_tag,
             // Differential promoter use
             for (size_t k = 0; k < samples[i]->gene_primary_transcripts.size(); ++k)
             {
+                const Abundance& curr_abundance = samples[j]->gene_primary_transcripts[k];
+                const Abundance& prev_abundance = samples[j]->gene_primary_transcripts[k];
+                
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                
                 get_ds_tests(samples[j]->gene_primary_transcripts[k], 
                              samples[i]->gene_primary_transcripts[k],
                              tests.diff_promoter_tests[i][j],
@@ -1115,6 +1184,21 @@ void test_differential(const string& locus_tag,
             // Differential coding sequence output
             for (size_t k = 0; k < samples[i]->gene_cds.size(); ++k)
             {
+                const Abundance& curr_abundance = samples[j]->gene_cds[k];
+                const Abundance& prev_abundance = samples[j]->gene_cds[k];
+                
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                
                 get_ds_tests(samples[j]->gene_cds[k], 
                              samples[i]->gene_cds[k],
                              tests.diff_cds_tests[i][j],
@@ -1124,6 +1208,22 @@ void test_differential(const string& locus_tag,
             // Differential splicing of primary transcripts
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
+                
+                const Abundance& curr_abundance = samples[j]->primary_transcripts[k];
+                const Abundance& prev_abundance = samples[j]->primary_transcripts[k];
+                
+                bool enough_reads = false;
+                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+                {
+                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+                {
+                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                        enough_reads = true;
+                }
+                
                 get_ds_tests(samples[j]->primary_transcripts[k], 
                              samples[i]->primary_transcripts[k],
                              tests.diff_splicing_tests[i][j],
