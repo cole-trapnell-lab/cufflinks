@@ -1013,12 +1013,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
 
@@ -1051,12 +1053,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 
@@ -1089,12 +1093,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 
@@ -1126,12 +1132,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 
@@ -1166,12 +1174,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 
@@ -1190,12 +1200,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 
@@ -1215,12 +1227,14 @@ void test_differential(const string& locus_tag,
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
                 {
-                    if (curr_abundance.num_fragments() / curr_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 if (prev_abundance.num_fragments() && prev_abundance.effective_length())
                 {
-                    if (prev_abundance.num_fragments() / prev_abundance.effective_length() >= min_read_count)
+                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
                 
