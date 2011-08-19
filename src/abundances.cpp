@@ -1463,6 +1463,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                            gamma_mle,
                                            gamma_map_estimate,
                                            gamma_map_covariance);
+            
+            ublas::vector<double> bootstrap_estimate = gamma_map_estimate;
+            ublas::matrix<double> bootstrap_covariance = gamma_map_covariance;
+            map_success  = bootstrap_gammas(filtered_transcripts,
+                                            nr_alignments,
+                                            log_conv_factors,
+                                            bootstrap_estimate,
+                                            bootstrap_covariance,
+                                            cross_replicate_js);
+            _gamma_bootstrap_covariance = bootstrap_covariance;
+            
         }
         
         std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
@@ -1488,6 +1499,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	vector<double> updated_gammas = vector<double>(N, 0.0);
 	ublas::matrix<double> updated_gamma_cov;
 	updated_gamma_cov = ublas::zero_matrix<double>(N, N);
+    ublas::matrix<double> updated_gamma_bootstrap_cov;
+    updated_gamma_bootstrap_cov = ublas::zero_matrix<double>(N, N);
 	
 	size_t cfs = 0;
 	shared_ptr<Scaffold> curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
@@ -1521,6 +1534,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 				{
 					updated_gamma_cov(i,j) = _gamma_covariance(scaff_present[i],
 															   scaff_present[j]);
+                    updated_gamma_bootstrap_cov(i,j) = _gamma_bootstrap_covariance(scaff_present[i],
+                                                                                   scaff_present[j]);
 					assert (!isinf(updated_gamma_cov(i,j)));
 					assert (!isnan(updated_gamma_cov(i,j)));
 				}
@@ -1560,6 +1575,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		_abundances[i]->status(numeric_status);
 	}
 	_gamma_covariance = updated_gamma_cov;
+    _gamma_bootstrap_covariance = updated_gamma_bootstrap_cov;
 	
 	return (status() == NUMERIC_OK);
 }

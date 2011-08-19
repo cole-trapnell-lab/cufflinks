@@ -787,6 +787,7 @@ void sample_abundance_worker(const string& locus_tag,
 
 struct LocusVarianceInfo
 {
+    int factory_id;
     double mean_count;
     double count_empir_var;
     double locus_count_fitted_var;
@@ -795,6 +796,10 @@ struct LocusVarianceInfo
     int num_transcripts;
     double bayes_gamma_trace;
     double empir_gamma_trace;
+    vector<double> gamma;
+    vector<double> gamma_var;
+    vector<double> gamma_bootstrap_var;
+    vector<string> transcript_ids;
 };
 
 #if ENABLE_THREADS
@@ -876,15 +881,21 @@ void sample_worker(const RefSequenceTable& rt,
     {
 
         LocusVarianceInfo info;
+        info.factory_id = factory_id;
         info.mean_count = locus_mv.first;
         info.count_empir_var = locus_mv.second;
         info.locus_count_fitted_var = disperser->scale_mass_variance(info.mean_count);
         double total_iso_scaled_var = 0.0;
         const AbundanceGroup& ab_group = abundance->transcripts;
-		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
+		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
 		{
+            shared_ptr<Abundance> ab = ab_group.abundances()[i];
             double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
 			total_iso_scaled_var += scaled_var;
+            info.gamma.push_back(ab->gamma());
+            info.gamma_var.push_back(ab_group.gamma_cov()(i,i));
+            info.gamma_bootstrap_var.push_back(ab_group.gamma_bootstrap_cov()(i,i));
+            info.transcript_ids.push_back(ab->description());
 		}
         
         info.cross_replicate_js = ab_group.cross_rep_js();
@@ -929,10 +940,15 @@ void dump_locus_variance_info(const string& filename)
     
     FILE* fdump = fopen(filename.c_str(), "w");
     
-    fprintf(fdump, "mean\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\n");
+    fprintf(fdump, 
+            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tgamma_bootstrap_var\n");
     foreach (LocusVarianceInfo& L, locus_variance_info_table)
     {
-        fprintf(fdump, "%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\n", L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace);
+        for (size_t i = 0; i < L.gamma.size(); ++i)
+        {
+            fprintf(fdump, "%d\t%s\t%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\t%lf\t%lf\t%lf\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i] * L.mean_count,L.gamma_var[i],L.gamma_bootstrap_var[i]);
+        }
+        
     }
     
 #if ENABLE_THREADS
