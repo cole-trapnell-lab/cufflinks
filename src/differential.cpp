@@ -680,9 +680,13 @@ void sample_abundance_worker(const string& locus_tag,
         // Cluster transcripts by CDS
         vector<AbundanceGroup> transcripts_by_cds;
         ublas::matrix<double> cds_gamma_cov;
+        ublas::matrix<double> cds_gamma_boot_cov;
+        ublas::matrix<double> cds_count_cov;
         cluster_transcripts<ConnectByAnnotatedProteinId>(sample.transcripts,
                                                          transcripts_by_cds,
-                                                         &cds_gamma_cov);
+                                                         &cds_gamma_cov,
+                                                         &cds_count_cov,
+                                                         &cds_gamma_boot_cov);
         foreach(AbundanceGroup& ab_group, transcripts_by_cds)
         {
             ab_group.locus_tag(locus_tag);
@@ -705,6 +709,8 @@ void sample_abundance_worker(const string& locus_tag,
         }
         AbundanceGroup cds(cds_abundances,
                            cds_gamma_cov,
+                           cds_gamma_boot_cov,
+                           cds_count_cov,
                            max_cds_mass_variance);
         
         vector<AbundanceGroup> cds_by_gene;
@@ -729,9 +735,13 @@ void sample_abundance_worker(const string& locus_tag,
         vector<AbundanceGroup> transcripts_by_tss;
         
         ublas::matrix<double> tss_gamma_cov;
+        ublas::matrix<double> tss_gamma_boot_cov;
+        ublas::matrix<double> tss_count_cov;
         cluster_transcripts<ConnectByAnnotatedTssId>(sample.transcripts,
                                                      transcripts_by_tss,
-                                                     &tss_gamma_cov);
+                                                     &tss_gamma_cov,
+                                                     &tss_count_cov,
+                                                     &tss_gamma_boot_cov);
         
        
         foreach(AbundanceGroup& ab_group, transcripts_by_tss)
@@ -758,6 +768,8 @@ void sample_abundance_worker(const string& locus_tag,
         
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
                                            tss_gamma_cov,
+                                           tss_gamma_boot_cov,
+                                           tss_count_cov,
                                            max_tss_mass_variance);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
@@ -946,7 +958,7 @@ void dump_locus_variance_info(const string& filename)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {
-            fprintf(fdump, "%d\t%s\t%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\t%lf\t%lf\t%lf\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i] * L.mean_count,L.gamma_var[i],L.gamma_bootstrap_var[i]);
+            fprintf(fdump, "%d\t%s\t%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\t%lf\t%lf\t%lf\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i]);
         }
         
     }

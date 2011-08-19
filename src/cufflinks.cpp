@@ -834,7 +834,6 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 		return;
 	
 	vector<double> gammas;
-	ublas::matrix<double> gamma_covariance;
     
 	vector<MateHit> hits_in_cluster;
 	

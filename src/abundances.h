@@ -283,7 +283,8 @@ public:
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
 		_abundances = other._abundances;
-		_gamma_covariance = other._gamma_covariance;
+		_count_covariance = other._count_covariance;
+        _gamma_covariance = other._gamma_covariance;
         _gamma_bootstrap_covariance = other._gamma_bootstrap_covariance;
 		_FPKM_conf = other._FPKM_conf;
 		_kappa = other._kappa;
@@ -298,6 +299,7 @@ public:
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
 		_abundances(abundances), 
+        _count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
         _gamma_bootstrap_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
@@ -309,11 +311,14 @@ public:
         _bayes_gamma_var_trace(0.0) {}
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
+                   const ublas::matrix<double>& gamma_bootstrap_covariance,
+                   const ublas::matrix<double>& count_covariance,
                    const long double max_mass_variance) :
 		_abundances(abundances), 
-		_gamma_covariance(gamma_covariance),
+		_count_covariance(count_covariance),
+        _gamma_covariance(gamma_covariance),
+        _gamma_bootstrap_covariance(gamma_bootstrap_covariance),
         _max_mass_variance(max_mass_variance),
-        _gamma_bootstrap_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
         _cross_rep_js(0.0),_empir_gamma_var_trace(0.0),_bayes_gamma_var_trace(0.0)
 	{
         
@@ -381,6 +386,8 @@ public:
     
     const ublas::matrix<double>& gamma_bootstrap_cov() const { return _gamma_bootstrap_covariance; }
     
+    const ublas::matrix<double>& count_cov() const { return _count_covariance; }
+    
 	const ublas::matrix<double>& kappa_cov() const { return _kappa_covariance; }
 	
 	
@@ -420,6 +427,8 @@ private:
 	
 	vector<shared_ptr<Abundance> > _abundances;
 	
+    ublas::matrix<double> _count_covariance;
+    
 	ublas::matrix<double> _gamma_covariance;
     ublas::matrix<double> _gamma_bootstrap_covariance;
     
