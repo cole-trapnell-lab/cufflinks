@@ -1160,6 +1160,17 @@ void AbundanceGroup::calculate_conf_intervals()
                 {
                     _abundances[j]->status(NUMERIC_LOW_DATA);
                 }
+                else
+                {
+                    double gamma_cov_j =  _gamma_covariance(j,j);
+                    double bootstrap_j = _gamma_bootstrap_covariance(j,j);
+                    double bootstrap_gamma_delta = abs(bootstrap_j - gamma_cov_j);
+                    if (bootstrap_gamma_delta > 2.0 * gamma_cov_j && _abundances.size() > 1)
+                    {
+                        _abundances[j]->status(NUMERIC_LOW_DATA);
+                    }
+                }
+                
                 
                 if (fpkm_var < 0)
                 {
