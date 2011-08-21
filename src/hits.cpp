@@ -191,14 +191,13 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 							   const string& ref_name,
 							   int left,
 							   const vector<CigarOp>& cigar,
-							   bool antisense_aln,
 							   CuffStrand source_strand,
 							   const string& partner_ref,
 							   int partner_pos, 
-							   double error_prob,
 							   unsigned int edit_dist,
 							   int num_hits,
-                               float base_mass)
+                               float base_mass,
+                               uint32_t sam_flag)
 {
 	InsertID insert_id = _insert_table.get_id(insert_name);
 	RefID reference_id = _ref_table.get_id(ref_name, NULL);
@@ -208,28 +207,26 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   insert_id, 
 				   left, 
 				   cigar, 
-				   antisense_aln,
 				   source_strand,
 				   partner_ref_id,
 				   partner_pos,
-				   error_prob,
 				   edit_dist,
 				   num_hits,
-                   base_mass);	
+                   base_mass,
+                   sam_flag);	
 }
 
 ReadHit HitFactory::create_hit(const string& insert_name, 
 							   const string& ref_name,
 							   uint32_t left,
 							   uint32_t read_len,
-							   bool antisense_aln,
 							   CuffStrand source_strand,
 							   const string& partner_ref,
 							   int partner_pos,
-							   double error_prob,
 							   unsigned int edit_dist,
 							   int num_hits,
-                               float base_mass)
+                               float base_mass,
+                               uint32_t sam_flag)
 {
 	InsertID insert_id = _insert_table.get_id(insert_name);
 	RefID reference_id = _ref_table.get_id(ref_name, NULL);
@@ -239,14 +236,13 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 				   insert_id, 
 				   left,
 				   read_len,
-				   antisense_aln,
 				   source_strand,
 				   partner_ref_id,
 				   partner_pos,
-				   error_prob,
 				   edit_dist,
 				   num_hits,
-                   base_mass);	
+                   base_mass,
+                   sam_flag);	
 }
 
 // populate a bam_t This will 
@@ -277,8 +273,9 @@ bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
 	return true;
 }
 
-CuffStrand use_stranded_protocol(uint32_t sam_flag, bool antisense_aln, MateStrandMapping msm)
+CuffStrand use_stranded_protocol(uint32_t sam_flag,  MateStrandMapping msm)
 {
+    bool antisense_aln = sam_flag & 0x10;
 	if (((sam_flag & BAM_FPAIRED) && (sam_flag & BAM_FREAD1)) || !(sam_flag & BAM_FPAIRED)) // first-in-pair or single-end
 	{
 		switch(msm)
@@ -331,18 +328,6 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	bool spliced_alignment = false;
 	int num_hits = 1;
 	
-	double mapQ = hit_buf->core.qual;
-	long double error_prob;
-	if (mapQ > 0)
-	{
-		long double p = (-1.0 * mapQ) / 10.0;
-		error_prob = pow(10.0L, p);
-	}
-	else
-	{
-		error_prob = 1.0;
-	}
-
 	//header->target_name[c->tid]
 	
 	if (sam_flag & 0x4 || target_id < 0)
@@ -352,14 +337,13 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						"*",
 						0, // SAM files are 1-indexed
 						0,
-						false,
 						CUFF_STRAND_UNKNOWN,
 						"*",
 						0,
-						1.0,
 						0,
 						1,
-                        1.0);
+                        1.0,
+                        sam_flag);
 		return true;
 	}
 	
@@ -458,11 +442,9 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
         if (mass <= 0.0)
             mass = 1.0;
 	}
-	
-    bool antisense_aln = bam1_strand(hit_buf);
-    
+	    
     if (_rg_props.strandedness() == STRANDED_PROTOCOL && source_strand == CUFF_STRAND_UNKNOWN)
-		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
+		source_strand = use_stranded_protocol(sam_flag, _rg_props.mate_strand_mapping());
     
 	if (!spliced_alignment)
 	{
@@ -473,14 +455,13 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset,  // BAM files are 0-indexed
 						cigar,
-						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos,
-						error_prob,
 						num_mismatches,
 						num_hits,
-                        mass);
+                        mass,
+                        sam_flag);
 		return true;
 		
 	}
@@ -495,14 +476,13 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset,  // BAM files are 0-indexed
 						cigar,
-						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos,
-						error_prob,
 						num_mismatches,
 						num_hits,
-                        mass);
+                        mass,
+                        sam_flag);
 		return true;
 	}
 	
@@ -756,19 +736,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	vector<CigarOp> cigar;
 	bool spliced_alignment = false;
 	int num_hits = 1;
-	
-	double mapQ = atoi(map_qual_str);
-	long double error_prob;
-	if (mapQ > 0)
-	{
-		long double p = (-1.0 * mapQ) / 10.0;
-		error_prob = pow(10.0L, p);
-	}
-	else
-	{
-		error_prob = 1.0;
-	}
-    
+	    
     if ((sam_flag & 0x4) ||!strcmp(text_name, "*"))
 	{
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
@@ -776,14 +744,13 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						"*",
 						0, // SAM files are 1-indexed
 						0,
-						false,
 						CUFF_STRAND_UNKNOWN,
 						"*",
 						0,
-						1.0,
 						0,
 						1,
-                        1.0);
+                        1.0,
+                        sam_flag);
 		return true;
 	}
 	// Mostly pilfered direct from the SAM tools:
@@ -915,12 +882,10 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 			}
 		}
 	}
-    
-    bool antisense_aln = sam_flag & 0x0010;
-    
+        
     // Don't let the protocol setting override explicit XS tags
 	if (_rg_props.strandedness() == STRANDED_PROTOCOL && source_strand == CUFF_STRAND_UNKNOWN)
-		source_strand = use_stranded_protocol(sam_flag, antisense_aln, _rg_props.mate_strand_mapping());
+		source_strand = use_stranded_protocol(sam_flag, _rg_props.mate_strand_mapping());
 	
 	if (!spliced_alignment)
 	{		
@@ -929,14 +894,13 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset - 1,
 						cigar,
-						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
-						error_prob,
 						num_mismatches,
 						num_hits,
-                        mass);
+                        mass,
+                        sam_flag);
 		return true;
 		
 	}
@@ -951,14 +915,13 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 						text_name,
 						text_offset - 1,
 						cigar,
-						antisense_aln,
 						source_strand,
 						mrnm,
 						text_mate_pos - 1,
-						error_prob,
 						num_mismatches,
 						num_hits,
-                        mass);
+                        mass,
+                        sam_flag);
 		return true;
 	}
 	return false;

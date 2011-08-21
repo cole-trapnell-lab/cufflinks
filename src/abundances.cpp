@@ -2601,7 +2601,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
         }
     }
     
-    cross_replicate_js = jensen_shannon_div(mle_gammas);
+    //cross_replicate_js = jensen_shannon_div(mle_gammas);
     
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;

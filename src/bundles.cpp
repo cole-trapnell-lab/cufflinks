@@ -1058,7 +1058,7 @@ void count_introns_in_read(const ReadHit& read,
 				IntronCountTable::iterator itr = ins_itr.first;
 				itr->second.total_reads++;
 				
-				if (read.error_prob() > 0.9)
+				if (read.num_hits() > 10)
 				{
 					itr->second.multimap_reads++;
 				}

@@ -70,7 +70,6 @@ struct ReadHit
 	ReadHit() : 
 		_ref_id(0),
 		_insert_id(0),
-		_error_prob(1.0),
         _base_mass(1.0),
         _edit_dist(0xFFFFFFFF),
 		_num_hits(1)
@@ -82,14 +81,13 @@ struct ReadHit
 			InsertID insert_id, 
 			int left, 
 			int read_len, 
-			bool antisense,
 			CuffStrand source_strand,
 			RefID partner_ref,
 			int partner_pos,
-			double error_prob,
 			unsigned int edit_dist,
 			int num_hits,
-            float base_mass) :
+            float base_mass,
+            uint32_t sam_flag) :
 		_ref_id(ref_id),
 		_insert_id(insert_id), 
 		_left(left), 
@@ -97,11 +95,10 @@ struct ReadHit
 		_partner_pos(partner_pos),
 		_cigar(vector<CigarOp>(1,CigarOp(MATCH,read_len))),
 		_source_strand(source_strand),
-		_antisense_aln(antisense),
-		_error_prob(error_prob),
         _base_mass(base_mass),
         _edit_dist(edit_dist),
-		_num_hits(num_hits)
+		_num_hits(num_hits),
+        _sam_flag(sam_flag)
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
@@ -112,14 +109,13 @@ struct ReadHit
 			InsertID insert_id, 
 			int left,  
 			const vector<CigarOp>& cigar,
-			bool antisense_aln,
 			CuffStrand source_strand,
 			RefID partner_ref,
 			int partner_pos, 
-			double error_prob,
 			unsigned int  edit_dist,
 			int num_hits,
-            float base_mass) : 
+            float base_mass,
+            uint32_t sam_flag) : 
 		_ref_id(ref_id),
 		_insert_id(insert_id), 	
 		_left(left),
@@ -127,11 +123,10 @@ struct ReadHit
 		_partner_pos(partner_pos),
 		_cigar(cigar),
 		_source_strand(source_strand),
-		_antisense_aln(antisense_aln),
-		_error_prob(error_prob),
         _base_mass(base_mass),
         _edit_dist(edit_dist),
-		_num_hits(num_hits)
+		_num_hits(num_hits),
+        _sam_flag(sam_flag)
 	{
 		assert(_cigar.capacity() == _cigar.size());
 		_right = get_right();
@@ -147,12 +142,11 @@ struct ReadHit
 		_partner_pos = other._partner_pos;
 		_cigar = other._cigar;
 		_source_strand = other._source_strand;
-		_antisense_aln = other._antisense_aln;
-		_error_prob = other._error_prob;
 		_num_hits = other._num_hits;
         _base_mass = other._base_mass;
         _edit_dist = other._edit_dist;
         _right = get_right();
+        _sam_flag = other._sam_flag;
         num_deleted++;
     }
     
@@ -203,7 +197,7 @@ struct ReadHit
 	{
 	    return (_insert_id == rhs._insert_id &&
 	            _ref_id == rhs._ref_id &&
-	            _antisense_aln == rhs._antisense_aln &&
+	            antisense_align() == rhs.antisense_align() &&
 	            _left == rhs._left && 
 	            _source_strand == rhs._source_strand &&
 	            /* DO NOT USE ACCEPTED IN COMPARISON */
@@ -219,9 +213,8 @@ struct ReadHit
 	int left() const					{ return _left;				}
 	int right() const					{ return _right;			}
 	CuffStrand source_strand()	const	{ return _source_strand; }
-	bool antisense_align() const		{ return _antisense_aln;	}
-	
-	double error_prob() const			{ return _error_prob;		}
+	bool antisense_align() const		{ return _sam_flag & 0x10;	}
+    bool is_first() const               { return _sam_flag & 0x40;  }	
 	
 	// Number of multi-hits for this read
 	int num_hits() const				{ return _num_hits;			}
@@ -320,11 +313,10 @@ private:
 	vector<CigarOp> _cigar;
 	
 	CuffStrand _source_strand;    // Which strand the read really came from, if known
-	bool _antisense_aln;       // Whether the alignment is to the reverse strand
-	float _error_prob;		   // Probability that this alignment is incorrect
     float _base_mass;
     unsigned int  _edit_dist;            // Number of mismatches
 	int _num_hits; // Number of multi-hits (1 by default)
+    uint32_t _sam_flag;
 	//string _hitfile_rec; // Points to the buffer for the record from which this hit came
 };
 
@@ -576,27 +568,25 @@ public:
 					   const string& ref_name,
 					   int left,
 					   const vector<CigarOp>& cigar,
-					   bool antisense_aln,
 					   CuffStrand source_strand,
 					   const string& partner_ref,
 					   int partner_pos,
-					   double error_prob,
 					   unsigned int  edit_dist,
 					   int num_hits,
-                       float base_mass);
+                       float base_mass,
+                       uint32_t sam_flag);
 	
 	ReadHit create_hit(const string& insert_name, 
 					   const string& ref_name,
 					   uint32_t left,
 					   uint32_t read_len,
-					   bool antisense_aln,
 					   CuffStrand source_strand,
 					   const string& partner_ref,
 					   int partner_pos,
-					   double error_prob,
 					   unsigned int  edit_dist,
 					   int num_hits,
-                       float base_mass);
+                       float base_mass,
+                       uint32_t sam_flag);
 	
 	virtual void reset() = 0;
 	

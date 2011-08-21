@@ -389,9 +389,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	//To be used for quartile normalization
 	vector<long double> mass_dist; 	
 	
-	// Store the maximum read length for "left" and "right" reads to report to user.
-	int max_left = 0;
-	int max_right = 0;
+	// Store the maximum read length for "first" and "second" reads to report to user.
+	int max_1 = 0;
+	int max_2 = 0;
 	
 	shared_ptr<MultiReadTable> mrt(new MultiReadTable());
 	
@@ -491,7 +491,12 @@ void inspect_map(BundleFactoryType& bundle_factory,
 			int left_len = hits[i].left_alignment()->right()-hits[i].left_alignment()->left();
 			min_len = min(min_len, left_len);
 			if (!hits[i].left_alignment()->contains_splice())
-				max_left = max(max_left, left_len);
+            {
+				if (hits[i].left_alignment()->is_first())
+                    max_1 = max(max_1, left_len);
+                else
+                    max_2 = max(max_2, left_len);
+            }
 			
 			// Find right length
 			if (hits[i].right_alignment())
@@ -499,8 +504,13 @@ void inspect_map(BundleFactoryType& bundle_factory,
 				int right_len = hits[i].right_alignment()->right()-hits[i].right_alignment()->left();
 				min_len = min(min_len, right_len);
 				if (!hits[i].right_alignment()->contains_splice())
-					max_right = max(max_right, right_len);
-				has_pairs = true;
+                {
+                    if (hits[i].right_alignment()->is_first())
+                        max_1 = max(max_1, right_len);
+                    else
+                        max_2 = max(max_2, right_len);
+                }
+                has_pairs = true;
 			}
 			
 			// Find fragment length
@@ -708,9 +718,9 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	if (corr_multi)
 		fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
 	if (has_pairs)
-		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_left, max_right);
+		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_1, max_2);
 	else
-		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max_left);
+		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max_1);
 
 	if (empirical)
 	{
