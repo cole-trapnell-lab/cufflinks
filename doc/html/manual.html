@@ -348,8 +348,20 @@
   	  <tr><td VALIGN=top nowrap>
 	  <tt>--num-importance-samples &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
-	  This parameter is now deprecated, since the importance sampling procedure has been replaced with a Monte Carlo sampling (bootstrap) procedure.
+	  Sets the number of importance samples generated for each locus during abundance estimation. Default: 1000
 	  </td></tr> 
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--bootstrap-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the fraction of fragments in each locus used for each bootstrap replication. Default: 1.0
+	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--num-bootstrap-samples &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Number of replications used during bootstrapping for abundance estimation. 
+	  </td></tr>
 	
 	  <tr><td VALIGN=top nowrap>
 	  <tt>--bootstrap-fraction &lt;0.0-1.0&gt;</tt>
@@ -1483,7 +1495,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>8</td><td VALIGN=top>FPKM<sub><em>y</em></sub></td><td VALIGN=top><tt>8.551545</tt></td><td VALIGN=top>FPKM of the gene in sample <em>y</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>9</td><td VALIGN=top>ln(FPKM<sub><em>y</em></sub>/FPKM<sub><em>x</em></sub>)</td><td VALIGN=top><tt>0.06531</tt></td><td VALIGN=top>The natural log of the fold change <em>y</em>/<em>x</em><td>
+			<td VALIGN=top>9</td><td VALIGN=top>log2(FPKM<sub><em>y</em></sub>/FPKM<sub><em>x</em></sub>)</td><td VALIGN=top><tt>0.06531</tt></td><td VALIGN=top>The (base 2) log of the fold change <em>y</em>/<em>x</em><td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>10</td><td VALIGN=top>test stat</td><td VALIGN=top><tt>0.860902</tt></td><td VALIGN=top>The value of the test statistic used to compute significance of the observed change in FPKM</td>
@@ -1688,36 +1700,41 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </tr>
 		  <tr>
 			<td VALIGN=top>9</td><td VALIGN=top>coverage</td><td VALIGN=top><tt>43.4279</tt></td><td VALIGN=top>Estimate for the absolute depth of read coverage across the object</td>
+		  <tr>
+			<td VALIGN=top>10</td><td VALIGN=top>q0_FPKM</td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the object in sample 0</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>10</td><td VALIGN=top>status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			<td VALIGN=top>11</td><td VALIGN=top>q0_FPKM_lo</td><td VALIGN=top><tt>7.03583</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>11</td><td VALIGN=top>q0_FPKM</td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the object in sample 0</td>
+			<td VALIGN=top>12</td><td VALIGN=top>q0_FPKM_hi</td><td VALIGN=top><tt>8.98595</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>12</td><td VALIGN=top>q0_FPKM_lo</td><td VALIGN=top><tt>7.03583</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
+			<td VALIGN=top>13</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>13</td><td VALIGN=top>q0_FPKM_hi</td><td VALIGN=top><tt>8.98595</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
+			<td VALIGN=top>14</td><td VALIGN=top>q0_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>14</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
-		  </tr>
-		  <tr>
-			<td VALIGN=top>15</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
+			<td VALIGN=top>15</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>16<td VALIGN=top>q1_FPKM_hi</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 11</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
+			<td VALIGN=top>17<td VALIGN=top>q1_status</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 12</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+			<td VALIGN=top>3<em>N</em> + 13</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 13</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+			<td VALIGN=top>3<em>N</em> + 14</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 15</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3<em>N</em> + 16</td><td VALIGN=top>q<em>N</em>_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample <em>N</em>. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  </table>
 		 <br/> 

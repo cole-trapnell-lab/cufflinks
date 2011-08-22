@@ -229,10 +229,10 @@
 			<h2>1.1 release - 8/XX/2011</h2>
 			  <p>This is a fix release to address several issues reported by our users:
 				  <ul>
-				<li>Variance on isoform abundances is now estimated by bootstrapping rather than importance sampling, which substantially improves the accuracy of differential expression analysis in loci with low to medium sequencing depth
+				<li>Cuffdiff now includes a more sophisticated check for sufficient sequencing depth prior to testing for differences, which substantially improves the accuracy of differential expression analysis in loci with low to medium depth. 
 				<li>A bug in the calculation of the parameters for the beta negative binomial distribution used during variance estimation has been fixed.
 				</ul>
-				<p><b>FILE FORMAT CHANGES</b>
+				<p><b>FILE FORMAT CHANGES:</b>
 				<ul>
 				<li>By popular request, fold changes are now reported log2, rather than ln
 				<li>The status column in fpkm tracking files has been replaced by a per-condition quantification status column

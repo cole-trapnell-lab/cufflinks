@@ -130,11 +130,11 @@ void print_usage()
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
-    fprintf(stderr, "  --num-importance-samples     deprecated (no effect)\n");
-	fprintf(stderr, "  --num-bootstrap-samples      Number of bootstrap replications                      [ default:   20   ]\n");
-    fprintf(stderr, "  --bootstrap-fraction         Fraction of fragments in each bootstrap sample        [ default:   1.0   ]\n");
+    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+	fprintf(stderr, "  --num-bootstrap-samples      Number of bootstrap replications                      [ default:     20 ]\n");
+    fprintf(stderr, "  --bootstrap-fraction         Fraction of fragments in each bootstrap sample        [ default:    1.0 ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  TRUE  ]\n");
+    fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion          [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
