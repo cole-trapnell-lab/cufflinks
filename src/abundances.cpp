@@ -79,6 +79,10 @@ AbundanceStatus AbundanceGroup::status() const
 		{
 			return NUMERIC_LOW_DATA;
 		}
+        if (ab->status() == NUMERIC_HI_DATA)
+		{
+			return NUMERIC_HI_DATA;
+		}
 	}
 	return NUMERIC_OK;
 }
@@ -715,65 +719,18 @@ void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vecto
 
 long double solve_beta(long double A, long double B, long double C)
 {
-//    long double a = C/B;
-//    long double b = ((4*C/B) - 4*A*C/(B*B));
-//    long double c = 5*A*A*C/(B*B*B) - 10*A*C/(B*B) - A/(A-B) + 5*C/B;
-//    long double d = 1 + 2*C/B - 6*A*C/(B*B) + 6*A*A*C/(B*B*B) - 2*A*A*A*C/(B*B*B*B);
-
     long double a = -C/B;
     long double b = (A + 4*A*C/(B*B) - (4*C/B));
     long double c = -A + B - 5*A*A*C/(B*B*B) + 10*A*C/(B*B) - 5*C/B;
     long double d = 2*A*A*A*C/(B*B*B*B) - 6*A*A*C/(B*B*B) + 6*A*C/(B*B) - 2*C/B;
-    
-//    b/= a;
-//    c /= a;
-//    d /= a;
     complex<long double> q((3*a*c - b*b)/(a*a*9.0));
-    complex<long double> r((9.0*a*c*b - 27.0*a*a*d - 2.0*b*b*b)/(a*a*a*54.0));
-    
-    long double disc = (q*q*q + r*r).real();
-    
+    complex<long double> r((9.0*a*c*b - 27.0*a*a*d - 2.0*b*b*b)/(a*a*a*54.0));    
     complex<long double> s1 = std::pow((r + std::sqrt(q*q*q + r*r)),complex<long double>(1/3.0));
     complex<long double> s2 = std::pow((r - std::sqrt(q*q*q + r*r)),complex<long double>(1/3.0));
-    
-//    cerr << "***********"<< endl;
-//    cerr << std::sqrt(q*q*q + r*r) << endl;
-//    cerr << s1 << endl;
-//    cerr << s2 << endl;
-//    cerr << r << endl;
-//    cerr << (r + std::sqrt(q*q*q + r*r)) << endl;
-//    cerr << pow(r + std::sqrt(q*q*q + r*r), complex<long double>(1/3.0)) << endl;
-//    cerr << s1 - s2 << endl;
-//    cerr << s1 + s2 << endl;
-//    cerr << (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0) << endl;
-    
-    complex<long double> R1 = s1 + s2 - complex<long double>(b/(a*3.0));
-    //R1 -= ;
-    
-//    complex<long double> R2 = -(s1+s2);
-//    R2 /= complex<long double>(2.0);
-//    R2 -= complex<long double>(b/3.0);
-//    R2 += (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
-    
-    complex<long double> R2 = -(s1+s2)/complex<long double>(2.0) - complex<long double>(b/(a*3.0)) + (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
-        
-//    complex<long double> R3 = -(s1+s2);
-//    R3 /= complex<long double>(2.0);
-//    R3 -= complex<long double>(b/3.0);
-//    R3 -= (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
-    
+    complex<long double> R1 = s1 + s2 - complex<long double>(b/(a*3.0));   
+    complex<long double> R2 = -(s1+s2)/complex<long double>(2.0) - complex<long double>(b/(a*3.0)) + (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);  
     complex<long double> R3 = -(s1+s2)/complex<long double>(2.0) - complex<long double>(b/(a*3.0)) - (s1-s2) * complex<long double>(0, sqrtl(3.0)/2.0);
-    
-    
-    //cerr <<  complex<long double>(1,1) * complex<long double>(sqrt(3.0)/2.0) << endl;
-    
-//    complex<long double> R2(-(s1+s2)/2.0 - b/3.0,(s1-s2)*sqrt(3.0)/2.0);
-//    complex<long double> R3(-(s1+s2)/2.0 - b/3.0,-sqrt(3.0)*(s1-s2)/2.0);
-//    
-//    cerr << R1 << endl;
-//    cerr << R2 << endl;
-//    cerr << R3 << endl;
-//    
+  
     vector<long double> roots;
     if (R1.imag() == 0)
         roots.push_back(R1.real());
@@ -783,142 +740,13 @@ long double solve_beta(long double A, long double B, long double C)
         roots.push_back(R3.real());
     sort(roots.begin(), roots.end());
 
-    //assert (roots.empty() == false);
     if (roots.empty())
         return 0;
     
     long double root = roots.back();
-    
-//    long double discrim = 18*a*b*c*d - 4*b*b*b*d + b*b*c*c - 4*a*c*c*c - 27*a*a*d*d;
-//    
-//    //assert(discrim < 0);
-//    
-//    complex<long double> h = complex<long double>(2*b*b*b - 9*a*b*c + 27*a*a*d, 0);
-//    complex<long double> f = complex<long double>(b*b - 3*a*c, 0);
-//    complex<long double> t = std::sqrt(h*h - complex<long double>(4,0)*f*f*f);
-//    cerr << t << endl;
-//    
-//    long double root = 0.0;
-////    root = -b / (3*a);
-////    root -= (1.0/(3*a)) * cbrtl((h + t)/2.0);
-////    root -= (1.0/(3*a)) * cbrtl((h - t)/2.0);
-//    complex<long double> hpt = h + t;
-//    complex<long double> hmt = h - t;
-//    
-//    cerr << hpt << endl;
-//    cerr << hmt << endl;
-//    
-//    long double r1 = -b / (3.0*a) - (1.0/(3.0*a)) * cbrtl((hpt.real())/2.0) - (1.0/(3.0*a)) * cbrtl((hmt.real())/2.0);
-//    long double r2 = -b / (3.0*a) - (1.0/(3.0*a)) * cbrtl((hmt.real())/2.0) - (1.0/(3.0*a)) * cbrtl((hmt.real())/2.0);
-//    long double r3 = -b / (3.0*a) - (1.0/(3.0*a)) * cbrtl((hpt.real())/2.0) - (1.0/(3.0*a)) * cbrtl((hpt.real())/2.0);
-//    
-//    vector<long double> roots;
-//    if (R1.imag() == 0)
-//        roots.push_back(R1.real()); 
-//    
-//    roots.push_back(r1);
-//    roots.push_back(r2);
-//    roots.push_back(r3);
-//    sort(roots.begin(), roots.end());
-//    root = roots.back();
-    
-    
-//    // cardano:
-//    long double p = -b/(3*a);
-//    long double q = p*p*p + (b*c - 3*a*d)/(6*a*a);
-//    long double r = c/(3*a);
-//    root = cbrtl(q + sqrtl(q*q + powl(r - p*p, 3))) + 
-//        cbrtl(q - sqrtl(q*q + powl(r - p*p, 3))) + p; 
-    
-//    long double test = a*root*root*root + b*root*root + c*root + d;
-    
-    long double test_root = (a*root*root*root) + (b*root*root) + (c*root) + d;
-    //assert (abs(test_root) < 1e-1);
-    
     return root;
 }
 
-//
-//long double solve_beta(long double A, long double B, long double C)
-//{
-//    
-//    complex<long double> t1 = 2.0*A*A*A*powl(B,12) + 
-//                     24.0 * A*A*A*powl(B,10)*C + 
-//                     51.0*A*A*A*powl(B,8)*C*C + 
-//                     2.0*A*A*A*powl(B,6)*C*C*C - 
-//                     33.0*A*A*powl(B,11)*C - 
-//                     138.0*A*A*powl(B,9)*C*C - 
-//                     6.0*A*A*powl(B,7)*C*C*C;
-//    
-//    assert(!isnan(t1.real()));
-//    
-//    complex<long double> t7 = 9.0*A*powl(B,12)*C + 
-//                     123.0*A*powl(B,10)*C*C +
-//                     6.0*A*powl(B,8)*C*C*C - 
-//                     36.0*powl(B,11)*C*C - 
-//                     2.0*powl(B,9)*C*C*C;
-//    assert(!isnan(t7.real()));
-//    
-//    complex<long double> t2 = -A*A*powl(B,8) - 
-//                     8.0*A*A*powl(B,6)*C - 
-//                     A*A*powl(B,4)*C*C + 
-//                     11.0*A*powl(B,7)*C + 
-//                     2.0*A*powl(B,5)*C*C - 
-//                     3.0*powl(B,8)*C - 
-//                     powl(B,6)*C*C;
-//    assert(!isnan(t2.real()));
-//    //assert(powl(t2,3) >= 0);
-//    
-//    complex<long double> t3 = t1 + t7;
-//    assert(!isnan(t3.real()));
-//    complex<long double> p_ab = 4 * t2.real()*t2.real()*t2.real() + t3.real()*t3.real();
-//    //complex<long double> p_ab2 = complex<long double>(4,0) * t2*t2*t2 + t3*t3;
-//    //complex<long double> t4_2 = std::sqrt(p_ab2);
-//    
-//    //complex<long double> t4 = sqrtl(p_ab);
-//    complex<long double> cp_ab(p_ab);
-//    complex<long double> t4 = std::sqrt(cp_ab);
-//    //assert(!isnan(t4));
-//    
-//    
-//    complex<long double> t6 = std::pow((t1 + t4 + t7), 1.0/3.0);
-//    assert(!isnan(t6.real()));
-//    
-//    complex<long double> t10 = cbrtl(2.0)*t2 / (3*B*B*B*C*t6);
-//    assert(!isnan(t10.real()));
-//    
-//    complex<long double> t8 = (-A*powl(B,4) - 4*A*B*B*C + 4*B*B*B*C) / (3*B*B*B*C);
-//    assert(!isnan(t8.real()));
-//    
-//    complex<long double> t9 = 1.0/(3*cbrtl(2)*B*B*B*C);
-//    assert(!isnan(t9.real()));
-//    
-//    complex<long double> beta = t9 * t6 - t10 - t8; 
-//    assert(!isnan(beta.real()));
-//    
-//    fprintf(stderr, "T1 = %Lg\n", t1.real());
-//
-//    fprintf(stderr, "T2 = %Lg\n", t2.real());
-//
-//    fprintf(stderr, "T3 = %Lg\n", t3.real());
-//
-//    fprintf(stderr, "T4 = %Lg\n", t4.real());
-//
-//    fprintf(stderr, "T6 = %Lg\n", t6.real());
-//    
-//    fprintf(stderr, "T7 = %Lg\n", t7.real());
-//
-//    fprintf(stderr, "T8 = %Lg\n", t8.real());
-//    
-//    fprintf(stderr, "T9 = %Lg\n", t9.real());
-//
-//    fprintf(stderr, "T10 = %Lg\n", t10.real());
-//    
-//    fprintf(stderr, "beta = (real : %Lg, imag : %Lg\n", beta.real(), beta.imag());
-//
-//    
-//    return beta.real();
-//}
 
 bool compute_fpkm_variance(long double& variance,
                              double gamma_t, 
@@ -964,28 +792,13 @@ bool compute_fpkm_variance(long double& variance,
     {
         // default to poisson dispersion
         variance = poisson_variance;
-//        if (variance < 0)
-//        {
-//            fprintf(stderr, "Warning: negative variance in case 1: (A = %Lf, psi_var = %Lf, gamma_t = %lf)\n", A, psi_var, gamma_t);
-//        }
-        //printf("Warning: overdispersion too small to warrant NB, reverting to poisson\n");
-        //printf("\t X_g_gamma_t = %lg, V_X_g_t = %lg\n", X_g * gamma_t, V_X_g_t);
-        //printf("\t A = %Lg, B = %Lg\n", A, B);
     }
     else // there's some detectable overdispersion here, use mixture of negative binomials
     {
         if (psi_t_count_var < 1) 
         {
-            //printf("Warning: Counts are overdispersed, using single-isoform NB distribution\n");
             // default to regular negative binomial case.
-            //assert (gamma_t == 1.0);
-            //double FPKM = 1000000000.0 * X_g * gamma_t / (l_t * M);
             variance = V_X_g_t;
-            
-//            if (variance <= 0)
-//            {
-//                fprintf(stderr, "Warning: negative variance in case 2: (V_X_g_t = )\n", A, V_X_g_t);
-//            }
         }
         else
         {
@@ -1000,11 +813,6 @@ bool compute_fpkm_variance(long double& variance,
             beta = solve_beta(A,B,C);
             alpha = 1.0 - (A/(A-B)) * beta;
 
-            // Working approximation:
-//            beta = (A*B)/C-(B-A)/B;
-//            alpha = (A/(B-A))*beta;
-
-            
             if (beta <= 2 || alpha <= 1)
             {
                 //printf ("Warning: beta for is %Lg\n", beta);
@@ -1044,18 +852,12 @@ bool compute_fpkm_variance(long double& variance,
 //    fprintf (stderr, "variance = %Lf\n", variance);
 //    fprintf (stderr, "****************\n");
     
-    long double mean_frags = A * (1000000000.0 / (l_t *M));
+//    long double mean_frags = A * (1000000000.0 / (l_t *M));
     
     variance = ceil(variance);
     
     variance *= ((1000000000.0 / (l_t *M)))*((1000000000.0 / (l_t *M)));
     
-    //printf("\t mean = %lg, variance = %lg\n", (double)mean, (double)variance);
-//    if (variance < mean)
-//    {
-//        printf ("Warning: mean > variance!\n");
-//        
-//    }
     assert (!numeric_ok || (!isinf(variance) && !isnan(variance)));
     assert (!numeric_ok || variance != 0 || A == 0);
     return numeric_ok;
@@ -1211,7 +1013,7 @@ void AbundanceGroup::calculate_conf_intervals()
 	{
 		double sum_transfrag_FPKM_hi = 0;
         double max_fpkm = 0.0;
-        double min_fpkm = 1e100;
+        //double min_fpkm = 1e100;
 		foreach(shared_ptr<Abundance> pA, _abundances)
 		{
 			double FPKM_hi;
@@ -1274,13 +1076,13 @@ void AbundanceGroup::calculate_FPKM_variance()
     if (status() == NUMERIC_OK)
     {   
         long double var = 0.0;
-        bool numeric_ok = compute_fpkm_group_variance(var,
-                                                      gammas,
-                                                      _count_covariance,
-                                                      num_fragments(),
-                                                      V_X_gs,
-                                                      ls,
-                                                      num_fragments()/mass_fraction());
+        compute_fpkm_group_variance(var,
+                                    gammas,
+                                    _count_covariance,
+                                    num_fragments(),
+                                    V_X_gs,
+                                    ls,
+                                    num_fragments()/mass_fraction());
         _FPKM_variance = var;
     }
     else
@@ -1466,7 +1268,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                             gamma_map_estimate,
                                             gamma_map_covariance,
                                             cross_replicate_js);
-            empir_gamma_var_trace(trace(gamma_map_covariance));
             _gamma_bootstrap_covariance = gamma_map_covariance;
         }
         else
@@ -2579,12 +2380,9 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
     
     gamma_covariance = ublas::zero_matrix<double>(N,N);
     ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
-    
-    int MLENUM = 0;
+
     foreach(ublas::vector<double>& mle, mle_gammas)
     {
-        //cerr << "MLE # "<< MLENUM++ << endl;
-        //cerr << mle << endl;
         expected_mle_gamma += mle;
     }
     expected_mle_gamma /= mle_gammas.size();
@@ -2600,8 +2398,6 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             }
         }
     }
-    
-    cross_replicate_js = jensen_shannon_div(mle_gammas);
     
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;
@@ -2895,8 +2691,6 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
             }
         }
     }
-    
-    //cross_replicate_js = jensen_shannon_div(mle_gammas);
     
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;

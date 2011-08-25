@@ -97,6 +97,8 @@ extern bool bootstrap;
 extern int num_bootstrap_samples;
 extern double bootstrap_fraction;
 
+extern int max_frags_per_bundle;
+
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
 
@@ -413,4 +415,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_BOOTSTRAP_FRACTION      290
 #define OPT_TILE_LEN                291
 #define OPT_TILE_SEP                292
+#define OPT_MAX_FRAGS_PER_BUNDLE    293
 #endif

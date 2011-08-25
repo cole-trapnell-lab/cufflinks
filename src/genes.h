@@ -26,6 +26,10 @@ extern int next_gene_id;
 
 int get_next_gene_id();
 
+extern int next_skipped_region_id; 
+
+int get_next_skipped_region_id();
+
 class Isoform
 {
 public:

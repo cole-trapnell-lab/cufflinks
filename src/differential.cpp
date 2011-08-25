@@ -229,7 +229,7 @@ bool test_diffexp(const FPKMContext& curr,
 	}
 	else
 	{
-		if (curr.FPKM > 0.0 )
+		if (curr.FPKM > 0.0)
 		{
             if (curr.status != NUMERIC_LOW_DATA && curr.FPKM_variance > 0.0)
             {
@@ -253,7 +253,7 @@ bool test_diffexp(const FPKMContext& curr,
 		}
 		else if (prev.FPKM > 0.0)
 		{
-            if (curr.status != NUMERIC_LOW_DATA &&  prev.FPKM_variance > 0.0)
+            if (prev.status != NUMERIC_LOW_DATA && prev.FPKM_variance > 0.0)
             {
                 normal norm(prev.FPKM, sqrt(prev.FPKM_variance));
                 test.p_value = cdf(norm, 0);
@@ -273,8 +273,13 @@ bool test_diffexp(const FPKMContext& curr,
                 test.p_value = 1;
                 performed_test = false;
             }
-
 		}
+        else
+        {
+            assert (prev.FPKM == 0.0 && curr.FPKM == 0.0);
+            performed_test = false;
+        }
+        
 	}	
 	
 	test.test_status = performed_test ? OK : NOTEST;
@@ -318,13 +323,24 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
     const FPKMContext& r2 = prev_abundance;
     
 	if (curr_abundance.status == NUMERIC_FAIL || 
-        prev_abundance.status == NUMERIC_FAIL)
+        prev_abundance.status == NUMERIC_FAIL ||
+        prev_abundance.status == NUMERIC_HI_DATA ||
+        curr_abundance.status == NUMERIC_HI_DATA)
     {
         test_diffexp(r1, r2, test);
         test.test_stat = 0;
 		test.p_value = 1.0;
 		test.differential = 0.0;
-		test.test_status = FAIL;
+        if (curr_abundance.status == NUMERIC_FAIL || 
+            prev_abundance.status == NUMERIC_FAIL)
+        {
+            test.test_status = FAIL;
+        }
+        else if (prev_abundance.status == NUMERIC_HI_DATA ||
+                 curr_abundance.status == NUMERIC_HI_DATA)
+        {
+            test.test_status = HIDATA;
+        }
     }
     else if (curr_abundance.status == NUMERIC_LOW_DATA && 
              prev_abundance.status == NUMERIC_LOW_DATA)
@@ -652,13 +668,23 @@ void sample_abundance_worker(const string& locus_tag,
     
     vector<MateHit> hits_in_cluster;
     
-    get_alignments_from_scaffolds(sample.transcripts.abundances(),
-                                  hits_in_cluster);
-    
-    // Compute the individual transcript FPKMs via each sample's 
-    // AbundanceGroup for this locus.
-    
-    sample.transcripts.calculate_abundance(hits_in_cluster);
+    if (sample_bundle->hits().size() <= max_frags_per_bundle)
+    {
+        get_alignments_from_scaffolds(sample.transcripts.abundances(),
+                                      hits_in_cluster);
+        
+        // Compute the individual transcript FPKMs via each sample's 
+        // AbundanceGroup for this locus.
+        
+        sample.transcripts.calculate_abundance(hits_in_cluster);
+    }
+    else
+    {
+        foreach(shared_ptr<Abundance>  ab, abundances)
+        {
+            ab->status(NUMERIC_HI_DATA);
+        }
+    }
     
     // Cluster transcripts by gene_id
     vector<AbundanceGroup> transcripts_by_gene_id;
@@ -910,14 +936,14 @@ void sample_worker(const RefSequenceTable& rt,
             info.transcript_ids.push_back(ab->description());
 		}
         
-        info.cross_replicate_js = ab_group.cross_rep_js();
+        info.cross_replicate_js = 0;
         //assert (abundance->cluster_mass == locus_mv.first);
         //assert (total_iso_scaled_var >= info.mean_count);
         
         info.isoform_fitted_var_sum = total_iso_scaled_var;
         info.num_transcripts = ab_group.abundances().size();
-        info.bayes_gamma_trace = ab_group.bayes_gamma_var_trace();
-        info.empir_gamma_trace = ab_group.empir_gamma_var_trace();
+        info.bayes_gamma_trace = 0;
+        info.empir_gamma_trace = 0;
         locus_variance_info_table.push_back(info);
     }
     

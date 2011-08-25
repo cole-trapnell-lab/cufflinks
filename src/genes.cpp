@@ -138,3 +138,18 @@ int get_next_gene_id()
 #endif
 	return next;
 }
+
+
+int next_skipped_region_id = 1;
+
+int get_next_skipped_region_id()
+{
+#if ENABLE_THREADS
+	gene_id_lock.lock();
+#endif
+	int next = next_skipped_region_id++;
+#if ENABLE_THREADS
+	gene_id_lock.unlock();
+#endif
+	return next;
+}

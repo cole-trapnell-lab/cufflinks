@@ -92,6 +92,7 @@ static struct option long_options[] = {
 {"no-faux-reads",           no_argument,             0,          OPT_NO_FAUX_READS},
 {"tile-read-len",           required_argument,        0,          OPT_TILE_LEN}, 
 {"tile-read-sep",           required_argument,        0,          OPT_TILE_SEP}, 
+{"max-bundle-frags",        required_argument,        0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {0, 0, 0, 0} // terminator
 };
 
@@ -134,6 +135,7 @@ void print_usage()
     fprintf(stderr, "  --min-frags-per-transfrag    minimum number of fragments needed for new transfrags [ default:     10 ]\n");
     fprintf(stderr, "  --overhang-tolerance         number of terminal exon bp to tolerate in introns     [ default:      8 ]\n");
     fprintf(stderr, "  --max-bundle-length          maximum genomic length allowed for a given bundle     [ default:3500000 ]\n");
+    fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
     fprintf(stderr, "  --min-intron-length          minimum intron size allowed in genome                 [ default:     50 ]\n");
     fprintf(stderr, "  --trim-3-avgcov-thresh       minimum avg coverage required to attempt 3' trimming  [ default:     10 ]\n");
     fprintf(stderr, "  --trim-3-dropoff-frac        fraction of avg coverage below which to trim 3' end   [ default:    0.1 ]\n");
@@ -378,6 +380,11 @@ int parse_options(int argc, char** argv)
                 use_total_mass = true;
                 break;
             }
+            case OPT_MAX_FRAGS_PER_BUNDLE:
+            {
+                max_frags_per_bundle = parseInt(0, "--max-bundle-frags must be at least 0", print_usage);
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -588,6 +595,9 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 						  vector<shared_ptr<Scaffold> >* ref_scaffs = NULL,
 						  BundleStats* stats = NULL)
 {
+    if (bundle.hits().size() > max_frags_per_bundle)
+        return false;
+    
 	bool ref_guided = (ref_scaffs != NULL);
 	
 	vector<Scaffold> hits;
@@ -1050,7 +1060,8 @@ void assemble_bundle(const RefSequenceTable& rt,
 					 long double map_mass,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
-					 FILE* ftrans_abundances)
+					 FILE* ftrans_abundances,
+					 FILE* fskipped)
 {
 	HitBundle& bundle = *bundle_ptr;
     
@@ -1077,6 +1088,8 @@ void assemble_bundle(const RefSequenceTable& rt,
 	
 	vector<shared_ptr<Scaffold> > scaffolds;
 	
+    bool successfully_assembled = true;
+    
 	switch(bundle_mode)
 	{
 		case REF_DRIVEN:
@@ -1088,15 +1101,51 @@ void assemble_bundle(const RefSequenceTable& rt,
 			}
 			break;
 		case REF_GUIDED:
-			scaffolds_for_bundle(bundle, scaffolds, &bundle.ref_scaffolds());
+			successfully_assembled = scaffolds_for_bundle(bundle, scaffolds, &bundle.ref_scaffolds());
 			break;
 		case HIT_DRIVEN:
-			scaffolds_for_bundle(bundle, scaffolds);
+			successfully_assembled = scaffolds_for_bundle(bundle, scaffolds);
 			break;
 		default:
 			assert(false);
 	}
 	
+    if (successfully_assembled == false)
+    {
+
+#if ENABLE_THREADS	
+        out_file_lock.lock();
+#endif
+        
+        int mask_region_id = get_next_skipped_region_id();
+        fprintf(fskipped, 
+                "%s\tCufflinks\texon\t%d\t%d\t%d\t%s\t.\tgene_id \"mask_%d\"; transcript_id \"mask_id%d/+\";\n",
+                rt.get_name(bundle.ref_id()),
+                bundle.left() + 1,
+                bundle.right(), // GTF intervals are inclusive on both ends, but ours are half-open
+                0,
+                "+",
+                mask_region_id,
+                mask_region_id);
+        
+        fprintf(fskipped, 
+                "%s\tCufflinks\texon\t%d\t%d\t%d\t%s\t.\tgene_id \"mask_%d\"; transcript_id \"mask_id%d/-\";\n",
+                rt.get_name(bundle.ref_id()),
+                bundle.left() + 1,
+                bundle.right(), // GTF intervals are inclusive on both ends, but ours are half-open
+                0,
+                "-",
+                mask_region_id,
+                mask_region_id);
+        
+        
+#if ENABLE_THREADS	
+        out_file_lock.unlock();
+#endif
+        delete bundle_ptr;
+		return;
+    }
+    
 	if (scaffolds.empty())
 	{
 		delete bundle_ptr;
@@ -1183,6 +1232,8 @@ void assemble_bundle(const RefSequenceTable& rt,
 				status = "OK";
 			else if (iso.status() == NUMERIC_LOW_DATA)
                 status = "LOWDATA";
+            else if (iso.status() == NUMERIC_HI_DATA)
+                status = "HIDATA";
             else if (iso.status() == NUMERIC_FAIL)
 				status = "FAIL";
             else
@@ -1217,6 +1268,8 @@ void assemble_bundle(const RefSequenceTable& rt,
             status = "OK";
         else if (gene.status() == NUMERIC_LOW_DATA)
             status = "LOWDATA";
+        else if (gene.status() == NUMERIC_HI_DATA)
+            status = "HIDATA";
         else if (gene.status() == NUMERIC_FAIL)
             status = "FAIL";
         else
@@ -1282,6 +1335,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
     fprintf(fgene_abundances,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tFPKM_status\n");
     
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
+    FILE* fskipped = fopen(string(output_dir + "/" + "skipped.gtf").c_str(), "w");
     
 	string process;
 	if (corr_bias && corr_multi && final_est_run)
@@ -1360,7 +1414,8 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 					 bundle_factory.read_group_properties()->normalized_map_mass(),
 					 ftranscripts, 
 					 fgene_abundances,
-					 ftrans_abundances);
+					 ftrans_abundances,
+                     fskipped);
 #else
 		assemble_bundle(boost::cref(rt), 
 						bundle_ptr, 
@@ -1368,7 +1423,8 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 						bundle_factory.read_group_properties()->normalized_map_mass(),
 						ftranscripts,
 						fgene_abundances,
-						ftrans_abundances);
+						ftrans_abundances,
+                        fskipped);
 #endif			
 		
 	}
@@ -1402,6 +1458,7 @@ bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
 	fclose(ftranscripts);
 	fclose(ftrans_abundances);
 	fclose(fgene_abundances);
+    fclose(fskipped);
 	return true;
 }
 	

@@ -110,6 +110,8 @@ bool bootstrap = false;
 int num_bootstrap_samples = 20;
 double bootstrap_fraction = 1.0;
 
+int max_frags_per_bundle = 1000000;
+
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 

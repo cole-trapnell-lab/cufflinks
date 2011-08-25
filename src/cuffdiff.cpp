@@ -100,7 +100,7 @@ static struct option long_options[] = {
 {"split-variance",          no_argument,	 		 0,	         OPT_SPLIT_VARIANCE},
 {"num-bootstrap-samples",   required_argument,	 		 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
 {"bootstrap-fraction",      required_argument,	 		 0,          OPT_BOOTSTRAP_FRACTION},
-
+{"max-bundle-frags",        required_argument,        0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {0, 0, 0, 0} // terminator
 };
 
@@ -140,7 +140,8 @@ void print_usage()
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
-    fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [ default:  FALSE ]\n");    
+    fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [ default:  FALSE ]\n");
+    fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
     print_library_table();
 }
 
@@ -329,7 +330,11 @@ int parse_options(int argc, char** argv)
                 bootstrap_fraction = parseFloat(0, 1.0, "--bootstrap-fraction must be between 0 and 1.0", print_usage);
                 break;
             }
-
+            case OPT_MAX_FRAGS_PER_BUNDLE:
+            {
+                max_frags_per_bundle = parseInt(0, "--max-bundle-frags must be at least 0", print_usage);
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -416,6 +421,8 @@ void print_tests(FILE* fout,
             status = "OK";
         else if (test.test_status == LOWDATA)
             status = "LOWDATA";
+        else if (test.test_status == HIDATA)
+            status = "HIDATA";
         else if (test.test_status == NOTEST)
             status = "NOTEST";
         else
@@ -500,6 +507,10 @@ void print_FPKM_tracking(FILE* fout,
             else if (fpkms[i].status == NUMERIC_LOW_DATA)
             {
                 status_str = "LOWDATA";
+            }
+            else if (fpkms[i].status == NUMERIC_HI_DATA)
+            {
+                status_str = "HIDATA";
             }
             else
             {
@@ -1522,10 +1533,12 @@ int main(int argc, char** argv)
 	
     driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
 	
+#if 0
     if (emit_count_tables)
     {
         dump_locus_variance_info("locus_var.txt");
     }
+#endif
     
 	return 0;
 }
