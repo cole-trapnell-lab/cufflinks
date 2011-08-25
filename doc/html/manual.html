@@ -381,6 +381,12 @@
 	  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
 	  </td></tr>
 	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--max-bundle-frags &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the maximum number of fragments a locus may have before being skipped. Skipped loci are listed in <tt>skipped.gtf</tt>. Default: 1000000  
+	  </td></tr>
+	
 	  <tr><td VALIGN=top>
 	  <b>Advanced Assembly Options:</b>
 	  </td><td VALIGN=top>
@@ -1409,6 +1415,12 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
       generation and differential expression analysis.  The default is 1e-5, and 
       we recommend you not alter this parameter. 
 	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--max-bundle-frags &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Sets the maximum number of fragments a locus may have before being skipped. Skipped loci are marked with status HIDATA. Default: 1000000  
+	  </td></tr>
 	  
 		  </table><br/>
 	  <h2 id="cuffdiff_output">Cuffdiff Output</h2><br/>
@@ -1486,7 +1498,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>NOTEST</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>NOTEST</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>7</td><td VALIGN=top>FPKM<sub><em>x</em></sub></td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the gene in sample <em>x</em></td>
@@ -1538,7 +1550,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>7</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
@@ -1588,7 +1600,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>7</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
@@ -1639,7 +1651,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>5</td><td VALIGN=top>sample 2</td><td VALIGN=top><tt>Brain</tt></td><td VALIGN=top>Label (or number if no labels provided) of the second sample being tested</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
+			<td VALIGN=top>6</td><td VALIGN=top>Test status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Can be one of OK (test successful), NOTEST (not enough alignments for testing), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents testing.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>7</td><td VALIGN=top>Reserved</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top></td>
@@ -1713,7 +1725,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>13</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>14</td><td VALIGN=top>q0_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			<td VALIGN=top>14</td><td VALIGN=top>q0_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>15</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
@@ -1722,7 +1734,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>16<td VALIGN=top>q1_FPKM_hi</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>17<td VALIGN=top>q1_status</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			<td VALIGN=top>17<td VALIGN=top>q1_status</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>3<em>N</em> + 13</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
@@ -1734,7 +1746,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>3<em>N</em> + 15</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 16</td><td VALIGN=top>q<em>N</em>_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample <em>N</em>. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			<td VALIGN=top>3<em>N</em> + 16</td><td VALIGN=top>q<em>N</em>_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample <em>N</em>. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  </table>
 		 <br/> 

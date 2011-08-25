@@ -231,6 +231,8 @@
 				  <ul>
 				<li>Cuffdiff now includes a more sophisticated check for sufficient sequencing depth prior to testing for differences, which substantially improves the accuracy of differential expression analysis in loci with low to medium depth. 
 				<li>A bug in the calculation of the parameters for the beta negative binomial distribution used during variance estimation has been fixed.
+				<li>Some users have reported that Cufflinks or Cuffdiff crashes due to running out of memory when processing highly expressed loci. Both programs now have a maximum number of fragments that can fall within a locus.  If a locus has more than this maximum, it is skipped.  The threshold is configurable via the <tt>--max-bundle-frags</tt> option.
+				
 				</ul>
 				<p><b>FILE FORMAT CHANGES:</b>
 				<ul>

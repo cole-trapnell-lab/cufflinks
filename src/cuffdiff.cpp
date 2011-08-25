@@ -529,13 +529,44 @@ bool p_value_lt(const SampleDifference* lhs, const SampleDifference* rhs)
 	return lhs->p_value < rhs->p_value;
 }
 
+//// Benjamani-Hochberg procedure
+//int fdr_significance(double fdr, 
+//					  vector<SampleDifference*>& tests)
+//{
+//	sort(tests.begin(), tests.end(), p_value_lt);
+//	vector<SampleDifference*> passing;
+//
+//	for (int k = 0; k < (int)tests.size(); ++k)
+//	{
+//		if (tests[k]->test_status == OK)
+//		{
+//			passing.push_back(tests[k]);
+//		}
+//		else
+//		{
+//			tests[k]->significant = false;
+//		}
+//	}
+//	int significant = 0;
+//	for (int k = 0; k < (int)passing.size(); ++k)
+//	{
+//		double r = (double)passing.size() / ((double) k + 1);
+//		double corrected_p = passing[k]->p_value * r;
+//		passing[k]->corrected_p = corrected_p;
+//		passing[k]->significant = (corrected_p <= fdr);
+//        significant += passing[k]->significant;
+//	}
+//    
+//	return passing.size();
+//}
+
 // Benjamani-Hochberg procedure
 int fdr_significance(double fdr, 
-					  vector<SampleDifference*>& tests)
+                     vector<SampleDifference*>& tests)
 {
 	sort(tests.begin(), tests.end(), p_value_lt);
 	vector<SampleDifference*> passing;
-
+    
 	for (int k = 0; k < (int)tests.size(); ++k)
 	{
 		if (tests[k]->test_status == OK)
@@ -548,17 +579,30 @@ int fdr_significance(double fdr,
 		}
 	}
 	int significant = 0;
-	for (int k = 0; k < (int)passing.size(); ++k)
+	float pmin=1;
+	int n = (int) passing.size();
+    //use the same procedure as p.adjust(...,"BH") in R
+	for (int k = n-1; k >= 0; k--)
 	{
-		double r = (double)passing.size() / ((double) k + 1);
-		double corrected_p = passing[k]->p_value * r;
-		passing[k]->corrected_p = corrected_p;
+		double corrected_p = (double) passing[k]->p_value * ((double) n/(double) (k+1));
+        //make sure that no entry with lower p-value will get higher q-value than any entry with higher p-value
+		if (corrected_p < pmin) 
+		{
+			pmin = corrected_p;
+		}
+		else
+		{
+			corrected_p = pmin;
+		}
+        // make sure that the q-value is always <= 1 
+		passing[k]->corrected_p = (corrected_p < 1 ? corrected_p : 1); 
 		passing[k]->significant = (corrected_p <= fdr);
         significant += passing[k]->significant;
 	}
     
 	return passing.size();
 }
+
 
 void extract_sample_diffs(SampleDiffs& diff_map,
 						  vector<SampleDifference*>& diffs)
