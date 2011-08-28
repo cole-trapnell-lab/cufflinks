@@ -3,28 +3,28 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>index.html</string>
+	<string>howitworks.html</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>index.html</string>
 			<key>lastUsed</key>
-			<date>2011-08-03T13:59:08Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2011-08-21T23:59:28Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>howitworks.html</string>
 			<key>lastUsed</key>
-			<date>2011-07-24T15:59:11Z</date>
+			<date>2011-08-22T00:11:24Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>manual.html</string>
 			<key>lastUsed</key>
-			<date>2011-07-24T15:21:52Z</date>
+			<date>2011-08-22T00:11:24Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -88,14 +88,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>176</integer>
+				<integer>1516</integer>
 				<key>line</key>
-				<integer>606</integer>
+				<integer>598</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
-			<integer>0</integer>
+			<integer>77</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>590</integer>
 		</dict>
 		<key>igenomes.html</key>
 		<dict>
@@ -132,28 +132,28 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>3</integer>
+				<integer>30</integer>
 				<key>line</key>
-				<integer>242</integer>
+				<integer>234</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>220</integer>
+			<integer>207</integer>
 		</dict>
 		<key>manual.html</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>23</integer>
+				<integer>78</integer>
 				<key>line</key>
-				<integer>1371</integer>
+				<integer>362</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>720</integer>
+			<integer>321</integer>
 		</dict>
 		<key>tutorial.html</key>
 		<dict>
@@ -183,6 +183,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{406, 74}, {1060, 954}}</string>
+	<string>{{563, 224}, {1060, 954}}</string>
 </dict>
 </plist>

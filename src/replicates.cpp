@@ -85,7 +85,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     if (lb != _scaled_mass_means.end())
     {
         int d = lb - _scaled_mass_means.begin();
-        if (*lb == scaled_mass)
+        if (*lb == scaled_mass || lb == _scaled_mass_means.begin())
         {
             double var = _scaled_mass_variances[d];
             if (var < scaled_mass) // revert to poisson if underdispersed
@@ -94,8 +94,15 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
             return var;
         }
         
+        
         //in between two points on the scale.
         d--;
+        
+        if ((d < 0 || d >= _scaled_mass_means.size()) ||
+            (d < 0 || d >= _scaled_mass_variances.size()))
+        {
+            fprintf(stderr, "ARG\n");
+        }
         double x1_mean = _scaled_mass_means[d];
         double x2_mean = _scaled_mass_means[d + 1];
         

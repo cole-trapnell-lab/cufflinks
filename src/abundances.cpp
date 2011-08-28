@@ -2626,9 +2626,9 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
         for (size_t j = 0; j < alignments.size(); ++j)
         {
             int adjusted_mass = 0.0;
-            while (sample_idxs[curr_sample] >= processed_hits &&
-                   sample_idxs[curr_sample] < processed_hits + alignments[j].collapse_mass() &&
-                   curr_sample < sample_idxs.size())
+            while (curr_sample < sample_idxs.size() &&
+                   sample_idxs[curr_sample] >= processed_hits &&
+                   sample_idxs[curr_sample] < processed_hits + alignments[j].collapse_mass())
             {
                 adjusted_mass++;
                 curr_sample++;
