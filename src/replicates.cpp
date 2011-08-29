@@ -18,6 +18,39 @@ extern "C" {
 boost::mutex _locfit_lock;
 #endif
 
+MassDispersionModel::MassDispersionModel(const std::vector<double>& scaled_mass_means, 
+                                         const std::vector<double>& scaled_raw_variances,
+                                         const std::vector<double>& scaled_mass_variances) 
+{
+    if (scaled_mass_means.size() != scaled_mass_variances.size())
+    {
+        fprintf (stderr, "Error: dispersion model table is malformed\n");
+    }
+    
+    double last_val = 0;
+    for (size_t i = 0; i < scaled_mass_means.size(); i++)
+    {
+        
+        if (last_val > scaled_mass_means[i])
+        {
+            fprintf (stderr, "Error: DispersionModel input is malformed\n");
+        }
+        
+        if ( i == 0 || last_val < scaled_mass_means[i])
+        {
+            _scaled_mass_means.push_back(scaled_mass_means[i]);
+            _scaled_raw_variances.push_back(scaled_raw_variances[i]);
+            _scaled_mass_variances.push_back(scaled_mass_variances[i]);
+        }
+        else
+        {
+            // skip this element if it's equal to what we've already seen
+        }
+        
+        last_val = scaled_mass_means[i];
+    }
+}
+
 double MassDispersionModel::scale_mass_variance(double scaled_mass) const 
 {
     if (scaled_mass <= 0)
@@ -82,7 +115,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     lb = lower_bound(_scaled_mass_means.begin(), 
                      _scaled_mass_means.end(), 
                      scaled_mass);
-    if (lb != _scaled_mass_means.end())
+    if (lb < _scaled_mass_means.end())
     {
         int d = lb - _scaled_mass_means.begin();
         if (*lb == scaled_mass || lb == _scaled_mass_means.begin())
@@ -98,11 +131,20 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         //in between two points on the scale.
         d--;
         
-        if ((d < 0 || d >= _scaled_mass_means.size()) ||
-            (d < 0 || d >= _scaled_mass_variances.size()))
+        if (d < 0)
         {
-            fprintf(stderr, "ARG\n");
+            fprintf(stderr, "ARG d < 0, d = %d \n", d);
         }
+        
+        if (d >= _scaled_mass_means.size())
+        {
+            fprintf(stderr, "ARG d >= _scaled_mass_means.size(), d = %d\n", d);
+        }
+        if (d >= _scaled_mass_variances.size())
+        {
+            fprintf(stderr, "ARG d >= _scaled_mass_variances.size(), d = %d\n", d);
+        }
+        
         double x1_mean = _scaled_mass_means[d];
         double x2_mean = _scaled_mass_means[d + 1];
         
