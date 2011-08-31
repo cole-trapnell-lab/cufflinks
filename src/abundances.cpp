@@ -1642,7 +1642,10 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 	}
 	else
 	{
-		p[j] = 0.0;
+        for (j = 0; j < N; ++j) 
+        {
+            p[j] = 0.0;
+        }
 	}
 }
  
