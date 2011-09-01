@@ -322,7 +322,7 @@ int parse_options(int argc, char** argv)
             }
             case OPT_NUM_BOOTSTRAP_SAMPLES:
             {
-                num_bootstrap_samples = parseInt(1, "--num-bootstrap-samples must be at least 1", print_usage);
+                num_bootstrap_samples = parseInt(0, "--num-bootstrap-samples must be at least 1", print_usage);
                 break;
             }
             case OPT_BOOTSTRAP_FRACTION:
