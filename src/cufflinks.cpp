@@ -90,8 +90,10 @@ static struct option long_options[] = {
 {"3-overhang-tolerance",	required_argument,		 0,			 OPT_3_OVERHANG_TOLERANCE},
 {"intron-overhang-tolerance",	required_argument,		 0,		 OPT_INTRON_OVERHANG_TOLERANCE},
 {"no-faux-reads",           no_argument,             0,          OPT_NO_FAUX_READS},
-{"tile-read-len",           required_argument,        0,          OPT_TILE_LEN}, 
-{"tile-read-sep",           required_argument,        0,          OPT_TILE_SEP}, 
+{"no-5-extend",             no_argument,             0,          OPT_NO_5_EXTEND},
+{"tile-read-len",           required_argument,       0,          OPT_TILE_LEN}, 
+{"tile-read-sep",           required_argument,       0,          OPT_TILE_SEP}, 
+    
 {"max-bundle-frags",        required_argument,        0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {0, 0, 0, 0} // terminator
 };
@@ -345,6 +347,11 @@ int parse_options(int argc, char** argv)
                 enable_faux_reads = false;
                 break;
             }
+            case OPT_NO_5_EXTEND:
+            {
+                enable_5_extend = false;
+                break;
+            }
             case OPT_3_OVERHANG_TOLERANCE:
             {
                 overhang_3 = parseInt(0, "--3-overhang-tolernace must be at least 0", print_usage);
@@ -473,7 +480,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 				{
 					kept_lhs[l] = false;
 				}
-				else if (ref_scaff->overlapped_3(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
+				else if (enable_5_extend && ref_scaff->overlapped_3(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
 				{
 					ref_scaff->extend_5(lhs[l]);
 					kept_lhs[l] = false;
@@ -492,7 +499,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 				{
 					kept_rhs[r] = false;
 				}
-				else if (ref_scaff->overlapped_3(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
+				else if (enable_5_extend && ref_scaff->overlapped_3(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
 				{
 					ref_scaff->extend_5(rhs[r]);
 					kept_rhs[r] = false;

@@ -74,6 +74,7 @@ extern int ref_merge_overhang_tolerance;
 extern int tile_len;
 extern int tile_off;
 extern bool enable_faux_reads;
+extern bool enable_5_extend;
 
 // Assembly options
 extern uint32_t min_intron_length;
@@ -415,5 +416,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_BOOTSTRAP_FRACTION      290
 #define OPT_TILE_LEN                291
 #define OPT_TILE_SEP                292
-#define OPT_MAX_FRAGS_PER_BUNDLE    293
+#define OPT_NO_5_EXTEND             293
+#define OPT_MAX_FRAGS_PER_BUNDLE    294
 #endif
