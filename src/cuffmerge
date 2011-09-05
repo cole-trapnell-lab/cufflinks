@@ -164,7 +164,7 @@ def cufflinks(out_dir,
               sam_file,
               min_isoform_frac,
               gtf_file=None,
-              extra_opts=["-q", "--overhang-tolerance", "200", "--library-type=transfrags",  "-A","0.0", "--min-frags-per-transfrag", "0"],
+              extra_opts=["-q", "--overhang-tolerance", "200", "--library-type=transfrags",  "-A","0.0", "--min-frags-per-transfrag", "0", "--no-5-extend"],
               lsf=False,
               curr_queue=None):
     if gtf_file != None:
@@ -327,9 +327,9 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
         ref_str = " -r %s " % ref_gtf
 
     if fasta != None:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm %s -s %s %s''' % (ref_str, fasta, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm -C -G %s -s %s %s''' % (ref_str, fasta, meta_asm_gtf)
     else:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm %s %s''' % (ref_str, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o tmp_meta_asm -C -G %s %s''' % (ref_str, meta_asm_gtf)
 
     #cmd = bsub_cmd(comp_cmd, "/gencode_cmp", True, job_mem=8)
     cmd = comp_cmd

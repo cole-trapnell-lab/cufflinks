@@ -472,18 +472,32 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 		{			
 			foreach(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
 			{
+                // if we're past all the overlaps, just stop
 				if (ref_scaff->left() >= lhs[l].right() + overhang_3)
 				{
 					break;
 				}
+                // don't emit assembled transfrags that are contained within reference ones
 				else if (ref_scaff->contains(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
 				{
 					kept_lhs[l] = false;
 				}
-				else if (enable_5_extend && ref_scaff->overlapped_3(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
+                // if they're compatible but not equal, let's check a few more criteria before 
+                // we decide to emit the assembled guy
+				else if (ref_scaff->overlapped_3(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
 				{
-					ref_scaff->extend_5(lhs[l]);
-					kept_lhs[l] = false;
+					if (ref_scaff->gaps() == lhs[l].gaps())
+                    {
+                        kept_lhs[l] = false;
+                    }
+                    else
+                    {
+                        if (enable_5_extend)
+                        {
+                            ref_scaff->extend_5(lhs[l]);
+                            kept_lhs[l] = false;
+                        }
+                    }
 				}
 			}
 		}
@@ -499,10 +513,20 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 				{
 					kept_rhs[r] = false;
 				}
-				else if (enable_5_extend && ref_scaff->overlapped_3(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
+				else if (ref_scaff->overlapped_3(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
 				{
-					ref_scaff->extend_5(rhs[r]);
-					kept_rhs[r] = false;
+                    if (ref_scaff->gaps() == rhs[r].gaps())
+                    {
+                        kept_rhs[r] = false;
+                    }
+                    else
+                    {
+                        if (enable_5_extend)
+                        {
+                            ref_scaff->extend_5(rhs[r]);
+                            kept_rhs[r] = false;
+                        }
+                    }
 				}
 			}
 		}
