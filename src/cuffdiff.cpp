@@ -1360,6 +1360,7 @@ int main(int argc, char** argv)
     }
     
     if (!no_update_check)
+        check_version(PACKAGE_VERSION);
         
     
     string ref_gtf_filename = argv[optind++];
