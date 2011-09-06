@@ -475,7 +475,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
                 // if we're past all the overlaps, just stop
 				if (ref_scaff->left() >= lhs[l].right() + overhang_3)
 				{
-					break;
+					//break;
 				}
                 // don't emit assembled transfrags that are contained within reference ones
 				else if (ref_scaff->contains(lhs[l], 0, overhang_3) && Scaffold::compatible(*ref_scaff, lhs[l], ref_merge_overhang_tolerance))
@@ -507,7 +507,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 			{
 				if (ref_scaff->left() >= rhs[r].right() + overhang_3)
 				{
-					break;
+					//break;
 				}
 				else if (ref_scaff->contains(rhs[r], 0, overhang_3) && Scaffold::compatible(*ref_scaff, rhs[r], ref_merge_overhang_tolerance))
 				{
