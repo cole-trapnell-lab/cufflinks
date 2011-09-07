@@ -603,7 +603,7 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
         GStr refname(gffrec->getRefName());
         RefTran* rt=reftbl.Find(refname.chars());
         if (rt==NULL && refname.length()>2 && refname[-2]=='.' && isdigit(refname[-1])) {
-           //try removing the version
+           //try removing the version suffix
            refname.cut(-2);
            //GMessage("[DEBUG] Trying ref name '%s'...\n", refname.chars());
            rt=reftbl.Find(refname.chars());

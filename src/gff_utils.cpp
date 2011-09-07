@@ -325,6 +325,25 @@ void printLocus(GffLocus* loc, const char* pre=NULL) {
   GMessage("\n");
 }
 
+void preserveContainedCDS(GffObj* t, GffObj* tfrom) {
+ //transfer CDS info to the container t if it's a larger protein
+ if (tfrom->CDstart==0) return;
+ if (t->CDstart) {
+   if (tfrom->CDstart<t->CDstart && tfrom->CDstart>=t->start)
+      t->CDstart=tfrom->CDstart;
+   if (tfrom->CDend>t->CDend && tfrom->CDend<=t->end)
+      t->CDend=tfrom->CDend;
+   }
+  else { //no CDS info on container, just copy it from the contained
+   if (tfrom->CDstart>=t->start) t->CDstart=tfrom->CDstart;
+                          else t->CDstart=t->start;
+   if (tfrom->CDend<=t->end) t->CDend=tfrom->CDend;
+                      else t->CDend=t->end;
+   }
+   
+ 
+}
+
 void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant, bool matchAllIntrons, bool fuzzSpan) {
   //GMessage(">>Placing transcript %s\n", t->getID());
   GTData* tdata=new GTData(t);
@@ -386,9 +405,11 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
                       (container=redundantTranscripts(*t, *(loc.rnas[ti]), matchAllIntrons, fuzzSpan))!=NULL) {
                      if (container==t) {
                         odata->replaced_by=t;
+                        preserveContainedCDS(t, loc.rnas[ti]);
                         }
                      else {
                         tdata->replaced_by=loc.rnas[ti];
+                        preserveContainedCDS(loc.rnas[ti], t);
                         }
                      }
               }//for each transcript in the exon-overlapping locus
