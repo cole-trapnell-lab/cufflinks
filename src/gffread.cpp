@@ -9,8 +9,8 @@
 
 #define USAGE "Usage:\n\
 gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
- [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end>] \n\
- [-CTVNJMKQAFGRUVBHZWTOLE] [-w <spl_exons.fa>] [-x <spl_cds.fa>] [-y <tr_cds.fa>]\n\
+ [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end> [-R]]\n\
+ [-CTVNJMKQAFGUBHZWTOLE] [-w <exons.fa>] [-x <cds.fa>] [-y <tr_cds.fa>]\n\
  [-i <maxintron>] \n\
  Filters and/or converts GFF3/GTF2 records.\n\
  <input_gff> is a GFF file, use '-' if the GFF records will be given at stdin\n\
@@ -24,10 +24,10 @@ gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
       <seq-name> <seq-length> <seq-description>\n\
       (useful for -A option with mRNA/EST/protein mappings)\n\
   -i  discard transcripts having an intron larger than <maxintron>\n\
-  -r  only show transcripts crossing coordinate range <start>..<end>\n\
+  -r  only show transcripts overlapping coordinate range <start>..<end>\n\
       (on chromosome/contig <chr>, strand <strand> if provided)\n\
   -R  for -r option, discard all transcripts that are not fully \n\
-      contained within given range\n\
+      contained within the given range\n\
   -U  discard single-exon transcripts\n\
   -C  coding only: discard mRNAs that have no CDS feature\n\
   -F  full GFF attribute preservation (all attributes are shown)\n\
@@ -52,6 +52,7 @@ gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
  \n\
   -M/--merge : cluster the input transcripts into loci, collapsing matching\n\
        transcripts (those with the same exact introns and fully contained)\n\
+  -d <dupinfo> : for -M option, write collapsing info to file <dupinfo>\n\
   --cluster-only: same as --merge but without collapsing matching transcripts\n\
   -K  for -M option: also collapse shorter, fully contained transcripts\n\
       with fewer introns than the container\n\
@@ -601,7 +602,7 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
   if (reftbl.Count()>0) {
         GStr refname(gffrec->getRefName());
         RefTran* rt=reftbl.Find(refname.chars());
-        if (rt==NULL && refname[-2]=='.' && isdigit(refname[-1])) {
+        if (rt==NULL && refname.length()>2 && refname[-2]=='.' && isdigit(refname[-1])) {
            //try removing the version
            refname.cut(-2);
            //GMessage("[DEBUG] Trying ref name '%s'...\n", refname.chars());
@@ -638,7 +639,7 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
      if (rfltStart!=0 || rfltEnd!=MAX_UINT) {
        if (rfltWithin) {
          if (gffrec->start<rfltStart || gffrec->end>rfltEnd) {
-            return false;
+            return false; //not within query range
             }
          }
        else {
@@ -712,7 +713,6 @@ int main(int argc, char * const argv[]) {
       exit(1);
       }
     }
- //protmap=(args.getOpt('P')!=NULL);
  if (fullCDSonly) validCDSonly=true;
  if (verbose) { 
      fprintf(stderr, "Command line was:\n");
@@ -785,11 +785,12 @@ int main(int argc, char * const argv[]) {
       rfltEnd=(uint)gsend.asInt();
       if (rfltEnd==0) rfltEnd=MAX_UINT;
       }
-   
    } //gseq/range filtering
  else {
    if (rfltWithin)
-     GError("Error: option -R doesn't make sense without -r!\n");
+     GError("Error: option -R requires -r!\n");
+   //if (rfltWholeTranscript)
+   //  GError("Error: option -P requires -r!\n");
    }
  s=args.getOpt('m');
  if (!s.is_empty()) {

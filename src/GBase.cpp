@@ -3,6 +3,14 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
+#ifndef S_ISREG
+#define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
+#endif
+
 static char msg[4069];
 /*
 #ifdef _DEFINE_WIN32_FSEEKO
