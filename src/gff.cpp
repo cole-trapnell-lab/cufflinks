@@ -403,10 +403,34 @@ if (reader->transcriptsOnly && !is_t_data) {
  skip=false;
 }
 
+
+void GffObj::addCDS(uint cd_start, uint cd_end, char phase) {
+  if (cd_start>=this->start) {
+        this->CDstart=cd_start;
+        if (strand=='+') this->CDphase=phase;
+        }
+      else this->CDstart=this->start;
+  if (cd_end<=this->end) {
+      this->CDend=cd_end;
+      if (strand=='-') this->CDphase=phase;
+      }
+     else this->CDend=this->end;
+  isTranscript(true);
+  exon_ftype_id=gff_fid_exon;
+  if (monoFeature()) {
+     if (exons.Count()==0) addExon(this->start, this->end,0,'.',0,0,false,exgffExon);
+            else exons[0]->exontype=exgffExon;
+     }
+}
+
 int GffObj::addExon(GffReader* reader, GffLine* gl, bool keepAttr, bool noExonAttr) {
   //this will make sure we have the right subftype_id!
-  int subf_id=-1;
-  //if (ftype_id==gff_fid_mRNA) { //for mRNAs only parse known subfeatures!
+  //int subf_id=-1;
+  if (!isTranscript() && gl->is_cds) {
+          isTranscript(true);
+          exon_ftype_id=gff_fid_exon;
+          if (exons.Count()==1) exons[0]->exontype=exgffExon;
+          }
   if (isTranscript()) {
      if (exon_ftype_id<0) {//exon_ftype_id=gff_fid_exon;
           if (gl->exontype>0) exon_ftype_id=gff_fid_exon;
@@ -422,12 +446,12 @@ int GffObj::addExon(GffReader* reader, GffLine* gl, bool keepAttr, bool noExonAt
           }
      }
   else { //non-mRNA parent feature, check this subf type
-    subf_id=names->feats.addName(gl->ftype);
+    int subf_id=names->feats.addName(gl->ftype);
     if (exon_ftype_id<0 || exons.Count()==0) //never assigned a subfeature type before (e.g. first exon being added)
        exon_ftype_id=subf_id;
      else {
        if (exon_ftype_id!=subf_id) {
-         //if (subftype_id==ftype_id && exons.Count()==1 && exons[0]->start==start && exons[0]->end==end) {
+         //
          if (exon_ftype_id==ftype_id && exons.Count()==1 && exons[0]->start==start && exons[0]->end==end) {
             //the existing exon was just a dummy one created by default, discard it
             exons.Clear();
@@ -568,6 +592,13 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
 	   } //check for overlap
    // --- no overlap, or accepted micro-overlap (ribosomal slippage)
    // create & add the new segment
+   /*
+   if (start>0 && exontype==exgffCDS && exons.Count()==0) {
+      //adding a CDS directly as the first subfeature of a declared parent
+      segstart=start;
+      segend=end;
+      } 
+   */
    GffExon* enew=new GffExon(segstart, segend, sc, fr, qs, qe, exontype);
    int eidx=exons.Add(enew);
    if (eidx<0) {
@@ -580,8 +611,12 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
      return -1;            
      }
    covlen+=(int)(exons[eidx]->end-exons[eidx]->start)+1;
-   start=exons.First()->start;
-   end=exons.Last()->end;
+   //adjust parent feature coordinates to contain this exon
+   if (start==0 || start>exons.First()->start) {
+     start=exons.First()->start;
+     }
+   if (end<exons.Last()->end) end=exons.Last()->end;
+     
    if (uptr!=NULL) { //collect stats about the underlying genomic sequence
        GSeqStat* gsd=(GSeqStat*)uptr;
        if (start<gsd->mincoord) gsd->mincoord=start;

@@ -271,7 +271,7 @@ int main(int argc, char * const argv[]) {
   GStr outbasename; //include path, if provided
   GStr outprefix; //without path and/or extension
   GStr outstats=args.getOpt('o');
-  if (outstats.is_empty()) {
+  if (outstats.is_empty() || outstats=="-") {
        outstats="cuffcmp";
        }
   outbasename=outstats;
@@ -2082,76 +2082,65 @@ void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
      GffObj& m=*mrnas[i];
      char ovlcode=((CTData*)m.uptr)->getBestCode();
      if (ovlcode>47 && strchr("=cjeo",ovlcode)!=NULL) continue;
-     //if (ovlcode<47 || strchr("uirp",ovlcode)!=NULL)
-     //if (ovlcode<47 || strchr("=cjeo",ovlcode)==NULL)
-        {
-         //incCodeCount(ovlcode);
-         GLocus* rloc=rloci->Get(j);
-        CHECK_RLOC:
-         if (rloc->start>m.end) continue; //check next transfrag
-         if (m.start>rloc->end) {
-               j++;
-               if (j<rloci->Count()) {
-                   rloc=rloci->Get(j);
-                   goto CHECK_RLOC;
-                   }
-                 else //rloci exhausted
-                   break; //no chance of overlap from now on
-               }
-         //m overlaps rloc:
-         //check if m has a fuzzy intron overlap -> 's' (shadow, mapped on the wrong strand)
-         //  then if m is contained within an intron -> 'i'
-         //  otherwise it's just a plain cross-strand overlap: 'x'
-         int jm=0;
-         do { //while rloci overlap this transfrag (m)
-           bool is_shadow=false;
-           GffObj* sovl=NULL;
-           bool is_intraintron=false;
-           GffObj* iovl=NULL;
-           if (rloc->introns.Count()>0) {
-               for (int n=0;n<rloc->introns.Count();n++) {
-                  GISeg& rintron=rloc->introns[n];
-                  if (rintron.start>m.end) break;
-                  if (m.start>rintron.end) continue;
-                  //overlap between m and intron
-                  if (m.end<=rintron.end && m.start>=rintron.start) {
-                      //((CTData*)m.uptr)->addOvl('i', rintron.t);
-                      is_intraintron=true;
-                      if (iovl==NULL || iovl->covlen<rintron.t->covlen) iovl=rintron.t;
-                      continue;
+     GLocus* rloc=rloci->Get(j);
+     if (rloc->start>m.end) continue; //check next transfrag
+     while (m.start>rloc->end && j+1<rloci->Count()) {
+           j++;
+           rloc=rloci->Get(j);
+           }
+     if (rloc->start>m.end) continue; //check next transfrag
+     //m overlaps rloc:
+     //check if m has a fuzzy intron overlap -> 's' (shadow, mapped on the wrong strand)
+     //  then if m is contained within an intron -> 'i'
+     //  otherwise it's just a plain cross-strand overlap: 'x'
+     int jm=0;
+     do { //while rloci overlap this transfrag (m)
+       rloc=rloci->Get(j+jm);
+       bool is_shadow=false;
+       GffObj* sovl=NULL;
+       bool is_intraintron=false;
+       GffObj* iovl=NULL;
+       if (rloc->introns.Count()>0) {
+           for (int n=0;n<rloc->introns.Count();n++) {
+              GISeg& rintron=rloc->introns[n];
+              if (rintron.start>m.end) break;
+              if (m.start>rintron.end) continue;
+              //overlap between m and intron
+              if (m.end<=rintron.end && m.start>=rintron.start) {
+                  is_intraintron=true;
+                  if (iovl==NULL || iovl->covlen<rintron.t->covlen) iovl=rintron.t;
+                  continue;
+                  }
+              //check if any intron of m has a fuzz-match with rintron
+              for (int e=1;e<m.exons.Count();e++) {
+                 GSeg mintron(m.exons[e-1]->end+1,m.exons[e]->start-1);
+                 if (rintron.coordMatch(&mintron,10)) {
+                    is_shadow=true;
+                    if (sovl==NULL || sovl->covlen<rintron.t->covlen) sovl=rintron.t;
+                    break;
+                    }
+                 } //for each m intron
+              } //for each intron of rloc
+           }//rloc has introns
+       bool xcode=true;
+       if (is_shadow) { ((CTData*)m.uptr)->addOvl('s', sovl); xcode=false; }
+             // else
+       if (ovlcode!='i' && is_intraintron) { ((CTData*)m.uptr)->addOvl('i', iovl); xcode=false; }
+       if (xcode) {
+               // just plain overlap, find the overlapping mrna in rloc
+               GffObj* maxovl=NULL;
+               int ovlen=0;
+               for (int ri=0;ri<rloc->mrnas.Count();ri++) {
+                  int o=m.exonOverlapLen(*(rloc->mrnas[ri]));
+                  if (o>ovlen) {
+                      ovlen=o;
+                      maxovl=rloc->mrnas[ri];
                       }
-                  //check if any intron of m has a fuzz-match with rintron
-                  for (int e=1;e<m.exons.Count();e++) {
-                     GSeg mintron(m.exons[e-1]->end+1,m.exons[e]->start-1);
-                     if (rintron.coordMatch(&mintron,10)) {
-                        //((CTData*)m.uptr)->addOvl('s', rintron.t);
-                        is_shadow=true;
-                        if (sovl==NULL || sovl->covlen<rintron.t->covlen) sovl=rintron.t;
-                        break;
-                        }
-                     } //for each m intron
-                  } //for each intron of rloc
-               }//rloc has introns
-           bool xcode=true;
-           if (is_shadow) { ((CTData*)m.uptr)->addOvl('s', sovl); xcode=false; }
-                 // else
-           if (ovlcode!='i' && is_intraintron) { ((CTData*)m.uptr)->addOvl('i', iovl); xcode=false; }
-           if (xcode) {
-                   // just plain overlap, find the overlapping mrna in rloc
-                   GffObj* maxovl=NULL;
-                   int ovlen=0;
-                   for (int ri=0;ri<rloc->mrnas.Count();ri++) {
-                      int o=m.exonOverlapLen(*(rloc->mrnas[ri]));
-                      if (o>ovlen) {
-                          ovlen=o;
-                          maxovl=rloc->mrnas[ri];
-                          }
-                      }
-                   if (maxovl!=NULL) ((CTData*)m.uptr)->addOvl('x',maxovl);
-                   } //'x'
-           jm++;
-           } while (j+jm<rloci->Count() && rloci->Get(j+jm)->overlap(m));
-        } // code testing across strands
+                  }
+               if (maxovl!=NULL) ((CTData*)m.uptr)->addOvl('x',maxovl);
+               } //'x'
+       jm++;
+       } while (j+jm<rloci->Count() && rloci->Get(j+jm)->overlap(m));
      } //for each transfrag
 }
 

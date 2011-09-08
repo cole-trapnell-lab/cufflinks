@@ -335,13 +335,8 @@ void preserveContainedCDS(GffObj* t, GffObj* tfrom) {
       t->CDend=tfrom->CDend;
    }
   else { //no CDS info on container, just copy it from the contained
-   if (tfrom->CDstart>=t->start) t->CDstart=tfrom->CDstart;
-                          else t->CDstart=t->start;
-   if (tfrom->CDend<=t->end) t->CDend=tfrom->CDend;
-                      else t->CDend=t->end;
+   t->addCDS(tfrom->CDstart, tfrom->CDend, tfrom->CDphase);
    }
-   
- 
 }
 
 void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant, bool matchAllIntrons, bool fuzzSpan) {

@@ -608,9 +608,12 @@ public:
      if (sid==gff_fid_exon && isCDS) sid=gff_fid_CDS;
      return names->feats.getName(sid);
      }
+   void addCDS(uint cd_start, uint cd_end, char phase=0);
+   
    bool monoFeature() {
      return (exons.Count()==0 || 
-          (exons.Count()==1 && exon_ftype_id==ftype_id));
+          (exons.Count()==1 && exon_ftype_id==ftype_id && 
+              exons[0]->end==this->end && exons[0]->start==this->start));
      }
 
    bool hasCDS() { return (CDstart>0); }

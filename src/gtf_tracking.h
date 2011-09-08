@@ -1297,7 +1297,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs=true);
 void sort_GSeqs_byName(GList<GSeqData>& seqdata);
 
 
-bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool equnspl=false);
+bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool fuzzunspl=false, bool contain_only=false);
 
 //use qsearch to "position" a given coordinate x within a list of transcripts sorted 
 //by their start (lowest) coordinate; the returned int is the list index of the 
