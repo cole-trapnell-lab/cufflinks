@@ -458,7 +458,7 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 		}
 		for (int i=0;i<rdata->mrnas_r.Count();i++) {
 			for (int j=0;j<seqdata.umrnas.Count();j++) {
-				if (seqdata.umrnas[j]->strand) continue;
+				if (seqdata.umrnas[j]->strand!='.') continue;
 				uint ustart=seqdata.umrnas[j]->exons.First()->start;
 				uint uend=seqdata.umrnas[j]->exons.Last()->end;
 				uint rstart=rdata->mrnas_r[i]->exons.First()->start;
@@ -479,7 +479,7 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 	//---- now compare to other transcripts
 	for (int i=0;i<seqdata.mrnas_f.Count();i++) {
 		for (int j=0;j<seqdata.umrnas.Count();j++) {
-			if (seqdata.umrnas[j]->strand) continue;
+			if (seqdata.umrnas[j]->strand!='.') continue;
 			uint ustart=seqdata.umrnas[j]->exons.First()->start;
 			uint uend=seqdata.umrnas[j]->exons.Last()->end;
 			uint rstart=seqdata.mrnas_f[i]->exons.First()->start;
@@ -493,7 +493,7 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 	}
 	for (int i=0;i<seqdata.mrnas_r.Count();i++) {
 		for (int j=0;j<seqdata.umrnas.Count();j++) {
-			if (seqdata.umrnas[j]->strand) continue;
+			if (seqdata.umrnas[j]->strand!='.') continue;
 			uint ustart=seqdata.umrnas[j]->exons.First()->start;
 			uint uend=seqdata.umrnas[j]->exons.Last()->end;
 			uint rstart=seqdata.mrnas_r[i]->exons.First()->start;
