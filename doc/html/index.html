@@ -124,25 +124,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.0.3</td>
-                    <td align="right">6/1/2011</td>
+                    <td>version 1.1.0</td>
+                    <td align="right">9/8/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.0.3.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.1.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.3.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.1.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.0.3.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.1.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -151,6 +151,8 @@
               </table>
             </ul>
           </div>
+
+
           <h2>Related Tools</h2>
           <div class="box">
             <ul>
@@ -226,17 +228,17 @@
         <!-- End of "rightside" -->
         <div id="leftside">
 	
-			<h2>1.1 release - 8/XX/2011</h2>
+			<h2>1.1.0 release - 9/8/2011</h2>
 			  <p>This is a fix release to address several issues reported by our users:
 				  <ul>
 				<li>Cuffdiff now includes a more sophisticated check for sufficient sequencing depth prior to testing for differences, which substantially improves the accuracy of differential expression analysis in loci with low to medium depth. 
 				<li>A bug in the calculation of the parameters for the beta negative binomial distribution used during variance estimation has been fixed.
 				<li>Some users have reported that Cufflinks or Cuffdiff crashes due to running out of memory when processing highly expressed loci. Both programs now have a maximum number of fragments that can fall within a locus.  If a locus has more than this maximum, it is skipped.  The threshold is configurable via the <tt>--max-bundle-frags</tt> option.
-				
+				<li>Gffread now keeps the longest CDS when collapsing transcripts.
 				</ul>
 				<p><b>FILE FORMAT CHANGES:</b>
 				<ul>
-				<li>By popular request, fold changes are now reported log2, rather than ln
+				<li>By popular request, fold changes are now reported log2, rather than natural log
 				<li>The status column in fpkm tracking files has been replaced by a per-condition quantification status column
 				<li>The header size limit in Cufflinks' BAM parser used to have a 4 megabyte limit.  This has been removed to allow Cufflinks to be used on assemblies with many contigs.
 			  </ul>
