@@ -3,6 +3,8 @@
 extern bool verbose;
 extern bool debugMode;
 
+//bool debugState=false;
+
 void printFasta(FILE* f, GStr& defline, char* seq, int seqlen) {
  if (seq==NULL) return;
  int len=(seqlen>0)?seqlen:strlen(seq);
@@ -315,7 +317,7 @@ int gseqCmpName(const pointer p1, const pointer p2) {
 }
 
 
-void printLocus(GffLocus* loc, const char* pre=NULL) {
+void printLocus(GffLocus* loc, const char* pre) {
   if (pre!=NULL) fprintf(stderr, "%s", pre);
   GMessage(" [%d-%d] : ", loc->start, loc->end);
   GMessage("%s",loc->rnas[0]->getID());
@@ -339,11 +341,18 @@ void preserveContainedCDS(GffObj* t, GffObj* tfrom) {
    }
 }
 
-void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant, bool matchAllIntrons, bool fuzzSpan) {
-  //GMessage(">>Placing transcript %s\n", t->getID());
+void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant,
+                                               bool matchAllIntrons, bool fuzzSpan) {
   GTData* tdata=new GTData(t);
   gdata->tdata.Add(tdata);
   int tidx=-1;
+  /*
+  if (debug) {
+     GMessage(">>Placing transcript %s\n", t->getID());
+     debugState=true;
+     }
+    else debugState=false; 
+   */
   if (t->exons.Count()>0)
               tidx=gdata->rnas.Add(t); //added it in sorted order
             else {
@@ -356,16 +365,20 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
        //GMessage("  <<make it first locus %d-%d \n",t->start, t->end);
        return;
        }
+   /*    
   //DEBUG: show available loci:
-  // GMessage("  [%d loci already:\n", gdata->loci.Count());
-  //for (int l=0;l<gdata->loci.Count();l++) {
-  //    printLocus(gdata->loci[l]);
-  //    }
+   if (debug) {
+    GMessage("  [%d loci already:\n", gdata->loci.Count());
+    for (int l=0;l<gdata->loci.Count();l++) {
+       printLocus(gdata->loci[l]);
+       }
+    }
+  */
   int nidx=qsearch_gloci(t->end, gdata->loci); //get index of nearest locus starting just ABOVE t->end
   //GMessage("\tlooking up end coord %d in gdata->loci.. (qsearch got nidx=%d)\n", t->end, nidx);
   if (nidx==0) {
      //cannot have any overlapping loci
-     //GMessage("  <<no ovls possible, create locus %d-%d \n",t->start, t->end);
+     //if (debug) GMessage("  <<no ovls possible, create locus %d-%d \n",t->start, t->end);
      gdata->loci.Add(new GffLocus(t));
      return;
      }
@@ -373,7 +386,7 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
   int lfound=0; //count of parent loci
   GArray<int> mrgloci(false);
   GList<GffLocus> tloci(true); //candidate parent loci to adopt this
-  //GMessage("\tchecking all loci from %d to 0\n",nidx-1);
+  //if (debug) GMessage("\tchecking all loci from %d to 0\n",nidx-1);
   for (int l=nidx-1;l>=0;l--) {
       GffLocus& loc=*(gdata->loci[l]);
       if (loc.strand!='.' && t->strand!='.'&& loc.strand!=t->strand) continue;
@@ -381,10 +394,17 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
            if (t->start-loc.start>GFF_MAX_LOCUS) break; //give up already
            continue;
            }
-      if (loc.start>t->end) continue;
-          //this should never be the case if nidx was found correctly
-      //GMessage(" !range overlap found with locus ");
-      //printLocus(&loc);
+      if (loc.start>t->end) {
+               //this should never be the case if nidx was found correctly
+               GMessage("Warning: qsearch_gloci found loc.start>t.end!(t=%s)\n", t->getID());
+               continue;
+               }
+      /*
+      if (debug) {
+          GMessage(" !range overlap found with locus ");
+          printLocus(&loc);
+          }
+      */
       if (loc.add_RNA(t)) {
          //will add this transcript to loc
          lfound++;
@@ -410,25 +430,42 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
               }//for each transcript in the exon-overlapping locus
           } //if doCollapseRedundant
          } //overlapping locus
-      }
+      } //for each existing locus
   if (lfound==0) {
       //overlapping loci not found, create a locus with only this mRNA
-      //GMessage("  overlapping locus not found, create locus %d-%d \n",t->start, t->end);
+      /* if (debug) {
+        GMessage("  overlapping locus not found, create locus %d-%d \n",t->start, t->end);
+        }
+      */
       int addidx=gdata->loci.Add(new GffLocus(t));
       if (addidx<0) {
+         //should never be the case!
          GMessage("  WARNING: new GffLocus(%s:%d-%d) not added!\n",t->getID(), t->start, t->end);
          }
       }
-   else if (lfound>1) {
-      //more than one loci found parenting this mRNA, merge loci
-      //if (lfound>2) GMessage(" merging %d loci \n",lfound);
-       lfound--;
+   else { //found at least one overlapping locus
+     lfound--;
+     int locidx=mrgloci[lfound];
+     GffLocus& loc=*(gdata->loci[locidx]);
+     //last locus index found is also the smallest index
+     if (lfound>0) {
+       //more than one loci found parenting this mRNA, merge loci
+       /* if (debug)
+          GMessage(" merging %d loci \n",lfound);
+       */
        for (int l=0;l<lfound;l++) {
-          int mlidx=mrgloci[l]; //largest indices first, so it's safe to remove
-          gdata->loci[mrgloci[lfound]]->addMerge(*(gdata->loci[mlidx]), t);
-          gdata->loci.Delete(mlidx);
+          int mlidx=mrgloci[l]; 
+          loc.addMerge(*(gdata->loci[mlidx]), t);
+          gdata->loci.Delete(mlidx); //highest indices first, so it's safe to remove
           }
-      }
+       }
+     int i=locidx;  
+     while (i>0 && loc<*(gdata->loci[i-1])) {
+       //bubble down until it's in the proper order
+       i--;
+       gdata->loci.Swap(i,i+1);
+       }
+     }//found at least one overlapping locus
 }
 
 void collectLocusData(GList<GenomicSeqData>& ref_data) {
@@ -488,7 +525,8 @@ void collectLocusData(GList<GenomicSeqData>& ref_data) {
 
 
 void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate, 
-                              bool doCluster, bool doCollapseRedundant, bool matchAllIntrons, bool fuzzSpan) {
+                          bool doCluster, bool doCollapseRedundant, 
+                          bool matchAllIntrons, bool fuzzSpan, bool forceExons) {
    GffReader* gffr=new GffReader(f, this->transcriptsOnly, false); //not only mRNA features, not sorted
    gffr->showWarnings(this->showWarnings);
    //           keepAttrs   mergeCloseExons  noExonAttr
@@ -501,7 +539,7 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
      GffObj* m=gffr->gflst[k];
      if (strcmp(m->getFeatureName(), "locus")==0 && 
           m->getAttr("transcripts")!=NULL) {
-        continue;
+        continue; //discard locus meta-features
         }
      
      char* rloc=m->getAttr("locus");
@@ -512,6 +550,9 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
        //a non-mRNA feature with no subfeatures
        //add a dummy exon just to have the generic exon checking work
        m->addExon(m->start,m->end);
+       }
+     if (forceExons && m->children.Count()==0) {
+       m->exon_ftype_id=gff_fid_exon;
        }
      GList<GffObj> gfadd(false,false);
      if (gf_validate!=NULL && !(*gf_validate)(m, &gfadd)) {

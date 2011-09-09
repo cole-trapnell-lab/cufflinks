@@ -612,7 +612,7 @@ public:
    
    bool monoFeature() {
      return (exons.Count()==0 || 
-          (exons.Count()==1 && exon_ftype_id==ftype_id && 
+          (exons.Count()==1 &&  //exon_ftype_id==ftype_id && 
               exons[0]->end==this->end && exons[0]->start==this->start));
      }
 

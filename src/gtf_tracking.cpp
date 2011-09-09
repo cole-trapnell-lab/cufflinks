@@ -242,12 +242,12 @@ int parse_mRNAs(GfList& mrnas,
 		     int rpidx=-1;
 		     GffObj* rp= is_RefDup(m, *target_mrnas, rpidx);
 		     if (rp!=NULL) { //duplicate found
-		       //discard one of them
-		       //but let's keep the gene_name if present
-		     //DEBUG:
-		     //GMessage("Ref duplicates: %s = %s\n", rp->getID(), m->getID());
-		     refdiscarded++;
-		     if (betterDupRef(rp, m)) {
+		      //discard one of them
+		      //but let's keep the gene_name if present
+		      //DEBUG:
+		      //GMessage("Ref duplicates: %s = %s\n", rp->getID(), m->getID());
+		      refdiscarded++;
+		      if (betterDupRef(rp, m)) {
 		           if (rp->getGeneName()==NULL && m->getGeneName()!=NULL) {
 		                  rp->setGeneName(m->getGeneName());
 		                  }

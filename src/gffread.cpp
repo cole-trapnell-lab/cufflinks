@@ -673,13 +673,14 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
 
 int main(int argc, char * const argv[]) {
  GArgs args(argc, argv, 
-   "debug;merge;cluster-only;help;MINCOV=MINPID=hvOUNHWCVJMKQNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
+   "debug;merge;cluster-only;help;force-exons;MINCOV=MINPID=hvOUNHWCVJMKQNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
  args.printError(USAGE, true);
  if (args.getOpt('h') || args.getOpt("help")) {
     GMessage("%s",USAGE);
     exit(1);
     }
  debugMode=(args.getOpt("debug")!=NULL);
+ bool forceExons=(args.getOpt("force-exons")!=NULL);
  mRNAOnly=(args.getOpt('O')==NULL);
  //sortByLoc=(args.getOpt('S')!=NULL);
  addDescr=(args.getOpt('A')!=NULL);
@@ -840,7 +841,7 @@ int main(int argc, char * const argv[]) {
    gffloader.mergeCloseExons=mergeCloseExons;
    gffloader.showWarnings=(args.getOpt('E')!=NULL);
    gffloader.load(g_data, &validateGffRec, doCluster, doCollapseRedundant, 
-                             matchAllIntrons, fuzzSpan);
+                             matchAllIntrons, fuzzSpan, forceExons);
    if (doCluster) 
      collectLocusData(g_data);
    if (numfiles==0) break;

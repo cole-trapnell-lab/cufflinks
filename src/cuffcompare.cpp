@@ -2274,21 +2274,28 @@ void buildXLoci(GTrackLocus& loctrack, int qcount, GSeqTrack& gtrack, char stran
             mrgxloci.Add(xl);
             }
          } //for each existing Xlocus
-      //if (xfound<0) continue;
       if (xfound==0) {
-         //GXLocus *newxloc=new GXLocus(loc);
          xloci->Add(new GXLocus(loc));
          }
-      else if (xfound>1) {
-         for (int l=1;l<xfound;l++) {
-           int mlidx=mrgxloci[l]-l+1;
-           xloci->Get(mrgxloci[0])->addMerge(*(xloci->Get(mlidx)));
-           GXLocus* ldel=xloci->Get(mlidx);
-           xloci->Delete(mlidx);
-           if (retxloci!=NULL)
-                 delete ldel;
-           }
-         }
+      else {
+         int il=mrgxloci[0];
+         GXLocus& xloc=*(xloci->Get(il));
+         if (xfound>1) {
+            for (int l=1;l<xfound;l++) {
+              int mlidx=mrgxloci[l]-l+1;
+              xloc.addMerge(*(xloci->Get(mlidx)));
+              GXLocus* ldel=xloci->Get(mlidx);
+              xloci->Delete(mlidx);
+              if (retxloci!=NULL)
+                    delete ldel;
+              }
+            }
+         //in case xloc.start was decreased, bubble-down until it's in the proper order
+         while (il>0 && xloc<*(xloci->Get(il-1))) {
+            il--;
+            xloci->Swap(il,il+1);
+            }
+         } //at least one locus is being merged 
       }//for each locus
    }//for each set of loci in the region (refs and each qry set)
   //-- add xloci to the global set of xloci unless retxloci was given,
@@ -2446,13 +2453,22 @@ void xclusterLoci(int qcount, char strand, GSeqTrack& gtrack) {
          if (!refcheck) //we really don't care about ref-only clusters
            loctracks.Add(new GTrackLocus(loc));
          }
-      else if (xfound>1) {
-         for (int l=1;l<xfound;l++) {
-           int mlidx=mrgloctracks[l]-l+1;
-           loctracks.Get(mrgloctracks[0])->addMerge(loctracks[mlidx], qcount, loc);
-           loctracks.Delete(mlidx);
+      else {
+         int il=mrgloctracks[0];
+         GTrackLocus& tloc=*(loctracks.Get(il));
+         if (xfound>1) {
+           for (int l=1;l<xfound;l++) {
+             int mlidx=mrgloctracks[l]-l+1;
+             tloc.addMerge(loctracks[mlidx], qcount, loc);
+             loctracks.Delete(mlidx);
+             }
            }
-         }
+         //in case tloc.start was decreased, bubble-down 'til it's in the proper place
+         while (il>0 && tloc<*(loctracks[il-1])) {
+            il--;
+            loctracks.Swap(il,il+1);
+            }
+        } //at least one locus found
       }//for each wrklocus
      } //for each set of loci (q)
    //loctracks is now set with all x-clusters on this strand

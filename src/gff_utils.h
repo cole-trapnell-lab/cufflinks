@@ -5,7 +5,6 @@
 #include "GFastaIndex.h"
 #include "GFaSeqGet.h"
 
-
 typedef bool GFValidateFunc(GffObj* gf, GList<GffObj>* gfadd);
 
 class GeneInfo { //for Ensembl GTF conversion
@@ -174,22 +173,6 @@ class GFastaDb {
      faseq=NULL;
      last_fetchid=-1;
      char* gseqname=GffObj::names->gseqs.getName(gseq_id);
-     // DEBUG:
-     //GMessage("..processing transcripts on: %s\n",gseqname);
-     //genomic sequence given
-     /*
-     if (gcdb!=NULL) {
-       uint32 reclen=0;
-       off_t rpos=gcdb->getRecordPos(gseqname, &reclen);
-       if (rpos<0) // genomic sequence not found
-          GError("Error: cannot find genomic sequence '%s' in %s\n",gseqname, fastaPath);
-       // WARNING: does not validate FASTA line-len uniformity!
-       faseq=new GFaSeqGet(fastaPath,rpos, false);
-       faseq->loadall(reclen); //load the whole sequence, it's faster
-       last_fetchid=gseq_id;
-       return faseq;
-       }
-       */
      if (faIdx!=NULL) { //fastaPath was the multi-fasta file name
         GFastaRec* farec=faIdx->getRecord(gseqname);
         if (farec!=NULL) {
@@ -268,6 +251,8 @@ class CGeneSym {
 
 const char* getGeneDescr(const char* gsym);
 
+void printLocus(GffLocus* loc, const char* pre=NULL);
+
 class GffLocus:public GSeg {
 public:
     int gseq_id; //id of underlying genomic sequence
@@ -280,6 +265,7 @@ public:
     GList<CGeneSym> gene_names;
     GList<CGeneSym> gene_ids;
     int v; //user flag/data
+   /*
    bool operator==(GffLocus& d){
        return (gseq_id==d.gseq_id && strand==d.strand && start==d.start && end==d.end);
        }
@@ -297,7 +283,7 @@ public:
                      else return end<d.end;
         } else return (start<d.start);
      }
-    
+    */
     const char* getGeneName() {
          if (gene_names.Count()==0) return NULL;
          return gene_names.First()->name.chars();
@@ -367,8 +353,6 @@ public:
             uint jend=locus.mexons[j].end;
             if (iend<jstart) { i++; continue; }
             if (jend<istart) { j++; continue; }
-            //if (mexons[i].overlap(jstart, jend)) {
-            //exon overlap was found :
             ovlexons.Add(j);
             //extend mexons[i] as needed
             if (jstart<istart) mexons[i].start=jstart;
@@ -384,7 +368,6 @@ public:
                     }
                 } //while next mexons merge
             } // mexons[i] end extend
-            //  } //exon overlap
             j++; //check the next locus.mexon
         }
         //-- add the rest of the non-overlapping mexons:
@@ -406,7 +389,6 @@ public:
      if (t_maxcov->covlen<locus.t_maxcov->covlen)
             t_maxcov=locus.t_maxcov;
      }
-
 
     bool exonOverlap(GffLocus& loc) {
         //check if any mexons overlap!
@@ -483,7 +465,11 @@ public:
     void rnas_add(GffObj* t) {
       rnas.Add(t);
       // adjust start/end
-      if (start>t->start || start==0) start=t->start;
+      //if (start==0 || start>t->start) start=t->start;
+      if (start==0) start=t->start;
+        else if (start>t->start) {
+          start=t->start;
+          }
       if (end<t->end) end=t->end;
       if (t_maxcov->covlen<t->covlen) t_maxcov=t;
       if (strand==0) strand=t->strand;
@@ -591,7 +577,8 @@ struct GffLoader {
   bool mergeCloseExons;
   bool showWarnings;
   void load(GList<GenomicSeqData>&seqdata, GFValidateFunc* gf_validate=NULL, 
-                      bool doCluster=true, bool doCollapseRedundant=true, bool matchAllIntrons=true, bool fuzzSpan=false);
+                      bool doCluster=true, bool doCollapseRedundant=true, 
+                      bool matchAllIntrons=true, bool fuzzSpan=false, bool forceExons=false);
   GffLoader(const char* filename):fname(filename) {
       f=NULL;
       transcriptsOnly=true;

@@ -163,6 +163,7 @@ template <class OBJ> class GPVec {
     void deallocate_item(OBJ* item); //forcefully call fFreeProc or delete on item
     void Clear();
     void Exchange(int idx1, int idx2);
+    void Swap(int idx1, int idx2)  { Exchange(idx1, idx2); }
     OBJ* First() { return (fCount>0)?fList[0]:NULL; }
     OBJ* Last()  { return (fCount>0)?fList[fCount-1]:NULL;}
     bool isEmpty() { return fCount==0; }
@@ -654,6 +655,15 @@ template <class OBJ> void GVec<OBJ>::Replace(int idx, OBJ& item) {
  fArray[idx]=item;
 }
 
+template <class OBJ> void GVec<OBJ>::Exchange(int idx1, int idx2) {
+ TEST_INDEX(idx1);
+ TEST_INDEX(idx2);
+ OBJ item=fArray[idx1];
+ fArray[idx1]=fArray[idx2];
+ fArray[idx2]=item;
+}
+
+
 template <class OBJ> void GArray<OBJ>::Replace(int idx, OBJ& item) {
  //TEST_INDEX(idx);
  if (idx<0 || idx>=this->fCount) GError(SLISTINDEX_ERR, __FILE__,__LINE__, idx);
@@ -905,7 +915,7 @@ template <class OBJ> void GPVec<OBJ>::Clear() {
 }
 
 template <class OBJ> void GPVec<OBJ>::Exchange(int idx1, int idx2) {
- //BE_UNSORTED; //cannot do that in a sorted list!
+//Warning: this will BREAK sort order for sorted GList
  TEST_INDEX(idx1);
  TEST_INDEX(idx2);
  OBJ* item=fList[idx1];
@@ -1211,6 +1221,7 @@ template <class OBJ> void GPVec<OBJ>::Put(int idx, OBJ* item) {
 
 template <class OBJ> void GList<OBJ>::Put(int idx, OBJ* item, bool re_sort) {
  //WARNING: this will never free the replaced item!
+ // this may BREAK the sort order unless the "re_sort" parameter is given
  if (idx<0 || idx>this->fCount) GError(SLISTINDEX_ERR, idx);
  this->fList[idx]=item;
  if (SORTED && item!=NULL && re_sort) Sort(); //re-sort
