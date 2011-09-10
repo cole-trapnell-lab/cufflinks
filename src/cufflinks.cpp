@@ -492,11 +492,11 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
                     }
                     else
                     {
-                        if (enable_5_extend)
-                        {
-                            ref_scaff->extend_5(lhs[l]);
-                            kept_lhs[l] = false;
-                        }
+//                        if (enable_5_extend)
+//                        {
+//                            ref_scaff->extend_5(lhs[l]);
+//                            kept_lhs[l] = false;
+//                        }
                     }
 				}
 			}
@@ -521,11 +521,11 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
                     }
                     else
                     {
-                        if (enable_5_extend)
-                        {
-                            ref_scaff->extend_5(rhs[r]);
-                            kept_rhs[r] = false;
-                        }
+//                        if (enable_5_extend)
+//                        {
+//                            ref_scaff->extend_5(rhs[r]);
+//                            kept_rhs[r] = false;
+//                        }
                     }
 				}
 			}

@@ -113,6 +113,14 @@ double bootstrap_fraction = 1.0;
 
 int max_frags_per_bundle = 1000000;
 
+// SECRET OPTIONS: 
+// These options are just for instrumentation and benchmarking code
+
+float read_skip_fraction = 0.0;
+
+// END SECRET OPTIONS
+
+
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 

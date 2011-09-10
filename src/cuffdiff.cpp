@@ -101,6 +101,7 @@ static struct option long_options[] = {
 {"num-bootstrap-samples",   required_argument,	 		 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
 {"bootstrap-fraction",      required_argument,	 		 0,          OPT_BOOTSTRAP_FRACTION},
 {"max-bundle-frags",        required_argument,        0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
+{"read-skip-fraction",      required_argument,	 		 0,          OPT_READ_SKIP_FRACTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -142,6 +143,9 @@ void print_usage()
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
     fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
+    fprintf(stderr, "\nDebugging use only:\n");
+    fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
+
     print_library_table();
 }
 
@@ -333,6 +337,11 @@ int parse_options(int argc, char** argv)
             case OPT_MAX_FRAGS_PER_BUNDLE:
             {
                 max_frags_per_bundle = parseInt(0, "--max-bundle-frags must be at least 0", print_usage);
+                break;
+            }
+            case OPT_READ_SKIP_FRACTION:
+            {
+                read_skip_fraction = parseFloat(0, 1.0, "--read-skip-fraction must be between 0 and 1.0", print_usage);
                 break;
             }
 			default:

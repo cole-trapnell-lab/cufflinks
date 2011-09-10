@@ -100,6 +100,13 @@ extern double bootstrap_fraction;
 
 extern int max_frags_per_bundle;
 
+// SECRET OPTIONS: 
+// These options are just for instrumentation and benchmarking code
+
+extern float read_skip_fraction;
+
+// END SECRET OPTIONS
+
 #define ASM_VERBOSE 0
 #define ENABLE_THREADS 1
 
@@ -418,4 +425,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_TILE_SEP                292
 #define OPT_NO_5_EXTEND             293
 #define OPT_MAX_FRAGS_PER_BUNDLE    294
+#define OPT_READ_SKIP_FRACTION      295
 #endif

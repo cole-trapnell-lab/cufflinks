@@ -13,6 +13,7 @@
 #include <config.h>
 #endif
 #include <boost/bind.hpp>
+#include <boost/random.hpp>
 #include <vector>
 #include <numeric>
 #include "common.h"
@@ -204,12 +205,18 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 
 class BundleFactory
 {
+    boost::mt19937 rng;
+    boost::uniform_01<boost::mt19937> _zeroone;
+    
 public:
     
 	BundleFactory(shared_ptr<HitFactory> fac, BundleMode bm)
-	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0)
+	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0),  _zeroone(rng)
 	{
 		_rg_props = shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
+        
+        
+       
 	}
 
     bool bundles_remain()  

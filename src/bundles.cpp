@@ -755,16 +755,30 @@ double BundleFactory::rewind_hit(const ReadHit* rh)
 bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
 {
 	const ReadHit* bh = NULL;
+    
+    bool skip_read = false;
+    
 	while(bh == NULL)
 	{
 		if (!_hit_fac->records_remain())
 		{
 			return false;
 		}
-		bundle.add_raw_mass(next_valid_alignment(bh));
+        
+        // If we are randomly throwing out reads, check to see
+        // whether this one should be kept.
+        if (read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction)
+        {
+            skip_read = true;
+            next_valid_alignment(bh);
+        }
+        else
+        {
+            bundle.add_raw_mass(next_valid_alignment(bh));
+        }
 	}
 	
-	if (!bundle.add_open_hit(read_group_properties(), bh))
+	if (skip_read || !bundle.add_open_hit(read_group_properties(), bh))
     {
         delete bh;
         bh = NULL;
@@ -786,7 +800,10 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		const ReadHit* bh = NULL;
 		while(_hit_fac->records_remain())
 		{
-			bundle.add_raw_mass(next_valid_alignment(bh));
+            if (read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction)
+            {
+                bundle.add_raw_mass(next_valid_alignment(bh));
+            }
 		}
         bundle.finalize();
 		return false;
@@ -805,7 +822,22 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 	while(true)
 	{		
 		const ReadHit* bh = NULL;
-		bundle.add_raw_mass(next_valid_alignment(bh));
+        
+        
+		// If we are randomly throwing out reads, check to see
+        // whether this one should be kept.
+        double t = _zeroone();
+        if (read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction)
+        {
+            next_valid_alignment(bh);
+            delete bh;
+            bh = NULL;
+        }
+        else
+        {
+            bundle.add_raw_mass(next_valid_alignment(bh));
+        }
+
 		
         if (bh == NULL)
         {
@@ -865,6 +897,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
     return true;
 }
 
+// NOTE: does not support read skipping yet.
 bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 {
 	
@@ -958,9 +991,18 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 	int initial_right = bundle.right();
 	while(true)
 	{
+        bool skip_read = false;
         const ReadHit* bh = NULL;
-		bundle.add_raw_mass(next_valid_alignment(bh));
-		
+        
+        if (read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction)
+        {
+            skip_read = true;
+        }
+        else
+        {
+            bundle.add_raw_mass(next_valid_alignment(bh));
+		}
+        
 		if (bh == NULL)
 		{
 			if (_hit_fac->records_remain())
@@ -975,7 +1017,7 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 		
 		if (bh->ref_id() == bundle.ref_id() && bh->left() < bundle.right() + olap_radius)
 		{			
-			if (!bundle.add_open_hit(read_group_properties(), bh))
+			if (skip_read || !bundle.add_open_hit(read_group_properties(), bh))
             {
                 delete bh;
                 bh = NULL;
