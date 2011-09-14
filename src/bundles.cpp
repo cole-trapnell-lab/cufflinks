@@ -661,12 +661,6 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
         
 		if (tmp.ref_id() == 12638153115695167477)  // corresponds to SAM "*" under FNV hash. unaligned read record 
             continue;
-	
-        // if the user's asked for read trimming, do it here.
-        if (trim_read_length > 0)
-        {
-            tmp.trim(trim_read_length);
-        }
         
 		raw_mass += tmp.mass();
 		
@@ -743,7 +737,15 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
         
         if (hit_within_mask)
             continue;
+        
+        // if the user's asked for read trimming, do it here.
+        if (trim_read_length > 0)
+        {
+            tmp.trim(trim_read_length);
+        }
+        
         bh = new ReadHit(tmp);
+        
         break;
     }
     

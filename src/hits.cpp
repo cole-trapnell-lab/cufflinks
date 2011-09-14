@@ -33,10 +33,131 @@ int num_deleted = 0;
 void ReadHit::trim(int trimmed_length)
 {
     bool antisense_aln = _sam_flag & 0x10;
-    if (antisense_aln)
-    {
     
+    vector<CigarOp> new_cigar;
+    int new_left = 0;
+    
+    if (!antisense_aln)
+    {
+        int pos = _left;
+        new_left = _left;
+        int length = 0;
+		for (vector<CigarOp>::iterator i = _cigar.begin(); i < _cigar.end(); ++i)
+		{
+			const CigarOp& op = *i;
+            
+            if (length < trimmed_length)
+            {
+                switch(op.opcode)
+                {
+                    case REF_SKIP:
+                        //gaps_out.push_back(make_pair(pos, pos + op.length - 1));
+                        pos += op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    case SOFT_CLIP:
+                        assert(false); // not sure if this case is right
+                        pos += op.length;
+                        length += op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    case HARD_CLIP:
+                        new_cigar.push_back(op);
+                        break;
+                    case MATCH:
+                        if (length + op.length < trimmed_length)
+                        {
+                            pos += op.length;
+                            length += op.length;
+                            new_cigar.push_back(op);
+                        }
+                        else
+                        {
+                            new_cigar.push_back(CigarOp(MATCH, trimmed_length - length));
+                            pos += trimmed_length - length;
+                            length += trimmed_length - length;
+                        }
+                        break;
+                    case INS:
+                        assert(false); // not sure if this case is right
+                        pos -= op.length;
+                        length -= op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    case DEL:
+                        assert(false); // not sure if this case is right
+                        pos += op.length;
+                        length += op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    default:
+                        break;
+                }
+            }
+		}
     }
+    else
+    {
+        int pos = _right;
+        int length = 0;
+		for (vector<CigarOp>::reverse_iterator i = _cigar.rbegin(); i < _cigar.rend(); ++i)
+		{
+			const CigarOp& op = *i;
+            
+            if (length < trimmed_length)
+            {
+                switch(op.opcode)
+                {
+                    case REF_SKIP:
+                        //gaps_out.push_back(make_pair(pos, pos + op.length - 1));
+                        pos -= op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    case SOFT_CLIP:
+                        assert(false); // not sure if this case is right
+                        pos -= op.length;
+                        length += op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    case HARD_CLIP:
+                        new_cigar.push_back(op);
+                        break;
+                    case MATCH:
+                        if (length + op.length < trimmed_length)
+                        {
+                            pos -= op.length;
+                            length += op.length;
+                            new_cigar.push_back(op);
+                        }
+                        else
+                        {
+                            new_cigar.push_back(CigarOp(MATCH, trimmed_length - length));
+                            pos -= trimmed_length - length;
+                            length += trimmed_length - length;
+                        }
+                        break;
+                    case INS:
+                        assert(false); // not sure if this case is right
+                        pos += op.length;
+                        length -= op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    case DEL:
+                        assert(false); // not sure if this case is right
+                        pos -= op.length;
+                        length += op.length;
+                        new_cigar.push_back(op);
+                        break;
+                    default:
+                        break;
+                }
+            }
+		}
+        _left = pos;
+    }
+    _cigar = new_cigar;
+    _right = get_right();
+    assert (trimmed_length == read_len());
 }
 
 //static const int max_read_length = 1024;

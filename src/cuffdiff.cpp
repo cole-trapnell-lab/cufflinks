@@ -103,7 +103,7 @@ static struct option long_options[] = {
 {"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {"read-skip-fraction",      required_argument,	     0,          OPT_READ_SKIP_FRACTION},
 {"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
-{"trimmed-read-length",     required_argument,	     0,          OPT_TRIM_READ_LENGTH},
+{"trim-read-length",     required_argument,	     0,          OPT_TRIM_READ_LENGTH},
 {0, 0, 0, 0} // terminator
 };
 
