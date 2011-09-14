@@ -272,6 +272,8 @@ struct ReadHit
 	
     unsigned int  edit_dist() const { return _edit_dist; }
     
+    void trim(int trimmed_length);
+    
 	//const string& hitfile_rec() const { return _hitfile_rec; }
 	//void hitfile_rec(const string& rec) { _hitfile_rec = rec; }
 	

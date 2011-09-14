@@ -30,6 +30,15 @@ boost::mutex RefSequenceTable::table_lock;
 
 int num_deleted = 0;
 
+void ReadHit::trim(int trimmed_length)
+{
+    bool antisense_aln = _sam_flag & 0x10;
+    if (antisense_aln)
+    {
+    
+    }
+}
+
 //static const int max_read_length = 1024;
 
 bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2)

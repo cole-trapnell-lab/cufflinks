@@ -98,10 +98,12 @@ static struct option long_options[] = {
 {"empirical-covariance",    no_argument,	 		 0,	         OPT_USE_EMPIRICAL_COVARIANCE},
 {"split-mass",              no_argument,	 		 0,	         OPT_SPLIT_MASS},
 {"split-variance",          no_argument,	 		 0,	         OPT_SPLIT_VARIANCE},
-{"num-bootstrap-samples",   required_argument,	 		 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
-{"bootstrap-fraction",      required_argument,	 		 0,          OPT_BOOTSTRAP_FRACTION},
-{"max-bundle-frags",        required_argument,        0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
-{"read-skip-fraction",      required_argument,	 		 0,          OPT_READ_SKIP_FRACTION},
+{"num-bootstrap-samples",   required_argument,	 	 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
+{"bootstrap-fraction",      required_argument,	 	 0,          OPT_BOOTSTRAP_FRACTION},
+{"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
+{"read-skip-fraction",      required_argument,	     0,          OPT_READ_SKIP_FRACTION},
+{"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
+{"trimmed-read-length",     required_argument,	     0,          OPT_TRIM_READ_LENGTH},
 {0, 0, 0, 0} // terminator
 };
 
@@ -145,6 +147,8 @@ void print_usage()
     fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
+    fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
+    fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
 
     print_library_table();
 }
@@ -342,6 +346,16 @@ int parse_options(int argc, char** argv)
             case OPT_READ_SKIP_FRACTION:
             {
                 read_skip_fraction = parseFloat(0, 1.0, "--read-skip-fraction must be between 0 and 1.0", print_usage);
+                break;
+            }
+            case OPT_NO_READ_PAIRS:
+            {
+                no_read_pairs = true;
+                break;
+            }
+            case OPT_TRIM_READ_LENGTH:
+            {
+                trim_read_length = parseInt(0, "--trim-read-length must be at least 1", print_usage);
                 break;
             }
 			default:

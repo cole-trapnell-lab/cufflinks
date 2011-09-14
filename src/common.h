@@ -103,7 +103,9 @@ extern int max_frags_per_bundle;
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
 
+extern bool no_read_pairs;
 extern float read_skip_fraction;
+extern int trim_read_length;
 
 // END SECRET OPTIONS
 
@@ -426,4 +428,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_5_EXTEND             293
 #define OPT_MAX_FRAGS_PER_BUNDLE    294
 #define OPT_READ_SKIP_FRACTION      295
+#define OPT_NO_READ_PAIRS           296
+#define OPT_TRIM_READ_LENGTH        297
 #endif

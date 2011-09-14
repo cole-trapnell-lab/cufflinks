@@ -117,6 +117,8 @@ int max_frags_per_bundle = 1000000;
 // These options are just for instrumentation and benchmarking code
 
 float read_skip_fraction = 0.0;
+bool no_read_pairs = false;
+int trim_read_length = -1;
 
 // END SECRET OPTIONS
 
