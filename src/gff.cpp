@@ -159,11 +159,16 @@ GffLine::GffLine(GffReader* reader, const char* l) {
  ftype=t[2];
  info=t[8];
  char* p=t[3];
- if (!parseUInt(p,fstart))
-   GError("Error parsing start coordinate from GFF line:\n%s\n",l);
+ if (!parseUInt(p,fstart)) {
+   //FIXME: chromosome_band entries in Flybase
+   GMessage("Warning: invalid start coordinate at line:\n%s\n",l);
+   return;
+   }
  p=t[4];
- if (!parseUInt(p,fend))
-   GError("Error parsing end coordinate from GFF line:\n%s\n",l);
+ if (!parseUInt(p,fend)) {
+   GMessage("Warning: invalid end coordinate at line:\n%s\n",l);
+   return;
+   }
  if (fend<fstart) swap(fend,fstart); //make sure fstart>=fend, always
  p=t[5];
  if (p[0]=='.' && p[1]==0) {
@@ -188,7 +193,7 @@ GffLine::GffLine(GffReader* reader, const char* l) {
    is_exon=true;
    is_t_data=true;
    }
-  else if (strstr(fnamelc, "exon")!=NULL) {
+  else if (endsWith(fnamelc, "exon")) {
    exontype=exgffExon;
    is_exon=true;
    is_t_data=true;
@@ -971,9 +976,16 @@ GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline,
 bool GffReader::addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr) {
   bool r=true;
   if (gffline->strand!=prevgfo->gffobj->strand) {
-     GMessage("GFF Error: duplicate GFF ID '%s' (exons found on different strands of %s)\n",
-        prevgfo->gffobj->gffID, prevgfo->gffobj->getGSeqName());
-      r=false;
+	 if (prevgfo->gffobj->strand=='.') {
+        prevgfo->gffobj->strand=gffline->strand;
+	    }
+	 else {
+		 GMessage("GFF Error at %s (%c): exon %d-%d (%c) found on different strand; discarded.\n",
+			prevgfo->gffobj->gffID, prevgfo->gffobj->strand,
+			gffline->fstart, gffline->fend, gffline->strand, prevgfo->gffobj->getGSeqName());
+		 //r=false;
+		 return true; //FIXME: split trans-spliced mRNAs by strand
+		 }
      }
   int gdist=(gffline->fstart>prevgfo->gffobj->end) ? gffline->fstart-prevgfo->gffobj->end :
                       ((gffline->fend<prevgfo->gffobj->start)? prevgfo->gffobj->start-gffline->fend :
