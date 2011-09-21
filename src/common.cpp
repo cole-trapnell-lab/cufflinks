@@ -110,7 +110,7 @@ bool split_variance = false;
 bool bootstrap = false;
 int num_bootstrap_samples = 20;
 double bootstrap_fraction = 1.0;
-
+double bootstrap_delta_gap = 2.0;
 int max_frags_per_bundle = 1000000;
 
 // SECRET OPTIONS: 

@@ -69,6 +69,7 @@ void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 
 AbundanceStatus AbundanceGroup::status() const
 {
+    bool has_lowdata_member = false;
 	foreach(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (ab->status() == NUMERIC_FAIL)
@@ -77,13 +78,36 @@ AbundanceStatus AbundanceGroup::status() const
 		}
         if (ab->status() == NUMERIC_LOW_DATA)
 		{
-			return NUMERIC_LOW_DATA;
+			has_lowdata_member = true;
 		}
         if (ab->status() == NUMERIC_HI_DATA)
 		{
 			return NUMERIC_HI_DATA;
 		}
 	}
+    
+    if (has_lowdata_member)
+    {
+        if (_abundances.size() <= 1)
+            return NUMERIC_LOW_DATA;
+        // check that the variance of the group is stable (w.r.t to bootstrap)
+        double total_cov = 0.0;
+        double total_bootstrap_cov = 0.0;
+        for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
+        {
+            for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
+            {
+                total_cov += _gamma_covariance(i,j);
+                total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
+            }
+        }
+        double bootstrap_gamma_delta = abs(total_bootstrap_cov - total_cov);
+        if (bootstrap_gamma_delta > bootstrap_delta_gap * total_cov)
+        {
+            return NUMERIC_LOW_DATA;
+        }
+    }
+    
 	return NUMERIC_OK;
 }
 
@@ -967,7 +991,7 @@ void AbundanceGroup::calculate_conf_intervals()
                     double gamma_cov_j =  _gamma_covariance(j,j);
                     double bootstrap_j = _gamma_bootstrap_covariance(j,j);
                     double bootstrap_gamma_delta = abs(bootstrap_j - gamma_cov_j);
-                    if (bootstrap_gamma_delta > 2.0 * gamma_cov_j && _abundances.size() > 1)
+                    if (bootstrap_gamma_delta > bootstrap_delta_gap * gamma_cov_j && _abundances.size() > 1)
                     {
                         _abundances[j]->status(NUMERIC_LOW_DATA);
                     }

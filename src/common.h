@@ -97,7 +97,7 @@ extern bool split_variance;
 extern bool bootstrap;
 extern int num_bootstrap_samples;
 extern double bootstrap_fraction;
-
+extern double bootstrap_delta_gap;
 extern int max_frags_per_bundle;
 
 // SECRET OPTIONS: 

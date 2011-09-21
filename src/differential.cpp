@@ -21,7 +21,7 @@
 
 using namespace std;
 
-double min_read_count = 100;
+double min_read_count = 10;
 
 #if ENABLE_THREADS
 mutex _launcher_lock;
