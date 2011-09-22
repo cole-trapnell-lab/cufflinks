@@ -411,8 +411,26 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	
 	bool prev_status = curr_abundance.status();
 	bool curr_status = prev_abundance.status();
+    
+    bool has_lowdata_member = false;
+	foreach(shared_ptr<Abundance> ab, curr_abundance.abundances())
+	{
+        if (ab->status() == NUMERIC_LOW_DATA)
+		{
+			has_lowdata_member = true;
+		}
+	}
+    
+    foreach(shared_ptr<Abundance> ab, prev_abundance.abundances())
+	{
+        if (ab->status() == NUMERIC_LOW_DATA)
+		{
+			has_lowdata_member = true;
+		}
+	}
 	
-	if (prev_status == NUMERIC_OK && prev_abundance.num_fragments() > 0 &&
+	if (has_lowdata_member == false &&
+        prev_status == NUMERIC_OK && prev_abundance.num_fragments() > 0 &&
 		curr_status == NUMERIC_OK && curr_abundance.num_fragments() > 0)
 	{
 		vector<ublas::vector<double> > sample_kappas;
