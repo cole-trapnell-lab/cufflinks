@@ -884,6 +884,7 @@ class GTssCl:public GSeg { //experiment cluster of ref loci (isoforms)
      //check if it can be added to existing xconsensi
      uint nfend=0;
      uint nfstart=0;
+     /*
      if (tsscl.Get(0)->tcons->getGeneID()!=NULL && 
              c->tcons->getGeneID()!=NULL && 
             strcmp(tsscl.Get(0)->tcons->getGeneID(), c->tcons->getGeneID()))
@@ -891,7 +892,7 @@ class GTssCl:public GSeg { //experiment cluster of ref loci (isoforms)
         //FIXME: we might not want this if input files are not from Cufflinks
         //       and they could simply lack proper GeneID
           return false;
-            
+      */
      if (c->tcons->strand=='-') {
         //no, the first exons don't have to overlap
         //if (!c->tcons->exons.Last()->overlap(fstart,fend)) return false;
