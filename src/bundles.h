@@ -727,7 +727,7 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	if (has_pairs)
 		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_1, max_2);
 	else
-		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max_1);
+		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max(max_1,max_2));
 
 	if (empirical)
 	{

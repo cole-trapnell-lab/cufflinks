@@ -974,7 +974,6 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 bool BundleFactory::_expand_by_refs(HitBundle& bundle)
 {
 	int initial_right = bundle.right();
-		
 	while(next_ref_scaff < ref_mRNAs.end())
 	{		
 		assert(bundle.ref_id() != (*next_ref_scaff)->ref_id() || (*next_ref_scaff)->left() >= bundle.left());
