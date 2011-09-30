@@ -411,26 +411,8 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	
 	bool prev_status = curr_abundance.status();
 	bool curr_status = prev_abundance.status();
-    
-    bool has_lowdata_member = false;
-	foreach(shared_ptr<Abundance> ab, curr_abundance.abundances())
-	{
-        if (ab->status() == NUMERIC_LOW_DATA)
-		{
-			has_lowdata_member = true;
-		}
-	}
-    
-    foreach(shared_ptr<Abundance> ab, prev_abundance.abundances())
-	{
-        if (ab->status() == NUMERIC_LOW_DATA)
-		{
-			has_lowdata_member = true;
-		}
-	}
 	
-	if (has_lowdata_member == false &&
-        prev_status == NUMERIC_OK && prev_abundance.num_fragments() > 0 &&
+	if (prev_status == NUMERIC_OK && prev_abundance.num_fragments() > 0 &&
 		curr_status == NUMERIC_OK && curr_abundance.num_fragments() > 0)
 	{
 		vector<ublas::vector<double> > sample_kappas;
@@ -1215,6 +1197,11 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
+                if (desc == "ENSMUSG00000009471")
+                {
+                    int a = 4;
+                }
+                    
                 pair<int, SampleDiffs::iterator> result;
                 result = get_de_tests(desc,
                              itr->second.fpkm_series[j], 

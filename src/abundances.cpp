@@ -208,8 +208,26 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 			next_cov_row++;
 		}
 	}
-	
+
 	filtered_group = AbundanceGroup(new_ab, new_cov, new_boot_cov, new_count_cov, _max_mass_variance);
+    //ublas::matrix<double> zm = ublas::zero_matrix<double>(num_kept,num_kept);
+    //if (new_cov == zm)
+//    bool nonzero = false;
+//    for (size_t i = 0; i < new_cov.size1(); ++i)
+//    {
+//        for (size_t j = 0; j < new_cov.size2(); ++j)
+//        {
+//            if (new_cov(i,j))
+//                nonzero = true;
+//        }
+//    }
+//    
+//    if (nonzero)
+//    {
+//        cerr << _count_covariance << endl;
+//        cerr << new_count_cov << endl;
+//        cerr << filtered_group.count_cov() << endl;
+//    }
 }
 
 void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
@@ -1575,11 +1593,20 @@ void AbundanceGroup::calculate_kappas()
             }
             else
             {
+//                if (_abundances[k]->FPKM_variance() > 0 && _abundances[m]->FPKM_variance() > 0)
+//                {
+//                    if (_count_covariance(k,m) == 0)
+//                        cerr << _count_covariance << endl;
+//                    //assert (_count_covariance(k,m) != 0);
+//                }
                 double kappa_covar = _count_covariance(k, m) / (L * Z_kappa * Z_kappa);
                 _kappa_covariance(k,m) = kappa_covar;
             }
 		}
 	}
+    
+    //cerr << _kappa_covariance << endl;
+    //cerr << _count_covariance << endl;
 }
 
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
