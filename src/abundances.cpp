@@ -404,7 +404,7 @@ void AbundanceGroup::calculate_counts(const vector<MateHit>& alignments,
             }
             else
             {
-                 scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());   
+                scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());   
             }
             //double scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
             //double scaled_variance = disperser->scale_mass_variance(scaled_mass) * _abundances[j]->gamma();
@@ -1544,12 +1544,17 @@ void AbundanceGroup::calculate_kappas()
 		}
 	}
 	
+    if (num_members > 1)
+    {
+        cerr << _count_covariance << endl; 
+    }
+    
 	for (size_t k = 0; k < num_members; ++k)
 	{
 		for (size_t m = 0; m < num_members; ++m)
 		{
             double L = _abundances[k]->effective_length() * 
-            					   _abundances[m]->effective_length();
+                       _abundances[m]->effective_length();
             if (L == 0.0)
             {
                 _kappa_covariance(k,m) = 0.0;
@@ -1560,9 +1565,12 @@ void AbundanceGroup::calculate_kappas()
                 double l_t = _abundances[k]->effective_length();
                 double M = num_fragments()/mass_fraction();
                 double den = (1000000000.0 / (l_t * M));
+                double counts = num_fragments();
                 double count_var = _abundances[k]->FPKM_variance() / (den*den);
-                
-                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
+                double count_var2 = _count_covariance(k, m);
+//                
+//                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
+                double kappa_var = _abundances[k]->FPKM_variance() / (S_FPKM * S_FPKM);
                 _kappa_covariance(k,m) = kappa_var;
             }
             else
