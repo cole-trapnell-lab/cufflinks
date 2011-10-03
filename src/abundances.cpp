@@ -1562,10 +1562,10 @@ void AbundanceGroup::calculate_kappas()
 		}
 	}
 	
-    if (num_members > 1)
-    {
-        cerr << _count_covariance << endl; 
-    }
+//    if (num_members > 1)
+//    {
+//        cerr << _count_covariance << endl; 
+//    }
     
 	for (size_t k = 0; k < num_members; ++k)
 	{
