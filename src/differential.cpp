@@ -620,9 +620,6 @@ void add_to_tracking_table(size_t sample_index,
     {
         fpkms.push_back(r1);
     }
-
-     // TODO: remove this assert
-    //assert (inserted.first->second.fpkm_series.size() <= 2);
 }
 
 string bundle_locus_tag(const RefSequenceTable& rt, 
@@ -708,10 +705,14 @@ void sample_abundance_worker(const string& locus_tag,
         ublas::matrix<double> cds_gamma_cov;
         ublas::matrix<double> cds_gamma_boot_cov;
         ublas::matrix<double> cds_count_cov;
+        ublas::matrix<double> cds_iterated_exp_count_cov;
+        ublas::matrix<double> cds_fpkm_cov;
         cluster_transcripts<ConnectByAnnotatedProteinId>(sample.transcripts,
                                                          transcripts_by_cds,
                                                          &cds_gamma_cov,
+                                                         &cds_iterated_exp_count_cov,
                                                          &cds_count_cov,
+                                                         &cds_fpkm_cov,
                                                          &cds_gamma_boot_cov);
         foreach(AbundanceGroup& ab_group, transcripts_by_cds)
         {
@@ -736,7 +737,9 @@ void sample_abundance_worker(const string& locus_tag,
         AbundanceGroup cds(cds_abundances,
                            cds_gamma_cov,
                            cds_gamma_boot_cov,
+                           cds_iterated_exp_count_cov,
                            cds_count_cov,
+                           cds_fpkm_cov,
                            max_cds_mass_variance);
         
         vector<AbundanceGroup> cds_by_gene;
@@ -763,10 +766,14 @@ void sample_abundance_worker(const string& locus_tag,
         ublas::matrix<double> tss_gamma_cov;
         ublas::matrix<double> tss_gamma_boot_cov;
         ublas::matrix<double> tss_count_cov;
+        ublas::matrix<double> tss_iterated_exp_count_cov;
+        ublas::matrix<double> tss_fpkm_cov;
         cluster_transcripts<ConnectByAnnotatedTssId>(sample.transcripts,
                                                      transcripts_by_tss,
                                                      &tss_gamma_cov,
+                                                     &tss_iterated_exp_count_cov,
                                                      &tss_count_cov,
+                                                     &tss_fpkm_cov,
                                                      &tss_gamma_boot_cov);
         
        
@@ -795,7 +802,9 @@ void sample_abundance_worker(const string& locus_tag,
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
                                            tss_gamma_cov,
                                            tss_gamma_boot_cov,
+                                           tss_iterated_exp_count_cov,
                                            tss_count_cov,
+                                           tss_fpkm_cov,
                                            max_tss_mass_variance);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;

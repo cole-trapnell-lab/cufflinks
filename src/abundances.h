@@ -283,7 +283,9 @@ public:
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
 		_abundances = other._abundances;
-		_count_covariance = other._count_covariance;
+		_iterated_exp_count_covariance = other._iterated_exp_count_covariance;
+        _count_covariance = other._count_covariance;
+        _fpkm_covariance = other._fpkm_covariance;
         _gamma_covariance = other._gamma_covariance;
         _gamma_bootstrap_covariance = other._gamma_bootstrap_covariance;
 		_FPKM_conf = other._FPKM_conf;
@@ -296,7 +298,9 @@ public:
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
 		_abundances(abundances), 
+        _iterated_exp_count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
         _count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
+        _fpkm_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
         _gamma_bootstrap_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
@@ -307,16 +311,22 @@ public:
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
                    const ublas::matrix<double>& gamma_bootstrap_covariance,
+                   const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
+                   const ublas::matrix<double>& fpkm_covariance,
                    const long double max_mass_variance) :
 		_abundances(abundances), 
-		_count_covariance(count_covariance),
+		_iterated_exp_count_covariance(iterated_exp_count_covariance),
+        _count_covariance(count_covariance),
+        _fpkm_covariance(fpkm_covariance),
         _gamma_covariance(gamma_covariance),
         _gamma_bootstrap_covariance(gamma_bootstrap_covariance),
         _max_mass_variance(max_mass_variance)
 	{
-        
-		calculate_conf_intervals();
+		// Calling calculate_FPKM_covariance() also estimates cross-replicate
+        // count variances
+        // calculate_FPKM_covariance();
+        calculate_conf_intervals();
 		calculate_kappas();
 	}
 	
@@ -380,9 +390,13 @@ public:
     
     const ublas::matrix<double>& gamma_bootstrap_cov() const { return _gamma_bootstrap_covariance; }
     
+    const ublas::matrix<double>& iterated_count_cov() const { return _iterated_exp_count_covariance; }
+    
     const ublas::matrix<double>& count_cov() const { return _count_covariance; }
     
 	const ublas::matrix<double>& kappa_cov() const { return _kappa_covariance; }
+    
+    const ublas::matrix<double>& fpkm_cov() const { return _kappa_covariance; }
 	
 	
 	void calculate_abundance(const vector<MateHit>& alignments);
@@ -398,11 +412,14 @@ private:
                           const vector<double>& log_conv_factors,
 						  const vector<shared_ptr<Abundance> >& transcripts,
 						  const vector<shared_ptr<Abundance> >& mapped_transcripts);
-	void calculate_FPKM_variance();
-	void calculate_conf_intervals();
-	void calculate_counts(const vector<MateHit>& nr_alignments,
+	void calculate_FPKM_covariance();
+    void estimate_count_covariance();
+    void calculate_conf_intervals();
+	void calculate_locus_scaled_mass_and_variance(const vector<MateHit>& nr_alignments,
                           const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
+    
+    
 	void update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts);
 
     
@@ -412,8 +429,15 @@ private:
 	
 	vector<shared_ptr<Abundance> > _abundances;
 	
+    // _count_covariance is the final count covariance matrix.  It's includes our estimates
+    // of transcript-level biological variability on counts
     ublas::matrix<double> _count_covariance;
     
+    // _iterated_exp_count_covariance is the ITERATED EXPECTATION count covariance matrix.  It's not the 
+    // estimated count covariance matrix (i.e. it doesn't include biological variability from
+    // the fitted model.
+    ublas::matrix<double> _iterated_exp_count_covariance;
+    ublas::matrix<double> _fpkm_covariance;
 	ublas::matrix<double> _gamma_covariance;
     ublas::matrix<double> _gamma_bootstrap_covariance;
     
@@ -475,12 +499,6 @@ AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts
                                const ublas::matrix<double>& proposal_gamma_covariance,
                                ublas::vector<double>& gamma_map_estimate,
                                ublas::matrix<double>& gamma_map_covariance);
-
-//AbundanceStatus gamma_map(const vector<shared_ptr<Abundance> >& transcripts,
-//                          const vector<MateHit>& nr_alignments,
-//                          const vector<double>& log_conv_factors,
-//                          vector<double>& gamma_map_estimate,
-//                          ublas::matrix<double>& gamma_covariance);
 
 AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
