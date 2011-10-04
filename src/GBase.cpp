@@ -497,11 +497,10 @@ char* reverseChars(char* str, int slen) {
   if (slen==0) slen=strlen(str);
   int l=0;
   int r=slen-1;
-  register char c;
+  char c;
   while (l<r) {
      c=str[l];str[l]=str[r];
      str[r]=c;
-     //swap(str[l],str[r]);
      l++;r--;
      }
   return str;

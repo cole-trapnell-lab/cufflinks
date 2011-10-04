@@ -274,11 +274,10 @@ char* rstrchr(char* str, char ch);
 char* strchrs(const char* s, const char* chrs);
 //strchr but with a set of chars instead of only one
 
-char* rstrfind(const char* str, const char *substr); /* like rindex() but for strings
-or like the right side version of strstr()
-*/
-//reverse character string or
-char* reverseChars(char* str, int slen=0);
+char* rstrfind(const char* str, const char *substr); 
+// like rindex() but for strings;  right side version of strstr()
+
+char* reverseChars(char* str, int slen=0); //in place reversal of string 
 
 char* rstrstr(const char* rstart, const char *lend, const char* substr);
 /*the reversed, rightside equivalent of strstr: starts searching

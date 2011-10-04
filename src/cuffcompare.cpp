@@ -2131,14 +2131,24 @@ void reclass_XStrand(GList<GffObj>& mrnas, GList<GLocus>* rloci) {
                // just plain overlap, find the overlapping mrna in rloc
                GffObj* maxovl=NULL;
                int ovlen=0;
+               GffObj* max_lovl=NULL; //max len ref transcript
+                       // having no exon overlap but simply range overlap (interleaved exons)
                for (int ri=0;ri<rloc->mrnas.Count();ri++) {
+                  if (!m.overlap(*(rloc->mrnas[ri]))) continue;
                   int o=m.exonOverlapLen(*(rloc->mrnas[ri]));
-                  if (o>ovlen) {
-                      ovlen=o;
-                      maxovl=rloc->mrnas[ri];
-                      }
+                  if (o>0) {
+                     if (o>ovlen) {
+                        ovlen=o;
+                        maxovl=rloc->mrnas[ri];
+                        }
+                     }
+                    else { //no exon overlap, but still overlapping (interleaved exons)
+                     if (max_lovl==NULL || max_lovl->covlen<rloc->mrnas[ri]->covlen)
+                         max_lovl=rloc->mrnas[ri];
+                     }
                   }
-               if (maxovl!=NULL) ((CTData*)m.uptr)->addOvl('x',maxovl);
+               if (maxovl) ((CTData*)m.uptr)->addOvl('x',maxovl);
+                 else if (max_lovl) ((CTData*)m.uptr)->addOvl('x',max_lovl);
                } //'x'
        jm++;
        } while (j+jm<rloci->Count() && rloci->Get(j+jm)->overlap(m));
