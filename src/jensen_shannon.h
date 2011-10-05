@@ -19,7 +19,7 @@ namespace ublas = boost::numeric::ublas;
 
 double entropy(const ublas::vector<double>& p);
 
-double jensen_shannon_div(std::vector<ublas::vector<double> >& sample_kappas);
+double jensen_shannon_distance(std::vector<ublas::vector<double> >& sample_kappas);
 
 void jensen_shannon_gradient(std::vector<ublas::vector<double> >& sample_kappas,
 							 double js,

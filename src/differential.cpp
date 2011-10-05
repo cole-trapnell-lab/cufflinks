@@ -431,7 +431,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 		sample_kappas.push_back(prev_kappas);
 		sample_kappas.push_back(curr_kappas);
 		
-		double js = jensen_shannon_div(sample_kappas);
+		double js = jensen_shannon_distance(sample_kappas);
 		if (js == 0.0 || isnan(js) || isinf(js))
 		{
 			test.test_stat = 0;

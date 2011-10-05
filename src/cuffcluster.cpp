@@ -260,7 +260,7 @@ void assign_to_nearest_cluster(vector<ExprRecord>& expr_records, vector<ClusterS
         for (size_t m = 0; m < clusters.size(); ++m)
         {
             kappas[1] = clusters[m].mean;
-            double js = jensen_shannon_div(kappas);
+            double js = jensen_shannon_distance(kappas);
             if (js < min_dist)
             {
                 closest_mean = m;
@@ -307,7 +307,7 @@ void assign_to_nearest_cluster(vector<ExprRecord>& expr_records, vector<ClusterS
         foreach (int m, cluster.members)
         {
             kappas[1] = expr_records[m].cond_density;
-            double js = jensen_shannon_div(kappas);
+            double js = jensen_shannon_distance(kappas);
             cluster.variance += (js * js);
         }
         
@@ -350,7 +350,7 @@ void split_cluster(const vector<ExprRecord>& expr_records,
     for (size_t m = 0; m < to_split.members.size(); ++m)
     {
         kappas.push_back(expr_records[to_split.members[m]].cond_density);
-        double js = jensen_shannon_div(kappas);
+        double js = jensen_shannon_distance(kappas);
         dist_from_mean.push_back(js);
     }
     
@@ -394,10 +394,10 @@ void split_cluster(const vector<ExprRecord>& expr_records,
     for (size_t m = 0; m < to_split.members.size(); ++m)
     {
         a_kappas[1] = expr_records[to_split.members[m]].cond_density;
-        double a_js = jensen_shannon_div(a_kappas);
+        double a_js = jensen_shannon_distance(a_kappas);
         
         b_kappas[1] = expr_records[to_split.members[m]].cond_density;
-        double b_js = jensen_shannon_div(b_kappas);
+        double b_js = jensen_shannon_distance(b_kappas);
         
         if (a_js < b_js)
         {
@@ -421,7 +421,7 @@ void split_cluster(const vector<ExprRecord>& expr_records,
     for (size_t m = 0; m < a_cluster.members.size(); ++m)
     {
         a_kappas[1] = expr_records[a_cluster.members[m]].cond_density;
-        double js = jensen_shannon_div(a_kappas);
+        double js = jensen_shannon_distance(a_kappas);
         a_cluster.variance += (js * js);
     }
     
@@ -430,7 +430,7 @@ void split_cluster(const vector<ExprRecord>& expr_records,
     for (size_t m = 0; m < b_cluster.members.size(); ++m)
     {
         b_kappas[1] = expr_records[b_cluster.members[m]].cond_density;
-        double js = jensen_shannon_div(b_kappas);
+        double js = jensen_shannon_distance(b_kappas);
         b_cluster.variance += (js * js);
     }
     
@@ -659,7 +659,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
         norm_kappas.push_back(u1);
         norm_kappas.push_back(u2);
         
-        double norm_js = jensen_shannon_div(norm_kappas);
+        double norm_js = jensen_shannon_distance(norm_kappas);
         double max_FPKM = -1;
         double max_log_FPKM = -1;
         
@@ -766,7 +766,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
                 ublas::vector<double> specific_vec = ublas::unit_vector<double>(N, i);
                 kappas[1] = specific_vec;
                 
-                double js = jensen_shannon_div(kappas);
+                double js = jensen_shannon_distance(kappas);
                 js /= norm_js;
                 
                 rec.cond_specificities[i] = 1.0 - js;
@@ -842,7 +842,7 @@ void driver(FILE* fpkm_file, FILE* spec_out, FILE* row_matrix_out, FILE* row_den
 //             {
 //                 const ublas::vector<double>& j_vec = fpkm_dists[j];
 //                 kappas[1] = j_vec;
-//                 double i_j_js = jensen_shannon_div(kappas);
+//                 double i_j_js = jensen_shannon_distance(kappas);
 //                 if (j == fpkm_dists.size() - 1)
 //                 {
 //                     fprintf(row_matrix_out, "%g\n", i_j_js);

@@ -29,7 +29,7 @@ double entropy(const ublas::vector<double>& p)
 	return e;
 }
 
-double jensen_shannon_div(std::vector<ublas::vector<double> >& sample_kappas)
+double jensen_shannon_distance(std::vector<ublas::vector<double> >& sample_kappas)
 {
 	assert (sample_kappas.size() > 1);
 	
@@ -127,8 +127,8 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 #endif
 				gradient(i*kappa_length + k) /= denoms(k);
 				gradient(i*kappa_length + k) = log(gradient(i*kappa_length + k));
-				gradient(i*kappa_length + k) /= sample_kappas.size();
-				gradient(i*kappa_length + k) *= (1.0/(2.0*js));
+				gradient(i*kappa_length + k) /= sample_kappas.size(); // m in paper notation
+				gradient(i*kappa_length + k) *= (1.0/(2.0*sqrt(js))); // This is supposed to use the square root of the distance (it's not a typo)
 				
 #ifdef DEBUG
 				if(isinf(gradient(i*kappa_length + k)))
