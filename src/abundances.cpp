@@ -1037,11 +1037,30 @@ void AbundanceGroup::estimate_count_covariance()
                         }
                         if (scale_i != 0 && scale_j != 0)
                         {
+                            double poisson_variance_i = _abundances[i]->num_fragments();
+                            double poisson_variance_j = _abundances[j]->num_fragments();
+                            double poisson_scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
+                            double poisson_scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
+                            double poisson_scale = sqrt(poisson_scale_i) * sqrt(poisson_scale_j);
+                            
+                            //fprintf(stderr, "Total scaling factor: %lg, alt scaling factor %lg \n", sqrt(scale_i) * sqrt(scale_j), alt_scale);
+                            double full_scale = sqrt(scale_i) * sqrt(scale_j);
                             double before = _iterated_exp_count_covariance(i,j);
-                            double after = sqrt(scale_i) * sqrt(scale_j) * _iterated_exp_count_covariance(i,j);
+                            
+                            long double scale = poisson_scale;
+                            if (scale < 1.0)
+                                scale = 1.0;
+                            
+                            //double after = full_scale * before;
+                            double after = scale * before;
+                            
                             assert (_iterated_exp_count_covariance(i,j) <= 0);
                             assert (before >= after);
                             _count_covariance(i,j) = after;
+                        }
+                        else
+                        {
+                            _count_covariance(i,j) = 0;
                         }
                         assert (!isinf(_count_covariance(i,j)) && !isnan(_count_covariance(i,j)));
                         // TODO: attach per-transcript cross-replicate count variance here?
@@ -1076,6 +1095,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
     estimate_count_covariance();
     
     long double total_var = 0.0;
+    double dummy_var = 0.0;
     for (size_t j = 0; j < _abundances.size(); ++j)
     {
         for (size_t i = 0; i < _abundances.size(); ++i)
@@ -1102,6 +1122,15 @@ void AbundanceGroup::calculate_FPKM_covariance()
             {
                 assert (_abundances[i]->FPKM() == 0 || _fpkm_covariance(i,j) != 0);
                 _abundances[i]->FPKM_variance(_fpkm_covariance(i,j));
+                dummy_var += _fpkm_covariance(i,i);
+            }
+            else
+            {
+                if (_iterated_exp_count_covariance(i,j) <  _count_covariance(i,j))
+                {
+                    fprintf(stderr, "WARNING: modeled covariance (%lg) is less than iterated expectation covariance (%lg)\n", _iterated_exp_count_covariance(i,j), _count_covariance(i,j));
+                }
+                dummy_var += _iterated_exp_count_covariance(i,j) * ((1000000000.0 / (length_j *M)))*((1000000000.0 / (length_i *M)));;
             }
             
             total_var += _fpkm_covariance(i,j);
@@ -1109,6 +1138,10 @@ void AbundanceGroup::calculate_FPKM_covariance()
     }
     
     _FPKM_variance = total_var;
+    if (FPKM() != 0 && _abundances.size() > 1)
+    {
+        int a = 5;
+    }
     
     assert (FPKM() == 0 || _FPKM_variance != 0);
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
