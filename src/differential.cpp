@@ -1205,11 +1205,6 @@ void test_differential(const string& locus_tag,
                     if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
-                
-                if (desc == "ENSMUSG00000009471")
-                {
-                    int a = 4;
-                }
                     
                 pair<int, SampleDiffs::iterator> result;
                 result = get_de_tests(desc,
