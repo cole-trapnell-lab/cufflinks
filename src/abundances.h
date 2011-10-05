@@ -326,6 +326,17 @@ public:
 		// Calling calculate_FPKM_covariance() also estimates cross-replicate
         // count variances
         // calculate_FPKM_covariance();
+        double fpkm_var = 0.0;
+        for (size_t i = 0; i < _fpkm_covariance.size1(); ++i)
+        {
+            for (size_t j = 0; j < _fpkm_covariance.size2(); ++j)
+            {
+                fpkm_var += _fpkm_covariance(i,j);
+            }
+        }
+        
+        _FPKM_variance = fpkm_var;
+        
         calculate_conf_intervals();
 		calculate_kappas();
 	}

@@ -1060,7 +1060,11 @@ void AbundanceGroup::estimate_count_covariance()
         assert(false);
 	}
     
-    
+//    cerr << "ITERATED:" << endl;
+//    cerr <<_iterated_exp_count_covariance << endl;
+//    
+//    cerr << "ITERATED:" << endl;
+//    cerr <<_iterated_exp_count_covariance << endl;
 }
 
 void AbundanceGroup::calculate_FPKM_covariance()
@@ -1142,7 +1146,7 @@ void AbundanceGroup::calculate_conf_intervals()
                     assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
                     ConfidenceInterval conf(FPKM_lo, FPKM_hi);
                     _abundances[j]->FPKM_conf(conf);
-                    _abundances[j]->FPKM_variance(fpkm_var);
+                    //_abundances[j]->FPKM_variance(fpkm_var);
                 }
                 else
                 {
@@ -1154,7 +1158,7 @@ void AbundanceGroup::calculate_conf_intervals()
 			else
 			{
 				_abundances[j]->FPKM_conf(ConfidenceInterval(0.0, 0.0));
-				_abundances[j]->FPKM_variance(0.0);
+				//_abundances[j]->FPKM_variance(0.0);
 			}
 		}
 		
@@ -1198,7 +1202,7 @@ void AbundanceGroup::calculate_conf_intervals()
 				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
 				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
 				pA->FPKM_conf(conf);
-                pA->FPKM_variance(var_fpkm);
+                //pA->FPKM_variance(var_fpkm);
 				max_fpkm = max(sum_transfrag_FPKM_hi, FPKM_hi);
 			}
 			else
@@ -1207,7 +1211,7 @@ void AbundanceGroup::calculate_conf_intervals()
 				FPKM_lo = 0.0;
 				ConfidenceInterval conf(0.0, 0.0);
 				pA->FPKM_conf(conf);
-                pA->FPKM_variance(0.0);
+                //pA->FPKM_variance(0.0);
 			}
             
 		}
