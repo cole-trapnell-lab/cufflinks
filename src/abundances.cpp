@@ -1023,32 +1023,28 @@ void AbundanceGroup::estimate_count_covariance()
                 }
                 for (size_t i = 0; i < _abundances.size(); ++i)
                 {
-                    double scale_i = 0.0;
-                    double i_xpc = _iterated_exp_count_covariance(i,i);
-                    if (i_xpc == 0)
+                    if (i != j)
                     {
-                        scale_i = 0.0;
-                    }
-                    else
-                    {
-                        scale_i = _count_covariance(i,i) / _iterated_exp_count_covariance(i,i);
-                    }
-                    if (scale_i != 0 && scale_j != 0)
-                    {
-                        double before = _iterated_exp_count_covariance(i,j);
-                        double after = sqrt(scale_i) * sqrt(scale_j) * _iterated_exp_count_covariance(i,j);
-                        _count_covariance(i,j) = sqrt(scale_i) * sqrt(scale_j) * _iterated_exp_count_covariance(i,j);
-                    }
-                    assert (!isinf(_count_covariance(i,j)) && !isnan(_count_covariance(i,j)));
-                    // TODO: attach per-transcript cross-replicate count variance here.
-                    if (i == j)
-                    {
-                        if (_count_covariance(i,i) == 0)
+                        double scale_i = 0.0;
+                        double i_xpc = _iterated_exp_count_covariance(i,i);
+                        if (i_xpc == 0)
                         {
-                            double A = num_fragments() * _abundances[j]->gamma();
-                            assert (_abundances[j]->status() != NUMERIC_OK ||  A == 0);
+                            scale_i = 0.0;
                         }
-                        //_abundances[i]->count_covariance(_count_covariance(i,j));
+                        else
+                        {
+                            scale_i = _count_covariance(i,i) / _iterated_exp_count_covariance(i,i);
+                        }
+                        if (scale_i != 0 && scale_j != 0)
+                        {
+                            double before = _iterated_exp_count_covariance(i,j);
+                            double after = sqrt(scale_i) * sqrt(scale_j) * _iterated_exp_count_covariance(i,j);
+                            assert (_iterated_exp_count_covariance(i,j) <= 0);
+                            assert (before >= after);
+                            _count_covariance(i,j) = after;
+                        }
+                        assert (!isinf(_count_covariance(i,j)) && !isnan(_count_covariance(i,j)));
+                        // TODO: attach per-transcript cross-replicate count variance here?
                     }
                 }
             }
