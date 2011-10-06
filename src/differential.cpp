@@ -466,6 +466,13 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			
 			double js_var = inner_prod(js_gradient, 
 									   prod(js_covariance, js_gradient));
+            
+//            ublas::vector<double> alt_js_gradient;
+//			alt_jensen_shannon_gradient(sample_kappas, js, alt_js_gradient);
+//            
+//            double alt_js_var = inner_prod(alt_js_gradient, 
+//									   prod(js_covariance, alt_js_gradient));
+//            fprintf(stderr, "Current JS variance %lg, Alt. JS variance %lg\n", js_var, alt_js_var);
 #ifdef DEBUG
 			if (isinf(js_var) || isnan(js_var))
 			{

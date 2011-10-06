@@ -21,6 +21,10 @@ double entropy(const ublas::vector<double>& p);
 
 double jensen_shannon_distance(std::vector<ublas::vector<double> >& sample_kappas);
 
+//void alt_jensen_shannon_gradient(std::vector<ublas::vector<double> >& sample_kappas,
+//                                 double js,
+//                                 ublas::vector<double>& gradient);
+
 void jensen_shannon_gradient(std::vector<ublas::vector<double> >& sample_kappas,
 							 double js,
 							 ublas::vector<double>& gradient);
