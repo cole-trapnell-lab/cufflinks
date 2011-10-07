@@ -1893,7 +1893,7 @@ void AbundanceGroup::calculate_kappas()
             }
             else
             {
-                double kappa_covar = _fpkm_covariance(k,m) / (S_FPKM * S_FPKM);
+                double kappa_covar = _fpkm_covariance(k,m) / S_FPKM;
                 //double kappa_covar = _count_covariance(k, m) / (L * Z_kappa * Z_kappa);
                 _kappa_covariance(k,m) = kappa_covar;
             }
