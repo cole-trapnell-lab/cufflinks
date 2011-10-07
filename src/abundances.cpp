@@ -1128,7 +1128,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
             {
                 if (_iterated_exp_count_covariance(i,j) <  _count_covariance(i,j))
                 {
-                    fprintf(stderr, "WARNING: modeled covariance (%lg) is less than iterated expectation covariance (%lg)\n", _iterated_exp_count_covariance(i,j), _count_covariance(i,j));
+                    fprintf(stderr, "WARNING: modeled covariance (%lg) is less than iterated expectation covariance (%lg)\n", _count_covariance(i,j), _iterated_exp_count_covariance(i,j));
                 }
                 dummy_var += _iterated_exp_count_covariance(i,j) * ((1000000000.0 / (length_j *M)))*((1000000000.0 / (length_i *M)));;
             }

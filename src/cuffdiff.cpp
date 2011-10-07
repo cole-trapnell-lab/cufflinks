@@ -103,7 +103,8 @@ static struct option long_options[] = {
 {"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {"read-skip-fraction",      required_argument,	     0,          OPT_READ_SKIP_FRACTION},
 {"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
-{"trim-read-length",     required_argument,	     0,          OPT_TRIM_READ_LENGTH},
+{"trim-read-length",        required_argument,	     0,          OPT_TRIM_READ_LENGTH},
+{"cov-delta",               required_argument,	     0,          OPT_MAX_DELTA_GAP},
 {0, 0, 0, 0} // terminator
 };
 
@@ -149,7 +150,7 @@ void print_usage()
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
-
+    fprintf(stderr, "  --cov-delta                  Maximum gap between bootstrap and IS                  [ default:   2.0  ]\n");
     print_library_table();
 }
 
@@ -356,6 +357,11 @@ int parse_options(int argc, char** argv)
             case OPT_TRIM_READ_LENGTH:
             {
                 trim_read_length = parseInt(0, "--trim-read-length must be at least 1", print_usage);
+                break;
+            }
+            case OPT_MAX_DELTA_GAP:
+            {
+                bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
                 break;
             }
 			default:

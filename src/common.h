@@ -430,4 +430,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_READ_SKIP_FRACTION      295
 #define OPT_NO_READ_PAIRS           296
 #define OPT_TRIM_READ_LENGTH        297
+#define OPT_MAX_DELTA_GAP           298
 #endif
