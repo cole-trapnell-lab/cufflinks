@@ -224,7 +224,7 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 				gradient(i*kappa_length + k) /= p_bar(k);
 				gradient(i*kappa_length + k) = log(gradient(i*kappa_length + k));
 				gradient(i*kappa_length + k) /= sample_kappas.size(); // m in paper notation
-				gradient(i*kappa_length + k) *= (1.0/(2.0 * sqrt(js))); // This is supposed to use the square root of the distance (it's not a typo)
+				gradient(i*kappa_length + k) *= (1.0/(2.0 * js)); // This is supposed to use the square root of the distance (it's not a typo)
 				
                 double curr_grad = gradient(i*kappa_length + k);
                 //fprintf(stderr, "Curr gradient: %lg, alternate gradient %lg\n", curr_grad, alt_grad);
