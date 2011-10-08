@@ -876,6 +876,12 @@ bool estimate_count_variance(long double& variance,
             assert (!numeric_ok || variance >= poisson_variance);
             assert (!numeric_ok || variance >= V_X_g_t);
             
+            if (variance < poisson_variance)
+                variance = poisson_variance;
+            
+            if (variance < V_X_g_t)
+                variance = V_X_g_t;
+            
             //assert (abs(FPKM - mean) < 1e-3);
         }
     }
@@ -1126,7 +1132,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
             }
             else
             {
-                if (_iterated_exp_count_covariance(i,j) <  _count_covariance(i,j))
+                if (_iterated_exp_count_covariance(i,j) >  _count_covariance(i,j))
                 {
                     fprintf(stderr, "WARNING: modeled covariance (%lg) is less than iterated expectation covariance (%lg)\n", _count_covariance(i,j), _iterated_exp_count_covariance(i,j));
                 }
@@ -1138,10 +1144,10 @@ void AbundanceGroup::calculate_FPKM_covariance()
     }
     
     _FPKM_variance = total_var;
-    if (FPKM() != 0 && _abundances.size() > 1)
-    {
-        int a = 5;
-    }
+//    if (FPKM() != 0 && _abundances.size() > 1)
+//    {
+//        int a = 5;
+//    }
     
     assert (FPKM() == 0 || _FPKM_variance != 0);
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
