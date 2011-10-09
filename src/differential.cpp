@@ -496,29 +496,29 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
                 // We're dealing with a standard normal that's been truncated below zero
                 // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
                 
-                cerr << endl << "js: " << js << endl;
-                cerr << "js_var: " << js_var << endl;
-                cerr << "grad: " << js_gradient << endl;
-				
-                cerr << "kappa covariances: " << endl;
-                for (size_t j = 0; j < covariances.size(); ++j)
-                {
-                    cerr << "kappa # " << j << endl;
-                    cerr << sample_kappas[j] << endl;
-                    cerr << "covariance # " << j << endl;
-                    for (size_t i = 0; i < covariances[j].size1(); ++i)
-                    {
-                        ublas::matrix_row<ublas::matrix<double> > mr (covariances[j], i);
-                        cerr << mr << endl;
-                    }
-                }
-                
-                cerr << "js_cov: " << endl;
-                for (size_t i = 0; i < js_covariance.size1(); ++i)
-                {
-                    ublas::matrix_row<ublas::matrix<double> > mr (js_covariance, i);
-                    cerr << mr << endl;
-                }
+//                cerr << endl << "js: " << js << endl;
+//                cerr << "js_var: " << js_var << endl;
+//                cerr << "grad: " << js_gradient << endl;
+//				
+//                cerr << "kappa covariances: " << endl;
+//                for (size_t j = 0; j < covariances.size(); ++j)
+//                {
+//                    cerr << "kappa # " << j << endl;
+//                    cerr << sample_kappas[j] << endl;
+//                    cerr << "covariance # " << j << endl;
+//                    for (size_t i = 0; i < covariances[j].size1(); ++i)
+//                    {
+//                        ublas::matrix_row<ublas::matrix<double> > mr (covariances[j], i);
+//                        cerr << mr << endl;
+//                    }
+//                }
+//                
+//                cerr << "js_cov: " << endl;
+//                for (size_t i = 0; i < js_covariance.size1(); ++i)
+//                {
+//                    ublas::matrix_row<ublas::matrix<double> > mr (js_covariance, i);
+//                    cerr << mr << endl;
+//                }
 				//cerr << prod(js_covariance, js_gradient) << endl;	
                 
                 

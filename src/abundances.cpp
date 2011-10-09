@@ -1663,6 +1663,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             }
         }
         
+        for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
+        {
+            double s = 0.0;
+            
+            for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+            {
+                s += marg_cond_prob(j,i);
+            }
+            assert (s == 1.0);
+        }
+        
         double total_var = 0.0;
         
         for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
@@ -1681,6 +1692,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                     else
                     {
                         double covar = -u[i] * marg_cond_prob(k,i) * marg_cond_prob(j,i);
+                        assert (count_covariance(k,j) <= 0);
                         count_covariance(k,j) += covar;
                     }
                 }
@@ -1699,8 +1711,17 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             }
         }
         
+//        fprintf (stderr, "*****\n");
+//        for (size_t i = 0; i < expected_counts.size(); ++i)
+//        {
+//            string d = filtered_transcripts[i]->description();
+//            fprintf (stderr, "%s: Expected count = %lg, fraction = %lg, gamma = %lg\n", d.c_str(), expected_counts(i), expected_counts(i) / total_counts, gamma_map_estimate[i]);
+//        }
+        
         expected_counts /= total_counts;
         gamma_map_estimate = expected_counts;
+        
+        
         
         std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
         _gamma_covariance = gamma_map_covariance;
