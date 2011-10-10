@@ -95,14 +95,14 @@ AbundanceStatus AbundanceGroup::status() const
         double total_bootstrap_cov = 0.0;
         for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
         {
-//            for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
-//            {
-//                total_cov += _gamma_covariance(i,j);
-//                total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
-//            }
+            for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
+            {
+                total_cov += _gamma_covariance(i,j);
+                total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
+            }
             
-            total_cov += _gamma_covariance(i,i);
-            total_bootstrap_cov += _gamma_bootstrap_covariance(i,i);
+//            total_cov += _gamma_covariance(i,i);
+//            total_bootstrap_cov += _gamma_bootstrap_covariance(i,i);
             
         }
         double bootstrap_gamma_delta = abs(total_bootstrap_cov - total_cov);
