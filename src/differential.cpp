@@ -1011,6 +1011,20 @@ void sample_worker(const RefSequenceTable& rt,
             info.gamma_bootstrap_var.push_back(ab_group.gamma_bootstrap_cov()(i,i));
             info.transcript_ids.push_back(ab->description());
 		}
+
+        const ublas::matrix<double>& bs_gamma_cov = ab_group.gamma_bootstrap_cov();
+        const ublas::matrix<double>& gamma_cov = ab_group.gamma_cov();
+        info.bayes_gamma_trace = 0;
+        info.empir_gamma_trace = 0;
+        for (size_t i = 0; i < ab_group.abundances().size(); ++i)
+        {
+            //for (size_t j = 0; j < ab_group.abundances().size(); ++j)
+            {
+                info.bayes_gamma_trace += gamma_cov(i,i);
+                info.empir_gamma_trace += bs_gamma_cov(i,i);
+            }
+        }
+
         
         info.cross_replicate_js = 0;
         //assert (abundance->cluster_mass == locus_mv.first);
@@ -1018,8 +1032,8 @@ void sample_worker(const RefSequenceTable& rt,
         
         info.isoform_fitted_var_sum = total_iso_scaled_var;
         info.num_transcripts = ab_group.abundances().size();
-        info.bayes_gamma_trace = 0;
-        info.empir_gamma_trace = 0;
+//        info.bayes_gamma_trace = 0;
+//        info.empir_gamma_trace = 0;
         locus_variance_info_table.push_back(info);
     }
     
@@ -1060,7 +1074,7 @@ void dump_locus_variance_info(const string& filename)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {
-            fprintf(fdump, "%d\t%s\t%lf\t%lf\t%lf\t%lf\t%lf\t%d\t%lf\t%lf\t%lf\t%lf\t%lf\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i]);
+            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i]);
         }
         
     }

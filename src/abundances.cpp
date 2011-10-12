@@ -105,7 +105,8 @@ AbundanceStatus AbundanceGroup::status() const
         
     }
     double bootstrap_gamma_delta = abs(total_bootstrap_cov - total_cov);
-    if (bootstrap_gamma_delta > bootstrap_delta_gap * total_cov)
+    double gap = bootstrap_delta_gap * total_cov;
+    if (bootstrap_gamma_delta > gap)
     {
         return NUMERIC_LOW_DATA;
     }

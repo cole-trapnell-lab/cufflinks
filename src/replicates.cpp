@@ -218,7 +218,7 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
     }
 }
 
-static const int min_loci_for_fitting = 30;
+static const int min_loci_for_fitting = 3;
 
 boost::shared_ptr<MassDispersionModel const> 
 fit_dispersion_model_helper(const string& condition_name,
