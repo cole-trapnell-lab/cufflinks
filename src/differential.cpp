@@ -410,7 +410,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	
 	bool prev_status = curr_abundance.status();
 	bool curr_status = prev_abundance.status();
-	
+    
     vector<bool> to_keep(curr_abundance.abundances().size(), false);
     
     for (size_t k = 0; k < prev_abundance.abundances().size(); ++k)

@@ -86,31 +86,30 @@ AbundanceStatus AbundanceGroup::status() const
 		}
 	}
     
-    if (has_lowdata_member)
+    // if we get here, things are either OK, or NUMERIC_LOW_DATA 
+    if (_abundances.size() <= 1)
+        return NUMERIC_LOW_DATA;
+    // check that the variance of the group is stable (w.r.t to bootstrap)
+    double total_cov = 0.0;
+    double total_bootstrap_cov = 0.0;
+    for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
     {
-        if (_abundances.size() <= 1)
-            return NUMERIC_LOW_DATA;
-        // check that the variance of the group is stable (w.r.t to bootstrap)
-        double total_cov = 0.0;
-        double total_bootstrap_cov = 0.0;
-        for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
+        for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
         {
-            for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
-            {
-                total_cov += _gamma_covariance(i,j);
-                total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
-            }
-            
+            total_cov += _gamma_covariance(i,j);
+            total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
+        }
+        
 //            total_cov += _gamma_covariance(i,i);
 //            total_bootstrap_cov += _gamma_bootstrap_covariance(i,i);
-            
-        }
-        double bootstrap_gamma_delta = abs(total_bootstrap_cov - total_cov);
-        if (bootstrap_gamma_delta > bootstrap_delta_gap * total_cov)
-        {
-            return NUMERIC_LOW_DATA;
-        }
+        
     }
+    double bootstrap_gamma_delta = abs(total_bootstrap_cov - total_cov);
+    if (bootstrap_gamma_delta > bootstrap_delta_gap * total_cov)
+    {
+        return NUMERIC_LOW_DATA;
+    }
+
     
 	return NUMERIC_OK;
 }
@@ -970,12 +969,12 @@ void AbundanceGroup::estimate_count_covariance()
         V_X_gs.push_back(_abundances[j]->mass_variance());
     }
     
-    //cerr << _iterated_exp_count_covariance << endl;
-    
     _count_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
-    if (status() == NUMERIC_OK)
+    
+    AbundanceStatus group_status = status();
+    
+    if (group_status == NUMERIC_OK || NUMERIC_LOW_DATA)
 	{
-        
 		// This will compute the transcript level cross-replicate counts
 		for (size_t j = 0; j < _abundances.size(); ++j)
 		{
@@ -998,10 +997,13 @@ void AbundanceGroup::estimate_count_covariance()
                 }
                 else
                 {
+                    double gamma = _abundances[j]->gamma();
+                    double num_frags = _abundances[j]->gamma() * num_fragments();
                     double gamma_cov_j =  _gamma_covariance(j,j);
                     double bootstrap_j = _gamma_bootstrap_covariance(j,j);
                     double bootstrap_gamma_delta = abs(bootstrap_j - gamma_cov_j);
-                    if (bootstrap_gamma_delta > bootstrap_delta_gap * gamma_cov_j && _abundances.size() > 1)
+                    double gap = bootstrap_delta_gap * gamma_cov_j;
+                    if (bootstrap_gamma_delta > gap && _abundances.size() > 1)
                     {
                         _abundances[j]->status(NUMERIC_LOW_DATA);
                     }
@@ -1016,6 +1018,16 @@ void AbundanceGroup::estimate_count_covariance()
                 //assert(false);
 			}
 		}
+        
+        if (group_status == NUMERIC_LOW_DATA)
+        {
+            // if the entire group is unstable, then set LOWDATA on all members of 
+            // it to reduce false positives in differential expression analysis.
+            foreach(shared_ptr<Abundance> ab, _abundances)
+            {
+                ab->status(NUMERIC_LOW_DATA);
+            }
+        }
         
         if (_abundances.size() > 1)
         {
@@ -1886,11 +1898,16 @@ void AbundanceGroup::calculate_kappas()
 		}
 	}
 	
+    //fprintf (stderr, "*********\n");
 	foreach (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (S_FPKM > 0)
 		{
 			pA->kappa(pA->FPKM() / S_FPKM);
+            double kappa = pA->kappa();
+            //fprintf (stderr, "kappa = %lg\n", kappa);
+            //if (kappa < 0.05)
+            //    pA->status(NUMERIC_LOW_DATA);
 		}
 		else
 		{
@@ -1915,17 +1932,34 @@ void AbundanceGroup::calculate_kappas()
                 double M = num_fragments()/mass_fraction();
                 double den = (1000000000.0 / (l_t * M));
                 double counts = num_fragments();
-                double count_var2 = _abundances[k]->FPKM_variance() / (den*den);
+                //double count_var2 = _abundances[k]->FPKM_variance() / (den*den);
                 double count_var = _count_covariance(k, m);
+                double kappa = _abundances[k]->kappa();
 //                
 //                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
-                double kappa_var = _abundances[k]->FPKM_variance() / (S_FPKM * S_FPKM);
+                double kappa_var;
+                if (S_FPKM)
+                {
+                    kappa_var = _abundances[k]->FPKM_variance() / (S_FPKM * S_FPKM);
+                }
+                else
+                {
+                    kappa_var = 0.0;
+                }
+                
                 _kappa_covariance(k,m) = kappa_var;
             }
             else
             {
-                double kappa_covar = _fpkm_covariance(k,m) / (S_FPKM * S_FPKM);
-                //double kappa_covar = _count_covariance(k, m) / (L * Z_kappa * Z_kappa);
+                double kappa_covar;
+                if (S_FPKM)
+                {
+                    kappa_covar = _fpkm_covariance(k,m) / (S_FPKM * S_FPKM);
+                }
+                else
+                {
+                    kappa_covar = 0.0;
+                }
                 _kappa_covariance(k,m) = kappa_covar;
             }
 		}
