@@ -94,23 +94,25 @@ AbundanceStatus AbundanceGroup::status() const
     double total_bootstrap_cov = 0.0;
     for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
     {
-        for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
-        {
-            total_cov += _gamma_covariance(i,j);
-            total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
-        }
+//        for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
+//        {
+//            total_cov += _gamma_covariance(i,j);
+//            total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
+//        }
         
-//            total_cov += _gamma_covariance(i,i);
-//            total_bootstrap_cov += _gamma_bootstrap_covariance(i,i);
+        total_cov += _gamma_covariance(i,i);
+        total_bootstrap_cov += _gamma_bootstrap_covariance(i,i);
         
     }
-    double bootstrap_gamma_delta = abs(total_bootstrap_cov - total_cov);
-    double gap = bootstrap_delta_gap * total_cov;
-    if (bootstrap_gamma_delta > gap)
+    if (total_cov > 0 && total_bootstrap_cov > 0)
     {
-        return NUMERIC_LOW_DATA;
+        double bootstrap_gamma_delta = log2(total_bootstrap_cov/total_cov);
+        //double gap = bootstrap_delta_gap * total_cov;
+        if (abs(bootstrap_gamma_delta) > bootstrap_delta_gap)
+        {
+            return NUMERIC_LOW_DATA;
+        }
     }
-
     
 	return NUMERIC_OK;
 }
@@ -998,16 +1000,16 @@ void AbundanceGroup::estimate_count_covariance()
                 }
                 else
                 {
-                    double gamma = _abundances[j]->gamma();
-                    double num_frags = _abundances[j]->gamma() * num_fragments();
-                    double gamma_cov_j =  _gamma_covariance(j,j);
-                    double bootstrap_j = _gamma_bootstrap_covariance(j,j);
-                    double bootstrap_gamma_delta = abs(bootstrap_j - gamma_cov_j);
-                    double gap = bootstrap_delta_gap * gamma_cov_j;
-                    if (bootstrap_gamma_delta > gap && _abundances.size() > 1)
-                    {
-                        _abundances[j]->status(NUMERIC_LOW_DATA);
-                    }
+//                    double gamma = _abundances[j]->gamma();
+//                    double num_frags = _abundances[j]->gamma() * num_fragments();
+//                    double gamma_cov_j =  _gamma_covariance(j,j);
+//                    double bootstrap_j = _gamma_bootstrap_covariance(j,j);
+//                    double bootstrap_gamma_delta = abs(bootstrap_j - gamma_cov_j);
+//                    double gap = bootstrap_delta_gap * gamma_cov_j;
+//                    if (bootstrap_gamma_delta > gap && _abundances.size() > 1)
+//                    {
+//                        _abundances[j]->status(NUMERIC_LOW_DATA);
+//                    }
                     
                     assert (!isinf(count_var) && !isnan(count_var));
                     _count_covariance(j,j) = count_var;

@@ -1026,7 +1026,7 @@ void sample_worker(const RefSequenceTable& rt,
         }
 
         
-        info.cross_replicate_js = 0;
+        info.cross_replicate_js = 30;
         //assert (abundance->cluster_mass == locus_mv.first);
         //assert (total_iso_scaled_var >= info.mean_count);
         
