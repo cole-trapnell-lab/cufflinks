@@ -1709,9 +1709,9 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                 if (marg_cond_prob(j,i) == 1)
                 {
                     num_salient_frags += u[i];
-                    ublas::matrix_column<ublas::matrix<double> > mr (marg_cond_prob, i);
+                    //ublas::matrix_column<ublas::matrix<double> > mr (marg_cond_prob, i);
                     //cerr << gamma_map_estimate(i) << endl;
-                    cerr << mr << endl;
+                    //cerr << mr << endl;
                 }
                 for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
                 {
