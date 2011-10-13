@@ -278,7 +278,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _salient_frags(0.0) {}
 	
 	AbundanceGroup(const AbundanceGroup& other) 
 	{
@@ -294,6 +294,7 @@ public:
 		_FPKM_variance = other._FPKM_variance;
 		_description = other._description;
         _max_mass_variance = other._max_mass_variance;
+        _salient_frags = other._salient_frags;
 	}
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -306,7 +307,8 @@ public:
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
-        _max_mass_variance(0.0) {}
+        _max_mass_variance(0.0),
+        _salient_frags(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
@@ -321,7 +323,8 @@ public:
         _fpkm_covariance(fpkm_covariance),
         _gamma_covariance(gamma_covariance),
         _gamma_bootstrap_covariance(gamma_bootstrap_covariance),
-        _max_mass_variance(max_mass_variance)
+        _max_mass_variance(max_mass_variance),
+        _salient_frags(0.0)
 	{
 		// Calling calculate_FPKM_covariance() also estimates cross-replicate
         // count variances
@@ -414,7 +417,10 @@ public:
 	
     void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
     double max_mass_variance() const { return _max_mass_variance; }
-
+    
+    double salient_frags() const { return _salient_frags; }
+    void salient_frags(double nf) { _salient_frags = nf; }
+    
 private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
@@ -459,6 +465,7 @@ private:
 	double _FPKM_variance;
 	string _description;
     double _max_mass_variance;  // upper bound on the count variance that could come from this group.
+    double _salient_frags;
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,

@@ -1695,15 +1695,30 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         
         double total_var = 0.0;
         
+        double num_salient_frags = 0.0;
+        double total_frags = 0.0;
+        
+        //iterate over fragments
         for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
         {
+            total_frags += u[i];
+            
+            // iterate over transcripts
             for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
             {
+                if (marg_cond_prob(j,i) == 1)
+                {
+                    num_salient_frags += u[i];
+                    ublas::matrix_column<ublas::matrix<double> > mr (marg_cond_prob, i);
+                    //cerr << gamma_map_estimate(i) << endl;
+                    cerr << mr << endl;
+                }
                 for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
                 {
                     if (j == k)
                     {
                         double var = u[i] * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
+                        
                         count_covariance(k,k) += var;
                         assert (count_covariance(k,k) >= 0);
                         total_var += var;
@@ -1717,6 +1732,27 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                 }
             }
         }
+        
+        salient_frags(num_salient_frags);
+        
+        //cerr << "Total frags " << total_frags << endl; 
+        //cerr << "Salient frags " << salient_frags << endl; 
+        //cerr << "Salient fraction " << salient_frags / total_frags << endl; 
+//        double total_count_var = 0.0;
+//        for (size_t j = 0; j < count_covariance.size1(); ++j)
+//        {
+//            for (size_t k = 0; k < count_covariance.size2(); ++k)
+//            {
+//                total_count_var += count_covariance(j,k);
+//            }
+//        }
+//        cerr << "Total count var " << total_count_var << endl;
+//        for (size_t i = 0; i < count_covariance.size1(); ++i)
+//        {   
+//            ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+//            cerr << gamma_map_estimate(i) << endl;
+//            cerr << mr << endl;
+//        }
         
         ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
         double total_counts = 0.0;
@@ -3535,7 +3571,9 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                 for (size_t i = 0; i < M; ++i)
                 {
                     if (cond_probs[j][i])
+                    {
                         compat(i,j) = cond_probs[j][i];
+                    }
                 }
             }
             
