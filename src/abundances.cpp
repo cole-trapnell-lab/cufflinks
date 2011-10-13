@@ -1697,12 +1697,12 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         double total_var = 0.0;
         
         double num_salient_frags = 0.0;
-        double total_frags = 0.0;
+        double num_frags = 0.0;
         
         //iterate over fragments
         for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
         {
-            total_frags += u[i];
+            num_frags += u[i];
             
             // iterate over transcripts
             for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
@@ -1733,8 +1733,33 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                 }
             }
         }
+        //assert (num_salient_frags <= total_frags);
+        //assert (num_salient_frags <= num_fragments());
+        
+//        cerr << "Total count covar "  << endl;
+//        for (size_t i = 0; i < count_covariance.size1(); ++i)
+//        {   
+//            ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+//            //cerr << gamma_map_estimate(i) << endl;
+//            cerr << mr << endl;
+//        }
+        
+        if (num_fragments())
+            count_covariance *= (num_frags * num_frags) / (num_fragments() * num_fragments());
+        
+//        cerr << "Rescaled count covar " << endl;
+//        for (size_t i = 0; i < count_covariance.size1(); ++i)
+//        {   
+//            ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+//            //cerr << gamma_map_estimate(i) << endl;
+//            cerr << mr << endl;
+//        }
         
         salient_frags(num_salient_frags);
+        total_frags(num_frags);
+        
+        //double locus_num_frags = num_fragments();
+        //assert (num_salient_frags <= num_fragments());
         
         //cerr << "Total frags " << total_frags << endl; 
         //cerr << "Salient frags " << salient_frags << endl; 

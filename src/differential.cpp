@@ -1006,9 +1006,9 @@ void sample_worker(const RefSequenceTable& rt,
         double total_iso_scaled_var = 0.0;
         
         const AbundanceGroup& ab_group = abundance->transcripts;
-        info.locus_total_frags = ab_group.num_fragments();
+        info.locus_total_frags = ab_group.total_frags();
         info.locus_salient_frags = ab_group.salient_frags();
-        double group_counts = ab_group.num_fragments();
+        //double group_counts = ab_group.total_frags();
 		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
 		{
             shared_ptr<Abundance> ab = ab_group.abundances()[i];
