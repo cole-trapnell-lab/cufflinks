@@ -155,13 +155,13 @@ public:
 	void FPKM_conf(const ConfidenceInterval& cf) { _FPKM_conf = cf; }
 	
 	double gamma() const					{ return _gamma; }
-	void gamma(double g)					{ _gamma = g; };
+	void gamma(double g)					{ assert(!isnan(g)); _gamma = g; };
 	
 	double kappa() const					{ return _kappa; }
 	void kappa(double k)					{ _kappa = k; }
 	
 	double num_fragments() const			{ return _num_fragments; }
-	void num_fragments(double nf)			{ _num_fragments = nf; }
+	void num_fragments(double nf)			{ assert (!isnan(nf)); _num_fragments = nf; }
     
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }

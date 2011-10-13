@@ -915,6 +915,8 @@ struct LocusVarianceInfo
     vector<double> gamma_bootstrap_var;
     vector<string> transcript_ids;
     double locus_salient_frags;
+    double locus_total_frags;
+
 };
 
 #if ENABLE_THREADS
@@ -1002,8 +1004,11 @@ void sample_worker(const RefSequenceTable& rt,
         info.locus_count_fitted_var = disperser->scale_mass_variance(info.mean_count);
         
         double total_iso_scaled_var = 0.0;
+        
         const AbundanceGroup& ab_group = abundance->transcripts;
+        info.locus_total_frags = ab_group.num_fragments();
         info.locus_salient_frags = ab_group.salient_frags();
+        double group_counts = ab_group.num_fragments();
 		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
 		{
             shared_ptr<Abundance> ab = ab_group.abundances()[i];
@@ -1072,12 +1077,12 @@ void dump_locus_variance_info(const string& filename)
     FILE* fdump = fopen(filename.c_str(), "w");
     
     fprintf(fdump, 
-            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tgamma_bootstrap_var\tlocus_salient_frags\n");
+            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tgamma_bootstrap_var\tlocus_salient_frags\tlocus_total_frags\n");
     foreach (LocusVarianceInfo& L, locus_variance_info_table)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {
-            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i], L.locus_salient_frags);
+            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i], L.locus_salient_frags, L.locus_total_frags);
         }
         
     }

@@ -252,8 +252,19 @@ fit_dispersion_model_helper(const string& condition_name,
     
     if (raw_means_and_vars.size() < min_loci_for_fitting)
     {
+        shared_ptr<MassDispersionModel> disperser;
+        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
+        
+        for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
+             itr != labeled_mv_table.end();
+             ++itr)
+        {
+            string label = itr->first;
+            pair<double, double> p = itr->second;
+            disperser->set_raw_mean_and_var(itr->first, itr->second);
+        }
         //fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
-        return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
+        return disperser;
     }
     
     sort(raw_means_and_vars.begin(), raw_means_and_vars.end());

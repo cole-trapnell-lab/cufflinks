@@ -125,6 +125,7 @@ double AbundanceGroup::num_fragments() const
 	{
 		num_f += ab->num_fragments();
 	}
+    assert (!isnan(num_f));
 	return num_f;
 }
 
@@ -1773,12 +1774,22 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 //            fprintf (stderr, "%s: Expected count = %lg, fraction = %lg, gamma = %lg\n", d.c_str(), expected_counts(i), expected_counts(i) / total_counts, gamma_map_estimate[i]);
 //        }
         
-        expected_counts /= total_counts;
-        gamma_map_estimate = expected_counts;
-        
+        if (total_counts > 0)
+        {
+            expected_counts /= total_counts;
+            gamma_map_estimate = expected_counts;
+        }
+        else
+        {
+            gamma_map_estimate = ublas::zero_vector<double>(marg_cond_prob.size1());
+        }
         
         
         std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+//        for (size_t i = 0; i < filtered_gammas.size(); ++i)
+//        {
+//            assert (
+//        }
         _gamma_covariance = gamma_map_covariance;
         _iterated_exp_count_covariance = count_covariance;
         for (size_t i = 0; i < _iterated_exp_count_covariance.size1(); ++i)
