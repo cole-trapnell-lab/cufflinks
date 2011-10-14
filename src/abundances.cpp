@@ -1841,7 +1841,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
             {
                 if (j == k)
                 {
-                    double var = (u[i]/num_frags) * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
+                    double var = num_fragments() * (u[i]/num_frags) * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
                     
                     count_covariance(k,k) += var;
                     assert (count_covariance(k,k) >= 0);
@@ -1849,7 +1849,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 }
                 else
                 {
-                    double covar = -(u[i]/num_frags) * marg_cond_prob(k,i) * marg_cond_prob(j,i);
+                    double covar = - num_fragments() * (u[i]/num_frags) * marg_cond_prob(k,i) * marg_cond_prob(j,i);
                     assert (count_covariance(k,j) <= 0);
                     count_covariance(k,j) += covar;
                 }
@@ -1857,31 +1857,31 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         }
     }
     
-    //if (num_frags)
-    {
-        //double lf = num_fragments();
-        double scale = (num_fragments() * num_fragments());
-        //assert (num_frags >= num_salient_frags);
-        //num_frags *= num_fragments() / num_frags;
-        //num_salient_frags *= num_fragments() / num_frags;
-        assert (num_frags >= num_salient_frags);
-        count_covariance *= scale;
-    }
+//    //if (num_frags)
+//    {
+//        //double lf = num_fragments();
+//        double scale = (num_fragments() * num_fragments());
+//        //assert (num_frags >= num_salient_frags);
+//        //num_frags *= num_fragments() / num_frags;
+//        //num_salient_frags *= num_fragments() / num_frags;
+//        assert (num_frags >= num_salient_frags);
+//        count_covariance *= scale;
+//    }
     
     salient_frags(num_salient_frags);
     total_frags(num_frags);
     
-    ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
-    double total_counts = 0.0;
-    for (size_t i = 0; i < nr_alignments.size(); ++i)
-    {
-        for (size_t j = 0; j < cond_probs.size(); ++j)
-        {
-            double expected = u[i] * marg_cond_prob(j,i);
-            expected_counts(j) += expected;
-            total_counts += expected;
-        }
-    }
+//    ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
+//    double total_counts = 0.0;
+//    for (size_t i = 0; i < nr_alignments.size(); ++i)
+//    {
+//        for (size_t j = 0; j < cond_probs.size(); ++j)
+//        {
+//            double expected = u[i] * marg_cond_prob(j,i);
+//            expected_counts(j) += expected;
+//            total_counts += expected;
+//        }
+//    }
 
     _iterated_exp_count_covariance = count_covariance;
     for (size_t i = 0; i < _iterated_exp_count_covariance.size1(); ++i)
