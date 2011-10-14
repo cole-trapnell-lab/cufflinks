@@ -441,6 +441,8 @@ private:
     void calculate_conf_intervals();
 	void calculate_locus_scaled_mass_and_variance(const vector<MateHit>& nr_alignments,
                           const vector<shared_ptr<Abundance> >& transcripts);
+    void calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
+                                                 const vector<shared_ptr<Abundance> >& transcripts);
 	void calculate_kappas();
     
     
