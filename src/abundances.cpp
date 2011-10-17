@@ -1825,7 +1825,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         bool salient = 0.0;
         for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
         {
-            if (marg_cond_prob(j,i) > 0.0 && marg_cond_prob(j,i) < 1.0)
+            if (marg_cond_prob(j,i) > transcripts[j]->gamma() && marg_cond_prob(j,i) <= 1.0)
             {
                 salient = true;
                 break;
