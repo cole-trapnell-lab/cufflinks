@@ -1618,6 +1618,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                             gamma_map_estimate,
                                             gamma_map_covariance,
                                             cross_replicate_js);
+            _gamma_covariance = gamma_map_covariance;
             _gamma_bootstrap_covariance = gamma_map_covariance;
         }
         else
@@ -1629,6 +1630,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                            gamma_mle,
                                            gamma_map_estimate,
                                            gamma_map_covariance);
+            _gamma_covariance = gamma_map_covariance;
             
             ublas::vector<double> bootstrap_estimate = gamma_map_estimate;
             ublas::matrix<double> bootstrap_covariance = gamma_map_covariance;
@@ -1852,7 +1854,8 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
             {
                 if (j == k)
                 {
-                    double var = num_fragments() * (u[i]/num_frags) * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
+                    
+                    double var = (u[i]/num_frags) * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
                     
                     count_covariance(k,k) += var;
                     assert (count_covariance(k,k) >= 0);
@@ -1860,13 +1863,21 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 }
                 else
                 {
-                    double covar = - num_fragments() * (u[i]/num_frags) * marg_cond_prob(k,i) * marg_cond_prob(j,i);
+                    double covar = -(u[i]/num_frags) * marg_cond_prob(k,i) * marg_cond_prob(j,i);
                     assert (count_covariance(k,j) <= 0);
                     count_covariance(k,j) += covar;
                 }
             }
         }
     }
+    
+//    cerr << "$$$$$$$$$$$$" << endl;
+//    cerr << count_covariance * num_fragments() << endl;
+//    cerr << "************" << endl;
+//    cerr << (count_covariance + _gamma_covariance) * num_fragments() << endl;
+    
+    count_covariance += _gamma_covariance;
+    count_covariance *= num_fragments();
     
 //    //if (num_frags)
 //    {
@@ -1905,14 +1916,26 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
 //    }
 
     _iterated_exp_count_covariance = count_covariance;
+    
+    // take care of little rounding errors
     for (size_t i = 0; i < _iterated_exp_count_covariance.size1(); ++i)
     {
         for (size_t j = 0; j < _iterated_exp_count_covariance.size2(); ++j)
         {
             if (i == j)
-                assert(_iterated_exp_count_covariance(i,j) >= 0);
+            {
+                double c = _iterated_exp_count_covariance(i,j);
+                if (c < 0)
+                    _iterated_exp_count_covariance(i,j) = 0;
+                //assert(c >= 0);
+            }
             else
-                assert(_iterated_exp_count_covariance(i,j) <= 0);
+            {
+                double c = _iterated_exp_count_covariance(i,j);
+                if (c > 0)
+                    _iterated_exp_count_covariance(i,j) = 0;
+                //assert(c <= 0);
+            }
         }
     }
 }
