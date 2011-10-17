@@ -1822,17 +1822,28 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     //iterate over fragments
     for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
     {
-        bool salient = 0.0;
+//        bool salient = 0.0;
+//        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+//        {
+//            if (marg_cond_prob(j,i) > transcripts[j]->gamma() && marg_cond_prob(j,i) <= 1.0)
+//            {
+//                salient = true;
+//                break;
+//            }
+//        }
+//        if (salient)
+//            num_salient_frags += u[i];
+        double entropy = 0.0;
         for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
         {
-            if (marg_cond_prob(j,i) > transcripts[j]->gamma() && marg_cond_prob(j,i) <= 1.0)
+            if (marg_cond_prob(j,i) > 0)
             {
-                salient = true;
-                break;
+                double p = marg_cond_prob(j,i);
+                double L = log2(p);
+                entropy += p * L;
             }
         }
-        if (salient)
-            num_salient_frags += u[i];
+        num_salient_frags -= num_fragments() * (u[i]/num_frags) * entropy;
         
         // iterate over transcripts
         for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
@@ -1869,7 +1880,17 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
 //    }
     
     salient_frags(num_salient_frags);
-    total_frags(num_frags);
+    double max_entropy = 0.0;
+    for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+    {
+        if (transcripts[j]->gamma() > 0)
+        {
+            double p = transcripts[j]->gamma();
+            double L = log2(p);
+            max_entropy += p * L;
+        }
+    }
+    total_frags(-max_entropy * num_fragments());
     
 //    ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
 //    double total_counts = 0.0;
