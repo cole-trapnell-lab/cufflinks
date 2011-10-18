@@ -342,7 +342,7 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
             test.test_status = HIDATA;
         }
     }
-    else if (curr_abundance.status == NUMERIC_LOW_DATA && 
+    else if (curr_abundance.status == NUMERIC_LOW_DATA || 
              prev_abundance.status == NUMERIC_LOW_DATA)
     {
         // perform the test, but mark it as not significant and don't add it to the 

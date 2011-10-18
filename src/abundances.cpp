@@ -1013,14 +1013,14 @@ void AbundanceGroup::estimate_count_covariance()
                 {
 //                    double gamma = _abundances[j]->gamma();
 //                    double num_frags = _abundances[j]->gamma() * num_fragments();
-//                    double gamma_cov_j =  _gamma_covariance(j,j);
-//                    double bootstrap_j = _gamma_bootstrap_covariance(j,j);
-//                    double bootstrap_gamma_delta = abs(bootstrap_j - gamma_cov_j);
-//                    double gap = bootstrap_delta_gap * gamma_cov_j;
-//                    if (bootstrap_gamma_delta > gap && _abundances.size() > 1)
-//                    {
-//                        _abundances[j]->status(NUMERIC_LOW_DATA);
-//                    }
+                    double gamma_cov_j =  _gamma_covariance(j,j);
+                    double bootstrap_j = _gamma_bootstrap_covariance(j,j);
+                    double bootstrap_gamma_delta = log2(bootstrap_j/gamma_cov_j);
+
+                    if (abs(bootstrap_gamma_delta) > bootstrap_delta_gap && _abundances.size() > 1)
+                    {
+                        _abundances[j]->status(NUMERIC_LOW_DATA);
+                    }
                     
                     assert (!isinf(count_var) && !isnan(count_var));
                     _count_covariance(j,j) = count_var;
@@ -1657,8 +1657,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             //cerr << gamma_map_estimate << endl;
             //std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
             
-            _gamma_covariance = gamma_map_covariance;
-            
+            _gamma_bootstrap_covariance = gamma_map_covariance;
+                        
             ublas::vector<double> bootstrap_estimate = gamma_map_estimate;
             ublas::matrix<double> bootstrap_covariance = gamma_map_covariance;
             map_success  = bootstrap_gammas(filtered_transcripts,
@@ -1667,7 +1667,10 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                             bootstrap_estimate,
                                             bootstrap_covariance,
                                             cross_replicate_js);
-            _gamma_bootstrap_covariance = bootstrap_covariance;
+            
+            std::copy(bootstrap_estimate.begin(), bootstrap_estimate.end(), filtered_gammas.begin());
+            _gamma_covariance = bootstrap_covariance;
+
             
         }
 	}
