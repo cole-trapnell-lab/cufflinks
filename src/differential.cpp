@@ -914,6 +914,7 @@ struct LocusVarianceInfo
     vector<double> gamma_var;
     vector<double> gamma_bootstrap_var;
     vector<string> transcript_ids;
+    vector<double> count_sharing;
     double locus_salient_frags;
     double locus_total_frags;
 
@@ -1011,12 +1012,23 @@ void sample_worker(const RefSequenceTable& rt,
         //double group_counts = ab_group.total_frags();
 		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
 		{
+            const ublas::matrix<double>& cov = ab_group.iterated_count_cov();
+            double count_var = cov(i,i);
+            double max_count_covar = 0.0;
+            for (size_t j = 0; j < cov.size1(); ++j)
+            {
+                if (j != i && abs(cov(i,j)) > max_count_covar)
+                    max_count_covar = abs(cov(i,j));
+            }
+            double count_sharing = count_var > 0 ? max_count_covar / count_var : 0;
+            
             shared_ptr<Abundance> ab = ab_group.abundances()[i];
             double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
 			total_iso_scaled_var += scaled_var;
             info.gamma.push_back(ab->gamma());
             info.gamma_var.push_back(ab_group.gamma_cov()(i,i));
             info.gamma_bootstrap_var.push_back(ab_group.gamma_bootstrap_cov()(i,i));
+            info.count_sharing.push_back(count_sharing);
             info.transcript_ids.push_back(ab->description());
 		}
 
@@ -1077,12 +1089,12 @@ void dump_locus_variance_info(const string& filename)
     FILE* fdump = fopen(filename.c_str(), "w");
     
     fprintf(fdump, 
-            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tgamma_bootstrap_var\tlocus_salient_frags\tlocus_total_frags\n");
+            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tgamma_bootstrap_var\tlocus_salient_frags\tlocus_total_frags\tcount_sharing\n");
     foreach (LocusVarianceInfo& L, locus_variance_info_table)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {
-            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i], L.locus_salient_frags, L.locus_total_frags);
+            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i], L.locus_salient_frags, L.locus_total_frags, L.count_sharing[i]);
         }
         
     }

@@ -1915,8 +1915,13 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
 //    cerr << "************" << endl;
 //    cerr << (count_covariance + _gamma_covariance) * num_fragments() << endl;
     
-    count_covariance += _gamma_covariance;
+    //count_covariance += _gamma_covariance;
     count_covariance *= num_fragments();
+    
+//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) {
+//        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+//        std::cerr << mr << std::endl;
+//    }
     
 //    //if (num_frags)
 //    {
