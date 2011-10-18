@@ -106,6 +106,7 @@ extern int max_frags_per_bundle;
 extern bool no_read_pairs;
 extern float read_skip_fraction;
 extern int trim_read_length;
+extern double mle_accuracy;
 
 // END SECRET OPTIONS
 
@@ -431,4 +432,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_READ_PAIRS           296
 #define OPT_TRIM_READ_LENGTH        297
 #define OPT_MAX_DELTA_GAP           298
+#define OPT_MLE_MIN_ACC             299
 #endif

@@ -572,4 +572,8 @@ double get_scaffold_min_doc(int bundle_origin,
 							const Scaffold& s,
 							const vector<int>& depth_of_coverage);
 
+AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& transcripts,
+                                         const vector<MateHit>& alignments,
+                                         const ublas::vector<double>& gamma_mean,
+                                         ublas::matrix<double>& inverse_fisher);
 #endif

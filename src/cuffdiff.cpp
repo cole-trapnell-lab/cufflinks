@@ -86,6 +86,7 @@ static struct option long_options[] = {
 {"no-collapse-cond-prob",   no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
+{"min-mle-accuracy",		required_argument,		 0,			 OPT_MLE_MIN_ACC},
 {"poisson-dispersion",		no_argument,             0,		     OPT_POISSON_DISPERSION},
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
 {"no-update-check",         no_argument,             0,          OPT_NO_UPDATE_CHECK},
@@ -360,6 +361,11 @@ int parse_options(int argc, char** argv)
                 break;
             }
             case OPT_MAX_DELTA_GAP:
+            {
+                bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
+                break;
+            }
+            case OPT_MLE_MIN_ACC:
             {
                 bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
                 break;

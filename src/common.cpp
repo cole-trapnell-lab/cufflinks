@@ -105,9 +105,9 @@ bool use_em = true;
 bool cond_prob_collapse = true;
 
 bool emit_count_tables = false;
-bool use_fisher_covariance = true;
+bool use_fisher_covariance = false;
 bool split_variance = false;
-bool bootstrap = false;
+bool bootstrap = true;
 int num_bootstrap_samples = 20;
 double bootstrap_fraction = 1.0;
 double bootstrap_delta_gap = 1.0;
@@ -119,6 +119,7 @@ int max_frags_per_bundle = 1000000;
 float read_skip_fraction = 0.0;
 bool no_read_pairs = false;
 int trim_read_length = -1;
+double mle_accuracy = 1e-6;
 
 // END SECRET OPTIONS
 

@@ -580,7 +580,19 @@ void HitBundle::finalize(bool is_combined)
 	if (!is_combined)
 	{
 		sort(_hits.begin(), _hits.end(), mate_hit_lt);
-		collapse_hits();
+        if (cond_prob_collapse)
+        {
+            collapse_hits();
+        }
+        else
+        {
+            foreach (MateHit& hit, _hits)
+            {
+                hit.incr_collapse_mass(hit.common_scale_mass());
+            }
+            _non_redundant = _hits;
+            
+        }
 		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt_sp);
 		vector<shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
 												_ref_scaffs.end(),
