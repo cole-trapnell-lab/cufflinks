@@ -1623,6 +1623,9 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         }
         else
         {
+            //cerr << "********" << endl;
+            //cerr << gamma_mle << endl;
+            //cerr << "########" << endl;
             verbose_msg( "Importance sampling posterior distribution\n");
             map_success = bayesian_gammas(filtered_transcripts,
                                            nr_alignments,
@@ -1630,6 +1633,9 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                            gamma_mle,
                                            gamma_map_estimate,
                                            gamma_map_covariance);
+            //cerr << gamma_map_estimate << endl;
+            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+            
             _gamma_covariance = gamma_map_covariance;
             
             ublas::vector<double> bootstrap_estimate = gamma_map_estimate;
@@ -1700,6 +1706,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 			// then scaffolds[i] has a non-zero abundance, we need to fill
 			// that in along with relevant cells from the covariance matrix
 			updated_gammas[i] = filtered_gammas[scaff_present[i]];
+            //cerr << updated_gammas[i] << ",";
+            
 			for (size_t j = 0; j < N; ++j)
 			{
 				if (scaff_present[j] != N)
@@ -1721,6 +1729,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 			}
 		}
 	}
+    
+    //cerr << endl;
 	
     AbundanceStatus numeric_status = NUMERIC_OK;
     if (mle_success == NUMERIC_LOW_DATA)
@@ -1744,6 +1754,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         }
         // otherwise, we're cool.
     }
+    
+    
     
 	// All scaffolds that go in get abundances, but those that get "filtered"
 	// from the calculation get zeros.
