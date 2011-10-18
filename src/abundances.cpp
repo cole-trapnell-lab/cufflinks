@@ -3220,7 +3220,7 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;
     
-    //cerr << "MLE: " << expected_mle_gamma << endl;
+    cerr << "MLE: " << expected_mle_gamma << endl;
     //cerr << "COV:" << endl;
     //cerr << gamma_covariance << endl;
     //cerr << "*************" << endl;
