@@ -741,6 +741,21 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         calculate_kappas();
     }
     
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        for (size_t j = 0; j < _abundances.size(); ++j)
+        {
+            if (i != j)
+            {
+                if (_abundances[i]->transfrag()->contains(*_abundances[j]->transfrag()) &&
+                    Scaffold::compatible(*_abundances[i]->transfrag(),*_abundances[j]->transfrag()))
+                {
+                    _abundances[j]->status(NUMERIC_LOW_DATA);
+                }
+            }
+        }
+    }
+    
     //fprintf(stderr, "Total calls to get_cond_prob = %d\n", total_cond_prob_calls);
 }
 
@@ -1617,8 +1632,48 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         ublas::vector<double> gamma_map_estimate = ublas::zero_vector<double>(filtered_gammas.size());
         ublas::matrix<double> gamma_map_covariance = ublas::zero_matrix<double>(N,N);
         double cross_replicate_js = 0.0;
+        
+        ublas::matrix<double> empir_covariance = ublas::zero_matrix<double>(N,N);
+        
+        if (true)
+        {
+            verbose_msg( "Importance sampling posterior distribution\n");
+            map_success = bayesian_gammas(filtered_transcripts,
+                                          nr_alignments,
+                                          log_conv_factors,
+                                          gamma_mle,
+                                          gamma_map_estimate,
+                                          gamma_map_covariance);
+            //cerr << gamma_map_estimate << endl;
+            //std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+            
+            _gamma_bootstrap_covariance = gamma_map_covariance;
+            
+            map_success  = empirical_replicate_gammas(filtered_transcripts,
+                                                      nr_alignments,
+                                                      log_conv_factors,
+                                                      gamma_map_estimate,
+                                                      gamma_map_covariance,
+                                                      cross_replicate_js);
+            _gamma_covariance = gamma_map_covariance;
+            
+//            for (unsigned i = 0; i < _gamma_bootstrap_covariance.size1 (); ++ i) 
+//            {
+//                ublas::matrix_row<ublas::matrix<double> > mr (_gamma_bootstrap_covariance, i);
+//                //cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
+//                std::cerr << i << " : " << mr << std::endl;
+//            }
+//            
+//            for (unsigned i = 0; i < _gamma_covariance.size1 (); ++ i) 
+//            {
+//                ublas::matrix_row<ublas::matrix<double> > mr (_gamma_covariance, i);
+//                //cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
+//                std::cerr << i << " : " << mr << std::endl;
+//            }
+            
+        }
         // If we have multiple replicates, estimate covariance from them via a MLE computation on each replicate
-        if (bootstrap == false && use_fisher_covariance == true)
+        else if (bootstrap == false && use_fisher_covariance == true)
         {
             map_success  = calculate_inverse_fisher(filtered_transcripts,
                                                     nr_alignments,
@@ -1629,7 +1684,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
             _gamma_covariance = gamma_map_covariance;
             _gamma_bootstrap_covariance = gamma_map_covariance;
         }
-        if (bootstrap == true && !use_fisher_covariance)
+        else if (bootstrap == true && !use_fisher_covariance)
         {
             map_success  = bootstrap_gammas(filtered_transcripts,
                                             nr_alignments,
@@ -1638,7 +1693,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                             gamma_map_covariance,
                                             cross_replicate_js);
             //cerr << gamma_map_estimate << endl;
-            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+            //std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
             _gamma_covariance = gamma_map_covariance;
             _gamma_bootstrap_covariance = gamma_map_covariance;
         }
@@ -1668,7 +1723,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                             bootstrap_covariance,
                                             cross_replicate_js);
             
-            std::copy(bootstrap_estimate.begin(), bootstrap_estimate.end(), filtered_gammas.begin());
+            //std::copy(bootstrap_estimate.begin(), bootstrap_estimate.end(), filtered_gammas.begin());
             _gamma_covariance = bootstrap_covariance;
 
             
@@ -1794,7 +1849,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
     _iterated_exp_count_covariance = updated_iterated_exp_count_cov;
     _gamma_bootstrap_covariance = updated_gamma_bootstrap_cov;
     _fpkm_covariance = updated_fpkm_cov;
-
 	
 	return (status() == NUMERIC_OK);
 }
@@ -1857,6 +1911,8 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         num_frags += u[i];
     }
     
+    ublas::vector<double> expected_counts = ublas::zero_vector<double>(cond_probs.size());
+    
     //iterate over fragments
     for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
     {
@@ -1892,9 +1948,8 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 {
                     if (j == k)
                     {
-                        
+                        expected_counts(j) += (u[i]/num_frags) * marg_cond_prob(k,i);
                         double var = (u[i]/num_frags) * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
-                        
                         count_covariance(k,k) += var;
                         assert (count_covariance(k,k) >= 0);
                         total_var += var;
@@ -1917,11 +1972,34 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     
     //count_covariance += _gamma_covariance;
     count_covariance *= num_fragments();
+    expected_counts *= num_fragments();
     
-//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) {
+    double total_length = 0.0;
+    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
+    {
+        total_length += _abundances[i]->effective_length();
+    }
+    
+//    if (total_length)
+//    {
+//        for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
+//        {
+//            fprintf(stderr, 
+//                    "%lg, %lg, %lg\n", 
+//                    _abundances[i]->gamma(), 
+//                    _abundances[i]->effective_length()/total_length, 
+//                    log2(_abundances[i]->gamma()/(_abundances[i]->effective_length()/total_length)));
+//        }
+//    }
+    
+//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
+//    {
 //        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+//        cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
 //        std::cerr << mr << std::endl;
 //    }
+    
+    //cerr << trace << "," << off_diag << endl;
     
 //    //if (num_frags)
 //    {
@@ -2900,6 +2978,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             {
                 mle(i) = rep_gammas[i];
             }
+            //cerr << mle << endl;
             mle_gammas.push_back(mle);
         }
         else
@@ -2933,9 +3012,9 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
     gamma_covariance /= mle_gammas.size();
     gamma_map_estimate = expected_mle_gamma;
     
-    //cerr << "MLE: " << expected_mle_gamma << endl;
-    //cerr << "COV:" << endl;
-    //cerr << gamma_covariance << endl;
+//    cerr << "MLE: " << expected_mle_gamma << endl;
+//    cerr << "COV:" << endl;
+//    cerr << gamma_covariance << endl;
     //cerr << "*************" << endl;
     return NUMERIC_OK;
 }
@@ -3193,11 +3272,15 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
             mle_gammas.push_back(mle);
         }
         
+        
+        
         for (size_t j = 0; j < alignments.size(); ++j)
         {
             alignments[j].collapse_mass(unscaled_masses[j]);
         }
     }
+    
+    fprintf(stderr, "Ran %lu bootstrap samples succesfully\n", mle_gammas.size());
     
     if (mle_gammas.empty())
         return NUMERIC_FAIL;
@@ -3647,7 +3730,8 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                 {
                     if (cond_probs[j][i])
                     {
-                        compat(i,j) = cond_probs[j][i];
+                        //compat(i,j) = cond_probs[j][i];
+                        compat(i,j) = 1;
                     }
                 }
             }

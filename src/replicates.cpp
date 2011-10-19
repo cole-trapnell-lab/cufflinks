@@ -242,10 +242,10 @@ fit_dispersion_model_helper(const string& condition_name,
         }
         if (var > 0.0 && p.counts.size())
             var /= p.counts.size();
+        labeled_mv_table[p.locus_desc] = make_pair(mean, var);
         if (mean > 0 && var > 0.0)
         {
             //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
-            labeled_mv_table[p.locus_desc] = make_pair(mean, var);
             raw_means_and_vars.push_back(make_pair(mean, var));
         }
     }

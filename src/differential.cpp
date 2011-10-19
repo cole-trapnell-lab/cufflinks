@@ -1014,23 +1014,45 @@ void sample_worker(const RefSequenceTable& rt,
         if (ab_group.num_fragments())
             cov /= ab_group.num_fragments();
         
+        double total_length = 0.0;
+        for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
+        {
+            total_length += ab_group.abundances()[i]->effective_length();
+        }
+        
+//        if (total_length)
+//        {
+//            for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
+//            {
+//                fprintf(stderr, 
+//                        "%lg, %lg, %lg\n", 
+//                        _abundances[i]->gamma(), 
+//                        _abundances[i]->effective_length()/total_length, 
+//                        log2(_abundances[i]->gamma()/(_abundances[i]->effective_length()/total_length)));
+//            }
+//        }
+        
 		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
 		{
             
-            double count_var = cov(i,i);
-            double max_count_covar = 0.0;
-            size_t max_covar_idx = 0.0;
-            for (size_t j = 0; j < cov.size1(); ++j)
-            {
-                if (j != i && abs(cov(i,j)) > max_count_covar)
-                {
-                    max_count_covar = abs(cov(i,j));
-                    max_covar_idx = j;
-                }
-            }
+//            double count_var = cov(i,i);
+//            double max_count_covar = 0.0;
+//            size_t max_covar_idx = 0.0;
+//            for (size_t j = 0; j < cov.size1(); ++j)
+//            {
+//                if (j != i && abs(cov(i,j)) > max_count_covar)
+//                {
+//                    max_count_covar = abs(cov(i,j));
+//                    max_covar_idx = j;
+//                }
+//            }
             double count_sharing = 0.0;
-            if (cov(i,i) != 0 && cov(max_covar_idx,max_covar_idx) != 0)
-                count_sharing = -1.0 * cov(i,max_covar_idx) / sqrt(cov(i,i) * cov(max_covar_idx,max_covar_idx));
+//            if (cov(i,i) != 0 && cov(max_covar_idx,max_covar_idx) != 0)
+//                count_sharing = -1.0 * cov(i,max_covar_idx) / sqrt(cov(i,i) * cov(max_covar_idx,max_covar_idx));
+            
+            
+            if (total_length)
+                count_sharing = log2(ab_group.abundances()[i]->gamma()/(ab_group.abundances()[i]->effective_length()/total_length));
             
             shared_ptr<Abundance> ab = ab_group.abundances()[i];
             double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
