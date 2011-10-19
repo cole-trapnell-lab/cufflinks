@@ -1010,17 +1010,27 @@ void sample_worker(const RefSequenceTable& rt,
         info.locus_total_frags = ab_group.total_frags();
         info.locus_salient_frags = ab_group.salient_frags();
         //double group_counts = ab_group.total_frags();
+        ublas::matrix<double> cov = ab_group.iterated_count_cov();
+        if (ab_group.num_fragments())
+            cov /= ab_group.num_fragments();
+        
 		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
 		{
-            const ublas::matrix<double>& cov = ab_group.iterated_count_cov();
+            
             double count_var = cov(i,i);
             double max_count_covar = 0.0;
+            size_t max_covar_idx = 0.0;
             for (size_t j = 0; j < cov.size1(); ++j)
             {
                 if (j != i && abs(cov(i,j)) > max_count_covar)
+                {
                     max_count_covar = abs(cov(i,j));
+                    max_covar_idx = j;
+                }
             }
-            double count_sharing = count_var > 0 ? max_count_covar / count_var : 0;
+            double count_sharing = 0.0;
+            if (cov(i,i) != 0 && cov(max_covar_idx,max_covar_idx) != 0)
+                count_sharing = -1.0 * cov(i,max_covar_idx) / sqrt(cov(i,i) * cov(max_covar_idx,max_covar_idx));
             
             shared_ptr<Abundance> ab = ab_group.abundances()[i];
             double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
