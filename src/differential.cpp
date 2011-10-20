@@ -408,8 +408,8 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	
 	test.test_status = NOTEST;
 	
-	bool prev_status = curr_abundance.status();
-	bool curr_status = prev_abundance.status();
+	AbundanceStatus prev_status = curr_abundance.status();
+	AbundanceStatus curr_status = prev_abundance.status();
     
     vector<bool> to_keep(curr_abundance.abundances().size(), false);
     
