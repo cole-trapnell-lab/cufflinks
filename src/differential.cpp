@@ -445,6 +445,8 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
     curr_abundance.filter_group(to_keep, filtered_curr);
     
 	if (filtered_prev.abundances().size() > 1 &&
+        filtered_prev.has_member_with_status(NUMERIC_LOW_DATA) == false &&
+        filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false && 
         prev_status == NUMERIC_OK && filtered_prev.num_fragments() > 0 &&
 		curr_status == NUMERIC_OK && filtered_curr.num_fragments() > 0)
 	{
@@ -576,7 +578,9 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	}
 	else // we won't even bother with the JS-based testing in LOWDATA cases.
 	{
-        if (prev_status == NUMERIC_OK && curr_status == NUMERIC_OK)
+        if (prev_status == NUMERIC_OK && curr_status == NUMERIC_OK && 
+            filtered_prev.has_member_with_status(NUMERIC_LOW_DATA) == false &&
+            filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false)
             test.test_status = NOTEST;
         else if (prev_status == NUMERIC_FAIL || curr_status == NUMERIC_FAIL)
             test.test_status = FAIL;

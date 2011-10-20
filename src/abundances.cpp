@@ -79,7 +79,7 @@ AbundanceStatus AbundanceGroup::status() const
         if (ab->status() == NUMERIC_LOW_DATA)
 		{
 			has_lowdata_member = true;
-            return NUMERIC_LOW_DATA;
+            //return NUMERIC_LOW_DATA;
 		}
         if (ab->status() == NUMERIC_HI_DATA)
 		{
@@ -87,37 +87,46 @@ AbundanceStatus AbundanceGroup::status() const
 		}
 	}
     
-//    // if we get here, things are either OK, or NUMERIC_LOW_DATA 
-//    if (_abundances.size() <= 1)
-//        return NUMERIC_LOW_DATA;
-//    // check that the variance of the group is stable (w.r.t to bootstrap)
-//    double total_cov = 0.0;
-//    double total_gamma = 0.0;
-//    for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
-//    {
-////        for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
-////        {
-////            total_cov += _gamma_covariance(i,j);
-////            //total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
-////        }
-//        
-//        
-//        total_gamma = _abundances[i]->gamma();
-//        total_cov += _gamma_covariance(i,i);
-//        //total_gamma += _gamma_bootstrap_covariance(i,i);
-//        
-//    }
-//    if (total_cov > 0 && total_gamma > 0)
-//    {
-//        double bootstrap_gamma_delta = total_cov/total_gamma;
-//        //double gap = bootstrap_delta_gap * total_cov;
-//        if (bootstrap_gamma_delta > bootstrap_delta_gap)
-//        {
-//            return NUMERIC_LOW_DATA;
-//        }
-//    }
+    // check that the variance of the group is stable (w.r.t to bootstrap)
+    double total_cov = 0.0;
+    double total_gamma = 0.0;
+    for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
+    {
+        for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
+        {
+            total_cov += _gamma_covariance(i,j);
+            //total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
+        }
+        
+        
+        total_gamma = _abundances[i]->gamma();
+        //total_cov += _gamma_covariance(i,i);
+        //total_gamma += _gamma_bootstrap_covariance(i,i);
+        
+    }
+    if (total_cov > 0 && total_gamma > 0)
+    {
+        double bootstrap_gamma_delta = total_cov/total_gamma;
+        //double gap = bootstrap_delta_gap * total_cov;
+        if (bootstrap_gamma_delta > bootstrap_delta_gap)
+        {
+            return NUMERIC_LOW_DATA;
+        }
+    }
     
 	return NUMERIC_OK;
+}
+
+bool AbundanceGroup::has_member_with_status(AbundanceStatus member_status)
+{
+    foreach(shared_ptr<Abundance> ab, _abundances)
+	{
+		if (ab->status() == member_status)
+		{
+			return true;
+		}
+	}
+    return false;
 }
 
 double AbundanceGroup::num_fragments() const

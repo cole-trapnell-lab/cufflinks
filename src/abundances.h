@@ -350,7 +350,8 @@ public:
 	
 	AbundanceStatus status() const;
 	void status(AbundanceStatus s)			{ }
-	
+	bool has_member_with_status(AbundanceStatus member_status);
+    
 	double FPKM() const;
     void   FPKM(double fpkm)                { }
     
