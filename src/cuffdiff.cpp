@@ -1616,7 +1616,7 @@ int main(int argc, char** argv)
 #if 1
     if (emit_count_tables)
     {
-        dump_locus_variance_info("locus_var.txt");
+        dump_locus_variance_info(output_dir + string("/locus_var.txt"));
     }
 #endif
     

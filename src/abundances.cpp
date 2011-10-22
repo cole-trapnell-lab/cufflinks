@@ -3143,7 +3143,7 @@ AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcript
 
 #if 1
     proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
-    proposal *= 4.0;
+    proposal *= 10.0;
 #endif
     
     if (fisher_status != NUMERIC_OK)
