@@ -1663,7 +1663,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                           gamma_map_estimate,
                                           gamma_map_covariance);
             //cerr << gamma_map_estimate << endl;
-            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+            //std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
             
             _gamma_covariance = gamma_map_covariance;
             

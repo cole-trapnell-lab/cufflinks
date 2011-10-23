@@ -73,7 +73,7 @@ int max_frag_len = 800;
 int min_frag_len = 1;
 float min_isoform_fraction = 0.1;
 int max_mle_iterations = 5000;
-int num_importance_samples = 1000;
+int num_importance_samples = 10000;
 bool use_compat_mass = false;
 bool use_total_mass = false;
 
