@@ -104,15 +104,15 @@ AbundanceStatus AbundanceGroup::status() const
         //total_gamma += _gamma_bootstrap_covariance(i,i);
         
     }
-    if (total_cov > 0 && total_gamma > 0)
-    {
-        double bootstrap_gamma_delta = total_cov/total_gamma;
-        //double gap = bootstrap_delta_gap * total_cov;
-        if (bootstrap_gamma_delta > bootstrap_delta_gap)
-        {
-            return NUMERIC_LOW_DATA;
-        }
-    }
+//    if (total_cov > 0 && total_gamma > 0)
+//    {
+//        double bootstrap_gamma_delta = total_cov/total_gamma;
+//        //double gap = bootstrap_delta_gap * total_cov;
+//        if (bootstrap_gamma_delta > bootstrap_delta_gap)
+//        {
+//            return NUMERIC_LOW_DATA;
+//        }
+//    }
     
 	return NUMERIC_OK;
 }
@@ -735,6 +735,11 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     
     calculate_iterated_exp_count_covariance(non_equiv_alignments, transcripts);
     
+    // Refresh the variances to match the new gammas computed during iterated
+    // expectation
+    calculate_locus_scaled_mass_and_variance(non_equiv_alignments, transcripts);  
+    
+    
 	if(corr_multi && !final_est_run)
 	{
 		update_multi_reads(non_equiv_alignments, mapped_transcripts);
@@ -1049,11 +1054,11 @@ void AbundanceGroup::estimate_count_covariance()
 //                        _abundances[j]->status(NUMERIC_LOW_DATA);
 //                    }
 
-                    if (_abundances[j]->gamma() > 0 && 
-                        gamma_cov_j/_abundances[j]->gamma() > bootstrap_delta_gap)
-                    {
-                        _abundances[j]->status(NUMERIC_LOW_DATA);
-                    }
+//                    if (_abundances[j]->gamma() > 0 && 
+//                        gamma_cov_j/_abundances[j]->gamma() > bootstrap_delta_gap)
+//                    {
+//                        _abundances[j]->status(NUMERIC_LOW_DATA);
+//                    }
 
                     assert (!isinf(count_var) && !isnan(count_var));
                     _count_covariance(j,j) = count_var;
@@ -1871,6 +1876,172 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	return (status() == NUMERIC_OK);
 }
 
+//void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
+//                                                             const vector<shared_ptr<Abundance> >& transcripts)
+//{
+//    // Now calculate the _iterated_exp_count_covariance matrix via iterated expectation
+//    vector<vector<double> > cond_probs(transcripts.size(), vector<double>());
+//    for(size_t j = 0; j < transcripts.size(); ++j)
+//    {
+//        cond_probs[j]= *(transcripts[j]->cond_probs());
+//    }
+//    
+//    vector<double> u(nr_alignments.size());
+//    for (size_t i = 0; i < nr_alignments.size(); ++i)
+//    {
+//        u[i] = nr_alignments[i].collapse_mass();
+//    }
+//    
+//    ublas::matrix<double> count_covariance = ublas::zero_matrix<double>(transcripts.size(), transcripts.size());
+//    
+//    ublas::vector<double> total_cond_prob = ublas::zero_vector<double>(nr_alignments.size());
+//    
+//    for (size_t i = 0; i < nr_alignments.size(); ++i)
+//    {
+//        for (size_t j = 0; j < cond_probs.size(); ++j)
+//        {
+//            if (cond_probs[j][i] > 0)
+//                total_cond_prob(i) += transcripts[j]->gamma();
+//        }
+//    }
+//    
+//    // Compute the marginal conditional probability for each fragment against each isoform
+//    ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcripts.size(), nr_alignments.size());
+//    
+//    for (size_t i = 0; i < nr_alignments.size(); ++i)
+//    {
+//        for (size_t j = 0; j < cond_probs.size(); ++j)
+//        {
+//            if (total_cond_prob(i))
+//            {
+//                if (cond_probs[j][i] > 0)
+//                {
+//                    marg_cond_prob(j,i) = transcripts[j]->gamma()/total_cond_prob(i);
+//                }
+//            }
+//        }
+//    }
+//    
+//    double total_var = 0.0;
+//    
+//    double num_salient_frags = 0.0;
+//    //double num_unsalient_frags = 0.0;
+//    double num_frags = 0.0;
+//    
+//    //iterate over fragments
+//    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
+//    {
+//        num_frags += u[i];
+//        //cerr << u[i] << endl;
+//    }
+//    
+//    ublas::vector<double> expected_counts = ublas::zero_vector<double>(cond_probs.size());
+//    
+//    //iterate over fragments
+//    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
+//    {
+//        double entropy = 0.0;
+//        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+//        {
+//            if (marg_cond_prob(j,i) > 0)
+//            {
+//                double p = marg_cond_prob(j,i);
+//                double L = log2(p);
+//                entropy += p * L;
+//            }
+//        }
+//        num_salient_frags -= num_fragments() * (u[i]/num_frags) * entropy;
+//        
+//        if (num_frags)
+//        {        
+//            // iterate over transcripts
+//            for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+//            {
+//                for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
+//                {
+//                    if (j == k)
+//                    {
+//                        expected_counts(j) += u[i] * marg_cond_prob(k,i);
+//                        double var = u[i] * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
+//                        count_covariance(k,k) += var;
+//                        assert (count_covariance(k,k) >= 0);
+//                        total_var += var;
+//                    }
+//                    else
+//                    {
+//                        double covar = -u[i] * marg_cond_prob(k,i) * marg_cond_prob(j,i);
+//                        assert (count_covariance(k,j) <= 0);
+//                        count_covariance(k,j) += covar;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    
+//    //count_covariance *= num_fragments();
+//    //expected_counts *= num_fragments();
+//    
+//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+//        cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+//
+//    double total_length = 0.0;
+//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
+//    {
+//        total_length += _abundances[i]->effective_length();
+//    }
+//    
+//    salient_frags(num_salient_frags);
+//    double max_entropy = 0.0;
+//    for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+//    {
+//        if (transcripts[j]->gamma() > 0)
+//        {
+//            double p = transcripts[j]->gamma();
+//            double L = log2(p);
+//            max_entropy += p * L;
+//        }
+//    }
+//    total_frags(-max_entropy * num_fragments());
+//
+//    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
+//    if (total_counts > 0)
+//    {
+//        for (size_t i = 0; i < transcripts.size(); ++i)
+//        {
+//            //_abundances[i]->num_fragments(expected_counts(i));
+//            _abundances[i]->gamma(expected_counts(i) / total_counts);
+//        }
+//    }
+//    
+//    _iterated_exp_count_covariance = count_covariance;
+//    
+//    // take care of little rounding errors
+//    for (size_t i = 0; i < _iterated_exp_count_covariance.size1(); ++i)
+//    {
+//        for (size_t j = 0; j < _iterated_exp_count_covariance.size2(); ++j)
+//        {
+//            if (i == j)
+//            {
+//                double c = _iterated_exp_count_covariance(i,j);
+//                if (c < 0)
+//                    _iterated_exp_count_covariance(i,j) = 0;
+//                //assert(c >= 0);
+//            }
+//            else
+//            {
+//                double c = _iterated_exp_count_covariance(i,j);
+//                if (c > 0)
+//                    _iterated_exp_count_covariance(i,j) = 0;
+//                //assert(c <= 0);
+//            }
+//        }
+//    }
+//}
+
 void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
                                                              const vector<shared_ptr<Abundance> >& transcripts)
 {
@@ -1881,10 +2052,13 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         cond_probs[j]= *(transcripts[j]->cond_probs());
     }
     
+    double num_frags = 0.0;
+    
     vector<double> u(nr_alignments.size());
     for (size_t i = 0; i < nr_alignments.size(); ++i)
     {
         u[i] = nr_alignments[i].collapse_mass();
+        num_frags += u[i];
     }
     
     ublas::matrix<double> count_covariance = ublas::zero_matrix<double>(transcripts.size(), transcripts.size());
@@ -1902,6 +2076,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     
     // Compute the marginal conditional probability for each fragment against each isoform
     ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcripts.size(), nr_alignments.size());
+    ublas::matrix<double>  marg_cond_prob_cov = ublas::zero_matrix<double>(transcripts.size(), nr_alignments.size());
     
     for (size_t i = 0; i < nr_alignments.size(); ++i)
     {
@@ -1912,7 +2087,67 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 if (cond_probs[j][i] > 0)
                 {
                     marg_cond_prob(j,i) = transcripts[j]->gamma()/total_cond_prob(i);
+                    if (marg_cond_prob(j,i) == 1.0)
+                        marg_cond_prob_cov(j,i) = 0.0;
+                    else
+                        marg_cond_prob_cov(j,i) = _gamma_covariance(j,j)/(total_cond_prob(i) * total_cond_prob(i));
                 }
+            }
+        }
+    }
+    
+    ublas::matrix<double> alpha_f_t = ublas::zero_matrix<double>(transcripts.size(), nr_alignments.size());
+    ublas::matrix<double> beta_f_t =  ublas::zero_matrix<double>(transcripts.size(), nr_alignments.size());
+    
+    for (size_t i = 0; i < nr_alignments.size(); ++i)
+    {
+        for (size_t j = 0; j < cond_probs.size(); ++j)
+        {
+            double c_i = marg_cond_prob(j,i);
+            double xi_i = marg_cond_prob_cov(j,i);
+            
+            if (c_i < 1 && c_i > 0.0)
+            {
+                //assert (xi_i > 0);
+                //double k_i = (u[i]/num_frags) * num_fragments();
+                
+                //double k_i = 1.0;
+            
+                double k_i = u[i] / nr_alignments[i].common_scale_mass();
+                
+                // we won't need the alphas and betas if k_i == 1
+                if (k_i == 1)
+                    continue;
+                double denom = (k_i *  xi_i / c_i);
+                denom -= k_i * c_i;
+                denom += (c_i - 1);
+                
+                double alpha = c_i - xi_i;
+                alpha /= denom;
+                alpha *= k_i;
+                
+                // if alpha is negative, data is "underdispersed", so just bag 
+                // this fragment and we'll default to binomial variance for it
+                if (alpha < 0)  
+                {
+                    continue;
+                }
+                assert (!isnan(alpha) && ! isinf(alpha));
+                alpha_f_t(j,i) = alpha;
+                
+                double beta = (1 - c_i)*(1 - (xi_i/c_i));
+                beta /= denom;
+                beta *= k_i;
+                
+                // if alpha is negative, data is "underdispersed", so just bag 
+                // this fragment and we'll default to binomial variance for it
+                if (beta < 0)
+                {
+                    continue;
+                }
+                assert (!isnan(beta) && ! isinf(beta));
+                
+                beta_f_t(j,i) = beta;
             }
         }
     }
@@ -1921,97 +2156,114 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     
     double num_salient_frags = 0.0;
     //double num_unsalient_frags = 0.0;
-    double num_frags = 0.0;
-    
-    //iterate over fragments
-    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
-    {
-        num_frags += u[i];
-    }
     
     ublas::vector<double> expected_counts = ublas::zero_vector<double>(cond_probs.size());
     
     //iterate over fragments
     for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
     {
-//        bool salient = 0.0;
-//        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
-//        {
-//            if (marg_cond_prob(j,i) > transcripts[j]->gamma() && marg_cond_prob(j,i) <= 1.0)
-//            {
-//                salient = true;
-//                break;
-//            }
-//        }
-//        if (salient)
-//            num_salient_frags += u[i];
-        double entropy = 0.0;
-        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
-        {
-            if (marg_cond_prob(j,i) > 0)
-            {
-                double p = marg_cond_prob(j,i);
-                double L = log2(p);
-                entropy += p * L;
-            }
-        }
-        num_salient_frags -= num_fragments() * (u[i]/num_frags) * entropy;
-        
+        // FIXME: this if() is lame, move it to clean up this block
         if (num_frags)
         {        
+            double scale = nr_alignments[i].common_scale_mass();
+            //double k_f = (u[i]/num_frags) * num_fragments();
+            double k_f = u[i] / nr_alignments[i].common_scale_mass();
+            //double k_i = 1.0
+            
             // iterate over transcripts
             for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
             {
+                double alpha_j_i = alpha_f_t(j,i);
+                double beta_j_i = beta_f_t(j,i);
+                double c_j_i = marg_cond_prob(j,i);
+                
                 for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
                 {
+                    double alpha_k_i = alpha_f_t(k,i);
+                    double beta_k_i = beta_f_t(k,i);
+                    double c_k_i = marg_cond_prob(k,i);
+                    
                     if (j == k)
                     {
-                        expected_counts(j) += (u[i]/num_frags) * marg_cond_prob(k,i);
-                        double var = (u[i]/num_frags) * marg_cond_prob(k,i) * (1.0 - marg_cond_prob(k,i));
-                        count_covariance(k,k) += var;
-                        assert (count_covariance(k,k) >= 0);
-                        total_var += var;
+                        expected_counts(j) += k_f * c_k_i * nr_alignments[i].common_scale_mass();
+                        double binom_var = k_f * c_k_i * (1.0 - c_k_i);
+                        if (k_f == 1 || alpha_k_i == 0 || beta_k_i == 0)
+                        {
+                            // now, at the end of the, apply the scaling factor 
+                            binom_var *= (nr_alignments[i].common_scale_mass() * nr_alignments[i].common_scale_mass());
+                            count_covariance(k,k) += binom_var;
+                        }
+                        else if (c_k_i < 1.0 && c_k_i > 0.0)
+                        {
+                            double var = alpha_k_i * beta_k_i;
+                            var *= (alpha_k_i + beta_k_i + k_f);
+                            var /= (alpha_k_i + beta_k_i) * (alpha_k_i + beta_k_i);
+                            var /= (alpha_k_i + beta_k_i + 1);
+                            var *= k_f;
+                            
+                            assert (!isinf(var) && !isnan(var));
+                            
+                            // now, at the end of the, apply the scaling factor 
+                            var *= (nr_alignments[i].common_scale_mass() * nr_alignments[i].common_scale_mass());
+                            
+                            count_covariance(k,k) +=  var;
+                            assert (count_covariance(k,k) >= 0);
+                            
+                            //assert (binom_var <= var);
+                            //fprintf(stderr, "i = %lu, k = %lu, u[i] = %lg, binom / beta = %lf\n", i, k, u[i], binom_var / var);
+                            total_var += var;
+                        }
                     }
                     else
                     {
-                        double covar = -(u[i]/num_frags) * marg_cond_prob(k,i) * marg_cond_prob(j,i);
-                        assert (count_covariance(k,j) <= 0);
-                        count_covariance(k,j) += covar;
+                        double binom_covar = - k_f * c_k_i * c_j_i;
+                        if (k_f == 1 || alpha_k_i == 0 || beta_k_i == 0 ||
+                            alpha_j_i == 0 || beta_j_i == 0)
+                        {
+                            // now, at the end of the, apply the scaling factor 
+                            binom_covar *= (nr_alignments[i].common_scale_mass() * nr_alignments[i].common_scale_mass());
+                            count_covariance(k,j) += binom_covar;
+                        }
+
+                        else if (c_k_i < 1.0 && c_j_i < 1.0 &&
+                            c_k_i > 0.0 && c_j_i > 0.0)
+                        {
+                            double mu_k = alpha_k_i/(alpha_k_i+beta_k_i);
+                            double denom_k = (alpha_k_i + beta_k_i + 1);
+                            
+                            double mu_j = alpha_j_i/(alpha_j_i + beta_j_i);
+                            double denom_j = (alpha_j_i + beta_j_i + 1);
+                            
+                            double covar = -k_f*k_f;
+                            covar *= (mu_k*(1-mu_k))/denom_k;
+                            covar *= (mu_j*(1-mu_j))/denom_j;
+                            assert (!isinf(covar) && !isnan(covar));
+                            
+                            // now, at the end of the, apply the scaling factor 
+                            covar *= (nr_alignments[i].common_scale_mass() * nr_alignments[i].common_scale_mass());
+                            
+                            count_covariance(k,j) += covar;
+                        }
                     }
                 }
             }
         }
     }
     
-//    cerr << "$$$$$$$$$$$$" << endl;
-//    cerr << count_covariance * num_fragments() << endl;
-//    cerr << "************" << endl;
-//    cerr << (count_covariance + _gamma_covariance) * num_fragments() << endl;
+    //cerr << "$$$$$$$$$$$$" << endl;
+    //cerr << count_covariance << endl;
+    //    cerr << "************" << endl;
+    //    cerr << (count_covariance + _gamma_covariance) * num_fragments() << endl;
     
     //count_covariance += _gamma_covariance;
     
     
-//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
-//        //cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-//    
-//    for (size_t i = 0; i < count_covariance.size1(); ++i)
-//    {
-//        count_covariance(i,i) += _gamma_covariance(i,i); 
-//    }
-//    
-//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
-//        //cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-//    
-    count_covariance *= num_fragments();
-    expected_counts *= num_fragments();
+    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
+    {
+        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
+        cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
+        std::cerr << i << " : " << mr << std::endl;
+    }
     
     double total_length = 0.0;
     for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
@@ -2019,63 +2271,18 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         total_length += _abundances[i]->effective_length();
     }
     
-//    if (total_length)
-//    {
-//        for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
-//        {
-//            fprintf(stderr, 
-//                    "%lg, %lg, %lg\n", 
-//                    _abundances[i]->gamma(), 
-//                    _abundances[i]->effective_length()/total_length, 
-//                    log2(_abundances[i]->gamma()/(_abundances[i]->effective_length()/total_length)));
-//        }
-//    }
-    
-//    for (unsigned i = 0; i < count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance, i);
-//        cerr << i << " : " << expected_counts(i) << "," << _abundances[i]->num_fragments() << " : ";
-//        std::cerr << mr << std::endl;
-//    }
-    
-    //cerr << trace << "," << off_diag << endl;
-    
-//    //if (num_frags)
-//    {
-//        //double lf = num_fragments();
-//        double scale = (num_fragments() * num_fragments());
-//        //assert (num_frags >= num_salient_frags);
-//        //num_frags *= num_fragments() / num_frags;
-//        //num_salient_frags *= num_fragments() / num_frags;
-//        assert (num_frags >= num_salient_frags);
-//        count_covariance *= scale;
-//    }
-    
-    salient_frags(num_salient_frags);
-    double max_entropy = 0.0;
-    for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
+    // update the num_fragments and gammas for each transcript based on 
+    // iterated expectation
+    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
+    if (total_counts > 0)
     {
-        if (transcripts[j]->gamma() > 0)
+        for (size_t i = 0; i < transcripts.size(); ++i)
         {
-            double p = transcripts[j]->gamma();
-            double L = log2(p);
-            max_entropy += p * L;
+            //_abundances[i]->num_fragments(expected_counts(i));
+            _abundances[i]->gamma(expected_counts(i) / total_counts);
         }
     }
-    total_frags(-max_entropy * num_fragments());
     
-//    ublas::vector<double> expected_counts = ublas::zero_vector<double>(marg_cond_prob.size1());
-//    double total_counts = 0.0;
-//    for (size_t i = 0; i < nr_alignments.size(); ++i)
-//    {
-//        for (size_t j = 0; j < cond_probs.size(); ++j)
-//        {
-//            double expected = u[i] * marg_cond_prob(j,i);
-//            expected_counts(j) += expected;
-//            total_counts += expected;
-//        }
-//    }
-
     _iterated_exp_count_covariance = count_covariance;
     
     // take care of little rounding errors
@@ -2100,6 +2307,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         }
     }
 }
+
 
 void AbundanceGroup::calculate_kappas()
 {
