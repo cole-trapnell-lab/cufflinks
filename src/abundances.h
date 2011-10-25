@@ -453,6 +453,10 @@ private:
 	void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
 												  vector<shared_ptr<Abundance> >& transcripts,
 												  vector<shared_ptr<Abundance> >& mapped_transcripts);
+    
+    void update_transcript_expression(double locus_mass, double locus_mass_fraction);
+    
+    //void collect_read_group_props();
 	
 	vector<shared_ptr<Abundance> > _abundances;
 	
@@ -477,6 +481,8 @@ private:
     double _max_mass_variance;  // upper bound on the count variance that could come from this group.
     double _salient_frags;
     double _total_frags;
+    
+    //std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
