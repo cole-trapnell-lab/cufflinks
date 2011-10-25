@@ -309,7 +309,8 @@ void generate_importance_samples(multinormal_generator<double>& generator,
 		double m = sum(scaled_sample);
 		if (m && !isnan(m))
 		{
-			for (size_t j = 0; j < scaled_sample.size(); ++j) {
+			for (size_t j = 0; j < scaled_sample.size(); ++j) 
+            {
 				scaled_sample(j) = scaled_sample(j) / m;
 			}
 			if (no_zeros)
@@ -331,6 +332,7 @@ void generate_importance_samples(multinormal_generator<double>& generator,
 		}
 		else
 		{
+            samples.push_back(ublas::zero_vector<double>(scaled_sample.size()));
 			//cerr << r << endl;
 			//cerr << scaled_sample << endl;
 		}
