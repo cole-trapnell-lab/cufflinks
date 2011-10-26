@@ -2031,28 +2031,28 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         
         if (true)
         {
-            verbose_msg( "Importance sampling posterior distribution\n");
-            map_success = bayesian_gammas(filtered_transcripts,
-                                          nr_alignments,
-                                          log_conv_factors,
-                                          gamma_mle,
-                                          gamma_map_estimate,
-                                          gamma_map_covariance);
+//            verbose_msg( "Importance sampling posterior distribution\n");
+//            map_success = bayesian_gammas(filtered_transcripts,
+//                                          nr_alignments,
+//                                          log_conv_factors,
+//                                          gamma_mle,
+//                                          gamma_map_estimate,
+//                                          gamma_map_covariance);
             //cerr << gamma_map_estimate << endl;
             //std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
             
-            _gamma_covariance = gamma_map_covariance;
+            //_gamma_covariance = gamma_map_covariance;
             
-//            map_success  = empirical_replicate_gammas(filtered_transcripts,
-//                                                      nr_alignments,
-//                                                      log_conv_factors,
-//                                                      gamma_map_estimate,
-//                                                      gamma_map_covariance,
-//                                                      cross_replicate_js);
-////             cerr << gamma_map_estimate << endl;
-//            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+            map_success  = empirical_replicate_gammas(filtered_transcripts,
+                                                      nr_alignments,
+                                                      log_conv_factors,
+                                                      gamma_map_estimate,
+                                                      gamma_map_covariance,
+                                                      cross_replicate_js);
+//             cerr << gamma_map_estimate << endl;
+            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
 
-//            _gamma_covariance = gamma_map_covariance;
+            _gamma_covariance = gamma_map_covariance;
 //            
 ////            for (unsigned i = 0; i < _gamma_bootstrap_covariance.size1 (); ++ i) 
 ////            {
@@ -2276,7 +2276,24 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         gammas(i) = _abundances[i]->gamma();
     }
     
-    multinormal_generator<double> generator(gammas, _gamma_covariance);
+    ublas::matrix<double> cov_chol = _gamma_covariance;
+    double success = cholesky_factorize(cov_chol);
+    
+//    cerr << "cov : " << endl;
+//    for (unsigned i = 0; i < _gamma_covariance.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (_gamma_covariance, i);
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+//    
+//    cerr << "cholesky cov : " << endl;
+//    for (unsigned i = 0; i < cov_chol.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (cov_chol, i);
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+    
+    multinormal_generator<double> generator(gammas, cov_chol);
     vector<ublas::vector<double> > samples;
     
 	generate_importance_samples(generator, samples, nr_alignments.size(), false);
@@ -2293,8 +2310,11 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     // Compute the marginal conditional probability for each fragment against each isoform
     ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcripts.size(), nr_alignments.size());
     
+    //cerr << "gammas : " << gammas;
+    
     for (size_t i = 0; i < nr_alignments.size(); ++i)
     {
+        //cerr << samples[i] << endl;
         for (size_t j = 0; j < cond_probs.size(); ++j)
         {
             if (total_cond_prob(i))
