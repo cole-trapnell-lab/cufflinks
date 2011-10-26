@@ -3544,7 +3544,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
             {
                 mle(i) = rep_gammas[i];
             }
-            cerr << mle << endl;
+            //cerr << mle << endl;
             mle_gammas.push_back(mle);
         }
         else
@@ -3553,7 +3553,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
         }
     }
 
-    cerr << "***" << endl;
+    //cerr << "***" << endl;
     gamma_covariance = ublas::zero_matrix<double>(N,N);
     ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
 
