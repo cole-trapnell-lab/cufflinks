@@ -1035,6 +1035,8 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
         {
             tmp_hits.push_back(*(compat_table[i][j]));
         }
+        if (tmp_hits.empty())
+            continue;
         collapse_equivalent_hits(tmp_hits,
                                  transcripts,
                                  tmp_mapped_transcripts,
