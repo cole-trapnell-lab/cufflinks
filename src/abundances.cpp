@@ -799,7 +799,6 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
 
 }
 
-
 int total_cond_prob_calls = 0;
 void collapse_equivalent_hits(const vector<MateHit>& alignments,
                               vector<shared_ptr<Abundance> >& transcripts,
@@ -1003,6 +1002,50 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
     }
 }
 
+void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
+                                     vector<shared_ptr<Abundance> >& transcripts,
+                                     vector<shared_ptr<Abundance> >& mapped_transcripts,
+                                     vector<MateHit>& nr_alignments,
+                                     vector<double>& log_conv_factors)
+{
+    int N = transcripts.size();
+	int M = alignments.size();
+    
+    vector<vector<const MateHit*> > compat_table(1 << N);
+    vector<vector<char> > compatibilities(N, vector<char>(M,0));
+    compute_compatibilities(transcripts, alignments, compatibilities);
+    
+    for(int i = 0; i < M; ++i)
+    {
+        size_t compat_mask = 0;
+        for (int j = 0; j < N; ++j)
+        {
+            compat_mask |= compatibilities[j][i] << j;
+        }
+        compat_table[compat_mask].push_back(&(alignments[i]));
+    }
+    
+    for (size_t i = 0; i < compat_table.size(); ++i)
+    {
+        vector<MateHit> tmp_hits;
+        vector<MateHit> tmp_nr_hits;
+        vector<double> tmp_log_conv_factors;
+        vector<shared_ptr<Abundance> > tmp_mapped_transcripts;
+        for (size_t j = 0; j < compat_table[i].size(); ++j)
+        {
+            tmp_hits.push_back(*(compat_table[i][j]));
+        }
+        collapse_equivalent_hits(tmp_hits,
+                                 transcripts,
+                                 tmp_mapped_transcripts,
+                                 tmp_nr_hits,
+                                 tmp_log_conv_factors, 
+                                 false);
+        copy(tmp_nr_hits.begin(), tmp_nr_hits.end(), back_inserter(nr_alignments));
+        copy(tmp_log_conv_factors.begin(), tmp_log_conv_factors.end(), back_inserter(log_conv_factors));
+    }
+}
+
 #define PERFORM_EQUIV_COLLAPSE 1
 
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
@@ -1026,10 +1069,11 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     vector<double> log_conv_factors;
     if (cond_prob_collapse)
     {
-        collapse_equivalent_hits(nr_alignments, transcripts, mapped_transcripts, non_equiv_alignments, log_conv_factors, false);
+        collapse_equivalent_hits_helper(nr_alignments, transcripts, mapped_transcripts, non_equiv_alignments, log_conv_factors);
         assert (non_equiv_alignments.size() == log_conv_factors.size());
         log_conv_factors = vector<double>(nr_alignments.size(), 0);
         nr_alignments.clear();
+        compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
     else
     {
@@ -1979,7 +2023,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                           gamma_map_estimate,
                                           gamma_map_covariance);
             //cerr << gamma_map_estimate << endl;
-            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+            //std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
             
             _gamma_covariance = gamma_map_covariance;
             
