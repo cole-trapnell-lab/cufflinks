@@ -1011,6 +1011,19 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
     int N = transcripts.size();
 	int M = alignments.size();
     
+    // If there's a lot of transcripts, just use the old, overlap constrained 
+    // version of the equivalence collapse.
+    if (N > 24)
+    {
+        collapse_equivalent_hits(alignments,
+                                 transcripts,
+                                 mapped_transcripts,
+                                 nr_alignments,
+                                 log_conv_factors, 
+                                 true);
+        return;
+    }
+    
     vector<vector<const MateHit*> > compat_table(1 << N);
     vector<vector<char> > compatibilities(N, vector<char>(M,0));
     compute_compatibilities(transcripts, alignments, compatibilities);
@@ -1020,8 +1033,9 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
         size_t compat_mask = 0;
         for (int j = 0; j < N; ++j)
         {
-            compat_mask |= compatibilities[j][i] << j;
+            compat_mask |= ((compatibilities[j][i] !=0) << j);
         }
+        assert (compat_mask < compat_table.size());
         compat_table[compat_mask].push_back(&(alignments[i]));
     }
     
