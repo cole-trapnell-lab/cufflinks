@@ -205,7 +205,7 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 	{
 		for (size_t k = 0; k < kappa_length; ++k)
 		{
-			if (p_bar(k) == 0.0 || gradient(i*kappa_length + k) == 0.0)
+			if (p_bar(k) == 0.0 || gradient(i*kappa_length + k) == 0.0 || js == 0.0)
 			{
 				gradient(i*kappa_length + k) = 0.0;
 			}
@@ -227,6 +227,8 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 				gradient(i*kappa_length + k) *= (1.0/(2.0 * js)); // This is supposed to use the square root of the distance (it's not a typo)
 				
                 double curr_grad = gradient(i*kappa_length + k);
+                
+                assert (!isinf(curr_grad) && !isnan(curr_grad));
                 //fprintf(stderr, "Curr gradient: %lg, alternate gradient %lg\n", curr_grad, alt_grad);
 #if 0
 				if(isinf(gradient(i*kappa_length + k)))
@@ -267,6 +269,7 @@ void make_js_covariance_matrix(vector<ublas::matrix<double> >& kappa_covariances
 			{
 				js_covariance(i*kappa_length + j, i*kappa_length + k) = 
 				kappa_covariances[i](j,k);
+                assert (!isinf(js_covariance(i*kappa_length + j, i*kappa_length + k) && ! isnan(js_covariance(i*kappa_length + j, i*kappa_length + k))));
 			}
 		}
 	}

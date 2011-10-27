@@ -501,6 +501,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			
 			double js_var = inner_prod(js_gradient, 
 									   prod(js_covariance, js_gradient));
+            assert (!isinf(js_var) && !isnan(js_var));
             
 //            ublas::vector<double> alt_js_gradient;
 //			alt_jensen_shannon_gradient(sample_kappas, js, alt_js_gradient);
