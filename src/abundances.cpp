@@ -2482,14 +2482,30 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     
     for (size_t i = 0; i < nr_alignments.size(); ++i)
     {
-        const ublas::vector<double>& mle = _mles_for_read_groups[nr_alignments[i].read_group_props()];
-        for (size_t j = 0; j < cond_probs.size(); ++j)
+        // if the individual replicate gamma mles are available, use them
+        if (_mles_for_read_groups.empty() == false)
         {
-            if (cond_probs[j][i] > 0)
+            const ublas::vector<double>& mle = _mles_for_read_groups[nr_alignments[i].read_group_props()];
+            for (size_t j = 0; j < cond_probs.size(); ++j)
             {
-                total_cond_prob(i) += mle(j) * cond_probs[j][i];
-                //total_cond_prob(i) += transcripts[j]->gamma() * cond_probs[j][i];
-                
+                if (cond_probs[j][i] > 0)
+                {
+                    total_cond_prob(i) += mle(j) * cond_probs[j][i];
+                    //total_cond_prob(i) += transcripts[j]->gamma() * cond_probs[j][i];
+                    
+                }
+            }
+        }
+        else
+        {
+            // the replicate gamma mles might not be available, if one of the
+            // replicates returned an error, we'll consider all to be unreliable
+            for (size_t j = 0; j < cond_probs.size(); ++j)
+            {
+                if (cond_probs[j][i] > 0)
+                {
+                    total_cond_prob(i) += transcripts[j]->gamma() * cond_probs[j][i];
+                }
             }
         }
     }
@@ -2499,15 +2515,34 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     
     for (size_t i = 0; i < nr_alignments.size(); ++i)
     {
-        const ublas::vector<double>& mle = _mles_for_read_groups[nr_alignments[i].read_group_props()];
-        for (size_t j = 0; j < cond_probs.size(); ++j)
+        // if the individual replicate gamma mles are available, use them
+        if (_mles_for_read_groups.empty() == false)
         {
-            if (total_cond_prob(i))
+            const ublas::vector<double>& mle = _mles_for_read_groups[nr_alignments[i].read_group_props()];
+            for (size_t j = 0; j < cond_probs.size(); ++j)
             {
-                if (cond_probs[j][i] > 0)
+                if (total_cond_prob(i))
                 {
-                    marg_cond_prob(j,i) = (mle(j) * cond_probs[j][i])/total_cond_prob(i);
-                    //marg_cond_prob(j,i) = (transcripts[j]->gamma() * cond_probs[j][i])/total_cond_prob(i);
+                    if (cond_probs[j][i] > 0)
+                    {
+                        marg_cond_prob(j,i) = (mle(j) * cond_probs[j][i])/total_cond_prob(i);
+                        //marg_cond_prob(j,i) = (transcripts[j]->gamma() * cond_probs[j][i])/total_cond_prob(i);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // the replicate gamma mles might not be available, if one of the
+            // replicates returned an error, we'll consider all to be unreliable
+            for (size_t j = 0; j < cond_probs.size(); ++j)
+            {
+                if (total_cond_prob(i))
+                {
+                    if (cond_probs[j][i] > 0)
+                    {
+                        marg_cond_prob(j,i) = (transcripts[j]->gamma() * cond_probs[j][i])/total_cond_prob(i);
+                    }
                 }
             }
         }
@@ -3602,6 +3637,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
         }
         else
         {
+            // if one replicate fails, let's just not trust any of them
+            mles_for_read_groups.clear();
             return mle_success;
         }
     }
