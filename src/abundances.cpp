@@ -1457,42 +1457,39 @@ void AbundanceGroup::estimate_count_covariance()
             for (size_t j = 0; j < _abundances.size(); ++j)
             {
                 double scale_j = 0.0;
-                double j_xpc = _iterated_exp_count_covariance(j,j);
-                if (j_xpc == 0)
+                double poisson_variance_j = _abundances[j]->num_fragments();
+                if (poisson_variance_j == 0)
                 {
                     scale_j = 0.0;
                 }
                 else
                 {
-                    scale_j = _count_covariance(j,j) / _iterated_exp_count_covariance(j,j);
+                    
+                    scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
                 }
                 for (size_t i = 0; i < _abundances.size(); ++i)
                 {
                     if (i != j)
                     {
                         double scale_i = 0.0;
-                        double i_xpc = _iterated_exp_count_covariance(i,i);
-                        if (i_xpc == 0)
+                        double poisson_variance_i = _abundances[i]->num_fragments();
+                        if (poisson_variance_i == 0)
                         {
                             scale_i = 0.0;
                         }
                         else
                         {
-                            scale_i = _count_covariance(i,i) / _iterated_exp_count_covariance(i,i);
+                            scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
                         }
                         if (scale_i != 0 && scale_j != 0)
                         {
-                            double poisson_variance_i = _abundances[i]->num_fragments();
-                            double poisson_variance_j = _abundances[j]->num_fragments();
-                            double poisson_scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
-                            double poisson_scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
-                            double poisson_scale = sqrt(poisson_scale_i) * sqrt(poisson_scale_j);
+                            double poisson_scale = sqrt(scale_j) * sqrt(scale_i);
                             
-                            //fprintf(stderr, "Total scaling factor: %lg, alt scaling factor %lg \n", sqrt(scale_i) * sqrt(scale_j), alt_scale);
-                            double full_scale = sqrt(scale_i) * sqrt(scale_j);
                             double before = _iterated_exp_count_covariance(i,j);
                             
                             long double scale = poisson_scale;
+                            
+                            assert (!isinf(scale) && !isnan(scale));
                             if (scale < 1.0)
                                 scale = 1.0;
                             
@@ -2491,6 +2488,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 if (cond_probs[j][i] > 0)
                 {
                     total_cond_prob(i) += mle(j) * cond_probs[j][i];
+                    assert (!isnan(total_cond_prob(i) && ! isinf(total_cond_prob(i))));
                     //total_cond_prob(i) += transcripts[j]->gamma() * cond_probs[j][i];
                     
                 }
@@ -2505,6 +2503,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 if (cond_probs[j][i] > 0)
                 {
                     total_cond_prob(i) += transcripts[j]->gamma() * cond_probs[j][i];
+                    assert (!isnan(total_cond_prob(i) && ! isinf(total_cond_prob(i))));
                 }
             }
         }
@@ -2585,13 +2584,15 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 {
                     double var = u[i] * c_k_i * (1.0 - c_k_i);
                     count_covariance(k,k) += var;
-                    assert (count_covariance(k,k) >= 0);
+                    assert (var >= 0);
+                    assert (!isnan(var) && !isinf(var));
                     total_var += var;
                 }
                 else
                 {
                     double covar = -u[i] * c_k_i * c_j_i;
-                    assert (count_covariance(k,j) <= 0);
+                    assert (covar <= 0);
+                    assert (!isnan(covar) && !isinf(covar));
                     count_covariance(k,j) += covar;
                 }
             }
@@ -3037,6 +3038,7 @@ void AbundanceGroup::calculate_kappas()
                     kappa_var = 0.0;
                 }
                 
+                assert (!isnan(kappa_var) && !isinf(kappa_var));
                 _kappa_covariance(k,m) = kappa_var;
             }
             else
