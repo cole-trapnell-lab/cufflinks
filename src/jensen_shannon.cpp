@@ -228,7 +228,7 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 				
                 double curr_grad = gradient(i*kappa_length + k);
                 //fprintf(stderr, "Curr gradient: %lg, alternate gradient %lg\n", curr_grad, alt_grad);
-#if 1
+#if 0
 				if(isinf(gradient(i*kappa_length + k)))
 				{
 					cerr << grad_tmp << endl;
