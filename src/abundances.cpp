@@ -2151,6 +2151,8 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	// Now we need to fill in zeros for the isoforms we filtered out of the 
 	// MLE/MAP calculation
 	vector<double> updated_gammas = vector<double>(N, 0.0);
+    
+    
 	ublas::matrix<double> updated_gamma_cov;
 	updated_gamma_cov = ublas::zero_matrix<double>(N, N);
     ublas::matrix<double> updated_gamma_bootstrap_cov;
@@ -2181,6 +2183,23 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		}
 	}
 	
+    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > updated_mles_for_read_groups;
+    for (std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >::iterator itr = _mles_for_read_groups.begin();
+         itr != _mles_for_read_groups.end(); ++itr)
+    {
+        ublas::vector<double> updated_replicate_mle = ublas::zero_vector<double>(N);
+        for (size_t i = 0; i < N; ++i)
+        {
+            if (scaff_present[i] != N)
+            {
+                updated_replicate_mle(i) = itr->second(scaff_present[i]);
+            }
+        }
+        updated_mles_for_read_groups[itr->first] = updated_replicate_mle;
+    }
+    
+    _mles_for_read_groups = updated_mles_for_read_groups;
+    
 	for (size_t i = 0; i < N; ++i)
 	{
 		if (scaff_present[i] != N)
@@ -2487,6 +2506,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
             {
                 if (cond_probs[j][i] > 0)
                 {
+                    assert (mle.size() == cond_probs.size());
                     total_cond_prob(i) += mle(j) * cond_probs[j][i];
                     assert (!isnan(total_cond_prob(i) && ! isinf(total_cond_prob(i))));
                     //total_cond_prob(i) += transcripts[j]->gamma() * cond_probs[j][i];

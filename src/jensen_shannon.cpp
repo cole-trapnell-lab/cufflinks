@@ -185,6 +185,7 @@ void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
 	{
 		for (size_t k = 0; k < kappa_length; ++k)
 		{
+            assert (!isinf(sample_kappas[i](k)) && !isnan(sample_kappas[i](k)));
 			gradient(i*kappa_length + k) = sample_kappas[i](k);
 		}
 	}
