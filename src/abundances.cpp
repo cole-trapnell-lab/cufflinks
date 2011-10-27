@@ -2041,27 +2041,27 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         if (true)
         {
             verbose_msg( "Importance sampling posterior distribution\n");
-            map_success = bayesian_gammas(filtered_transcripts,
-                                          nr_alignments,
-                                          log_conv_factors,
-                                          gamma_mle,
-                                          gamma_map_estimate,
-                                          gamma_map_covariance);
-            //cerr << gamma_map_estimate << endl;
-            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
-            
-            _gamma_covariance = gamma_map_covariance;
-            
-//            map_success  = empirical_replicate_gammas(filtered_transcripts,
-//                                                      nr_alignments,
-//                                                      log_conv_factors,
-//                                                      gamma_map_estimate,
-//                                                      gamma_map_covariance,
-//                                                      cross_replicate_js);
-////             cerr << gamma_map_estimate << endl;
+//            map_success = bayesian_gammas(filtered_transcripts,
+//                                          nr_alignments,
+//                                          log_conv_factors,
+//                                          gamma_mle,
+//                                          gamma_map_estimate,
+//                                          gamma_map_covariance);
+//            //cerr << gamma_map_estimate << endl;
 //            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
+//            
+//            _gamma_covariance = gamma_map_covariance;
+            
+            map_success  = empirical_replicate_gammas(filtered_transcripts,
+                                                      nr_alignments,
+                                                      log_conv_factors,
+                                                      gamma_map_estimate,
+                                                      gamma_map_covariance,
+                                                      cross_replicate_js);
+//             cerr << gamma_map_estimate << endl;
+            std::copy(gamma_map_estimate.begin(), gamma_map_estimate.end(), filtered_gammas.begin());
 //
-            //_gamma_covariance = gamma_map_covariance;
+            _gamma_covariance = gamma_map_covariance;
 //            
 ////            for (unsigned i = 0; i < _gamma_bootstrap_covariance.size1 (); ++ i) 
 ////            {
@@ -3309,7 +3309,7 @@ double EM (int N, int M, vector<double> & newP,
 		//printf("%.3f %.3f %.3f\n", newP[6], newP[7], newP[8]);
 		iter++;
 	}
-	if (iter == max_mle_iterations)
+	if (iter >= max_mle_iterations)
     {
 		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
         converged = false;
