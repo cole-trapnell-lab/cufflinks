@@ -375,22 +375,32 @@ void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
 AbundanceStatus AbundanceGroup::status() const
 {
     bool has_lowdata_member = false;
+    bool has_ok_member = false;
 	foreach(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (ab->status() == NUMERIC_FAIL)
 		{
 			return NUMERIC_FAIL;
 		}
-        if (ab->status() == NUMERIC_LOW_DATA)
+        else if (ab->status() == NUMERIC_LOW_DATA)
 		{
 			has_lowdata_member = true;
             //return NUMERIC_LOW_DATA;
 		}
-        if (ab->status() == NUMERIC_HI_DATA)
+        else if (ab->status() == NUMERIC_HI_DATA)
 		{
 			return NUMERIC_HI_DATA;
 		}
+        else if (ab->status() == NUMERIC_OK)
+		{
+			has_ok_member = true;
+		}
 	}
+    
+    if (has_ok_member == false)
+        return NUMERIC_LOW_DATA;
+    
+    
     
     // check that the variance of the group is stable (w.r.t to bootstrap)
     double total_cov = 0.0;
