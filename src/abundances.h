@@ -429,6 +429,8 @@ public:
     double total_frags() const { return _total_frags; }
     void total_frags(double nf) { _total_frags = nf; }
     
+    
+    
 private:
 	
 	void FPKM_conf(const ConfidenceInterval& cf)  { _FPKM_conf = cf; }
@@ -483,6 +485,7 @@ private:
     double _total_frags;
     
     //std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
+    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
@@ -497,14 +500,14 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance,
-                                                   double& cross_replicate_js);
+                                                   std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups);
 
 AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,
                                            const vector<double>& log_conv_factors,
                                            ublas::vector<double>& gamma_map_estimate,
                                            ublas::matrix<double>& gamma_map_covariance,
-                                           double& cross_replicate_js);
+                                           std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups);
 
 AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                                     const vector<MateHit>& nr_alignments,
