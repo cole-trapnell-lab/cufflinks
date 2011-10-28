@@ -111,7 +111,7 @@ void print_scaff_as_sam(FILE* sam_out,
 	
 	uint32_t sam_pos = scaff.left() + 1;
 	uint32_t map_quality = 255;
-	char cigar[2048];
+	char cigar[8192];
 	cigar[0] = 0;
 	string mate_ref_name = "*";
 	uint32_t mate_pos = 0;
