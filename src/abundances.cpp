@@ -4503,8 +4503,8 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
     else
     {
         if (!identifiable)
-            return NUMERIC_LOW_DATA;
-            //return NUMERIC_OK;
+            //return NUMERIC_LOW_DATA;
+            return NUMERIC_OK;
         else
             return NUMERIC_FAIL;
     }
