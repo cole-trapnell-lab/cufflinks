@@ -1002,7 +1002,6 @@ void sample_worker(const RefSequenceTable& rt,
     pair<double, double> locus_mv = disperser->get_raw_mean_and_var(locus_tag);
     if (locus_mv.first != 0 && locus_mv.second != 0)
     {
-
         LocusVarianceInfo info;
         info.factory_id = factory_id;
         info.mean_count = locus_mv.first;
