@@ -1099,6 +1099,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         assert (non_equiv_alignments.size() == log_conv_factors.size());
         log_conv_factors = vector<double>(nr_alignments.size(), 0);
         nr_alignments.clear();
+        mapped_transcripts.clear();
         compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
     else
