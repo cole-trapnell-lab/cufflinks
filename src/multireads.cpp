@@ -27,15 +27,18 @@ MultiHit* MultiRead::get_hit(RefID r_id, int left, int right)
         }
 		_curr_index = (_curr_index + 1) % num_hits();
 	}  
-    fprintf(stderr, "\nERROR: Multi-Hit not found (%d,%d).\n", left, right); 
-    exit(1);
+    fprintf(stderr, "\nWARNING: Multi-Hit not found (%d,%d).\n", left, right); 
+    return NULL;
 }
 
 void MultiRead::add_expr(RefID r_id, int left, int right, double expr)
 {
 	MultiHit* hit = get_hit(r_id, left, right);
-    hit->expr += expr;
-	_tot_expr += expr;
+    if (hit)
+    {
+        hit->expr += expr;
+        _tot_expr += expr;
+    }
 }
 
 double MultiRead::get_mass(RefID r_id, int left, int right, bool valid_mass)
@@ -49,7 +52,10 @@ double MultiRead::get_mass(RefID r_id, int left, int right, bool valid_mass)
 		return 0.0;
 	
 	MultiHit* hit = get_hit(r_id, left, right);
-	return hit->expr/_tot_expr;
+    if (hit)
+        return hit->expr/_tot_expr;
+    else
+        return 1.0/num_hits();
 }
 
 MultiRead* MultiReadTable::get_read(InsertID mr_id)

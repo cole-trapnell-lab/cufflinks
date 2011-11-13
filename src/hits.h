@@ -136,7 +136,7 @@ struct ReadHit
     ReadHit(const ReadHit& other)
     {
         _ref_id = other._ref_id;
-		_insert_id = other._insert_id; 	
+		_insert_id = other._insert_id;
 		_left = other._left;
 		_partner_ref_id = other._partner_ref_id;
 		_partner_pos = other._partner_pos;
@@ -335,7 +335,13 @@ public:
 		assert(_id);
 		return _id;
 	}
-	
+    
+    // Calculate checksum
+	InsertID get_cs(const string& name)
+	{
+        return string_checksum(name.c_str());
+    }
+    
 private:
 	
 	// This is FNV-1, see http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
@@ -349,6 +355,17 @@ private:
 		}
 		return hash;
 	}
+    
+    
+    inline uint64_t string_checksum(const char * s)
+    {
+        uint64_t c = 0;
+        for ( ; *s; ++s)       
+        {
+            c += *s;
+        }
+        return c;
+    }
 };
 
 class RefSequenceTable
@@ -516,16 +533,6 @@ private:
 		}
 		return hash;
 	}
-//	inline uint32_t hash_string(const char* __s)
-//	{
-//		uint32_t hash = 0x811c9dc5;
-//		for ( ; *__s; ++__s)
-//		{
-//			hash *= 16777619;
-//			hash ^= *__s;
-//		}
-//		return hash;
-//	}
 	
 	//IDTable _by_name;
 	RefID _next_id;
@@ -633,8 +640,6 @@ private:
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
     uint32_t _num_seq_header_recs;
-
-
 };
 
 /******************************************************************************

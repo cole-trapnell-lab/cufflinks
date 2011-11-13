@@ -724,10 +724,10 @@ void inspect_map(BundleFactoryType& bundle_factory,
 		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", norm_map_mass);
 	if (corr_multi)
 		fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
-	if (has_pairs)
-		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_1, max_2);
-	else
-		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max(max_1,max_2));
+//	if (has_pairs)
+//		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_1, max_2);
+//	else
+//		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max(max_1,max_2));
 
 	if (empirical)
 	{

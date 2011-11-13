@@ -334,7 +334,7 @@ ReadHit HitFactory::create_hit(const string& insert_name,
 	RefID partner_ref_id = _ref_table.get_id(partner_ref, NULL);
 	
 	return ReadHit(reference_id,
-				   insert_id, 
+				   insert_id,
 				   left, 
 				   cigar, 
 				   source_strand,
