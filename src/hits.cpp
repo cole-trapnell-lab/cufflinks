@@ -690,8 +690,15 @@ bool HitFactory::parse_header_string(const string& header_rec,
 				
                 if (info->observation_order != _num_seq_header_recs)
                 {
-                    fprintf(stderr, "Error: sort order of reads in BAMs must be the same\n");
-					exit(1);
+                    if (info->name != fields[1])
+                    {
+                        fprintf(stderr, "Error: Hash collision between references '%s' and '%s'.\n", info->name, fields[1]);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Error: sort order of reads in BAMs must be the same\n");
+					}
+                    exit(1);
                 }
             }
         }
