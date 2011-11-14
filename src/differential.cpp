@@ -495,20 +495,10 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			make_js_covariance_matrix(covariances,js_covariance);
 			assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
 			
-			//cout << "grad: " << js_gradient << endl;
-			//cout << "js_cov: " << js_covariance << endl;
-			//cout << prod(js_covariance, js_gradient) << endl;
-			
 			double js_var = inner_prod(js_gradient, 
 									   prod(js_covariance, js_gradient));
             assert (!isinf(js_var) && !isnan(js_var));
-            
-//            ublas::vector<double> alt_js_gradient;
-//			alt_jensen_shannon_gradient(sample_kappas, js, alt_js_gradient);
-//            
-//            double alt_js_var = inner_prod(alt_js_gradient, 
-//									   prod(js_covariance, alt_js_gradient));
-//            fprintf(stderr, "Current JS variance %lg, Alt. JS variance %lg\n", js_var, alt_js_var);
+
 #ifdef DEBUG
 			if (isinf(js_var) || isnan(js_var))
 			{
@@ -531,32 +521,6 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			{
                 // We're dealing with a standard normal that's been truncated below zero
                 // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
-                
-//                cerr << endl << "js: " << js << endl;
-//                cerr << "js_var: " << js_var << endl;
-//                cerr << "grad: " << js_gradient << endl;
-//				
-//                cerr << "kappa covariances: " << endl;
-//                for (size_t j = 0; j < covariances.size(); ++j)
-//                {
-//                    cerr << "kappa # " << j << endl;
-//                    cerr << sample_kappas[j] << endl;
-//                    cerr << "covariance # " << j << endl;
-//                    for (size_t i = 0; i < covariances[j].size1(); ++i)
-//                    {
-//                        ublas::matrix_row<ublas::matrix<double> > mr (covariances[j], i);
-//                        cerr << mr << endl;
-//                    }
-//                }
-//                
-//                cerr << "js_cov: " << endl;
-//                for (size_t i = 0; i < js_covariance.size1(); ++i)
-//                {
-//                    ublas::matrix_row<ublas::matrix<double> > mr (js_covariance, i);
-//                    cerr << mr << endl;
-//                }
-				//cerr << prod(js_covariance, js_gradient) << endl;	
-                
                 
 				normal test_dist(0,1.0);
 				//double denom = sqrt(js_var);
@@ -801,10 +765,12 @@ void sample_abundance_worker(const string& locus_tag,
         // Group the CDS clusters by gene
         vector<shared_ptr<Abundance> > cds_abundances;
         double max_cds_mass_variance = 0.0; 
+        set<shared_ptr<ReadGroupProperties const> > rg_props;
         foreach (AbundanceGroup& ab_group, sample.cds)
         {
             cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
             max_cds_mass_variance = max(ab_group.max_mass_variance(), max_cds_mass_variance);
+            rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end()); 
         }
         AbundanceGroup cds(cds_abundances,
                            cds_gamma_cov,
@@ -812,7 +778,8 @@ void sample_abundance_worker(const string& locus_tag,
                            cds_iterated_exp_count_cov,
                            cds_count_cov,
                            cds_fpkm_cov,
-                           max_cds_mass_variance);
+                           max_cds_mass_variance,
+                           rg_props);
         
         vector<AbundanceGroup> cds_by_gene;
         
@@ -865,10 +832,12 @@ void sample_abundance_worker(const string& locus_tag,
         
         // Group TSS clusters by gene
         vector<shared_ptr<Abundance> > primary_transcript_abundances;
+        set<shared_ptr<ReadGroupProperties const> > rg_props;
         foreach (AbundanceGroup& ab_group, sample.primary_transcripts)
         {
             primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
             max_tss_mass_variance = max(max_tss_mass_variance, ab_group.max_mass_variance());
+            rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
         }
         
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
@@ -877,7 +846,8 @@ void sample_abundance_worker(const string& locus_tag,
                                            tss_iterated_exp_count_cov,
                                            tss_count_cov,
                                            tss_fpkm_cov,
-                                           max_tss_mass_variance);
+                                           max_tss_mass_variance,
+                                           rg_props);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
         

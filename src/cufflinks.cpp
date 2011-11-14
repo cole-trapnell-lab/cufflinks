@@ -626,7 +626,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 						  vector<shared_ptr<Scaffold> >* ref_scaffs = NULL,
 						  BundleStats* stats = NULL)
 {
-    if (bundle.hits().size() > max_frags_per_bundle)
+    if (bundle.hits().size() >= max_frags_per_bundle)
         return false;
     
 	bool ref_guided = (ref_scaffs != NULL);

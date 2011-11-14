@@ -149,7 +149,7 @@ public:
 		_transfrag->fpkm(fpkm);
 	}
 	double FPKM_variance() const			{ return _FPKM_variance; }
-	void   FPKM_variance(double v)			{ _FPKM_variance = v; }
+	void   FPKM_variance(double v);			
 	
 	ConfidenceInterval	FPKM_conf() const   { return _FPKM_conf; }
 	void FPKM_conf(const ConfidenceInterval& cf) { _FPKM_conf = cf; }
@@ -296,7 +296,7 @@ public:
         _max_mass_variance = other._max_mass_variance;
         _salient_frags = other._salient_frags;
         _total_frags = other._total_frags;
-
+        _read_group_props = other._read_group_props;
     }
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -319,34 +319,8 @@ public:
                    const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
-                   const long double max_mass_variance) :
-		_abundances(abundances), 
-		_iterated_exp_count_covariance(iterated_exp_count_covariance),
-        _count_covariance(count_covariance),
-        _fpkm_covariance(fpkm_covariance),
-        _gamma_covariance(gamma_covariance),
-        _gamma_bootstrap_covariance(gamma_bootstrap_covariance),
-        _max_mass_variance(max_mass_variance),
-        _salient_frags(0.0),
-        _total_frags(0.0)
-	{
-		// Calling calculate_FPKM_covariance() also estimates cross-replicate
-        // count variances
-        // calculate_FPKM_covariance();
-        double fpkm_var = 0.0;
-        for (size_t i = 0; i < _fpkm_covariance.size1(); ++i)
-        {
-            for (size_t j = 0; j < _fpkm_covariance.size2(); ++j)
-            {
-                fpkm_var += _fpkm_covariance(i,j);
-            }
-        }
-        
-        _FPKM_variance = fpkm_var;
-        
-        calculate_conf_intervals();
-		calculate_kappas();
-	}
+                   const long double max_mass_variance,
+                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props); 
 	
 	AbundanceStatus status() const;
 	void status(AbundanceStatus s)			{ }
@@ -429,7 +403,7 @@ public:
     double total_frags() const { return _total_frags; }
     void total_frags(double nf) { _total_frags = nf; }
     
-    
+    const std::set<shared_ptr<ReadGroupProperties const> >& rg_props() const { return _read_group_props; }
     
 private:
 	
@@ -484,8 +458,8 @@ private:
     double _salient_frags;
     double _total_frags;
     
-    //std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
-    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
+    std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
+    //std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
 };
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
