@@ -432,6 +432,8 @@ private:
     
     void update_transcript_expression(double locus_mass, double locus_mass_fraction);
     
+    
+    
     //void collect_read_group_props();
 	
 	vector<shared_ptr<Abundance> > _abundances;

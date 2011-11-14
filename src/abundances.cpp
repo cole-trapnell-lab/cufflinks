@@ -429,8 +429,8 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 //        fpkm_var = nb_limit;
 //    }
 //    
-//    assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
-//    
+    assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
+    
     _FPKM_variance = fpkm_var;
     
     calculate_conf_intervals();
@@ -1567,7 +1567,7 @@ void AbundanceGroup::estimate_count_covariance()
                                 scale = 1.0;
                             
                             double after = scale * before;
-                            assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
+                            //assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
                             
                             assert (_iterated_exp_count_covariance(i,j) <= 0);
                             assert (before >= after);
@@ -1589,6 +1589,23 @@ void AbundanceGroup::estimate_count_covariance()
         // if we get here, there was an EM or IS failure, and the covariances can't be reliably calculated.
         // assert(false);
 	}
+    
+    double total_count_var = 0.0;
+    for (size_t i = 0; i < _count_covariance.size1(); ++i)
+    {
+         for (size_t j = 0; j < _count_covariance.size2(); ++j)
+         {
+             total_count_var += _count_covariance(i,j); 
+         }
+    }
+    if (total_count_var < 0)
+    {
+        fprintf(stderr, "Warning: total count covariance is negative!\n");
+        for (size_t j = 0; j < _abundances.size(); ++j)
+        {
+            _abundances[j]->status(NUMERIC_FAIL);
+        }
+    }
     
 //    cerr << "full count: " << endl;
 //    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
@@ -1620,6 +1637,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
     
     long double total_var = 0.0;
     long double total_count_var = 0.0;
+    long double total_iterated = 0.0;
     
     double dummy_var = 0.0;
     
@@ -1669,17 +1687,33 @@ void AbundanceGroup::calculate_FPKM_covariance()
             
             total_count_var += _count_covariance(i,j);
             total_var += _fpkm_covariance(i,j);
+            total_iterated += _iterated_exp_count_covariance(i,j);
         }
     }
     
-    if (total_var < 0  && status() == NUMERIC_OK)
-    {
-        //cerr << _fpkm_covariance << endl;
-        fprintf (stderr, "Total variance is less than zero! (%Lg, FPKM = %lg, count_var = %Lg)\n", total_var, FPKM(), total_count_var);
-    }
-    assert(total_var >= 0);
+//    if (total_var < 0  && status() == NUMERIC_OK)
+//    {
+//        cerr << "full count: " << endl;
+//        for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
+//        {
+//            ublas::matrix_row<ublas::matrix<double> > mr (_count_covariance, i);
+//            cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
+//            std::cerr << i << " : " << mr << std::endl;
+//        }
+//        cerr << "======" << endl;
+//        fprintf (stderr, "Total variance is less than zero! (%Lg, FPKM = %lg, counts = %lg, count_var = %Lg, iterated = %Lg)\n", total_var, FPKM(), num_fragments(), total_count_var, total_iterated);
+//    }
+//    assert(total_var >= 0);
     
     _FPKM_variance = total_var;
+    if (_FPKM_variance < 0)
+    {
+        fprintf (stderr, "Total variance is less than zero! (%Lg, FPKM = %lg, counts = %lg, count_var = %Lg, iterated = %Lg)\n", total_var, FPKM(), num_fragments(), total_count_var, total_iterated);
+        for (size_t j = 0; j < _abundances.size(); ++j)
+        {
+            _abundances[j]->status(NUMERIC_FAIL);
+        }
+    }
 //    if (FPKM() != 0 && _abundances.size() > 1)
 //    {
 //        int a = 5;
