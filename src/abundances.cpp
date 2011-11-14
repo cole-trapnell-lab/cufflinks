@@ -1590,17 +1590,11 @@ void AbundanceGroup::estimate_count_covariance()
         // assert(false);
 	}
     
-    double total_count_var = 0.0;
-    for (size_t i = 0; i < _count_covariance.size1(); ++i)
+    ublas::matrix<double> test = _count_covariance;
+    double ret = cholesky_factorize(test);
+    if (ret != 0)
     {
-         for (size_t j = 0; j < _count_covariance.size2(); ++j)
-         {
-             total_count_var += _count_covariance(i,j); 
-         }
-    }
-    if (total_count_var < 0)
-    {
-        fprintf(stderr, "Warning: total count covariance is negative!\n");
+        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
         for (size_t j = 0; j < _abundances.size(); ++j)
         {
             _abundances[j]->status(NUMERIC_FAIL);
@@ -1708,7 +1702,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
     _FPKM_variance = total_var;
     if (_FPKM_variance < 0)
     {
-        fprintf (stderr, "Total variance is less than zero! (%Lg, FPKM = %lg, counts = %lg, count_var = %Lg, iterated = %Lg)\n", total_var, FPKM(), num_fragments(), total_count_var, total_iterated);
+        //fprintf (stderr, "Total variance is less than zero! (%Lg, FPKM = %lg, counts = %lg, count_var = %Lg, iterated = %Lg)\n", total_var, FPKM(), num_fragments(), total_count_var, total_iterated);
         for (size_t j = 0; j < _abundances.size(); ++j)
         {
             _abundances[j]->status(NUMERIC_FAIL);
