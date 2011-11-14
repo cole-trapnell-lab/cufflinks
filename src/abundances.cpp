@@ -1525,68 +1525,10 @@ void AbundanceGroup::estimate_count_covariance()
         
         if (_abundances.size() > 1)
         {
-//            for (size_t j = 0; j < _abundances.size(); ++j)
-//            {
-//                double scale_j = 0.0;
-//                double poisson_variance_j = _abundances[j]->num_fragments();
-//                if (poisson_variance_j == 0)
-//                {
-//                    scale_j = 0.0;
-//                }
-//                else
-//                {
-//                    
-//                    scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
-////                    if (-scale_j * _iterated_exp_count_covariance(i,j) > _abundances[j]->mass_variance())
-////                        scale_j = -_abundances[j]->mass_variance() / _iterated_exp_count_covariance(i,j);
-//                }
-//                for (size_t i = 0; i < _abundances.size(); ++i)
-//                {
-//                    if (i != j)
-//                    {
-//                        double scale_i = 0.0;
-//                        double poisson_variance_i = _abundances[i]->num_fragments();
-//                        if (poisson_variance_i == 0)
-//                        {
-//                            scale_i = 0.0;
-//                        }
-//                        else
-//                        {
-//                            scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
-//                        }
-//                        if (scale_i != 0 && scale_j != 0)
-//                        {
-//                            double poisson_scale = sqrt(scale_j) * sqrt(scale_i);
-//                            
-//                            double before = _iterated_exp_count_covariance(i,j);
-//                            
-//                            long double scale = poisson_scale;
-//                            
-//                            assert (!isinf(scale) && !isnan(scale));
-//                            if (scale < 1.0)
-//                                scale = 1.0;
-//                            
-//                            double after = scale * before;
-//                            //assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
-//                            
-//                            assert (_iterated_exp_count_covariance(i,j) <= 0);
-//                            assert (before >= after);
-//                            _count_covariance(i,j) = after;
-//                        }
-//                        else
-//                        {
-//                            _count_covariance(i,j) = 0;
-//                        }
-//                        assert (!isinf(_count_covariance(i,j)) && !isnan(_count_covariance(i,j)));
-//                        // TODO: attach per-transcript cross-replicate count variance here?
-//                    }
-//                }
-//            }
-            
             for (size_t j = 0; j < _abundances.size(); ++j)
             {
                 double scale_j = 0.0;
-                double poisson_variance_j = _iterated_exp_count_covariance(j,j);
+                double poisson_variance_j = _abundances[j]->num_fragments();
                 if (poisson_variance_j == 0)
                 {
                     scale_j = 0.0;
@@ -1594,23 +1536,23 @@ void AbundanceGroup::estimate_count_covariance()
                 else
                 {
                     
-                    scale_j = _count_covariance(j,j) / _iterated_exp_count_covariance(j,j);
-                    //                    if (-scale_j * _iterated_exp_count_covariance(i,j) > _abundances[j]->mass_variance())
-                    //                        scale_j = -_abundances[j]->mass_variance() / _iterated_exp_count_covariance(i,j);
+                    scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
+//                    if (-scale_j * _iterated_exp_count_covariance(i,j) > _abundances[j]->mass_variance())
+//                        scale_j = -_abundances[j]->mass_variance() / _iterated_exp_count_covariance(i,j);
                 }
                 for (size_t i = 0; i < _abundances.size(); ++i)
                 {
                     if (i != j)
                     {
                         double scale_i = 0.0;
-                        double poisson_variance_i = _iterated_exp_count_covariance(i,i);
+                        double poisson_variance_i = _abundances[i]->num_fragments();
                         if (poisson_variance_i == 0)
                         {
                             scale_i = 0.0;
                         }
                         else
                         {
-                            scale_i = _count_covariance(j,j) / _iterated_exp_count_covariance(i,i);
+                            scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
                         }
                         if (scale_i != 0 && scale_j != 0)
                         {
@@ -1640,8 +1582,6 @@ void AbundanceGroup::estimate_count_covariance()
                     }
                 }
             }
-
-        
         }
 	}
 	else
