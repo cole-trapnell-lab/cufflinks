@@ -416,18 +416,22 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 
     _FPKM_variance = fpkm_var;
     
-    test = _fpkm_covariance;
-    ret = cholesky_factorize(test);
-    if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
+    if (final_est_run)
     {
-        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
-        for (size_t j = 0; j < _abundances.size(); ++j)
+        test = _fpkm_covariance;
+        ret = cholesky_factorize(test);
+        if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
         {
-            _abundances[j]->status(NUMERIC_FAIL);
+            //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
+            for (size_t j = 0; j < _abundances.size(); ++j)
+            {
+                _abundances[j]->status(NUMERIC_FAIL);
+            }
         }
+        assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
     }
 
-    assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
+    
     
     calculate_conf_intervals();
     calculate_kappas();
@@ -1678,19 +1682,21 @@ void AbundanceGroup::calculate_FPKM_covariance()
     }
     
     _FPKM_variance = total_var;
-    
-    ublas::matrix<double> test = _fpkm_covariance;
-    double ret = cholesky_factorize(test);
-    if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
+    if (final_est_run)
     {
-        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
-        for (size_t j = 0; j < _abundances.size(); ++j)
+        ublas::matrix<double> test = _fpkm_covariance;
+        double ret = cholesky_factorize(test);
+        if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
         {
-            _abundances[j]->status(NUMERIC_FAIL);
+            //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
+            for (size_t j = 0; j < _abundances.size(); ++j)
+            {
+                _abundances[j]->status(NUMERIC_FAIL);
+            }
         }
+
+        assert (FPKM() == 0 || _FPKM_variance > 0 || status() != NUMERIC_OK);
     }
-    
-    assert (FPKM() == 0 || _FPKM_variance > 0 || status() != NUMERIC_OK);
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
 
