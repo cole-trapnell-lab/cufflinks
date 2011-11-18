@@ -158,13 +158,16 @@ BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 		paramTypes = siteSpec;
 	}
 	_frag_len_dist = frag_len_dist;
-	_startSeqParams = ublas::zero_matrix<long double>(_m,_n);
+	
+    long double pc = numeric_limits<long double>::min();
+    
+    _startSeqParams = ublas::scalar_matrix<long double>(_m,_n, pc);
 	_startSeqExp = ublas::zero_matrix<long double>(_m,_n);
-	_endSeqParams = ublas::zero_matrix<long double>(_m,_n);
+	_endSeqParams = ublas::scalar_matrix<long double>(_m,_n, pc);
 	_endSeqExp = ublas::zero_matrix<long double>(_m,_n);
-	_startPosParams = ublas::zero_matrix<long double>(20,5);
+	_startPosParams = ublas::scalar_matrix<long double>(20,5, pc);
 	_startPosExp = ublas::zero_matrix<long double>(20,5);
-	_endPosParams = ublas::zero_matrix<long double>(20,5);
+	_endPosParams = ublas::scalar_matrix<long double>(20,5, pc);
 	_endPosExp = ublas::zero_matrix<long double>(20,5);
 }
 
@@ -645,7 +648,8 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 			eff_len += fld->pdf(l) * (trans_len - l + 1);
 		}
 	}
-		
+	
+	assert(eff_len > 0);
 	_start_biases.push_back(start_bias);
 	_end_biases.push_back(end_bias);
 	_tot_biases_for_len.push_back(tot_bias_for_len);
