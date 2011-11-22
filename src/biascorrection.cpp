@@ -158,16 +158,14 @@ BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
 		paramTypes = siteSpec;
 	}
 	_frag_len_dist = frag_len_dist;
-	
-    long double pc = numeric_limits<long double>::min();
-    
-    _startSeqParams = ublas::scalar_matrix<long double>(_m,_n, pc);
+	    
+    _startSeqParams = ublas::zero_matrix<long double>(_m,_n);
 	_startSeqExp = ublas::zero_matrix<long double>(_m,_n);
-	_endSeqParams = ublas::scalar_matrix<long double>(_m,_n, pc);
+	_endSeqParams = ublas::zero_matrix<long double>(_m,_n);
 	_endSeqExp = ublas::zero_matrix<long double>(_m,_n);
-	_startPosParams = ublas::scalar_matrix<long double>(20,5, pc);
+	_startPosParams = ublas::zero_matrix<long double>(20,5);
 	_startPosExp = ublas::zero_matrix<long double>(20,5);
-	_endPosParams = ublas::scalar_matrix<long double>(20,5, pc);
+	_endPosParams = ublas::zero_matrix<long double>(20,5);
 	_endPosExp = ublas::zero_matrix<long double>(20,5);
 }
 
@@ -422,6 +420,7 @@ void BiasLearner::getBias(const Scaffold& transcript, vector<double>& startBiase
 				}
 			}
 		}
+        assert(finite(startBias) && finite(endBias));
 		startBiases[i] = startBias;
 		endBiases[i] = endBias;
 	}
@@ -462,6 +461,9 @@ void BiasLearner::genNList(const char* seqSlice, int start, int n, list<int>& nL
 
 void BiasLearner::normalizeParameters()
 {
+    double THRESH = 100;
+
+    
 	//Normalize position parameters	
 	vector<long double> startPosParam_sums;
 	vector<long double> startPosExp_sums;
@@ -477,19 +479,33 @@ void BiasLearner::normalizeParameters()
 	{
 		for(size_t j=0; j < _startPosParams.size2(); j++)
 		{
-			_startPosParams(i,j) /= startPosParam_sums[j];
-			_startPosExp(i,j) /= startPosExp_sums[j];
-			if (_startPosExp(i,j) == 0)
-				_startPosParams(i,j) = numeric_limits<long double>::max();
-			else
-				_startPosParams(i,j) /= _startPosExp(i,j);
+            if (startPosParam_sums[j] < THRESH)
+			{
+				_startPosParams(i,j) = 1;
+			}
+            else
+            {
+                _startPosParams(i,j) /= startPosParam_sums[j];
+                _startPosExp(i,j) /= startPosExp_sums[j];
+                if (_startPosExp(i,j) == 0)
+                    _startPosParams(i,j) = numeric_limits<long double>::max();
+                else
+                    _startPosParams(i,j) /= _startPosExp(i,j);
+            }
 			
-			_endPosParams(i,j) /= endPosParam_sums[j];
-			_endPosExp(i,j) /= endPosExp_sums[j];
-			if (_endPosExp(i,j) == 0)
-				_endPosParams(i,j) = numeric_limits<long double>::max();
-			else
-				_endPosParams(i,j) /= _endPosExp(i,j);
+            if (endPosParam_sums[j] < THRESH)
+			{
+				_endPosParams(i,j) = 1;
+			}
+            else
+            {
+                _endPosParams(i,j) /= endPosParam_sums[j];
+                _endPosExp(i,j) /= endPosExp_sums[j];
+                if (_endPosExp(i,j) == 0)
+                    _endPosParams(i,j) = numeric_limits<long double>::max();
+                else
+                    _endPosParams(i,j) /= _endPosExp(i,j);
+            }
 		}
 	}
 	
@@ -507,13 +523,13 @@ void BiasLearner::normalizeParameters()
 	ublas::matrix<long double> endParam_sums;
 	end_tot = fourSums(_endSeqParams, endParam_sums);
 	fourSums(_endSeqExp, endSeqExp_sums); 
-	
+	    
 	//Normalize sequence parameters
 	for(int i=0; i < _m; i++)
 	{
 		for(int j=0; j < pow4[paramTypes[i]]; j++)
 		{
-			if (startParam_sums(i,j/4)==0)
+			if (startParam_sums(i,j/4) < THRESH)
 			{
 				_startSeqParams(i,j) = 1;
 			}
@@ -523,7 +539,7 @@ void BiasLearner::normalizeParameters()
 				_startSeqExp(i,j) /= startSeqExp_sums(i,j/4);
 				_startSeqParams(i,j) /= _startSeqExp(i,j);
 			}
-			if (endParam_sums(i,j/4)==0)
+			if (endParam_sums(i,j/4) < THRESH)
 			{
 				_endSeqParams(i,j) = 1;
 			}
@@ -533,7 +549,6 @@ void BiasLearner::normalizeParameters()
 				_endSeqExp(i,j) /= endSeqExp_sums(i,j/4);
 				_endSeqParams(i,j) /= _endSeqExp(i,j);
 			}
-
 		}
 	}
 	
