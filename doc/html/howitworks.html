@@ -73,25 +73,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.1.0</td>
-                    <td align="right">9/8/2011</td>
+                    <td>version 1.2.0</td>
+                    <td align="right">11/23/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.1.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.2.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.1.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.2.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.1.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.2.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -265,18 +265,7 @@
 	  	model is linear, the likelihood function has a unique maximum value, and
 	  	Cufflinks finds it with a numerical optimization algorithm.</p>
   
-	  <p>When some isoforms have much lower abundance than another from the same
-	  gene, or when the number of reads for the locus is very small, this 
-	  numerical procedure is less accurate.  To place confidences on the reported
-	  abundances, we have adapted the Bayesian inference procedure
-		proposed by Hui Jiang and Wing Wong for single read RNA-seq in</p>
-	  <br/>
-	
-	  <ul>
-	  	<li>Hui Jiang and Wing Hung Wong, <a href="http://bioinformatics.oxfordjournals.org/cgi/content/full/25/8/1026"> Statistical Inferences for isoform expression</a>, Bioinformatics, 2009 25(8):1026-1032
-	  </ul>
-	  <br/>
-	  <p>Using these statistical methods, Cufflinks can estimate the abundances of the isoforms present in the sample,
+	  <p>Using this statistical method, Cufflinks can estimate the abundances of the isoforms present in the sample,
 	  either using a known "reference" annotation, 	or after an ab-initio 
 		assembly of the transcripts using only the reference genome.
       </p>

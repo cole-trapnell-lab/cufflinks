@@ -124,25 +124,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.1.0</td>
-                    <td align="right">9/8/2011</td>
+                    <td>version 1.2.0</td>
+                    <td align="right">11/23/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.1.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.2.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.1.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.2.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.1.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.2.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -230,6 +230,23 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+			<h2>1.2.0 release - 11/23/2011</h2>
+			  <p>This release fixes a number of bugs and includes some signficant accuracy and performance improvements:
+				  <ul>
+				<li>Some users were experiencing a large number of genes or transcripts marked FAIL during Cuffdiff runs or Cufflinks quantification runs.  These were caused by one of several issues.  Most of these genes were due to numerical exceptions generated during importance sampling, a procedure originally intended to improve accuracy of abundance estimates in genes with one or more very low abundance isoforms.  After detailed simulation experiments, we have concluded that the gains in accuracy are minor and do not justify the number of genes that FAIL when this procudure can't be executed.  We have dropped both this routine and the bootstrap check, which can similarly generate FAIL genes under similar conditions. 
+				<li>Improvements to FPKM variance estimates for genes and transcripts, resulting in better differential expression accuracy in Cuffdiff.
+				<li>A bug that reduced accuracy in certain abundant genes has been corrected.
+				<li>The <tt>--max-bundle-frags</tt> option, which skips extremely deeply sequenced loci that might otherwise crash the program, has been improved so that those loci are never allowed to fully load into memory.  This improves overall memory footprint and should prevent memory-related crashes.
+				<li>A bug in bias correction that results in "Inf" and "NaN" values has been fixed.
+				<li>An improved pre-quantification fragment collapse optimization has substantially lowered memory footprint and improved running time for Cuffdiff and Cufflinks abundance estimation.
+				<li>A bug that halts runs on hash-collisions for read names has been fixed.
+				<li>A buffer overflow in the SAM parser has been fixed.
+				<li>Other minor bugfixes and accuracy improvements for quantification.
+				</ul>
+			  </ul>
+			  </p>
+			  <br/>
+	
 			<h2>CummeRbund released - 11/21/2011</h2>
 			<p>
 			Extracting biological insight from transcript-level RNA-Seq analysis can be very challenging. Due to the volume and complexity of output from RNA-Seq analysis pipelines, many users may choose to focus only on gene-level results, and thus miss crucial biological insights that a transcript-level analysis can provide. We are happy to present CummeRbund, an R/Bioconductor package that simplifies the organization, access, exploration, and visualization of the various output files of a Cuffdiff differential expression analysis. CummeRbund begins by re-organizing the Cuffdiff output files, and storing these data in a local SQLite database. During this process, CummeRbund indexes the data to speed up access to specific feature data (genes, isoforms, TSS, CDS, etc.), and preserves the various relationships between these features. Access to data elements is done through R via the RSQLite package and data are presented in appropriately structured R classes with various convenience functions designed to streamline your workflow. 
