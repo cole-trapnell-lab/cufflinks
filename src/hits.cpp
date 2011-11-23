@@ -692,7 +692,7 @@ bool HitFactory::parse_header_string(const string& header_rec,
                 {
                     if (info->name != fields[1])
                     {
-                        fprintf(stderr, "Error: Hash collision between references '%s' and '%s'.\n", info->name, fields[1]);
+                        fprintf(stderr, "Error: Hash collision between references '%s' and '%s'.\n", info->name, fields[1].c_str());
                     }
                     else
                     {

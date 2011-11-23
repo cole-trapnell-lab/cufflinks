@@ -1727,7 +1727,7 @@ void AbundanceGroup::calculate_conf_intervals()
                     FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
                     if (!(FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi))
                     {
-                        fprintf(stderr, "Error: confidence intervals are illegal! var = %Lg, fpkm = %lg, lo = %lg, hi %lg, status = %d\n", fpkm_var, _abundances[j]->FPKM(), FPKM_lo, FPKM_hi, _abundances[j]->status());
+                        //fprintf(stderr, "Error: confidence intervals are illegal! var = %Lg, fpkm = %lg, lo = %lg, hi %lg, status = %d\n", fpkm_var, _abundances[j]->FPKM(), FPKM_lo, FPKM_hi, _abundances[j]->status());
                     }
                     assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
                     ConfidenceInterval conf(FPKM_lo, FPKM_hi);
@@ -3415,7 +3415,7 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
         }
     }
     
-    fprintf(stderr, "Ran %lu bootstrap samples succesfully\n", mle_gammas.size());
+    //fprintf(stderr, "Ran %lu bootstrap samples succesfully\n", mle_gammas.size());
     
     if (mle_gammas.empty())
         return NUMERIC_FAIL;
