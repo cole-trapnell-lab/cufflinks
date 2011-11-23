@@ -353,6 +353,7 @@ bool GStr::endsWith(const GStr& s) const {
 bool GStr::contains(char c) const {
  return (index(c, 0) >= 0);
  }
+
 GStr& GStr::format(const char *fmt,...) {
 // Format as in sprintf
   make_unique(); //edit operation ahead
@@ -669,6 +670,20 @@ GStr GStr::substr(int idx, int len) const {
     newstring.replace_data(len);
     ::memcpy(newstring.chrs(), &chars()[idx], len);
     return newstring;
+}
+
+GStr& GStr::reverse() {
+  make_unique();
+  int l=0;
+  int r=my_data->length-1;
+  char c;
+  while (l<r) {
+     c=my_data->chars[l];
+     my_data->chars[l]=my_data->chars[r];
+     my_data->chars[r]=c;
+     l++;r--;
+     }
+  return *this;
 }
 
 

@@ -7,7 +7,7 @@ GffNames* GffObj::names=NULL;
 
 const uint GFF_MAX_LOCUS = 7000000; //longest known gene in human is ~2.2M, UCSC claims a gene for mouse of ~ 3.1 M
 const uint GFF_MAX_EXON  =   30000; //longest known exon in human is ~11K
-const uint GFF_MAX_INTRON= 6000000;
+const uint GFF_MAX_INTRON= 6000000; //Ensembl shows a >5MB human intron 
 bool gff_show_warnings = false; //global setting, set by GffReader->showWarnings()
 const int gff_fid_mRNA=0;
 const int gff_fid_transcript=1;
@@ -976,17 +976,18 @@ GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline,
 bool GffReader::addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr) {
   bool r=true;
   if (gffline->strand!=prevgfo->gffobj->strand) {
-	 if (prevgfo->gffobj->strand=='.') {
-        prevgfo->gffobj->strand=gffline->strand;
-	    }
-	 else {
-		 GMessage("GFF Error at %s (%c): exon %d-%d (%c) found on different strand; discarded.\n",
-			prevgfo->gffobj->gffID, prevgfo->gffobj->strand,
-			gffline->fstart, gffline->fend, gffline->strand, prevgfo->gffobj->getGSeqName());
-		 //r=false;
-		 return true; //FIXME: split trans-spliced mRNAs by strand
-		 }
-     }
+  //TODO: add support for trans-splicing and even inter-chromosomal fusions
+     if (prevgfo->gffobj->strand=='.') {
+            prevgfo->gffobj->strand=gffline->strand;
+        }
+     else {
+       GMessage("GFF Error at %s (%c): exon %d-%d (%c) found on different strand; discarded.\n",
+       prevgfo->gffobj->gffID, prevgfo->gffobj->strand,
+       gffline->fstart, gffline->fend, gffline->strand, prevgfo->gffobj->getGSeqName());
+       //r=false;
+       return true; //FIXME: split trans-spliced mRNAs by strand
+       }
+   }
   int gdist=(gffline->fstart>prevgfo->gffobj->end) ? gffline->fstart-prevgfo->gffobj->end :
                       ((gffline->fend<prevgfo->gffobj->start)? prevgfo->gffobj->start-gffline->fend :
                          0 );

@@ -79,7 +79,7 @@ template <class OBJ> class GVec {
     void Move(int curidx, int newidx);
 };
 
-// GArray is the fully sortable collection, but requires the comparison operators to be defined
+// GArray is the sortable collection, but requires the comparison operators to be defined
 template <class OBJ> class GArray:public GVec<OBJ> {
   protected:
     bool fUnique;
@@ -316,7 +316,8 @@ template <class OBJ> GVec<OBJ>::GVec(GVec<OBJ>& array) { //copy constructor
  this->fCapacity=array.fCapacity;
  this->fArray=NULL;
  if (this->fCapacity>0) {
-    GMALLOC(fArray, fCapacity*sizeof(OBJ));
+    //GMALLOC(fArray, fCapacity*sizeof(OBJ));
+    fArray=new OBJ[this->fCapacity];
     }
  this->fCount=array.fCount;
  // uses OBJ operator=
@@ -328,7 +329,8 @@ template <class OBJ> GArray<OBJ>::GArray(GArray<OBJ>& array):GVec<OBJ>(0) { //co
  this->fCapacity=array.fCapacity;
  this->fArray=NULL;
  if (this->fCapacity>0) {
-    GMALLOC(this->fArray, this->fCapacity*sizeof(OBJ));
+    //GMALLOC(this->fArray, this->fCapacity*sizeof(OBJ));
+    this->fArray=new OBJ[this->fCapacity];
     }
  this->fCount=array.fCount;
  fUnique=array.fUnique;
@@ -343,7 +345,8 @@ template <class OBJ> const GVec<OBJ>& GVec<OBJ>::operator=(GVec<OBJ>& array) {
  fCount=array.fCount;
  fCapacity=array.fCapacity;
  if (fCapacity>0) {
-    GMALLOC(fArray, fCapacity*sizeof(OBJ));
+    //GMALLOC(fArray, fCapacity*sizeof(OBJ));
+    fArray=new OBJ[this->fCapacity];
     }
  fCount=array.fCount;
  // uses OBJ operator=
@@ -360,7 +363,8 @@ template <class OBJ> const GArray<OBJ>& GArray<OBJ>::operator=(GArray<OBJ>& arra
  this->fUnique=array.fUnique;
  this->fCapacity=array.fCapacity;
  if (this->fCapacity>0) {
-    GMALLOC(this->fArray, this->fCapacity*sizeof(OBJ));
+    //GMALLOC(this->fArray, this->fCapacity*sizeof(OBJ));
+    this->fArray=new OBJ[this->fCapacity];
     }
  this->fCompareProc=array.fCompareProc;
  this->fCount=array.fCount;
@@ -398,10 +402,16 @@ template <class OBJ> void GVec<OBJ>::setCapacity(int NewCapacity) {
     //error: capacity not within range
   if (NewCapacity!=fCapacity) {
    if (NewCapacity==0) {
-      GFREE(fArray);
+      //GFREE(fArray);
+      delete[] fArray;
       }
     else {
-      GREALLOC(fArray, NewCapacity*sizeof(OBJ));
+      //GREALLOC(fArray, NewCapacity*sizeof(OBJ));
+      OBJ* oldArray=fArray;
+      fArray=new OBJ[NewCapacity];
+      for (int i=0;i<this->fCount;i++) {
+        fArray[i] = oldArray[i];
+        }
       }
    fCapacity=NewCapacity;
    }
@@ -456,26 +466,39 @@ template <class OBJ> void GVec<OBJ>::Grow(int idx, OBJ& item) {
   if (NewCapacity <= fCount || NewCapacity >= MAXLISTSIZE)
     GError(SLISTCAPACITY_ERR, NewCapacity);
     //error: capacity not within range
+
   if (NewCapacity!=fCapacity) {
     if (NewCapacity==0) {
-      GFREE(fArray);
+      //GFREE(fArray);
+      delete[] fArray;
+      fArray=NULL;
       }
     else { //add the new item
       if (idx==fCount) { //append item
-         GREALLOC(fArray, NewCapacity*sizeof(OBJ));
+         //GREALLOC(fArray, NewCapacity*sizeof(OBJ));
+         setCapacity(NewCapacity);
          fArray[idx]=item;
          }
        else { //insert item at idx
         OBJ* newList;
-        GMALLOC(newList, NewCapacity*sizeof(OBJ));
+        //GMALLOC(newList, NewCapacity*sizeof(OBJ));
+        newList=new OBJ[NewCapacity];
         //copy data before idx
-        memmove(&newList[0],&fArray[0], idx*sizeof(OBJ));
-        newList[idx]=item; // operator=
+        //memmove(&newList[0],&fArray[0], idx*sizeof(OBJ));
+        // operator= required!
+        for (int i=0;i<idx;i++) {
+          newList[i]=fArray[i];
+          }
+        newList[idx]=item;
         //copy data after idx
-        memmove(&newList[idx+1],&fArray[idx], (fCount-idx)*sizeof(OBJ));
-        memset(&newList[fCount+1], 0, (NewCapacity-fCount-1)*sizeof(OBJ));
+        //memmove(&newList[idx+1],&fArray[idx], (fCount-idx)*sizeof(OBJ));
+        for (int i=idx+1;i<=fCount;i++) {
+          newList[i]=fArray[i-1];
+          }
+        //memset(&newList[fCount+1], 0, (NewCapacity-fCount-1)*sizeof(OBJ));
         //data copied:
-        GFREE(fArray);
+        //GFREE(fArray);
+        delete[] fArray;
         fArray=newList;
         }
       fCount++;
@@ -607,14 +630,18 @@ template <class OBJ> void GVec<OBJ>::idxInsert(int idx, OBJ& item) {
  //so the allowed range is [0..fCount]
  //the old idx item all the above will be shifted to idx+1
  if (idx<0 || idx>fCount) GError(SLISTINDEX_ERR, idx);
- if (fCount==fCapacity) { //need to resize
-    Grow(idx, item);
-    //expand and also copy/move data and insert the new item
+ if (fCount==fCapacity) { //need to resize the array
+    Grow(idx, item); //expand and also copy/move data and insert the new item
     return;
     }
  //move data around to make room for the new item
- if (idx<fCount)
-      memmove(&fArray[idx+1], &fArray[idx], (fCount-idx)*sizeof(OBJ));
+ if (idx<fCount) {
+      //copy after-idx items (shift up) 
+      //memmove(&newList[idx+1],&fArray[idx], (fCount-idx)*sizeof(OBJ));
+      for (int i=fCount; i>idx; i--) {
+          fArray[i]=fArray[i-1];
+          }
+      }
  fArray[idx]=item;
  fCount++;
 }
@@ -674,18 +701,21 @@ template <class OBJ> void GArray<OBJ>::Replace(int idx, OBJ& item) {
 
 template <class OBJ> void GVec<OBJ>::Delete(int index) {
  TEST_INDEX(index);
- //fArray[index]=NULL;
  fCount--;
- if (index<fCount) //move higher elements if any
-   memmove(&fArray[index], &fArray[index+1], (fCount-index)*sizeof(OBJ));
+ while (index<fCount) {
+    //move higher elements if any (shift down)
+    //memmove(&fArray[index], &fArray[index+1], (fCount-index)*sizeof(OBJ));
+    fArray[index]=fArray[index+1];
+    index++;
+    }
 }
 
 template <class OBJ> void GVec<OBJ>::setCount(int NewCount) {
   if (NewCount<0 || NewCount > MAXLISTSIZE)
      GError(SLISTCOUNT_ERR, NewCount);
   if (NewCount > fCapacity) setCapacity(NewCount);
-  if (NewCount > fCount)
-    memset(&fArray[fCount], 0, (NewCount - fCount) * sizeof(OBJ));
+  //if (NewCount > fCount)
+  //  memset(&fArray[fCount], 0, (NewCount - fCount) * sizeof(OBJ));
   fCount = NewCount;
 }
 

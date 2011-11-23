@@ -203,7 +203,7 @@ GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons, bool
    return bigger;
    }
  //--- matchAllIntrons==false: intron-chain containment is also considered redundancy
- int maxlen=0;
+ //int maxlen=0;
  int minlen=0;
  if (ti.covlen>tj.covlen) {
       if (tj.exons.Count()>ti.exons.Count()) {
@@ -215,7 +215,7 @@ GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons, bool
           bigger=&ti;
           smaller=&tj;
           }
-      maxlen=ti.covlen;
+      //maxlen=ti.covlen;
       minlen=tj.covlen;
       }
    else { //tj has more bases
@@ -228,7 +228,7 @@ GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons, bool
           bigger=&tj;
           smaller=&ti;
           }
-      maxlen=tj.covlen;
+      //maxlen=tj.covlen;
       minlen=ti.covlen;
       }
  if (imax==0 && jmax==0) {

@@ -129,7 +129,7 @@ bool spliceCheck=false; //only known splice-sites
 bool fullCDSonly=false; // starts with START, ends with STOP codon
 bool fullattr=false;
 //bool sortByLoc=false; // if the GFF output should be sorted by location
-bool ensembl_convert=false; //-L, assisst in converting Ensembl GTF to GFF3
+bool ensembl_convert=false; //-L, assist in converting Ensembl GTF to GFF3
 
 
 //GStr gseqpath;
@@ -309,30 +309,37 @@ bool process_transcript(GFastaDb& gfasta, GffObj& gffrec) {
  if (gname==NULL) gname=gffrec.getGeneID();
  GStr defline(gffrec.getID());
  if (f_out && !fmtGTF) {
-     const char* tn=NULL;
-     if ((tn=gffrec.getAttr("transcript_name"))!=NULL) {
-        gffrec.addAttr("Name", tn);
+     const char* tname=NULL;
+     if ((tname=gffrec.getAttr("transcript_name"))!=NULL) {
+        gffrec.addAttr("Name", tname);
         gffrec.removeAttr("transcript_name");
         }
      }
  if (ensembl_convert && startsWith(gffrec.getID(), "ENS")) {
-      const char* tn=gffrec.getTrackName();
-      gffrec.addAttr("type", tn);
+      const char* biotype=gffrec.getAttr("gene_biotype");
+      if (biotype) {
+         gffrec.addAttr("type", biotype);
+         gffrec.removeAttr("gene_biotype");
+         }
+       else { //old Ensembl files lacking gene_biotype
+         gffrec.addAttr("type", gffrec.getTrackName());
+         }
+
       //bool is_gene=false;
       bool is_pseudo=false;
-      if (strcmp(tn, "protein_coding")==0 || gffrec.hasCDS())
+      if (strcmp(biotype, "protein_coding")==0 || gffrec.hasCDS())
                 gffrec.setFeatureName("mRNA");
        else {
-          if (strcmp(tn, "processed_transcript")==0) 
+          if (strcmp(biotype, "processed_transcript")==0) 
               gffrec.setFeatureName("proc_RNA");
             else {
-              //is_gene=endsWith(tn, "gene");
-              is_pseudo=strifind(tn, "pseudo");
+              //is_gene=endsWith(biotype, "gene");
+              is_pseudo=strifind(biotype, "pseudo");
               if (is_pseudo) {
                    gffrec.setFeatureName("pseudo_RNA");
                    }
-                else if (endsWith(tn, "RNA")) {
-                   gffrec.setFeatureName(tn);
+                else if (endsWith(biotype, "RNA")) {
+                   gffrec.setFeatureName(biotype);
                    } else gffrec.setFeatureName("misc_RNA");
               }
           }

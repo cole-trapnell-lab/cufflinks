@@ -75,6 +75,7 @@ class GStr {
         GStr from(char c); //same as to, but starting from the right side
         GStr copy() const;
         GStr& format(const char *fmt,...);
+        GStr& reverse();
         GStr& appendfmt(const char *fmt,...);
         GStr& cut(int index = 0, int len = -1); //delete a specified length
         GStr& remove(int from, int to) {

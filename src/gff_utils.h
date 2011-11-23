@@ -41,7 +41,9 @@ class GeneInfo { //for Ensembl GTF conversion
      gfrec->parent=gf;
      gf->children.Add(gfrec);
      if (ensembl_convert) {
-       gf->addAttr("type", gf->getTrackName());
+       //gf->addAttr("type", gf->getTrackName());
+       const char* biotype=gfrec->getAttr("type");
+       if (biotype) gf->addAttr("type", biotype);
        }
      //gf->children.Add(gfrec);
      }
