@@ -1561,7 +1561,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	BiasLearner* bl_ptr = new BiasLearner(rg_props->frag_len_dist());
     bundle_factory.read_group_properties(rg_props);
 
-	if (ref_gtf)
+	//if (ref_gtf) -- why? bad introns are bad
 		bundle_factory.bad_intron_table(bad_introns);
 	
 	max_frag_len = rg_props->frag_len_dist()->max();
