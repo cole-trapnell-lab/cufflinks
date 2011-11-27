@@ -699,24 +699,29 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
       if ((super->qmrnas[i]->udata & 3) > 1) continue; //already counted a ichainTP for this qry
       if (ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch, 5)) { //fuzzy match
          GLocus* qlocus=((CTData*)super->qmrnas[i]->uptr)->locus;
+         GLocus* rlocus=((CTData*)super->rmrnas[j]->uptr)->locus;
          if (super->qmrnas[i]->exons.Count()>1) {
               super->ichainATP++;
               qlocus->ichainATP++;
+              rlocus->ichainATP++;
               }
           if (exonMatch) {
                 super->mrnaATP++;
                 qlocus->mrnaATP++;
+                rlocus->mrnaATP++;
                 }
          if (ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch)) { //exact match
              if (super->qmrnas[i]->exons.Count()>1) {
                 super->qmrnas[i]->udata|=1;
                 super->ichainTP++;
                 qlocus->ichainTP++;
+                rlocus->ichainTP++;
                 }
              if (exonMatch) {
                 super->qmrnas[i]->udata|=2;
                 super->mrnaTP++;
                 qlocus->mrnaTP++;
+                rlocus->mrnaTP++;
                 }
              } //exact match
          } //fuzzy match
@@ -724,8 +729,14 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
     } //qry mrna loop
   for (int ql=0;ql<super->qloci.Count();ql++) {
       if (super->qloci[ql]->ichainTP+super->qloci[ql]->mrnaTP >0 )
-                 super->locusTP++;
+                 super->locusQTP++;
       if (super->qloci[ql]->ichainATP+super->qloci[ql]->mrnaATP>0)
+                 super->locusAQTP++;
+      }
+  for (int rl=0;rl<super->rloci.Count();rl++) {
+      if (super->rloci[rl]->ichainTP+super->rloci[rl]->mrnaTP >0 )
+                 super->locusTP++;
+      if (super->rloci[rl]->ichainATP+super->rloci[rl]->mrnaATP>0)
                  super->locusATP++;
       }
 
@@ -1432,12 +1443,14 @@ void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
     fsn=(100.0*(double)ps->mrnaATP)/(ps->mrnaATP+ps->mrnaAFN);
     if (fsp>100.0) fsp=100.0;
     if (fsn>100.0) fsn=100.0;
-    fprintf(fout, "  Transcript level: \t%5.1f\t%5.1f\t%5.1f\t%5.1f\n",sn, sp,fsn,fsp);
-    sp=(100.0*(double)ps->locusTP)/(ps->locusTP+ps->locusFP);
-    sn=(100.0*(double)ps->locusTP)/(ps->locusTP+ps->locusFN);
-    fsp=(100.0*(double)ps->locusATP)/(ps->locusATP+ps->locusAFP);
-    fsn=(100.0*(double)ps->locusATP)/(ps->locusATP+ps->locusAFN);
+    fprintf(fout, "  Transcript level: \t%5.1f\t%5.1f\t%5.1f\t%5.1f\n",sn, sp, fsn, fsp);
+    //sp=(100.0*(double)ps->locusTP)/(ps->locusTP+ps->locusFP);
+    sp=(100.0*(double)ps->locusQTP)/ps->total_qloci;
+    sn=(100.0*(double)ps->locusTP)/ps->total_rloci;  //(ps->locusTP+ps->locusFN);
+    fsp=(100.0*(double)ps->locusAQTP)/ps->total_qloci; //(ps->locusATP+ps->locusAFP);
+    fsn=(100.0*(double)ps->locusATP)/ps->total_rloci; //(ps->locusATP+ps->locusAFN);
     fprintf(fout, "       Locus level: \t%5.1f\t%5.1f\t%5.1f\t%5.1f\n",sn, sp, fsn, fsp);
+    //fprintf(fout, "                   (locus TP=%d, total ref loci=%d)\n",ps->locusTP, ps->total_rloci);
     sn=(100.0*(double)ps->m_exons)/(ps->total_rexons);
     fprintf(fout, "   Missed exons:\t%d/%d (%5.1f%%)\n",ps->m_exons, ps->total_rexons, sn);
     sn=(100.0*(double)ps->w_exons)/(ps->total_qexons);

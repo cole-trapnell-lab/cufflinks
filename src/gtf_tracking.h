@@ -634,7 +634,9 @@ public:
     int total_rintrons; //unique introns
 	
     //--- accuracy data after compared to ref loci:
-	int locusTP; // 1 if mrnaTP>0
+  int locusQTP;
+	int locusTP;
+  int locusAQTP;
 	int locusATP; // 1 if ichainATP + mrnaATP > 0
 	int locusFP;
 	int locusAFP;
@@ -697,7 +699,7 @@ public:
 		qbases_all=0;
 		rbases_all=0;
 		baseTP=0;baseFP=0;baseFN=0;
-		locusTP=0;locusATP=0;
+		locusTP=0;locusQTP=0; locusAQTP=0; locusATP=0;
 		locusFP=0;locusAFP=0;locusAFN=0;
 		locusFN=0;
 		in_rmrnas=0;
@@ -783,8 +785,8 @@ public:
 		mrnaAFP=total_qmrnas-mrnaATP;
 		mrnaAFN=total_rmrnas-mrnaATP;
 		// locus/gene level:
-		locusAFP=total_qloci-locusATP;
-		locusFP=total_qloci-locusTP;
+		locusAFP=total_qloci-locusAQTP;
+		locusFP=total_qloci-locusQTP;
 		locusAFN=total_rloci-locusATP;
 		locusFN=total_rloci-locusTP;
 	}
@@ -802,7 +804,9 @@ public:
 		mrnaTP+=s.mrnaTP;
 		mrnaATP+=s.mrnaATP;
 		locusTP+=s.locusTP;
+    locusQTP+=s.locusQTP;
 		locusATP+=s.locusATP;
+    locusAQTP+=s.locusAQTP;
 		m_exons+=s.m_exons;
 		w_exons+=s.w_exons;
 		m_introns+=s.m_introns;
