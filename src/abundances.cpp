@@ -416,7 +416,7 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 
     _FPKM_variance = fpkm_var;
     
-    if (final_est_run)
+    if (final_est_run && library_type != "transfrags")
     {
         test = _fpkm_covariance;
         ret = cholesky_factorize(test);
@@ -1682,7 +1682,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
     }
     
     _FPKM_variance = total_var;
-    if (final_est_run)
+    if (final_est_run && library_type != "transfrags")
     {
         ublas::matrix<double> test = _fpkm_covariance;
         double ret = cholesky_factorize(test);
