@@ -897,7 +897,17 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	
     if (library_type != "transfrags")
     {
-        transfrag_cluster.calculate_abundance(hits_in_cluster);
+        if (hits_in_cluster.size() < max_frags_per_bundle)
+        {
+            transfrag_cluster.calculate_abundance(hits_in_cluster);
+        }
+        else
+        {
+            foreach(shared_ptr<Abundance>  ab, transfrag_cluster.abundances())
+            {
+                ab->status(NUMERIC_HI_DATA);
+            }
+        }
 	}
     else
     {

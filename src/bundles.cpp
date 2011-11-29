@@ -733,6 +733,8 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
         {
             if ((*next_mask_scaff)->left() >= tmp.left())
             {
+                //REMOVE ME:
+                int a = 4;
                 break;
             }
             
@@ -845,7 +847,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 	{		
 		const ReadHit* bh = NULL;
         
-        
+        bool skip_read = false;
 		// If we are randomly throwing out reads, check to see
         // whether this one should be kept.
         double t = _zeroone();
@@ -853,8 +855,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
             bundle.hits().size() >= max_frags_per_bundle)
         {
             next_valid_alignment(bh);
-            delete bh;
-            bh = NULL;
+            skip_read = true;
         }
         else
         {
@@ -891,6 +892,12 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			}
 		}	
 		
+        if (skip_read)
+        {
+            delete bh;
+            continue;
+        }
+        
         if (bh->left() >= bundle.left() && bh->right() <= bundle.right())
 		{
 			if (!bundle.add_open_hit(read_group_properties(), bh, false))
