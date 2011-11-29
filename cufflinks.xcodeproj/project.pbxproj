@@ -488,7 +488,7 @@
 
 /* Begin PBXFileReference section */
 		0A24FD6214118BE6008659F7 /* libboost_thread-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_thread-mt.a"; path = "../../../../opt/local/lib/libboost_thread-mt.a"; sourceTree = "<group>"; };
-		0A24FD6514118C26008659F7 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = ../../../../usr/lib/libbam.a; sourceTree = "<group>"; };
+		0A24FD6514118C26008659F7 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = ../usr/local/libIntel64/libbam.a; sourceTree = DEVELOPER_DIR; };
 		0A25E74B1242E95A0080BEA9 /* progressbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = progressbar.h; path = src/progressbar.h; sourceTree = "<group>"; };
 		0A4C0AD412F734DE0055A9D8 /* multireads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = multireads.h; path = src/multireads.h; sourceTree = "<group>"; };
 		0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
