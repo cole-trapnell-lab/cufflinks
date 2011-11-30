@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A24FD6314118BE6008659F7 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A24FD6214118BE6008659F7 /* libboost_thread-mt.a */; };
-		0A24FD6614118C26008659F7 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A24FD6514118C26008659F7 /* libbam.a */; };
 		0A6183721324308800EFF9AF /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
 		0A6183731324308800EFF9AF /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
 		0A69414F132AEDAB00558D76 /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
@@ -65,9 +63,6 @@
 		0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A87350214118DD700E28429 /* libboost_thread-mt.a */; };
 		0A87350414118DD700E28429 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A87350214118DD700E28429 /* libboost_thread-mt.a */; };
 		0A9291D5132AD37100E7B024 /* replicates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED677C0D132A3D83000CFDC8 /* replicates.cpp */; };
-		9C198ABE12F231CD00919C3B /* test_scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C198ABD12F231CD00919C3B /* test_scaffolds.cpp */; };
-		9C198ACA12F240D400919C3B /* scaffolds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5153110C72963000A4F41 /* scaffolds.cpp */; };
-		9C198AD712F2410100919C3B /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152210C72963000A4F41 /* common.cpp */; };
 		9CBCD9B41333EB5B0059FE74 /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
 		9CBCD9B51333ECCE0059FE74 /* replicates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED677C0D132A3D83000CFDC8 /* replicates.cpp */; };
 		9CBCD9B61333ECF50059FE74 /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
@@ -354,6 +349,7 @@
 		EDACE432114EFF5C009024DB /* differential.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE431114EFF5C009024DB /* differential.cpp */; };
 		EDACE43A114F031B009024DB /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
 		EDACE43B114F031B009024DB /* clustering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDACE439114F031B009024DB /* clustering.cpp */; };
+		EDB3C814148686E10021E75B /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A24FD6514118C26008659F7 /* libbam.a */; };
 		EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */; };
 		EDBAC4C211FF5AD3002B7162 /* biascorrection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */; };
 		EDD0CE0A10C72F7D00AF308F /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
@@ -382,8 +378,6 @@
 		EDD6A9C911598AB900D3F668 /* GStr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152D10C72963000A4F41 /* GStr.cpp */; };
 		EDD6A9CA11598AB900D3F668 /* gtf_tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */; };
 		EDD6A9DE11598CFC00D3F668 /* cuffcompare.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152310C72963000A4F41 /* cuffcompare.cpp */; };
-		EDD6AA481159BE6500D3F668 /* test_abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA461159BE6500D3F668 /* test_abundances.cpp */; };
-		EDD6AA6C1159C05600D3F668 /* test_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDD6AA471159BE6500D3F668 /* test_main.cpp */; };
 		EDD94B481205C9E800AA1086 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
 		EDD94B491205C9E800AA1086 /* assemble.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151F10C72963000A4F41 /* assemble.cpp */; };
 		EDD94B4A1205C9E800AA1086 /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
@@ -623,7 +617,6 @@
 		EDD0CE2210C72F7D00AF308F /* cuffdiff */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cuffdiff; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6A7A0115562EE00D3F668 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Makefile.am; path = src/Makefile.am; sourceTree = "<group>"; };
 		EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
-		EDD6AA231159BA2E00D3F668 /* Boost Tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Boost Tests"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD6AA461159BE6500D3F668 /* test_abundances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_abundances.cpp; sourceTree = "<group>"; };
 		EDD6AA471159BE6500D3F668 /* test_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_main.cpp; sourceTree = "<group>"; };
 		EDD94B671205C9E800AA1086 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -649,8 +642,6 @@
 			files = (
 				ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */,
 				0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
-				0A24FD6314118BE6008659F7 /* libboost_thread-mt.a in Frameworks */,
-				0A24FD6614118C26008659F7 /* libbam.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -674,19 +665,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */,
+				EDB3C814148686E10021E75B /* libbam.a in Frameworks */,
 				0A87350414118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
+				EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		EDD6A9CF11598AB900D3F668 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		EDD6AA211159BA2E00D3F668 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -813,7 +798,6 @@
 				EDD0CD9C10C72AC200AF308F /* cufflinks */,
 				EDD0CE2210C72F7D00AF308F /* cuffdiff */,
 				EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */,
-				EDD6AA231159BA2E00D3F668 /* Boost Tests */,
 				EDD94B671205C9E800AA1086 /* cufflinks_xcode */,
 				EDFE39CE122BE65600F24CD3 /* cuffcluster */,
 				ED41B838127602C60000B5A2 /* cufflinks_xcode */,
@@ -1021,23 +1005,6 @@
 			productReference = EDD6A9D511598ABA00D3F668 /* cufflinks_xcode */;
 			productType = "com.apple.product-type.tool";
 		};
-		EDD6AA221159BA2E00D3F668 /* Unit Tests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = EDD6AA2C1159BA3200D3F668 /* Build configuration list for PBXNativeTarget "Unit Tests" */;
-			buildPhases = (
-				EDD6AA201159BA2E00D3F668 /* Sources */,
-				EDD6AA211159BA2E00D3F668 /* Frameworks */,
-				EDD6AA5B1159BFBB00D3F668 /* Run Tests */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "Unit Tests";
-			productName = "Boost Tests";
-			productReference = EDD6AA231159BA2E00D3F668 /* Boost Tests */;
-			productType = "com.apple.product-type.tool";
-		};
 		EDD94B461205C9E800AA1086 /* gtf_to_sam */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EDD94B641205C9E800AA1086 /* Build configuration list for PBXNativeTarget "gtf_to_sam" */;
@@ -1100,7 +1067,6 @@
 				8DD76F620486A84900D96B5E /* cufflinks */,
 				EDD0CE0810C72F7D00AF308F /* cuffdiff */,
 				EDD6A9BA11598AB900D3F668 /* cuffcompare */,
-				EDD6AA221159BA2E00D3F668 /* Unit Tests */,
 				EDD94B461205C9E800AA1086 /* gtf_to_sam */,
 				9CD6E8E813379B7E00CCE1DE /* compress_gtf */,
 				EDFE39B0122BE65600F24CD3 /* cuffcluster */,
@@ -1108,23 +1074,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		EDD6AA5B1159BFBB00D3F668 /* Run Tests */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Run Tests";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${TARGET_BUILD_DIR}/${EXECUTABLE_NAME}\"";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8DD76F640486A84900D96B5E /* Sources */ = {
@@ -1425,18 +1374,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		EDD6AA201159BA2E00D3F668 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				9C198AD712F2410100919C3B /* common.cpp in Sources */,
-				9C198ACA12F240D400919C3B /* scaffolds.cpp in Sources */,
-				EDD6AA6C1159C05600D3F668 /* test_main.cpp in Sources */,
-				EDD6AA481159BE6500D3F668 /* test_abundances.cpp in Sources */,
-				9C198ABE12F231CD00919C3B /* test_scaffolds.cpp in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		EDD94B471205C9E800AA1086 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1629,6 +1566,7 @@
 					"\"$(SRCROOT)\"",
 					/opt/local/lib,
 					"\"$(SRCROOT)/../samtools-0.1.8\"",
+					/usr/local/libIntel64,
 				);
 				PRODUCT_NAME = cufflinks;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
@@ -1668,6 +1606,7 @@
 					"\"$(SRCROOT)\"",
 					/opt/local/lib,
 					"\"$(SRCROOT)/../samtools-0.1.8\"",
+					/usr/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = cufflinks;
@@ -1906,6 +1845,7 @@
 					/usr/local/lib,
 					"\"$(SRCROOT)\"",
 					/opt/local/lib,
+					/usr/local/libIntel64,
 				);
 				PRODUCT_NAME = cuffdiff;
 				RUN_CLANG_STATIC_ANALYZER = YES;
@@ -1941,6 +1881,7 @@
 					/usr/local/lib,
 					"\"$(SRCROOT)\"",
 					/opt/local/lib,
+					/usr/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = cuffdiff;
@@ -2018,41 +1959,6 @@
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = cufflinks;
-			};
-			name = Release;
-		};
-		EDD6AA251159BA2F00D3F668 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					./src,
-					"/usr/local/include/boost-1_41",
-				);
-				INSTALL_PATH = /usr/local/bin;
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				PRODUCT_NAME = "Boost Tests";
-				USER_HEADER_SEARCH_PATHS = "";
-			};
-			name = Debug;
-		};
-		EDD6AA261159BA2F00D3F668 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_NAME = "Boost Tests";
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -2246,15 +2152,6 @@
 			buildConfigurations = (
 				EDD6A9D311598AB900D3F668 /* Debug */,
 				EDD6A9D411598AB900D3F668 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		EDD6AA2C1159BA3200D3F668 /* Build configuration list for PBXNativeTarget "Unit Tests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				EDD6AA251159BA2F00D3F668 /* Debug */,
-				EDD6AA261159BA2F00D3F668 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

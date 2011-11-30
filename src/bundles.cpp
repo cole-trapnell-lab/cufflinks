@@ -886,7 +886,11 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			}
 			else // the hit stream has gone too far, rewind and break
 			{
-				bundle.rem_raw_mass(rewind_hit(bh));
+                double mass = rewind_hit(bh);
+                if (skip_read == false)
+                {
+                    bundle.rem_raw_mass(mass);
+                }
 				break;  
 			}
 		}	
@@ -909,7 +913,10 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		}
 		else if (bh->left() >= bundle.right())
 		{
-			bundle.rem_raw_mass(rewind_hit(bh));
+            if (!skip_read)
+            {
+                bundle.rem_raw_mass(rewind_hit(bh));
+            }
 			break;
 		}
 	    else 
