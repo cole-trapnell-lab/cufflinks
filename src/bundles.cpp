@@ -862,7 +862,6 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
             bundle.add_raw_mass(next_valid_alignment(bh));
         }
 
-		
         if (bh == NULL)
         {
 			if (_hit_fac->records_remain())
@@ -892,18 +891,20 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			}
 		}	
 		
-        if (skip_read)
-        {
-            delete bh;
-            continue;
-        }
-        
         if (bh->left() >= bundle.left() && bh->right() <= bundle.right())
 		{
-			if (!bundle.add_open_hit(read_group_properties(), bh, false))
+            if (skip_read)
             {
                 delete bh;
                 bh = NULL;
+            }
+			else
+            {
+                if (!bundle.add_open_hit(read_group_properties(), bh, false))
+                {
+                    delete bh;
+                    bh = NULL;
+                }
             }
 		}
 		else if (bh->left() >= bundle.right())

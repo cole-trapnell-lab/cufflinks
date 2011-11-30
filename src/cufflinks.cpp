@@ -869,7 +869,8 @@ void decr_pool_count()
 void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 								   //const RefSequenceTable& rt,
                                    double total_map_mass,
-                                   vector<Gene>& genes)
+                                   vector<Gene>& genes,
+                                   bool bundle_too_large)
 {
 	if (transfrag_cluster.abundances().empty())
 		return;
@@ -897,7 +898,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	
     if (library_type != "transfrags")
     {
-        if (hits_in_cluster.size() < max_frags_per_bundle)
+        if (bundle_too_large == false)
         {
             transfrag_cluster.calculate_abundance(hits_in_cluster);
         }
@@ -1052,7 +1053,8 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 
 void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 									long double total_map_mass,
-									vector<Gene>& genes)
+									vector<Gene>& genes,
+                                    bool bundle_too_large)
 {	
 	//vector<shared_ptr<Scaffold> > partials;
 	//vector<shared_ptr<Scaffold> > completes;
@@ -1090,7 +1092,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	
 	foreach(AbundanceGroup& cluster, transfrags_by_cluster)
 	{
-		quantitate_transcript_cluster(cluster, total_map_mass, genes);
+		quantitate_transcript_cluster(cluster, total_map_mass, genes, bundle_too_large);
 	}
     verbose_msg( "%s\tBundle quantitation complete\n", bundle_label->c_str());
 }
@@ -1195,11 +1197,14 @@ void assemble_bundle(const RefSequenceTable& rt,
 		
 	vector<Gene> genes;
     
+    bool bundle_too_large = bundle_ptr->hits().size() >= max_frags_per_bundle;
+    
     // FIXME: this routine does more than just quantitation, and should be 
     // renamed or refactored.
     quantitate_transcript_clusters(scaffolds, 
                                    map_mass,
-                                   genes);
+                                   genes,
+                                   bundle_too_large);
     
     verbose_msg( "%s\tFiltering bundle assembly\n", bundle_label->c_str());
     
