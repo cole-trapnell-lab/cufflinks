@@ -124,25 +124,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.2.0</td>
-                    <td align="right">11/23/2011</td>
+                    <td>version 1.2.1</td>
+                    <td align="right">11/30/2011</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.2.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.2.1.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.2.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.2.1.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.2.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.2.1.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -230,6 +230,15 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+			<h2>1.2.1 release - 11/30/2011</h2>
+			  <p>This release fixes an issue introduced with version 1.2.0, 
+				where a very deeply sequenced locus could cause Cufflinks or 
+				Cuffdiff to assign 0 FPKM to subsequent genes.  It also 
+				corrects a bug where Cufflinks wasn't reporting very deeply 
+				sequenced loci as HIDATA.
+			  </ul>
+			  </p>
+			  <br/>
 			<h2>1.2.0 release - 11/23/2011</h2>
 			  <p>This release fixes a number of bugs and includes some signficant accuracy and performance improvements:
 				  <ul>
