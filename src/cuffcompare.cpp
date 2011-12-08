@@ -1451,26 +1451,29 @@ void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
     fsn=(100.0*(double)ps->locusATP)/ps->total_rloci; //(ps->locusATP+ps->locusAFN);
     fprintf(fout, "       Locus level: \t%5.1f\t%5.1f\t%5.1f\t%5.1f\n",sn, sp, fsn, fsp);
     //fprintf(fout, "                   (locus TP=%d, total ref loci=%d)\n",ps->locusTP, ps->total_rloci);
+    fprintf(fout, "\nMatching intron chains: %7d\n",ps->ichainTP);
+    fprintf(fout, "         Matching loci: %7d\n",ps->locusTP);
+    fprintf(fout, "\n");
     sn=(100.0*(double)ps->m_exons)/(ps->total_rexons);
-    fprintf(fout, "   Missed exons:\t%d/%d (%5.1f%%)\n",ps->m_exons, ps->total_rexons, sn);
+    fprintf(fout, "          Missed exons: %7d/%d\t(%5.1f%%)\n",ps->m_exons, ps->total_rexons, sn);
     sn=(100.0*(double)ps->w_exons)/(ps->total_qexons);
-    fprintf(fout, "    Wrong exons:\t%d/%d (%5.1f%%)\n",ps->w_exons, ps->total_qexons,sn);
+    fprintf(fout, "           Novel exons: %7d/%d\t(%5.1f%%)\n",ps->w_exons, ps->total_qexons,sn);
     if (ps->total_rintrons>0) {
-      sn=(100.0*(double)ps->m_introns)/(ps->total_rintrons);
-      fprintf(fout, " Missed introns:\t%d/%d (%5.1f%%)\n",ps->m_introns, ps->total_rintrons, sn);
-      }
+    sn=(100.0*(double)ps->m_introns)/(ps->total_rintrons);
+    fprintf(fout, "        Missed introns: %7d/%d\t(%5.1f%%)\n",ps->m_introns, ps->total_rintrons, sn);
+    }
     if (ps->total_qintrons>0) {
-      sn=(100.0*(double)ps->w_introns)/(ps->total_qintrons);
-      fprintf(fout, "  Wrong introns:\t%d/%d (%5.1f%%)\n",ps->w_introns, ps->total_qintrons,sn);
-      }
+    sn=(100.0*(double)ps->w_introns)/(ps->total_qintrons);
+    fprintf(fout, "         Novel introns: %7d/%d\t(%5.1f%%)\n",ps->w_introns, ps->total_qintrons,sn);
+    }
     if (ps->total_rloci>0) {
-      sn=(100.0*(double)ps->m_loci)/(ps->total_rloci);
-      fprintf(fout, " Missed loci:\t%d/%d (%5.1f%%)\n",ps->m_loci, ps->total_rloci, sn);
-      }
+    sn=(100.0*(double)ps->m_loci)/(ps->total_rloci);
+    fprintf(fout, "           Missed loci: %7d/%d\t(%5.1f%%)\n",ps->m_loci, ps->total_rloci, sn);
+    }
     if (ps->total_qloci>0) {
-      sn=(100.0*(double)ps->w_loci)/(ps->total_qloci);
-      fprintf(fout, "  Wrong loci:\t%d/%d (%5.1f%%)\n",ps->w_loci, ps->total_qloci,sn);
-      }
+    sn=(100.0*(double)ps->w_loci)/(ps->total_qloci);
+    fprintf(fout, "            Novel loci: %7d/%d\t(%5.1f%%)\n",ps->w_loci, ps->total_qloci,sn);
+    }
 
   }
 }

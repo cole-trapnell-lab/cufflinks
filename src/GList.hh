@@ -402,7 +402,6 @@ template <class OBJ> void GVec<OBJ>::setCapacity(int NewCapacity) {
     //error: capacity not within range
   if (NewCapacity!=fCapacity) {
    if (NewCapacity==0) {
-      //GFREE(fArray);
       delete[] fArray;
       }
     else {
@@ -412,6 +411,7 @@ template <class OBJ> void GVec<OBJ>::setCapacity(int NewCapacity) {
       for (int i=0;i<this->fCount;i++) {
         fArray[i] = oldArray[i];
         }
+      delete[] oldArray;
       }
    fCapacity=NewCapacity;
    }
