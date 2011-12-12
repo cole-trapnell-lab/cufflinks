@@ -540,6 +540,7 @@
 		9CC50B8F13204FEA0031949A /* imatlb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imatlb.h; sourceTree = "<group>"; };
 		9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = compress_gtf.cpp; path = src/compress_gtf.cpp; sourceTree = "<group>"; };
 		9CD6E93F13379B7E00CCE1DE /* compress_gtf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compress_gtf; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CE680F6149697B500855EDB /* cuffmerge */ = {isa = PBXFileReference; explicitFileType = text.script.python; name = cuffmerge; path = src/cuffmerge; sourceTree = "<group>"; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
 		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
 		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };
@@ -763,6 +764,7 @@
 				EDA5152310C72963000A4F41 /* cuffcompare.cpp */,
 				EDA5152410C72963000A4F41 /* cuffdiff.cpp */,
 				EDA5152510C72963000A4F41 /* cufflinks.cpp */,
+				9CE680F6149697B500855EDB /* cuffmerge */,
 				EDACE431114EFF5C009024DB /* differential.cpp */,
 				EDA5152610C72963000A4F41 /* filters.cpp */,
 				EDA5152710C72963000A4F41 /* GArgs.cpp */,

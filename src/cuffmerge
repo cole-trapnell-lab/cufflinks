@@ -495,7 +495,10 @@ def header_for_chrom_info(chrom_info):
     return header
 
 def main(argv=None):
-
+    
+    # Set this so sort is consistent across platforms and python versions 
+    # (and always character-lexicographic)
+    os.environ['LC_ALL']='C'
     warnings.filterwarnings("ignore", "tmpnam is a potential security risk")
     global params
     params = TestParams()
