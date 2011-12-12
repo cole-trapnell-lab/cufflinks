@@ -230,6 +230,7 @@
 		9CD6E93613379B7E00CCE1DE /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5913204F180031949A /* cmd.c */; };
 		9CD6E93A13379B7E00CCE1DE /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		9CD6E94113379B9D00CCE1DE /* compress_gtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */; };
+		9CE680F414968E0C00855EDB /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A24FD6514118C26008659F7 /* libbam.a */; };
 		ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		ED41B818127602C60000B5A2 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
 		ED41B819127602C60000B5A2 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
@@ -641,6 +642,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */,
+				9CE680F414968E0C00855EDB /* libbam.a in Frameworks */,
 				0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
