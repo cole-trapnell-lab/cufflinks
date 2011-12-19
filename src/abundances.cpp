@@ -3631,17 +3631,36 @@ void calc_isoform_fpkm_conf_intervals(double FPKM,
 	FPKM_conf = ConfidenceInterval(FPKM_lo, FPKM_hi);
 }
 
+bool not_intronic(int p, vector<float>& depth_of_coverage, vector<float>& intronic_cov, float min_intra_intron_fraction,
+      int& intronic_status) {
+  bool not_an_intron = (intronic_cov[p]==0 ||
+        depth_of_coverage[p]/intronic_cov[p] >= min_intra_intron_fraction);
+ if (not_an_intron) intronic_status--;
+               else intronic_status++;
+ return not_an_intron;
+}
+
+
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,
-				   vector<int>& depth_of_coverage,
-				   map<pair<int, int>, int>& intron_depth_of_coverage,
-				   bool exclude_intra_intron)
+				   vector<float>& depth_of_coverage,
+				   map<pair<int, int>, float>& intron_depth_of_coverage,
+				   bool exclude_intra_intron,
+				   vector<float>* intronic_cov,
+				   vector<int>* scaff_intronic_status)
 {
-	vector<bool> intronic(depth_of_coverage.size(), false);
-	depth_of_coverage = vector<int>(depth_of_coverage.size(), 0);
+  vector<int> i_status;
+  if (scaff_intronic_status==NULL)
+    scaff_intronic_status=&i_status;
+  *scaff_intronic_status = vector<int>(scaffolds.size(), 0);
+  vector<float> intronic;
+  if (intronic_cov==NULL)
+    intronic_cov=&intronic;
+  *intronic_cov = vector<float>(depth_of_coverage.size(), 0);
+  //vector<bool> intronic(depth_of_coverage.size(), false);
+	depth_of_coverage = vector<float>(depth_of_coverage.size(), 0);
 		
 	set<const MateHit*> hits_in_gene_set;
-	
 	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
 		hits_in_gene_set.insert(scaffolds[i].mate_hits().begin(),
@@ -3657,7 +3676,9 @@ double compute_doc(int bundle_origin,
 		hits.push_back(Scaffold(**itr));
         hits.back().fpkm((**itr).mass());
 	}
-	
+
+	/*
+	//no need for this here, we do it below with depth_of_coverage
 	for (size_t i = 0; i < hits.size(); ++i)
 	{
 		const vector<AugmentedCuffOp>& aug_ops = hits[i].augmented_ops();
@@ -3673,7 +3694,7 @@ double compute_doc(int bundle_origin,
 			}
 		}
 	}
-	
+	*/
 	for (size_t i = 0; i < hits.size(); ++i)
 	{
 		const vector<AugmentedCuffOp>& aug_ops = hits[i].augmented_ops();
@@ -3689,19 +3710,28 @@ double compute_doc(int bundle_origin,
 			}
 			else if (op.opcode == CUFF_INTRON)
 			{
-				pair<map<pair<int,int>,int>::iterator, bool> is = intron_depth_of_coverage.insert(make_pair(make_pair(op.g_left(), op.g_right()), 0));
+        for (int K = op.g_left(); K < op.g_right(); ++K)
+        {
+          (*intronic_cov)[K - bundle_origin] += hits[i].fpkm();
+          //intronic[K - bundle_origin] = true;
+        }
+
+				pair<map<pair<int,int>,float>::iterator, bool> is = intron_depth_of_coverage.insert(make_pair(make_pair(op.g_left(), op.g_right()), 0));
 				is.first->second += hits[i].fpkm();
 			}
 		}
 	}
 	
-	vector<int> knockout(depth_of_coverage);
+	vector<float> knockout(depth_of_coverage);
 	
-	int total_doc = 0;
+	double total_doc = 0;
 	int total_len = 0;
-	for (size_t i = 0; i < hits.size(); ++i)
+	float min_intra_intron_fraction = min(pre_mrna_fraction, min_isoform_fraction);
+	//for (size_t i = 0; i < hits.size(); ++i)
+	for (size_t i = 0; i < scaffolds.size(); ++i)
 	{
-		const vector<AugmentedCuffOp>& aug_ops = hits[i].augmented_ops();
+		//const vector<AugmentedCuffOp>& aug_ops = hits[i].augmented_ops();
+	  const vector<AugmentedCuffOp>& aug_ops = scaffolds[i].augmented_ops();
 		for (size_t j = 0; j < aug_ops.size(); ++j)
 		{
 			const AugmentedCuffOp& op = aug_ops[j];
@@ -3709,7 +3739,10 @@ double compute_doc(int bundle_origin,
 			{
 				for (int K = op.g_left(); K < op.g_right(); ++K)
 				{
-					if (!exclude_intra_intron || !intronic[K - bundle_origin])
+					//if (!exclude_intra_intron || !intronic[K - bundle_origin])
+				  if (!exclude_intra_intron ||
+				       not_intronic(K-bundle_origin, depth_of_coverage, *intronic_cov, min_intra_intron_fraction,
+				           (*scaff_intronic_status)[i]) )
 					{
 						total_doc += knockout[K - bundle_origin];
 						total_len += (knockout[K - bundle_origin] != 0);
@@ -3720,20 +3753,20 @@ double compute_doc(int bundle_origin,
 		}
 	}
 	
-	return (double)total_doc / (double)total_len;
+	return total_doc/(double)total_len;
 }
 
-double major_isoform_intron_doc(map<pair<int, int>, int>& intron_doc)
+double major_isoform_intron_doc(map<pair<int, int>, float>& intron_doc)
 {
 	double major_isoform_intron_doc = 0;
 	int num_major_introns = 0;
-	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
+	for(map<pair<int, int>, float>::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
 	{
 		bool heaviest = true;
 		
-		for (map<pair<int,int>, int>::const_iterator itr2 = intron_doc.begin();
+		for (map<pair<int,int>, float>::const_iterator itr2 = intron_doc.begin();
 			 itr2 != intron_doc.end();
 			 ++itr2)
 		{	
@@ -3767,8 +3800,8 @@ double major_isoform_intron_doc(map<pair<int, int>, int>& intron_doc)
 
 void record_min_doc_for_scaffolds(int bundle_origin, 
 								  const vector<Scaffold>& hits,
-								  const vector<int>& depth_of_coverage,
-								  const map<pair<int, int>, int>& intron_depth_of_coverage,
+								  const vector<float>& depth_of_coverage,
+								  const map<pair<int, int>, float>& intron_depth_of_coverage,
 								  vector<double>& scaff_doc)
 {
 	for (size_t h = 0; h < hits.size(); ++h)
@@ -3786,7 +3819,7 @@ void record_min_doc_for_scaffolds(int bundle_origin,
 
 void record_doc_for_scaffolds(int bundle_origin, 
 							  const vector<Scaffold>& hits,
-							  const vector<int>& depth_of_coverage,
+							  const vector<float>& depth_of_coverage,
 							  vector<double>& scaff_doc)
 {
 	for (size_t h = 0; h < hits.size(); ++h)
@@ -3801,8 +3834,8 @@ void record_doc_for_scaffolds(int bundle_origin,
 
 void record_doc_for_scaffolds(int bundle_origin, 
 							  const vector<Scaffold>& hits,
-							  const vector<int>& depth_of_coverage,
-							  const map<pair<int, int>, int>& intron_depth_of_coverage,
+							  const vector<float>& depth_of_coverage,
+							  const map<pair<int, int>, float>& intron_depth_of_coverage,
 							  vector<double>& scaff_doc)
 {
 	for (size_t h = 0; h < hits.size(); ++h)
@@ -3819,11 +3852,11 @@ void record_doc_for_scaffolds(int bundle_origin,
 }
 
 double get_intron_doc(const Scaffold& s,
-					  const map<pair<int, int>, int >& intron_depth_of_coverage)
+					  const map<pair<int, int>, float >& intron_depth_of_coverage)
 {
 	const vector<AugmentedCuffOp>& aug_ops = s.augmented_ops();
 	int num_introns = 0;
-	int doc = 0;
+	double doc = 0;
 	for (size_t j = 0; j < aug_ops.size(); ++j)
 	{
 		const AugmentedCuffOp& op = aug_ops[j];
@@ -3831,32 +3864,32 @@ double get_intron_doc(const Scaffold& s,
 		{
 			num_introns++;
 			pair<int,int> op_intron(op.g_left(), op.g_right());
-			map<pair<int, int>, int >::const_iterator itr = intron_depth_of_coverage.find(op_intron);
+			map<pair<int, int>, float >::const_iterator itr = intron_depth_of_coverage.find(op_intron);
 			//			assert (itr != intron_depth_of_coverage.end());
 			if (itr == intron_depth_of_coverage.end())
 			{
-				map<pair<int, int>, int >::const_iterator zi;
+				map<pair<int, int>, float >::const_iterator zi;
 				for (zi = intron_depth_of_coverage.begin();
 					 zi != intron_depth_of_coverage.end();
 					 ++zi)
 				{
-					verbose_msg( "intron: [%d-%d], %d\n", zi->first.first, zi->first.second, zi->second);
+					verbose_msg( "Warning: intron not within scaffold ([%d-%d], %d)\n", zi->first.first, zi->first.second, zi->second);
 				}
 			}
 
 			doc += itr->second;
 		}
-	}	
+	}
 	return doc / (double)num_introns;
 }
 
 double get_scaffold_doc(int bundle_origin, 
 						const Scaffold& s,
-						const vector<int>& depth_of_coverage)
+						const vector<float>& depth_of_coverage)
 {
 	const vector<AugmentedCuffOp>& aug_ops = s.augmented_ops();
 	int m_len = 0;
-	int doc = 0;
+	double doc = 0;
 	for (size_t j = 0; j < aug_ops.size(); ++j)
 	{
 		const AugmentedCuffOp& op = aug_ops[j];
@@ -3870,15 +3903,15 @@ double get_scaffold_doc(int bundle_origin,
 		}
 	}
 	
-	return (double) doc / (double) m_len; 
+	return doc/(double)m_len;
 }
 
 double get_scaffold_min_doc(int bundle_origin, 
 							const Scaffold& s,
-							const vector<int>& depth_of_coverage)
+							const vector<float>& depth_of_coverage)
 {
 	const vector<AugmentedCuffOp>& aug_ops = s.augmented_ops();
-	int min_doc = 99999999;
+	float min_doc = 99999999;
 	
 	for (size_t j = 0; j < aug_ops.size(); ++j)
 	{

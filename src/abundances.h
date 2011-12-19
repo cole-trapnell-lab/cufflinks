@@ -523,40 +523,42 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,
-				   vector<int>& depth_of_coverage,
-				   map<pair<int, int>, int>& intron_depth_of_coverage,
-				   bool exclude_intra_intron);
+				   vector<float>& depth_of_coverage,
+				   map<pair<int, int>, float>& intron_depth_of_coverage,
+				   bool exclude_intra_intron=false,
+				   vector<float>* intronic_cov=NULL,
+				   vector<int>* scaff_intronic_status=NULL);
 
-double major_isoform_intron_doc(map<pair<int, int>, int>& intron_doc);
+double major_isoform_intron_doc(map<pair<int, int>, float>& intron_doc);
 
 void record_doc_for_scaffolds(int bundle_origin, 
 							  const std::vector<Scaffold>& hits,
-							  const std::vector<int>& depth_of_coverage,
-							  const std::map<std::pair<int, int>, int>& intron_depth_of_coverage,
+							  const std::vector<float>& depth_of_coverage,
+							  const std::map<std::pair<int, int>, float>& intron_depth_of_coverage,
 							  std::vector<double>& scaff_doc);
 
 void record_doc_for_scaffolds(int bundle_origin, 
 							  const std::vector<Scaffold>& hits,
-							  const std::vector<int>& depth_of_coverage,
+							  const std::vector<float>& depth_of_coverage,
 							  std::vector<double>& scaff_doc);
 
 void record_min_doc_for_scaffolds(int bundle_origin, 
 								  const std::vector<Scaffold>& hits,
-								  const std::vector<int>& depth_of_coverage,
-								  const std::map<std::pair<int, int>, int>& intron_depth_of_coverage,
+								  const std::vector<float>& depth_of_coverage,
+								  const std::map<std::pair<int, int>, float>& intron_depth_of_coverage,
 								  std::vector<double>& scaff_doc);
 
 
 double get_intron_doc(const Scaffold& s,
-					  const map<pair<int, int>, int >& intron_depth_of_coverage);
+					  const map<pair<int, int>, float>& intron_depth_of_coverage);
 
 double get_scaffold_doc(int bundle_origin, 
 						const Scaffold& s,
-						const vector<int>& depth_of_coverage);
+						const vector<float>& depth_of_coverage);
 
 double get_scaffold_min_doc(int bundle_origin, 
 							const Scaffold& s,
-							const vector<int>& depth_of_coverage);
+							const vector<float>& depth_of_coverage);
 
 AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& transcripts,
                                          const vector<MateHit>& alignments,

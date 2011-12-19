@@ -418,8 +418,8 @@ bool make_scaffolds(int bundle_left,
 
         verbose_msg( "%s\tAssembling bundle with %lu hits\n", bundle_label->c_str(), hits.size());
        
-		vector<int> depth_of_coverage(bundle_length,0);
-		map<pair<int,int>, int> intron_depth_of_coverage;
+		vector<float> depth_of_coverage(bundle_length,0);
+		map<pair<int,int>, float> intron_depth_of_coverage;
 		compute_doc(bundle_left, 
 					hits, 
 					depth_of_coverage, 

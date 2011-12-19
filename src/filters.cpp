@@ -26,9 +26,9 @@ void filter_introns(int bundle_length,
 					bool filter_on_intron_overlap,
 					bool filter_with_intron_doc)
 {
-	vector<int> depth_of_coverage(bundle_length,0);
+	vector<float> depth_of_coverage(bundle_length,0);
 	vector<double> scaff_doc;
-	map<pair<int,int>, int> intron_doc;
+	map<pair<int,int>, float> intron_doc;
 	vector<Scaffold> filtered_hits;
 	vector<bool> toss(hits.size(), false);
 	
@@ -51,7 +51,7 @@ void filter_introns(int bundle_length,
 		verbose_msg("\tFiltering bundle introns, avg bundle doc = %lf, thresh = %f\n", bundle_avg_doc, bundle_avg_thresh);
 	}
 	
-	for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
+	for(map<pair<int, int>, float>::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
 	{
@@ -64,7 +64,7 @@ void filter_introns(int bundle_length,
 			{
 				if (ops[i].opcode == CUFF_INTRON)
 				{
-					map<pair<int, int>, int>::const_iterator itr;
+					map<pair<int, int>, float>::const_iterator itr;
 					itr = intron_doc.find(make_pair(ops[i].g_left(), ops[i].g_right()));
 					
 					double doc = itr->second;
@@ -78,7 +78,7 @@ void filter_introns(int bundle_length,
 					if (!filter_on_intron_overlap)
 						continue;
 					
-					for (map<pair<int,int>, int>::const_iterator itr2 = intron_doc.begin();
+					for (map<pair<int,int>, float>::const_iterator itr2 = intron_doc.begin();
 						 itr2 != intron_doc.end();
 						 ++itr2)
 					{	
@@ -128,11 +128,11 @@ void filter_introns(int bundle_length,
 	hits = filtered_hits;
 }
 
-double background_rate(const vector<int> depth_of_coverage,
+double background_rate(const vector<float> depth_of_coverage,
                        int left, 
                        int right)
 {
-    vector<int> tmp;
+    vector<float> tmp;
     
     size_t r_bound = (size_t)min(right, (int) depth_of_coverage.size());
     size_t l_bound = (size_t)max(left, 0);
@@ -144,7 +144,7 @@ double background_rate(const vector<int> depth_of_coverage,
     if (tmp.empty())
         return 0;
     
-    vector<int>::iterator new_end =  remove(tmp.begin(), tmp.end(), 0);
+    vector<float>::iterator new_end =  remove(tmp.begin(), tmp.end(), 0);
     tmp.erase(new_end, tmp.end());
     sort(tmp.begin(), tmp.end());
     
@@ -157,66 +157,76 @@ void pre_mrna_filter(int bundle_length,
 					 int bundle_left,
 					 vector<Scaffold>& hits)
 {
-	vector<int> depth_of_coverage(bundle_length,0);
+	vector<float> depth_of_coverage(bundle_length,0);
 	vector<double> scaff_doc;
-	map<pair<int,int>, int> intron_doc;
+	map<pair<int,int>, float> intron_doc;
 	vector<Scaffold> filtered_hits;
 	vector<bool> toss(hits.size(), false);
-	
+	vector<float> through_introns; //for each location, how many introns pass through
+
+	vector<int> scaff_intron_status;
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
-    double bundle_avg_doc = compute_doc(bundle_left, 
+  double bundle_avg_doc = compute_doc(bundle_left,
 										hits, 
 										depth_of_coverage, 
 										intron_doc,
-										true);
-    
+										true,
+										&through_introns,
+										&scaff_intron_status);
+   verbose_msg("Pre-mRNA flt: bundle average doc = %lf\n", bundle_avg_doc);
+  /*
+   //2nd call not needed, the vectors won't change, only the return value
 	compute_doc(bundle_left, 
                 hits, 
                 depth_of_coverage, 
                 intron_doc,
                 false);
-    
+  */
 	record_doc_for_scaffolds(bundle_left, 
 							 hits, 
 							 depth_of_coverage, 
 							 intron_doc,
 							 scaff_doc);
-    
-    
-	for(map<pair<int, int>, int >::const_iterator itr = intron_doc.begin();
+
+	for(map<pair<int, int>, float >::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
 	{
 		int i_left = itr->first.first;
 		int i_right = itr->first.second;
-		
-        double intron_background = background_rate(depth_of_coverage, 
-                                                   i_left - bundle_left, 
-                                                   i_right - bundle_left);
+		int i_doc   = itr->second;
+    double intron_background = background_rate(depth_of_coverage,
+                                               i_left - bundle_left,
+                                               i_right - bundle_left);
+    double cumul_cov = 0;
+    for (int i = 0; i < i_right - i_left; ++i)
+    {
+        size_t pos = (i_left - bundle_left) + i;
+        cumul_cov += depth_of_coverage[pos];
+    }
+    cumul_cov /= i_right - i_left;
+    verbose_msg("Pre-mRNA flt: intron %d-%d : background: %lf, inner coverage: %lf, junction coverage: %f\n",
+                 i_left, i_right, intron_background, cumul_cov, i_doc);
+    if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
+    {
+        //fprintf(stderr, "\tskipping\n");
+        continue;
+    }
         
-        double cumul_cov = 0;
-        for (int i = 0; i < i_right - i_left; ++i)
-        {
-            size_t pos = (i_left - bundle_left) + i;
-            cumul_cov += depth_of_coverage[pos];
-        }
-        cumul_cov /= i_right - i_left;
-        verbose_msg("retained intron %d-%d background: %lf\n", i_left, i_right, intron_background);
-        if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
-        {
-            //fprintf(stderr, "\tskipping\n");
-            
-            continue;
-        }
-        
-		//double thresh = (1.0/pre_mrna_fraction) * intron_background;
+		////double thresh = (1.0/pre_mrna_fraction) * intron_background;
 		double thresh = pre_mrna_fraction * intron_background;
+    float min_flt_fraction = min(pre_mrna_fraction, min_isoform_fraction);
+    //double thresh = min_flt_fraction * i_doc;
 
-        for (size_t j = 0; j < hits.size(); ++j)
+    for (size_t j = 0; j < hits.size(); ++j)
         {
+           if (hits[j].left()>i_right) break;
             if (hits[j].is_ref())
                 continue;
-			
+			      if (toss[j])
+			          continue;
+			      //find maximum intron support in the hit region
+
             int len = 0;
             double doc = 0.0;
             size_t curr_op = 0;
@@ -224,7 +234,6 @@ void pre_mrna_filter(int bundle_length,
             while (curr_op != ops.size())
             {
                 const AugmentedCuffOp&  op = ops[curr_op];
-                
                 if (op.opcode == CUFF_MATCH)
                 {
                     int op_len = 0;
@@ -283,22 +292,24 @@ void pre_mrna_filter(int bundle_length,
                 if (hit_doc_in_region < thresh)
                 {
                     toss[j] = true;
-//                    if (hits[j].has_intron())
-//                    {
-//                        fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-//                    }
+                    if (hits[j].has_intron())
+                    {
+                    //    fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+
+                       verbose_msg("\t@@@ Filtering intron scaff [%d-%d] (scaff_doc=%lf, doc_in_region=%lf)\n",
+                            hits[j].left(), hits[j].right(), scaff_doc[j], hit_doc_in_region);
+                    }
                 }
             }
-		}
-	}
-    
+		} //for each scaffold
+	} //for each intron
 	for (size_t j = 0; j < hits.size(); ++j)
 	{	
 		if (!toss[j])
 		{
 			filtered_hits.push_back(hits[j]);
 		}
-		else
+		/*else
 		{
 			if (hits[j].has_intron())
 			{
@@ -306,9 +317,11 @@ void pre_mrna_filter(int bundle_length,
                 verbose_msg( "\t@@@ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
 			}
 		}
+		*/
 	}
     
-	verbose_msg("\tPre-mRNA filter pass complete, excluded %lu fragments\n", hits.size() - filtered_hits.size());
+	if (cuff_verbose && hits.size()>filtered_hits.size())
+	  verbose_msg("\tPre-mRNA flt tossed %lu fragments\n", hits.size() - filtered_hits.size());
 	
 	hits = filtered_hits;
 }
@@ -320,9 +333,9 @@ void filter_hits(int bundle_length,
 	
 	pre_mrna_filter(bundle_length, bundle_left, hits);
 	
-	vector<int> depth_of_coverage(bundle_length+1,0);
+	vector<float> depth_of_coverage(bundle_length+1,0);
 	vector<double> scaff_doc;
-	map<pair<int,int>, int> intron_doc;
+	map<pair<int,int>, float> intron_doc;
 	vector<Scaffold> filtered_hits;
 	vector<bool> toss(hits.size(), false);
 	
@@ -334,12 +347,13 @@ void filter_hits(int bundle_length,
 										true);
 	
 	// recompute the real DoCs
+	/* not needed, vectors are not changed
 	compute_doc(bundle_left, 
 				hits, 
 				depth_of_coverage, 
 				intron_doc,
 				false);
-	
+	*/
 	
 	record_min_doc_for_scaffolds(bundle_left, 
 								 hits, 
@@ -359,7 +373,7 @@ void filter_hits(int bundle_length,
 		//bundle_avg_thresh = min_isoform_fraction * bundle_avg_doc;
 		
 		set<pair<int, int> > tossed_introns;
-		for(map<pair<int, int>, int>::const_iterator itr = intron_doc.begin();
+		for(map<pair<int, int>, float>::const_iterator itr = intron_doc.begin();
 			itr != intron_doc.end(); 
 			++itr)
 		{
@@ -484,7 +498,7 @@ void filter_hits(int bundle_length,
 	
 	toss = vector<bool>(hits.size(), false);
 	
-	map<pair<int, int>, int> dummy;
+	map<pair<int, int>, float> dummy;
 	bundle_avg_doc = compute_doc(bundle_left, 
 								 hits, 
 								 depth_of_coverage, 

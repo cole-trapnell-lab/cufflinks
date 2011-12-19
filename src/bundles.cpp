@@ -1329,7 +1329,8 @@ void identify_bad_splices(const HitBundle& bundle,
 	}
 	
 	minor_introns(bundle.length(), bundle.left(), intron_counts, bad_introns, min_isoform_fraction);
-	multimapping_introns(bundle.length(), bundle.left(), intron_counts, bad_introns, 0.5);
+	// [Geo] disable filtering of multi-mapped introns:
+  // multimapping_introns(bundle.length(), bundle.left(), intron_counts, bad_introns, 0.5);
 	for (IntronCountTable::iterator itr = intron_counts.begin();
 		 itr != intron_counts.end();
 		 ++itr)

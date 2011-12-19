@@ -66,6 +66,7 @@ static struct option long_options[] = {
 {"upper-quartile-normalization",  no_argument,	 		 0,	         'N'},
 {"frag-bias-correct",       required_argument,		 0,			 'b'},
 {"multi-read-correct",      no_argument,			 0,			 'u'},
+
 {"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
@@ -100,7 +101,7 @@ static struct option long_options[] = {
 
 void print_usage()
 {
-    //NOTE: SPACES ONLY, bozo (I agree -- everywhere else in the code too, please don't use tabs)
+    //NOTE: SPACES ONLY, bozo
     fprintf(stderr, "cufflinks v%s\n", PACKAGE_VERSION);
     fprintf(stderr, "linked against Boost version %d\n", BOOST_VERSION);
     fprintf(stderr, "-----------------------------\n"); 
@@ -287,7 +288,7 @@ int parse_options(int argc, char** argv)
 				corr_multi = true;
 				break;
 			}
-            case OPT_LIBRARY_TYPE:
+      case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
 				break;
@@ -369,7 +370,7 @@ int parse_options(int argc, char** argv)
             }
             case OPT_INTRON_OVERHANG_TOLERANCE:
             {
-                ref_merge_overhang_tolerance = parseInt(0, "--intron-overhang-tolernace must be at least 0", print_usage);
+                ref_merge_overhang_tolerance = parseInt(0, "--intron-overhang-tolerance must be at least 0", print_usage);
                 break;
             }
             case OPT_RANDOM_SEED:
@@ -640,9 +641,9 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 		hits.push_back(Scaffold(hit));
 	}
     
-    vector<int> depth_of_coverage(bundle.length(),0);
+  vector<float> depth_of_coverage(bundle.length(),0);
 	vector<double> scaff_doc;
-	map<pair<int,int>, int> intron_doc;
+	map<pair<int,int>, float> intron_doc;
 	
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
 	double bundle_avg_doc = compute_doc(bundle.left(), 
@@ -1631,7 +1632,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 int main(int argc, char** argv)
 {	
     init_library_table();
-    
+  string cmdline;
+  for (int i=0;i<argc;i++) {
+    cmdline+=argv[i];
+    cmdline+=" ";
+    }
 	int parse_ret = parse_options(argc,argv);
     if (parse_ret)
         return parse_ret;
@@ -1651,6 +1656,8 @@ int main(int argc, char** argv)
     if (!no_update_check)
         check_version(PACKAGE_VERSION);
     
+    if (cuff_quiet || cuff_verbose)
+      fprintf(stderr, "Command line:\n%s\n", cmdline.c_str());
     string sam_hits_file_name = argv[optind++];
 	
 
