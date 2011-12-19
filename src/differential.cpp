@@ -441,7 +441,7 @@ bool test_js(const AbundanceGroup& prev_abundance,
              double& js,
              double& p_val)
 {
-    static const int num_samples = 1000;
+    static const int num_samples = 10000;
     vector<double> js_samples;
     
     bool success = generate_js_samples(prev_abundance, curr_abundance, num_samples, js_samples);
