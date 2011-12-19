@@ -231,6 +231,8 @@
 		9CD6E93A13379B7E00CCE1DE /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		9CD6E94113379B9D00CCE1DE /* compress_gtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */; };
 		9CE680F414968E0C00855EDB /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A24FD6514118C26008659F7 /* libbam.a */; };
+		9CE680F9149FBEBD00855EDB /* sampling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CE680F8149FBEBD00855EDB /* sampling.cpp */; };
+		9CE680FB149FBF3000855EDB /* sampling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CE680F8149FBEBD00855EDB /* sampling.cpp */; };
 		ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		ED41B818127602C60000B5A2 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
 		ED41B819127602C60000B5A2 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
@@ -541,6 +543,8 @@
 		9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = compress_gtf.cpp; path = src/compress_gtf.cpp; sourceTree = "<group>"; };
 		9CD6E93F13379B7E00CCE1DE /* compress_gtf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compress_gtf; sourceTree = BUILT_PRODUCTS_DIR; };
 		9CE680F6149697B500855EDB /* cuffmerge */ = {isa = PBXFileReference; explicitFileType = text.script.python; name = cuffmerge; path = src/cuffmerge; sourceTree = "<group>"; };
+		9CE680F7149FBE2F00855EDB /* sampling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sampling.h; path = src/sampling.h; sourceTree = "<group>"; };
+		9CE680F8149FBEBD00855EDB /* sampling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sampling.cpp; path = src/sampling.cpp; sourceTree = "<group>"; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
 		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
 		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };
@@ -792,6 +796,8 @@
 				ED677C0D132A3D83000CFDC8 /* replicates.cpp */,
 				ED677C0E132A3D83000CFDC8 /* replicates.h */,
 				9C40F31B13C78FEF00515339 /* cuffmerge */,
+				9CE680F7149FBE2F00855EDB /* sampling.h */,
+				9CE680F8149FBEBD00855EDB /* sampling.cpp */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -1161,6 +1167,7 @@
 				EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 				ED877B74123BCA3F0025A050 /* GFastaIndex.cpp in Sources */,
 				0A6183721324308800EFF9AF /* multireads.cpp in Sources */,
+				9CE680F9149FBEBD00855EDB /* sampling.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1358,6 +1365,7 @@
 				ED920F5C132158CA008DDA0B /* readfile.c in Sources */,
 				0A6183731324308800EFF9AF /* multireads.cpp in Sources */,
 				ED677C0F132A3D83000CFDC8 /* replicates.cpp in Sources */,
+				9CE680FB149FBF3000855EDB /* sampling.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

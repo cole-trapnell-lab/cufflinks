@@ -18,6 +18,7 @@
 #include "differential.h"
 #include "clustering.h"
 #include "differential.h"
+#include "sampling.h"
 
 using namespace std;
 
@@ -382,6 +383,106 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	return make_pair(total_iso_de_tests, inserted.first);
 }
 
+bool generate_js_samples(const AbundanceGroup& prev_abundance,
+                         const AbundanceGroup& curr_abundance,
+                         size_t num_js_samples,
+                         vector<double>& js_samples)
+{
+    ublas::matrix<double> prev_kappa_cov = prev_abundance.kappa_cov();
+    
+    ublas::vector<double> prev_kappa_mean(curr_abundance.abundances().size());
+    for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
+    {
+        prev_kappa_mean(i) = prev_abundance.abundances()[i]->kappa();
+    }
+    
+    ublas::vector<double> curr_kappa_mean(curr_abundance.abundances().size());
+    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
+    {
+        curr_kappa_mean(i) = curr_abundance.abundances()[i]->kappa();
+    }
+
+    double prev_ret = cholesky_factorize(prev_kappa_cov);
+    if (prev_ret != 0)
+        return false;
+    
+    ublas::matrix<double> curr_kappa_cov = curr_abundance.kappa_cov();
+    double curr_ret = cholesky_factorize(curr_kappa_cov);
+    if (curr_ret != 0)
+        return false;
+    
+    multinormal_generator<double> prev_generator(prev_kappa_mean, prev_kappa_cov);
+    vector<ublas::vector<double> > prev_samples;
+    generate_importance_samples(prev_generator, prev_samples, num_js_samples, true);
+    
+    multinormal_generator<double> curr_generator(curr_kappa_mean, curr_kappa_cov);
+    vector<ublas::vector<double> > curr_samples;
+    generate_importance_samples(curr_generator, curr_samples, num_js_samples, true);
+
+    js_samples.clear();
+    
+    size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
+    vector<ublas::vector<double> > sample_kappas(2);
+    for (size_t i = 0; i < num_samples; ++i)
+    {
+		sample_kappas[0] = prev_samples[i];
+        sample_kappas[1] = curr_samples[i];
+				
+		double js = jensen_shannon_distance(sample_kappas);  
+        js_samples.push_back(js);
+    }
+    
+    sort(js_samples.begin(), js_samples.end());
+    return true;
+}
+
+bool test_js(const AbundanceGroup& prev_abundance,
+             const AbundanceGroup& curr_abundance,
+             double& js,
+             double& p_val)
+{
+    static const int num_samples = 1000;
+    vector<double> js_samples;
+    
+    bool success = generate_js_samples(prev_abundance, curr_abundance, num_samples, js_samples);
+    if (success == false)
+        return false;
+    
+    vector<ublas::vector<double> > sample_kappas;
+    ublas::vector<double> curr_kappas(curr_abundance.abundances().size());
+    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
+    {
+        curr_kappas(i) = curr_abundance.abundances()[i]->kappa();
+    }
+    
+    ublas::vector<double> prev_kappas(prev_abundance.abundances().size());
+    for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
+    {
+        prev_kappas(i) = prev_abundance.abundances()[i]->kappa();
+    }
+    
+    sample_kappas.push_back(prev_kappas);
+    sample_kappas.push_back(curr_kappas);
+    
+    js = jensen_shannon_distance(sample_kappas);
+    
+    if (isinf(js) || isnan(js))
+        return false;
+        
+    vector<double>::iterator lb = lower_bound(js_samples.begin(), js_samples.end(), js);
+    if (lb != js_samples.end())
+    {
+        size_t num_less_extreme_samples = lb - js_samples.begin();
+        p_val =  1.0  - ((double)num_less_extreme_samples/js_samples.size());
+    }
+    else if (num_samples)
+    {
+        p_val = 1.0/num_samples;
+    }
+    
+    return true;
+}
+
 // This performs within-group tests on a set of isoforms or a set of TSS groups.
 // This is a way of looking for meaningful differential splicing or differential
 // promoter use.
@@ -466,8 +567,11 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 		sample_kappas.push_back(prev_kappas);
 		sample_kappas.push_back(curr_kappas);
 		
-		double js = jensen_shannon_distance(sample_kappas);
-		if (js == 0.0 || isnan(js) || isinf(js))
+        double js = 0.0;
+        double p_val = 1.0;
+        
+		bool success = test_js(filtered_prev, filtered_curr, js, p_val);
+		if (js == 0.0 || success == false)
 		{
 			test.test_stat = 0;
 			test.p_value = 1.0;
@@ -478,65 +582,113 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 		}
 		else
 		{
-			ublas::vector<double> js_gradient;
-			jensen_shannon_gradient(sample_kappas, js, js_gradient);
-			
-			vector<ublas::matrix<double> > covariances;
-			
-			covariances.push_back(filtered_prev.kappa_cov());
-			covariances.push_back(filtered_curr.kappa_cov());
-			
-			ublas::matrix<double> js_covariance;
-			assert (covariances.size() > 0);
-			for (size_t i = 0; i < covariances.size(); ++i)
-			{
-				assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
-			}
-			make_js_covariance_matrix(covariances,js_covariance);
-			assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
-			
-			double js_var = inner_prod(js_gradient, 
-									   prod(js_covariance, js_gradient));
+            test.test_stat = 0;
+			test.p_value = p_val;
+			test.value_1 = 0;
+			test.value_2 = 0;
+			test.differential = js;
+			test.test_status = enough_reads ? OK : NOTEST;
+            
+            ///////////////////
+#if 1
+            ublas::vector<double> js_gradient;
+            jensen_shannon_gradient(sample_kappas, js, js_gradient);
+            
+            vector<ublas::matrix<double> > covariances;
+            
+            covariances.push_back(filtered_prev.kappa_cov());
+            covariances.push_back(filtered_curr.kappa_cov());
+            
+            ublas::matrix<double> js_covariance;
+            assert (covariances.size() > 0);
+            for (size_t i = 0; i < covariances.size(); ++i)
+            {
+                assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
+            }
+            make_js_covariance_matrix(covariances,js_covariance);
+            assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
+            
+            double js_var = inner_prod(js_gradient, 
+                                       prod(js_covariance, js_gradient));
             assert (!isinf(js_var) && !isnan(js_var));
 
-#ifdef DEBUG
-			if (isinf(js_var) || isnan(js_var))
-			{
-				cerr << "grad: " << js_gradient << endl;
-				cerr << "js_cov: " << js_covariance << endl;
-				cerr << prod(js_covariance, js_gradient) << endl;	
-			}
-#endif
-			if (js_var <= 0.0)
-			{
-                
-				test.test_stat = 0;
-				test.p_value = 1.0;
-				test.value_1 = 0;
-				test.value_2 = 0;
-				test.differential = 0;
-				test.test_status = NOTEST;
-			}
-			else
-			{
+            if (js_var > 0.0)
+            {
                 // We're dealing with a standard normal that's been truncated below zero
                 // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
                 
-				normal test_dist(0,1.0);
-				//double denom = sqrt(js_var);
-				double p = js/sqrt(js_var);
-                test.test_stat = 2 * pdf(test_dist, p);
-				test.p_value = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
-				test.value_1 = 0;
-				test.value_2 = 0;
-				test.differential = js;
-				test.test_status = enough_reads ? OK : NOTEST;
-			}
-			if (isinf(test.test_stat) || isnan(test.test_stat))
-			{
-				fprintf(stderr, "Warning: test stat is invalid!\n");
-				exit(1);
-			}
+                normal test_dist(0,1.0);
+                //double denom = sqrt(js_var);
+                double p = js/sqrt(js_var);
+                //test.test_stat = 2 * pdf(test_dist, p);
+                // analytic p_value:
+                test.test_stat = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
+            }
+
+#endif
+            ///////////////////
+            
+            
+            
+//			ublas::vector<double> js_gradient;
+//			jensen_shannon_gradient(sample_kappas, js, js_gradient);
+//			
+//			vector<ublas::matrix<double> > covariances;
+//			
+//			covariances.push_back(filtered_prev.kappa_cov());
+//			covariances.push_back(filtered_curr.kappa_cov());
+//			
+//			ublas::matrix<double> js_covariance;
+//			assert (covariances.size() > 0);
+//			for (size_t i = 0; i < covariances.size(); ++i)
+//			{
+//				assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
+//			}
+//			make_js_covariance_matrix(covariances,js_covariance);
+//			assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
+//			
+//			double js_var = inner_prod(js_gradient, 
+//									   prod(js_covariance, js_gradient));
+//            assert (!isinf(js_var) && !isnan(js_var));
+//
+//#ifdef DEBUG
+//			if (isinf(js_var) || isnan(js_var))
+//			{
+//				cerr << "grad: " << js_gradient << endl;
+//				cerr << "js_cov: " << js_covariance << endl;
+//				cerr << prod(js_covariance, js_gradient) << endl;	
+//			}
+//#endif
+//			if (js_var <= 0.0)
+//			{
+//                
+//				test.test_stat = 0;
+//				test.p_value = 1.0;
+//				test.value_1 = 0;
+//				test.value_2 = 0;
+//				test.differential = 0;
+//				test.test_status = NOTEST;
+//			}
+//			else
+//			{
+//                // We're dealing with a standard normal that's been truncated below zero
+//                // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
+//                
+//				normal test_dist(0,1.0);
+//				//double denom = sqrt(js_var);
+//				double p = js/sqrt(js_var);
+//                test.test_stat = 2 * pdf(test_dist, p);
+//				test.p_value = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
+//				test.value_1 = 0;
+//				test.value_2 = 0;
+//				test.differential = js;
+//				test.test_status = enough_reads ? OK : NOTEST;
+//			}
+//			if (isinf(test.test_stat) || isnan(test.test_stat))
+//			{
+//				fprintf(stderr, "Warning: test stat is invalid!\n");
+//				exit(1);
+//			}
 		}
 
 		inserted.first->second = test;

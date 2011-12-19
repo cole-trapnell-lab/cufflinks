@@ -50,6 +50,7 @@ noinst_HEADERS = \
     matching_merge.h \
     graph_optimize.h \
     jensen_shannon.h \
+    sampling.h \
 	lemon/maps.h \
 	lemon/bin_heap.h \
 	lemon/fib_heap.h \
@@ -119,6 +120,7 @@ libcufflinks_a_SOURCES = \
     matching_merge.cpp \
     graph_optimize.cpp \
     biascorrection.cpp \
+    sampling.cpp \
     locfit/adap.c \
     locfit/ar_funs.c \
     locfit/arith.c \

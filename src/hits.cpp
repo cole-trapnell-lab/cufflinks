@@ -476,7 +476,12 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
                         sam_flag);
 		return true;
 	}
-	
+	if (target_id >= _hit_file->header->n_targets)
+    {
+        fprintf (stderr, "BAM error: file contains hits to sequences not in header SQ records (%s)\n", bam1_qname(hit_buf));
+        return false;
+    }
+    
 	string text_name = _hit_file->header->target_name[target_id];
 	
 	for (int i = 0; i < hit_buf->core.n_cigar; ++i) 
