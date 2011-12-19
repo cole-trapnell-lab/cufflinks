@@ -479,6 +479,11 @@ bool test_js(const AbundanceGroup& prev_abundance,
     {
         p_val = 1.0/num_samples;
     }
+    else
+    {
+        p_val = 1.0;
+        return false;
+    }
     
     return true;
 }
