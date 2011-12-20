@@ -3363,7 +3363,7 @@ AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts
 	multinormal_generator<double> generator(proposal_gamma_mean, covariance_chol);
     vector<ublas::vector<double> > samples;
     
-	generate_importance_samples(generator, samples, num_importance_samples);
+	generate_importance_samples(generator, samples, num_importance_samples, false);
 	
 	if (samples.size() < 100)
 	{

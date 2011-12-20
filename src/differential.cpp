@@ -545,6 +545,8 @@ bool generate_null_js_samples(const AbundanceGroup& null_abundance,
     generator.set_parameters(null_kappa_mean, null_kappa_cov);
     
     generate_importance_samples(generator, null_samples, num_js_samples, true);
+    if (null_samples.size() == 0)
+        return false;
     
     js_samples.clear();
     
