@@ -383,56 +383,229 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	return make_pair(total_iso_de_tests, inserted.first);
 }
 
-bool generate_js_samples(const AbundanceGroup& prev_abundance,
-                         const AbundanceGroup& curr_abundance,
-                         size_t num_js_samples,
-                         vector<double>& js_samples)
-{
-    ublas::matrix<double> prev_kappa_cov = prev_abundance.kappa_cov();
-    
-    ublas::vector<double> prev_kappa_mean(curr_abundance.abundances().size());
-    for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
-    {
-        prev_kappa_mean(i) = prev_abundance.abundances()[i]->kappa();
-    }
-    
-    ublas::vector<double> curr_kappa_mean(curr_abundance.abundances().size());
-    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
-    {
-        curr_kappa_mean(i) = curr_abundance.abundances()[i]->kappa();
-    }
 
-    double prev_ret = cholesky_factorize(prev_kappa_cov);
+//bool generate_js_samples(const AbundanceGroup& prev_abundance,
+//                         const AbundanceGroup& curr_abundance,
+//                         size_t num_js_samples,
+//                         vector<double>& js_samples)
+//{
+//    ublas::vector<double> prev_kappa_mean(curr_abundance.abundances().size());
+//    for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
+//    {
+//        prev_kappa_mean(i) = prev_abundance.abundances()[i]->kappa();
+//    }
+//    
+//    ublas::vector<double> curr_kappa_mean(curr_abundance.abundances().size());
+//    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
+//    {
+//        curr_kappa_mean(i) = curr_abundance.abundances()[i]->kappa();
+//    }
+//
+//    ublas::matrix<double> prev_kappa_cov = prev_abundance.kappa_cov();
+//    double prev_ret = cholesky_factorize(prev_kappa_cov);
+//    if (prev_ret != 0)
+//        return false;
+//    
+//    ublas::matrix<double> curr_kappa_cov = curr_abundance.kappa_cov();
+//    double curr_ret = cholesky_factorize(curr_kappa_cov);
+//    if (curr_ret != 0)
+//        return false;
+//    
+//    vector<ublas::vector<double> > samples;
+//    
+//    multinormal_generator<double> generator(prev_kappa_mean, prev_kappa_cov);
+//    //vector<ublas::vector<double> > prev_samples;
+//    generate_importance_samples(generator, samples, num_js_samples / 2, true);
+//    
+//    // It's a little silly that we have to do this, but since we always initialize
+//    // the random number generators to random_seed, instead of time(NULL), simply
+//    // creating a new generator (rather than re-using it) 
+//    generator.set_parameters(curr_kappa_mean, curr_kappa_cov);
+//    
+//    //multinormal_generator<double> curr_generator(curr_kappa_mean, curr_kappa_cov);
+//    //vector<ublas::vector<double> > curr_samples;
+//    generate_importance_samples(generator, samples, num_js_samples / 2, true);
+//
+//    // We want to revise the covariance matrix from the samples, since we'll 
+//    // need it later for the CIs.
+//    ublas::matrix<double> null_kappa_cov;
+//    null_kappa_cov = ublas::zero_matrix<double>(curr_kappa_cov.size1(),
+//                                               curr_kappa_cov.size2());
+//    
+//
+//    ublas::vector<double> null_kappa_mean;
+//    null_kappa_mean = ublas::zero_vector<double>(curr_kappa_cov.size1());
+//    
+//    foreach(ublas::vector<double>& sample, samples)
+//    {
+//        null_kappa_mean += sample;
+//    }
+//    null_kappa_mean /= samples.size();
+//   
+//    for (size_t i = 0; i < null_kappa_cov.size1(); ++i)
+//    {
+//        for (size_t j = 0; j < null_kappa_cov.size2(); ++j)
+//        {
+//            for (size_t k = 0 ; k < samples.size(); ++k)
+//            {
+//                double c = (samples[k](i) - null_kappa_mean(i)) * (samples[k](j) - null_kappa_mean(j));
+//                null_kappa_cov(i,j) += c;
+//            }
+//        }
+//    }
+//    
+//    null_kappa_cov /= samples.size();
+//    
+//    static const double epsilon = 1e-6;
+//    
+//    null_kappa_cov += (epsilon * ublas::identity_matrix<double>(null_kappa_cov.size1()));
+//    
+//    double null_ret = cholesky_factorize(null_kappa_cov);
+//    if (null_ret != 0)
+//        return false;
+//    
+//    generator.set_parameters(null_kappa_mean, null_kappa_cov);
+//    samples.clear();
+//    generate_importance_samples(generator, samples, num_js_samples, true);
+//    
+//    cerr << "prev: " << endl;
+//    cerr << prev_kappa_mean << endl;
+//    for (unsigned i = 0; i < prev_kappa_cov.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (prev_kappa_cov, i);
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+//    cerr << "curr: " << endl;
+//    cerr << curr_kappa_mean << endl;
+//    for (unsigned i = 0; i < curr_kappa_cov.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (curr_kappa_cov, i);
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+//    cerr << "null: " << endl;
+//    cerr << null_kappa_mean << endl;
+//    for (unsigned i = 0; i < null_kappa_cov.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (null_kappa_cov, i);
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+//    cerr << "======" << endl;
+//    
+//    js_samples.clear();
+//    
+//    
+//    //size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
+//    size_t num_samples = num_js_samples;
+//    vector<ublas::vector<double> > sample_kappas(2);
+//    
+//    boost::uniform_int<> uniform_dist(0,samples.size()-1);
+//    boost::mt19937 rng; 
+//    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > uniform_gen(rng, uniform_dist); 
+//    
+//    for (size_t i = 0; i < num_samples; ++i)
+//    {
+//		sample_kappas[0] = samples[uniform_gen()];
+//        sample_kappas[1] = samples[uniform_gen()];
+//            
+//		double js = jensen_shannon_distance(sample_kappas);  
+//        cerr << sample_kappas[0] << " vs. " <<  sample_kappas[1] << " = " << js << endl;
+//        js_samples.push_back(js);
+//    }
+//    
+//    sort(js_samples.begin(), js_samples.end());
+//    
+////    for (size_t i = 0; i < 100; ++i)
+////    {
+////        fprintf(stderr, "%lg\n", js_samples[i]);
+////    }
+//    return true;
+//}
+
+bool generate_null_js_samples(const AbundanceGroup& null_abundance,
+                              size_t num_js_samples,
+                              multinormal_generator<double>& generator,
+                              vector<double>& js_samples)
+{
+    ublas::vector<double> null_kappa_mean(null_abundance.abundances().size());
+    for (size_t i = 0; i < null_abundance.abundances().size(); ++i)
+    {
+        null_kappa_mean(i) = null_abundance.abundances()[i]->kappa();
+    }
+    
+    ublas::matrix<double> null_kappa_cov = null_abundance.kappa_cov();
+    double prev_ret = cholesky_factorize(null_kappa_cov);
     if (prev_ret != 0)
         return false;
     
-    ublas::matrix<double> curr_kappa_cov = curr_abundance.kappa_cov();
-    double curr_ret = cholesky_factorize(curr_kappa_cov);
-    if (curr_ret != 0)
-        return false;
+    vector<ublas::vector<double> > null_samples;
     
-    multinormal_generator<double> prev_generator(prev_kappa_mean, prev_kappa_cov);
-    vector<ublas::vector<double> > prev_samples;
-    generate_importance_samples(prev_generator, prev_samples, num_js_samples, true);
+    // It's a little silly that we have to do this, but since we always initialize
+    // the random number generators to random_seed, instead of time(NULL), simply
+    // creating a new generator (rather than re-using it) 
+    generator.set_parameters(null_kappa_mean, null_kappa_cov);
     
-    multinormal_generator<double> curr_generator(curr_kappa_mean, curr_kappa_cov);
-    vector<ublas::vector<double> > curr_samples;
-    generate_importance_samples(curr_generator, curr_samples, num_js_samples, true);
-
+    generate_importance_samples(generator, null_samples, num_js_samples, true);
+    
     js_samples.clear();
     
-    size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
+    //size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
+    size_t num_samples = num_js_samples;
     vector<ublas::vector<double> > sample_kappas(2);
+    
+    boost::uniform_int<> null_uniform_dist(0,null_samples.size()-1);
+    boost::mt19937 null_rng; 
+    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > null_uniform_gen(null_rng, null_uniform_dist); 
+    
     for (size_t i = 0; i < num_samples; ++i)
     {
-		sample_kappas[0] = prev_samples[i];
-        sample_kappas[1] = curr_samples[i];
-				
+		sample_kappas[0] = null_samples[null_uniform_gen()];
+        sample_kappas[1] = null_samples[null_uniform_gen()];
+        
 		double js = jensen_shannon_distance(sample_kappas);  
+        //cerr << sample_kappas[0] << " vs. " <<  sample_kappas[1] << " = " << js << endl;
         js_samples.push_back(js);
     }
-    
+
     sort(js_samples.begin(), js_samples.end());
+    
+    //    for (size_t i = 0; i < 100; ++i)
+    //    {
+    //        fprintf(stderr, "%lg\n", js_samples[i]);
+    //    }
+    return true;
+}
+
+// Calculates the probability that drawing two samples from the provided
+// relative abundance distribution would have produced a value at least as
+// extreme as the given js value.
+bool one_sided_js_test(const AbundanceGroup& null_abundances,
+                       size_t num_samples,
+                       multinormal_generator<double>& generator,
+                       double js,
+                       double& p_val)
+{
+    vector<double> js_samples;
+    
+    
+    bool success = generate_null_js_samples(null_abundances, num_samples, generator, js_samples);
+    if (success == false)
+        return false;
+    
+    vector<double>::iterator lb = lower_bound(js_samples.begin(), js_samples.end(), js);
+    if (lb != js_samples.end())
+    {
+        size_t num_less_extreme_samples = lb - js_samples.begin();
+        p_val =  1.0  - ((double)num_less_extreme_samples/js_samples.size());
+    }
+    else if (num_samples)
+    {
+        p_val = 1.0/num_samples;
+    }
+    else
+    {
+        p_val = 1.0;
+        return false;
+    }
     return true;
 }
 
@@ -441,13 +614,6 @@ bool test_js(const AbundanceGroup& prev_abundance,
              double& js,
              double& p_val)
 {
-    static const int num_samples = 10000;
-    vector<double> js_samples;
-    
-    bool success = generate_js_samples(prev_abundance, curr_abundance, num_samples, js_samples);
-    if (success == false)
-        return false;
-    
     vector<ublas::vector<double> > sample_kappas;
     ublas::vector<double> curr_kappas(curr_abundance.abundances().size());
     for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
@@ -468,22 +634,56 @@ bool test_js(const AbundanceGroup& prev_abundance,
     
     if (isinf(js) || isnan(js))
         return false;
-        
-    vector<double>::iterator lb = lower_bound(js_samples.begin(), js_samples.end(), js);
-    if (lb != js_samples.end())
-    {
-        size_t num_less_extreme_samples = lb - js_samples.begin();
-        p_val =  1.0  - ((double)num_less_extreme_samples/js_samples.size());
-    }
-    else if (num_samples)
-    {
-        p_val = 1.0/num_samples;
-    }
-    else
-    {
-        p_val = 1.0;
+    
+    static const int num_samples = 100000;
+    
+//    bool success = generate_js_samples(prev_abundance, curr_abundance, num_samples, js_samples);
+//    if (success == false)
+//        return false;
+
+    multinormal_generator<double> gen(ublas::zero_vector<double>(prev_abundance.kappa_cov().size1()),
+                                      ublas::zero_matrix<double>(prev_abundance.kappa_cov().size1(),
+                                                                 prev_abundance.kappa_cov().size2()));
+    
+    double prev_p_val = 1.0;
+    bool prev_succ = one_sided_js_test(prev_abundance, num_samples, gen, js, prev_p_val);
+    
+    double curr_p_val = 1.0;
+    bool curr_succ = one_sided_js_test(curr_abundance, num_samples, gen, js, curr_p_val);
+
+    if (!curr_succ || !prev_succ)
         return false;
-    }
+        
+    p_val = (prev_p_val + curr_p_val)/2;
+//    double mean_js = accumulate(js_samples.begin(), js_samples.end(), 0.0);
+//    if (js_samples.size() == 0)
+//        return false;
+//    mean_js /= js_samples.size();
+//    
+//    double var_js = 0.0;
+//    for (size_t i = 0; i < js_samples.size(); ++i)
+//    {
+//        double s =  js_samples[i] - mean_js;
+//        s *= s;
+//        var_js += s;
+//    }
+//    var_js /= js_samples.size();
+//    
+//    if (var_js > 0.0)
+//    {
+//        // We're dealing with a standard normal that's been truncated below zero
+//        // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
+//        
+//        normal test_dist(0,1.0);
+//        //double denom = sqrt(js_var);
+//        double se_js = sqrt(var_js);
+//        double p = mean_js/se_js;
+//        p_val = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
+//    }
+//    else
+//    {
+//        return false;
+//    }
     
     return true;
 }

@@ -197,7 +197,6 @@ public:
 	multinormal_generator(const boost::numeric::ublas::vector<ValueType>& mean,
 						  const boost::numeric::ublas::matrix<ValueType>& chol_cov)
     :	
-    // FIXME: revert back to seeding on time(NULL)
     _engine(random_seed),
     _distribution(),
     _generator(boost::variate_generator<base_generator_type&, 
@@ -234,6 +233,14 @@ public:
 		
 		return _rand;
 	}
+    
+    void set_parameters(const boost::numeric::ublas::vector<ValueType>& mean,
+                        const boost::numeric::ublas::matrix<ValueType>& chol_cov)
+    {
+        _rand = boost::numeric::ublas::zero_vector<ValueType>(mean.size());
+		_mean = mean; 
+		_cholesky = chol_cov;
+    }
 	
 private:
 	boost::numeric::ublas::vector<ValueType>		_rand;
