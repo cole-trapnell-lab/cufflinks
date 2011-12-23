@@ -740,8 +740,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
         if (prev_abundance.abundances()[k]->num_fragments() && prev_abundance.abundances()[k]->effective_length())
         {
             double frags_per_kb = prev_abundance.abundances()[k]->num_fragments() / (prev_abundance.abundances()[k]->effective_length() / 1000.0);
-            //if (frags_per_kb >= min_read_count)
-            if (frags_per_kb > 0)
+            if (frags_per_kb >= min_read_count)
                 prev_enough_reads = true;
         }
         
@@ -749,8 +748,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
         if (curr_abundance.abundances()[k]->num_fragments() && curr_abundance.abundances()[k]->effective_length())
         {
             double frags_per_kb = curr_abundance.abundances()[k]->num_fragments() / (curr_abundance.abundances()[k]->effective_length() / 1000.0);
-            //if (frags_per_kb >= min_read_count)
-            if (frags_per_kb > 0)
+            if (frags_per_kb >= min_read_count)
                 curr_enough_reads = true;
         }
         
