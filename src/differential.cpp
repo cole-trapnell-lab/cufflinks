@@ -533,9 +533,18 @@ bool generate_null_js_samples(const AbundanceGroup& null_abundance,
     }
     
     ublas::matrix<double> null_kappa_cov = null_abundance.kappa_cov();
+    
     double prev_ret = cholesky_factorize(null_kappa_cov);
     if (prev_ret != 0)
         return false;
+    
+//    cerr << endl << null_kappa_mean << endl;
+//    for (unsigned i = 0; i < null_kappa_cov.size1 (); ++ i) 
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (null_kappa_cov, i);
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
+//    cerr << "======" << endl;
     
     vector<ublas::vector<double> > null_samples;
     
@@ -544,7 +553,7 @@ bool generate_null_js_samples(const AbundanceGroup& null_abundance,
     // creating a new generator (rather than re-using it) 
     generator.set_parameters(null_kappa_mean, null_kappa_cov);
     
-    generate_importance_samples(generator, null_samples, num_js_samples, true);
+    generate_importance_samples(generator, null_samples, num_js_samples, false);
     if (null_samples.size() == 0)
         return false;
     
@@ -720,6 +729,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 	AbundanceStatus curr_status = prev_abundance.status();
     
     vector<bool> to_keep(curr_abundance.abundances().size(), false);
+    //vector<bool> to_keep(curr_abundance.abundances().size(), false);
     
     for (size_t k = 0; k < prev_abundance.abundances().size(); ++k)
     {
@@ -730,7 +740,8 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
         if (prev_abundance.abundances()[k]->num_fragments() && prev_abundance.abundances()[k]->effective_length())
         {
             double frags_per_kb = prev_abundance.abundances()[k]->num_fragments() / (prev_abundance.abundances()[k]->effective_length() / 1000.0);
-            if (frags_per_kb >= min_read_count)
+            //if (frags_per_kb >= min_read_count)
+            if (frags_per_kb > 0)
                 prev_enough_reads = true;
         }
         
@@ -738,7 +749,8 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
         if (curr_abundance.abundances()[k]->num_fragments() && curr_abundance.abundances()[k]->effective_length())
         {
             double frags_per_kb = curr_abundance.abundances()[k]->num_fragments() / (curr_abundance.abundances()[k]->effective_length() / 1000.0);
-            if (frags_per_kb >= min_read_count)
+            //if (frags_per_kb >= min_read_count)
+            if (frags_per_kb > 0)
                 curr_enough_reads = true;
         }
         
@@ -753,8 +765,8 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
     curr_abundance.filter_group(to_keep, filtered_curr);
     
 	if (filtered_prev.abundances().size() > 1 &&
-        filtered_prev.has_member_with_status(NUMERIC_LOW_DATA) == false &&
-        filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false && 
+        /*filtered_prev.has_member_with_status(NUMERIC_LOW_DATA) == false &&
+        filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false &&*/ 
         prev_status == NUMERIC_OK && filtered_prev.num_fragments() > 0 &&
 		curr_status == NUMERIC_OK && filtered_curr.num_fragments() > 0)
 	{
