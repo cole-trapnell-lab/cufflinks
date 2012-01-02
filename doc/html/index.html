@@ -128,25 +128,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.2.1</td>
-                    <td align="right">11/30/2011</td>
+                    <td>version 1.3.0</td>
+                    <td align="right">1/2/2012</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.2.1.tar.gz"
+                    <td><a href="./downloads/cufflinks-1.3.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.2.1.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.3.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.2.1.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-1.3.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -234,14 +234,14 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
-			<h2>1.2.1 release - 11/30/2011</h2>
-			  <p>This release fixes an issue introduced with version 1.2.0, 
-				where a very deeply sequenced locus could cause Cufflinks or 
-				Cuffdiff to assign 0 FPKM to subsequent genes.  It also 
-				corrects a bug where Cufflinks wasn't reporting very deeply 
-				sequenced loci as HIDATA.
-			  </ul>
-			  </p>
+			<h2>1.3.0 release - 1/2/2012</h2>
+			  <p>This release improves the accuracy of Cuffdiff's isoform switching tests and fixes several bugs.
+				<ul>
+					<li>Cuffdiff find genes that are differentially spliced or switch promoters between conditions using the Jensen-Shannon distance metric. Previous versions of Cuffdiff tested for the signficance of observed shifts in relative isoform abundance using an analytic approximation of the variance of this metric for each gene.  However, when few replicates are available or sequencing is shallow, this approximation can be poor.  This release improves Cuffdiff's accuracy with a computational-derived estimate of the variance of the Jensen-Shannon metric by sampling in each gene.  This improvement substantially reduces the false positive rate of Cuffdiff's tests in <tt>splicing.diff</tt>, <tt>promoters.diff</tt>, and <tt>cds.diff</tt>.  Tests for changes in global expression are not affected.
+					<li>A bug in Cuffmerge that caused a crash with a warning about improper sorting of SAM files has been corrected.
+					<li>A bug that caused Cuffmerge to drop some reference transcripts from the output has been fixed.
+					<li>A few minor issues with Cufflinks' pre-assembly alignment filters have been fixed.
+				</ul>
 			  <br/>
 			<h2>1.2.0 release - 11/23/2011</h2>
 			  <p>This release fixes a number of bugs and includes some signficant accuracy and performance improvements:
