@@ -167,59 +167,80 @@ inline int Gintcmp(int a, int b) {
   return a-b;
 }
 
-int Gstrcmp(char* a, char* b);
+int Gstrcmp(const char* a, const char* b, int n=-1);
 //same as strcmp but doesn't crash on NULL pointers
 
-int Gstricmp(const char* a, const char* b);
+int Gstricmp(const char* a, const char* b, int n=-1);
 
-inline void swap(int &arg1, int &arg2){
- //arg1 ^= arg2;
- //arg2 ^= arg1;
- //arg1 ^= arg2;
- register int swp=arg1;
- arg1=arg2; arg2=swp;
- }
+//basic swap template function
+template<class T> void Gswap(T& lhs, T& rhs) {
+ //register T tmp=lhs;
+ T tmp=lhs; //requires copy operator
+ lhs=rhs;
+ rhs=tmp;
+}
 
-inline void swap(char* &arg1, char* &arg2){ //swap pointers!
- register char* swp=arg1;
- arg1=arg2; arg2=swp;
- }
-
-inline void swap(uint &arg1, uint &arg2) {
-  register uint swp=arg1;
-  arg1=arg2; arg2=swp;
+/// bitCount_32 - this function counts the number of set bits in a value.
+/// Ex. CountPopulation(0xF000F000) = 8
+/// Returns 0 if the word is zero.
+inline uint bitCount_32(uint32_t Value) {
+#if __GNUC__ >= 4
+    return __builtin_popcount(Value);
+#else
+    uint32_t v = Value - ((Value >> 1) & 0x55555555);
+    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+#endif
   }
 
-inline void swap(short &arg1, short &arg2) {
-  register short swp=arg1;
-  arg1=arg2; arg2=swp;
+/// bitCount_64 - this function counts the number of set bits in a value,
+/// (64 bit edition.)
+inline uint bitCount_64(uint64_t Value) {
+#if __GNUC__ >= 4
+    return __builtin_popcountll(Value);
+#else
+    uint64_t v = Value - ((Value >> 1) & 0x5555555555555555ULL);
+    v = (v & 0x3333333333333333ULL) + ((v >> 2) & 0x3333333333333333ULL);
+    v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+    return uint((uint64_t)(v * 0x0101010101010101ULL) >> 56);
+#endif
   }
 
-inline void swap(unsigned short &arg1, unsigned short &arg2) {
-  register unsigned short swp=arg1;
-  arg1=arg2; arg2=swp;
-  }
+/// CountTrailingZeros_32 - this function performs the platform optimal form of
+/// counting the number of zeros from the least significant bit to the first one
+/// bit.  Ex. CountTrailingZeros_32(0xFF00FF00) == 8.
+/// Returns 32 if the word is zero.
+inline unsigned bitCountTrailingZeros_32(uint32_t Value) {
+#if __GNUC__ >= 4
+  return Value ? __builtin_ctz(Value) : 32;
+#else
+  static const unsigned Mod37BitPosition[] = {
+    32, 0, 1, 26, 2, 23, 27, 0, 3, 16, 24, 30, 28, 11, 0, 13,
+    4, 7, 17, 0, 25, 22, 31, 15, 29, 10, 12, 6, 0, 21, 14, 9,
+    5, 20, 8, 19, 18
+  };
+  return Mod37BitPosition[(-Value & Value) % 37];
+#endif
+}
 
-inline void swap(long &arg1, long &arg2) {
-  register long swp=arg1;
-  arg1=arg2; arg2=swp;
-  }
-
-inline void swap(unsigned long &arg1, unsigned long &arg2) {
-  register unsigned long swp=arg1;
-  arg1=arg2; arg2=swp;
-  }
-
-
-inline void swap(char &arg1, char &arg2) {
-  register char swp=arg1;
-  arg1=arg2; arg2=swp;
-  }
-
-inline void swap(unsigned char &arg1, unsigned char &arg2) {
-  register unsigned char swp=arg1;
-  arg1=arg2; arg2=swp;
-  }
+// CountTrailingZeros_64 - This function performs the platform optimal form
+/// of counting the number of zeros from the least significant bit to the first
+/// one bit (64 bit edition.)
+/// Returns 64 if the word is zero.
+inline unsigned bitCountTrailingZeros_64(uint64_t Value) {
+#if __GNUC__ >= 4
+  return Value ? __builtin_ctzll(Value) : 64;
+#else
+  static const unsigned Mod67Position[] = {
+    64, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54,
+    4, 64, 13, 10, 17, 62, 60, 28, 42, 30, 20, 51, 25, 44, 55,
+    47, 5, 32, 65, 38, 14, 22, 11, 58, 18, 53, 63, 9, 61, 27,
+    29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36, 56,
+    7, 48, 35, 6, 34, 33, 0
+  };
+  return Mod67Position[(-Value & Value) % 67];
+#endif
+}
 
 /**************** Memory management ***************************/
 
@@ -330,7 +351,7 @@ class GSeg {
      }
 
   bool overlap(uint s, uint e) {
-     if (s>e) { swap(s,e); }
+     if (s>e) { Gswap(s,e); }
      //return start<s ? (s<=end) : (start<=e);
      return (start<=e && end>=s);
      }
@@ -347,7 +368,7 @@ class GSeg {
         }
      }
   int overlapLen(uint rstart, uint rend) {
-     if (rstart>rend) { swap(rstart,rend); }
+     if (rstart>rend) { Gswap(rstart,rend); }
      if (start<rstart) {
         if (rstart>end) return 0;
         return (rend>end) ? end-rstart+1 : rend-rstart+1;
@@ -369,9 +390,6 @@ class GSeg {
   bool operator==(GSeg& d){
       return (start==d.start && end==d.end);
       }
-  bool operator>(GSeg& d){
-     return (start==d.start)?(end>d.end):(start>d.start);
-     }
   bool operator<(GSeg& d){
      return (start==d.start)?(end<d.end):(start<d.start);
      }

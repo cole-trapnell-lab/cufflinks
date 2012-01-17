@@ -65,6 +65,14 @@ template <class OBJ> class GVec {
           TEST_INDEX(i);
           return fArray[i];
           }
+    OBJ& Last() {
+         TEST_INDEX(fCount-1);
+         return fArray[fCount-1];
+         }
+    OBJ& First() {
+         TEST_INDEX(0);
+         return fArray[0];
+         }
     void Clear();
     void Insert(int idx, OBJ* item);
     void Delete(int index);
@@ -85,8 +93,8 @@ template <class OBJ> class GArray:public GVec<OBJ> {
     bool fUnique;
     static int DefaultCompareProc(OBJ& item1, OBJ& item2) {
       //the comparison operators MUST be defined for OBJ class!
-      if ( item1 > item2) return 1;
-        else return (item2 > item1) ? -1 : 0 ;
+      if ( item2 < item1) return 1;
+        else return (item1 < item2) ? -1 : 0 ;
       }
   public:
     typedef int CompareProc(OBJ& item1, OBJ& item2);
@@ -188,9 +196,9 @@ template <class OBJ> class GList:public GPVec<OBJ> {
     bool fUnique;
     GCompareProc* fCompareProc; //a pointer to a Compare function
     static int DefaultCompareProc(const pointer item1, const pointer item2) {
-      //the comparison operators MUST be defined for OBJ class!
-      if (*((OBJ*)item1) > *((OBJ*)item2)) return 1;
-        else if (*((OBJ*)item2) > *((OBJ*)item1)) return -1;
+      //operator< MUST be defined for OBJ class!
+      if (*((OBJ*)item2) < *((OBJ*)item1)) return 1;
+        else if (*((OBJ*)item1) < *((OBJ*)item2)) return -1;
                                              else return  0;
       }
     void QuickSort(int L, int R);

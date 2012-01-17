@@ -163,23 +163,40 @@ char* Gstrdup(const char* sfrom, const char* sto) {
   return copy;
   }
 
-int Gstrcmp(char* a, char* b) {
+int Gstrcmp(const char* a, const char* b, int n) {
  if (a==NULL || b==NULL) {
    return a==NULL ? -1 : 1;
    }
- else return strcmp(a,b);
+ else {
+   if (n<0) return strcmp(a,b);
+       else return strncmp(a,b,n);
+ }
+
 }
 
-int Gstricmp(const char* a, const char* b) {
+int Gstricmp(const char* a, const char* b, int n) {
  if (a==NULL || b==NULL) return a==NULL ? -1 : 1;
  register int ua, ub;
- while ((*a!=0) && (*b!=0)) {
-  ua=tolower((unsigned char)*a);
-  ub=tolower((unsigned char)*b);
-  a++;b++;
-  if (ua!=ub) return ua < ub ? -1 : 1;
+ if (n<0) {
+   while ((*a!=0) && (*b!=0)) {
+    ua=tolower((unsigned char)*a);
+    ub=tolower((unsigned char)*b);
+    a++;b++;
+    if (ua!=ub) return ua < ub ? -1 : 1;
+    }
+    return (*a == 0) ? ( (*b == 0) ? 0 : -1 ) : 1 ;
   }
-  return (*a == 0) ? ( (*b == 0) ? 0 : -1 ) : 1 ;
+ else {
+   while (n && (*a!=0) && (*b!=0)) {
+    ua=tolower((unsigned char)*a);
+    ub=tolower((unsigned char)*b);
+    a++;b++;n--;
+    if (ua!=ub) return ua < ub ? -1 : 1;
+    }
+    //return (*a == 0) ? ( (*b == 0) ? 0 : -1 ) : 1 ;
+   if (n==0) return 0;
+   else { return (*a == 0) ? ( (*b == 0) ? 0 : -1 ) : 1 ; }
+  }
 }
 
 int strsplit(char* str, char** fields, int maxfields, const char* delim) {

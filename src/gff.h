@@ -98,7 +98,7 @@ class GffLine {
        num_parents=0;
        parents=NULL;
        }
-    char* extractAttr(const char* pre, bool caseStrict=true, bool enforce_GTF2=false);
+    char* extractAttr(const char* pre, bool caseStrict=false, bool enforce_GTF2=false);
     GffLine(GffLine* l) { //a copy constructor
       memcpy((void*)this, (void*)l, sizeof(GffLine));
       line=NULL;
@@ -674,7 +674,7 @@ public:
      }
    bool exonOverlap(uint s, uint e) {//check if ANY exon overlaps given segment
       //ignores strand!
-      if (s>e) swap(s,e);
+      if (s>e) Gswap(s,e);
       for (int i=0;i<exons.Count();i++) {
          if (exons[i]->overlap(s,e)) return true;
          }
@@ -697,7 +697,7 @@ public:
     int exonOverlapIdx(uint s, uint e, int* ovlen=NULL) {
       //return the exons' index for the overlapping OR ADJACENT exon
       //ovlen, if given, will return the overlap length
-      if (s>e) swap(s,e);
+      if (s>e) Gswap(s,e);
       s--;e++; //to also catch adjacent exons
       for (int i=0;i<exons.Count();i++) {
             if (exons[i]->start>e) break;

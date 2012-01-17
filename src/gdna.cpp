@@ -21,7 +21,7 @@ char* reverseComplement(char* seq, int slen) {
    register char c;
    while (l<r) {
       c=seq[l];seq[l]=seq[r];
-      seq[r]=c;   //this was: swap(str[l],str[r]);
+      seq[r]=c;   //this was: Gswap(str[l],str[r]);
       l++;r--;
       }
    for (int i=0;i<slen;i++) seq[i]=ntComplement(seq[i]);

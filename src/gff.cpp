@@ -52,40 +52,57 @@ int gfo_cmpByLoc(const pointer p1, const pointer p2) {
              else return (int)(g1.gseq_id-g2.gseq_id);
 }
 
-char* GffLine::extractAttr(const char* pre, bool caseStrict, bool enforce_GTF2) {
+char* GffLine::extractAttr(const char* attr, bool caseStrict, bool enforce_GTF2) {
  //parse a key attribute and remove it from the info string
  //(only works for attributes that have values following them after ' ' or '=')
  static const char GTF2_ERR[]="Error parsing attribute %s ('\"' required) at GTF line:\n%s\n";
- int lpre=strlen(pre);
- char cend=pre[lpre-1];
- char* pos = (caseStrict) ? strstr(info, pre) : strifind(info, pre);
- if (pos==NULL) return NULL;
- char* findstart=info;
- //require word boundary on the left:
- while (pos!=NULL && pos!=info && *(pos-1)!=';' && *(pos-1)!=' ') {
-    findstart=pos+lpre;
-    pos = (caseStrict) ? strstr(findstart, pre) : strifind(findstart, pre);
-    }
- if (pos==NULL) return NULL;
- if (cend!=' ' && cend!='=') {
-    //require word boundary on the right:
-    while (pos!=NULL && *(pos+lpre)!=' ' && *(pos+lpre)!='=') {
-       findstart=pos+lpre;
-       pos = (caseStrict) ? strstr(findstart, pre) : strifind(findstart, pre);
-       }
-    }
- if (pos==NULL) return NULL;
- char* vp=pos+lpre;
+ int attrlen=strlen(attr);
+ char cend=attr[attrlen-1];
+ //char* pos = (caseStrict) ? strstr(info, attr) : strifind(info, attr);
+ //must make sure attr is not found in quoted text
+ char* pos=info;
+ char prevch=0;
+ bool in_str=false;
+ bool notfound=true;
+ int (*strcmpfn)(const char*, const char*, int) = caseStrict ? Gstrcmp : Gstricmp;
+ while (notfound && *pos) {
+   char ch=*pos;
+   if (ch=='"') {
+     in_str=!in_str;
+     pos++;
+     prevch=ch;
+     continue;
+     }
+   if (!in_str && (prevch==0 || prevch==' ' || prevch == ';')
+          && strcmpfn(attr, pos, attrlen)==0) {
+      //attr match found
+      //check for word boundary on right
+      char* epos=pos+attrlen;
+      if (cend=='=' || cend==' ' || *epos==0 || *epos==' ') {
+        notfound=false;
+        break;
+        }
+      //not a perfect match, move on
+      pos=epos;
+      prevch=*(pos-1);
+      continue;
+      }
+   //not a match or in_str
+   prevch=ch;
+   pos++;
+   }
+ if (notfound) return NULL;
+ char* vp=pos+attrlen;
  while (*vp==' ') vp++;
  if (*vp==';' || *vp==0)
-      GError("Error parsing value of GFF attribute \"%s\", line:\n%s\n", pre, dupline);
+      GError("Error parsing value of GFF attribute \"%s\", line:\n%s\n", attr, dupline);
  bool dq_enclosed=false; //value string enclosed by double quotes
  if (*vp=='"') {
      dq_enclosed=true;
      vp++;
      }
  if (enforce_GTF2 && !dq_enclosed)
-      GError(GTF2_ERR,pre, dupline);
+      GError(GTF2_ERR,attr, dupline);
  char* vend=vp;
  if (dq_enclosed) {
     while (*vend!='"' && *vend!=';' && *vend!=0) vend++;
@@ -94,7 +111,7 @@ char* GffLine::extractAttr(const char* pre, bool caseStrict, bool enforce_GTF2) 
     while (*vend!=';' && *vend!=0) vend++;
     }
  if (enforce_GTF2 && *vend!='"')
-     GError(GTF2_ERR, pre, dupline);
+     GError(GTF2_ERR, attr, dupline);
  char *r=Gstrdup(vp, vend-1);
  //-- now remove this attribute from the info string
  while (*vend!=0 && (*vend=='"' || *vend==';' || *vend==' ')) vend++;
@@ -169,7 +186,7 @@ GffLine::GffLine(GffReader* reader, const char* l) {
    GMessage("Warning: invalid end coordinate at line:\n%s\n",l);
    return;
    }
- if (fend<fstart) swap(fend,fstart); //make sure fstart>=fend, always
+ if (fend<fstart) Gswap(fend,fstart); //make sure fstart>=fend, always
  p=t[5];
  if (p[0]=='.' && p[1]==0) {
   score=0;
@@ -234,27 +251,27 @@ if (reader->transcriptsOnly && !is_t_data) {
           }
         return; //skip this line, unwanted feature name
         }
- ID=extractAttr("ID=");
- char* Parent=extractAttr("Parent=");
+ ID=extractAttr("ID=",true);
+ char* Parent=extractAttr("Parent=",true);
  is_gff3=(ID!=NULL || Parent!=NULL);
  if (is_gff3) {
    //parse as GFF3
     if (ID!=NULL) {
        //has ID attr so it's likely to be a parent feature
        //look for explicit gene name
-       gene_name=extractAttr("gene_name=",false);
+       gene_name=extractAttr("gene_name=");
        if (gene_name==NULL) {
-           gene_name=extractAttr("geneName=",false);
+           gene_name=extractAttr("geneName=");
            if (gene_name==NULL) {
-               gene_name=extractAttr("gene_sym=",false);
+               gene_name=extractAttr("gene_sym=");
                if (gene_name==NULL) {
-                   gene_name=extractAttr("gene=",false);
+                   gene_name=extractAttr("gene=");
                    }
                }
            }
-       gene_id=extractAttr("geneID=",false);
+       gene_id=extractAttr("geneID=");
        if (gene_id==NULL) {
-          gene_id=extractAttr("gene_id=",false);
+          gene_id=extractAttr("gene_id=");
           }
        if (is_gene) {
          //special case: keep the Name and ID attributes of the gene feature
@@ -299,7 +316,7 @@ if (reader->transcriptsOnly && !is_t_data) {
          } //has Parent field
    } //GFF3
   else { // GTF-like expected
-   Parent=extractAttr("transcript_id");
+   Parent=extractAttr("transcript_id",true);
    if (Parent!=NULL) { //GTF2 format detected
      if (is_transcript) {
          // atypical GTF with a parent transcript line declared
@@ -307,11 +324,17 @@ if (reader->transcriptsOnly && !is_t_data) {
          Parent=NULL;
          }
      gene_id=extractAttr("gene_id"); // for GTF this is the only attribute accepted as geneID
+     if (gene_id==NULL)
+       gene_id=extractAttr("geneid");
      gene_name=extractAttr("gene_name");
      if (gene_name==NULL) {
+
            gene_name=extractAttr("gene_sym");
-           if (gene_name==NULL)
+           if (gene_name==NULL) {
                gene_name=extractAttr("gene");
+               if (gene_name==NULL)
+                  gene_name=extractAttr("genesymbol");
+               }
            }
      //prepare for parseAttr by adding '=' character instead of spaces for all attributes
      //after the attribute name
@@ -531,7 +554,7 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
      isCDS=false;
      }
   if (qs || qe) {
-    if (qs>qe) swap(qs,qe);
+    if (qs>qe) Gswap(qs,qe);
     if (qs==0) qs=1;
 	}
   int ovlen=0;

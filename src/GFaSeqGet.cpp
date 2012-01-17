@@ -228,7 +228,7 @@ const char* GFaSeqGet::subseq(uint cstart, int& clen) {
 }
 
 char* GFaSeqGet::copyRange(uint cstart, uint cend, bool revCmpl, bool upCase) {
-  if (cstart>cend) { swap(cstart, cend); }
+  if (cstart>cend) { Gswap(cstart, cend); }
   int clen=cend-cstart+1;
   const char* gs=subseq(cstart, clen);
   if (gs==NULL) return NULL;

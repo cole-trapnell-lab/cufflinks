@@ -228,7 +228,6 @@ class GTData { //transcript associated data
             rna->uptr=this;
             }
         }
-   bool operator>(GTData& b) { return (rna > b.rna); }
    bool operator<(GTData& b) { return (rna < b.rna); }
    bool operator==(GTData& b) { return (rna==b.rna); }
 };
@@ -240,10 +239,6 @@ class CGeneSym {
   CGeneSym(const char* n=NULL, int f=0):name(n) {
     freq=f;
     }
-  bool operator>(CGeneSym& b) {
-     return (freq==b.freq) ? ( (name.length()==b.name.length()) ? (name>b.name) :
-               (name.length()>b.name.length()) ) : ( freq<b.freq );
-     }
   bool operator<(CGeneSym& b) {
      return (freq==b.freq)? ( (name.length()==b.name.length()) ? (name<b.name) :
          (name.length()<b.name.length()) ) : ( freq>b.freq );
@@ -271,13 +266,6 @@ public:
    bool operator==(GffLocus& d){
        return (gseq_id==d.gseq_id && strand==d.strand && start==d.start && end==d.end);
        }
-   bool operator>(GffLocus& d){
-      if (gseq_id!=d.gseq_id) return (gseq_id>d.gseq_id);
-      if (start==d.start) {
-         if (end==d.end) return (strand>d.strand);
-                      else return (end>d.end);
-         } else return (start>d.start);
-      }
    bool operator<(GffLocus& d){
      if (gseq_id!=d.gseq_id) return (gseq_id<d.gseq_id);
      if (start==d.start) {
@@ -498,9 +486,6 @@ class GenomicSeqData {
   bool operator==(GenomicSeqData& d){
     return gseq_id==d.gseq_id;
   }
-  bool operator>(GenomicSeqData& d){
-    return (gseq_id>d.gseq_id);
-  }
   bool operator<(GenomicSeqData& d){
     return (gseq_id<d.gseq_id);
   }
@@ -588,13 +573,13 @@ struct GffLoader {
       noExonAttrs=false;
       mergeCloseExons=false;
       showWarnings=false;
-      if (fname=="-") {
+      if (fname=="-" || fname=="stdin") {
          f=stdin;
          fname="stdin";
          }
         else {
           if ((f=fopen(fname.chars(), "r"))==NULL) {
-            GError("Error: cannot open file %s!\n",fname.chars());
+            GError("Error: cannot open gff file %s!\n",fname.chars());
             }
           }
       }

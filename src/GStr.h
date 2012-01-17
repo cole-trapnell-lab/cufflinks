@@ -26,7 +26,7 @@ class GStr {
         friend bool operator>(const char* s1, const GStr& s2);
         friend bool operator>=(const char* s1, const GStr& s2);
         friend bool operator!=(const char* s1, const GStr& s2);
-        friend void swap(GStr& s1, GStr& s2);
+        friend void Gswap(GStr& s1, GStr& s2);
     public:
         GStr();
         GStr(const GStr& s);
@@ -197,7 +197,6 @@ inline const char *GStr::text() const {
  return my_data->chars;
  }
 
-
 inline bool operator>=(const char *s1, const GStr& s2) {
  return (strcmp(s1, s2.chars()) >= 0);
  }
@@ -206,10 +205,9 @@ inline bool operator!=(const char *s1, const GStr& s2) {
  return (strcmp(s1, s2.chars()) != 0);
  }
 
-inline void swap(GStr& s1, GStr& s2) {
+inline void Gswap(GStr& s1, GStr& s2) {
  GStr::Data *tmp = s1.my_data; s1.my_data = s2.my_data;
  s2.my_data = tmp;
  }
-
 
 #endif

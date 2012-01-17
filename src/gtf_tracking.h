@@ -181,11 +181,6 @@ public:
 			return (ovlen==b.ovlen)? betterRef(mrna, b.mrna) : (ovlen>b.ovlen);
 		else return rank<b.rank;
 	}
-    bool operator>(COvLink& b) {
-		if (rank==b.rank)
-			return (ovlen==b.ovlen)? betterRef(b.mrna, mrna) : (ovlen<b.ovlen);
-		else return rank>b.rank;
-	}
     bool operator==(COvLink& b) {
 		return (rank==b.rank && mrna==b.mrna);
 	}
@@ -337,7 +332,6 @@ public:
 	char getBestCode() {
 		return (ovls.Count()>0) ? ovls[0]->code : 0 ;
     }
-	bool operator>(CTData& b) { return (mrna > b.mrna); }
 	bool operator<(CTData& b) { return (mrna < b.mrna); }
 	bool operator==(CTData& b) { return (mrna==b.mrna); }
 };

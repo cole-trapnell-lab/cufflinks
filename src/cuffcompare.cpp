@@ -116,9 +116,6 @@ class GSeqTrack {
   bool operator==(GSeqTrack& d){
       return (gseq_id==d.gseq_id);
       }
-  bool operator>(GSeqTrack& d){
-     return (gseq_id>d.gseq_id);
-     }
   bool operator<(GSeqTrack& d){
      return (gseq_id<d.gseq_id);
      }
@@ -856,9 +853,6 @@ class GProtCl {
    }
    bool operator==(GProtCl& cl) {
     return this==&cl;
-    }
-   bool operator>(GProtCl& cl) {
-     return (this>&cl);
     }
    bool operator<(GProtCl& cl) {
     return (this<&cl);
