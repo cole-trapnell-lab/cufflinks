@@ -969,7 +969,7 @@ class GTrackLocus:public GSeg {
    void addQCl(int q, GQCluster* qcl, GLocus* lnkloc) {
       for (int i=0;i<qcl->qloci.Count();i++) {
          GLocus* loc=qcl->qloci[i];
-         if (loc==lnkloc || loc->t_ptr==this) continue;
+         if (loc==lnkloc) continue; // or if loc->t_ptr==this ?
          hasQloci=true;
          loc->t_ptr=this;
          qcls[q]->addLocus(loc);
