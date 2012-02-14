@@ -101,7 +101,8 @@ void MultiReadTable::add_expr(RefID r_id, int left, int right, InsertID mr_id, d
 	boost::mutex::scoped_lock lock(_lock);
 #endif
 	MultiRead* mr = get_read(mr_id);
-	mr->add_expr(r_id, left, right, expr);
+    if (mr)
+        mr->add_expr(r_id, left, right, expr);
 }
 
 double MultiReadTable::get_mass(const MateHit& hit)

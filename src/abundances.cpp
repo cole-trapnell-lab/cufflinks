@@ -794,6 +794,8 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
     int N = transcripts.size();
 	int M = alignments.size();
     
+    // TODO: Remove this short cut after verifying that it doesn't really make sense
+    // for large bundles.  The collapse is almost certainly more efficient.
     // If there's a lot of transcripts, just use the old, overlap constrained 
     // version of the equivalence collapse.
     if (N > 24)
