@@ -641,14 +641,14 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
         curr_align = &nr_alignments.back();
         log_conv_factors.push_back(0);
         
-        if (alignments[i].is_multi()) // don't reduce other hits into multihits
+        if (corr_multi && alignments[i].is_multi()) // don't reduce other hits into multihits
             continue;
         
         bool seen_olap = false;
         
         for(int k = i + 1 ; k < M; ++k)
         {
-            if (replaced[k] || alignments[k].is_multi() || alignments[i].read_group_props() != alignments[k].read_group_props())
+            if (replaced[k] || (corr_multi && alignments[k].is_multi()) || alignments[i].read_group_props() != alignments[k].read_group_props())
                 continue;
             if (require_overlap && !::overlap_in_genome(curr_align->left(), curr_align->right(),
                                      alignments[k].left(), alignments[k].right()))
@@ -694,7 +694,9 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
             {
                 if ((*cond_probs_k)[j] != 0 && cond_probs_i[j] != 0)
                 {
-                    double ratio =  (*cond_probs_k)[j] / cond_probs_i[j];
+                    double cp_j = (*cond_probs_k)[j];
+                    double cp_i = cond_probs_i[j];
+                    double ratio =  cp_j / cp_i;
                     if (last_cond_prob == -1)
                     {
                         //assert(ratio < 5);
@@ -703,6 +705,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                     else
                     {
                         if (last_cond_prob != ratio)
+                        //if (abs(last_cond_prob - ratio) > 0.001)
                         {
                             equiv = false;
                             break;
@@ -744,6 +747,10 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 double more_mass = alignments[k].collapse_mass();
                 curr_align->incr_collapse_mass(more_mass);
             }
+            else
+            {
+                int a = 4;
+            }
         }
     }
     
@@ -781,7 +788,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
 	}
     if (nr_alignments.size())
     {
-        verbose_msg("\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * nr_alignments.size()/(double)alignments.size());
+        verbose_msg("\nReduced %lu frags to %lu (%lf percent)\n", alignments.size(), nr_alignments.size(), 100.0 * (1 - nr_alignments.size()/(double)alignments.size()));
     }
 }
 
@@ -794,6 +801,12 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
     int N = transcripts.size();
 	int M = alignments.size();
     
+    if (N == 1)
+    {
+        nr_alignments = alignments;
+        log_conv_factors = vector<double>(M, 0.0);
+        return;
+    }
     // TODO: Remove this short cut after verifying that it doesn't really make sense
     // for large bundles.  The collapse is almost certainly more efficient.
     // If there's a lot of transcripts, just use the old, overlap constrained 
