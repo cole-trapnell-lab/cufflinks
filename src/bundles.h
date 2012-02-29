@@ -720,8 +720,8 @@ void inspect_map(BundleFactoryType& bundle_factory,
 	fprintf(stderr, "> Map Properties:\n");
 	if (use_quartile_norm)
 		fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
-	else
-		fprintf(stderr, ">\tTotal Map Mass: %.2Lf\n", norm_map_mass);
+	fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", norm_map_mass);
+	fprintf(stderr, ">\tRaw Map Mass: %.2Lf\n", map_mass);
 	if (corr_multi)
 		fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
 //	if (has_pairs)

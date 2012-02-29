@@ -1281,7 +1281,17 @@ void AbundanceGroup::estimate_count_covariance()
                                 scale = 1.0;
                             
                             double after = scale * before;
+                            double cauchy_schwartz_bound = sqrt(_abundances[i]->mass_variance()) * sqrt(_abundances[j]->mass_variance());
+                            
                             //assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
+                            
+                            // Make sure we aren't over-scaling (doing so could produce a variance covariance matrix 
+                            // that isn't positive definite.
+                            if (abs(after) > cauchy_schwartz_bound)
+                            {
+                                fprintf(stderr, "Warning: gene exceeds Cauchy-Schwartz bound on covariance\n");
+                                after = -cauchy_schwartz_bound;
+                            }
                             
                             assert (_iterated_exp_count_covariance(i,j) <= 0);
                             assert (before >= after);
