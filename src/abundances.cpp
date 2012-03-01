@@ -101,27 +101,29 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
             fpkm_var += _fpkm_covariance(i,j);
         }
     }
-    
-    ublas::matrix<double> test = _count_covariance;
-    double ret = cholesky_factorize(test);
-    if (ret != 0)
+    if (FPKM() > 0)
     {
-        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
-        for (size_t j = 0; j < _abundances.size(); ++j)
-        {
-            _abundances[j]->status(NUMERIC_FAIL);
-        }
+        ublas::matrix<double> test = _count_covariance;
+        double ret = cholesky_factorize(test);
+    //    if (ret != 0)
+    //    {
+    //        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
+    //        for (size_t j = 0; j < _abundances.size(); ++j)
+    //        {
+    //            _abundances[j]->status(NUMERIC_FAIL);
+    //        }
+    //    }
     }
-
     _FPKM_variance = fpkm_var;
     
-    if (final_est_run && library_type != "transfrags")
+    if (FPKM() > 0 && final_est_run && library_type != "transfrags")
     {
-        test = _fpkm_covariance;
-        ret = cholesky_factorize(test);
+        
+        ublas::matrix<double> test = _fpkm_covariance;
+        double ret = cholesky_factorize(test);
         if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
         {
-            //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
+            fprintf(stderr, "Warning: total FPKM covariance is not positive definite (ret = %lg)!\n", ret);
             for (size_t j = 0; j < _abundances.size(); ++j)
             {
                 _abundances[j]->status(NUMERIC_FAIL);
@@ -1241,32 +1243,35 @@ void AbundanceGroup::estimate_count_covariance()
         {
             for (size_t j = 0; j < _abundances.size(); ++j)
             {
-                double scale_j = 0.0;
-                double poisson_variance_j = _abundances[j]->num_fragments();
-                if (poisson_variance_j == 0)
-                {
-                    scale_j = 0.0;
-                }
-                else
-                {
-                    
-                    scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
-//                    if (-scale_j * _iterated_exp_count_covariance(i,j) > _abundances[j]->mass_variance())
-//                        scale_j = -_abundances[j]->mass_variance() / _iterated_exp_count_covariance(i,j);
-                }
                 for (size_t i = 0; i < _abundances.size(); ++i)
                 {
                     if (i != j)
                     {
+                        
+                        double scale_j = 0.0;
+                        double poisson_variance_j = _abundances[j]->num_fragments();
+                        if (_iterated_exp_count_covariance(j,j) == 0)
+                        {
+                            scale_j = 0.0;
+                        }
+                        else
+                        {
+                            
+                            //scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
+                            //scale_j = _count_covariance(j,j) / _iterated_exp_count_covariance(j,j);
+                            scale_j = _count_covariance(j,j)  * (_iterated_exp_count_covariance(i,j)/_iterated_exp_count_covariance(j,j));
+                        }
+                        
                         double scale_i = 0.0;
                         double poisson_variance_i = _abundances[i]->num_fragments();
-                        if (poisson_variance_i == 0)
+                        if (_iterated_exp_count_covariance(i,i) == 0)
                         {
                             scale_i = 0.0;
                         }
                         else
                         {
-                            scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
+                            //scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
+                            scale_i = _count_covariance(i,i)  * (_iterated_exp_count_covariance(i,j)/_iterated_exp_count_covariance(i,i));
                         }
                         if (scale_i != 0 && scale_j != 0)
                         {
@@ -1285,20 +1290,6 @@ void AbundanceGroup::estimate_count_covariance()
                             
                             //assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
                             
-                            // Make sure we aren't over-scaling (doing so could produce a variance covariance matrix 
-                            // that isn't positive definite.
-                            if (abs(after) > cauchy_schwartz_bound)
-                            {
-                                fprintf(stderr, "Warning: gene exceeds Cauchy-Schwartz bound on covariance\n");
-                                //after = -cauchy_schwartz_bound;
-                            }
-                            double overdispersion_bound = sqrt(_abundances[i]->mass_variance()) * sqrt(_abundances[j]->mass_variance());
-                            if (abs(after) > overdispersion_bound)
-                            {
-                                fprintf(stderr, "Warning!\n");
-                                //after = -cauchy_schwartz_bound;
-                            }
-                            
                             assert (_iterated_exp_count_covariance(i,j) <= 0);
                             assert (before >= after);
                             _count_covariance(i,j) = after;
@@ -1313,6 +1304,58 @@ void AbundanceGroup::estimate_count_covariance()
                 }
             }
         }
+        
+        ublas::matrix<double> test = _count_covariance;
+        double ret = cholesky_factorize(test);
+        if (ret != 0)
+        {
+            for (int r = 0; r < _count_covariance.size1(); ++r)
+            {
+                ublas::matrix_row<ublas::matrix<double> > mr (_count_covariance, r);
+                double p = ublas::inner_prod(project(mr,ublas::range(0,r)), project(mr,ublas::range(0,r)));
+                double el = mr(r);
+                double diff = el - p;
+                fprintf (stderr, "el = %.2f, p = %.2f, diff = %.2f\n", el, p, diff); 
+            }
+            
+            fprintf(stderr, "Warning: total count covariance is not positive definite (ret = %lg)!\n", ret);
+            cerr << "full count: " << endl;
+            for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
+            {
+                ublas::matrix_row<ublas::matrix<double> > mr (_count_covariance, i);
+                cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
+                std::cerr << i << " : " << mr << std::endl;
+            }
+            cerr << "======" << endl;
+            
+            cerr << "iterated expectations: " << endl;
+            for (unsigned i = 0; i < _iterated_exp_count_covariance.size1 (); ++ i) 
+            {
+                ublas::matrix_row<ublas::matrix<double> > mr (_iterated_exp_count_covariance, i);
+                cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
+                std::cerr << i << " : " << mr << std::endl;
+            }
+            cerr << "======" << endl;
+            
+            fprintf(stderr, "Indices of dispersion, dispersion of uncertainty, BNB/Poisson\n");
+            for (unsigned i = 0; i < _iterated_exp_count_covariance.size1 (); ++ i) 
+            {
+                if (_abundances[i]->num_fragments() > 0)
+                {
+                    cerr << i << " : " << (_abundances[i]->mass_variance() / _abundances[i]->num_fragments()) << " : " 
+                    << (_count_covariance(i,i) / _iterated_exp_count_covariance(i,i))  << " : " <<
+                    (_count_covariance(i,i) / _abundances[i]->num_fragments()) << endl;
+                }
+                else{
+                    cerr << i << " : 0 : 0 " << endl;
+                }
+            }
+            
+//            for (size_t j = 0; j < _abundances.size(); ++j)
+//            {
+//                _abundances[j]->status(NUMERIC_FAIL);
+//            }
+        }
 	}
 	else
 	{
@@ -1320,16 +1363,7 @@ void AbundanceGroup::estimate_count_covariance()
         // assert(false);
 	}
     
-    ublas::matrix<double> test = _count_covariance;
-    double ret = cholesky_factorize(test);
-    if (ret != 0)
-    {
-        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
-        for (size_t j = 0; j < _abundances.size(); ++j)
-        {
-            _abundances[j]->status(NUMERIC_FAIL);
-        }
-    }
+
     
 //    cerr << "full count: " << endl;
 //    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
@@ -1418,7 +1452,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
         double ret = cholesky_factorize(test);
         if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
         {
-            //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
+            fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
             for (size_t j = 0; j < _abundances.size(); ++j)
             {
                 _abundances[j]->status(NUMERIC_FAIL);
@@ -2131,6 +2165,27 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
             }
         }
     }
+     
+//    ublas::matrix<double> test = _iterated_exp_count_covariance;
+//    double ret = cholesky_factorize(test);
+//    if (ret != 0)
+//    {
+//        fprintf(stderr, "Warning: iterated expectation count covariance is not positive definite (ret = %lg)!\n", ret);
+//        cerr << "iterated expectations: " << endl;
+//        for (unsigned i = 0; i < _iterated_exp_count_covariance.size1 (); ++ i) 
+//        {
+//            ublas::matrix_row<ublas::matrix<double> > mr (_iterated_exp_count_covariance, i);
+//            cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
+//            std::cerr << i << " : " << mr << std::endl;
+//        }
+//        cerr << "======" << endl;
+//
+////        for (size_t j = 0; j < _abundances.size(); ++j)
+////        {
+////            _abundances[j]->status(NUMERIC_FAIL);
+////        }
+//    }
+
 }
 
 void AbundanceGroup::calculate_kappas()
