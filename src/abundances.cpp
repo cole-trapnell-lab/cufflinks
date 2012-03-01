@@ -1259,7 +1259,7 @@ void AbundanceGroup::estimate_count_covariance()
                             
                             //scale_j = _abundances[j]->mass_variance() / poisson_variance_j;
                             //scale_j = _count_covariance(j,j) / _iterated_exp_count_covariance(j,j);
-                            scale_j = _count_covariance(j,j)  * (_iterated_exp_count_covariance(i,j)/_iterated_exp_count_covariance(j,j));
+                            scale_j = (-_iterated_exp_count_covariance(i,j)/_iterated_exp_count_covariance(j,j));
                         }
                         
                         double scale_i = 0.0;
@@ -1271,27 +1271,38 @@ void AbundanceGroup::estimate_count_covariance()
                         else
                         {
                             //scale_i = _abundances[i]->mass_variance() / poisson_variance_i;
-                            scale_i = _count_covariance(i,i)  * (_iterated_exp_count_covariance(i,j)/_iterated_exp_count_covariance(i,i));
+                            
+                            scale_i = (-_iterated_exp_count_covariance(i,j)/_iterated_exp_count_covariance(i,i));
                         }
                         if (scale_i != 0 && scale_j != 0)
                         {
                             double poisson_scale = sqrt(scale_j) * sqrt(scale_i);
                             
-                            double before = _iterated_exp_count_covariance(i,j);
+                            double before = -sqrt(_count_covariance(j,j)) * sqrt(_count_covariance(i,i));
                             
                             long double scale = poisson_scale;
                             
-                            assert (!isinf(scale) && !isnan(scale));
-                            if (scale < 1.0)
-                                scale = 1.0;
+                            //assert (!isinf(scale) && !isnan(scale));
+                            //if (scale < 1.0)
+                            //    scale = 1.0;
                             
                             double after = scale * before;
                             double cauchy_schwartz_bound = sqrt(_count_covariance(j,j)) * sqrt(_count_covariance(i,i));
                             
+                            after = after + 1e-3; // to improve condition and avoid rounding errors
+                            if (after > 0)
+                                after = 0;
+                            
+                            if (-after > cauchy_schwartz_bound)
+                            {
+                                fprintf(stderr, "Warning: total count\n");
+                                int a = 4;
+                            }
                             //assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
                             
                             assert (_iterated_exp_count_covariance(i,j) <= 0);
-                            assert (before >= after);
+                            //assert (before >= after);
+                            
                             _count_covariance(i,j) = after;
                         }
                         else
