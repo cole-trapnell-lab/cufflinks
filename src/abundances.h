@@ -415,11 +415,20 @@ private:
 						  const vector<shared_ptr<Abundance> >& mapped_transcripts);
 	void calculate_FPKM_covariance();
     void estimate_count_covariance();
+    void simulate_count_covariance(const vector<MateHit>& nr_alignments,
+                                   const vector<shared_ptr<Abundance> >& transcripts);
+
     void calculate_conf_intervals();
 	void calculate_locus_scaled_mass_and_variance(const vector<MateHit>& nr_alignments,
                           const vector<shared_ptr<Abundance> >& transcripts);
     void calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
                                                  const vector<shared_ptr<Abundance> >& transcripts);
+    
+    
+    void calculate_assignment_probs(const vector<MateHit>& nr_alignments, 
+                                    const ublas::matrix<double>& transcript_cond_probs,
+                                    const ublas::vector<double>& proposed_gammas,
+                                    ublas::vector<double>& assign_probs);    
 	void calculate_kappas();
     
     
@@ -453,6 +462,8 @@ private:
 	ConfidenceInterval _FPKM_conf;
 	
 	ublas::matrix<double> _kappa_covariance;
+    ublas::matrix<double> _assign_probs;
+    
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
