@@ -1318,6 +1318,14 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     
     _count_covariance /= assigned_counts.size();
     
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        if (_count_covariance(i,i) < _abundances[i]->mass_variance())
+            _count_covariance(i,i) = _abundances[i]->mass_variance();
+        if (_count_covariance(i,i) < _abundances[i]->num_fragments())
+            _count_covariance(i,i) = _abundances[i]->num_fragments();
+    }
+    
 //    cerr << "simulated count covariance: " << endl;
 //    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
 //    {
