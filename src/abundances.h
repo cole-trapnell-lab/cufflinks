@@ -17,6 +17,9 @@
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/vector.hpp>
+
+#include <Eigen/Dense>
+
 #include "hits.h"
 #include "scaffolds.h"
 #include "bundles.h"
@@ -425,10 +428,10 @@ private:
                                                  const vector<shared_ptr<Abundance> >& transcripts);
     
     
-    void calculate_assignment_probs(const vector<MateHit>& nr_alignments, 
-                                    const ublas::matrix<double>& transcript_cond_probs,
-                                    const ublas::vector<double>& proposed_gammas,
-                                    ublas::vector<double>& assign_probs);    
+    void calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
+                                    const Eigen::MatrixXd& transcript_cond_probs,
+                                    const Eigen::VectorXd& proposed_gammas,
+                                    Eigen::VectorXd& assigned_probs);    
 	void calculate_kappas();
     
     
@@ -496,41 +499,11 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
                                            ublas::matrix<double>& gamma_map_covariance,
                                            std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups);
 
-AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
-                                    const vector<MateHit>& nr_alignments,
-                                    const vector<double>& log_conv_factors,
-                                    ublas::vector<double>& gamma_map_estimate,
-                                    ublas::matrix<double>& gamma_covariance,
-                                    double& cross_replicate_js);
-
-AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& nr_alignments,
-                                 const vector<double>& log_conv_factors,
-                                 ublas::vector<double>& gamma_map_estimate,
-                                 ublas::matrix<double>& gamma_map_covariance,
-                                 double& cross_replicate_js);
-
-AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& nr_alignments,
-                                 const vector<double>& log_conv_factors,
-                                 const ublas::vector<double>& gamma_mle,
-                                 ublas::vector<double>& gamma_map_estimate,
-                                 ublas::matrix<double>& gamma_map_covariance);
-
-AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts,
-                               const vector<MateHit>& alignments,
-                               const vector<double>& log_conv_factors,
-                               const ublas::vector<double>&  proposal_gamma_mean,
-                               const ublas::matrix<double>& proposal_gamma_covariance,
-                               ublas::vector<double>& gamma_map_estimate,
-                               ublas::matrix<double>& gamma_map_covariance);
-
 AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
                           vector<double>& gammas,
-                          bool check_identifiability = true,
-                          vector<double>* p_hint = NULL);
+                          bool check_identifiability = true);
 
 double compute_doc(int bundle_origin, 
 				   const vector<Scaffold>& scaffolds,

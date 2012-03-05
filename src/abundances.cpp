@@ -40,11 +40,14 @@
 #include <boost/random/negative_binomial_distribution.hpp>
 
 
+#include <Eigen/Dense>
+//using Eigen::MatrixXd;
+
 
 //#define USE_LOG_CACHE
 
 void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
-						 const vector<MateHit>& alignments,
+                             const vector<MateHit>& alignments,
 							 vector<vector<char> >& compatibilities)
 {
 	int M = alignments.size();
@@ -1201,7 +1204,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     boost::mt19937 rng;
     
     vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
-    vector<ublas::vector<double> > generated_counts (num_count_draws, ublas::zero_vector<double>(_abundances.size()));
+    vector<Eigen::VectorXd > generated_counts (num_count_draws, Eigen::VectorXd::Zero(_abundances.size()));
     
     
     
@@ -1246,39 +1249,47 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     }
     
     ublas::matrix<double> assign_probs_transpose = ublas::trans(_assign_probs);
-    vector<ublas::vector<double> > assigned_counts (num_count_draws, ublas::zero_vector<double>(_abundances.size()));
+    vector<Eigen::VectorXd > assigned_counts (num_count_draws, Eigen::VectorXd::Zero(_abundances.size()));
     
-    ublas::matrix<double> transcript_cond_probs = ublas::zero_matrix<double>(_abundances.size(), nr_alignments.size());
-    for (size_t j = 0; j < transcript_cond_probs.size1(); ++j)
+    Eigen::MatrixXd transcript_cond_probs(_abundances.size(), nr_alignments.size());
+    for (size_t j = 0; j < transcript_cond_probs.rows(); ++j)
     {
-        for (size_t i = 0; i < transcript_cond_probs.size2(); ++i)
+        for (size_t i = 0; i < transcript_cond_probs.cols(); ++i)
         {
             transcript_cond_probs(j,i) = (*(transcripts[j]->cond_probs()))[i];
         }
     }
     
+    Eigen::VectorXd aligment_multiplicities(nr_alignments.size());
+    for (size_t i = 0; i < aligment_multiplicities.size(); ++i)
+    {
+        aligment_multiplicities[i] = nr_alignments[i].collapse_mass();
+    }
+    
     for (size_t i = 0; i < num_count_draws; ++i)
     {
-        ublas::vector<double> proposed_gammas = generated_counts[i];
-        double total_frags = accumulate(generated_counts[i].begin(),generated_counts[i].end(),0);
+        //ublas::vector<double> proposed_gammas = generated_counts[i];
+        Eigen::VectorXd proposed_gammas = generated_counts[i];
+        
+        double total_frags = generated_counts[i].sum();
         
         if (total_frags == 0)
             continue;
         
         proposed_gammas /= total_frags;
         
-        ublas::vector<double> assign_probs;
-        calculate_assignment_probs(nr_alignments, transcript_cond_probs, proposed_gammas, assign_probs);
+        Eigen::VectorXd assign_probs;
+        calculate_assignment_probs(aligment_multiplicities, transcript_cond_probs, proposed_gammas, assign_probs);
         //assign_probs_transpose = ublas::trans(assign_probs);
-        ublas::vector<double> assigned = assign_probs * total_frags;
+        Eigen::VectorXd assigned = assign_probs * total_frags;
         
         //ublas::vector<double> assigned = ublas::prod(assign_probs_transpose,generated_counts[i]);
         //cerr << generated_counts[i] << " , " << assigned << " , " << assign_probs << endl;
         assigned_counts[i] = assigned;
     }
     
-    ublas::vector<double> expected_counts = ublas::zero_vector<double>(_abundances.size());
-    ublas::vector<double> expected_generated_counts = ublas::zero_vector<double>(_abundances.size());
+    Eigen::VectorXd expected_counts = Eigen::VectorXd::Zero(_abundances.size());
+    Eigen::VectorXd expected_generated_counts = Eigen::VectorXd::Zero(_abundances.size());
     //
     
     for (size_t i = 0; i < assigned_counts.size(); ++i)
@@ -1338,7 +1349,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
 //    std::cerr << expected_counts << std::endl;
 //    cerr << "======" << endl;
     
-    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
+    double total_counts = expected_counts.sum();
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
         if (total_counts > 0)
@@ -2059,111 +2070,76 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	return (status() == NUMERIC_OK);
 }
 
-void AbundanceGroup::calculate_assignment_probs(const vector<MateHit>& nr_alignments, 
-                                                const ublas::matrix<double>& transcript_cond_probs,
-                                                const ublas::vector<double>& proposed_gammas,
-                                                ublas::vector<double>& assigned_probs)
+void AbundanceGroup::calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
+                                                const Eigen::MatrixXd& transcript_cond_probs,
+                                                const Eigen::VectorXd& proposed_gammas,
+                                                Eigen::VectorXd& assigned_probs)
 {
-    vector<double> u(nr_alignments.size());
-    for (size_t i = 0; i < nr_alignments.size(); ++i)
-    {
-        u[i] = nr_alignments[i].collapse_mass();
-    }
+//    vector<double> u(nr_alignments.size());
+//    for (size_t i = 0; i < alignment_multiplicity.size(); ++i)
+//    {
+//        u[i] = nr_alignments[i].collapse_mass();
+//    }
     
-    ublas::vector<double> total_cond_prob = ublas::prod(proposed_gammas,transcript_cond_probs);
-    
+    //ublas::vector<double> total_cond_prob = ublas::prod(proposed_gammas,transcript_cond_probs);
+    Eigen::VectorXd total_cond_prob = proposed_gammas.transpose() * transcript_cond_probs ;
     
     
     // Compute the marginal conditional probability for each fragment against each isoform
-    ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcript_cond_probs.size1(), transcript_cond_probs.size2());
+    //ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcript_cond_probs.size1(), transcript_cond_probs.size2());
+    Eigen::MatrixXd marg_cond_prob(transcript_cond_probs.rows(), transcript_cond_probs.cols());
     
-    
-    for (size_t i = 0; i < nr_alignments.size(); ++i)
+    for (size_t i = 0; i < alignment_multiplicities.size(); ++i)
     {
-        //cerr <<  row(transcript_cond_probs, i) <<  endl;
-        column(marg_cond_prob,i) = ublas::element_prod(proposed_gammas, 
-                                                    column(transcript_cond_probs, i));
-        //cerr <<  column(marg_cond_prob,i) << " , " <<  total_cond_prob(i) << endl;
+        
+        //column(marg_cond_prob,i) = ublas::element_prod(proposed_gammas, 
+        //                                               column(transcript_cond_probs, i));
+        
+        marg_cond_prob.array().col(i) = proposed_gammas.array() * transcript_cond_probs.array().col(i);
+        
         if (total_cond_prob(i) > 0)
         {
-            column(marg_cond_prob,i) /= total_cond_prob(i);
+            marg_cond_prob.array().col(i) /= total_cond_prob(i);
+            //column(marg_cond_prob,i) /= total_cond_prob(i);
         }
     }
     
-//    for (size_t i = 0; i < nr_alignments.size(); ++i)
+    //ublas::vector<double> expected_counts = ublas::zero_vector<double>(transcript_cond_probs.rows());
+    
+    Eigen::VectorXd expected_counts = marg_cond_prob * alignment_multiplicities;
+//    //iterate over fragments
+//    for (size_t i = 0; i < marg_cond_prob.cols(); ++i)
 //    {
-//        for (size_t j = 0; j < transcript_cond_probs.size1(); ++j)
+//        // iterate over transcripts
+//        for (size_t j = 0; j < marg_cond_prob.rows(); ++j)
 //        {
-//            if (total_cond_prob(i))
-//            {
-//                marg_cond_prob = ublas::prod(proposed_gammas,transcript_cond_probs(i))/total_cond_prob(i);
-//            }
+//            double c_j_i = marg_cond_prob(j,i);
+//            expected_counts(j) += u[i] * c_j_i;
+//            
+////            for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
+////            {
+////                double c_k_i = marg_cond_prob(k,i);
+////                
+////                if (j == k)
+////                {
+////                    if (c_j_i > 0)
+////                        assign_probs(j,j) += c_k_i * (u[i]);
+////                }
+////                else
+////                {
+////                    if (c_j_i > 0)
+////                        assign_probs(j,k) += c_k_i * (u[i]);
+////                } 
+////            }
 //        }
+//        
 //    }
     
-    //assigned_counts = ublas::zero_matrix<double>(proposed_gammas.size(), proposed_gammas.size());
-    
-    //ublas::vector<double> correct_assign_probs = ublas::zero_vector<double>(cond_probs.size());
-    ublas::vector<double> expected_counts = ublas::zero_vector<double>(transcript_cond_probs.size1());
-    
-    //iterate over fragments
-    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
-    {
-        // iterate over transcripts
-        for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
-        {
-            double c_j_i = marg_cond_prob(j,i);
-            expected_counts(j) += u[i] * marg_cond_prob(j,i);
-            
-//            for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
-//            {
-//                double c_k_i = marg_cond_prob(k,i);
-//                
-//                if (j == k)
-//                {
-//                    if (c_j_i > 0)
-//                        assign_probs(j,j) += c_k_i * (u[i]);
-//                }
-//                else
-//                {
-//                    if (c_j_i > 0)
-//                        assign_probs(j,k) += c_k_i * (u[i]);
-//                } 
-//            }
-        }
-        
-    }
-    
-    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
+    double total_counts = expected_counts.sum();
     if (total_counts == 0)
         assigned_probs = expected_counts;
     else
         assigned_probs = expected_counts / total_counts;
-    
-//    for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
-//    {
-//        double den = 0; 
-//        for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
-//        {
-//            den += assign_probs(j,k); 
-//        }
-//        if (den > 0)
-//        {
-//            for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
-//            {
-//                assign_probs(j,k) /= den; 
-//            }
-//        }
-//    }
-//    //_assign_probs = trans(_assign_probs);
-//    
-//    cerr << "assignment probabilities: " << endl;
-//    for (unsigned i = 0; i < assign_probs.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (assign_probs, i);
-//        cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
 }
 
 
@@ -2496,54 +2472,59 @@ void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundan
 	sort(alignments.begin(), alignments.end(), mate_hit_lt);
 }
 
-void round(vector<double> & p) {
-	
-	double KILLP = 0; // kill all probabilities below this
-	
-	for (vector<double>::iterator i = p.begin(); i != p.end(); ++i) {
-		if ((*i) < KILLP) 
-			*i = 0;
-	}
-}
+//void round(Eigen::VectorXd&  p) {
+//	
+//	double KILLP = 0; // kill all probabilities below this
+//	
+//	for (size_t i = 0; i < p.size(); ++i) {
+//		if (p(i) < KILLP) 
+//			p(i) = 0;
+//	}
+//}
 
 void Estep (int N, 
 			int M, 
-			vector<double> const & p,
-			vector<vector<double> >& U,
-			const vector<vector<double> >& cond_probs,
-			const vector<double>& u) {
+			const Eigen::VectorXd& p,
+			Eigen::MatrixXd& U,
+			const Eigen::MatrixXd& cond_probs,
+			const Eigen::VectorXd& alignment_multiplicities) {
 	// given p, fills U with expected frequencies
 	int i,j;	
     
-    vector<double> frag_prob_sums(M, 0.0);
+    Eigen::VectorXd frag_prob_sums = Eigen::VectorXd::Zero(M);
     
     for (j = 0; j < N; ++j) 
     {
         for (i = 0; i < M; ++i) 
         {
-            frag_prob_sums [i] += cond_probs[j][i] * p[j];
+            frag_prob_sums(i) += cond_probs(j,i) * p(j);
         }
     }
     
     for (i = 0; i < M; ++i) 
     {
-        frag_prob_sums[i] = frag_prob_sums[i] ? (1.0 / frag_prob_sums[i]) : 0.0;
+        frag_prob_sums(i) = frag_prob_sums(i) ? (1.0 / frag_prob_sums(i)) : 0.0;
     }
     
     for (j = 0; j < N; ++j) 
     {
         for (i = 0; i < M; ++i) 
         {
-            double ProbY = frag_prob_sums[i];
-            double exp_i_j = u[i] * cond_probs[j][i] * p[j] * ProbY;
-            U[j][i] = exp_i_j;
+            double ProbY = frag_prob_sums(i);
+            double exp_i_j = alignment_multiplicities(i) * cond_probs(j,i) * p(j) * ProbY;
+            U(j,i) = exp_i_j;
         }
     }
 }
 
 
-void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U) {
-	vector<double> v(N,0);
+void Mstep (int N, 
+            int M, 
+            Eigen::VectorXd& p, 
+            const Eigen::MatrixXd& U) 
+{
+	Eigen::VectorXd v = Eigen::VectorXd::Zero(N);
+    
 	double m = 0;
 	int i,j;
 	
@@ -2552,22 +2533,22 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 		//cout << "." <<  v[j] << ".\n";
 		for (i = 0; i < M; ++i) {
 			//	cout << U[i][j] << " \n";
-			v[j] += U[j][i];
+			v(j) += U(j,i);
 		}
-		m += v[j];
+		m += v(j);
 	}
 	
 	if (m)
 	{
 		for (j = 0; j < N; ++j) {
-			p[j] = v[j] / m;
+			p(j) = v(j) / m;
 		}
 	}
 	else
 	{
         for (j = 0; j < N; ++j) 
         {
-            p[j] = 0.0;
+            p(j) = 0.0;
         }
 	}
 }
@@ -2575,9 +2556,9 @@ void Mstep (int N, int M, vector<double> & p, vector<vector<double> > const & U)
 
 double logLike (int N, 
 				int M, 
-				vector<double> & p,
-				const vector<vector<double> >& cond_prob, 
-				const vector<double>& u,
+				Eigen::VectorXd& p,
+				const Eigen::MatrixXd& cond_prob, 
+				const Eigen::VectorXd& alignment_multiplicities,
                 const vector<double>& log_conv_factors) {
 	int i,j;
 	
@@ -2586,183 +2567,52 @@ double logLike (int N,
 	for (i= 0; i < M; i++) {
 		Prob_Y = 0;
 		for (j= 0; j < N; j++) {
-			Prob_Y += cond_prob[j][i] * p[j];
+			Prob_Y += cond_prob(j,i) * p(j);
 		}
 		if (Prob_Y > 0) {
-			ell += (u[i] * log(Prob_Y));
+			ell += (alignment_multiplicities(i) * log(Prob_Y));
 		}
 	}
 	return ell;
 }
 
-void grad_ascent_step (int N, 
-                       int M, 
-                       vector<double> const & p,
-                       vector<vector<double> >& U,
-                       const vector<vector<double> >& cond_probs,
-                       const vector<double>& u,
-                       vector<double>& newP,
-                       double& epsilon) 
-{
-	// given p, fills U with expected frequencies
-	//int i,j;	
-    
-    vector<double> dLL_dj(N, 0.0);
-    
-    for (size_t i = 0; i < M; ++i)
-    {
-        double denom = 0.0;
-        for (size_t j = 0; j < N; ++j)
-        {
-            denom += p[j] * cond_probs[j][i];
-        }
-        
-        for (size_t j = 0; j < N; ++j)
-        {
-            if (denom > 0)
-            {
-                dLL_dj[j] += u[i] * cond_probs[j][i] / denom;
-            }
-        }
-    }
-    
-    for (size_t j = 0; j < N; ++j)
-    {
-        newP[j] = p[j] + epsilon * dLL_dj[j];
-    }
-    
-    double m = accumulate(newP.begin(), newP.end(), 0.0);
-    if (m > 0)
-    {    
-        for (int j = 0; j < N; ++j) {
-            newP[j] = newP[j] / m;
-        }
-    }
-    else
-    {
-        return;
-    }
-}
-
-double grad_ascent (int N, int M, vector<double> & newP, 
-                    const vector<vector<double> >& cond_prob, 
-                    vector<double> const & u,
-                    vector<double> const & log_conv_factors,
-                    bool& converged) 
-{
-    converged = true;
-    double sum = 0;
-	double newEll = 0;
-	vector<double> p(N,0);
-	vector<vector<double> > U(N, vector<double>(M,0));
-	double ell = 0; 
-	int iter = 0;
-	int j;
-	
-	for (j = 0; j < N; ++j) {
-		p[j] = drand48();
-		sum += p[j];
-	}
-	for (j = 0; j < N; ++j) {
-		p[j] = p[j] / sum;
-	}
-	
-    ell = logLike(N, M, p, cond_prob, u, log_conv_factors);
-    
-    double epsilon = 1e-5;
-    
-    static const double ACCURACY = 1e-6; // convergence criteria
-	
-	while (iter <= 2 || iter < max_mle_iterations) 
-    {
-        grad_ascent_step(N, M, p, U, cond_prob, u, newP, epsilon);
-		
-		newEll = logLike(N, M, newP, cond_prob,u, log_conv_factors);
-		
-        double delta = newEll - ell;
-        //fprintf (stderr, "%g\n", delta);
-        if (delta > 0)
-        {
-            //round(newP);
-			p = newP;
-			ell = newEll;
-            if (abs(delta) < ACCURACY)
-            {
-                break;
-            }
-        }
-        else
-        {
-            //verbose_msg("Reducing EPSILON \n");
-            epsilon /= 10;
-        }
-		iter++;
-	}
-	if (iter == max_mle_iterations)
-    {
-		verbose_msg("Warning: ITERMAX reached in abundance estimation, estimation hasn't fully converged\n");
-        converged = false;
-    }
-    verbose_msg("Convergence reached in %d iterations \n", iter);
-	return newEll;
-
-}
-
-double EM (int N, int M, vector<double> & newP, 
-		   const vector<vector<double> >& cond_prob, 
-		   vector<double> const & u,
-           vector<double> const & log_conv_factors,
-           bool& converged,
-           vector<double>* p_hint) 
+double EM(int N, int M, 
+          Eigen::VectorXd&  newP, 
+          const Eigen::MatrixXd& cond_prob, 
+		  const Eigen::VectorXd& alignment_multiplicities,
+          vector<double> const & log_conv_factors,
+          bool& converged) 
 {
     converged = true;
 	//double sum = 0;
 	double newEll = 0;
-	vector<double> p(N,0);
-	vector<vector<double> > U(N, vector<double>(M,0));
+    Eigen::VectorXd p = Eigen::VectorXd::Zero(N);
+    Eigen::MatrixXd  U = Eigen::MatrixXd::Zero(N,M);
 	double ell = 0; 
 	int iter = 0;
 	int j;
     
-	if (p_hint == NULL)
-    {
-        for (j = 0; j < N; ++j) {
-            //p[j] = drand48();
-            //sum += p[j];
-            p[j] = 1.0/(double)N;
-        }
+    for (j = 0; j < N; ++j) {
+        //p[j] = drand48();
+        //sum += p[j];
+        p(j) = 1.0/(double)N;
     }
-    else
-    {
-        assert (p_hint->size() == N);
-        p = *p_hint;
-    }
+  
     
-//	for (j = 0; j < N; ++j) {
-//		p[j] = p[j] / sum;
-//	}
-	
-	//#ifdef DEBUG
-//	for (j = 0; j < N; ++j) {
-//		cout << p[j] << " ";
-//	}
-//	cout << endl;
-	//#endif
 
-//	static const double ACCURACY = 1e-6; // convergence for EM
     static const double ACCURACY = mle_accuracy; // convergence for EM
     
 	while (((iter <= 2) || (abs(ell - newEll) > ACCURACY)) && (iter < max_mle_iterations)) {
 		if (iter > 0) {
-			round(newP);
+			//round(newP);
 			p = newP;
 			ell = newEll;
 		}
 		
-		Estep(N, M, p, U, cond_prob, u); //  fills U
+		Estep(N, M, p, U, cond_prob, alignment_multiplicities); //  fills U
 		Mstep(N, M, newP,U); // fills p
 		
-		newEll = logLike(N, M, newP, cond_prob,u, log_conv_factors);
+		newEll = logLike(N, M, newP, cond_prob,alignment_multiplicities, log_conv_factors);
 		
 		//fprintf(stderr, "%d\t%lf\n", iter, newEll);
 		
@@ -2830,97 +2680,6 @@ void compute_fisher(const vector<shared_ptr<Abundance> >& transcripts,
 				fisher(j,k) += u[x] * fisher_x_j_k;
 			}
 		}
-	}
-}
-
-void compute_sample_weights(const ublas::matrix<double>& proposed_cov,
-							const vector<vector<double> >& cond_probs,
-							const vector<ublas::vector<double> >& samples,
-							const vector<double>& u,
-                            const vector<double>& log_conv_factors,
-							double scale,
-							const ublas::vector<double>& MLE,
-							vector<ublas::vector<double> >& weighted_samples,
-							vector<pair<size_t, double> >& sample_weights)
-{
-	if (cond_probs.empty())
-		return;
-	
-	int M = cond_probs.front().size();
-	int N = cond_probs.size();
-	
-	//cerr << "Cov^-1"<<inv_cov << endl;
-	for (size_t i = 0; i < samples.size(); ++i)
-	{
-		vector<double> sample(samples[i].begin(), samples[i].end()); 
-		
-		//cerr << "s: "<<samples[i] << endl;
-		
-
-		
-		double ell = logLike(N,
-                             M,
-                             sample, 
-                             cond_probs, 
-							 u,
-                             log_conv_factors);
-		
-		ublas::vector<double> diff = (samples[i] - MLE);
-		//cerr << "diff: "<<diff << endl;
-		
-		ublas::vector<double> diff_transpose = ublas::trans(diff);
-		//cerr << "diff^T" << diff_transpose << endl;
-		ublas::vector<double> P = prod(proposed_cov, diff);
-		//cerr << "Prod: "<< P << endl;
-		double X = inner_prod(diff_transpose,P);
-		
-		//cerr << diff_transpose << " "<< P << " " << X << endl;
-		
-		double sample_prob = exp(-0.5 * X) / scale;
-		
-		if (sample_prob == 0.0)
-		{
-			//			fprintf(stderr, "Error: sample_prob == 0, %lf after rounding. \n", X);
-			//			cerr << "diff: "<<diff << endl;//cerr << covariance << endl;
-			//			cerr << "Prod: "<< P << endl;
-			//			cerr << "s: "<<samples[i] << endl;
-			//			return false;
-			continue; // prob is zero after rounding, skip this sample
-		}
-		
-		assert (sample_prob);
-		assert (!isinf(sample_prob));
-		assert (!isnan(sample_prob));
-		//cerr << "Prob(sample) = " << sample_prob << endl;
-		double log_weight;
-		
-		
-		if (sample_prob == 0)
-		{
-			continue;
-		}
-		else
-		{
-			//assert (sample_prob > 0.0 && sample_prob <= 1.0);
-			//sample_prob *= scale;
-			double e_p = ell - log(sample_prob);
-			log_weight = e_p;
-		}
-		
-		ublas::vector<double> scaled_sample(N);
-		for (size_t v = 0; v < scaled_sample.size(); ++v)
-		{
-			assert (samples[i][v]);
-			scaled_sample(v) = log_weight + log(samples[i][v]);
-			assert (scaled_sample(v));
-			assert (!isinf(scaled_sample(v)));
-			assert (!isnan(scaled_sample(v)));
-		}
-		
-		//cerr << scaled_sample << endl;
-		weighted_samples.push_back(scaled_sample);
-		
-		sample_weights.push_back(make_pair(i, log_weight));
 	}
 }
 
@@ -3185,284 +2944,6 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
     return NUMERIC_OK;
 }
 
-AbundanceStatus bayesian_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& alignments,
-                                 const vector<double>& log_conv_factors,
-                                 const ublas::vector<double>& gamma_mle,
-                                 ublas::vector<double>& gamma_map_estimate,
-                                 ublas::matrix<double>& gamma_map_covariance)
-{
-    
-    ublas::matrix<double> inverse_fisher;
-    
-    // Calculate the mean gamma MLE and covariance matrix across replicates, so
-    // we can use it as the proposal distribution for importance sampling.  This will
-    // make the Bayesian prior more conservative than using the inverse of the 
-    // Fisher Information matrix on the mixed likelihood function.
-    AbundanceStatus fisher_status = calculate_inverse_fisher(transcripts,
-                                                             alignments,
-                                                             gamma_mle,
-                                                             inverse_fisher);
-    
-    
-    double trace = 0.0;
-    for (size_t i = 0; i < gamma_mle.size(); ++i)
-    {
-        trace += inverse_fisher(i,i);
-    }
-    
-    ublas::matrix<double> proposal = inverse_fisher;
-
-#if 1
-    proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
-    proposal *= 10.0;
-#endif
-    
-    if (fisher_status != NUMERIC_OK)
-        return fisher_status;
-    
-    AbundanceStatus map_status = map_estimation(transcripts,
-                                                alignments,
-                                                log_conv_factors,
-                                                gamma_mle,
-                                                proposal,
-                                                gamma_map_estimate,
-                                                gamma_map_covariance);
-    
-    return map_status;
-}
-
-AbundanceStatus bayesian_gammas_exact(const vector<shared_ptr<Abundance> >& transcripts,
-                                      const vector<MateHit>& nr_alignments,
-                                      const vector<double>& log_conv_factors,
-                                      const ublas::vector<double>& gamma_mle,
-                                      ublas::vector<double>& gamma_map_estimate,
-                                      ublas::matrix<double>& gamma_map_covariance)
-{
-    
-    ublas::matrix<double> inverse_fisher;
-    
-    // Calculate the mean gamma MLE and covariance matrix across replicates, so
-    // we can use it as the proposal distribution for importance sampling.  This will
-    // make the Bayesian prior more conservative than using the inverse of the 
-    // Fisher Information matrix on the mixed likelihood function.
-    AbundanceStatus fisher_status = calculate_inverse_fisher(transcripts,
-                                                             nr_alignments,
-                                                             gamma_mle,
-                                                             inverse_fisher);
-    
-    
-    double trace = 0.0;
-    for (size_t i = 0; i < gamma_mle.size(); ++i)
-    {
-        trace += inverse_fisher(i,i);
-    }
-    
-    ublas::matrix<double> proposal = inverse_fisher;
-    
-#if 1
-    proposal += ublas::identity_matrix<double>(gamma_mle.size()) * (trace / 10.0);
-    proposal *= 4.0;
-#endif
-    
-    if (fisher_status != NUMERIC_OK)
-        return fisher_status;
-    
-    AbundanceStatus map_status = map_estimation(transcripts,
-                                                nr_alignments,
-                                                log_conv_factors,
-                                                gamma_mle,
-                                                proposal,
-                                                gamma_map_estimate,
-                                                gamma_map_covariance);
-    return map_status;
-}
-
-
-AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
-                                    const vector<MateHit>& nr_alignments,
-                                    const vector<double>& log_conv_factors,
-                                    ublas::vector<double>& gamma_map_estimate,
-                                    ublas::matrix<double>& gamma_covariance,
-                                    double& cross_replicate_js)
-{
-    size_t N = transcripts.size();	
-	size_t M = nr_alignments.size();
-    
-    if (N == 1)
-    {
-        gamma_map_estimate = ublas::vector<double>(1);
-        gamma_map_estimate(0) = 1.0;
-        gamma_covariance = ublas::matrix<double>(1,1);
-        gamma_covariance(0,0) = 0.0;
-        return NUMERIC_OK;
-    }
-
-    vector<MateHit> alignments = nr_alignments;
-    vector<double>  scaled_masses;
-    vector<double>  unscaled_masses;
-    double num_uncollapsed_frags = 0.0;
-    for (size_t i = 0; i < M; ++i)
-    {
-        double uncollapsed_mass = alignments[i].collapse_mass() / alignments[i].common_scale_mass();
-        num_uncollapsed_frags += (uncollapsed_mass);
-        scaled_masses.push_back(alignments[i].collapse_mass());
-        unscaled_masses.push_back(uncollapsed_mass);
-        alignments[i].collapse_mass(uncollapsed_mass);
-    }
-    
-    // FIXME: this has already been computed above, so just pass it in.
-    vector<double> orig_gammas(0.0, transcripts.size());
-    gamma_mle(transcripts,
-              nr_alignments,
-              log_conv_factors, 
-              orig_gammas,
-              false);
-    
-    std::vector<ublas::vector<double> > mle_gammas;
-    
-    boost::uniform_int<> uniform_dist(0,num_uncollapsed_frags-1);
-    boost::mt19937 rng; 
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > uniform_gen(rng, uniform_dist); 
-    
-    int num_sample_frags = floor(num_uncollapsed_frags * bootstrap_fraction);
-    
-    if (num_sample_frags <= 0)
-    {
-        return NUMERIC_FAIL;
-    }
-    
-    for (size_t i = 0; i < num_bootstrap_samples; ++i)
-    {
-        vector<int> sample_idxs;
-        for (size_t j = 0; j < num_sample_frags; ++j)
-        {
-            sample_idxs.push_back(uniform_gen());
-        }
-        sort (sample_idxs.begin(), sample_idxs.end());
-        assert (sample_idxs.empty() == false);
-        
-        size_t curr_sample = 0;
-        size_t processed_hits = 0;
-        vector<double> adjusted_masses(alignments.size(), 0);
-        for (size_t j = 0; j < alignments.size(); ++j)
-        {
-            int adjusted_mass = 0.0;
-            while (curr_sample < sample_idxs.size() &&
-                   sample_idxs[curr_sample] >= processed_hits &&
-                   sample_idxs[curr_sample] < processed_hits + alignments[j].collapse_mass())
-            {
-                adjusted_mass++;
-                curr_sample++;
-            }
-            processed_hits += alignments[j].collapse_mass();
-            alignments[j].collapse_mass(adjusted_mass);
-            adjusted_masses[j] = adjusted_mass;
-        }
-        
-        for (size_t j = 0; j < alignments.size(); ++j)
-        {
-            alignments[j].collapse_mass(alignments[j].collapse_mass() * alignments[j].common_scale_mass());
-        }
-        
-        vector<double> bs_gammas(0.0, transcripts.size());
-        
-        AbundanceStatus mle_success = gamma_mle(transcripts,
-                                                alignments,
-                                                log_conv_factors, 
-                                                bs_gammas,
-                                                false,
-                                                &orig_gammas);
-        if (mle_success == NUMERIC_OK)
-        {
-            ublas::vector<double> mle = ublas::zero_vector<double>(N);
-            for(size_t j = 0; j < N; ++j)
-            {
-                mle(j) = bs_gammas[j];
-            }
-            mle_gammas.push_back(mle);
-        }
-        
-        
-        
-        for (size_t j = 0; j < alignments.size(); ++j)
-        {
-            alignments[j].collapse_mass(unscaled_masses[j]);
-        }
-    }
-    
-    //fprintf(stderr, "Ran %lu bootstrap samples succesfully\n", mle_gammas.size());
-    
-    if (mle_gammas.empty())
-        return NUMERIC_FAIL;
-    
-    gamma_covariance = ublas::zero_matrix<double>(N,N);
-    ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
-
-    foreach(ublas::vector<double>& mle, mle_gammas)
-    {
-        //cerr << "MLE # "<< MLENUM++ << endl;
-        //cerr << mle << endl;
-        expected_mle_gamma += mle;
-    }
-    expected_mle_gamma /= mle_gammas.size();
-    
-    for (size_t i = 0; i < N; ++i)
-    {
-        for (size_t j = 0; j < N; ++j)
-        {
-            for (size_t k = 0 ; k < mle_gammas.size(); ++k)
-            {
-                double c = (mle_gammas[k](i) - expected_mle_gamma(i)) * (mle_gammas[k](j) - expected_mle_gamma(j));
-                gamma_covariance(i,j) += c;
-            }
-        }
-    }
-    
-    gamma_covariance /= mle_gammas.size();
-    gamma_map_estimate = expected_mle_gamma;
-    
-    //cerr << "MLE: " << expected_mle_gamma << endl;
-    //cerr << "COV:" << endl;
-    //cerr << gamma_covariance << endl;
-    //cerr << "*************" << endl;
-    return NUMERIC_OK;
-}
-
-AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& alignments,
-                                 const vector<double>& log_conv_factors,
-                                 ublas::vector<double>& gamma_estimate,
-                                 ublas::matrix<double>& gamma_covariance,
-                                 double& cross_replicate_js)
-{
-    ublas::vector<double> empirical_gamma_mle = gamma_estimate;
-    ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
-    
-    // Calculate the mean gamma MLE and covariance matrix across replicates, so
-    // we can use it as the proposal distribution for importance sampling.  This will
-    // make the Bayesian prior more conservative than using the inverse of the 
-    // Fisher Information matrix on the mixed likelihood function.
-    AbundanceStatus empirical_mle_status = bootstrap_gamma_mle(transcripts,
-                                                               alignments,
-                                                               log_conv_factors,
-                                                               empirical_gamma_mle,
-                                                               empirical_gamma_covariance,
-                                                               cross_replicate_js);
-    
-    if (empirical_mle_status != NUMERIC_OK)
-        return empirical_mle_status;
-    
-    gamma_estimate = empirical_gamma_mle;
-    gamma_covariance = empirical_gamma_covariance;
-    
-
-    
-    
-
-    return NUMERIC_OK;
-}
-
 AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,
                                            const vector<double>& log_conv_factors,
@@ -3491,26 +2972,6 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
     gamma_estimate = empirical_gamma_mle;
     gamma_covariance = empirical_gamma_covariance;
 
-#if 0
-//    // Perform a bayesian estimation to improve the gamma estimate and their covariances 
-//    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(empirical_gamma_mle.size(),empirical_gamma_mle.size());
-//	for (size_t i = 0; i < empirical_gamma_mle.size(); ++i)
-//	{
-//		epsilon(i,i) = 1e-6;
-//	}
-//    
-//    empirical_gamma_covariance += epsilon;
-    
-    AbundanceStatus map_status = map_estimation(transcripts,
-                                                nr_alignments,
-                                                log_conv_factors,
-                                                empirical_gamma_mle,
-                                                empirical_gamma_covariance,
-                                                gamma_estimate,
-                                                gamma_covariance);
-    if (map_status != NUMERIC_OK)
-        return map_status;
-#endif
     return NUMERIC_OK;
 }
 
@@ -3608,105 +3069,6 @@ AbundanceStatus calc_is_scale_factor(const ublas::matrix<double>& covariance_cho
     return NUMERIC_OK;
 }
 
-AbundanceStatus map_estimation(const vector<shared_ptr<Abundance> >& transcripts,
-                               const vector<MateHit>& alignments,
-                               const vector<double>& log_conv_factors,
-                               const ublas::vector<double>& proposal_gamma_mean,
-                               const ublas::matrix<double>& proposal_gamma_covariance,
-                               ublas::vector<double>& gamma_map_estimate,
-                               ublas::matrix<double>& gamma_map_covariance)
-{
-    ublas::matrix<double> covariance_chol = proposal_gamma_covariance;
-    ublas::matrix<double> inv_cov = covariance_chol;
-	double ch = cholesky_factorize(covariance_chol);
-	
-	if (ch != 0.0)
-	{
-		verbose_msg("Warning: Covariance matrix is not positive definite (bad element: %lg)\n", ch);
-		return NUMERIC_FAIL;
-	}
-	
-	bool invertible = chol_invert_matrix(covariance_chol, inv_cov);
-	
-    if (!invertible)
-	{
-		verbose_msg("Warning: Covariance matrix is not invertible\n");
-		return NUMERIC_FAIL;
-	}
-    
-    //cerr << "Cholesky decomposed proposal covariance" << endl;
-    //cerr << covariance_chol << endl;
-    
-	multinormal_generator<double> generator(proposal_gamma_mean, covariance_chol);
-    vector<ublas::vector<double> > samples;
-    
-	generate_importance_samples(generator, samples, num_importance_samples, false);
-	
-	if (samples.size() < 100)
-	{
-		verbose_msg("Warning: not-enough samples for MAP re-estimation\n");
-		return NUMERIC_FAIL;
-	}
-	
-    double is_scale_factor = 0.0; 
-    
-    // Calculate the scaling factor for correcting the proposal distribution bias 
-    // during importance sampling
-	AbundanceStatus scale_status = calc_is_scale_factor(covariance_chol, is_scale_factor);
-	
-    if (scale_status == NUMERIC_FAIL)
-    {
-        return NUMERIC_FAIL;
-    }
-    
-	vector<pair<size_t, double> > sample_weights;
-	
-	ublas::vector<double> expectation(transcripts.size());
-	vector<ublas::vector<double> > weighted_samples;
-	
-	vector<vector<double> > cond_probs(transcripts.size(), vector<double>());
-	for(size_t j = 0; j < transcripts.size(); ++j)
-	{
-		cond_probs[j]= *(transcripts[j]->cond_probs());
-	}
-    
-    vector<double> u(alignments.size());
-	for (size_t i = 0; i < alignments.size(); ++i)
-	{
-		u[i] = alignments[i].collapse_mass();
-	}
-	
-	compute_sample_weights(proposal_gamma_covariance,
-						   cond_probs,
-						   samples,
-						   u,
-                           log_conv_factors,
-						   is_scale_factor,
-						   proposal_gamma_mean,
-						   weighted_samples,
-						   sample_weights);
-	
-    long double log_total_weight = 0.0;
-    
-	AbundanceStatus expectation_ok = compute_posterior_expectation(weighted_samples,
-                                                                   sample_weights,
-                                                                   expectation,
-                                                                   log_total_weight);
-    if (expectation_ok != NUMERIC_OK)
-    {
-        return expectation_ok;
-    }
-	
-    revise_map_mean_and_cov_estimate(log_total_weight,
-                                     expectation, 
-                                     sample_weights, 
-                                     weighted_samples,
-                                     gamma_map_estimate, 
-                                     gamma_map_covariance);
-    
-	return NUMERIC_OK;
-}
-
 template<class M, class PM>
 bool is_identifiable(M &m, PM &pm)
 {
@@ -3744,8 +3106,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
                           vector<double>& gammas,
-                          bool check_identifiability,
-                          vector<double>* p_hint)
+                          bool check_identifiability)
 {
 	gammas.clear();
 	if (transcripts.empty())
@@ -3772,16 +3133,20 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
 		
 		//compute_saliencies(cond_probs, saliencies, saliency_weight);
 		
-		vector<double> prob(N,0);
-
+        Eigen::VectorXd prob = Eigen::VectorXd::Zero(N);
+        Eigen::VectorXd _phint = Eigen::VectorXd::Zero(N);
+        
 		double logL;
 		
+        Eigen::MatrixXd cond_probs(N, M);
 		
-		vector<vector<double> > cond_probs(N, vector<double>());
-		for (size_t j = 0; j < N; ++j)
-		{
-			cond_probs[j] = *(transcripts[j]->cond_probs());
-		}
+        for (size_t j = 0; j < cond_probs.rows(); ++j)
+        {
+            for (size_t i = 0; i < cond_probs.cols(); ++i)
+            {
+                cond_probs(j,i) = (*(transcripts[j]->cond_probs()))[i];
+            }
+        }
         
         if (check_identifiability)
         {
@@ -3791,7 +3156,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
             {
                 for (size_t i = 0; i < M; ++i)
                 {
-                    if (cond_probs[j][i])
+                    if (cond_probs(j,i))
                     {
                         //compat(i,j) = cond_probs[j][i];
                         compat(i,j) = 1;
@@ -3831,25 +3196,19 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
             identifiable = is_identifiable<ublas::matrix<double>,pmatrix>(reduced_compat,pm);
         }
         
-		vector<double> u(M);
+        Eigen::VectorXd alignment_multiplicities(M);
 		for (size_t i = 0; i < M; ++i)
 		{
-			u[i] = nr_alignments[i].collapse_mass();
+			alignment_multiplicities[i] = nr_alignments[i].collapse_mass();
 		}
         		
-        if (use_em)
-        {
-            logL = EM(N, M, prob, cond_probs, u, log_conv_factors, converged, p_hint);
-        }
-		else
-        {
-            logL = grad_ascent(N, M, prob, cond_probs, u, log_conv_factors, converged);
-        }
+        logL = EM(N, M, prob, cond_probs, alignment_multiplicities, log_conv_factors, converged);
         
-		gammas = prob;
+		gammas = vector<double>(N, 0.0);
 		
 		for (size_t i = 0; i < gammas.size(); ++i)
 		{
+            gammas[i] = prob(i);
 			if (isnan(gammas[i]) || isinf(gammas[i]))
             {
                 return NUMERIC_FAIL;
