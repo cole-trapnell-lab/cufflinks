@@ -2,6 +2,7 @@ m4_include([ax_boost_base.m4])
 m4_include([ax_boost_thread.m4])
 m4_include([ax_bam.m4])
 m4_include([ax_check_zlib.m4])
+m4_include([ax_check_eigen.m4])
 
 define([svnversion], esyscmd([sh -c "svnversion|tr -d '\n'"]))dnl
 AC_INIT([cufflinks], [1.3.0], [cole@cs.umd.edu])
@@ -34,7 +35,7 @@ AX_BOOST_BASE([1.47.0])
 AX_BAM
 AX_BOOST_THREAD
 AX_CHECK_ZLIB()
-
+AX_EIGEN
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
@@ -44,6 +45,7 @@ AC_C_INLINE
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_CHECK_TYPES([ptrdiff_t])
+
 
 # Checks for library functions.
 #AC_FUNC_FORK
@@ -100,7 +102,7 @@ AC_ARG_ENABLE(profiling,      [  --enable-profiling        enable profiling with
 	  
 CFLAGS="${generic_CFLAGS} ${ext_CFLAGS} ${user_CFLAGS} ${debug_CFLAGS} ${OPENMP_CFLAGS}"
 CXXFLAGS="$CFLAGS"
-CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS $BAM_CPPFLAGS"
+CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN_CPPFLAGS}"
 LDFLAGS="$ext_LDFLAGS"
 
 # Checks for structures/functions that can be used to determine system memory

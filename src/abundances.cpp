@@ -46,7 +46,7 @@
 
 //#define USE_LOG_CACHE
 
-void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
+void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
                              const vector<MateHit>& alignments,
 							 vector<vector<char> >& compatibilities)
 {
@@ -475,16 +475,21 @@ double AbundanceGroup::effective_length() const
 //    }
 //}
 
-void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateHit>& alignments,
-                                                              const vector<shared_ptr<Abundance> >& transcripts)
+void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignments,
+                                                vector<shared_ptr<Abundance> >& transcripts)
 {
-	size_t M = alignments.size();
+    size_t M = alignments.size();
 	size_t N = transcripts.size();
 	
+    _count_per_replicate.clear();
+    
 	if (transcripts.empty())
 		return;
     
-    map<shared_ptr<ReadGroupProperties const>, double> count_per_replicate;
+    //map<shared_ptr<ReadGroupProperties const>, double> count_per_replicate;
+
+    vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
+	compute_cond_probs_and_effective_lengths(alignments, transcripts, mapped_transcripts);
     
 	for (size_t i = 0; i < M; ++i)
 	{	
@@ -505,13 +510,23 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
             shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
             //assert (parent != NULL);
             pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
-            inserted = count_per_replicate.insert(make_pair(rg_props, 0.0));
+            inserted = _count_per_replicate.insert(make_pair(rg_props, 0.0));
             _read_group_props.insert(rg_props);
             
             double more_mass = alignments[i].collapse_mass();
             inserted.first->second += more_mass;
         }
     }
+}
+
+void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateHit>& alignments,
+                                                              const vector<shared_ptr<Abundance> >& transcripts)
+{
+	size_t M = alignments.size();
+	size_t N = transcripts.size();
+	
+	if (transcripts.empty())
+		return;
     
     double avg_X_g = 0.0;
     double avg_mass_fraction = 0.0;
@@ -523,8 +538,8 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
     vector<double> avg_mass_variances(N, 0.0);
     
     double max_mass_var = 0.0;
-    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = count_per_replicate.begin();
-         itr != count_per_replicate.end();
+    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+         itr != _count_per_replicate.end();
          ++itr)
     {
         shared_ptr<ReadGroupProperties const> rg_props = itr->first;
@@ -546,11 +561,11 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
     
     // Set the maximum mass variance in case we get an identifiability failure
     // and need to bound the group expression.
-    if (!count_per_replicate.empty())
-        max_mass_var /= count_per_replicate.size();
+    if (!_count_per_replicate.empty())
+        max_mass_var /= _count_per_replicate.size();
     
     
-    double num_replicates = count_per_replicate.size();
+    double num_replicates = _count_per_replicate.size();
     
     if (num_replicates)
     {
@@ -654,7 +669,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
         
         for(int k = i + 1 ; k < M; ++k)
         {
-            if (replaced[k] || (corr_multi && alignments[k].is_multi()) || alignments[i].read_group_props() != alignments[k].read_group_props())
+            if (replaced[k] || (corr_multi && alignments[k].is_multi()) /*|| alignments[i].read_group_props() != alignments[k].read_group_props()*/)
                 continue;
             if (require_overlap && !::overlap_in_genome(curr_align->left(), curr_align->right(),
                                      alignments[k].left(), alignments[k].right()))
@@ -734,7 +749,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
             // can collapse k into i via the mass.
             if (equiv && last_cond_prob > 0.0)
             {
-                assert(curr_align->read_group_props() == alignments[k].read_group_props());
+                //assert(curr_align->read_group_props() == alignments[k].read_group_props());
                 assert (last_cond_prob > 0);
                 //double mass_muliplier = sqrt(last_cond_prob);
                 double mass_multiplier = log(last_cond_prob);
@@ -873,7 +888,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 	vector<shared_ptr<Abundance> > transcripts;
 	get_transfrags(transcripts);
 	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
-	
+    
 	vector<MateHit> nr_alignments;
     
     if (cond_prob_collapse)
@@ -884,6 +899,8 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     {
         nr_alignments = alignments;
     }
+    
+    collect_per_replicate_mass(nr_alignments, transcripts);
     
     vector<MateHit> non_equiv_alignments;
     vector<double> log_conv_factors;
@@ -2491,30 +2508,65 @@ void Estep (int N,
 	// given p, fills U with expected frequencies
 	int i,j;	
     
-    Eigen::VectorXd frag_prob_sums = Eigen::VectorXd::Zero(M);
+//    Eigen::VectorXd frag_prob_sums = Eigen::VectorXd::Zero(M);
+//    
+//    for (j = 0; j < N; ++j) 
+//    {
+//        for (i = 0; i < M; ++i) 
+//        {
+//            frag_prob_sums(i) += cond_probs(j,i) * p(j);
+//        }
+//    }
+//    
+//    for (i = 0; i < M; ++i) 
+//    {
+//        frag_prob_sums(i) = frag_prob_sums(i) ? (1.0 / frag_prob_sums(i)) : 0.0;
+//    }
+//    
+//    for (j = 0; j < N; ++j) 
+//    {
+//        for (i = 0; i < M; ++i) 
+//        {
+//            double ProbY = frag_prob_sums(i);
+//            double exp_i_j = alignment_multiplicities(i) * cond_probs(j,i) * p(j) * ProbY;
+//            U(j,i) = exp_i_j;
+//        }
+//    }
     
-    for (j = 0; j < N; ++j) 
-    {
-        for (i = 0; i < M; ++i) 
-        {
-            frag_prob_sums(i) += cond_probs(j,i) * p(j);
-        }
-    }
+    Eigen::VectorXd frag_prob_sums;// = Eigen::VectorXd::Zero(M);
+    
+//    for (j = 0; j < N; ++j) 
+//    {
+//        for (i = 0; i < M; ++i) 
+//        {
+//            frag_prob_sums(i) += cond_probs(j,i) * p(j);
+//        }
+//    }
+    
+    frag_prob_sums = p.transpose() * cond_probs;
     
     for (i = 0; i < M; ++i) 
     {
         frag_prob_sums(i) = frag_prob_sums(i) ? (1.0 / frag_prob_sums(i)) : 0.0;
     }
     
+    Eigen::ArrayXd x = frag_prob_sums.array() * alignment_multiplicities.array();
     for (j = 0; j < N; ++j) 
     {
         for (i = 0; i < M; ++i) 
         {
-            double ProbY = frag_prob_sums(i);
-            double exp_i_j = alignment_multiplicities(i) * cond_probs(j,i) * p(j) * ProbY;
+            //double ProbY = frag_prob_sums(i);
+            double exp_i_j = cond_probs(j,i) * p(j) * x(i);
             U(j,i) = exp_i_j;
         }
     }
+    //Eigen::ArrayXXd a_cond_probs = cond_probs.array();
+    //Eigen::ArrayXXd a_p = p.array();
+    //Eigen::ArrayXXd a_U = a_p * a_cond_probs.colwise();
+    //U = (.colwise() * p.transpose().array()).matrix();
+    //U = cond_probs.colwise() * p.array();
+    //U = alignment_multiplicities.array() * p.array() * cond_probs.array() * frag_prob_sums.array();
+    //U = (frag_prob_sums.array() * alignment_multiplicities.array()).rowwise() * p.array().colwise() * cond_probs.array().colwise();
 }
 
 
@@ -2523,33 +2575,46 @@ void Mstep (int N,
             Eigen::VectorXd& p, 
             const Eigen::MatrixXd& U) 
 {
-	Eigen::VectorXd v = Eigen::VectorXd::Zero(N);
+	Eigen::VectorXd v;// = Eigen::VectorXd::Zero(N);
     
 	double m = 0;
 	int i,j;
 	
-	//#pragma omp parallel for
-	for (j = 0; j < N; ++j) {
-		//cout << "." <<  v[j] << ".\n";
-		for (i = 0; i < M; ++i) {
-			//	cout << U[i][j] << " \n";
-			v(j) += U(j,i);
-		}
-		m += v(j);
-	}
 	
+//	for (j = 0; j < N; ++j) {
+//		//cout << "." <<  v[j] << ".\n";
+//		for (i = 0; i < M; ++i) {
+//			//	cout << U[i][j] << " \n";
+//			v(j) += U(j,i);
+//		}
+//		m += v(j);
+//	}
+//    
+//    if (m) 
+//    {
+//        for (j = 0; j < N; ++j) 
+//        {
+//            p(j) = v(j) / m;
+//        }   
+//    }
+//    else
+//    {
+//        for (j = 0; j < N; ++j) 
+//        {
+//            p(j) = 0.0;
+//        }
+//    }
+    
+	v = U.rowwise().sum();
+    m = v.colwise().sum()(0);
+    
 	if (m)
 	{
-		for (j = 0; j < N; ++j) {
-			p(j) = v(j) / m;
-		}
+		p = v / m;
 	}
 	else
 	{
-        for (j = 0; j < N; ++j) 
-        {
-            p(j) = 0.0;
-        }
+        p = Eigen::VectorXd::Zero(N);
 	}
 }
  
@@ -2560,19 +2625,28 @@ double logLike (int N,
 				const Eigen::MatrixXd& cond_prob, 
 				const Eigen::VectorXd& alignment_multiplicities,
                 const vector<double>& log_conv_factors) {
-	int i,j;
+	//int i,j;
 	
 	double ell = accumulate(log_conv_factors.begin(), log_conv_factors.end(), 0.0);
-	double Prob_Y;
-	for (i= 0; i < M; i++) {
-		Prob_Y = 0;
-		for (j= 0; j < N; j++) {
-			Prob_Y += cond_prob(j,i) * p(j);
-		}
-		if (Prob_Y > 0) {
-			ell += (alignment_multiplicities(i) * log(Prob_Y));
-		}
-	}
+	//double Prob_Y;
+//	for (int i= 0; i < M; i++) {
+//		Prob_Y = 0;
+//		for (int j= 0; j < N; j++) {
+//			Prob_Y += cond_prob(j,i) * p(j);
+//		}
+//		if (Prob_Y > 0) {
+//			ell += (alignment_multiplicities(i) * log(Prob_Y));
+//		}
+//	}
+    Eigen::VectorXd Prob_Ys = p.transpose() * cond_prob;
+    Eigen::VectorXd log_Prob_Ys = Prob_Ys.array().log();
+    //log_Prob_Ys *= alignment_multiplicities;
+    for (int i = 0; i < M; i++) {
+        if (Prob_Ys(i) > 0)
+        {
+            ell += alignment_multiplicities(i) * log_Prob_Ys(i);
+        }
+    }
 	return ell;
 }
 

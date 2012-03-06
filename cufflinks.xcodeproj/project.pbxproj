@@ -628,6 +628,7 @@
 		EDD94B671205C9E800AA1086 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDD94B711205CAF400AA1086 /* gtf_to_sam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_to_sam.cpp; path = src/gtf_to_sam.cpp; sourceTree = "<group>"; };
 		EDDBF70912D29DF000130D8A /* cuffcluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cuffcluster.cpp; path = src/cuffcluster.cpp; sourceTree = "<group>"; };
+		EDDC08C015064AA600CFC7EF /* ax_check_eigen.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = ax_check_eigen.m4; sourceTree = "<group>"; };
 		EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graph_optimize.h; path = src/graph_optimize.h; sourceTree = "<group>"; };
 		EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = graph_optimize.cpp; path = src/graph_optimize.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDE78A7811B6E912000F8846 /* scaffold_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scaffold_graph.h; path = src/scaffold_graph.h; sourceTree = "<group>"; };
@@ -894,6 +895,7 @@
 		ED1C0C6D11D7D9C000CFD663 /* Autotools */ = {
 			isa = PBXGroup;
 			children = (
+				EDDC08C015064AA600CFC7EF /* ax_check_eigen.m4 */,
 				ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */,
 				ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */,
 				ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */,

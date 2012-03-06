@@ -444,7 +444,8 @@ private:
     
     void update_transcript_expression(double locus_mass, double locus_mass_fraction);
     
-    
+    void collect_per_replicate_mass(const vector<MateHit>& alignments,
+                                    vector<shared_ptr<Abundance> >& transcripts);
     
     //void collect_read_group_props();
 	
@@ -475,10 +476,11 @@ private:
     double _total_frags;
     
     std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
+    map<shared_ptr<ReadGroupProperties const>, double> _count_per_replicate;
     //std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
 };
 
-void compute_compatibilities(vector<shared_ptr<Abundance> >& transcripts,
+void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 							 const vector<MateHit>& alignments,
 							 vector<vector<char> >& compatibilities);
 
