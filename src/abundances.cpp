@@ -1216,7 +1216,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         return;
     }
     
-    size_t num_count_draws = 500;
+    size_t num_count_draws = 2500;
     
     boost::mt19937 rng;
     
