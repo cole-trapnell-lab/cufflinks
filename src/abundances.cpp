@@ -1216,13 +1216,14 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         return;
     }
     
-    size_t num_count_draws = 2500;
+    size_t num_count_draws = 1000;
     
     boost::mt19937 rng;
     
     vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
     vector<Eigen::VectorXd > generated_counts (num_count_draws, Eigen::VectorXd::Zero(_abundances.size()));
     
+    calculate_iterated_exp_count_covariance(nr_alignments, transcripts);
     
     
     for (size_t j = 0; j < _abundances.size(); ++j)
@@ -1348,10 +1349,10 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
-        if (_count_covariance(i,i) < _abundances[i]->mass_variance())
-            _count_covariance(i,i) = _abundances[i]->mass_variance();
-        if (_count_covariance(i,i) < _abundances[i]->num_fragments())
-            _count_covariance(i,i) = _abundances[i]->num_fragments();
+        if (_count_covariance(i,i) < ceil(_abundances[i]->mass_variance()))
+            _count_covariance(i,i) = ceil(_abundances[i]->mass_variance());
+        if (_count_covariance(i,i) < ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)))
+            _count_covariance(i,i) = ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i));
     }
     
 //    cerr << "simulated count covariance: " << endl;
@@ -2214,24 +2215,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     }
     
     double total_var = 0.0;
-    
-    double num_salient_frags = 0.0;
-    //double num_unsalient_frags = 0.0;
-    double num_frags = 0.0;
-    
-    //iterate over fragments
-    for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
-    {
-        num_frags += u[i];
-        //cerr << u[i] << endl;
-    }
-    
-    ublas::vector<double> expected_counts = ublas::zero_vector<double>(cond_probs.size());
-    
-    _assign_probs = ublas::zero_matrix<double>(transcripts.size(), transcripts.size());
-    
-    //ublas::vector<double> correct_assign_probs = ublas::zero_vector<double>(cond_probs.size());
-    
+
     //iterate over fragments
     for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
     {
@@ -2240,7 +2224,6 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
         {
             double c_j_i = marg_cond_prob(j,i);
-            expected_counts(j) += u[i] * marg_cond_prob(j,i);
             
             //if (c_j_i == 0 || c_j_i == 1.0)
             //    continue;
@@ -2261,9 +2244,6 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                         assert (!isnan(var) && !isinf(var));
                         total_var += var;
                     }
-                    
-                    if (c_j_i > 0)
-                        _assign_probs(j,j) += c_k_i * ((double)u[i]);
                 }
                 else
                 {
@@ -2275,57 +2255,12 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                         assert (!isnan(covar) && !isinf(covar));
                         count_covariance(k,j) += covar;
                     }
-                    if (c_j_i > 0)
-                        _assign_probs(j,k) += c_k_i * ((double)u[i]);
                 } 
             }
         }
 
     }
-    
-    cerr << "pre-scaled assignment probabilities: " << endl;
-    for (unsigned i = 0; i < _assign_probs.size1 (); ++ i) 
-    {
-        ublas::matrix_row<ublas::matrix<double> > mr (_assign_probs, i);
-        cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
-        std::cerr << i << " : " << mr << std::endl;
-    }
-    
-    for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
-    {
-        double den = 0; 
-        for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
-        {
-            den += _assign_probs(j,k); 
-        }
-        if (den > 0)
-        {
-            for (size_t k = 0; k < marg_cond_prob.size1(); ++k)
-            {
-                _assign_probs(j,k) /= den; 
-            }
-        }
-    }
-    //_assign_probs = trans(_assign_probs);
-    
-    cerr << "assignment probabilities: " << endl;
-    for (unsigned i = 0; i < _assign_probs.size1 (); ++ i) 
-    {
-        ublas::matrix_row<ublas::matrix<double> > mr (_assign_probs, i);
-        cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
-        std::cerr << i << " : " << mr << std::endl;
-    }
-    
-    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
-    if (total_counts > 0)
-    {
-        for (size_t i = 0; i < transcripts.size(); ++i)
-        {
-            //_abundances[i]->num_fragments(expected_counts(i));
-            _abundances[i]->gamma(expected_counts(i) / total_counts);
-        }
-    }
-    
+        
     _iterated_exp_count_covariance = count_covariance;
     
     // take care of little rounding errors
@@ -2349,27 +2284,6 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
             }
         }
     }
-     
-//    ublas::matrix<double> test = _iterated_exp_count_covariance;
-//    double ret = cholesky_factorize(test);
-//    if (ret != 0)
-//    {
-//        fprintf(stderr, "Warning: iterated expectation count covariance is not positive definite (ret = %lg)!\n", ret);
-//        cerr << "iterated expectations: " << endl;
-//        for (unsigned i = 0; i < _iterated_exp_count_covariance.size1 (); ++ i) 
-//        {
-//            ublas::matrix_row<ublas::matrix<double> > mr (_iterated_exp_count_covariance, i);
-//            cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
-//            std::cerr << i << " : " << mr << std::endl;
-//        }
-//        cerr << "======" << endl;
-//
-////        for (size_t j = 0; j < _abundances.size(); ++j)
-////        {
-////            _abundances[j]->status(NUMERIC_FAIL);
-////        }
-//    }
-
 }
 
 void AbundanceGroup::calculate_kappas()
