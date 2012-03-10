@@ -112,6 +112,8 @@ int num_bootstrap_samples = 20;
 double bootstrap_fraction = 1.0;
 double bootstrap_delta_gap = 0.001;
 int max_frags_per_bundle = 1000000;
+bool analytic_diff = false;
+bool no_differential = false;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code

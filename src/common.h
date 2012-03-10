@@ -99,6 +99,9 @@ extern int num_bootstrap_samples;
 extern double bootstrap_fraction;
 extern double bootstrap_delta_gap;
 extern int max_frags_per_bundle;
+extern bool analytic_diff;
+extern bool no_differential;
+
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -433,4 +436,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_TRIM_READ_LENGTH        297
 #define OPT_MAX_DELTA_GAP           298
 #define OPT_MLE_MIN_ACC             299
+#define OPT_ANALYTIC_DIFF           300
+#define OPT_NO_DIFF           301
 #endif

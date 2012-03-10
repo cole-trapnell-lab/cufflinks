@@ -787,7 +787,56 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
         double js = 0.0;
         double p_val = 1.0;
         
-		bool success = test_js(filtered_prev, filtered_curr, js, p_val);
+        bool success;
+        
+        // Analytic JS variance calculation.
+        ublas::vector<double> js_gradient;
+        jensen_shannon_gradient(sample_kappas, js, js_gradient);
+        
+        vector<ublas::matrix<double> > covariances;
+        
+        covariances.push_back(filtered_prev.kappa_cov());
+        covariances.push_back(filtered_curr.kappa_cov());
+        
+        ublas::matrix<double> js_covariance;
+        assert (covariances.size() > 0);
+        for (size_t i = 0; i < covariances.size(); ++i)
+        {
+            assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
+        }
+        make_js_covariance_matrix(covariances,js_covariance);
+        assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
+        
+        double analytic_js_var = inner_prod(js_gradient, 
+                                   prod(js_covariance, js_gradient));
+        assert (!isinf(analytic_js_var) && !isnan(analytic_js_var));
+        
+        if (analytic_js_var > 0.0)
+        {
+            // We're dealing with a standard normal that's been truncated below zero
+            // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
+            
+            normal test_dist(0,1.0);
+            //double denom = sqrt(js_var);
+            double p = js/sqrt(analytic_js_var);
+            //test.test_stat = 2 * pdf(test_dist, p);
+            // analytic p_value:
+            test.test_stat = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
+        }
+        
+        // If we're going to use the analytic version, just go ahead and set 
+        // success to true, otherwise we need to run the Monte Carlo version
+        // and check the result of the simulation.
+        if (analytic_diff)
+        {
+            p_val = test.test_stat;
+            success = true;
+        }
+        else
+        {
+            success = test_js(filtered_prev, filtered_curr, js, p_val);
+        }
+        
 		if (js == 0.0 || success == false)
 		{
 			test.test_stat = 0;
@@ -799,7 +848,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 		}
 		else
 		{
-            test.test_stat = 0;
+            //test.test_stat = 0;
 			test.p_value = p_val;
 			test.value_1 = 0;
 			test.value_2 = 0;
@@ -807,42 +856,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			test.test_status = enough_reads ? OK : NOTEST;
             
             ///////////////////
-#if 1
-            ublas::vector<double> js_gradient;
-            jensen_shannon_gradient(sample_kappas, js, js_gradient);
-            
-            vector<ublas::matrix<double> > covariances;
-            
-            covariances.push_back(filtered_prev.kappa_cov());
-            covariances.push_back(filtered_curr.kappa_cov());
-            
-            ublas::matrix<double> js_covariance;
-            assert (covariances.size() > 0);
-            for (size_t i = 0; i < covariances.size(); ++i)
-            {
-                assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
-            }
-            make_js_covariance_matrix(covariances,js_covariance);
-            assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
-            
-            double js_var = inner_prod(js_gradient, 
-                                       prod(js_covariance, js_gradient));
-            assert (!isinf(js_var) && !isnan(js_var));
 
-            if (js_var > 0.0)
-            {
-                // We're dealing with a standard normal that's been truncated below zero
-                // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
-                
-                normal test_dist(0,1.0);
-                //double denom = sqrt(js_var);
-                double p = js/sqrt(js_var);
-                //test.test_stat = 2 * pdf(test_dist, p);
-                // analytic p_value:
-                test.test_stat = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
-            }
-
-#endif
             ///////////////////
             
             
