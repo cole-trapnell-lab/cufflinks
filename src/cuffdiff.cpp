@@ -1220,7 +1220,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> isoform_exp_diffs;
     fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    if (no_differential == false)
+    //if (no_differential == false)
     {
         for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
         {
@@ -1247,7 +1247,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> tss_group_exp_diffs;
     fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-	if (no_differential == false)
+	//if (no_differential == false)
     {
         for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
         {
@@ -1302,7 +1302,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> cds_exp_diffs;
     fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    if (no_differential == false)
+    //if (no_differential == false)
     {
         for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
         {
@@ -1330,7 +1330,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> splicing_diffs;
     fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    if (no_differential == false)
+    //if (no_differential == false)
     {
         for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
         {
@@ -1358,7 +1358,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> promoter_diffs;
     fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    if (no_differential == false)
+    //if (no_differential == false)
     {
         for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
         {
@@ -1386,7 +1386,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> cds_use_diffs;
     fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    if (no_differential == false)
+    //if (no_differential == false)
     {
         for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
         {

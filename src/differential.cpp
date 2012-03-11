@@ -119,7 +119,10 @@ void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abunda
         }
     }
     
-    test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
+    if (no_differential == false)
+    {    
+        test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
+    }
 }
 
 void TestLauncher::test_finished_loci()
