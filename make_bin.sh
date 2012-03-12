@@ -3,10 +3,10 @@
 #simple script to pack up a precompiled binary package, with the boost thread
 # library statically linked in.
 
-echo "packing up $1.tar.gz, using boost in $2, linking against $3 and using BAM in $4"
+echo "packing up $1.tar.gz, using boost in $2, linking against $3 and using BAM in $4, using Eigen in $5"
 mkdir $1
 make clean
-./configure --enable-intel64 --with-boost=$2 --with-boost-thread=$3 --with-bam=$4
+./configure --enable-intel64 --with-boost=$2 --with-boost-thread=$3 --with-bam=$4 --with-eigen=$5
 make
 cp src/cufflinks $1
 cp src/cuffcompare $1
