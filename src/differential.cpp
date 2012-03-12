@@ -119,10 +119,12 @@ void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abunda
         }
     }
     
-    if (no_differential == false)
-    {    
-        test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
-    }
+    // Test differential both extracts and records the FPKMs and performs the 
+    // testing itself. 
+    // FIXME: FPKM extraction should be split off into a separate routine 
+    // for clarity.
+    test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
+    
 }
 
 void TestLauncher::test_finished_loci()
@@ -1540,6 +1542,9 @@ void test_differential(const string& locus_tag,
 			add_to_tracking_table(i, ab, tracking.gene_fpkm_tracking);
 		}
 	}
+    
+    if (no_differential == true)
+        return;
 	
     // Perform pairwise significance testing between samples. If this is a
     // time series, only test between successive pairs of samples, as supplied 
