@@ -1544,7 +1544,12 @@ void test_differential(const string& locus_tag,
 	}
     
     if (no_differential == true)
+    {
+#if ENABLE_THREADS
+        test_storage_lock.unlock();
+#endif
         return;
+    }
 	
     // Perform pairwise significance testing between samples. If this is a
     // time series, only test between successive pairs of samples, as supplied 
