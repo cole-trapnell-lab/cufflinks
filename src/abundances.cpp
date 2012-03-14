@@ -1287,7 +1287,9 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         
         //Eigen::VectorXd relative_abundance = effective_length_recip.array() * assigned.array();
         //ublas::vector<double> assigned = ublas::prod(assign_probs_transpose,generated_counts[i]);
-        //cerr << generated_counts[i] << " , " << assigned << " , " << assign_probs << endl;
+        //cerr << generated_counts[i] << " , " << assigned.transpose() << " , " << assign_probs  << endl;
+        
+        //cerr << assigned.transpose() << endl;
         assigned_counts[i] = assigned;
         //relative_abundances[i] = relative_abundance;
     }
@@ -2278,6 +2280,14 @@ void AbundanceGroup::calculate_kappas()
 	size_t num_members = _abundances.size();
 	_kappa_covariance = ublas::matrix<double>(num_members, 
 											  num_members);
+    if (FPKM() == 0)
+    {
+        for (size_t k = 0; k < num_members; ++k)
+        {
+            _abundances[k]->kappa(0);
+        }
+        return;
+    }
     
     size_t num_count_draws = _assigned_count_samples.size();
     vector<Eigen::VectorXd > relative_abundances (num_count_draws, Eigen::VectorXd::Zero(num_members));
@@ -2293,21 +2303,25 @@ void AbundanceGroup::calculate_kappas()
     
     for (size_t i = 0; i < num_count_draws; ++i)
     {
+        
         Eigen::VectorXd relative_abundance = effective_length_recip.array() * _assigned_count_samples[i].array();
+        double total = relative_abundance.sum();
+        if (total > 0)
+            relative_abundance /= total;
         
         relative_abundances[i] = relative_abundance;
     }
     
     Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
     
-    for (size_t i = 0; i < _assigned_count_samples.size(); ++i)
+    for (size_t i = 0; i < relative_abundances.size(); ++i)
     {
         expected_relative_abundances += relative_abundances[i];
     }
     
     if (_assigned_count_samples.size() > 0)
     {
-        expected_relative_abundances /= _assigned_count_samples.size();
+        expected_relative_abundances /= relative_abundances.size();
     }
     
     for (size_t k = 0; k < num_members; ++k)
@@ -2335,10 +2349,12 @@ void AbundanceGroup::calculate_kappas()
     }
     
     _kappa_covariance /= _assigned_count_samples.size();
-    
-    vector<double> js_samples;
-    generate_null_js_samples(relative_abundances, 100000, js_samples);
-    _null_js_samples = js_samples;
+    if (expected_relative_abundances.sum() > 0)
+    {
+        vector<double> js_samples;
+        generate_null_js_samples(relative_abundances, 100000, js_samples);
+        _null_js_samples = js_samples;
+    }
     
 //	//cerr << gamma_cov <<endl;
 //	
@@ -3611,6 +3627,8 @@ bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
     
     size_t num_abundances = rel_abundances.front().size();
     
+    if (num_abundances <= 1)
+        return true;
     //    ublas::vector<double> null_kappa_mean(num_abundances);
     //    for (size_t i = 0; i < num_abundances; ++i)
     //    {
@@ -3643,7 +3661,8 @@ bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
         sample_kappas[1] = rel_abundances[null_uniform_gen()];
         
 		double js = jensen_shannon_distance(sample_kappas);  
-        //cerr << sample_kappas[0] << " vs. " <<  sample_kappas[1] << " = " << js << endl;
+        assert(!isnan(js));
+        //cerr << sample_kappas[0].transpose() << " vs. " <<  sample_kappas[1].transpose() << " = " << js << endl;
         js_samples.push_back(js);
     }
     

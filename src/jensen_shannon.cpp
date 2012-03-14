@@ -26,6 +26,8 @@ double entropy(const Eigen::VectorXd& p)
             e -= (P * log(P));
         }
 	}
+    if (e < 0)
+        e = 0;
 	return e;
 }
 
@@ -60,7 +62,8 @@ double jensen_shannon_distance(std::vector<Eigen::VectorXd>& sample_kappas)
 	double entropy_avg = entropy(avg_kappas);
 	
 	double js = entropy_avg - avg_entropy;
-
+    if (js < 0) // can happen due to underflow or rounding errors.
+        return 0;
 	return sqrt(js);
 }
 
