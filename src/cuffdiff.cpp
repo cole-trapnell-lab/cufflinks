@@ -93,7 +93,7 @@ static struct option long_options[] = {
 {"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
 {"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
 {"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
-{"analytic-diff",           no_argument,	 		 0,	         OPT_ANALYTIC_DIFF},
+//{"analytic-diff",           no_argument,	 		 0,	         OPT_ANALYTIC_DIFF},
 {"no-diff",                 no_argument,	 		 0,	         OPT_NO_DIFF},
     
 // Some options for testing different stats policies
@@ -374,11 +374,11 @@ int parse_options(int argc, char** argv)
                 bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
                 break;
             }
-            case OPT_ANALYTIC_DIFF:
-            {
-                analytic_diff = true;
-                break;
-            }
+//            case OPT_ANALYTIC_DIFF:
+//            {
+//                analytic_diff = true;
+//                break;
+//            }
             case OPT_NO_DIFF:
             {
                 no_differential = true;

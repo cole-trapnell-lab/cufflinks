@@ -290,7 +290,6 @@ public:
         _count_covariance = other._count_covariance;
         _fpkm_covariance = other._fpkm_covariance;
         _gamma_covariance = other._gamma_covariance;
-        _gamma_bootstrap_covariance = other._gamma_bootstrap_covariance;
 		_FPKM_conf = other._FPKM_conf;
 		_kappa = other._kappa;
 		_kappa_covariance = other._kappa_covariance;
@@ -300,6 +299,8 @@ public:
         _salient_frags = other._salient_frags;
         _total_frags = other._total_frags;
         _read_group_props = other._read_group_props;
+        _assigned_count_samples = other._assigned_count_samples;
+        _null_js_samples = other._null_js_samples;
     }
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -308,7 +309,6 @@ public:
         _count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
         _fpkm_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
-        _gamma_bootstrap_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
@@ -318,12 +318,12 @@ public:
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
-                   const ublas::matrix<double>& gamma_bootstrap_covariance,
                    const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
                    const long double max_mass_variance,
-                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props); 
+                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props,
+                   const vector<Eigen::VectorXd>& assigned_count_samples); 
 	
 	AbundanceStatus status() const;
 	void status(AbundanceStatus s)			{ }
@@ -384,17 +384,18 @@ public:
 	
 	const ublas::matrix<double>& gamma_cov() const { return _gamma_covariance; }
     
-    const ublas::matrix<double>& gamma_bootstrap_cov() const { return _gamma_bootstrap_covariance; }
-    
     const ublas::matrix<double>& iterated_count_cov() const { return _iterated_exp_count_covariance; }
     
     const ublas::matrix<double>& count_cov() const { return _count_covariance; }
     
 	const ublas::matrix<double>& kappa_cov() const { return _kappa_covariance; }
     
-    const ublas::matrix<double>& fpkm_cov() const { return _kappa_covariance; }
+    const ublas::matrix<double>& fpkm_cov() const { return _fpkm_covariance; }
 	
-	
+	const vector<Eigen::VectorXd>& assigned_counts() const { return _assigned_count_samples; }
+    
+    const vector<double> null_js_samples() const { return _null_js_samples; }
+    
 	void calculate_abundance(const vector<MateHit>& alignments);
 	
     void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
@@ -461,7 +462,6 @@ private:
     ublas::matrix<double> _iterated_exp_count_covariance;
     ublas::matrix<double> _fpkm_covariance;
 	ublas::matrix<double> _gamma_covariance;
-    ublas::matrix<double> _gamma_bootstrap_covariance;
     
 	ConfidenceInterval _FPKM_conf;
 	
@@ -474,6 +474,9 @@ private:
     double _max_mass_variance;  // upper bound on the count variance that could come from this group.
     double _salient_frags;
     double _total_frags;
+    
+    vector<Eigen::VectorXd> _assigned_count_samples;
+    vector<double> _null_js_samples;
     
     std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
     map<shared_ptr<ReadGroupProperties const>, double> _count_per_replicate;
@@ -550,4 +553,8 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
                                          const vector<MateHit>& alignments,
                                          const ublas::vector<double>& gamma_mean,
                                          ublas::matrix<double>& inverse_fisher);
+
+bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
+                              size_t num_js_samples,
+                              vector<double>& js_samples);
 #endif

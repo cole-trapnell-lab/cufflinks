@@ -77,22 +77,22 @@ void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 
 AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                                const ublas::matrix<double>& gamma_covariance,
-                               const ublas::matrix<double>& gamma_bootstrap_covariance,
                                const ublas::matrix<double>& iterated_exp_count_covariance,
                                const ublas::matrix<double>& count_covariance,
                                const ublas::matrix<double>& fpkm_covariance,
                                const long double max_mass_variance,
-                               const set<shared_ptr<ReadGroupProperties const> >& rg_props) :
+                               const set<shared_ptr<ReadGroupProperties const> >& rg_props,
+                               const vector<Eigen::VectorXd>& assigned_count_samples) :
     _abundances(abundances), 
     _iterated_exp_count_covariance(iterated_exp_count_covariance),
     _count_covariance(count_covariance),
     _fpkm_covariance(fpkm_covariance),
     _gamma_covariance(gamma_covariance),
-    _gamma_bootstrap_covariance(gamma_bootstrap_covariance),
     _max_mass_variance(max_mass_variance),
     _salient_frags(0.0),
     _total_frags(0.0),
-    _read_group_props(rg_props)
+    _read_group_props(rg_props),
+    _assigned_count_samples(assigned_count_samples)
 {
     // Calling calculate_FPKM_covariance() also estimates cross-replicate
     // count variances
@@ -102,22 +102,11 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
     {
         for (size_t j = 0; j < _fpkm_covariance.size2(); ++j)
         {
+            assert (!isnan(_fpkm_covariance(i,j)) && !isinf(_fpkm_covariance(i,j)));
             fpkm_var += _fpkm_covariance(i,j);
         }
     }
-    if (FPKM() > 0)
-    {
-        ublas::matrix<double> test = _count_covariance;
-        double ret = cholesky_factorize(test);
-    //    if (ret != 0)
-    //    {
-    //        //fprintf(stderr, "Warning: total count covariance is not positive definite!\n");
-    //        for (size_t j = 0; j < _abundances.size(); ++j)
-    //        {
-    //            _abundances[j]->status(NUMERIC_FAIL);
-    //        }
-    //    }
-    }
+    
     _FPKM_variance = fpkm_var;
     
     if (FPKM() > 0 && final_est_run && library_type != "transfrags")
@@ -133,10 +122,15 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                 _abundances[j]->status(NUMERIC_FAIL);
             }
         }
+        
+       if(!(FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK))
+       {
+           //cerr << _count_covariance << endl;
+           //cerr << _fpkm_covariance << endl;
+       }
+        
         assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
     }
-
-    
     
     calculate_conf_intervals();
     calculate_kappas();
@@ -169,35 +163,6 @@ AbundanceStatus AbundanceGroup::status() const
     
     if (has_ok_member == false)
         return NUMERIC_LOW_DATA;
-    
-    
-    
-    // check that the variance of the group is stable (w.r.t to bootstrap)
-    double total_cov = 0.0;
-    double total_gamma = 0.0;
-    for (size_t i = 0; i < _gamma_covariance.size1(); ++i)
-    {
-        for (size_t j = 0; j < _gamma_covariance.size2(); ++j)
-        {
-            total_cov += _gamma_covariance(i,j);
-            //total_bootstrap_cov += _gamma_bootstrap_covariance(i,j);
-        }
-        
-        
-        total_gamma = _abundances[i]->gamma();
-        //total_cov += _gamma_covariance(i,i);
-        //total_gamma += _gamma_bootstrap_covariance(i,i);
-        
-    }
-//    if (total_cov > 0 && total_gamma > 0)
-//    {
-//        double bootstrap_gamma_delta = total_cov/total_gamma;
-//        //double gap = bootstrap_delta_gap * total_cov;
-//        if (bootstrap_gamma_delta > bootstrap_delta_gap)
-//        {
-//            return NUMERIC_LOW_DATA;
-//        }
-//    }
     
 	return NUMERIC_OK;
 }
@@ -296,10 +261,12 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
     ublas::matrix<double> new_iterated_em_count_cov = ublas::zero_matrix<double>(num_kept,num_kept);
     ublas::matrix<double> new_count_cov = ublas::zero_matrix<double>(num_kept,num_kept);
     ublas::matrix<double> new_fpkm_cov = ublas::zero_matrix<double>(num_kept,num_kept);
-    ublas::matrix<double> new_boot_cov = ublas::zero_matrix<double>(num_kept,num_kept);
+    
 	vector<shared_ptr<Abundance> > new_ab;
+    
+	vector<Eigen::VectorXd> new_assigned_count_samples(_assigned_count_samples.size(), Eigen::VectorXd::Zero(num_kept));;
 	
-	// rebuild covariance matrix and abundance vector after filtration
+    // rebuild covariance matrix and abundance vector after filtration
 	
 	size_t next_cov_row = 0;
 	for (size_t i = 0; i < _abundances.size(); ++i)
@@ -316,22 +283,36 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
                     new_iterated_em_count_cov(next_cov_row,next_cov_col) = _iterated_exp_count_covariance(i, j);
                     new_count_cov(next_cov_row,next_cov_col) = _count_covariance(i, j);
                     new_fpkm_cov(next_cov_row,next_cov_col) = _fpkm_covariance(i, j);
-                    new_boot_cov(next_cov_row,next_cov_col) = _gamma_bootstrap_covariance(i, j);
 					next_cov_col++;
 				}
 			}
 			next_cov_row++;
 		}
 	}
+    
+    
+    size_t curr_abundance_idx = 0;
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        if (to_keep[i])
+		{
+            for (size_t j = 0; j < _assigned_count_samples.size(); ++j)
+            {
+                new_assigned_count_samples[j](curr_abundance_idx) = _assigned_count_samples[j](i);
+            }
+            curr_abundance_idx++;
+        }
+        
+    }
 
 	filtered_group = AbundanceGroup(new_ab, 
                                     new_cov, 
-                                    new_boot_cov, 
                                     new_iterated_em_count_cov, 
                                     new_count_cov, 
                                     new_fpkm_cov,
                                     _max_mass_variance,
-                                    _read_group_props);
+                                    _read_group_props,
+                                    new_assigned_count_samples);
 }
 
 void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
@@ -959,6 +940,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         {
             if (i != j)
             {
+                assert(!isinf(_fpkm_covariance(i,j)) && !isnan(_fpkm_covariance(i,j)));
                 if (_abundances[i]->transfrag()->contains(*_abundances[j]->transfrag()) &&
                     Scaffold::compatible(*_abundances[i]->transfrag(),*_abundances[j]->transfrag()))
                 {
@@ -1216,7 +1198,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         return;
     }
     
-    size_t num_count_draws = 1000;
+    size_t num_count_draws = 10000;
     
     boost::mt19937 rng;
     
@@ -1269,6 +1251,8 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     ublas::matrix<double> assign_probs_transpose = ublas::trans(_assign_probs);
     vector<Eigen::VectorXd > assigned_counts (num_count_draws, Eigen::VectorXd::Zero(_abundances.size()));
     
+    
+    
     Eigen::MatrixXd transcript_cond_probs(_abundances.size(), nr_alignments.size());
     for (size_t j = 0; j < transcript_cond_probs.rows(); ++j)
     {
@@ -1301,14 +1285,16 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         //assign_probs_transpose = ublas::trans(assign_probs);
         Eigen::VectorXd assigned = assign_probs * total_frags;
         
+        //Eigen::VectorXd relative_abundance = effective_length_recip.array() * assigned.array();
         //ublas::vector<double> assigned = ublas::prod(assign_probs_transpose,generated_counts[i]);
         //cerr << generated_counts[i] << " , " << assigned << " , " << assign_probs << endl;
         assigned_counts[i] = assigned;
+        //relative_abundances[i] = relative_abundance;
     }
     
     Eigen::VectorXd expected_counts = Eigen::VectorXd::Zero(_abundances.size());
+    Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
     Eigen::VectorXd expected_generated_counts = Eigen::VectorXd::Zero(_abundances.size());
-    //
     
     for (size_t i = 0; i < assigned_counts.size(); ++i)
     {
@@ -1318,11 +1304,13 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         }
         expected_counts += assigned_counts[i];
         expected_generated_counts += generated_counts[i];
+        //expected_relative_abundances += relative_abundances[i];
     }
     if (assigned_counts.size() > 0)
     {
         expected_counts /= assigned_counts.size();
         expected_generated_counts /= assigned_counts.size();
+        //expected_relative_abundances /= assigned_counts.size();
     }
     
       
@@ -1341,6 +1329,10 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
             {
                 double c = (assigned_counts[k](i) - expected_counts(i)) * (assigned_counts[k](j) - expected_counts(j));
                 _count_covariance(i,j) += c;
+                
+                assert (!isinf(_count_covariance(i,j)) && !isnan(_count_covariance(i,j)));
+                //double r = (relative_abundances[k](i) - expected_relative_abundances(i)) * (relative_abundances[k](j) - expected_relative_abundances(j));
+                //_kappa_covariance(i,j) += 
             }
         }
     }
@@ -1375,6 +1367,8 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         else
             _abundances[i]->gamma(0);
     }
+    
+    _assigned_count_samples = assigned_counts;
     
 //    for (size_t i = 0; i < num_count_draws; ++i)
 //    {
@@ -1659,19 +1653,17 @@ void AbundanceGroup::calculate_FPKM_covariance()
             {
                 double fpkm = _abundances[i]->FPKM();
                 double fpkm_var = _fpkm_covariance(i,j);
-                double status = _abundances[i]->status();
-                assert (_abundances[i]->FPKM() == 0 || _fpkm_covariance(i,j) > 0 || _abundances[i]->status() != NUMERIC_OK);
-                _abundances[i]->FPKM_variance(_fpkm_covariance(i,j));
-                dummy_var += _fpkm_covariance(i,i);
-            }
-            else
-            {
-                dummy_var += _iterated_exp_count_covariance(i,j) * ((1000000000.0 / (length_j *M)))*((1000000000.0 / (length_i *M)));;
+                assert (fpkm == 0 || fpkm_var > 0 || _abundances[i]->status() != NUMERIC_OK);
+                assert (!isinf(fpkm_var) && !isnan(fpkm_var));
+                _abundances[i]->FPKM_variance(fpkm_var);
+                
             }
             
             total_count_var += _count_covariance(i,j);
             total_var += _fpkm_covariance(i,j);
             total_iterated += _iterated_exp_count_covariance(i,j);
+            
+            assert (!isinf(_fpkm_covariance(i,j)) && !isnan(_fpkm_covariance(i,j)));
         }
     }
     
@@ -1871,8 +1863,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                                        transcripts.size());
         _fpkm_covariance = ublas::zero_matrix<double>(transcripts.size(), 
                                                       transcripts.size());
-        _gamma_bootstrap_covariance = ublas::zero_matrix<double>(transcripts.size(), 
-                                                       transcripts.size());
+        
 		return true;
     }
 	
@@ -1922,8 +1913,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                                                     transcripts.size());
         _fpkm_covariance = ublas::zero_matrix<double>(transcripts.size(), 
                                                       transcripts.size());
-        _gamma_bootstrap_covariance = ublas::zero_matrix<double>(transcripts.size(), 
-                                                                 transcripts.size());
+        
 		return true;
 	}
 	
@@ -1985,8 +1975,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
     
 	ublas::matrix<double> updated_gamma_cov;
 	updated_gamma_cov = ublas::zero_matrix<double>(N, N);
-    ublas::matrix<double> updated_gamma_bootstrap_cov;
-    updated_gamma_bootstrap_cov = ublas::zero_matrix<double>(N, N);
+    
     ublas::matrix<double> updated_count_cov;
     updated_count_cov = ublas::zero_matrix<double>(N, N);
     ublas::matrix<double> updated_iterated_exp_count_cov;
@@ -2028,8 +2017,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 				{
 					updated_gamma_cov(i,j) = _gamma_covariance(scaff_present[i],
 															   scaff_present[j]);
-                    updated_gamma_bootstrap_cov(i,j) = _gamma_bootstrap_covariance(scaff_present[i],
-                                                                                   scaff_present[j]);
+                    
                     updated_iterated_exp_count_cov(i,j) = _iterated_exp_count_covariance(scaff_present[i],
                                                                                          scaff_present[j]);
                     // Should still be empty but let's do these for consistency:
@@ -2082,7 +2070,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	_gamma_covariance = updated_gamma_cov;
     _count_covariance = updated_count_cov;
     _iterated_exp_count_covariance = updated_iterated_exp_count_cov;
-    _gamma_bootstrap_covariance = updated_gamma_bootstrap_cov;
     _fpkm_covariance = updated_fpkm_cov;
 	
 	return (status() == NUMERIC_OK);
@@ -2291,93 +2278,155 @@ void AbundanceGroup::calculate_kappas()
 	size_t num_members = _abundances.size();
 	_kappa_covariance = ublas::matrix<double>(num_members, 
 											  num_members);
-	//cerr << gamma_cov <<endl;
-	
-	assert (_gamma_covariance.size1() == num_members);
-	assert (_gamma_covariance.size2() == num_members);
-	
-	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
-	
-	double S_FPKM = 0.0;
-    double Z_kappa = 0.0;
-    double X_S = 0.0;
-	foreach (shared_ptr<Abundance> pA, _abundances)
-	{
-		if (pA->effective_length() > 0)
-		{
-			S_FPKM += pA->FPKM();
-            Z_kappa += pA->num_fragments() / pA->effective_length();
-            X_S += pA->num_fragments();
-		}
-	}
-	
-    //fprintf (stderr, "*********\n");
-	foreach (shared_ptr<Abundance> pA, _abundances)
-	{
-		if (S_FPKM > 0)
-		{
-			pA->kappa(pA->FPKM() / S_FPKM);
-            double kappa = pA->kappa();
-            //fprintf (stderr, "kappa = %lg\n", kappa);
-            //if (kappa < 0.05)
-            //    pA->status(NUMERIC_LOW_DATA);
-		}
-		else
-		{
-			pA->kappa(0); 
-		}
-	}
     
-	for (size_t k = 0; k < num_members; ++k)
-	{
-		for (size_t m = 0; m < num_members; ++m)
-		{
-            double L = _abundances[k]->effective_length() * 
-                       _abundances[m]->effective_length();
-            if (L == 0.0)
+    size_t num_count_draws = _assigned_count_samples.size();
+    vector<Eigen::VectorXd > relative_abundances (num_count_draws, Eigen::VectorXd::Zero(num_members));
+    
+    // We'll use the effective lengths to transform counts into relative abundances,
+    // and then use that to calculate the kappa variances and covariances.
+    Eigen::VectorXd effective_length_recip = Eigen::VectorXd::Zero(_abundances.size());
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        if (_abundances[i]->effective_length() > 0)
+            effective_length_recip(i) = 1.0 / _abundances[i]->effective_length();
+    }
+    
+    for (size_t i = 0; i < num_count_draws; ++i)
+    {
+        Eigen::VectorXd relative_abundance = effective_length_recip.array() * _assigned_count_samples[i].array();
+        
+        relative_abundances[i] = relative_abundance;
+    }
+    
+    Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
+    
+    for (size_t i = 0; i < _assigned_count_samples.size(); ++i)
+    {
+        expected_relative_abundances += relative_abundances[i];
+    }
+    
+    if (_assigned_count_samples.size() > 0)
+    {
+        expected_relative_abundances /= _assigned_count_samples.size();
+    }
+    
+    for (size_t k = 0; k < num_members; ++k)
+    {
+        _abundances[k]->kappa(expected_relative_abundances(k));
+    }
+    
+    //    cerr << "======" << endl;
+    //    cerr << "updated expected counts #1: " << endl;
+    //    std::cerr << expected_counts << std::endl;
+    //    cerr << "updated expected generated counts #1: " << endl;
+    //    std::cerr << expected_generated_counts << std::endl;
+    //    cerr << "======" << endl;
+    
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        for (size_t j = 0; j < _abundances.size(); ++j)
+        {
+            for (size_t k = 0 ; k < _assigned_count_samples.size(); ++k)
             {
-                _kappa_covariance(k,m) = 0.0;
+                double r = (relative_abundances[k](i) - expected_relative_abundances(i)) * (relative_abundances[k](j) - expected_relative_abundances(j));
+                _kappa_covariance(i,j) += r;
             }
-            else if (m == k)
-            {
-                // Use the modeled count variance here instead
-                double l_t = _abundances[k]->effective_length();
-                double M = num_fragments()/mass_fraction();
-                double den = (1000000000.0 / (l_t * M));
-                double counts = num_fragments();
-                //double count_var2 = _abundances[k]->FPKM_variance() / (den*den);
-                double count_var = _count_covariance(k, m);
-                double kappa = _abundances[k]->kappa();
+        }
+    }
+    
+    _kappa_covariance /= _assigned_count_samples.size();
+    
+    vector<double> js_samples;
+    generate_null_js_samples(relative_abundances, 100000, js_samples);
+    _null_js_samples = js_samples;
+    
+//	//cerr << gamma_cov <<endl;
+//	
+//	assert (_gamma_covariance.size1() == num_members);
+//	assert (_gamma_covariance.size2() == num_members);
+//	
+//	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
+//	
+//	double S_FPKM = 0.0;
+//    double Z_kappa = 0.0;
+//    double X_S = 0.0;
+//	foreach (shared_ptr<Abundance> pA, _abundances)
+//	{
+//		if (pA->effective_length() > 0)
+//		{
+//			S_FPKM += pA->FPKM();
+//            Z_kappa += pA->num_fragments() / pA->effective_length();
+//            X_S += pA->num_fragments();
+//		}
+//	}
+//	
+//    //fprintf (stderr, "*********\n");
+//	foreach (shared_ptr<Abundance> pA, _abundances)
+//	{
+//		if (S_FPKM > 0)
+//		{
+//			pA->kappa(pA->FPKM() / S_FPKM);
+//            double kappa = pA->kappa();
+//            //fprintf (stderr, "kappa = %lg\n", kappa);
+//            //if (kappa < 0.05)
+//            //    pA->status(NUMERIC_LOW_DATA);
+//		}
+//		else
+//		{
+//			pA->kappa(0); 
+//		}
+//	}
+//    
+//	for (size_t k = 0; k < num_members; ++k)
+//	{
+//		for (size_t m = 0; m < num_members; ++m)
+//		{
+//            double L = _abundances[k]->effective_length() * 
+//                       _abundances[m]->effective_length();
+//            if (L == 0.0)
+//            {
+//                _kappa_covariance(k,m) = 0.0;
+//            }
+//            else if (m == k)
+//            {
+//                // Use the modeled count variance here instead
+//                double l_t = _abundances[k]->effective_length();
+//                double M = num_fragments()/mass_fraction();
+//                double den = (1000000000.0 / (l_t * M));
+//                double counts = num_fragments();
+//                //double count_var2 = _abundances[k]->FPKM_variance() / (den*den);
+//                double count_var = _count_covariance(k, m);
+//                double kappa = _abundances[k]->kappa();
+////                
+////                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
+//                double kappa_var;
+//                if (S_FPKM)
+//                {
+//                    kappa_var = _abundances[k]->FPKM_variance() / (S_FPKM * S_FPKM);
+//                }
+//                else
+//                {
+//                    kappa_var = 0.0;
+//                }
 //                
-//                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
-                double kappa_var;
-                if (S_FPKM)
-                {
-                    kappa_var = _abundances[k]->FPKM_variance() / (S_FPKM * S_FPKM);
-                }
-                else
-                {
-                    kappa_var = 0.0;
-                }
-                
-                assert (!isnan(kappa_var) && !isinf(kappa_var));
-                _kappa_covariance(k,m) = kappa_var;
-            }
-            else
-            {
-                double kappa_covar;
-                if (S_FPKM)
-                {
-                    kappa_covar = _fpkm_covariance(k,m) / (S_FPKM * S_FPKM);
-                }
-                else
-                {
-                    kappa_covar = 0.0;
-                }
-                _kappa_covariance(k,m) = kappa_covar;
-            }
-		}
-	}
+//                assert (!isnan(kappa_var) && !isinf(kappa_var));
+//                _kappa_covariance(k,m) = kappa_var;
+//            }
+//            else
+//            {
+//                double kappa_covar;
+//                if (S_FPKM)
+//                {
+//                    kappa_covar = _fpkm_covariance(k,m) / (S_FPKM * S_FPKM);
+//                }
+//                else
+//                {
+//                    kappa_covar = 0.0;
+//                }
+//                _kappa_covariance(k,m) = kappa_covar;
+//            }
+//		}
+//	}
 }
 
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
@@ -3552,3 +3601,54 @@ double get_scaffold_min_doc(int bundle_origin,
 	
 	return min_doc;
 }
+
+bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
+                              size_t num_js_samples,
+                              vector<double>& js_samples)
+{
+    if (rel_abundances.empty())
+        return true;
+    
+    size_t num_abundances = rel_abundances.front().size();
+    
+    //    ublas::vector<double> null_kappa_mean(num_abundances);
+    //    for (size_t i = 0; i < num_abundances; ++i)
+    //    {
+    //        null_kappa_mean(i) = rel_abundances[i];
+    //    }
+    
+    //    cerr << endl << null_kappa_mean << endl;
+    //    for (unsigned i = 0; i < null_kappa_cov.size1 (); ++ i) 
+    //    {
+    //        ublas::matrix_row<ublas::matrix<double> > mr (null_kappa_cov, i);
+    //        std::cerr << i << " : " << mr << std::endl;
+    //    }
+    //    cerr << "======" << endl;
+    
+    //vector<ublas::vector<double> > null_samples;
+    
+    js_samples.clear();
+    
+    //size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
+    size_t num_samples = num_js_samples;
+    vector<Eigen::VectorXd> sample_kappas(2);
+    
+    boost::uniform_int<> null_uniform_dist(0,rel_abundances.size()-1);
+    boost::mt19937 null_rng; 
+    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > null_uniform_gen(null_rng, null_uniform_dist); 
+    
+    for (size_t i = 0; i < num_samples; ++i)
+    {
+		sample_kappas[0] = rel_abundances[null_uniform_gen()];
+        sample_kappas[1] = rel_abundances[null_uniform_gen()];
+        
+		double js = jensen_shannon_distance(sample_kappas);  
+        //cerr << sample_kappas[0] << " vs. " <<  sample_kappas[1] << " = " << js << endl;
+        js_samples.push_back(js);
+    }
+    
+    sort(js_samples.begin(), js_samples.end());
+    
+    return true;
+}
+

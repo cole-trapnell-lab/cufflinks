@@ -526,96 +526,24 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 //    return true;
 //}
 
-bool generate_null_js_samples(const AbundanceGroup& null_abundance,
-                              size_t num_js_samples,
-                              multinormal_generator<double>& generator,
-                              vector<double>& js_samples)
-{
-    ublas::vector<double> null_kappa_mean(null_abundance.abundances().size());
-    for (size_t i = 0; i < null_abundance.abundances().size(); ++i)
-    {
-        null_kappa_mean(i) = null_abundance.abundances()[i]->kappa();
-    }
-    
-    ublas::matrix<double> null_kappa_cov = null_abundance.kappa_cov();
-    
-    double prev_ret = cholesky_factorize(null_kappa_cov);
-    if (prev_ret != 0)
-        return false;
-    
-//    cerr << endl << null_kappa_mean << endl;
-//    for (unsigned i = 0; i < null_kappa_cov.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (null_kappa_cov, i);
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-//    cerr << "======" << endl;
-    
-    vector<ublas::vector<double> > null_samples;
-    
-    // It's a little silly that we have to do this, but since we always initialize
-    // the random number generators to random_seed, instead of time(NULL), simply
-    // creating a new generator (rather than re-using it) 
-    generator.set_parameters(null_kappa_mean, null_kappa_cov);
-    
-    generate_importance_samples(generator, null_samples, num_js_samples, false);
-    if (null_samples.size() == 0)
-        return false;
-    
-    js_samples.clear();
-    
-    //size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
-    size_t num_samples = num_js_samples;
-    vector<ublas::vector<double> > sample_kappas(2);
-    
-    boost::uniform_int<> null_uniform_dist(0,null_samples.size()-1);
-    boost::mt19937 null_rng; 
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > null_uniform_gen(null_rng, null_uniform_dist); 
-    
-    for (size_t i = 0; i < num_samples; ++i)
-    {
-		sample_kappas[0] = null_samples[null_uniform_gen()];
-        sample_kappas[1] = null_samples[null_uniform_gen()];
-        
-		double js = jensen_shannon_distance(sample_kappas);  
-        //cerr << sample_kappas[0] << " vs. " <<  sample_kappas[1] << " = " << js << endl;
-        js_samples.push_back(js);
-    }
-
-    sort(js_samples.begin(), js_samples.end());
-    
-    //    for (size_t i = 0; i < 100; ++i)
-    //    {
-    //        fprintf(stderr, "%lg\n", js_samples[i]);
-    //    }
-    return true;
-}
-
 // Calculates the probability that drawing two samples from the provided
 // relative abundance distribution would have produced a value at least as
 // extreme as the given js value.
 bool one_sided_js_test(const AbundanceGroup& null_abundances,
-                       size_t num_samples,
-                       multinormal_generator<double>& generator,
                        double js,
                        double& p_val)
 {
-    vector<double> js_samples;
+    const vector<double>& js_samples = null_abundances.null_js_samples();
     
-    
-    bool success = generate_null_js_samples(null_abundances, num_samples, generator, js_samples);
-    if (success == false)
-        return false;
-    
-    vector<double>::iterator lb = lower_bound(js_samples.begin(), js_samples.end(), js);
+    vector<double>::const_iterator lb = lower_bound(js_samples.begin(), js_samples.end(), js);
     if (lb != js_samples.end())
     {
         size_t num_less_extreme_samples = lb - js_samples.begin();
         p_val =  1.0  - ((double)num_less_extreme_samples/js_samples.size());
     }
-    else if (num_samples)
+    else if (js_samples.size())
     {
-        p_val = 1.0/num_samples;
+        p_val = 1.0/js_samples.size();
     }
     else
     {
@@ -630,14 +558,14 @@ bool test_js(const AbundanceGroup& prev_abundance,
              double& js,
              double& p_val)
 {
-    vector<ublas::vector<double> > sample_kappas;
-    ublas::vector<double> curr_kappas(curr_abundance.abundances().size());
+    vector<Eigen::VectorXd> sample_kappas;
+    Eigen::VectorXd curr_kappas(Eigen::VectorXd::Zero(curr_abundance.abundances().size()));
     for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
     {
         curr_kappas(i) = curr_abundance.abundances()[i]->kappa();
     }
     
-    ublas::vector<double> prev_kappas(prev_abundance.abundances().size());
+    Eigen::VectorXd prev_kappas(Eigen::VectorXd::Zero(prev_abundance.abundances().size()));
     for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
     {
         prev_kappas(i) = prev_abundance.abundances()[i]->kappa();
@@ -651,21 +579,11 @@ bool test_js(const AbundanceGroup& prev_abundance,
     if (isinf(js) || isnan(js))
         return false;
     
-    static const int num_samples = 100000;
-    
-//    bool success = generate_js_samples(prev_abundance, curr_abundance, num_samples, js_samples);
-//    if (success == false)
-//        return false;
-
-    multinormal_generator<double> gen(ublas::zero_vector<double>(prev_abundance.kappa_cov().size1()),
-                                      ublas::zero_matrix<double>(prev_abundance.kappa_cov().size1(),
-                                                                 prev_abundance.kappa_cov().size2()));
-    
     double prev_p_val = 1.0;
-    bool prev_succ = one_sided_js_test(prev_abundance, num_samples, gen, js, prev_p_val);
+    bool prev_succ = one_sided_js_test(prev_abundance, js, prev_p_val);
     
     double curr_p_val = 1.0;
-    bool curr_succ = one_sided_js_test(curr_abundance, num_samples, gen, js, curr_p_val);
+    bool curr_succ = one_sided_js_test(curr_abundance, js, curr_p_val);
 
     if (!curr_succ || !prev_succ)
         return false;
@@ -794,53 +712,42 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
         
         bool success;
         
-        // Analytic JS variance calculation.
-        ublas::vector<double> js_gradient;
-        jensen_shannon_gradient(sample_kappas, js, js_gradient);
+//        // Analytic JS variance calculation.
+//        ublas::vector<double> js_gradient;
+//        jensen_shannon_gradient(sample_kappas, js, js_gradient);
+//        
+//        vector<ublas::matrix<double> > covariances;
+//        
+//        covariances.push_back(filtered_prev.kappa_cov());
+//        covariances.push_back(filtered_curr.kappa_cov());
+//        
+//        ublas::matrix<double> js_covariance;
+//        assert (covariances.size() > 0);
+//        for (size_t i = 0; i < covariances.size(); ++i)
+//        {
+//            assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
+//        }
+//        make_js_covariance_matrix(covariances,js_covariance);
+//        assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
+//        
+//        double analytic_js_var = inner_prod(js_gradient, 
+//                                   prod(js_covariance, js_gradient));
+//        assert (!isinf(analytic_js_var) && !isnan(analytic_js_var));
+//        
+//        if (analytic_js_var > 0.0)
+//        {
+//            // We're dealing with a standard normal that's been truncated below zero
+//            // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
+//            
+//            normal test_dist(0,1.0);
+//            //double denom = sqrt(js_var);
+//            double p = js/sqrt(analytic_js_var);
+//            //test.test_stat = 2 * pdf(test_dist, p);
+//            // analytic p_value:
+//            test.test_stat = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
+//        }
         
-        vector<ublas::matrix<double> > covariances;
-        
-        covariances.push_back(filtered_prev.kappa_cov());
-        covariances.push_back(filtered_curr.kappa_cov());
-        
-        ublas::matrix<double> js_covariance;
-        assert (covariances.size() > 0);
-        for (size_t i = 0; i < covariances.size(); ++i)
-        {
-            assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
-        }
-        make_js_covariance_matrix(covariances,js_covariance);
-        assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
-        
-        double analytic_js_var = inner_prod(js_gradient, 
-                                   prod(js_covariance, js_gradient));
-        assert (!isinf(analytic_js_var) && !isnan(analytic_js_var));
-        
-        if (analytic_js_var > 0.0)
-        {
-            // We're dealing with a standard normal that's been truncated below zero
-            // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
-            
-            normal test_dist(0,1.0);
-            //double denom = sqrt(js_var);
-            double p = js/sqrt(analytic_js_var);
-            //test.test_stat = 2 * pdf(test_dist, p);
-            // analytic p_value:
-            test.test_stat = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
-        }
-        
-        // If we're going to use the analytic version, just go ahead and set 
-        // success to true, otherwise we need to run the Monte Carlo version
-        // and check the result of the simulation.
-        if (analytic_diff)
-        {
-            p_val = test.test_stat;
-            success = true;
-        }
-        else
-        {
-            success = test_js(filtered_prev, filtered_curr, js, p_val);
-        }
+        success = test_js(filtered_prev, filtered_curr, js, p_val);
         
 		if (js == 0.0 || success == false)
 		{
@@ -859,73 +766,7 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			test.value_2 = 0;
 			test.differential = js;
 			test.test_status = enough_reads ? OK : NOTEST;
-            
-            ///////////////////
-
-            ///////////////////
-            
-            
-            
-//			ublas::vector<double> js_gradient;
-//			jensen_shannon_gradient(sample_kappas, js, js_gradient);
-//			
-//			vector<ublas::matrix<double> > covariances;
-//			
-//			covariances.push_back(filtered_prev.kappa_cov());
-//			covariances.push_back(filtered_curr.kappa_cov());
-//			
-//			ublas::matrix<double> js_covariance;
-//			assert (covariances.size() > 0);
-//			for (size_t i = 0; i < covariances.size(); ++i)
-//			{
-//				assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
-//			}
-//			make_js_covariance_matrix(covariances,js_covariance);
-//			assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
-//			
-//			double js_var = inner_prod(js_gradient, 
-//									   prod(js_covariance, js_gradient));
-//            assert (!isinf(js_var) && !isnan(js_var));
-//
-//#ifdef DEBUG
-//			if (isinf(js_var) || isnan(js_var))
-//			{
-//				cerr << "grad: " << js_gradient << endl;
-//				cerr << "js_cov: " << js_covariance << endl;
-//				cerr << prod(js_covariance, js_gradient) << endl;	
-//			}
-//#endif
-//			if (js_var <= 0.0)
-//			{
-//                
-//				test.test_stat = 0;
-//				test.p_value = 1.0;
-//				test.value_1 = 0;
-//				test.value_2 = 0;
-//				test.differential = 0;
-//				test.test_status = NOTEST;
-//			}
-//			else
-//			{
-//                // We're dealing with a standard normal that's been truncated below zero
-//                // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
-//                
-//				normal test_dist(0,1.0);
-//				//double denom = sqrt(js_var);
-//				double p = js/sqrt(js_var);
-//                test.test_stat = 2 * pdf(test_dist, p);
-//				test.p_value = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
-//				test.value_1 = 0;
-//				test.value_2 = 0;
-//				test.differential = js;
-//				test.test_status = enough_reads ? OK : NOTEST;
-//			}
-//			if (isinf(test.test_stat) || isnan(test.test_stat))
-//			{
-//				fprintf(stderr, "Warning: test stat is invalid!\n");
-//				exit(1);
-//			}
-		}
+        }
 
 		inserted.first->second = test;
 	}
@@ -1127,17 +968,17 @@ void sample_abundance_worker(const string& locus_tag,
         // Cluster transcripts by CDS
         vector<AbundanceGroup> transcripts_by_cds;
         ublas::matrix<double> cds_gamma_cov;
-        ublas::matrix<double> cds_gamma_boot_cov;
         ublas::matrix<double> cds_count_cov;
         ublas::matrix<double> cds_iterated_exp_count_cov;
         ublas::matrix<double> cds_fpkm_cov;
+        vector<Eigen::VectorXd> cds_assigned_counts;
         cluster_transcripts<ConnectByAnnotatedProteinId>(sample.transcripts,
                                                          transcripts_by_cds,
                                                          &cds_gamma_cov,
                                                          &cds_iterated_exp_count_cov,
                                                          &cds_count_cov,
                                                          &cds_fpkm_cov,
-                                                         &cds_gamma_boot_cov);
+                                                         &cds_assigned_counts);
         foreach(AbundanceGroup& ab_group, transcripts_by_cds)
         {
             ab_group.locus_tag(locus_tag);
@@ -1162,12 +1003,12 @@ void sample_abundance_worker(const string& locus_tag,
         }
         AbundanceGroup cds(cds_abundances,
                            cds_gamma_cov,
-                           cds_gamma_boot_cov,
                            cds_iterated_exp_count_cov,
                            cds_count_cov,
                            cds_fpkm_cov,
                            max_cds_mass_variance,
-                           rg_props);
+                           rg_props,
+                           cds_assigned_counts);
         
         vector<AbundanceGroup> cds_by_gene;
         
@@ -1191,17 +1032,17 @@ void sample_abundance_worker(const string& locus_tag,
         vector<AbundanceGroup> transcripts_by_tss;
         
         ublas::matrix<double> tss_gamma_cov;
-        ublas::matrix<double> tss_gamma_boot_cov;
         ublas::matrix<double> tss_count_cov;
         ublas::matrix<double> tss_iterated_exp_count_cov;
         ublas::matrix<double> tss_fpkm_cov;
+        vector<Eigen::VectorXd> tss_assigned_counts;
         cluster_transcripts<ConnectByAnnotatedTssId>(sample.transcripts,
                                                      transcripts_by_tss,
                                                      &tss_gamma_cov,
                                                      &tss_iterated_exp_count_cov,
                                                      &tss_count_cov,
                                                      &tss_fpkm_cov,
-                                                     &tss_gamma_boot_cov);
+                                                     &tss_assigned_counts);
         
        
         foreach(AbundanceGroup& ab_group, transcripts_by_tss)
@@ -1230,12 +1071,12 @@ void sample_abundance_worker(const string& locus_tag,
         
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
                                            tss_gamma_cov,
-                                           tss_gamma_boot_cov,
                                            tss_iterated_exp_count_cov,
                                            tss_count_cov,
                                            tss_fpkm_cov,
                                            max_tss_mass_variance,
-                                           rg_props);
+                                           rg_props,
+                                           tss_assigned_counts);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
         
@@ -1421,12 +1262,11 @@ void sample_worker(const RefSequenceTable& rt,
 			total_iso_scaled_var += scaled_var;
             info.gamma.push_back(ab->gamma());
             info.gamma_var.push_back(ab_group.gamma_cov()(i,i));
-            info.gamma_bootstrap_var.push_back(ab_group.gamma_bootstrap_cov()(i,i));
             info.count_sharing.push_back(count_sharing);
             info.transcript_ids.push_back(ab->description());
 		}
 
-        const ublas::matrix<double>& bs_gamma_cov = ab_group.gamma_bootstrap_cov();
+        
         const ublas::matrix<double>& gamma_cov = ab_group.gamma_cov();
         info.bayes_gamma_trace = 0;
         info.empir_gamma_trace = 0;
@@ -1435,7 +1275,6 @@ void sample_worker(const RefSequenceTable& rt,
             //for (size_t j = 0; j < ab_group.abundances().size(); ++j)
             {
                 info.bayes_gamma_trace += gamma_cov(i,i);
-                info.empir_gamma_trace += bs_gamma_cov(i,i);
             }
         }
 
@@ -1483,12 +1322,12 @@ void dump_locus_variance_info(const string& filename)
     FILE* fdump = fopen(filename.c_str(), "w");
     
     fprintf(fdump, 
-            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tgamma_bootstrap_var\tlocus_salient_frags\tlocus_total_frags\tcount_sharing\n");
+            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tlocus_salient_frags\tlocus_total_frags\tcount_sharing\n");
     foreach (LocusVarianceInfo& L, locus_variance_info_table)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {
-            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i],L.gamma_bootstrap_var[i], L.locus_salient_frags, L.locus_total_frags, L.count_sharing[i]);
+            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i], L.locus_salient_frags, L.locus_total_frags, L.count_sharing[i]);
         }
         
     }
