@@ -1418,19 +1418,19 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         if (_count_covariance(i,i) < ceil(_abundances[i]->mass_variance()))
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to fitted variance model (%lg)\n", i, _count_covariance(i,i), ceil(_abundances[i]->mass_variance()));
-            //_count_covariance(i,i) = ceil(_abundances[i]->mass_variance());
+            _count_covariance(i,i) = ceil(_abundances[i]->mass_variance());
         }
         if (_count_covariance(i,i) < ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)))
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
-            //_count_covariance(i,i) = ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i));
+            _count_covariance(i,i) = ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i));
         }
     }
     
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        _count_covariance(i,i) = ceil(_count_covariance(i,i));
-    }
+//    for (size_t i = 0; i < _abundances.size(); ++i)
+//    {
+//        _count_covariance(i,i) = ceil(_count_covariance(i,i));
+//    }
     
 //    cerr << "simulated count covariance: " << endl;
 //    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
