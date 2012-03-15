@@ -692,74 +692,27 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 		curr_status == NUMERIC_OK && filtered_curr.num_fragments() > 0)
 	{
 		vector<ublas::vector<double> > sample_kappas;
-        vector<Eigen::VectorXd> sample_kappas_eigen;
 		ublas::vector<double> curr_kappas(filtered_curr.abundances().size());
-        Eigen::VectorXd curr_kappas_eigen = Eigen::VectorXd::Zero(filtered_curr.abundances().size());
         
-		for (size_t i = 0; i < filtered_curr.abundances().size(); ++i)
+        for (size_t i = 0; i < filtered_curr.abundances().size(); ++i)
 		{
 			curr_kappas(i) = filtered_curr.abundances()[i]->kappa();
-            curr_kappas_eigen(i) = filtered_curr.abundances()[i]->kappa();
 		}
 		
 		ublas::vector<double> prev_kappas(filtered_prev.abundances().size());
-        Eigen::VectorXd prev_kappas_eigen = Eigen::VectorXd::Zero(filtered_prev.abundances().size());
-        
-		for (size_t i = 0; i < filtered_prev.abundances().size(); ++i)
+        for (size_t i = 0; i < filtered_prev.abundances().size(); ++i)
 		{
 			prev_kappas(i) = filtered_prev.abundances()[i]->kappa();
-            prev_kappas_eigen(i) = filtered_prev.abundances()[i]->kappa();
 		}
 		
 		sample_kappas.push_back(prev_kappas);
 		sample_kappas.push_back(curr_kappas);
-        
-        sample_kappas_eigen.push_back(prev_kappas_eigen);
-		sample_kappas_eigen.push_back(curr_kappas_eigen);
 		
         double js = 0.0;
         double p_val = 1.0;
         
         bool success;
         success = test_js(filtered_prev, filtered_curr, js, p_val);
-        
-        // Analytic JS variance calculation.
-        ublas::vector<double> js_gradient;
-        jensen_shannon_gradient(sample_kappas_eigen, js, js_gradient);
-        
-        vector<ublas::matrix<double> > covariances;
-        
-        covariances.push_back(filtered_prev.kappa_cov());
-        covariances.push_back(filtered_curr.kappa_cov());
-        
-        ublas::matrix<double> js_covariance;
-        assert (covariances.size() > 0);
-        for (size_t i = 0; i < covariances.size(); ++i)
-        {
-            assert (covariances[i].size1() > 0 && covariances[i].size2() > 0);
-        }
-        make_js_covariance_matrix(covariances,js_covariance);
-        assert (js_covariance.size1() > 0 && js_covariance.size2() > 0);
-        //cerr << js_gradient << endl;
-        //cerr << js_covariance << endl;
-        double analytic_js_var = inner_prod(js_gradient, 
-                                   prod(js_covariance, js_gradient));
-        assert (!isinf(analytic_js_var) && !isnan(analytic_js_var));
-        //fprintf(stderr, "Analytic js: %lg\n", analytic_js_var);
-        if (analytic_js_var > 0.0)
-        {
-            // We're dealing with a standard normal that's been truncated below zero
-            // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
-            
-            normal test_dist(0,1.0);
-            //double denom = sqrt(js_var);
-            double p = js/sqrt(analytic_js_var);
-            //test.test_stat = 2 * pdf(test_dist, p);
-            // analytic p_value:
-            test.test_stat = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
-            //fprintf(stderr, "Analytic p value: %lg\n", test.test_stat);
-        }
-        // END analytic calculation
         
 		if (js == 0.0 || success == false)
 		{

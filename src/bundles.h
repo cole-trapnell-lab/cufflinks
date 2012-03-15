@@ -373,7 +373,8 @@ template<class BundleFactoryType>
 void inspect_map(BundleFactoryType& bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& count_table,
-                 bool progress_bar = true)
+                 bool progress_bar = true,
+                 bool show_stats = true)
 {
 
 	ProgressBar p_bar;
@@ -711,40 +712,57 @@ void inspect_map(BundleFactoryType& bundle_factory,
     std_dev = sqrt(std_dev);
 	
 	shared_ptr<ReadGroupProperties> rg_props = bundle_factory.read_group_properties();
-	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len));
+
+    FLDSource source = DEFAULT;
+    if (empirical)
+    {
+        source = LEARNED;
+    }
+    else if (user_provided_fld)
+    {
+        source = USER;
+    }
+
+	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len, source));
 	rg_props->multi_read_table(mrt);
 	rg_props->frag_len_dist(fld);
 	rg_props->normalized_map_mass(norm_map_mass);
     rg_props->total_map_mass(map_mass);
 
-	fprintf(stderr, "> Map Properties:\n");
-	if (use_quartile_norm)
-		fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
-	fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", norm_map_mass);
-	fprintf(stderr, ">\tRaw Map Mass: %.2Lf\n", map_mass);
-	if (corr_multi)
-		fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
-//	if (has_pairs)
-//		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_1, max_2);
-//	else
-//		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max(max_1,max_2));
+    if (show_stats)
+    {
+        fprintf(stderr, "> Map Properties:\n");
+        if (use_quartile_norm)
+            fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
+        fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", norm_map_mass);
+        fprintf(stderr, ">\tRaw Map Mass: %.2Lf\n", map_mass);
+        if (corr_multi)
+            fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", mrt->num_multireads(), mrt->num_multihits()); 
+    //	if (has_pairs)
+    //		fprintf(stderr, ">\tRead Type: %dbp x %dbp\n", max_1, max_2);
+    //	else
+    //		fprintf(stderr, ">\tRead Type: %dbp single-end\n", max(max_1,max_2));
 
-	if (empirical)
-	{
-		fprintf(stderr, ">\tFragment Length Distribution: Empirical (learned)\n");
-		fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
-		fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
-	}
-	else
-	{
-		if (user_provided_fld)
-			fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (user-specified)\n");
-		else
-			fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (default)\n");
-		fprintf(stderr, ">\t              Default Mean: %d\n", def_frag_len_mean);
-		fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
-	}
-
+        if (empirical)
+        {
+            fprintf(stderr, ">\tFragment Length Distribution: Empirical (learned)\n");
+            fprintf(stderr, ">\t              Estimated Mean: %.2f\n", mean);
+            fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", std_dev);
+        }
+        else
+        {
+            if (user_provided_fld)
+            {
+                fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (user-specified)\n");
+            }
+            else
+            {
+                fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (default)\n");
+            }
+            fprintf(stderr, ">\t              Default Mean: %d\n", def_frag_len_mean);
+            fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
+        }
+    }
 	bundle_factory.num_bundles(num_bundles);
 	bundle_factory.reset(); 
 	return;

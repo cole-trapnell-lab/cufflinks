@@ -173,6 +173,21 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     }
 }
 
+void transform_counts_to_common_scale(const vector<double>& scale_factors,
+                                      vector<LocusCountList>& sample_count_table)
+{
+    // Transform raw counts to the common scale
+    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    {
+        LocusCountList& p = sample_count_table[i];
+        for (size_t j = 0; j < p.counts.size(); ++j)
+        {
+            assert (scale_factors.size() > j);
+            p.counts[j] *= (1.0 / scale_factors[j]);
+        }
+    }
+}
+
 void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
                           vector<double>& scale_factors)
 {

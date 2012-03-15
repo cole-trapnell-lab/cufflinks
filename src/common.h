@@ -207,6 +207,13 @@ enum Platform
     SOLID
 };
 
+enum FLDSource
+{
+    LEARNED,
+    USER,
+    DEFAULT
+};
+
 class EmpDist
 {
 	//Vectors only valid between min and max!
@@ -217,10 +224,11 @@ class EmpDist
     double _std_dev;
 	int _min;
 	int _max;
-	
+	FLDSource _source;
+    
 public:
-	EmpDist(std::vector<double>& pdf, std::vector<double>& cdf, int mode, double mean, double std_dev, int min, int max)
-	: _pdf(pdf), _cdf(cdf), _mode(mode), _mean(mean), _std_dev(std_dev), _min(min), _max(max) {}
+	EmpDist(std::vector<double>& pdf, std::vector<double>& cdf, int mode, double mean, double std_dev, int min, int max, FLDSource source)
+	: _pdf(pdf), _cdf(cdf), _mode(mode), _mean(mean), _std_dev(std_dev), _min(min), _max(max), _source(source) {}
 	
 	void pdf(std::vector<double>& pdf)	{ _pdf = pdf; }
 	double pdf(int l) const
@@ -269,6 +277,9 @@ public:
     
     void std_dev(double std_dev)				{ _std_dev = std_dev;  }
 	double std_dev() const					{ return _std_dev; }
+    
+    FLDSource source() const        { return _source; }
+    void source(FLDSource source)   { _source = source; } 
 };
 
 class BiasLearner;
@@ -342,9 +353,14 @@ public:
     const std::vector<LocusCount>& common_scale_counts() { return _common_scale_counts; }
     void common_scale_counts(const std::vector<LocusCount>& counts) { _common_scale_counts = counts; }
     
+    const std::vector<LocusCount>& raw_counts() { return _raw_counts; }
+    void raw_counts(const std::vector<LocusCount>& counts) { _raw_counts = counts; }
+    
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
 	
+   
+    
 private:
     
     Strandedness _strandedness;
@@ -360,6 +376,7 @@ private:
     double _mass_scaling_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
     std::vector<LocusCount> _common_scale_counts;
+    std::vector<LocusCount> _raw_counts;
     
     bool _complete_fragments;
 };
@@ -438,4 +455,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_MLE_MIN_ACC             299
 //#define OPT_ANALYTIC_DIFF           300
 #define OPT_NO_DIFF                 301
+#define OPT_GEOMETRIC_NORM          302
+#define OPT_RAW_MAPPED_NORM          303
+
 #endif

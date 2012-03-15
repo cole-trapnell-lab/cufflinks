@@ -50,6 +50,9 @@ bool samples_are_time_series = false;
 using namespace std;
 using namespace boost;
 
+bool use_geometric_norm = true;
+bool use_raw_mapped_norm = false;
+
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
 const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:";
@@ -77,6 +80,8 @@ static struct option long_options[] = {
 {"multi-read-correct",      no_argument,			 0,			 'u'},
 {"time-series",             no_argument,             0,			 'T'},
 {"upper-quartile-norm",     no_argument,	 		 0,	         'N'},
+{"geometric-norm",          no_argument,	 		 0,	         OPT_GEOMETRIC_NORM},
+{"raw-mapped-norm",         no_argument,	 		 0,	         OPT_RAW_MAPPED_NORM},
 {"min-isoform-fraction",    required_argument,       0,          'F'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
@@ -384,6 +389,17 @@ int parse_options(int argc, char** argv)
                 no_differential = true;
                 break;
             }
+            case OPT_GEOMETRIC_NORM:
+            {
+                use_geometric_norm = true;
+                break;
+            } 
+            case OPT_RAW_MAPPED_NORM:
+            {
+                use_raw_mapped_norm = true;
+                break;
+            } 
+                
 			default:
 				print_usage();
 				return 1;
@@ -886,7 +902,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     }
 #endif
     
-    
     if (use_quartile_norm)
     {
         long double total_mass = 0.0;
@@ -907,6 +922,78 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 rg->normalized_map_mass(scaled_mass);
             }
         }
+    }
+    else if (use_geometric_norm)
+    {
+        vector<LocusCountList> sample_count_table;
+        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
+        {
+            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
+            const vector<LocusCount>& count_table = rg->raw_counts();
+            for (size_t i = 0; i < count_table.size(); ++i)
+            {
+                const LocusCount& c = count_table[i];
+                double raw_count = c.count;
+                
+                if (i >= sample_count_table.size())
+                {
+                    LocusCountList locus_count(c.locus_desc, all_read_groups.size(), c.num_transcripts); 
+                    sample_count_table.push_back(locus_count);
+                    sample_count_table.back().counts[0] = raw_count;
+                }
+                else
+                {
+                    if (sample_count_table[i].locus_desc != c.locus_desc)
+                    {
+                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                        exit(1);
+                    }
+                    sample_count_table[i].counts[fac_idx] = raw_count;
+                }
+            }
+        }
+        
+        vector<double> scale_factors(all_read_groups.size(), 0.0);
+        
+        calc_scaling_factors(sample_count_table, scale_factors);
+        
+        transform_counts_to_common_scale(scale_factors, sample_count_table);
+        
+        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
+        {
+            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
+            rg->mass_scale_factor(scale_factors[fac_idx]);
+        }
+        
+
+        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
+
+        {
+            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
+            //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
+            double total_common = 0.0;
+            for (size_t j = 0; j < sample_count_table.size(); ++j)
+            {
+                total_common += sample_count_table[j].counts[fac_idx];
+            }
+            rg->normalized_map_mass(total_common);
+        }
+        
+        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+        {
+            fac->fit_dispersion_model();
+        }
+
+    }
+    else if (use_raw_mapped_norm)
+    {
+        // no need to do anything beyond what's already being done during 
+        // per-condition map inspection.  Counts are common-scale-transformed 
+        // on a per condition basis.
+    }
+    else
+    {
+        assert(false);
     }
     
     int most_reps = -1;
@@ -1011,6 +1098,33 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 
     }
 
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties> rg = all_read_groups[i];
+        fprintf(stderr, "> Map Properties:\n");
+        
+        fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", rg->normalized_map_mass());
+        fprintf(stderr, ">\tRaw Map Mass: %.2Lf\n", rg->total_map_mass());
+        if (corr_multi)
+            fprintf(stderr,">\tNumber of Multi-Reads: %zu (with %zu total hits)\n", rg->multi_read_table()->num_multireads(), rg->multi_read_table()->num_multihits()); 
+        
+        if (rg->frag_len_dist()->source() == LEARNED)
+        {
+            fprintf(stderr, ">\tFragment Length Distribution: Empirical (learned)\n");
+            fprintf(stderr, ">\t              Estimated Mean: %.2f\n", rg->frag_len_dist()->mean());
+            fprintf(stderr, ">\t           Estimated Std Dev: %.2f\n", rg->frag_len_dist()->std_dev());
+        }
+        else
+        {
+            if (rg->frag_len_dist()->source() == USER)
+                fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (user-specified)\n");
+            else //rg->frag_len_dist()->source == FLD::DEFAULT
+                fprintf(stderr, ">\tFragment Length Distribution: Truncated Gaussian (default)\n");
+            fprintf(stderr, ">\t              Default Mean: %d\n", def_frag_len_mean);
+            fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
+        }
+    }
+    
     long double total_norm_mass = 0.0;
     long double total_mass = 0.0;
     foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
@@ -1019,12 +1133,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         total_mass += rg_props->total_map_mass();
     }
     
-    // scale the normalized masses so that both quantile total count normalization
-    // are roughly on the same numerical scale
-    foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    if (use_quartile_norm || use_raw_mapped_norm)
     {
-        long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
-        rg_props->normalized_map_mass(new_norm);
+        // scale the normalized masses so that both quantile total count normalization
+        // are roughly on the same numerical scale
+        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+        {
+            long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
+            rg_props->normalized_map_mass(new_norm);
+        }
     }
 
 	min_frag_len = tmp_min_frag_len;
