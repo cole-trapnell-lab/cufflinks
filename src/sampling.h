@@ -35,6 +35,8 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/math/constants/constants.hpp>
 
+#include <Eigen/Dense>
+
 // Boost Cholesky factorizations in the spirit of lu.hpp
 // Written by Robbie Vogt, found at: 
 // http://lists.boost.org/MailArchives/ublas/2005/07/0568.php
@@ -298,7 +300,7 @@ float_type log_space_add(float_type log_p, float_type log_q)
 }
 
 void generate_importance_samples(multinormal_generator<double>& generator,
-                                 std::vector<boost::numeric::ublas::vector<double> >& samples, 
+                                 std::vector<Eigen::VectorXd>& samples, 
                                  int num_samples,
                                  bool no_zeros = true);
 

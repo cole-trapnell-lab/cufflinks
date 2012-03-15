@@ -67,85 +67,77 @@ double jensen_shannon_distance(std::vector<Eigen::VectorXd>& sample_kappas)
 	return sqrt(js);
 }
 
-//void jensen_shannon_gradient(vector<ublas::vector<double> >& sample_kappas,
-//							 double js,
-//							 ublas::vector<double>& gradient)
-//{
-//	assert (sample_kappas.size() > 1);
-//	size_t kappa_length = sample_kappas.front().size();
-//	for (size_t i = 1; i < sample_kappas.size(); ++i)
-//	{
-//		assert (sample_kappas[i].size() == sample_kappas[i-1].size());
-//		kappa_length = sample_kappas[i].size();
-//	}
-//	
-//	if (kappa_length == 0)
-//		return;
-//	
-//	gradient = ublas::zero_vector<double>(sample_kappas.size() * kappa_length);
-//	for (size_t i = 0; i < sample_kappas.size(); ++i)
-//	{
-//		for (size_t k = 0; k < kappa_length; ++k)
-//		{
-//            assert (!isinf(sample_kappas[i](k)) && !isnan(sample_kappas[i](k)));
-//			gradient(i*kappa_length + k) = sample_kappas[i](k);
-//		}
-//	}
-//	
-//	//cout << "t1: " << gradient<< endl;
-//	
-//	ublas::vector<double> p_bar = ublas::zero_vector<double>(kappa_length);
-//	for (size_t i = 0; i < sample_kappas.size(); ++i)
-//	{
-//		p_bar += sample_kappas[i];
-//	}
-//	p_bar /= sample_kappas.size();
-//	
-//	
-//	//cout << "t2 " << denoms << endl;
-//	
-//	for (size_t i = 0; i < sample_kappas.size(); ++i)
-//	{
-//		for (size_t k = 0; k < kappa_length; ++k)
-//		{
-//			if (p_bar(k) == 0.0 || gradient(i*kappa_length + k) == 0.0 || js == 0.0)
-//			{
-//				gradient(i*kappa_length + k) = 0.0;
-//			}
-//			else
-//			{
-//#ifdef DEBUG
-//				ublas::vector<double>& grad_tmp = gradient;
-//#endif
-//                double alt_grad = 0.0;
-//                double m = 2.0;
-//                alt_grad = js / (2.0 * m);
-//                double A = log(gradient(i*kappa_length + k)) + (1.0 / gradient(i*kappa_length + k));
-//                double B = log(p_bar[k]) + (1.0 / p_bar[k]);
-//                alt_grad *= (A - B);
-//                
-//				gradient(i*kappa_length + k) /= p_bar(k);
-//				gradient(i*kappa_length + k) = log(gradient(i*kappa_length + k));
-//				gradient(i*kappa_length + k) /= sample_kappas.size(); // m in paper notation
-//				gradient(i*kappa_length + k) *= (1.0/(2.0 * js)); // This is supposed to use the square root of the distance (it's not a typo)
-//				
-//                double curr_grad = gradient(i*kappa_length + k);
-//                
-//                assert (!isinf(curr_grad) && !isnan(curr_grad));
-//                //fprintf(stderr, "Curr gradient: %lg, alternate gradient %lg\n", curr_grad, alt_grad);
-//#if 0
-//				if(isinf(gradient(i*kappa_length + k)))
-//				{
-//					cerr << grad_tmp << endl;
-//					cerr << sample_kappas[i] << endl;
-//					assert (false);
-//				}
-//#endif
-//				
-//			}
-//		}
-//	}
-//}
+void jensen_shannon_gradient(vector<Eigen::VectorXd>& sample_kappas,
+							 double js,
+							 ublas::vector<double>& gradient)
+{
+	assert (sample_kappas.size() > 1);
+	size_t kappa_length = sample_kappas.front().size();
+	for (size_t i = 1; i < sample_kappas.size(); ++i)
+	{
+		assert (sample_kappas[i].size() == sample_kappas[i-1].size());
+		kappa_length = sample_kappas[i].size();
+	}
+	
+	if (kappa_length == 0)
+		return;
+	
+	gradient = ublas::zero_vector<double>(sample_kappas.size() * kappa_length);
+	for (size_t i = 0; i < sample_kappas.size(); ++i)
+	{
+		for (size_t k = 0; k < kappa_length; ++k)
+		{
+            assert (!isinf(sample_kappas[i](k)) && !isnan(sample_kappas[i](k)));
+			gradient(i*kappa_length + k) = sample_kappas[i](k);
+		}
+	}
+	
+	//cout << "t1: " << gradient<< endl;
+	
+    ublas::vector<double> p_bar = ublas::zero_vector<double>(kappa_length);
+	for (size_t i = 0; i < sample_kappas.size(); ++i)
+	{
+		for (size_t j = 0; j < sample_kappas[i].size(); ++j)
+        {
+            p_bar[j] += sample_kappas[i](j);   
+        }
+	}
+	p_bar /= sample_kappas.size();
+	
+	
+	//cout << "t2 " << denoms << endl;
+	
+	for (size_t i = 0; i < sample_kappas.size(); ++i)
+	{
+		for (size_t k = 0; k < kappa_length; ++k)
+		{
+			if (p_bar(k) == 0.0 || gradient(i*kappa_length + k) == 0.0 || js == 0.0)
+			{
+				gradient(i*kappa_length + k) = 0.0;
+			}
+			else
+			{
+                double alt_grad = 0.0;
+                double m = 2.0;
+                alt_grad = js / (2.0 * m);
+                double A = log(gradient(i*kappa_length + k)) + (1.0 / gradient(i*kappa_length + k));
+                double B = log(p_bar[k]) + (1.0 / p_bar[k]);
+                alt_grad *= (A - B);
+                
+				gradient(i*kappa_length + k) /= p_bar(k);
+				gradient(i*kappa_length + k) = log(gradient(i*kappa_length + k));
+				gradient(i*kappa_length + k) /= sample_kappas.size(); // m in paper notation
+				gradient(i*kappa_length + k) *= (1.0/(2.0 * js)); // This is supposed to use the square root of the distance (it's not a typo)
+				
+                double curr_grad = gradient(i*kappa_length + k);
+                
+                assert (!isinf(curr_grad) && !isnan(curr_grad));
+                //fprintf(stderr, "Curr gradient: %lg, alternate gradient %lg\n", curr_grad, alt_grad);
+            
+			}
+		}
+	}
+}
 
 void make_js_covariance_matrix(vector<ublas::matrix<double> >& kappa_covariances,
 							   ublas::matrix<double>& js_covariance)
