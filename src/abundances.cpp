@@ -1427,6 +1427,11 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         }
     }
     
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        _count_covariance(i,i) = ceil(_count_covariance(i,i));
+    }
+    
 //    cerr << "simulated count covariance: " << endl;
 //    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
 //    {
