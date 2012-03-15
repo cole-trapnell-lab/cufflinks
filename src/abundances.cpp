@@ -1332,7 +1332,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
                 double p = selector[frag_idx];
                 for (size_t a_idx = 0; a_idx < _abundances.size(); ++a_idx)
                 {
-                    if (p <= s + assign_probs(a_idx, frag_idx))
+                    if (p < s + assign_probs(a_idx, frag_idx))
                     {
                         assigned_frag_counts(a_idx) += (aligment_multiplicities[frag_idx] / total_true_frags) * total_sample_frags;
                         break;
@@ -1413,17 +1413,49 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     
     _count_covariance /= assigned_counts.size();
     
+    double total_counts = expected_counts.sum();
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
+        if (total_counts > 0)
+        {
+            _abundances[i]->gamma(expected_counts(i) / total_counts);
+        }
+        else
+        {
+            _abundances[i]->gamma(0);
+        }
+    }
+    
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        // Make sure we aren't below the fit for the single isoform case
         if (_count_covariance(i,i) < ceil(_abundances[i]->mass_variance()))
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to fitted variance model (%lg)\n", i, _count_covariance(i,i), ceil(_abundances[i]->mass_variance()));
             _count_covariance(i,i) = ceil(_abundances[i]->mass_variance());
         }
+        
+        // Check that we aren't below what the Poisson model says we ought to be at
         if (_count_covariance(i,i) < ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)))
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
             _count_covariance(i,i) = ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i));
+        }
+        
+        long double count_var = 0.0;
+        
+        // Check that we aren't below what the BNB model says we ought to be at
+        bool numerics_ok = estimate_count_variance(count_var,
+                                                   _abundances[i]->gamma(),
+                                                   _iterated_exp_count_covariance(i,i),
+                                                   num_fragments(),
+                                                   _abundances[i]->mass_variance(),
+                                                   _abundances[i]->effective_length(),
+                                                   num_fragments()/mass_fraction());
+        if (numerics_ok&& _count_covariance(i,i) < ceil(count_var))
+        {
+            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
+            _count_covariance(i,i) = ceil(count_var);
         }
     }
     
@@ -1444,15 +1476,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
 //    std::cerr << expected_counts << std::endl;
 //    cerr << "======" << endl;
     
-    double total_counts = expected_counts.sum();
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        if (total_counts > 0)
-            _abundances[i]->gamma(expected_counts(i) / total_counts);
-        else
-            _abundances[i]->gamma(0);
-    }
-    
+        
     _assigned_count_samples = assigned_counts;
     
 //    for (size_t i = 0; i < num_count_draws; ++i)
