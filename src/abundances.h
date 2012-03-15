@@ -428,11 +428,7 @@ private:
     void calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
                                                  const vector<shared_ptr<Abundance> >& transcripts);
     
-    
-    void calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
-                                    const Eigen::MatrixXd& transcript_cond_probs,
-                                    const Eigen::VectorXd& proposed_gammas,
-                                    Eigen::VectorXd& assigned_probs);    
+        
 	void calculate_kappas();
     
     
@@ -557,4 +553,9 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
 bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
                               size_t num_js_samples,
                               vector<double>& js_samples);
+
+void calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
+                                const Eigen::MatrixXd& transcript_cond_probs,
+                                const Eigen::VectorXd& proposed_gammas,
+                                Eigen::MatrixXd& assignment_probs);
 #endif

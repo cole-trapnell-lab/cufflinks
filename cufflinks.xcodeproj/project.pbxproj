@@ -629,6 +629,7 @@
 		EDD94B711205CAF400AA1086 /* gtf_to_sam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_to_sam.cpp; path = src/gtf_to_sam.cpp; sourceTree = "<group>"; };
 		EDDBF70912D29DF000130D8A /* cuffcluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cuffcluster.cpp; path = src/cuffcluster.cpp; sourceTree = "<group>"; };
 		EDDC08C015064AA600CFC7EF /* ax_check_eigen.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = ax_check_eigen.m4; sourceTree = "<group>"; };
+		EDE26F1E15115CCB00A5199D /* rounding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rounding.h; path = src/rounding.h; sourceTree = "<group>"; };
 		EDE78A2B11B5F4F0000F8846 /* graph_optimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graph_optimize.h; path = src/graph_optimize.h; sourceTree = "<group>"; };
 		EDE78A2C11B5F4F0000F8846 /* graph_optimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = graph_optimize.cpp; path = src/graph_optimize.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDE78A7811B6E912000F8846 /* scaffold_graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scaffold_graph.h; path = src/scaffold_graph.h; sourceTree = "<group>"; };
@@ -760,6 +761,7 @@
 				EDA5151B10C72963000A4F41 /* transitive_closure.h */,
 				EDBBE9C811AA3F5E006AC14A /* transitive_reduction.h */,
 				EDA5151E10C72963000A4F41 /* abundances.cpp */,
+				EDE26F1E15115CCB00A5199D /* rounding.h */,
 				EDA5151F10C72963000A4F41 /* assemble.cpp */,
 				EDBAC4BF11FF5AD3002B7162 /* biascorrection.cpp */,
 				EDA5152010C72963000A4F41 /* bundles.cpp */,
