@@ -50,7 +50,7 @@ bool samples_are_time_series = false;
 using namespace std;
 using namespace boost;
 
-bool use_geometric_norm = true;
+bool use_geometric_norm = false;
 bool use_raw_mapped_norm = false;
 
 // We leave out the short codes for options that don't take an argument
@@ -429,6 +429,16 @@ int parse_options(int argc, char** argv)
     {
         fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
         exit(1);
+    }
+    
+    if (use_raw_mapped_norm + use_geometric_norm + use_quartile_norm > 1)
+    {
+        fprintf(stderr, "Error: Choose one of upper-quartile-norm, geometric-norm, or raw-mapped-norm\n");
+        exit(1);
+    }
+    if (use_raw_mapped_norm + use_geometric_norm + use_quartile_norm == 0)
+    {
+        use_geometric_norm = true;
     }
     
     tokenize(sample_label_list, ",", sample_labels);
@@ -902,100 +912,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     }
 #endif
     
-    if (use_quartile_norm)
-    {
-        long double total_mass = 0.0;
-        long double total_norm_mass = 0.0;
-        foreach (shared_ptr<ReadGroupProperties> rg, all_read_groups)
-        {
-            total_mass += rg->total_map_mass();
-            total_norm_mass += rg->normalized_map_mass();
-        }
-        
-        if (total_mass > 0)
-        {
-            double scaling_factor = total_mass / total_norm_mass;
-            foreach (shared_ptr<ReadGroupProperties> rg, all_read_groups)
-            {
-                double scaled_mass = scaling_factor * rg->normalized_map_mass();
-                
-                rg->normalized_map_mass(scaled_mass);
-            }
-        }
-    }
-    else if (use_geometric_norm)
-    {
-        vector<LocusCountList> sample_count_table;
-        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
-        {
-            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
-            const vector<LocusCount>& count_table = rg->raw_counts();
-            for (size_t i = 0; i < count_table.size(); ++i)
-            {
-                const LocusCount& c = count_table[i];
-                double raw_count = c.count;
-                
-                if (i >= sample_count_table.size())
-                {
-                    LocusCountList locus_count(c.locus_desc, all_read_groups.size(), c.num_transcripts); 
-                    sample_count_table.push_back(locus_count);
-                    sample_count_table.back().counts[0] = raw_count;
-                }
-                else
-                {
-                    if (sample_count_table[i].locus_desc != c.locus_desc)
-                    {
-                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
-                        exit(1);
-                    }
-                    sample_count_table[i].counts[fac_idx] = raw_count;
-                }
-            }
-        }
-        
-        vector<double> scale_factors(all_read_groups.size(), 0.0);
-        
-        calc_scaling_factors(sample_count_table, scale_factors);
-        
-        transform_counts_to_common_scale(scale_factors, sample_count_table);
-        
-        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
-        {
-            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
-            rg->mass_scale_factor(scale_factors[fac_idx]);
-        }
-        
-
-        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
-
-        {
-            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
-            //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
-            double total_common = 0.0;
-            for (size_t j = 0; j < sample_count_table.size(); ++j)
-            {
-                total_common += sample_count_table[j].counts[fac_idx];
-            }
-            rg->normalized_map_mass(total_common);
-        }
-        
-        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-        {
-            fac->fit_dispersion_model();
-        }
-
-    }
-    else if (use_raw_mapped_norm)
-    {
-        // no need to do anything beyond what's already being done during 
-        // per-condition map inspection.  Counts are common-scale-transformed 
-        // on a per condition basis.
-    }
-    else
-    {
-        assert(false);
-    }
-    
     int most_reps = -1;
     int most_reps_idx = 0;
     
@@ -1012,17 +928,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         if (most_reps == 1)
         {
             single_replicate_fac = true;
-        }
-    }
-    
-    if (most_reps != 1 && poisson_dispersion == false)
-    {
-        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-        {
-            if (fac->num_replicates() == 1)
-            {
-                fac->mass_dispersion_model(bundle_factories[most_reps_idx]->mass_dispersion_model());
-            }
         }
     }
     
@@ -1095,9 +1000,197 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         {
             rg_props->mass_dispersion_model(disperser);
         }
+    }
+    
+    if (!(most_reps == 1 && poisson_dispersion == false) && (use_quartile_norm || use_geometric_norm))
+    {
+        vector<LocusCountList> sample_count_table;
+        
+        //vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
+        
+        for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+        {
+            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
+            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+            vector<double> count_table;
+            for (size_t j = 0; j < replicates.size(); ++j)
+            {
+                shared_ptr<ReadGroupProperties> rg = replicates[j]->read_group_properties();
+                const vector<LocusCount>& rep_count_table = rg->common_scale_counts();
+                if (count_table.empty())
+                    count_table = vector<double>(rep_count_table.size(), 0);
+                
+                for (size_t i = 0; i < rep_count_table.size(); ++i)
+                {
+                    const LocusCount& c = rep_count_table[i];
+                    double count = c.count;
+                    count_table[i] += (count / replicates.size());;
+                }
+                
+            }
+            
+            for (size_t i = 0; i < count_table.size(); ++i)
+            {
+                
+                const LocusCount& c = replicates.front()->read_group_properties()->common_scale_counts()[i];
+                double count = count_table[i];
+                
+                if (i >= sample_count_table.size())
+                {
+                    LocusCountList locus_count(c.locus_desc, all_read_groups.size(), c.num_transcripts); 
+                    sample_count_table.push_back(locus_count);
+                    sample_count_table.back().counts[0] = count;
+                }
+                else
+                {
+                    if (sample_count_table[i].locus_desc != c.locus_desc)
+                    {
+                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                        exit(1);
+                    }
+                    sample_count_table[i].counts[fac_idx] = count;
+                }
+                
+            }
+        }
+        
+        vector<double> scale_factors(bundle_factories.size(), 0.0);
+        
+        calc_scaling_factors(sample_count_table, scale_factors);
+        
+        for (size_t j = 0; j < scale_factors.size(); ++j)
+        {
+            double total = 0.0;
+            double sf = scale_factors[j];
+            for (size_t i = 0; i < sample_count_table.size(); ++i)
+            {
+                total += sample_count_table[i].counts[j];
+            }
+            fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
 
+        }
+                    
+        transform_counts_to_common_scale(scale_factors, sample_count_table);
+        
+        // don't mess with the mass scale factors - those should be normalized
+        // within a condition so we don't skew the deconvolution towards one 
+        // replicate.
+        
+        //        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
+        //        {
+        //            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
+        //            rg->mass_scale_factor(scale_factors[fac_idx]);
+        //        }
+        
+        if (use_quartile_norm)
+        {
+            vector<double> upper_quartiles(bundle_factories.size(), 0);
+            vector<double> total_common_masses(bundle_factories.size(), 0);
+            
+            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+            {
+                //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
+                //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
+                vector<double> common_scaled_counts;
+                double total_common = 0.0;
+                
+                for (size_t j = 0; j < sample_count_table.size(); ++j)
+                {
+                    total_common += sample_count_table[j].counts[fac_idx];
+                    common_scaled_counts.push_back(sample_count_table[j].counts[fac_idx]);
+                }
+                
+                sort(common_scaled_counts.begin(), common_scaled_counts.end());
+                if (common_scaled_counts.empty())
+                    continue;
+                
+                int upper_quart_index = common_scaled_counts.size() * 0.75;
+                double upper_quart_count = common_scaled_counts[upper_quart_index];
+                upper_quartiles[fac_idx] = upper_quart_count;
+                total_common_masses[fac_idx] = total_common;
+            }
+            //            
+            //            foreach (shared_ptr<ReadGroupProperties> rg, all_read_groups)
+            //            {
+            //                total_mass += rg->total_map_mass();
+            //                total_norm_mass += rg->normalized_map_mass();
+            //            }
+            
+            long double total_mass = accumulate(total_common_masses.begin(), total_common_masses.end(), 0.0);
+            long double total_norm_mass = accumulate(upper_quartiles.begin(), upper_quartiles.end(), 0.0);
+            
+            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+            {
+                if (total_mass > 0)
+                {
+                    double scaling_factor = total_mass / total_norm_mass;
+                    foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
+                    {
+                        double scaled_mass = scaling_factor * upper_quartiles[fac_idx];
+                        bf->read_group_properties()->normalized_map_mass(scaled_mass);
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+            {
+                //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
+                //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
+                double total_common = 0.0;
+                for (size_t j = 0; j < sample_count_table.size(); ++j)
+                {
+                    total_common += sample_count_table[j].counts[fac_idx];
+                }
+                foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
+                {
+                    bf->read_group_properties()->normalized_map_mass(total_common);
+                }
+                
+                //rg->normalized_map_mass(scale_factors[fac_idx])
+            }
+        }   
+        // keep the per-condition, internally scaled dispersion models.
+        //        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+        //        {
+        //            fac->fit_dispersion_model();
+        //        }
+        
+    }
+    else if (use_raw_mapped_norm)
+    {
+        // no need to do anything beyond what's already being done during 
+        // per-condition map inspection.  Counts are common-scale-transformed 
+        // on a per condition basis.
+    }
+    else
+    {
+        assert(false);
+    }
+    
+    if (most_reps != 1 && poisson_dispersion == false)
+    {
+        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+        {
+            if (fac->num_replicates() == 1)
+            {
+                fac->mass_dispersion_model(bundle_factories[most_reps_idx]->mass_dispersion_model());
+            }
+        }
     }
 
+//    if (use_quartile_norm || use_raw_mapped_norm)
+//    {
+//        // scale the normalized masses so that both quantile total count normalization
+//        // are roughly on the same numerical scale
+//        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+//        {
+//            long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
+//            rg_props->normalized_map_mass(new_norm);
+//        }
+//    }
+    
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
         shared_ptr<ReadGroupProperties> rg = all_read_groups[i];
@@ -1131,17 +1224,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     {
         total_norm_mass += rg_props->normalized_map_mass();
         total_mass += rg_props->total_map_mass();
-    }
-    
-    if (use_quartile_norm || use_raw_mapped_norm)
-    {
-        // scale the normalized masses so that both quantile total count normalization
-        // are roughly on the same numerical scale
-        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-        {
-            long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
-            rg_props->normalized_map_mass(new_norm);
-        }
     }
 
 	min_frag_len = tmp_min_frag_len;
