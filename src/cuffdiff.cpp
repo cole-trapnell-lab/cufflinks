@@ -937,18 +937,19 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         for (size_t i = 0; i < all_read_groups.size(); ++i)
         {
             shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            const vector<LocusCount>& common_count_table = rg_props->common_scale_counts();
-            double unscaling_factor = 1.0 / rg_props->mass_scale_factor();
-            for (size_t j = 0; j < common_count_table.size(); ++j)
+            const vector<LocusCount>& raw_count_table = rg_props->raw_counts();
+            //double unscaling_factor = 1.0 / rg_props->mass_scale_factor();
+            for (size_t j = 0; j < raw_count_table.size(); ++j)
             {
                 if (sample_count_table.size() == j)
                 {
-                    const string& locus_id = common_count_table[j].locus_desc;
-                    int num_transcripts = common_count_table[j].num_transcripts;
+                    const string& locus_id = raw_count_table[j].locus_desc;
+                    int num_transcripts = raw_count_table[j].num_transcripts;
                     sample_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
                 }
-                double scaled = common_count_table[j].count;
-                sample_count_table[j].counts[i] = scaled * unscaling_factor;
+                double scaled = raw_count_table[j].count;
+                //sample_count_table[j].counts[i] = scaled * unscaling_factor;
+                sample_count_table[j].counts[i] = scaled;
                 assert(sample_count_table[j].counts[i] >= 0 && !isinf(sample_count_table[j].counts[i]));
             }
         }
@@ -957,6 +958,18 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         
         // TODO: needs to be refactored - similar code exists in replicates.cpp
         calc_scaling_factors(sample_count_table, scale_factors);
+        
+        for (size_t j = 0; j < scale_factors.size(); ++j)
+        {
+            double total = 0.0;
+            double sf = scale_factors[j];
+            for (size_t i = 0; i < sample_count_table.size(); ++i)
+            {
+                total += sample_count_table[i].counts[j];
+            }
+            fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+            
+        }
         
         for (size_t i = 0; i < all_read_groups.size(); ++i)
         {

@@ -359,6 +359,8 @@ public:
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
 	
+//    const string& description() const { return _description; }
+//    void description(const string& d) { _description = d; }
    
     
 private:

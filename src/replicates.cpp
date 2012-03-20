@@ -191,7 +191,8 @@ void transform_counts_to_common_scale(const vector<double>& scale_factors,
 void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
                           vector<double>& scale_factors)
 {
-    vector<double> geom_means(sample_count_table.size(), 0.0);
+    
+    vector<double> log_geom_means(sample_count_table.size(), 0.0);
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
@@ -199,18 +200,14 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
         
         for (size_t j = 0; j < p.counts.size(); ++j)
         {
-            //assert (geom_means.size() > j);
-            if (geom_means[i] > 0  && p.counts[j] > 0)
+            //assert (log_geom_means.size() > j);
+            if (p.counts[j] > 0)
             {
-                geom_means[i] *= p.counts[j];
-            }
-            else if (p.counts[j] > 0)
-            {
-                geom_means[i] = p.counts[j];
+                log_geom_means[i] += (1.0/p.counts.size()) * log(p.counts[j]);
             }
             
         }
-        geom_means[i] = pow(geom_means[i], 1.0/(double)p.counts.size());
+        //log_geom_means[i] = pow(log_geom_means[i], 1.0/(double)p.counts.size());
     }
     
     for (size_t j = 0; j < scale_factors.size(); ++j)
@@ -218,16 +215,16 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
         vector<double> tmp_counts;
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
-            if (geom_means[i] && !isinf(geom_means[i]) && !isnan(geom_means[i]) && sample_count_table[i].counts[j])
+            if (log_geom_means[i] && !isinf(log_geom_means[i]) && !isnan(log_geom_means[i]) && sample_count_table[i].counts[j])
             {
-                double gm = (double)sample_count_table[i].counts[j] / geom_means[i];
+                double gm = (double)log(sample_count_table[i].counts[j]) - log_geom_means[i];
                 assert (!isinf(gm));
                 tmp_counts.push_back(gm);
             }
         }
         sort(tmp_counts.begin(), tmp_counts.end());
         if (!tmp_counts.empty())
-            scale_factors[j] = tmp_counts[tmp_counts.size()/2];
+            scale_factors[j] = exp(tmp_counts[tmp_counts.size()/2]);
         else
             scale_factors[j] = 1.0;
     }
