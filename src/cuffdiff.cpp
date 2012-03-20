@@ -1091,7 +1091,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
         }
                     
-        transform_counts_to_common_scale(scale_factors, sample_count_table);
         
         // don't mess with the mass scale factors - those should be normalized
         // within a condition so we don't skew the deconvolution towards one 
@@ -1149,12 +1148,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                     {
                         double scaled_mass = scaling_factor * upper_quartiles[fac_idx];
                         bf->read_group_properties()->normalized_map_mass(scaled_mass);
+                        bf->read_group_properties()->external_scale_factor(1.0);
                     }
                 }
             }
         }
         else
         {
+            transform_counts_to_common_scale(scale_factors, sample_count_table);
+            
             for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
             {
                 //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
@@ -1184,7 +1186,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     {
         // no need to do anything beyond what's already being done during 
         // per-condition map inspection.  Counts are common-scale-transformed 
-        // on a per condition basis.
+        // on a per condition basis.  External scale factors are set to 1.0 
+        // by default
     }
     else
     {
