@@ -1829,7 +1829,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
         double ret = cholesky_factorize(test);
         if (ret != 0 || (_FPKM_variance < 0 && status() == NUMERIC_OK))
         {
-            fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
+            //fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
             for (size_t j = 0; j < _abundances.size(); ++j)
             {
                 _abundances[j]->status(NUMERIC_FAIL);
