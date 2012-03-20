@@ -938,7 +938,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         {
             shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
             const vector<LocusCount>& raw_count_table = rg_props->raw_counts();
-            //double unscaling_factor = 1.0 / rg_props->mass_scale_factor();
+            
             for (size_t j = 0; j < raw_count_table.size(); ++j)
             {
                 if (sample_count_table.size() == j)
@@ -974,7 +974,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         for (size_t i = 0; i < all_read_groups.size(); ++i)
         {
             shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            rg_props->mass_scale_factor(scale_factors[i]);
+            rg_props->internal_scale_factor(scale_factors[i]);
         }
         
         // Transform raw counts to the common scale
@@ -1003,7 +1003,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             rg_props->common_scale_counts(scaled_counts);
             // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
 
-            rg_props->mass_scale_factor(1.0);         
+            rg_props->internal_scale_factor(1.0);         
         }
         
         shared_ptr<MassDispersionModel const> disperser;
@@ -1050,7 +1050,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 
                 if (i >= sample_count_table.size())
                 {
-                    LocusCountList locus_count(c.locus_desc, all_read_groups.size(), c.num_transcripts); 
+                    LocusCountList locus_count(c.locus_desc, bundle_factories.size(), c.num_transcripts); 
                     sample_count_table.push_back(locus_count);
                     sample_count_table.back().counts[0] = count;
                 }
@@ -1073,6 +1073,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         
         for (size_t j = 0; j < scale_factors.size(); ++j)
         {
+            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[j];
+            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+            
+            for (size_t i = 0; i < replicates.size(); ++i)
+            {
+                shared_ptr<ReadGroupProperties> rg = replicates[i]->read_group_properties();
+                rg->external_scale_factor(scale_factors[j]);
+            }
+            
             double total = 0.0;
             double sf = scale_factors[j];
             for (size_t i = 0; i < sample_count_table.size(); ++i)
@@ -1080,7 +1089,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 total += sample_count_table[i].counts[j];
             }
             fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
-
         }
                     
         transform_counts_to_common_scale(scale_factors, sample_count_table);
@@ -1092,7 +1100,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         //        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
         //        {
         //            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
-        //            rg->mass_scale_factor(scale_factors[fac_idx]);
+        //            rg->internal_scale_factor(scale_factors[fac_idx]);
         //        }
         
         if (use_quartile_norm)
@@ -1159,6 +1167,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
                 {
                     bf->read_group_properties()->normalized_map_mass(total_common);
+                    //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
                 }
                 
                 //rg->normalized_map_mass(scale_factors[fac_idx])

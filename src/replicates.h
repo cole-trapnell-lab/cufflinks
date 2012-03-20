@@ -224,7 +224,7 @@ public:
         {
             shared_ptr<ReadGroupProperties> rg_props = _factories[i]->read_group_properties();
             assert (scale_factors[i] != 0);
-            rg_props->mass_scale_factor(scale_factors[i]);
+            rg_props->internal_scale_factor(scale_factors[i]);
         }
         
         transform_counts_to_common_scale(scale_factors, sample_count_table);
@@ -275,7 +275,7 @@ public:
                     sample_count_table[i].counts[fac_idx] = common_scale_count;
                 }
             }
-            scale_factors.push_back(rg_props->mass_scale_factor());
+            scale_factors.push_back(rg_props->internal_scale_factor());
         }
         
         shared_ptr<MassDispersionModel const> disperser;

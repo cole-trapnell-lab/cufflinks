@@ -326,18 +326,24 @@ public:
 	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
     void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 
 	
-    void mass_scale_factor(double sf) { _mass_scaling_factor = sf; }
-    double mass_scale_factor() const  { return _mass_scaling_factor; }
+    // The internal scaling factor relates replicates to each other, so
+    // that replicates with larger library sizes don't bias the isoform
+    // deconvolution over smaller libraries
+    void internal_scale_factor(double sf) { _internal_scale_factor = sf; }
+    double internal_scale_factor() const  { return _internal_scale_factor; }
+    
+    void external_scale_factor(double sf) { _external_scale_factor = sf; }
+    double external_scale_factor() const  { return _external_scale_factor; }
     
     void complete_fragments(bool c)  { _complete_fragments = c; }
     bool complete_fragments() const { return _complete_fragments; }
     
-    double scale_mass(double unscaled_mass) const 
+    double internally_scale_mass(double unscaled_mass) const 
     { 
-        if (_mass_scaling_factor == 0)
+        if (_internal_scale_factor == 0)
             return unscaled_mass;
         
-        return unscaled_mass * (1.0 / _mass_scaling_factor);
+        return unscaled_mass * (1.0 / _internal_scale_factor);
     }
     
     boost::shared_ptr<const MassDispersionModel> mass_dispersion_model() const 
@@ -375,7 +381,8 @@ private:
 	boost::shared_ptr<BiasLearner const> _bias_learner;
 	boost::shared_ptr<MultiReadTable> _multi_read_table;
     
-    double _mass_scaling_factor;
+    double _internal_scale_factor;
+    double _external_scale_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
     std::vector<LocusCount> _common_scale_counts;
     std::vector<LocusCount> _raw_counts;

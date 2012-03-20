@@ -495,6 +495,7 @@ void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignment
             inserted = _count_per_replicate.insert(make_pair(rg_props, 0.0));
             _read_group_props.insert(rg_props);
             
+            // these are the *internally* scaled masses.
             double more_mass = alignments[i].collapse_mass();
             inserted.first->second += more_mass;
         }
@@ -520,13 +521,29 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
     vector<double> avg_mass_variances(N, 0.0);
     
     double max_mass_var = 0.0;
+    
+    double external_scale_factor = -1.0;
     for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
          itr != _count_per_replicate.end();
          ++itr)
     {
         shared_ptr<ReadGroupProperties const> rg_props = itr->first;
-        double scaled_mass = itr->second; //rg_props->scale_mass(itr->second);
-        double scaled_total_mass = rg_props->scale_mass(rg_props->normalized_map_mass());
+        
+        if (external_scale_factor < 0)
+        {
+            external_scale_factor = rg_props->external_scale_factor();
+        }
+        else
+        {
+            assert (external_scale_factor == rg_props->external_scale_factor());
+        }
+        
+        // Since the _count_per_replicate table stores internally scaled
+        // fragment counts, we need to scale the fragment counts up so we 
+        // can compare between conditions, rather than just between replicates
+        // of this condition.
+        double scaled_mass = itr->second;
+        double scaled_total_mass = rg_props->internally_scale_mass(rg_props->normalized_map_mass());
         avg_X_g += scaled_mass;
         shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
         for (size_t j = 0; j < N; ++j)
@@ -573,6 +590,8 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
         if (j_avg_mass_fraction > 0)
         {
             double FPKM = j_avg_mass_fraction * 1000000000/ _abundances[j]->effective_length();
+            FPKM *= 1.0 / external_scale_factor;
+            
             _abundances[j]->FPKM(FPKM);
         }
         else 
@@ -743,10 +762,10 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
                 num_replaced++;
                 
-                //double scale_factor = alignments[k].common_scale_mass();
+                //double scale_factor = alignments[k].internal_scale_mass();
                 //double curr_align_mass = curr_align->collapse_mass();
                 
-                //double more_mass = alignments[k].common_scale_mass() * alignments[k].collapse_mass() ;
+                //double more_mass = alignments[k].internal_scale_mass() * alignments[k].collapse_mass() ;
                 double more_mass = alignments[k].collapse_mass();
                 curr_align->incr_collapse_mass(more_mass);
             }
@@ -1608,7 +1627,6 @@ void AbundanceGroup::estimate_count_covariance()
                             if (-after > cauchy_schwartz_bound)
                             {
                                 fprintf(stderr, "Warning: total count\n");
-                                int a = 4;
                             }
                             //assert (after <=  _abundances[i]->mass_variance() + _abundances[j]->mass_variance());
                             
@@ -1713,7 +1731,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
 		return;
 	}
     
-    long double M = num_fragments()/mass_fraction();
+    //long double M = num_fragments()/mass_fraction();
     
     //estimate_count_covariance();
     
@@ -1725,6 +1743,30 @@ void AbundanceGroup::calculate_FPKM_covariance()
     
     double abundance_weighted_length = 0.0;
     double total_abundance = 0.0;
+    
+    double external_scale_factor = -1.0;
+    
+    double M = 0;
+    
+    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+         itr != _count_per_replicate.end();
+         ++itr)
+    {
+        shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+        M += rg_props->normalized_map_mass();
+        
+        if (external_scale_factor < 0)
+        {
+            external_scale_factor = rg_props->external_scale_factor();
+        }
+        else
+        {
+            assert (external_scale_factor == rg_props->external_scale_factor());
+        }
+    }
+    
+    M /= _count_per_replicate.size();
+    
     for (size_t j = 0; j < _abundances.size(); ++j)
     {
         abundance_weighted_length += _abundances[j]->effective_length() * _abundances[j]->FPKM();
@@ -1733,6 +1775,10 @@ void AbundanceGroup::calculate_FPKM_covariance()
         for (size_t i = 0; i < _abundances.size(); ++i)
         {
             _fpkm_covariance(i,j) = _count_covariance(i,j);
+            
+            // FPKMs need to be on the external scale, so we can compare them
+            // between conditions.  Counts are internally scaled up until here.
+            _fpkm_covariance(i,j) *= 1.0 / (external_scale_factor * external_scale_factor);
             assert (!isinf(_count_covariance(i,j)) && !isnan(_fpkm_covariance(i,j)));
             
             long double length_i = _abundances[i]->effective_length();
@@ -1744,12 +1790,12 @@ void AbundanceGroup::calculate_FPKM_covariance()
                 _fpkm_covariance(i,j) *=
                     ((1000000000.0 / (length_j *M)))*((1000000000.0 / (length_i *M)));
                 assert (!isinf(_fpkm_covariance(i,j)) && !isnan(_fpkm_covariance(i,j)));
-                double fpkm_var_i = _fpkm_covariance(i,i);
-                double fpkm_var_j = _fpkm_covariance(j,j);
-                double fpkm_covar_i_j = _fpkm_covariance(i,j);
-                double count_var_i =  _count_covariance(i,i);
-                double count_var_j =  _count_covariance(j,j);
-                double count_covar_i_j = _count_covariance(i,j);
+//                double fpkm_var_i = _fpkm_covariance(i,i);
+//                double fpkm_var_j = _fpkm_covariance(j,j);
+//                double fpkm_covar_i_j = _fpkm_covariance(i,j);
+//                double count_var_i =  _count_covariance(i,i);
+//                double count_var_j =  _count_covariance(j,j);
+//                double count_covar_i_j = _count_covariance(i,j);
                 //assert (_fpkm_covariance(i,j) <= _fpkm_covariance(i,i)+_fpkm_covariance(j,j));
                 
             }
@@ -2355,15 +2401,11 @@ void AbundanceGroup::calculate_kappas()
 	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
 	
 	double S_FPKM = 0.0;
-    double Z_kappa = 0.0;
-    double X_S = 0.0;
 	foreach (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pA->effective_length() > 0)
 		{
 			S_FPKM += pA->FPKM();
-            Z_kappa += pA->num_fragments() / pA->effective_length();
-            X_S += pA->num_fragments();
 		}
 	}
 	
@@ -2397,15 +2439,6 @@ void AbundanceGroup::calculate_kappas()
             else if (m == k)
             {
                 // Use the modeled count variance here instead
-                double l_t = _abundances[k]->effective_length();
-                double M = num_fragments()/mass_fraction();
-                double den = (1000000000.0 / (l_t * M));
-                double counts = num_fragments();
-                //double count_var2 = _abundances[k]->FPKM_variance() / (den*den);
-                double count_var = _count_covariance(k, m);
-                double kappa = _abundances[k]->kappa();
-                //                
-                //                double kappa_var = count_var / (L * Z_kappa * Z_kappa);
                 double kappa_var;
                 if (S_FPKM)
                 {

@@ -553,7 +553,7 @@
 		ED41B838127602C60000B5A2 /* cufflinks_xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cufflinks_xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED4835D81249057500642337 /* progressbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = progressbar.h; path = src/progressbar.h; sourceTree = "<group>"; };
 		ED677C0D132A3D83000CFDC8 /* replicates.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = replicates.cpp; path = src/replicates.cpp; sourceTree = "<group>"; };
-		ED677C0E132A3D83000CFDC8 /* replicates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = replicates.h; path = src/replicates.h; sourceTree = "<group>"; };
+		ED677C0E132A3D83000CFDC8 /* replicates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = replicates.h; path = src/replicates.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		ED877B71123BCA3E0025A050 /* GFastaIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFastaIndex.h; path = src/GFastaIndex.h; sourceTree = "<group>"; };
 		ED877B72123BCA3F0025A050 /* GFastaIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFastaIndex.cpp; path = src/GFastaIndex.cpp; sourceTree = "<group>"; };
 		ED920F30132137F4008DDA0B /* density.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = density.c; sourceTree = "<group>"; };
@@ -585,7 +585,7 @@
 		EDA5151510C72963000A4F41 /* gff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gff.h; path = src/gff.h; sourceTree = "<group>"; };
 		EDA5151610C72963000A4F41 /* GStr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GStr.h; path = src/GStr.h; sourceTree = "<group>"; };
 		EDA5151710C72963000A4F41 /* gtf_tracking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gtf_tracking.h; path = src/gtf_tracking.h; sourceTree = "<group>"; };
-		EDA5151810C72963000A4F41 /* hits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hits.h; path = src/hits.h; sourceTree = "<group>"; };
+		EDA5151810C72963000A4F41 /* hits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = hits.h; path = src/hits.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		EDA5151910C72963000A4F41 /* scaffolds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scaffolds.h; path = src/scaffolds.h; sourceTree = "<group>"; };
 		EDA5151A10C72963000A4F41 /* tokenize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tokenize.h; path = src/tokenize.h; sourceTree = "<group>"; };
 		EDA5151B10C72963000A4F41 /* transitive_closure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transitive_closure.h; path = src/transitive_closure.h; sourceTree = "<group>"; };
@@ -597,7 +597,7 @@
 		EDA5152110C72963000A4F41 /* codons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = codons.cpp; path = src/codons.cpp; sourceTree = "<group>"; };
 		EDA5152210C72963000A4F41 /* common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = common.cpp; path = src/common.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDA5152310C72963000A4F41 /* cuffcompare.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = cuffcompare.cpp; path = src/cuffcompare.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		EDA5152410C72963000A4F41 /* cuffdiff.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cuffdiff.cpp; path = src/cuffdiff.cpp; sourceTree = "<group>"; };
+		EDA5152410C72963000A4F41 /* cuffdiff.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = cuffdiff.cpp; path = src/cuffdiff.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDA5152510C72963000A4F41 /* cufflinks.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = cufflinks.cpp; path = src/cufflinks.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDA5152610C72963000A4F41 /* filters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = filters.cpp; path = src/filters.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDA5152710C72963000A4F41 /* GArgs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GArgs.cpp; path = src/GArgs.cpp; sourceTree = "<group>"; };
@@ -609,7 +609,7 @@
 		EDA5152D10C72963000A4F41 /* GStr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GStr.cpp; path = src/GStr.cpp; sourceTree = "<group>"; };
 		EDA5152E10C72963000A4F41 /* gtf_reads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_reads.cpp; path = src/gtf_reads.cpp; sourceTree = "<group>"; };
 		EDA5152F10C72963000A4F41 /* gtf_tracking.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtf_tracking.cpp; path = src/gtf_tracking.cpp; sourceTree = "<group>"; };
-		EDA5153010C72963000A4F41 /* hits.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hits.cpp; path = src/hits.cpp; sourceTree = "<group>"; };
+		EDA5153010C72963000A4F41 /* hits.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = hits.cpp; path = src/hits.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		EDA5153110C72963000A4F41 /* scaffolds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = scaffolds.cpp; path = src/scaffolds.cpp; sourceTree = "<group>"; };
 		EDA5153210C72963000A4F41 /* tokenize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tokenize.cpp; path = src/tokenize.cpp; sourceTree = "<group>"; };
 		EDACE430114EFF5C009024DB /* differential.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = differential.h; path = src/differential.h; sourceTree = "<group>"; };

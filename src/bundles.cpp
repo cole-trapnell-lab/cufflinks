@@ -588,7 +588,7 @@ void HitBundle::finalize(bool is_combined)
         {
             foreach (MateHit& hit, _hits)
             {
-                hit.incr_collapse_mass(hit.common_scale_mass());
+                hit.incr_collapse_mass(hit.internal_scale_mass());
             }
             _non_redundant = _hits;
             
