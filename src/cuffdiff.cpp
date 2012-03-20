@@ -1157,6 +1157,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         {
             transform_counts_to_common_scale(scale_factors, sample_count_table);
             
+            double avg_total_common_scaled_count = 0.0;
+            
             for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
             {
                 //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
@@ -1166,12 +1168,19 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 {
                     total_common += sample_count_table[j].counts[fac_idx];
                 }
+                
+                avg_total_common_scaled_count += (1.0/bundle_factories.size()) * total_common;
+                
+                //rg->normalized_map_mass(scale_factors[fac_idx])
+            }
+            
+            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+            {
                 foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
                 {
-                    bf->read_group_properties()->normalized_map_mass(total_common);
+                    bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
                     //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
                 }
-                
                 //rg->normalized_map_mass(scale_factors[fac_idx])
             }
         }   
