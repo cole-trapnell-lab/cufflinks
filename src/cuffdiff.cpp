@@ -1003,7 +1003,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             rg_props->common_scale_counts(scaled_counts);
             // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
 
-            rg_props->internal_scale_factor(1.0);         
+            // rg_props->internal_scale_factor(1.0);         
         }
         
         shared_ptr<MassDispersionModel const> disperser;
@@ -1013,6 +1013,32 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         {
             rg_props->mass_dispersion_model(disperser);
         }
+	double avg_total_common_scaled_count = 0.0;
+        
+	for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+	  {
+	    //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
+	    //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
+	    double total_common = 0.0;
+	    for (size_t j = 0; j < sample_count_table.size(); ++j)
+	      {
+		total_common += sample_count_table[j].counts[fac_idx];
+	      }
+	    
+	    avg_total_common_scaled_count += (1.0/bundle_factories.size()) * total_common;
+            
+	    //rg->normalized_map_mass(scale_factors[fac_idx])
+	  }
+            
+	for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+	  {
+	    foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
+	      {
+		bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
+		//bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
+	      }
+	  }
+
     }
     
     if (!(most_reps == 1 && poisson_dispersion == false) && (use_quartile_norm || use_geometric_norm))
