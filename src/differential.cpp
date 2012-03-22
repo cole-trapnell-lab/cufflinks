@@ -1326,7 +1326,7 @@ void test_differential(const string& locus_tag,
 	for (size_t i = 0; i < samples.size(); ++i)
 	{
 		const AbundanceGroup& ab_group = samples[i]->transcripts;
-        fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
+        //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
 		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
 			add_to_tracking_table(i, *ab, tracking.isoform_fpkm_tracking);

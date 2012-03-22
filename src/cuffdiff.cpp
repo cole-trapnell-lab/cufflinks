@@ -134,6 +134,8 @@ void print_usage()
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "  -N/--upper-quartile-norm     use upper-quartile normalization                      [ default:  FALSE ]\n");
+    fprintf(stderr, "  --geometric-norm             use geometric mean normalization                      [ default:  TRUE ]\n");
+    fprintf(stderr, "  --raw-mapped-norm            use raw mapped count normalized (classic FPKM)        [ default:  FALSE ]\n");
     fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
@@ -810,8 +812,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
         {
             total += sample_count_table[i].counts[j];
         }
-        fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
-        
+        //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
     }
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
@@ -1203,15 +1204,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             size_t borrowed_disp_model_idx = most_reps_idx;
             if (fac->num_replicates() == 1)
             {
-                fac->mass_dispersion_model(bundle_factories[most_reps_idx]->mass_dispersion_model());
+                fac->mass_dispersion_model(bundle_factories[borrowed_disp_model_idx]->mass_dispersion_model());
+                double borrowed_size_factor = scale_factors[borrowed_disp_model_idx];
                 foreach(shared_ptr<BundleFactory> bf, fac->factories())
                 {
-                    // we don't need to set the normalized map mass, because that's been done above
-                    // but we do need to adjust the scaling factors so that the FPKMs aren't skewed
+                    // we need to adjust the scaling factors so that the FPKMs aren't skewed
                     // and the variance function from the dispersion model is correct.
                     //bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-                    bf->read_group_properties()->internal_scaling_factor(bf);
-                    bf->read_group_properties()->external_scaling_factor(1.0);
+                    bf->read_group_properties()->internal_scale_factor(bf->read_group_properties()->external_scale_factor()/borrowed_size_factor);
+                    bf->read_group_properties()->normalized_map_mass(bf->read_group_properties()->normalized_map_mass());
+                    bf->read_group_properties()->external_scale_factor(1.0);
                 }
             }
         }
