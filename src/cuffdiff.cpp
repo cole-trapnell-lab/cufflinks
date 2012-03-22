@@ -774,6 +774,116 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     return true;
 }
 
+void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
+{
+    vector<LocusCountList> sample_count_table;
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        const vector<LocusCount>& raw_count_table = rg_props->raw_counts();
+        
+        for (size_t j = 0; j < raw_count_table.size(); ++j)
+        {
+            if (sample_count_table.size() == j)
+            {
+                const string& locus_id = raw_count_table[j].locus_desc;
+                int num_transcripts = raw_count_table[j].num_transcripts;
+                sample_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
+            }
+            double scaled = raw_count_table[j].count;
+            //sample_count_table[j].counts[i] = scaled * unscaling_factor;
+            sample_count_table[j].counts[i] = scaled;
+            assert(sample_count_table[j].counts[i] >= 0 && !isinf(sample_count_table[j].counts[i]));
+        }
+    }
+    
+    vector<double> scale_factors(all_read_groups.size(), 0.0);
+    
+    // TODO: needs to be refactored - similar code exists in replicates.cpp
+    calc_scaling_factors(sample_count_table, scale_factors);
+    
+    for (size_t j = 0; j < scale_factors.size(); ++j)
+    {
+        double total = 0.0;
+        double sf = scale_factors[j];
+        for (size_t i = 0; i < sample_count_table.size(); ++i)
+        {
+            total += sample_count_table[i].counts[j];
+        }
+        fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+        
+    }
+    
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        rg_props->internal_scale_factor(scale_factors[i]);
+        //rg_props->external_scale_factor(scale_factors[i]);
+    }
+    
+    // Transform raw counts to the common scale
+    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    {
+        LocusCountList& p = sample_count_table[i];
+        for (size_t j = 0; j < p.counts.size(); ++j)
+        {
+            assert (scale_factors.size() > j);
+            p.counts[j] *= (1.0 / scale_factors[j]);
+        }
+    }
+    
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        vector<LocusCount> scaled_counts;
+        for (size_t j = 0; j < sample_count_table.size(); ++j)
+        {
+            string& locus_id = sample_count_table[j].locus_desc;
+            double count = sample_count_table[j].counts[i];
+            int num_transcripts = sample_count_table[j].num_transcripts;
+            LocusCount locus_count(locus_id, count, num_transcripts);
+            scaled_counts.push_back(locus_count);
+        }
+        rg_props->common_scale_counts(scaled_counts);
+        // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
+        
+        // rg_props->internal_scale_factor(1.0);         
+    }
+    
+    if (poisson_dispersion == false)
+    {
+        shared_ptr<MassDispersionModel const> disperser;
+        disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table);
+        
+        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+        {
+            rg_props->mass_dispersion_model(disperser);
+        }
+    }
+    
+    double avg_total_common_scaled_count = 0.0;
+    
+    for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
+    {
+        //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
+        //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
+        double total_common = 0.0;
+        for (size_t j = 0; j < sample_count_table.size(); ++j)
+        {
+            total_common += sample_count_table[j].counts[fac_idx];
+        }
+        
+        avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
+    }
+    
+    foreach(shared_ptr<ReadGroupProperties> rg, all_read_groups)
+    {
+        rg->normalized_map_mass(avg_total_common_scaled_count);
+        //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
+    }
+
+}
+
 void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 
@@ -931,117 +1041,12 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
     }
     
-    if (most_reps == 1 && poisson_dispersion == false)
+    if (most_reps == 1)
     {
-        vector<LocusCountList> sample_count_table;
-        for (size_t i = 0; i < all_read_groups.size(); ++i)
-        {
-            shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            const vector<LocusCount>& raw_count_table = rg_props->raw_counts();
-            
-            for (size_t j = 0; j < raw_count_table.size(); ++j)
-            {
-                if (sample_count_table.size() == j)
-                {
-                    const string& locus_id = raw_count_table[j].locus_desc;
-                    int num_transcripts = raw_count_table[j].num_transcripts;
-                    sample_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
-                }
-                double scaled = raw_count_table[j].count;
-                //sample_count_table[j].counts[i] = scaled * unscaling_factor;
-                sample_count_table[j].counts[i] = scaled;
-                assert(sample_count_table[j].counts[i] >= 0 && !isinf(sample_count_table[j].counts[i]));
-            }
-        }
-        
-        vector<double> scale_factors(all_read_groups.size(), 0.0);
-        
-        // TODO: needs to be refactored - similar code exists in replicates.cpp
-        calc_scaling_factors(sample_count_table, scale_factors);
-        
-        for (size_t j = 0; j < scale_factors.size(); ++j)
-        {
-            double total = 0.0;
-            double sf = scale_factors[j];
-            for (size_t i = 0; i < sample_count_table.size(); ++i)
-            {
-                total += sample_count_table[i].counts[j];
-            }
-            fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
-            
-        }
-        
-        for (size_t i = 0; i < all_read_groups.size(); ++i)
-        {
-            shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            rg_props->internal_scale_factor(scale_factors[i]);
-        }
-        
-        // Transform raw counts to the common scale
-        for (size_t i = 0; i < sample_count_table.size(); ++i)
-        {
-            LocusCountList& p = sample_count_table[i];
-            for (size_t j = 0; j < p.counts.size(); ++j)
-            {
-                assert (scale_factors.size() > j);
-                p.counts[j] *= (1.0 / scale_factors[j]);
-            }
-        }
-        
-        for (size_t i = 0; i < all_read_groups.size(); ++i)
-        {
-            shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-            vector<LocusCount> scaled_counts;
-            for (size_t j = 0; j < sample_count_table.size(); ++j)
-            {
-                string& locus_id = sample_count_table[j].locus_desc;
-                double count = sample_count_table[j].counts[i];
-                int num_transcripts = sample_count_table[j].num_transcripts;
-                LocusCount locus_count(locus_id, count, num_transcripts);
-                scaled_counts.push_back(locus_count);
-            }
-            rg_props->common_scale_counts(scaled_counts);
-            // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
-
-            // rg_props->internal_scale_factor(1.0);         
-        }
-        
-        shared_ptr<MassDispersionModel const> disperser;
-        disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table);
-
-        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-        {
-            rg_props->mass_dispersion_model(disperser);
-        }
-	double avg_total_common_scaled_count = 0.0;
-        
-	for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-	  {
-	    //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
-	    //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
-	    double total_common = 0.0;
-	    for (size_t j = 0; j < sample_count_table.size(); ++j)
-	      {
-		total_common += sample_count_table[j].counts[fac_idx];
-	      }
-	    
-	    avg_total_common_scaled_count += (1.0/bundle_factories.size()) * total_common;
-            
-	    //rg->normalized_map_mass(scale_factors[fac_idx])
-	  }
-            
-	for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-	  {
-	    foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
-	      {
-		bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-		//bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
-	      }
-	  }
-
+        normalize_as_pool(all_read_groups);
     }
     
-    if (!(most_reps == 1 && poisson_dispersion == false) && (use_quartile_norm || use_geometric_norm))
+    if (most_reps != 1 && (use_quartile_norm || use_geometric_norm))
     {
         vector<LocusCountList> sample_count_table;
         
@@ -1114,19 +1119,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             {
                 total += sample_count_table[i].counts[j];
             }
-            fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+            //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
         }
-                    
-        
-        // don't mess with the mass scale factors - those should be normalized
-        // within a condition so we don't skew the deconvolution towards one 
-        // replicate.
-        
-        //        for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
-        //        {
-        //            shared_ptr<ReadGroupProperties> rg = all_read_groups[fac_idx];
-        //            rg->internal_scale_factor(scale_factors[fac_idx]);
-        //        }
         
         if (use_quartile_norm)
         {
@@ -1155,12 +1149,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 upper_quartiles[fac_idx] = upper_quart_count;
                 total_common_masses[fac_idx] = total_common;
             }
-            //            
-            //            foreach (shared_ptr<ReadGroupProperties> rg, all_read_groups)
-            //            {
-            //                total_mass += rg->total_map_mass();
-            //                total_norm_mass += rg->normalized_map_mass();
-            //            }
             
             long double total_mass = accumulate(total_common_masses.begin(), total_common_masses.end(), 0.0);
             long double total_norm_mass = accumulate(upper_quartiles.begin(), upper_quartiles.end(), 0.0);
@@ -1205,17 +1193,28 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
                 {
                     bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-                    //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
                 }
-                //rg->normalized_map_mass(scale_factors[fac_idx])
             }
-        }   
-        // keep the per-condition, internally scaled dispersion models.
-        //        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-        //        {
-        //            fac->fit_dispersion_model();
-        //        }
+        }  
         
+        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+        {
+            // for now, "borrow" the dispersion model for the condition with the most replicates
+            size_t borrowed_disp_model_idx = most_reps_idx;
+            if (fac->num_replicates() == 1)
+            {
+                fac->mass_dispersion_model(bundle_factories[most_reps_idx]->mass_dispersion_model());
+                foreach(shared_ptr<BundleFactory> bf, fac->factories())
+                {
+                    // we don't need to set the normalized map mass, because that's been done above
+                    // but we do need to adjust the scaling factors so that the FPKMs aren't skewed
+                    // and the variance function from the dispersion model is correct.
+                    //bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
+                    bf->read_group_properties()->internal_scaling_factor(bf);
+                    bf->read_group_properties()->external_scaling_factor(1.0);
+                }
+            }
+        }
     }
     else if (use_raw_mapped_norm)
     {
@@ -1224,21 +1223,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         // on a per condition basis.  External scale factors are set to 1.0 
         // by default
     }
-    else
-    {
-        assert(false);
-    }
-    
-    if (most_reps != 1 && poisson_dispersion == false)
-    {
-        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-        {
-            if (fac->num_replicates() == 1)
-            {
-                fac->mass_dispersion_model(bundle_factories[most_reps_idx]->mass_dispersion_model());
-            }
-        }
-    }
+
 
 //    if (use_quartile_norm || use_raw_mapped_norm)
 //    {

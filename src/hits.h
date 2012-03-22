@@ -1000,7 +1000,7 @@ public:
 	double internal_scale_mass() const
 	{
        	double m = mass();
-        m *= _rg_props->internal_scale_factor();
+        m *= 1.0 / _rg_props->internal_scale_factor();
         
         return m;
 	}

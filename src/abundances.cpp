@@ -543,7 +543,7 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
         // can compare between conditions, rather than just between replicates
         // of this condition.
         double scaled_mass = itr->second;
-        double scaled_total_mass = rg_props->internally_scale_mass(rg_props->normalized_map_mass());
+        double scaled_total_mass = rg_props->normalized_map_mass();
         avg_X_g += scaled_mass;
         shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
         for (size_t j = 0; j < N; ++j)
@@ -1036,8 +1036,7 @@ bool estimate_count_variance(long double& variance,
                              double psi_t_count_var, 
                              double X_g, 
                              double V_X_g_t,
-                             double l_t,
-                             double M)
+                             double l_t)
 {
     if (l_t == 0)
     {
@@ -1469,8 +1468,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
                                                    _iterated_exp_count_covariance(i,i),
                                                    num_fragments(),
                                                    _abundances[i]->mass_variance(),
-                                                   _abundances[i]->effective_length(),
-                                                   num_fragments()/mass_fraction());
+                                                   _abundances[i]->effective_length());
         if (numerics_ok&& _count_covariance(i,i) < ceil(count_var))
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
@@ -1541,8 +1539,7 @@ void AbundanceGroup::estimate_count_covariance()
                                                            _iterated_exp_count_covariance(j,j),
                                                            num_fragments(),
                                                            _abundances[j]->mass_variance(),
-                                                           _abundances[j]->effective_length(),
-                                                           num_fragments()/mass_fraction());
+                                                           _abundances[j]->effective_length());
                 if (numerics_ok == false)
                 {
                     _abundances[j]->status(NUMERIC_LOW_DATA);
