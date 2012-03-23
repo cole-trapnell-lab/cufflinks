@@ -1139,17 +1139,17 @@ void sample_worker(const RefSequenceTable& rt,
     bool perform_cds_analysis = final_est_run;
     bool perform_tss_analysis = final_est_run;
 
-    foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
-    {
-        if (s->annotated_tss_id() == "")
-        {
-            perform_tss_analysis = false;
-        }
-        if (s->annotated_protein_id() == "")
-        {
-            perform_cds_analysis = false;
-        }
-    }
+//    foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+//    {
+//        if (s->annotated_tss_id() == "")
+//        {
+//            perform_tss_analysis = false;
+//        }
+//        if (s->annotated_protein_id() == "")
+//        {
+//            perform_cds_analysis = false;
+//        }
+//    }
 
     sample_abundance_worker(boost::cref(locus_tag),
                             boost::ref(*abundance),
