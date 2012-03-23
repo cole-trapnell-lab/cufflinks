@@ -1205,16 +1205,17 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             if (fac->num_replicates() == 1)
             {
                 fac->mass_dispersion_model(bundle_factories[borrowed_disp_model_idx]->mass_dispersion_model());
-                double borrowed_size_factor = scale_factors[borrowed_disp_model_idx];
+                double borrowed_internal_size_factor = scale_factors[borrowed_disp_model_idx];
+                double borrowed_external_size_factor = scale_factors[borrowed_disp_model_idx];
                 double borrowed_norm_map_mass = bundle_factories[borrowed_disp_model_idx]->factories().front()->read_group_properties()->normalized_map_mass();
                 foreach(shared_ptr<BundleFactory> bf, fac->factories())
                 {
                     // we need to adjust the scaling factors so that the FPKMs aren't skewed
                     // and the variance function from the dispersion model is correct.
                     //bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-                    bf->read_group_properties()->internal_scale_factor(bf->read_group_properties()->external_scale_factor()/borrowed_size_factor);
+                    bf->read_group_properties()->internal_scale_factor(bf->read_group_properties()->external_scale_factor()/borrowed_internal_size_factor);
                     bf->read_group_properties()->normalized_map_mass(borrowed_norm_map_mass);
-                    bf->read_group_properties()->external_scale_factor(1.0);
+                    bf->read_group_properties()->external_scale_factor(borrowed_external_size_factor);
                 }
             }
         }
