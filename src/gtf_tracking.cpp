@@ -562,6 +562,10 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	         bool check_for_dups, int qfidx, const char* fname, bool only_multiexon) {
 	//>>>>> read all transcripts/features from a GTF/GFF3 file
 	//int imrna_counter=0;
+#ifdef HEAPROFILE
+    if (IsHeapProfilerRunning())
+      HeapProfilerDump("00");
+#endif
 	int loci_counter=0;
 	if (ref_data==NULL) ref_data=&seqdata;
 	bool isRefData=(&seqdata==ref_data);
@@ -571,14 +575,26 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	//            keepAttrs   mergeCloseExons   noExonAttrs
 	gffr->readAll(!isRefData,          true,        isRefData || gtf_tracking_largeScale);
 	//so it will read exon attributes only for low number of Cufflinks files
-	
+#ifdef HEAPROFILE
+    if (IsHeapProfilerRunning())
+      HeapProfilerDump("post_readAll");
+#endif
+
 	int d=parse_mRNAs(gffr->gflst, seqdata, isRefData, check_for_dups, qfidx,only_multiexon);
+#ifdef HEAPROFILE
+    if (IsHeapProfilerRunning())
+      HeapProfilerDump("post_parse_mRNAs");
+#endif
 	if (gtf_tracking_verbose && d>0) {
 	  if (isRefData) GMessage(" %d duplicate reference transcripts discarded.\n",d);
 	            else GMessage(" %d redundant cufflinks transfrags discarded.\n",d);
 	  }
 	//imrna_counter=gffr->mrnas.Count();
 	delete gffr; //free the extra memory and unused GffObjs
+#ifdef HEAPROFILE
+    if (IsHeapProfilerRunning())
+      HeapProfilerDump("post_del_gffr");
+#endif
 	
 	//for each genomic sequence, cluster transcripts
 	int discarded=0;
@@ -627,6 +643,10 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 		if (gtf_tracking_verbose) GMessage("Found %d transcripts with undetermined strand.\n", discarded);
 	}
 	else { if (fdis!=NULL) remove(s.chars()); }
+#ifdef HEAPROFILE
+    if (IsHeapProfilerRunning())
+      HeapProfilerDump("post_cluster");
+#endif
 }
 
 int qsearch_mrnas(uint x, GList<GffObj>& mrnas) {

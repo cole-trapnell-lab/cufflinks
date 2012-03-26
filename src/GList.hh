@@ -45,9 +45,9 @@ template <class OBJ> class GVec {
     int fCount;
     int fCapacity;
   public:
-    GVec(int init_capacity=20);
+    GVec(int init_capacity=2);
     GVec(GVec<OBJ>& array); //copy constructor
-    const GVec<OBJ>& operator=(GVec& array); //copy operator
+    const GVec<OBJ>& operator=(GVec<OBJ>& array); //copy operator
     virtual ~GVec();
     void idxInsert(int idx, OBJ& item);
     void Grow();
@@ -106,7 +106,7 @@ template <class OBJ> class GArray:public GVec<OBJ> {
     GArray(bool sorted, bool unique=false);
     GArray(int init_capacity, bool sorted, bool unique=false);
     GArray(GArray<OBJ>& array); //copy constructor
-    const GArray<OBJ>& operator=(GArray& array);
+    const GArray<OBJ>& operator=(GArray<OBJ>& array);
     //~GArray();
     //assignment operator
     void setSorted(CompareProc* cmpFunc);
@@ -150,10 +150,10 @@ template <class OBJ> class GPVec {
       delete (OBJ*)item;
       }
     virtual ~GPVec();
-    GPVec(int init_capacity=10, bool free_elements=true); //also the default constructor
+    GPVec(int init_capacity=2, bool free_elements=true); //also the default constructor
     GPVec(GPVec<OBJ>& list); //copy constructor?
     GPVec(GPVec<OBJ>* list); //kind of a copy constructor
-    const GPVec<OBJ>& operator=(GPVec& list);
+    const GPVec<OBJ>& operator=(GPVec<OBJ>& list);
     OBJ* Get(int i);
     OBJ* operator[](int i) { return this->Get(i); }
     void Reverse(); //reverse pointer array; WARNING: will break the sort order if sorted!
@@ -212,7 +212,7 @@ template <class OBJ> class GList:public GPVec<OBJ> {
     GList(int init_capacity, bool sorted, bool free_elements=true, bool beUnique=false);
     GList(GList<OBJ>& list); //copy constructor?
     GList(GList<OBJ>* list); //kind of a copy constructor
-    const GList<OBJ>& operator=(GList& list);
+    const GList<OBJ>& operator=(GList<OBJ>& list);
     //void Clear();
     //~GList();
     void setSorted(GCompareProc* compareProc);
@@ -448,10 +448,13 @@ template <class OBJ> void GArray<OBJ>::setSorted(CompareProc* cmpFunc) {
 
 template <class OBJ> void GVec<OBJ>::Grow() {
  int delta;
- if (fCapacity > 64) delta = fCapacity/4;
-   else if (fCapacity > 8) delta = 16;
-                      else delta = 4;
-  setCapacity(fCapacity + delta);
+ if (fCapacity > 64 ) {
+   delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
+ }
+ else {
+   delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
+ }
+ setCapacity(fCapacity + delta);
 }
 
 template <class OBJ> void GVec<OBJ>::Reverse() {
@@ -467,9 +470,17 @@ template <class OBJ> void GVec<OBJ>::Reverse() {
 
 template <class OBJ> void GVec<OBJ>::Grow(int idx, OBJ& item) {
  int delta;
+ /*
  if (fCapacity > 64) delta = fCapacity/4;
    else if (fCapacity > 8) delta = 16;
                       else delta = 4;
+ */
+ if (fCapacity > 64 ) {
+   delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
+ }
+ else {
+   delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
+ }
  int NewCapacity=fCapacity+delta;
   if (NewCapacity <= fCount || NewCapacity >= MAXLISTSIZE)
     GError(SLISTCAPACITY_ERR, NewCapacity);
@@ -992,17 +1003,23 @@ template <class OBJ> void GList<OBJ>::setSorted(GCompareProc* compareProc) {
 
 template <class OBJ> void GPVec<OBJ>::Grow() {
  int delta;
- if (fCapacity > 64) delta = fCapacity/4;
-   else if (fCapacity > 8) delta = 16;
-                      else delta = 4;
+ if (fCapacity > 64 ) {
+   delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
+ }
+ else {
+   delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
+ }
   setCapacity(fCapacity + delta);
 }
 
 template <class OBJ> void GPVec<OBJ>::Grow(int idx, OBJ* newitem) {
  int delta;
- if (fCapacity > 64) delta = fCapacity/4;
-   else if (fCapacity > 8) delta = 16;
-                      else delta = 4;
+ if (fCapacity > 64 ) {
+   delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
+ }
+ else {
+   delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
+ }
  // setCapacity(fCapacity + delta);
  int NewCapacity=fCapacity+delta;
   if (NewCapacity <= fCount || NewCapacity > MAXLISTSIZE)

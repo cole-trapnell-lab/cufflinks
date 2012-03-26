@@ -5,6 +5,7 @@
 #ifndef GHash_HH
 #define GHash_HH
 #include "GBase.h"
+
 /**
 * This class maintains a fast-access hash table of entities
 * indexed by a character string (essentially, maps strings to pointers)
@@ -132,7 +133,9 @@ public:
 // Construct empty hash
 template <class OBJ> GHash<OBJ>::GHash(GFreeProc* freeProc) {
   GMALLOC(hash, sizeof(GHashEntry)*DEF_HASH_SIZE);
+  fCurrentEntry=-1;
   fFreeProc=freeProc;
+  lastkeyptr=NULL;
   for (uint i=0; i<DEF_HASH_SIZE; i++)
          hash[i].hash=-1; //this will be an indicator for 'empty' entries
   fCapacity=DEF_HASH_SIZE;
@@ -141,6 +144,8 @@ template <class OBJ> GHash<OBJ>::GHash(GFreeProc* freeProc) {
 
 template <class OBJ> GHash<OBJ>::GHash(bool doFree) {
   GMALLOC(hash, sizeof(GHashEntry)*DEF_HASH_SIZE);
+  fCurrentEntry=-1;
+  lastkeyptr=NULL;
   fFreeProc = (doFree)?&DefaultFreeProc : NULL;
   for (uint i=0; i<DEF_HASH_SIZE; i++)
          hash[i].hash=-1; //this will be an indicator for 'empty' entries

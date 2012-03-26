@@ -97,7 +97,7 @@ class GStr {
         GStr& tr(const char* from, const char* to=NULL);
         //number of occurences of a char in the string:
         int count(char c);
-        void startTokenize(const char* delimiter, enTokenizeMode tokenizemode=tkCharSet);
+        void startTokenize(const char* delimiter=" \t\n", enTokenizeMode tokenizemode=tkCharSet);
         bool nextToken(GStr& token);
         int asInt(int base=10);
         double asReal();

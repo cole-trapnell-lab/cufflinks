@@ -17,7 +17,7 @@ const uint gfo_flag_HAS_ERRORS       = 0x00000001;
 const uint gfo_flag_CHILDREN_PROMOTED= 0x00000002;
 const uint gfo_flag_IS_GENE          = 0x00000004;
 const uint gfo_flag_IS_TRANSCRIPT    = 0x00000008;
-const uint gfo_flag_FROM_GFF3        = 0x00000010;
+const uint gfo_flag_HAS_GFF_ID       = 0x00000010; //found GFF3 feature line with its own ID
 const uint gfo_flag_BY_EXON          = 0x00000020; //created by subfeature (exon) directly
 const uint gfo_flag_DISCARDED        = 0x00000100;
 const uint gfo_flag_LST_KEEP         = 0x00000200;
@@ -786,9 +786,9 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
   isCDS=gffline->is_cds; //for now
   isGene(gffline->is_gene);
   isTranscript(gffline->is_transcript || gffline->exontype!=0);
-  fromGff3(gffline->is_gff3);
+  //fromGff3(gffline->is_gff3);
 
-  if (gffline->parents!=NULL) {
+  if (gffline->parents!=NULL && !gffline->is_transcript) {
     //GTF style -- create a GffObj directly by subfeature
     //(also possible orphan GFF3 exon line, or an exon given before its parent (chado))
     if (gffline->exontype!=0) { //recognized exon-like feature
@@ -799,13 +799,13 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
        //make this GffObj of the same feature type
        ftype_id=names->feats.addName(gffline->ftype);
        }
-    if (gffline->ID==NULL) { //typical GTF
+    if (gffline->ID==NULL) { //typical GTF2 without "transcript" line
         gffID=Gstrdup(gffline->parents[0]);
         this->createdByExon(true);
         //this is likely the first exon/segment of the feature
         addExon(gfrd, gffline, keepAttr, noExonAttr);
         }
-      else { //a parented feature with an ID -- probably an orphan GFF3 line
+      else { //a parented feature with an ID: orphan or premature GFF3 subfeature line
         if (gffline->is_gff3 && gffline->exontype!=0) {
              //premature exon given before its parent transcript
              //create the transcript entry here
@@ -814,35 +814,41 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
              //this is the first exon/segment of the transcript
              addExon(gfrd, gffline, keepAttr, noExonAttr);
              }
-            else { //unrecognized non-exon feature ? use the ID instead
+        else { //unrecognized non-exon feature ? use the ID instead
+             this->hasGffID(true);
              gffID=Gstrdup(gffline->ID);
              if (keepAttr) this->parseAttrs(attrs, gffline->info);
              }
         }
-    } //subfeature given directly
-  else { //gffline->parents==NULL
+    } //non-transcript parented subfeature given directly
+  else {
+	//non-parented feature OR a recognizable transcript
     //create a parent feature in its own right
     gscore=gffline->score;
     if (gffline->ID==NULL || gffline->ID[0]==0)
       GError("Error: no ID found for GFF record start\n");
+    this->hasGffID(true);
     gffID=Gstrdup(gffline->ID); //there must be an ID here
     //if (gffline->is_transcript) ftype_id=gff_fid_mRNA;
       //else
     ftype_id=names->feats.addName(gffline->ftype);
     if (gffline->is_transcript)
       exon_ftype_id=gff_fid_exon;
-
     if (keepAttr) this->parseAttrs(attrs, gffline->info);
     }//no parent
 
   if (gffline->gene_name!=NULL) {
      gene_name=Gstrdup(gffline->gene_name);
      }
-  if (gffline->gene_id!=NULL) {
+  if (gffline->gene_id) {
      geneID=Gstrdup(gffline->gene_id);
      }
+  else if (gffline->is_transcript && gffline->parents) {
+	 geneID=Gstrdup(gffline->parents[0]);
+     }
 
-  GSeqStat* gsd=gfrd->gseqstats.AddIfNew(new GSeqStat(gseq_id,names->gseqs.lastNameUsed()),true);
+  //GSeqStat* gsd=gfrd->gseqstats.AddIfNew(new GSeqStat(gseq_id,names->gseqs.lastNameUsed()),true);
+  GSeqStat* gsd=gfrd->gseqstats.AddIfNew(new GSeqStat(gseq_id,gffline->gseqname), true);
   uptr=gsd;
   if (start<gsd->mincoord) gsd->mincoord=start;
   if (end>gsd->maxcoord) gsd->maxcoord=end;
@@ -882,6 +888,7 @@ GffLine* GffReader::nextGffLine() {
 return gffline;
 }
 
+
 char* GffReader::gfoBuildId(const char* id, const char* ctg) {
 //caller must free the returned pointer
  char* buf=NULL;
@@ -892,27 +899,54 @@ char* GffReader::gfoBuildId(const char* id, const char* ctg) {
  strcpy(buf+idlen+1, ctg);
  return buf;
 }
-
+/*
 void GffReader::gfoRemove(const char* id, const char* ctg) {
  char* buf=gfoBuildId(id,ctg);
  phash.Remove(buf);
  GFREE(buf);
 }
-
-//Warning: if gflst gets altered, idx becomes obsolete
-GfoHolder* GffReader::gfoAdd(const char* id, const char* ctg, GffObj* gfo, int idx) {
- char* buf=gfoBuildId(id,ctg);
- GfoHolder* r=new GfoHolder(gfo,idx);
- phash.Add(buf, r);
- GFREE(buf);
- return r;
+*/
+GfoHolder* GffReader::gfoAdd(GffObj* gfo, int idx) {
+ //Warning: if gflst gets altered, idx becomes obsolete
+ GVec<GfoHolder>* glst=phash.Find(gfo->gffID);
+ if (glst==NULL)
+	 glst=new GVec<GfoHolder>(1);
+ GfoHolder gh(gfo,idx);
+ int i=glst->Add(gh);
+ phash.Add(gfo->gffID, glst);
+ return &(glst->Get(i));
 }
 
-GfoHolder* GffReader::gfoFind(const char* id, const char* ctg) {
- char* buf=gfoBuildId(id,ctg);
- GfoHolder* r=phash.Find(buf);
- GFREE(buf);
- return r;
+GfoHolder* GffReader::gfoAdd(GVec<GfoHolder>& glst, GffObj* gfo, int idx) {
+ GfoHolder gh(gfo,idx);
+ int i=glst.Add(gh);
+ return &(glst[i]);
+}
+
+GfoHolder* GffReader::gfoFind(const char* id, const char* ctg,
+	            GVec<GfoHolder>** glst, char strand, uint start, uint end) {
+ GVec<GfoHolder>* gl=phash.Find(id);
+ GfoHolder* gh=NULL;
+ if (gl) {
+   for (int i=0;i<gl->Count();i++) {
+      GfoHolder& gfo = gl->Get(i);
+      if (ctg!=NULL && strcmp(ctg, gfo.gffobj->getGSeqName())!=0)
+           continue;
+      if (strand && gfo.gffobj->strand!='.' && strand != gfo.gffobj->strand)
+           continue;
+      if (start>0) {
+    	   if (abs((int)start-(int)gfo.gffobj->start)>GFF_MAX_LOCUS)
+               continue;
+           if (end>0 && (gfo.gffobj->start>end || gfo.gffobj->end<start))
+        	   continue;
+           }
+      //must be the same transcript, according to given comparison criteria
+      gh=&gfo;
+      break;
+      }
+   }
+ if (glst) *glst=gl;
+ return gh;
 }
 
 GfoHolder* GffReader::replaceGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr, int replaceidx) {
@@ -920,22 +954,24 @@ GfoHolder* GffReader::replaceGffRec(GffLine* gffline, bool keepAttr, bool noExon
   GfoHolder* r=NULL;
   if (replaceidx>=0) {
      gflst.Put(replaceidx,newgfo);
-     r=gfoAdd(newgfo->gffID, gffline->gseqname, newgfo, replaceidx);
+     r=gfoAdd(newgfo, replaceidx);
      }
    else {
      int gfoidx=gflst.Add(newgfo);
-     r=gfoAdd(newgfo->gffID, gffline->gseqname, newgfo, gfoidx);
+     r=gfoAdd(newgfo, gfoidx);
      }
+  /*
   if (gff_warns) {
     int* pcount=tids.Find(newgfo->gffID);
     if (pcount!=NULL) {
-       if (gff_warns) GMessage("Warning: duplicate GFF ID: %s\n", newgfo->gffID);
+      if (gff_warns) GMessage("Warning: duplicate GFF ID: %s\n", newgfo->gffID);
        (*pcount)++;
        }
      else {
        tids.Add(newgfo->gffID,new int(1));
        }
     }
+   */
   return r;
 }
 
@@ -956,15 +992,16 @@ GfoHolder* GffReader::updateParent(GfoHolder* newgfh, GffObj* parent) {
 }
 
 GfoHolder* GffReader::newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr,
-                          GffObj* parent, GffExon* pexon) {
+                          GffObj* parent, GffExon* pexon, GVec<GfoHolder>* glst) {
   GffObj* newgfo=new GffObj(this, gffline, keepAttr, noExonAttr);
   GfoHolder* r=NULL;
   int gfoidx=gflst.Add(newgfo);
-  r=gfoAdd(newgfo->gffID, gffline->gseqname, newgfo, gfoidx);
+  r=(glst) ? gfoAdd(*glst, newgfo, gfoidx) : gfoAdd(newgfo, gfoidx);
   if (parent!=NULL) {
     updateParent(r, parent);
     if (pexon!=NULL) parent->removeExon(pexon);
     }
+  /*
   if (gff_warns) {
     int* pcount=tids.Find(newgfo->gffID);
     if (pcount!=NULL) {
@@ -975,19 +1012,20 @@ GfoHolder* GffReader::newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr
        tids.Add(newgfo->gffID,new int(1));
        }
     }
+  */
   return r;
 }
 
 GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline, 
                                          bool keepAttr) {
  if (prevgfo==NULL) return NULL;
- prevgfo->gffobj->createdByExon(false);
+ //prevgfo->gffobj->createdByExon(false);
  prevgfo->gffobj->ftype_id=prevgfo->gffobj->names->feats.addName(gffline->ftype);
  prevgfo->gffobj->start=gffline->fstart;
  prevgfo->gffobj->end=gffline->fend;
  prevgfo->gffobj->isGene(gffline->is_gene);
  prevgfo->gffobj->isTranscript(gffline->is_transcript || gffline->exontype!=0);
- prevgfo->gffobj->fromGff3(gffline->is_gff3);
+ prevgfo->gffobj->hasGffID(gffline->ID!=NULL);
  if (keepAttr) {
    if (prevgfo->gffobj->attrs!=NULL) prevgfo->gffobj->attrs->Clear();
    prevgfo->gffobj->parseAttrs(prevgfo->gffobj->attrs, gffline->info);
@@ -999,8 +1037,8 @@ GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline,
 bool GffReader::addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr) {
   bool r=true;
   if (gffline->strand!=prevgfo->gffobj->strand) {
-  //TODO: add support for trans-splicing and even inter-chromosomal fusions
-     if (prevgfo->gffobj->strand=='.') {
+     //TODO: add support for trans-splicing and even inter-chromosomal fusions
+        if (prevgfo->gffobj->strand=='.') {
             prevgfo->gffobj->strand=gffline->strand;
         }
      else {
@@ -1064,39 +1102,70 @@ GfoHolder* GffReader::promoteFeature(CNonExon* subp, char*& subp_name, GHash<CNo
 }
 
 //have to parse the whole file because exons can be scattered all over
+//trans-splicing and fusions are only accepted in proper GFF3 format, with a single parent feature ID entry
 void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
   bool validation_errors = false;
   //loc_debug=false;
   GHash<CNonExon> pex; //keep track of any "exon"-like features that have an ID
                      //and thus could become promoted to parent features
   while (nextGffLine()!=NULL) {
-       //seen this gff ID before?
      GfoHolder* prevseen=NULL;
-     if (gffline->ID) //GFF3
-         prevseen=gfoFind(gffline->ID, gffline->gseqname);
-     if (prevseen!=NULL) {
-            if (prevseen->gffobj->createdByExon()) {
-                updateGffRec(prevseen, gffline, keepAttr);
-                }
-             else {
-                GMessage("Error: duplicate GFF ID '%s' encountered!\n",gffline->ID);
-                validation_errors = true;
-                if (gff_warns) { 
-                       delete gffline; gffline=NULL; continue;
-                       }
-                   else exit(1);
-                }
-            }
+     GVec<GfoHolder>* prevgflst=NULL;
+     if (gffline->ID && gffline->exontype==0) {
+	 //>> for a parent-like IDed feature (mRNA, gene, etc.)
+		 //look for same ID on the same chromosome/strand/locus
+		 prevseen=gfoFind(gffline->ID, gffline->gseqname, &prevgflst, gffline->strand, gffline->fstart);
+		 if (prevseen!=NULL) {
+				//same ID/chromosome combo encountered before
+				if (prevseen->gffobj->createdByExon() &&
+					  prevseen->gffobj->start>=gffline->fstart &&
+					  prevseen->gffobj->end<=gffline->fend) {
+					//an exon of this ID was given before
+					//this line has the main attributes for this ID
+					updateGffRec(prevseen, gffline, keepAttr);
+					}
+				 else {
+					//- duplicate ID -- this must be a discontiguous feature
+				   //   e.g. a trans-spliced transcript
+				   if (prevseen->gffobj->overlap(gffline->fstart, gffline->fend)) {
+					  //overlapping with same ID not allowed
+					 GMessage("Error: duplicate GFF ID '%s' encountered!\n",gffline->ID);
+					 //validation_errors = true;
+					 if (gff_warns) {
+					 	   delete gffline;
+					 	   gffline=NULL;
+					 	   continue;
+					 	   }
+					 else exit(1);
+				     }
+				    //create a new entry with the same ID
+                    prevseen=newGffRec(gffline, keepAttr, noExonAttr,
+                    	    prevseen->gffobj->parent, NULL, prevgflst);
+					} //duplicate ID on the same chromosome
+				} //prevseeen != NULL
+        } //parent-like ID feature
     if (gffline->parents==NULL) {//start GFF3-like record with no parent (mRNA, gene)
-       if (!prevseen) newGffRec(gffline, keepAttr, noExonAttr);
+       if (!prevseen) newGffRec(gffline, keepAttr, noExonAttr, NULL, NULL, prevgflst);
        }
-    else { //--- it's a parented feature (could still be a mRNA)
+    else { //--- it's a child feature (exon/CDS but could still be a mRNA with gene(s) as parent)
+       //updates all the declared parents with this child
        bool found_parent=false;
        GfoHolder* newgfo=prevseen;
+       GVec<GfoHolder>* newgflst=NULL;
        for (int i=0;i<gffline->num_parents;i++) {
             if (transcriptsOnly && discarded_ids.Find(gffline->parents[i])!=NULL)
                 continue; //skipping discarded parent feature
-            GfoHolder* parentgfo=gfoFind(gffline->parents[i], gffline->gseqname);
+            GfoHolder* parentgfo=NULL;
+            if (gffline->is_transcript || gffline->exontype==0) {//possibly a transcript
+               parentgfo=gfoFind(gffline->parents[i], gffline->gseqname,
+                                    &newgflst, gffline->strand, gffline->fstart, gffline->fend);
+               }
+            else {
+               //for exon-like entities we only need a parent to be in locus distance,
+               //on the same strand
+               parentgfo=gfoFind(gffline->parents[i], gffline->gseqname,
+                                     &newgflst, gffline->strand, gffline->fstart);
+               }
             if (parentgfo!=NULL) { //parent GffObj parsed earlier
                    found_parent=true;
                    if (parentgfo->gffobj->isGene() && gffline->is_transcript
@@ -1113,10 +1182,10 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
                        if (!addExonFeature(parentgfo, gffline, pex, noExonAttr))
                          validation_errors=true;
                        }
-                   }
+                   } //overlapping parent feature found
             } //for each parsed parent Id
        if (!found_parent) { //new GTF-like record starting here with a subfeature directly
-             //or it could be some chado GFF3 barf with exons declared BEFORE their parent :(
+             //or it could be some chado GFF3 barf with exons coming BEFORE their parent :(
             //check if this feature isn't parented by a previously stored "exon" subfeature
             char* subp_name=NULL;
             CNonExon* subp=subfPoolCheck(gffline, pex, subp_name);
@@ -1127,11 +1196,17 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
                if (!addExonFeature(gfoh, gffline, pex, noExonAttr))
                       validation_errors=true;
                }
-              else { //no parent seen before, create one directly with this exon
+              else { //no parent seen before,
                //loc_debug=true;
-               GfoHolder* newgfo=prevseen ? prevseen : newGffRec(gffline, keepAttr, noExonAttr);
-               if (gffline->ID!=NULL && gffline->exontype==0)
-                     subfPoolAdd(pex, newgfo);
+               GfoHolder* ngfo=prevseen;
+               if (ngfo==NULL) {
+                   //if it's an exon type, create directly the parent with this exon
+            	   //but if it's recognized as a transcript, the object itself is created
+            	   ngfo=newGffRec(gffline, keepAttr, noExonAttr, NULL, NULL, newgflst);
+                   }
+               if (!ngfo->gffobj->isTranscript() &&
+            	     gffline->ID!=NULL && gffline->exontype==0)
+                     subfPoolAdd(pex, ngfo);
                //even those with errors will be added here!
                }
             GFREE(subp_name);
@@ -1145,7 +1220,7 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
  // all gff records are now loaded in GList gflst
  // so we can free the hash
   phash.Clear();
-  tids.Clear();
+  //tids.Clear();
   if (validation_errors) {
     exit(1);
     }
@@ -1164,37 +1239,41 @@ GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons, bool keepAttrs, b
     ftype_id=gff_fid_mRNA;
     //exon_ftype_id=gff_fid_exon;
     }
- //if (ftype_id==gff_fid_mRNA || exon_ftype_id==gff_fid_exon || mergeCloseExons) {
- if (isTranscript() || exon_ftype_id==gff_fid_exon || mergeCloseExons) {
-   int mindist=mergeCloseExons ? 5:1;
-   for (int i=0;i<exons.Count()-1;i++) {
-     int ni=i+1;
-     uint mend=exons[i]->end;
-     while (ni<exons.Count()) {
-       int dist=(int)(exons[ni]->start-mend);
-       if (dist>mindist) break; //no merging with next segment
-       if (gfr!=NULL && gfr->gff_warns && dist!=0 && (exons[ni]->exontype!=exgffUTR && exons[i]->exontype!=exgffUTR)) {
-          GMessage("GFF warning: merging adjacent/overlapping segments of %s on %s (%d-%d, %d-%d)\n",
-               gffID, getGSeqName(), exons[i]->start, exons[i]->end,exons[ni]->start, exons[ni]->end);
-          }
-       mend=exons[ni]->end;
-       covlen-=exons[i]->len();
-       exons[i]->end=mend;
-       covlen+=exons[i]->len();
-       covlen-=exons[ni]->len();
-       if (exons[ni]->attrs!=NULL && (exons[i]->attrs==NULL || 
-            exons[i]->attrs->Count()<exons[ni]->attrs->Count())) {
-              //use the other exon attributes, if more
-              delete(exons[i]->attrs);
-              exons[i]->attrs=exons[ni]->attrs;
-              exons[ni]->attrs=NULL;
-              }
-       exons.Delete(ni);
-       } //check for merge with next exon
+ if (exons.Count()>0 && (isTranscript() || exon_ftype_id==gff_fid_exon)) {
+   if (mergeCloseExons) {
+     int mindist=mergeCloseExons ? 5:1;
+     for (int i=0;i<exons.Count()-1;i++) {
+       int ni=i+1;
+       uint mend=exons[i]->end;
+       while (ni<exons.Count()) {
+         int dist=(int)(exons[ni]->start-mend);
+         if (dist>mindist) break; //no merging with next segment
+         if (gfr!=NULL && gfr->gff_warns && dist!=0 && (exons[ni]->exontype!=exgffUTR && exons[i]->exontype!=exgffUTR)) {
+            GMessage("GFF warning: merging adjacent/overlapping segments of %s on %s (%d-%d, %d-%d)\n",
+                 gffID, getGSeqName(), exons[i]->start, exons[i]->end,exons[ni]->start, exons[ni]->end);
+            }
+         mend=exons[ni]->end;
+         covlen-=exons[i]->len();
+         exons[i]->end=mend;
+         covlen+=exons[i]->len();
+         covlen-=exons[ni]->len();
+         if (exons[ni]->attrs!=NULL && (exons[i]->attrs==NULL ||
+              exons[i]->attrs->Count()<exons[ni]->attrs->Count())) {
+                //use the other exon attributes, if more
+                delete(exons[i]->attrs);
+                exons[i]->attrs=exons[ni]->attrs;
+                exons[ni]->attrs=NULL;
+                }
+         exons.Delete(ni);
+         } //check for merge with next exon
      } //for each exon
-   }
+   } //merge close exons
+   //shrink transcript to the exons' span
+   this->start=exons.First()->start;
+   this->end=exons.Last()->end;
+ }
  //attribute reduction for GTF records
- if (keepAttrs && !noExonAttr && !fromGff3() 
+ if (keepAttrs && !noExonAttr && !hasGffID()
           && exons.Count()>0 && exons[0]->attrs!=NULL) {
    bool attrs_discarded=false;
    for (int a=0;a<exons[0]->attrs->Count();a++) {

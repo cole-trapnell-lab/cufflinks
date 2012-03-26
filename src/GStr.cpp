@@ -106,29 +106,37 @@ bool operator>(const char *s1, const GStr& s2) {
 
 GStr::GStr():my_data(&null_data) {
  fTokenDelimiter=NULL;
+ fTokenizeMode=tkCharSet;
  fLastTokenStart=0;
  readbuf=NULL;
+ readbufsize=0;
  }
 
 GStr::GStr(const GStr& s): my_data(&null_data){
  fTokenDelimiter=NULL;
+ fTokenizeMode=tkCharSet;
  fLastTokenStart=0;
  readbuf=NULL;
+ readbufsize=0;
  replace_data(s.my_data);
  }
 
 GStr::GStr(const char *s): my_data(&null_data) {
   fTokenDelimiter=NULL;
+  fTokenizeMode=tkCharSet;
   fLastTokenStart=0;
   readbuf=NULL;
+  readbufsize=0;
   my_data=new_data(s);
   my_data->ref_count = 1;
  }
 
 GStr::GStr(const int i): my_data(&null_data) {
  fTokenDelimiter=NULL;
+ fTokenizeMode=tkCharSet;
  fLastTokenStart=0;
  readbuf=NULL;
+ readbufsize=0;
  char buf[20];
  sprintf(buf,"%d",i);
  const int len = ::strlen(buf);
@@ -138,8 +146,10 @@ GStr::GStr(const int i): my_data(&null_data) {
 
 GStr::GStr(const double f): my_data(&null_data) {
  fTokenDelimiter=NULL;
+ fTokenizeMode=tkCharSet;
  fLastTokenStart=0;
  readbuf=NULL;
+ readbufsize=0;
  char buf[20];
  sprintf(buf,"%f",f);
  const int len = ::strlen(buf);
@@ -149,8 +159,10 @@ GStr::GStr(const double f): my_data(&null_data) {
 
 GStr::GStr(char c, int n): my_data(&null_data) {
   fTokenDelimiter=NULL;
+  fTokenizeMode=tkCharSet;
   fLastTokenStart=0;
   readbuf=NULL;
+  readbufsize=0;
   replace_data(n); ::memset(chrs(), c, n);
   }
 
@@ -1089,8 +1101,10 @@ GStr GStr::splitr(char c) {
 
 void GStr::startTokenize(const char* delimiter, enTokenizeMode tokenizemode) {
  GFREE(fTokenDelimiter);
- GMALLOC(fTokenDelimiter,strlen(delimiter)+1);
- strcpy(fTokenDelimiter, delimiter);
+ if (delimiter) {
+    GMALLOC(fTokenDelimiter,strlen(delimiter)+1);
+    strcpy(fTokenDelimiter, delimiter);
+    }
  fLastTokenStart=0;
  fTokenizeMode=tokenizemode;
 }

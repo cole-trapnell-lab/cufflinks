@@ -25,6 +25,9 @@
   #define CHPATHSEP '\\'
   #undef off_t
   #define off_t int64_t
+  #ifndef popen
+   #define popen _popen
+  #endif
   #ifdef _fseeki64
     #define fseeko(stream, offset, origin) _fseeki64(stream, offset, origin)
   #else
@@ -61,6 +64,8 @@
 
 typedef int32_t int32;
 typedef uint32_t uint32;
+typedef int16_t int16;
+typedef uint16_t uint16;
 
 typedef unsigned char uchar;
 typedef unsigned char byte;
@@ -180,67 +185,6 @@ template<class T> void Gswap(T& lhs, T& rhs) {
  rhs=tmp;
 }
 
-/// bitCount_32 - this function counts the number of set bits in a value.
-/// Ex. CountPopulation(0xF000F000) = 8
-/// Returns 0 if the word is zero.
-inline uint bitCount_32(uint32_t Value) {
-#if __GNUC__ >= 4
-    return __builtin_popcount(Value);
-#else
-    uint32_t v = Value - ((Value >> 1) & 0x55555555);
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-#endif
-  }
-
-/// bitCount_64 - this function counts the number of set bits in a value,
-/// (64 bit edition.)
-inline uint bitCount_64(uint64_t Value) {
-#if __GNUC__ >= 4
-    return __builtin_popcountll(Value);
-#else
-    uint64_t v = Value - ((Value >> 1) & 0x5555555555555555ULL);
-    v = (v & 0x3333333333333333ULL) + ((v >> 2) & 0x3333333333333333ULL);
-    v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
-    return uint((uint64_t)(v * 0x0101010101010101ULL) >> 56);
-#endif
-  }
-
-/// CountTrailingZeros_32 - this function performs the platform optimal form of
-/// counting the number of zeros from the least significant bit to the first one
-/// bit.  Ex. CountTrailingZeros_32(0xFF00FF00) == 8.
-/// Returns 32 if the word is zero.
-inline unsigned bitCountTrailingZeros_32(uint32_t Value) {
-#if __GNUC__ >= 4
-  return Value ? __builtin_ctz(Value) : 32;
-#else
-  static const unsigned Mod37BitPosition[] = {
-    32, 0, 1, 26, 2, 23, 27, 0, 3, 16, 24, 30, 28, 11, 0, 13,
-    4, 7, 17, 0, 25, 22, 31, 15, 29, 10, 12, 6, 0, 21, 14, 9,
-    5, 20, 8, 19, 18
-  };
-  return Mod37BitPosition[(-Value & Value) % 37];
-#endif
-}
-
-// CountTrailingZeros_64 - This function performs the platform optimal form
-/// of counting the number of zeros from the least significant bit to the first
-/// one bit (64 bit edition.)
-/// Returns 64 if the word is zero.
-inline unsigned bitCountTrailingZeros_64(uint64_t Value) {
-#if __GNUC__ >= 4
-  return Value ? __builtin_ctzll(Value) : 64;
-#else
-  static const unsigned Mod67Position[] = {
-    64, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54,
-    4, 64, 13, 10, 17, 62, 60, 28, 42, 30, 20, 51, 25, 44, 55,
-    47, 5, 32, 65, 38, 14, 22, 11, 58, 18, 53, 63, 9, 61, 27,
-    29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36, 56,
-    7, 48, 35, 6, 34, 33, 0
-  };
-  return Mod67Position[(-Value & Value) % 67];
-#endif
-}
 
 /**************** Memory management ***************************/
 

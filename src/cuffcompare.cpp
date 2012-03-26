@@ -167,6 +167,11 @@ void show_usage() {
   }
 
 int main(int argc, char * const argv[]) {
+
+#ifdef HEAPROFILE
+  if (!IsHeapProfilerRunning())
+      HeapProfilerStart("./cuffcompare_dbg.hprof");
+#endif
   GArgs args(argc, argv, "XDTMNVGSCKRLhp:c:d:s:i:n:r:o:");
   int e;
   if ((e=args.isError())>0) {
@@ -213,6 +218,8 @@ int main(int argc, char * const argv[]) {
           numqryfiles=args.startNonOpt();
           char *infile=NULL;
           if (numqryfiles>0) {
+            if (numqryfiles>6) 
+               gtf_tracking_largeScale=true;
             while ((infile=args.nextNonOpt())!=NULL) {
               if (!fileExists(infile)) GError("Error: cannot locate input file: %s\n", infile);
               qryfiles.Add(new GStr(infile));
@@ -1503,8 +1510,6 @@ GSeqTrack* findGSeqTrack(int gsid) {
   return gseqtracks[fidx];
 }
 
-
-
 GffObj* findRefMatch(GffObj& m, GLocus& rloc, int& ovlen) {
  ovlen=0;
  CTData* mdata=((CTData*)m.uptr);
@@ -1857,7 +1862,7 @@ void printITrack(FILE* ft, GList<GffObj>& mrnas, int qcount, int& cnum) {
        tcons=mrnas[i];
        tmaxcov=tcons->covlen;
        }
-   if (qtdata->isEqHead()) {//head of a equivalency chain
+   if (qtdata->eqhead) {//head of a equivalency chain
       //check if all transcripts in this chain have the same ovlcode
       for (int k=0;k<qtdata->eqlist->Count();k++) {
          GffObj* m=qtdata->eqlist->Get(k);
@@ -1890,7 +1895,7 @@ void printITrack(FILE* ft, GList<GffObj>& mrnas, int qcount, int& cnum) {
    if (ovlcode==0 || ovlcode=='-') ovlcode = (ref==NULL) ? 'u' : '.';
    //-- print columns 1 and 2 as LOCUS_ID and TCONS_ID
    //bool chainHead=(qtdata->eqnext!=NULL && ((qtdata->eqdata & EQHEAD_TAG)!=0));
-   bool chainHead=qtdata->isEqHead();
+   bool chainHead=qtdata->eqhead;
    //bool noChain=((qtdata->eqdata & EQCHAIN_TAGMASK)==0);
    bool noChain=(eqchain==NULL);
    if (chainHead || noChain) {
@@ -1997,7 +2002,7 @@ void findTRMatch(GTrackLocus& loctrack, int qcount, GLocus& rloc) {
     GffObj* rmatch=NULL; //== ref match for this row
     int rovlen=0;
     //if (qtdata->eqnext!=NULL && ((qtdata->eqdata & EQHEAD_TAG)!=0)) { 
-    if (qtdata->isEqHead()) {
+    if (qtdata->eqhead) {
         //EQ chain head -- transfrag equivalency list starts here
         if (qtdata->eqref==NULL) { //find rloc overlap
            if (qt.overlap(rloc.start, rloc.end)) {

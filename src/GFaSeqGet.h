@@ -1,6 +1,5 @@
 #ifndef GFASEQGET_H
 #define GFASEQGET_H
-
 #include "GList.hh"
 
 #define MAX_FASUBSEQ 0x20000000

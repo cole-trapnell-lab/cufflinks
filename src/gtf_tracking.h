@@ -9,6 +9,10 @@
  *
  */
 
+#ifdef HEAPROFILE
+#include "gperftools/heap-profiler.h"
+#endif
+
 #include "gff.h"
 #include "GFaSeqGet.h"
 #include "GFastaIndex.h"
@@ -231,6 +235,7 @@ public:
 	GffObj* eqref; //ref transcript having an ichain match
 	int qset; //qry set index (qfidx), -1 means reference dataset
 	//GffObj* eqnext; //next GffObj in the linked list of matching transfrags
+	bool eqhead;
 	CEqList* eqlist; //keep track of matching transfrags
 	//int eqdata; // flags for EQ list (is it a list head?)
 	// Cufflinks specific data:
@@ -245,9 +250,8 @@ public:
 		locus=l;
 		classcode=0;
 		eqref=NULL;
-		//eqnext=NULL;
+		eqhead=false;
 		eqlist=NULL;
-		//eqdata=0;
 		qset=-2;
 		FPKM=0;
 		conf_lo=0;
@@ -258,41 +262,50 @@ public:
 	~CTData() {
 		ovls.Clear();
 		//if ((eqdata & EQHEAD_TAG)!=0) delete eqlist;
-		if (isEqHead()) delete eqlist;
+		//if (isEqHead()) delete eqlist;
+		if (eqhead) delete eqlist;
 	}
 
   //inline bool eqHead() { return ((eqdata & EQHEAD_TAG)!=0); }
-  bool isEqHead() { 
+ /*  bool isEqHead() {
       if (eqlist==NULL) return false;
       return (eqlist->head==this->mrna);
       }
-    
+  */
   void joinEqList(GffObj* m) { //add list from m
    //list head is set to the transfrag with the lower qset#
   CTData* md=(CTData*)(m->uptr);
   //ASSERT(md);
-  if (eqlist==NULL) {
-     if (md->eqlist!=NULL) {
+  if (eqlist==NULL) { //no eqlist yet for this node
+     if (md->eqlist!=NULL) { //m in an eqlist already
           eqlist=md->eqlist;
           eqlist->Add(this->mrna);
           CTData* md_head_d=(CTData*)(md->eqlist->head->uptr);
-          if (this->qset < md_head_d->qset)
+          if (this->qset < md_head_d->qset) {
                eqlist->head=this->mrna;
-          }
-        else { //m was not in an EQ list
-          //eqlist=new GList<GffObj>((GCompareProc*)cmpByPtr, (GFreeProc*)NULL, true);
+               eqhead=true;
+               md_head_d->eqhead=false;
+               }
+        }
+        else { //m was not in an EQ list either
           eqlist=new CEqList();
           eqlist->Add(this->mrna);
           eqlist->Add(m);
           md->eqlist=eqlist;
-          if (qset<md->qset) eqlist->head=this->mrna;
-                       else  eqlist->head=m;
+          if (qset<md->qset) {
+        	eqlist->head=this->mrna;
+        	eqhead=true;
           }
+          else  {
+        	eqlist->head=m;
+        	md->eqhead=true;
+          }
+        }
       }//no eqlist before
      else { //merge two eqlists
       if (eqlist==md->eqlist) //already in the same eqlist, nothing to do
          return;
-      if (md->eqlist!=NULL) { //copy elements of m's eqlist
+      if (md->eqlist!=NULL) {
         //copy the smaller list into the larger one
         CEqList* srclst, *destlst;
         if (md->eqlist->Count()<eqlist->Count()) {
@@ -307,23 +320,31 @@ public:
            destlst->Add(srclst->Get(i));
            CTData* od=(CTData*)((*srclst)[i]->uptr);
            od->eqlist=destlst;
-           //od->eqdata=od->qset+1;
            }
         this->eqlist=destlst;
         CTData* s_head_d=(CTData*)(srclst->head->uptr);
         CTData* d_head_d=(CTData*)(destlst->head->uptr);
-        if (s_head_d->qset < d_head_d->qset )
-             this->eqlist->head=srclst->head; 
-        delete srclst;
+        if (s_head_d->qset < d_head_d->qset ) {
+             this->eqlist->head=srclst->head;
+             s_head_d->eqhead=true;
+             d_head_d->eqhead=false;
         }
-       else { //md->eqlist==NULL
+        else {
+          s_head_d->eqhead=false;
+          d_head_d->eqhead=true;
+        }
+        delete srclst;
+      }
+      else { //md->eqlist==NULL
         eqlist->Add(m);
         md->eqlist=eqlist;
         CTData* head_d=(CTData*)(eqlist->head->uptr);
-        if (md->qset<head_d->qset)
-            eqlist->head=m;
+        if (md->qset<head_d->qset) {
+          eqlist->head=m;
+          md->eqhead=true;
         }
       }
+    }
   }
 
 	void addOvl(char code,GffObj* target=NULL, int ovlen=0) {
