@@ -1431,18 +1431,18 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     
     _count_covariance /= assigned_counts.size();
     
-    double total_counts = expected_counts.sum();
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        if (total_counts > 0)
-        {
-            _abundances[i]->gamma(expected_counts(i) / total_counts);
-        }
-        else
-        {
-            _abundances[i]->gamma(0);
-        }
-    }
+//    double total_counts = expected_counts.sum();
+//    for (size_t i = 0; i < _abundances.size(); ++i)
+//    {
+//        if (total_counts > 0)
+//        {
+//            _abundances[i]->gamma(expected_counts(i) / total_counts);
+//        }
+//        else
+//        {
+//            _abundances[i]->gamma(0);
+//        }
+//    }
     
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
