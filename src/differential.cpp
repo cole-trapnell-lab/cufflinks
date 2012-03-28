@@ -950,8 +950,11 @@ void sample_abundance_worker(const string& locus_tag,
             set<string> protein_ids = ab_group.protein_id();
             assert (protein_ids.size() == 1);
             string desc = *(protein_ids.begin()); 
-            assert (desc != "");
+            //if (desc != "")
+            //{
+                //assert (desc != "");
             ab_group.description(*(protein_ids.begin()));
+            //}
         }
         
         sample.cds = transcripts_by_cds;
@@ -1136,20 +1139,20 @@ void sample_worker(const RefSequenceTable& rt,
     
     abundance->locus_tag = locus_tag;
     
-    bool perform_cds_analysis = final_est_run;
-    bool perform_tss_analysis = final_est_run;
+    bool perform_cds_analysis = false;
+    bool perform_tss_analysis = false;
 
-//    foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
-//    {
-//        if (s->annotated_tss_id() == "")
-//        {
-//            perform_tss_analysis = false;
-//        }
-//        if (s->annotated_protein_id() == "")
-//        {
-//            perform_cds_analysis = false;
-//        }
-//    }
+    foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+    {
+        if (s->annotated_tss_id() != "")
+        {
+            perform_tss_analysis = final_est_run;
+        }
+        if (s->annotated_protein_id() != "")
+        {
+            perform_cds_analysis = final_est_run;
+        }
+    }
 
     sample_abundance_worker(boost::cref(locus_tag),
                             boost::ref(*abundance),

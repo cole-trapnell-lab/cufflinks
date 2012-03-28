@@ -1120,7 +1120,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             {
                 total += sample_count_table[i].counts[j];
             }
-            //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+            fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
         }
         
         if (use_quartile_norm)

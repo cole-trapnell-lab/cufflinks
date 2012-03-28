@@ -1100,7 +1100,8 @@ bool estimate_count_variance(long double& variance,
             beta = solve_beta(A,B,C);
             alpha = 1.0 - (A/(A-B)) * beta;
 
-            if (beta <= 2 || alpha <= 1)
+            //if (beta <= 2 || alpha <= 1)
+            if (alpha <= 2)
             {
                 //printf ("Warning: beta for is %Lg\n", beta);
                 numeric_ok = false;
