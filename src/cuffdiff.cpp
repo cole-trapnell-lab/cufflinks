@@ -812,7 +812,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
         {
             total += sample_count_table[i].counts[j];
         }
-        //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+        fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
     }
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
