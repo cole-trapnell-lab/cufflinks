@@ -1040,7 +1040,7 @@ bool estimate_count_variance(long double& variance,
 {
     if (l_t == 0)
     {
-        return 0;
+        return true;
     }
 
     long double A = X_g * gamma_t;
@@ -1469,7 +1469,12 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
                                                    num_fragments(),
                                                    _abundances[i]->mass_variance(),
                                                    _abundances[i]->effective_length());
-        if (numerics_ok&& _count_covariance(i,i) < ceil(count_var))
+        if (numerics_ok == false)
+        {
+            fprintf(stderr, "Warning: BNB has no analytic solution\n");
+        }
+        
+        if (numerics_ok && _count_covariance(i,i) < ceil(count_var))
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
             _count_covariance(i,i) = ceil(count_var);
