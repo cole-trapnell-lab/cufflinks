@@ -1469,10 +1469,10 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
                                                    num_fragments(),
                                                    _abundances[i]->mass_variance(),
                                                    _abundances[i]->effective_length());
-        if (numerics_ok == false)
-        {
-            fprintf(stderr, "Warning: BNB has no analytic solution\n");
-        }
+//        if (numerics_ok == false)
+//        {
+//            fprintf(stderr, "Warning: BNB has no analytic solution\n");
+//        }
         
         if (numerics_ok && _count_covariance(i,i) < ceil(count_var))
         {
@@ -2319,6 +2319,8 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
     }
     
     double total_var = 0.0;
+    
+    ublas::vector<double> expected_counts = ublas::zero_vector<double>(cond_probs.size());
 
     //iterate over fragments
     for (size_t i = 0; i < marg_cond_prob.size2(); ++i)
@@ -2328,6 +2330,8 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
         for (size_t j = 0; j < marg_cond_prob.size1(); ++j)
         {
             double c_j_i = marg_cond_prob(j,i);
+            
+            expected_counts(j) += u[i] * marg_cond_prob(j,i);
             
             //if (c_j_i == 0 || c_j_i == 1.0)
             //    continue;
@@ -2365,6 +2369,16 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
 
     }
         
+    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
+
+    if (total_counts > 0)   
+    {
+        for (size_t i = 0; i < transcripts.size(); ++i)
+        {
+            _abundances[i]->gamma(expected_counts(i) / total_counts);  
+        } 
+    }
+    
     _iterated_exp_count_covariance = count_covariance;
     
     // take care of little rounding errors
