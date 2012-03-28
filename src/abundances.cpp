@@ -925,15 +925,20 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     //non_equiv_alignments.clear();
 	//collapse_hits(alignments, nr_alignments);
     //This will also compute the transcript level FPKMs
+    
+    calculate_iterated_exp_count_covariance(non_equiv_alignments, transcripts);
+    
+    // Calculate the initial estimates for the number of fragments originating
+    // from each transcript, and set the NB variances
     calculate_locus_scaled_mass_and_variance(non_equiv_alignments, transcripts);  
     
+    // Simulate NB draws and fragment assignment under uncertainty to sample
+    // from the BNBs.
     simulate_count_covariance(non_equiv_alignments, transcripts);
-    
-    //calculate_iterated_exp_count_covariance(non_equiv_alignments, transcripts);
     
     // Refresh the variances to match the new gammas computed during iterated
     // expectation
-    calculate_locus_scaled_mass_and_variance(non_equiv_alignments, transcripts);  
+    // calculate_locus_scaled_mass_and_variance(non_equiv_alignments, transcripts);  
     
     
 	if(corr_multi && !final_est_run)
@@ -1224,9 +1229,6 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     
     vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
     vector<Eigen::VectorXd > generated_counts (num_count_draws, Eigen::VectorXd::Zero(_abundances.size()));
-    
-    calculate_iterated_exp_count_covariance(nr_alignments, transcripts);
-    
     
     for (size_t j = 0; j < _abundances.size(); ++j)
     {
