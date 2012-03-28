@@ -937,13 +937,27 @@ void sample_abundance_worker(const string& locus_tag,
         ublas::matrix<double> cds_iterated_exp_count_cov;
         ublas::matrix<double> cds_fpkm_cov;
         vector<Eigen::VectorXd> cds_assigned_counts;
-        cluster_transcripts<ConnectByAnnotatedProteinId>(sample.transcripts,
+        
+        vector<bool> mask(sample.transcripts.abundances().size(), true);
+        for (size_t i = 0; i < sample.transcripts.abundances().size(); ++i)
+        {
+            if (*(sample.transcripts.abundances()[i]->protein_id().begin()) == "")
+            {
+                mask[i] = false;
+            }
+        }
+        
+        AbundanceGroup trans_with_p_id; 
+        sample.transcripts.filter_group(mask, trans_with_p_id);
+        
+        cluster_transcripts<ConnectByAnnotatedProteinId>(trans_with_p_id,
                                                          transcripts_by_cds,
                                                          &cds_gamma_cov,
                                                          &cds_iterated_exp_count_cov,
                                                          &cds_count_cov,
                                                          &cds_fpkm_cov,
                                                          &cds_assigned_counts);
+        
         foreach(AbundanceGroup& ab_group, transcripts_by_cds)
         {
             ab_group.locus_tag(locus_tag);
@@ -952,7 +966,7 @@ void sample_abundance_worker(const string& locus_tag,
             string desc = *(protein_ids.begin()); 
             //if (desc != "")
             //{
-                //assert (desc != "");
+            assert (desc != "");
             ab_group.description(*(protein_ids.begin()));
             //}
         }
@@ -965,9 +979,12 @@ void sample_abundance_worker(const string& locus_tag,
         set<shared_ptr<ReadGroupProperties const> > rg_props;
         foreach (AbundanceGroup& ab_group, sample.cds)
         {
-            cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-            max_cds_mass_variance = max(ab_group.max_mass_variance(), max_cds_mass_variance);
-            rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end()); 
+            //if (ab_group.description() != "")
+            {
+                cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+                max_cds_mass_variance = max(ab_group.max_mass_variance(), max_cds_mass_variance);
+                rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end()); 
+            }
         }
         AbundanceGroup cds(cds_abundances,
                            cds_gamma_cov,
@@ -1004,7 +1021,20 @@ void sample_abundance_worker(const string& locus_tag,
         ublas::matrix<double> tss_iterated_exp_count_cov;
         ublas::matrix<double> tss_fpkm_cov;
         vector<Eigen::VectorXd> tss_assigned_counts;
-        cluster_transcripts<ConnectByAnnotatedTssId>(sample.transcripts,
+        
+        vector<bool> mask(sample.transcripts.abundances().size(), true);
+        for (size_t i = 0; i < sample.transcripts.abundances().size(); ++i)
+        {
+            if (*(sample.transcripts.abundances()[i]->tss_id().begin()) == "")
+            {
+                mask[i] = false;
+            }
+        }
+        
+        AbundanceGroup trans_with_tss; 
+        sample.transcripts.filter_group(mask, trans_with_tss);
+        
+        cluster_transcripts<ConnectByAnnotatedTssId>(trans_with_tss,
                                                      transcripts_by_tss,
                                                      &tss_gamma_cov,
                                                      &tss_iterated_exp_count_cov,
@@ -1012,7 +1042,7 @@ void sample_abundance_worker(const string& locus_tag,
                                                      &tss_fpkm_cov,
                                                      &tss_assigned_counts);
         
-       
+        
         foreach(AbundanceGroup& ab_group, transcripts_by_tss)
         {
             ab_group.locus_tag(locus_tag);

@@ -101,8 +101,8 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
 	vector<vector<size_t> > cluster_indices(transfrags.abundances().size());
 	for (size_t i = 0; i < transfrags.abundances().size(); ++i)
 	{
-		clusters[component[i]][i] = true;
-		cluster_indices[component[i]].push_back(i);
+        clusters[component[i]][i] = true;
+        cluster_indices[component[i]].push_back(i);
 	}
 	for (size_t i = 0; i < cluster_indices.size(); ++i)
 	{
