@@ -107,7 +107,7 @@ lfit *tr;
 double *xa;
 INT *ce;
 { double le[(1+MXDIM)*(1+MXDIM)], ml;
-  INT d, vc, i, j, pv[(1+MXDIM)*(1+MXDIM)], im, jm;
+  INT d, vc, i, j, pv[(1+MXDIM)*(1+MXDIM)], im = 0, jm = 0;
   design *des;
   des = NULL;
   if (!triang_split(tr,ce,le)) return;

@@ -101,7 +101,9 @@ extern double bootstrap_delta_gap;
 extern int max_frags_per_bundle;
 //extern bool analytic_diff;
 extern bool no_differential;
-
+extern double num_frag_count_draws;
+extern double num_frag_assignments;
+extern double max_multiread_fraction;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -465,6 +467,10 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 //#define OPT_ANALYTIC_DIFF           300
 #define OPT_NO_DIFF                 301
 #define OPT_GEOMETRIC_NORM          302
-#define OPT_RAW_MAPPED_NORM          303
+#define OPT_RAW_MAPPED_NORM         303
+#define OPT_NUM_FRAG_COUNT_DRAWS    304
+#define OPT_NUM_FRAG_ASSIGN_DRAWS   305
+#define OPT_MAX_MULTIREAD_FRACTION  306
+
 
 #endif

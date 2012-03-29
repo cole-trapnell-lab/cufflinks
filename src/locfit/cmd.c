@@ -444,7 +444,7 @@ vari *v;
 void setcolor(v)
 vari *v;
 {
-    return NULL;
+    return;
 //   int i;
 //    lfcm[CBAK] = getcolidx(getargval(v,"back",0),lfcm[CBAK]);
 //    

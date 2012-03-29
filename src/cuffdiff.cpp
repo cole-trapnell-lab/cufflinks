@@ -64,7 +64,7 @@ const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:";
 
 static struct option long_options[] = {
 {"frag-len-mean",			required_argument,       0,          'm'},
-{"frag-len-std-dev",			required_argument,       0,          's'},
+{"frag-len-std-dev",        required_argument,       0,          's'},
 {"transcript-score-thresh", required_argument,       0,          't'},
 {"pre-mrna-fraction",		required_argument,		 0,			 'j'},
 {"max-intron-length",		required_argument,		 0,			 'I'},
@@ -100,6 +100,8 @@ static struct option long_options[] = {
 {"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
 //{"analytic-diff",           no_argument,	 		 0,	         OPT_ANALYTIC_DIFF},
 {"no-diff",                 no_argument,	 		 0,	         OPT_NO_DIFF},
+{"num-frag-count-draws",	required_argument,		 0,			 OPT_NUM_FRAG_COUNT_DRAWS},
+{"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
     
 // Some options for testing different stats policies
 {"fisher-covariance",       no_argument,	 		 0,	         OPT_USE_FISHER_COVARIANCE},
@@ -157,12 +159,12 @@ void print_usage()
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
     fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
-    fprintf(stderr, "  --analytic-diff              Use the analytic JS variance instead of Monte Carlo   [ default: FALSE  ]\n");
+    fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
+    fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
-    fprintf(stderr, "  --cov-delta                  Maximum gap between bootstrap and IS                  [ DEPRECATED      ]\n");
     print_library_table();
 }
 
@@ -343,7 +345,7 @@ int parse_options(int argc, char** argv)
             }
             case OPT_NUM_BOOTSTRAP_SAMPLES:
             {
-                num_bootstrap_samples = parseInt(0, "--num-bootstrap-samples must be at least 1", print_usage);
+                //num_bootstrap_samples = parseInt(1, "--num-bootstrap-samples must be at least 1", print_usage);
                 break;
             }
             case OPT_BOOTSTRAP_FRACTION:
@@ -401,6 +403,16 @@ int parse_options(int argc, char** argv)
                 use_raw_mapped_norm = true;
                 break;
             } 
+            case OPT_NUM_FRAG_COUNT_DRAWS:
+            {
+                num_frag_count_draws = parseInt(1, "--num-frag-count-draws must be at least 1", print_usage);
+                break;
+            }
+            case OPT_NUM_FRAG_ASSIGN_DRAWS:
+            {
+                num_frag_assignments = parseInt(1, "--num-frag-assign-draws must be at least 1", print_usage);
+                break;
+            }
                 
 			default:
 				print_usage();

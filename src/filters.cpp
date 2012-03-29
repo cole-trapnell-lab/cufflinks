@@ -163,31 +163,31 @@ void pre_mrna_filter(int bundle_length,
 	vector<Scaffold> filtered_hits;
 	vector<bool> toss(hits.size(), false);
 	vector<float> through_introns; //for each location, how many introns pass through
-
+    
 	vector<int> scaff_intron_status;
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
-  double bundle_avg_doc = compute_doc(bundle_left,
+    double bundle_avg_doc = compute_doc(bundle_left,
 										hits, 
 										depth_of_coverage, 
 										intron_doc,
 										true,
 										&through_introns,
 										&scaff_intron_status);
-   verbose_msg("Pre-mRNA flt: bundle average doc = %lf\n", bundle_avg_doc);
-  /*
-   //2nd call not needed, the vectors won't change, only the return value
-	compute_doc(bundle_left, 
-                hits, 
-                depth_of_coverage, 
-                intron_doc,
-                false);
-  */
+    verbose_msg("Pre-mRNA flt: bundle average doc = %lf\n", bundle_avg_doc);
+    /*
+     //2nd call not needed, the vectors won't change, only the return value
+     compute_doc(bundle_left, 
+     hits, 
+     depth_of_coverage, 
+     intron_doc,
+     false);
+     */
 	record_doc_for_scaffolds(bundle_left, 
 							 hits, 
 							 depth_of_coverage, 
 							 intron_doc,
 							 scaff_doc);
-
+    
 	for(map<pair<int, int>, float >::const_iterator itr = intron_doc.begin();
 		itr != intron_doc.end(); 
 		++itr)
@@ -195,38 +195,37 @@ void pre_mrna_filter(int bundle_length,
 		int i_left = itr->first.first;
 		int i_right = itr->first.second;
 		int i_doc   = itr->second;
-    double intron_background = background_rate(depth_of_coverage,
-                                               i_left - bundle_left,
-                                               i_right - bundle_left);
-    double cumul_cov = 0;
-    for (int i = 0; i < i_right - i_left; ++i)
-    {
-        size_t pos = (i_left - bundle_left) + i;
-        cumul_cov += depth_of_coverage[pos];
-    }
-    cumul_cov /= i_right - i_left;
-    verbose_msg("Pre-mRNA flt: intron %d-%d : background: %lf, inner coverage: %lf, junction coverage: %f\n",
-                 i_left, i_right, intron_background, cumul_cov, i_doc);
-    if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
-    {
-        //fprintf(stderr, "\tskipping\n");
-        continue;
-    }
-        
-		////double thresh = (1.0/pre_mrna_fraction) * intron_background;
-		double thresh = pre_mrna_fraction * intron_background;
-    float min_flt_fraction = min(pre_mrna_fraction, min_isoform_fraction);
-    //double thresh = min_flt_fraction * i_doc;
-
-    for (size_t j = 0; j < hits.size(); ++j)
+        double intron_background = background_rate(depth_of_coverage,
+                                                   i_left - bundle_left,
+                                                   i_right - bundle_left);
+        double cumul_cov = 0;
+        for (int i = 0; i < i_right - i_left; ++i)
         {
-           if (hits[j].left()>i_right) break;
+            size_t pos = (i_left - bundle_left) + i;
+            cumul_cov += depth_of_coverage[pos];
+        }
+        cumul_cov /= i_right - i_left;
+        verbose_msg("Pre-mRNA flt: intron %d-%d : background: %lf, inner coverage: %lf, junction coverage: %f\n",
+                    i_left, i_right, intron_background, cumul_cov, i_doc);
+        if (cumul_cov / bundle_avg_doc >= pre_mrna_fraction)
+        {
+            //fprintf(stderr, "\tskipping\n");
+            continue;
+        }
+        
+        ////double thresh = (1.0/pre_mrna_fraction) * intron_background;
+        double thresh = pre_mrna_fraction * intron_background;
+        
+        
+        for (size_t j = 0; j < hits.size(); ++j)
+        {
+            if (hits[j].left()>i_right) break;
             if (hits[j].is_ref())
                 continue;
-			      if (toss[j])
-			          continue;
-			      //find maximum intron support in the hit region
-
+            if (toss[j])
+                continue;
+            //find maximum intron support in the hit region
+            
             int len = 0;
             double doc = 0.0;
             size_t curr_op = 0;
@@ -294,10 +293,10 @@ void pre_mrna_filter(int bundle_length,
                     toss[j] = true;
                     if (hits[j].has_intron())
                     {
-                    //    fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-
-                       verbose_msg("\t@@@ Filtering intron scaff [%d-%d] (scaff_doc=%lf, doc_in_region=%lf)\n",
-                            hits[j].left(), hits[j].right(), scaff_doc[j], hit_doc_in_region);
+                        //    fprintf(stderr, "\t$$$ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+                        
+                        verbose_msg("\t@@@ Filtering intron scaff [%d-%d] (scaff_doc=%lf, doc_in_region=%lf)\n",
+                                    hits[j].left(), hits[j].right(), scaff_doc[j], hit_doc_in_region);
                     }
                 }
             }
@@ -310,18 +309,18 @@ void pre_mrna_filter(int bundle_length,
 			filtered_hits.push_back(hits[j]);
 		}
 		/*else
-		{
-			if (hits[j].has_intron())
-			{
-				
-                verbose_msg( "\t@@@ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
-			}
-		}
-		*/
+         {
+         if (hits[j].has_intron())
+         {
+         
+         verbose_msg( "\t@@@ Filtering intron scaff [%d-%d]\n", hits[j].left(), hits[j].right());
+         }
+         }
+         */
 	}
     
 	if (cuff_verbose && hits.size()>filtered_hits.size())
-	  verbose_msg("\tPre-mRNA flt tossed %lu fragments\n", hits.size() - filtered_hits.size());
+        verbose_msg("\tPre-mRNA flt tossed %lu fragments\n", hits.size() - filtered_hits.size());
 	
 	hits = filtered_hits;
 }
@@ -629,20 +628,19 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 			
             if (library_type != "transfrags")
             {
-                double low_qual_hits = 0.0;
-                static const double low_qual_err_prob = high_phred_err_prob; // hits with error_prob() above this are low quality;
-                static const double low_qual_thresh = 0.75; // hits with more than this fraction of low qual hits are repeats
+                double multi_hits = 0.0;
+                //static const double low_qual_err_prob = high_phred_err_prob; // hits with error_prob() above this are low quality;
+                //static const double low_qual_thresh = 0.75; // hits with more than this fraction of low qual hits are repeats
                 for (vector<const MateHit*>::const_iterator itr = hits.begin();
                      itr != hits.end();
                      ++itr)
                 {
-                    double e = 1-(*itr)->mass();
-                    if (e >= low_qual_err_prob)
-                        low_qual_hits += 1.0;
+                    if ((*itr)->is_multi())
+                        multi_hits += 1.0;
                 }
             
-                double low_qual_frac = low_qual_hits / (double)hits.size();
-                if (low_qual_frac > low_qual_thresh)
+                double low_qual_frac = multi_hits / (double)hits.size();
+                if (low_qual_frac > max_multiread_fraction)
                     repeats[t] = true;
             }
             if (scaff->strand() == CUFF_FWD &&
@@ -661,11 +659,6 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
                     chaff[t] = true;
             }
 		}
-//        else // we should still filter things that are zero to improve robustness of MAP estimation
-//        {
-//            if (abundances[t] == 0.0)
-//                too_rare[t] = true;
-//        }
 	}
 	
 	vector<shared_ptr<Abundance> > non_junk_transcripts;
@@ -831,7 +824,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             {
                 tmp_mean_to_trim = 0.0;
                 tmp_mean_to_keep = 0.0;
-                for (size_t i = 0; i < exon_3->genomic_length; i++)
+                for (int i = 0; i < exon_3->genomic_length; i++)
                 {
                     if (i <= to_remove)
                     {
@@ -933,9 +926,6 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
                     total += hit->mass();
                 }
             }
-            double avg_cov = total/scaff_len;
-            //        if (avg_cov < trim_3_avgcov_thresh)
-            //            continue;
             
             const AugmentedCuffOp* exon_3 = NULL;
             int mult;

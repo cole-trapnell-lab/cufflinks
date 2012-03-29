@@ -56,7 +56,7 @@ AC_CANONICAL_HOST
 
 # set CFLAGS and CXXFLAGS
 user_CFLAGS=${CFLAGS}
-generic_CFLAGS="-Wall -Wno-strict-aliasing -g -gdwarf-2 -Wuninitialized"
+generic_CFLAGS="-Wall -Wno-strict-aliasing -g -gdwarf-2 -Wunused -Wuninitialized"
 ext_CFLAGS=""
 debug_CFLAGS=""
 #echo "${host_cpu}-${host_os}"

@@ -237,6 +237,17 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
+			<h2>1.4.0 release - 4/XXX/2012</h2>
+			  <p>This release improves Cuffdiff accuracy and resolves several user-reported issues and bugs.
+				<ul>
+					<li>Some users were reporting a high FAIL rate on gene and transcripts quantification.  This has been resolved according to a battery of tests using real and simulated data.  The root cause was that in conditions with substantial overdispersion across replicates, the FPKM variance-covariance matrices  produced by the Cuffdiff model were not always positive-definite.  Cuffdiff was detecting this, and marking those genes as having unreliable confidence intervals.  Prior to 1.4.0, the model contained a heuristic approximation of the covariances between assigned fragment counts (which are necessary for calculating the variance on each gene's expression level), and this approximation was producing poorly conditioned matrices. We have replaced the heuristic approximation with a direct sampling approach.  By simulating fragment generation and assignment to each transcript, we are reconstructing variance-covariance matrices for assigned fragment counts that are always properly condition.  This sampling approach produces more accurate estimates of variance and covariance as well, improving accuracy of transcript and gene level differential analysis.  
+					<li>Several minor issues related to library size normalization have been fixed.
+					<li>A new library size normalization mode based on the geometric mean has been added, and is now the default for Cuffdiff. This method was introduced by Anders and Huber (Genome Biology, 2010).
+					<li>Cuffdiff now uses the <a href="http://eigen.tuxfamily.org">Eigen</a> linear algebra libraries.  Eigen is a fast package for matrix operations and makes good use of vector registers in modern processors, providing Cufflinks and Cuffdiff with a speed boost.
+					<li>Cuffdiff now requires Boost version 1.47 or later.
+				</ul>
+			  <br/>
+	
 			<h2>TopHat and Cufflinks protocol published at Nature Protocols - 3/12/2012</h2>
 			  <p>A complete <a href="http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html">bioinformatic protocol</a> for analysis of RNA-Seq data using our tools 
 				has been published at <em>Nature Protocols</em>.  The protocol covers read alignment with TopHat, 

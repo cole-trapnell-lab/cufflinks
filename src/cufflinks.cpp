@@ -96,6 +96,9 @@ static struct option long_options[] = {
 {"tile-read-sep",           required_argument,       0,          OPT_TILE_SEP}, 
     
 {"max-bundle-frags",        required_argument,        0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
+{"num-frag-count-draws",	required_argument,		 0,			 OPT_NUM_FRAG_COUNT_DRAWS},
+{"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
+{"max-multiread-fraction",	required_argument,		 0,			 OPT_MAX_MULTIREAD_FRACTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -124,9 +127,11 @@ void print_usage()
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  --upper-quartile-norm        use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ default:   1000 ]\n");
+    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [    DEPRECATED   ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  FALSE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  TRUE  ]\n");
+    fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
+    fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
     
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
@@ -142,6 +147,7 @@ void print_usage()
     fprintf(stderr, "  --min-intron-length          minimum intron size allowed in genome                 [ default:     50 ]\n");
     fprintf(stderr, "  --trim-3-avgcov-thresh       minimum avg coverage required to attempt 3' trimming  [ default:     10 ]\n");
     fprintf(stderr, "  --trim-3-dropoff-frac        fraction of avg coverage below which to trim 3' end   [ default:    0.1 ]\n");
+    fprintf(stderr, "  --max-multiread-fraction     maximum fraction of allowed multireads per transcript [ default:   0.75 ]\n");
     
     fprintf(stderr, "\nAdvanced Reference Annotation Guided Assembly Options:\n");
 //    fprintf(stderr, "  --tile-read-len              length of faux-reads                                  [ default:    405 ]\n");
@@ -391,6 +397,21 @@ int parse_options(int argc, char** argv)
             case OPT_MAX_FRAGS_PER_BUNDLE:
             {
                 max_frags_per_bundle = parseInt(0, "--max-bundle-frags must be at least 0", print_usage);
+                break;
+            }
+            case OPT_NUM_FRAG_COUNT_DRAWS:
+            {
+                num_frag_count_draws = parseInt(1, "--num-frag-count-draws must be at least 1", print_usage);
+                break;
+            }
+            case OPT_NUM_FRAG_ASSIGN_DRAWS:
+            {
+                num_frag_assignments = parseInt(1, "--num-frag-assign-draws must be at least 1", print_usage);
+                break;
+            }
+            case OPT_MAX_MULTIREAD_FRACTION:
+            {
+                max_multiread_fraction = parseFloat(0, 1.0, "--max-multiread-fraction must be between 0 and 1.0", print_usage);
                 break;
             }
 			default:

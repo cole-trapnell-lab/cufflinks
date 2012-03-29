@@ -205,9 +205,6 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 
 class BundleFactory
 {
-    boost::mt19937 rng;
-    boost::uniform_01<boost::mt19937> _zeroone;
-    
 public:
     
 	BundleFactory(shared_ptr<HitFactory> fac, BundleMode bm)
@@ -361,6 +358,10 @@ private:
     RefID _prev_ref_id;
     int _num_bundles;
     int _curr_bundle;
+    
+    boost::mt19937 rng;
+    boost::uniform_01<boost::mt19937> _zeroone;
+    
 #if ENABLE_THREADS    
     boost::mutex _factory_lock;
 #endif

@@ -114,6 +114,9 @@ double bootstrap_delta_gap = 0.001;
 int max_frags_per_bundle = 1000000;
 //bool analytic_diff = false;
 bool no_differential = false;
+double num_frag_count_draws = 1000;
+double num_frag_assignments = 1;
+double max_multiread_fraction = 0.75;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -122,6 +125,7 @@ float read_skip_fraction = 0.0;
 bool no_read_pairs = false;
 int trim_read_length = -1;
 double mle_accuracy = 1e-6;
+
 
 // END SECRET OPTIONS
 

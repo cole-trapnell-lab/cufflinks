@@ -895,7 +895,7 @@ void sample_abundance_worker(const string& locus_tag,
     
     vector<MateHit> hits_in_cluster;
     
-    if (sample_bundle->hits().size() < max_frags_per_bundle)
+    if (sample_bundle->hits().size() < (size_t)max_frags_per_bundle)
     {
         get_alignments_from_scaffolds(sample.transcripts.abundances(),
                                       hits_in_cluster);

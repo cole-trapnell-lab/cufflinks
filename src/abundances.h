@@ -418,7 +418,9 @@ private:
 						  const vector<shared_ptr<Abundance> >& transcripts,
 						  const vector<shared_ptr<Abundance> >& mapped_transcripts);
 	void calculate_FPKM_covariance();
-    void estimate_count_covariance();
+    
+    //void estimate_count_covariance();
+    
     void simulate_count_covariance(const vector<MateHit>& nr_alignments,
                                    const vector<shared_ptr<Abundance> >& transcripts);
 
@@ -448,14 +450,15 @@ private:
 	
 	vector<shared_ptr<Abundance> > _abundances;
 	
-    // _count_covariance is the final count covariance matrix.  It's includes our estimates
-    // of transcript-level biological variability on counts
-    ublas::matrix<double> _count_covariance;
-    
     // _iterated_exp_count_covariance is the ITERATED EXPECTATION count covariance matrix.  It's not the 
     // estimated count covariance matrix (i.e. it doesn't include biological variability from
     // the fitted model.
     ublas::matrix<double> _iterated_exp_count_covariance;
+    
+    // _count_covariance is the final count covariance matrix.  It's includes our estimates
+    // of transcript-level biological variability on counts
+    ublas::matrix<double> _count_covariance;
+    
     ublas::matrix<double> _fpkm_covariance;
 	ublas::matrix<double> _gamma_covariance;
     
@@ -471,10 +474,12 @@ private:
     double _salient_frags;
     double _total_frags;
     
-    vector<Eigen::VectorXd> _assigned_count_samples;
+    
     vector<double> _null_js_samples;
     
     std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
+    vector<Eigen::VectorXd> _assigned_count_samples;
+    
     map<shared_ptr<ReadGroupProperties const>, double> _count_per_replicate;
     //std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
 };

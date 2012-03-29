@@ -63,6 +63,7 @@
 		0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A87350214118DD700E28429 /* libboost_thread-mt.a */; };
 		0A87350414118DD700E28429 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A87350214118DD700E28429 /* libboost_thread-mt.a */; };
 		0A9291D5132AD37100E7B024 /* replicates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED677C0D132A3D83000CFDC8 /* replicates.cpp */; };
+		9C31043215250D8600F56669 /* jensen_shannon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */; };
 		9CBCD9B41333EB5B0059FE74 /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
 		9CBCD9B51333ECCE0059FE74 /* replicates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED677C0D132A3D83000CFDC8 /* replicates.cpp */; };
 		9CBCD9B61333ECF50059FE74 /* dens_haz.c in Sources */ = {isa = PBXBuildFile; fileRef = ED920F3613213B19008DDA0B /* dens_haz.c */; };
@@ -1171,6 +1172,7 @@
 				EDBAC4C111FF5AD3002B7162 /* biascorrection.cpp in Sources */,
 				ED877B74123BCA3F0025A050 /* GFastaIndex.cpp in Sources */,
 				0A6183721324308800EFF9AF /* multireads.cpp in Sources */,
+				9C31043215250D8600F56669 /* jensen_shannon.cpp in Sources */,
 				9CE680F9149FBEBD00855EDB /* sampling.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1560,7 +1562,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = NO;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = NO;
 				GCC_WARN_SHADOW = NO;
@@ -1570,10 +1572,10 @@
 				GCC_WARN_UNUSED_VALUE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
+					/opt/local/include,
 					/usr/include,
 					/usr/local/include,
 					./src,
-					/opt/local/include,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -1610,10 +1612,10 @@
 				GCC_UNROLL_LOOPS = YES;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = (
+					/opt/local/include,
 					/usr/include,
 					/usr/local/include,
 					./src,
-					/opt/local/include,
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
