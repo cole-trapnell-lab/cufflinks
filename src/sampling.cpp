@@ -24,7 +24,7 @@ void generate_importance_samples(multinormal_generator<double>& generator,
         
         Eigen::VectorXd scaled_sample = Eigen::VectorXd::Zero(r.size());
 		
-		for (size_t j = 0; j < scaled_sample.size(); ++j) 
+		for (int j = 0; j < scaled_sample.size(); ++j) 
         {
             scaled_sample(j) = r(j);
             
@@ -38,14 +38,14 @@ void generate_importance_samples(multinormal_generator<double>& generator,
 		double m = scaled_sample.sum();
 		if (m && !isnan(m))
 		{
-			for (size_t j = 0; j < scaled_sample.size(); ++j) 
+			for (int j = 0; j < scaled_sample.size(); ++j) 
             {
 				scaled_sample(j) = scaled_sample(j) / m;
 			}
 			if (no_zeros)
             {
                 bool has_zero = false;
-                for (size_t j = 0; j < scaled_sample.size(); ++j)
+                for (int j = 0; j < scaled_sample.size(); ++j)
                 {
                     if (scaled_sample[j] == 0)
                     {
