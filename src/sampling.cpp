@@ -29,7 +29,10 @@ void generate_importance_samples(multinormal_generator<double>& generator,
             scaled_sample(j) = r(j);
             
             if (scaled_sample(j) < 0)
-                scaled_sample(j) = -scaled_sample(j);
+            {
+                scaled_sample(j) = 0.0;
+                //scaled_sample(j) = -scaled_sample(j);
+            }
 		}
 		
 		double m = scaled_sample.sum();
