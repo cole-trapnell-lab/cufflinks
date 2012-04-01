@@ -2113,15 +2113,15 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
 
     }
         
-    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
-
-    if (total_counts > 0)   
-    {
-        for (size_t i = 0; i < transcripts.size(); ++i)
-        {
-            _abundances[i]->gamma(expected_counts(i) / total_counts);  
-        } 
-    }
+//    double total_counts = accumulate(expected_counts.begin(), expected_counts.end(), 0);
+//
+//    if (total_counts > 0)   
+//    {
+//        for (size_t i = 0; i < transcripts.size(); ++i)
+//        {
+//            _abundances[i]->gamma(expected_counts(i) / total_counts);  
+//        } 
+//    }
     
     _iterated_exp_count_covariance = count_covariance;
     
