@@ -309,21 +309,15 @@ shared_ptr<SampleDifferenceMetaData> get_metadata(const string description)
 
 // This performs between-group tests on isoforms or TSS groupings in a single
 // locus, on two different samples.
-pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
+SampleDifference get_de_tests(const string& description,
                  const FPKMContext& prev_abundance,
 				 const FPKMContext& curr_abundance,
-				 SampleDiffs& de_tests,
+				 //SampleDiffs& de_tests,
 				 bool enough_reads)
 {
 	int total_iso_de_tests = 0;
 			
 	SampleDifference test;
-    
-	pair<SampleDiffs::iterator, bool> inserted;
-//	inserted = de_tests.insert(make_pair(curr_abundance.description(),
-//										 SampleDifference())); 
-    inserted = de_tests.insert(make_pair(description,
-    									 SampleDifference())); 
     
     const FPKMContext& r1 = curr_abundance;
     const FPKMContext& r2 = prev_abundance;
@@ -383,9 +377,10 @@ pair<int, SampleDiffs::iterator>  get_de_tests(const string& description,
 	}
 	
     
-	inserted.first->second = test;
+	//inserted.first->second = test;
 	
-	return make_pair(total_iso_de_tests, inserted.first);
+	//return make_pair(total_iso_de_tests, inserted.first);
+    return test;
 }
 
 
@@ -625,15 +620,13 @@ bool test_js(const AbundanceGroup& prev_abundance,
 // This performs within-group tests on a set of isoforms or a set of TSS groups.
 // This is a way of looking for meaningful differential splicing or differential
 // promoter use.
-void get_ds_tests(const AbundanceGroup& prev_abundance,
-				  const AbundanceGroup& curr_abundance,
-				  SampleDiffs& diff_tests,
-				  bool enough_reads)
+SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
+                              const AbundanceGroup& curr_abundance,
+//                              SampleDiffs& diff_tests,
+                              bool enough_reads)
 {	
 	const string& name = curr_abundance.description();
 	
-	pair<SampleDiffs::iterator, bool> inserted;
-	inserted = diff_tests.insert(make_pair(name,SampleDifference())); 
 	SampleDifference test;
 	
     shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(name);
@@ -645,7 +638,6 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
     meta_data->description = curr_abundance.description();
     
     test.meta_data = meta_data;
-	
 	test.test_status = NOTEST;
 	
 	AbundanceStatus prev_status = curr_abundance.status();
@@ -732,8 +724,6 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 			test.differential = js;
 			test.test_status = enough_reads ? OK : NOTEST;
         }
-
-		inserted.first->second = test;
 	}
 	else // we won't even bother with the JS-based testing in LOWDATA cases.
 	{
@@ -749,8 +739,9 @@ void get_ds_tests(const AbundanceGroup& prev_abundance,
 		test.test_stat = 0;
 		test.p_value = 0.0;
 		test.differential = 0.0;
-		inserted.first->second = test;
 	}
+    
+    return test;
 }
 
 string make_ref_tag(const string& ref, char classcode)
@@ -1381,11 +1372,15 @@ void test_differential(const string& locus_tag,
 		}
 	}
     
+#if ENABLE_THREADS
+    test_storage_lock.unlock();
+#endif
+    
     if (no_differential == true)
     {
-#if ENABLE_THREADS
-        test_storage_lock.unlock();
-#endif
+//#if ENABLE_THREADS
+//        test_storage_lock.unlock();
+//#endif
         return;
     }
 	
@@ -1428,12 +1423,18 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
 
-                pair<int, SampleDiffs::iterator> result;
-                result = get_de_tests(desc,
+                SampleDifference test;
+                test = get_de_tests(desc,
                                       itr->second.fpkm_series[j], 
                                       itr->second.fpkm_series[i],
-                                      tests.isoform_de_tests[i][j],
+                                      //tests.isoform_de_tests[i][j],
                                       enough_reads);
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                pair<SampleDiffs::iterator, bool> inserted; 
+                inserted = tests.isoform_de_tests[i][j].insert(make_pair(desc,
+                                                                     test)); 
                 
                 shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
                 
@@ -1442,7 +1443,10 @@ void test_differential(const string& locus_tag,
                 meta_data->protein_ids = curr_abundance.protein_id();
                 meta_data->locus_desc = curr_abundance.locus_tag();
                 meta_data->description = curr_abundance.description();
-                result.second->second.meta_data = meta_data;
+                inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
             
             for (size_t k = 0; k < samples[i]->cds.size(); ++k)
@@ -1468,12 +1472,19 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
-                pair<int, SampleDiffs::iterator> result;
-                result = get_de_tests(desc,
-                             itr->second.fpkm_series[j], 
-                             itr->second.fpkm_series[i],
-                             tests.cds_de_tests[i][j],
-                             enough_reads);
+                SampleDifference test;
+                test = get_de_tests(desc,
+                                    itr->second.fpkm_series[j], 
+                                    itr->second.fpkm_series[i],
+                                    //tests.cds_de_tests[i][j],
+                                    enough_reads);
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                
+                pair<SampleDiffs::iterator, bool> inserted; 
+                inserted = tests.cds_de_tests[i][j].insert(make_pair(desc,
+                                                                           test)); 
                 
                 shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
                 
@@ -1482,7 +1493,10 @@ void test_differential(const string& locus_tag,
                 meta_data->protein_ids = curr_abundance.protein_id();
                 meta_data->locus_desc = curr_abundance.locus_tag();
                 meta_data->description = curr_abundance.description();
-                result.second->second.meta_data = meta_data;
+                inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
             
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
@@ -1508,12 +1522,19 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
-                pair<int, SampleDiffs::iterator> result;
-                result = get_de_tests(desc,
+                SampleDifference test;
+                test = get_de_tests(desc,
                              itr->second.fpkm_series[j], 
                              itr->second.fpkm_series[i],
-                             tests.tss_group_de_tests[i][j],
+                             //tests.tss_group_de_tests[i][j],
                              enough_reads);
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                pair<SampleDiffs::iterator, bool> inserted; 
+                inserted = tests.tss_group_de_tests[i][j].insert(make_pair(desc,
+                                                                      test)); 
+                
                 
                 shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
                 
@@ -1522,7 +1543,10 @@ void test_differential(const string& locus_tag,
                 meta_data->protein_ids = curr_abundance.protein_id();
                 meta_data->locus_desc = curr_abundance.locus_tag();
                 meta_data->description = curr_abundance.description();
-                result.second->second.meta_data = meta_data;
+                inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
             
             for (size_t k = 0; k < samples[i]->genes.size(); ++k)
@@ -1547,12 +1571,18 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                     
-                pair<int, SampleDiffs::iterator> result;
-                result = get_de_tests(desc,
+                SampleDifference test;
+                test = get_de_tests(desc,
                              itr->second.fpkm_series[j], 
                              itr->second.fpkm_series[i],
-                             tests.gene_de_tests[i][j],
+                             //tests.gene_de_tests[i][j],
                              enough_reads);
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                pair<SampleDiffs::iterator, bool> inserted; 
+                inserted = tests.gene_de_tests[i][j].insert(make_pair(desc,
+                                                                      test)); 
                 
                 shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
                 
@@ -1561,7 +1591,10 @@ void test_differential(const string& locus_tag,
                 meta_data->protein_ids = curr_abundance.protein_id();
                 meta_data->locus_desc = curr_abundance.locus_tag();
                 meta_data->description = curr_abundance.description();
-                result.second->second.meta_data = meta_data;
+                inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
             
             // FIXME: the code below will not properly test for differential
@@ -1574,6 +1607,7 @@ void test_differential(const string& locus_tag,
             {
                 const Abundance& curr_abundance = samples[j]->gene_primary_transcripts[k];
                 const Abundance& prev_abundance = samples[j]->gene_primary_transcripts[k];
+                const string& desc = curr_abundance.description();
                 
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
@@ -1589,10 +1623,22 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
-                get_ds_tests(samples[j]->gene_primary_transcripts[k], 
-                             samples[i]->gene_primary_transcripts[k],
-                             tests.diff_promoter_tests[i][j],
-                             enough_reads);
+                SampleDifference test;
+                test = get_ds_tests(samples[j]->gene_primary_transcripts[k], 
+                                    samples[i]->gene_primary_transcripts[k],
+                                    enough_reads);
+                
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                
+                pair<SampleDiffs::iterator, bool> inserted;
+                inserted = tests.diff_promoter_tests[i][j].insert(make_pair(desc,test)); 
+                inserted.first->second = test;
+                
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
             
             // Differential coding sequence output
@@ -1600,6 +1646,7 @@ void test_differential(const string& locus_tag,
             {
                 const Abundance& curr_abundance = samples[j]->gene_cds[k];
                 const Abundance& prev_abundance = samples[j]->gene_cds[k];
+                const string& desc = curr_abundance.description();
                 
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
@@ -1615,18 +1662,28 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
-                get_ds_tests(samples[j]->gene_cds[k], 
-                             samples[i]->gene_cds[k],
-                             tests.diff_cds_tests[i][j],
-                             enough_reads);
+                SampleDifference test;
+                test = get_ds_tests(samples[j]->gene_cds[k], 
+                                    samples[i]->gene_cds[k],
+                                    enough_reads);
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                pair<SampleDiffs::iterator, bool> inserted;
+                inserted = tests.diff_cds_tests[i][j].insert(make_pair(desc,test)); 
+                inserted.first->second = test;
+                
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
             
             // Differential splicing of primary transcripts
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
-                
                 const Abundance& curr_abundance = samples[j]->primary_transcripts[k];
                 const Abundance& prev_abundance = samples[j]->primary_transcripts[k];
+                const string& desc = curr_abundance.description();
                 
                 bool enough_reads = false;
                 if (curr_abundance.num_fragments() && curr_abundance.effective_length())
@@ -1642,15 +1699,22 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
-                get_ds_tests(samples[j]->primary_transcripts[k], 
-                             samples[i]->primary_transcripts[k],
-                             tests.diff_splicing_tests[i][j],
-                             enough_reads);
+                SampleDifference test;
+                test = get_ds_tests(samples[j]->primary_transcripts[k], 
+                                    samples[i]->primary_transcripts[k],
+                                    enough_reads);
+                
+#if ENABLE_THREADS
+                test_storage_lock.lock();
+#endif
+                pair<SampleDiffs::iterator, bool> inserted;
+                inserted = tests.diff_splicing_tests[i][j].insert(make_pair(desc,test)); 
+                inserted.first->second = test;
+                
+#if ENABLE_THREADS
+                test_storage_lock.unlock();
+#endif
             }
         }
 	}
-	
-#if ENABLE_THREADS
-	test_storage_lock.unlock();
-#endif
 }
