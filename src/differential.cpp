@@ -1292,6 +1292,43 @@ void dump_locus_variance_info(const string& filename)
 #endif
 }
 
+void filter_group_for_js_testing(vector<vector<AbundanceGroup> >& source_groups)
+{
+    if (source_groups.empty())
+        return;
+    
+    // iterate over transcript groups
+    for (size_t ab_group_idx = 0; ab_group_idx < source_groups[0].size(); ++ab_group_idx)
+    {
+        vector<bool> to_keep(source_groups[0][ab_group_idx].abundances().size(), false);
+        // iterate over samples
+        for (size_t sample_idx = 0;  sample_idx < source_groups.size(); ++sample_idx)
+        {
+            // iterate over each member of the current abundance group
+            AbundanceGroup& ab_group = source_groups[sample_idx][ab_group_idx];
+            for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
+            {
+                const Abundance& ab = *(ab_group.abundances()[ab_idx]);
+                if (ab.num_fragments() && ab.effective_length())
+                {
+                    double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
+                        to_keep[ab_idx] = true;
+                }
+            }
+        }
+        
+        // Now that we know which ones we want to keep, get rid of the rest
+        for (size_t sample_idx = 0;  sample_idx < source_groups.size(); ++sample_idx)
+        {
+            AbundanceGroup& ab_group = source_groups[sample_idx][ab_group_idx];
+            AbundanceGroup f = ab_group;
+            ab_group.filter_group(to_keep, f);
+            ab_group = f;
+        }
+    }
+}
+
 int total_tests = 0;
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
@@ -1350,9 +1387,21 @@ void test_differential(const string& locus_tag,
         return;
     }
 	
-//    vector<AbundanceGroup> filtered_primary_trans_groups;
-//    vector<AbundanceGroup> filtered_promoter_groups;
-//    vector<AbundanceGroup> filtered_cds_groups;
+    vector<vector<AbundanceGroup> > filtered_primary_trans_groups;
+    vector<vector<AbundanceGroup> > filtered_promoter_groups;
+    vector<vector<AbundanceGroup> > filtered_cds_groups;
+
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        filtered_primary_trans_groups.push_back(samples[i]->primary_transcripts);
+        filtered_promoter_groups.push_back(samples[i]->gene_primary_transcripts);
+        filtered_cds_groups.push_back(samples[i]->gene_cds);
+    }
+    
+    filter_group_for_js_testing(filtered_primary_trans_groups);
+    filter_group_for_js_testing(filtered_promoter_groups);
+    filter_group_for_js_testing(filtered_cds_groups);
+    
     
     // Perform pairwise significance testing between samples. If this is a
     // time series, only test between successive pairs of samples, as supplied 
@@ -1421,8 +1470,8 @@ void test_differential(const string& locus_tag,
             
             for (size_t k = 0; k < samples[i]->cds.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j]->cds[k];
-                const Abundance& prev_abundance = samples[i]->cds[k];
+                const Abundance& curr_abundance = samples[i]->cds[k];
+                const Abundance& prev_abundance = samples[j]->cds[k];
                 
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.cds_fpkm_tracking.find(desc);
@@ -1471,8 +1520,8 @@ void test_differential(const string& locus_tag,
             
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j]->primary_transcripts[k];
-                const Abundance& prev_abundance = samples[i]->primary_transcripts[k];
+                const Abundance& curr_abundance = samples[i]->primary_transcripts[k];
+                const Abundance& prev_abundance = samples[j]->primary_transcripts[k];
                 
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.tss_group_fpkm_tracking.find(desc);
@@ -1521,8 +1570,8 @@ void test_differential(const string& locus_tag,
             
             for (size_t k = 0; k < samples[i]->genes.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j]->genes[k];
-                const Abundance& prev_abundance = samples[i]->genes[k];
+                const AbundanceGroup& curr_abundance = samples[i]->genes[k];
+                const AbundanceGroup& prev_abundance = samples[j]->genes[k];
                 const string& desc = curr_abundance.description();
                 FPKMTrackingTable::iterator itr = tracking.gene_fpkm_tracking.find(desc);
                 assert (itr != tracking.gene_fpkm_tracking.end());
@@ -1575,8 +1624,8 @@ void test_differential(const string& locus_tag,
             // Differential promoter use
             for (size_t k = 0; k < samples[i]->gene_primary_transcripts.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j]->gene_primary_transcripts[k];
-                const Abundance& prev_abundance = samples[j]->gene_primary_transcripts[k];
+                const AbundanceGroup& curr_abundance = filtered_promoter_groups[i][k];
+                const AbundanceGroup& prev_abundance = filtered_promoter_groups[j][k];
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = false;
@@ -1594,8 +1643,8 @@ void test_differential(const string& locus_tag,
                 }
                 
                 SampleDifference test;
-                test = get_ds_tests(samples[j]->gene_primary_transcripts[k], 
-                                    samples[i]->gene_primary_transcripts[k],
+                test = get_ds_tests(prev_abundance, 
+                                    curr_abundance,
                                     enough_reads);
                 
 #if ENABLE_THREADS
@@ -1614,8 +1663,8 @@ void test_differential(const string& locus_tag,
             // Differential coding sequence output
             for (size_t k = 0; k < samples[i]->gene_cds.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j]->gene_cds[k];
-                const Abundance& prev_abundance = samples[j]->gene_cds[k];
+                const AbundanceGroup& curr_abundance = filtered_cds_groups[i][k];
+                const AbundanceGroup& prev_abundance = filtered_cds_groups[i][k];
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = false;
@@ -1633,8 +1682,8 @@ void test_differential(const string& locus_tag,
                 }
                 
                 SampleDifference test;
-                test = get_ds_tests(samples[j]->gene_cds[k], 
-                                    samples[i]->gene_cds[k],
+                test = get_ds_tests(prev_abundance, 
+                                    curr_abundance,
                                     enough_reads);
 #if ENABLE_THREADS
                 test_storage_lock.lock();
@@ -1651,8 +1700,8 @@ void test_differential(const string& locus_tag,
             // Differential splicing of primary transcripts
             for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
             {
-                const Abundance& curr_abundance = samples[j]->primary_transcripts[k];
-                const Abundance& prev_abundance = samples[j]->primary_transcripts[k];
+                const AbundanceGroup& curr_abundance = filtered_primary_trans_groups[i][k];
+                const AbundanceGroup& prev_abundance = filtered_primary_trans_groups[j][k];
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = false;
@@ -1670,8 +1719,8 @@ void test_differential(const string& locus_tag,
                 }
                 
                 SampleDifference test;
-                test = get_ds_tests(samples[j]->primary_transcripts[k], 
-                                    samples[i]->primary_transcripts[k],
+                test = get_ds_tests(prev_abundance, 
+                                    curr_abundance,
                                     enough_reads);
                 
 #if ENABLE_THREADS

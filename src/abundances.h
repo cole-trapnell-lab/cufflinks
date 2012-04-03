@@ -283,25 +283,25 @@ class AbundanceGroup : public Abundance
 public:
 	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _salient_frags(0.0), _total_frags(0.0) {}
 	
-	AbundanceGroup(const AbundanceGroup& other) 
-	{
-		_abundances = other._abundances;
-		_iterated_exp_count_covariance = other._iterated_exp_count_covariance;
-        _count_covariance = other._count_covariance;
-        _fpkm_covariance = other._fpkm_covariance;
-        _gamma_covariance = other._gamma_covariance;
-		_FPKM_conf = other._FPKM_conf;
-		_kappa = other._kappa;
-		_kappa_covariance = other._kappa_covariance;
-		_FPKM_variance = other._FPKM_variance;
-		_description = other._description;
-        _max_mass_variance = other._max_mass_variance;
-        _salient_frags = other._salient_frags;
-        _total_frags = other._total_frags;
-        _read_group_props = other._read_group_props;
-        _assigned_count_samples = other._assigned_count_samples;
-        _null_js_samples = other._null_js_samples;
-    }
+//	AbundanceGroup(const AbundanceGroup& other) 
+//	{
+//		_abundances = other._abundances;
+//		_iterated_exp_count_covariance = other._iterated_exp_count_covariance;
+//        _count_covariance = other._count_covariance;
+//        _fpkm_covariance = other._fpkm_covariance;
+//        _gamma_covariance = other._gamma_covariance;
+//		_FPKM_conf = other._FPKM_conf;
+//		_kappa = other._kappa;
+//		_kappa_covariance = other._kappa_covariance;
+//		_FPKM_variance = other._FPKM_variance;
+//		_description = other._description;
+//        _max_mass_variance = other._max_mass_variance;
+//        _salient_frags = other._salient_frags;
+//        _total_frags = other._total_frags;
+//        _read_group_props = other._read_group_props;
+//        _assigned_count_samples = other._assigned_count_samples;
+//        _null_js_samples = other._null_js_samples;
+//    }
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
 		_abundances(abundances), 

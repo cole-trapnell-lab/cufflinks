@@ -314,6 +314,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
                                     _max_mass_variance,
                                     _read_group_props,
                                     new_assigned_count_samples);
+    filtered_group.description(_description);
 }
 
 void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
