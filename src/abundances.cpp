@@ -175,7 +175,7 @@ void TranscriptAbundance::FPKM_variance(double v)
     _FPKM_variance = v; 
 }
 
-bool AbundanceGroup::has_member_with_status(AbundanceStatus member_status)
+bool AbundanceGroup::has_member_with_status(AbundanceStatus member_status) const
 {
     foreach(shared_ptr<Abundance> ab, _abundances)
 	{

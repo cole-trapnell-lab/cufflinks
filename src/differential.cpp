@@ -643,58 +643,24 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
 	AbundanceStatus prev_status = curr_abundance.status();
 	AbundanceStatus curr_status = prev_abundance.status();
     
-    vector<bool> to_keep(curr_abundance.abundances().size(), false);
-    //vector<bool> to_keep(curr_abundance.abundances().size(), false);
-    
-    for (size_t k = 0; k < prev_abundance.abundances().size(); ++k)
-    {
-        // assert (false);
-        
-        bool prev_enough_reads = false;
-        // do both curr and prev so that groups have the same number of slices.
-        if (prev_abundance.abundances()[k]->num_fragments() && prev_abundance.abundances()[k]->effective_length())
-        {
-            double frags_per_kb = prev_abundance.abundances()[k]->num_fragments() / (prev_abundance.abundances()[k]->effective_length() / 1000.0);
-            if (frags_per_kb >= min_read_count)
-                prev_enough_reads = true;
-        }
-        
-        bool curr_enough_reads = false;
-        if (curr_abundance.abundances()[k]->num_fragments() && curr_abundance.abundances()[k]->effective_length())
-        {
-            double frags_per_kb = curr_abundance.abundances()[k]->num_fragments() / (curr_abundance.abundances()[k]->effective_length() / 1000.0);
-            if (frags_per_kb >= min_read_count)
-                curr_enough_reads = true;
-        }
-        
-        if (curr_enough_reads || prev_enough_reads)
-            to_keep[k] = true;
-    }
-    
-    AbundanceGroup filtered_prev;
-    prev_abundance.filter_group(to_keep, filtered_prev);
-    
-    AbundanceGroup filtered_curr;
-    curr_abundance.filter_group(to_keep, filtered_curr);
-    
-	if (filtered_prev.abundances().size() > 1 &&
-        /*filtered_prev.has_member_with_status(NUMERIC_LOW_DATA) == false &&
+	if (prev_abundance.abundances().size() > 1 &&
+        /*prev_abundance.has_member_with_status(NUMERIC_LOW_DATA) == false &&
         filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false &&*/ 
-        prev_status == NUMERIC_OK && filtered_prev.num_fragments() > 0 &&
-		curr_status == NUMERIC_OK && filtered_curr.num_fragments() > 0)
+        prev_status == NUMERIC_OK && prev_abundance.num_fragments() > 0 &&
+		curr_status == NUMERIC_OK && curr_abundance.num_fragments() > 0)
 	{
 		vector<ublas::vector<double> > sample_kappas;
-		ublas::vector<double> curr_kappas(filtered_curr.abundances().size());
+		ublas::vector<double> curr_kappas(curr_abundance.abundances().size());
         
-        for (size_t i = 0; i < filtered_curr.abundances().size(); ++i)
+        for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
 		{
-			curr_kappas(i) = filtered_curr.abundances()[i]->kappa();
+			curr_kappas(i) = curr_abundance.abundances()[i]->kappa();
 		}
 		
-		ublas::vector<double> prev_kappas(filtered_prev.abundances().size());
-        for (size_t i = 0; i < filtered_prev.abundances().size(); ++i)
+		ublas::vector<double> prev_kappas(prev_abundance.abundances().size());
+        for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
 		{
-			prev_kappas(i) = filtered_prev.abundances()[i]->kappa();
+			prev_kappas(i) = prev_abundance.abundances()[i]->kappa();
 		}
 		
 		sample_kappas.push_back(prev_kappas);
@@ -704,7 +670,7 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
         double p_val = 1.0;
         
         bool success;
-        success = test_js(filtered_prev, filtered_curr, js, p_val);
+        success = test_js(prev_abundance, curr_abundance, js, p_val);
         
 		if (js == 0.0 || success == false)
 		{
@@ -728,8 +694,8 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
 	else // we won't even bother with the JS-based testing in LOWDATA cases.
 	{
         if (prev_status == NUMERIC_OK && curr_status == NUMERIC_OK && 
-            filtered_prev.has_member_with_status(NUMERIC_LOW_DATA) == false &&
-            filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false)
+            prev_abundance.has_member_with_status(NUMERIC_LOW_DATA) == false &&
+            curr_abundance.has_member_with_status(NUMERIC_LOW_DATA) == false)
             test.test_status = NOTEST;
         else if (prev_status == NUMERIC_FAIL || curr_status == NUMERIC_FAIL)
             test.test_status = FAIL;
@@ -1384,6 +1350,10 @@ void test_differential(const string& locus_tag,
         return;
     }
 	
+//    vector<AbundanceGroup> filtered_primary_trans_groups;
+//    vector<AbundanceGroup> filtered_promoter_groups;
+//    vector<AbundanceGroup> filtered_cds_groups;
+    
     // Perform pairwise significance testing between samples. If this is a
     // time series, only test between successive pairs of samples, as supplied 
     // by the user.
