@@ -2330,7 +2330,7 @@ void AbundanceGroup::calculate_kappas()
         multinormal_generator<double> generator(kappa_mean, kappa_cov_chol);
         vector<Eigen::VectorXd> multinormal_samples;
         
-        generate_importance_samples(generator, multinormal_samples, 10000, true);
+        generate_importance_samples(generator, multinormal_samples, 10000, false);
 
         // We used to sample the JS using the real assigned count samples, but
         // that's not quite as accurate as simulating from a multinomial built from
