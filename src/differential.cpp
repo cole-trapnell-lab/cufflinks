@@ -1329,6 +1329,21 @@ void filter_group_for_js_testing(vector<vector<AbundanceGroup> >& source_groups)
     }
 }
 
+bool group_has_record_above_thresh(const AbundanceGroup& ab_group)
+{
+    for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
+    {
+        const Abundance& ab = *(ab_group.abundances()[ab_idx]);
+        if (ab.num_fragments() && ab.effective_length())
+        {
+            double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
+            if (frags_per_kb >= min_read_count)
+                return true;
+        }
+    }
+    return false;
+}
+
 int total_tests = 0;
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
@@ -1628,20 +1643,8 @@ void test_differential(const string& locus_tag,
                 const AbundanceGroup& prev_abundance = filtered_promoter_groups[j][k];
                 const string& desc = curr_abundance.description();
                 
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                
+                bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
+                                     group_has_record_above_thresh(prev_abundance));
                 SampleDifference test;
                 test = get_ds_tests(prev_abundance, 
                                     curr_abundance,
@@ -1667,20 +1670,8 @@ void test_differential(const string& locus_tag,
                 const AbundanceGroup& prev_abundance = filtered_cds_groups[i][k];
                 const string& desc = curr_abundance.description();
                 
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                
+                bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
+                                     group_has_record_above_thresh(prev_abundance));                
                 SampleDifference test;
                 test = get_ds_tests(prev_abundance, 
                                     curr_abundance,
@@ -1704,19 +1695,8 @@ void test_differential(const string& locus_tag,
                 const AbundanceGroup& prev_abundance = filtered_primary_trans_groups[j][k];
                 const string& desc = curr_abundance.description();
                 
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
+                bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
+                                     group_has_record_above_thresh(prev_abundance));
                 
                 SampleDifference test;
                 test = get_ds_tests(prev_abundance, 
