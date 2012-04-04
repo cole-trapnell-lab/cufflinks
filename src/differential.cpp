@@ -628,16 +628,7 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
 	const string& name = curr_abundance.description();
 	
 	SampleDifference test;
-	
-    shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(name);
     
-    meta_data->gene_ids = curr_abundance.gene_id();
-    meta_data->gene_names = curr_abundance.gene_name();
-    meta_data->protein_ids = curr_abundance.protein_id();
-    meta_data->locus_desc = curr_abundance.locus_tag();
-    meta_data->description = curr_abundance.description();
-    
-    test.meta_data = meta_data;
 	test.test_status = NOTEST;
 	
 	AbundanceStatus prev_status = curr_abundance.status();
@@ -1650,6 +1641,18 @@ void test_differential(const string& locus_tag,
                                     curr_abundance,
                                     enough_reads);
                 
+                // The filtered group might be empty, so let's grab metadata from
+                // the unfiltered group
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = samples[i]->gene_primary_transcripts[k].gene_id();
+                meta_data->gene_names = samples[i]->gene_primary_transcripts[k].gene_name();
+                meta_data->protein_ids = samples[i]->gene_primary_transcripts[k].protein_id();
+                meta_data->locus_desc = samples[i]->gene_primary_transcripts[k].locus_tag();
+                meta_data->description = samples[i]->gene_primary_transcripts[k].description();
+                
+                test.meta_data = meta_data;
+                
 #if ENABLE_THREADS
                 test_storage_lock.lock();
 #endif
@@ -1676,6 +1679,19 @@ void test_differential(const string& locus_tag,
                 test = get_ds_tests(prev_abundance, 
                                     curr_abundance,
                                     enough_reads);
+                
+                // The filtered group might be empty, so let's grab metadata from
+                // the unfiltered group
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = samples[i]->gene_cds[k].gene_id();
+                meta_data->gene_names = samples[i]->gene_cds[k].gene_name();
+                meta_data->protein_ids = samples[i]->gene_cds[k].protein_id();
+                meta_data->locus_desc = samples[i]->gene_cds[k].locus_tag();
+                meta_data->description = samples[i]->gene_cds[k].description();
+                
+                test.meta_data = meta_data;
+                
 #if ENABLE_THREADS
                 test_storage_lock.lock();
 #endif
@@ -1702,6 +1718,18 @@ void test_differential(const string& locus_tag,
                 test = get_ds_tests(prev_abundance, 
                                     curr_abundance,
                                     enough_reads);
+                
+                // The filtered group might be empty, so let's grab metadata from
+                // the unfiltered group
+                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+                
+                meta_data->gene_ids = samples[i]->primary_transcripts[k].gene_id();
+                meta_data->gene_names = samples[i]->primary_transcripts[k].gene_name();
+                meta_data->protein_ids = samples[i]->primary_transcripts[k].protein_id();
+                meta_data->locus_desc = samples[i]->primary_transcripts[k].locus_tag();
+                meta_data->description = samples[i]->primary_transcripts[k].description();
+                
+                test.meta_data = meta_data;
                 
 #if ENABLE_THREADS
                 test_storage_lock.lock();
