@@ -1667,7 +1667,7 @@ void test_differential(const string& locus_tag,
             for (size_t k = 0; k < samples[i]->gene_cds.size(); ++k)
             {
                 const AbundanceGroup& curr_abundance = filtered_cds_groups[i][k];
-                const AbundanceGroup& prev_abundance = filtered_cds_groups[i][k];
+                const AbundanceGroup& prev_abundance = filtered_cds_groups[j][k];
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
