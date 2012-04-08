@@ -238,7 +238,8 @@ static const int min_loci_for_fitting = 30;
 boost::shared_ptr<MassDispersionModel const> 
 fit_dispersion_model_helper(const string& condition_name,
                             const vector<double>& scale_factors,
-                            const vector<LocusCountList>& sample_count_table)
+                            const vector<LocusCountList>& sample_count_table,
+                            bool exclude_zero_samples)
 {
     vector<pair<double, double> > raw_means_and_vars;
     map<string, pair<double, double> > labeled_mv_table;
@@ -261,7 +262,7 @@ fit_dispersion_model_helper(const string& condition_name,
         if (var > 0.0 && p.counts.size())
             var /= p.counts.size();
         labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-        if (mean > 0 && var > 0.0 && num_non_zero > 1)
+        if (mean > 0 && var > 0.0 && (!exclude_zero_samples || num_non_zero == p.counts.size()))
         {
             //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
             raw_means_and_vars.push_back(make_pair(mean, var));
@@ -360,7 +361,8 @@ fit_dispersion_model_helper(const string& condition_name,
 boost::shared_ptr<MassDispersionModel const> 
 fit_dispersion_model(const string& condition_name,
                      const vector<double>& scale_factors,
-                     const vector<LocusCountList>& sample_count_table)
+                     const vector<LocusCountList>& sample_count_table,
+                     bool exclude_zero_samples)
 {
 //    
 //#if ENABLE_THREADS
@@ -411,7 +413,7 @@ fit_dispersion_model(const string& condition_name,
         }
         else
         {
-            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_table);
+            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_table, exclude_zero_samples);
         }
         disp_models[i] = model;
     }

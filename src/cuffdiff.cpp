@@ -975,7 +975,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
     if (poisson_dispersion == false)
     {
         shared_ptr<MassDispersionModel const> disperser;
-        disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table);
+        disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table, false);
         
         foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
         {
@@ -1081,7 +1081,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             continue;
         
         vector<double> scale_factors(itr->second.front().counts.size(), 1);
-        shared_ptr<MassDispersionModel const> model = fit_dispersion_model(itr->first->name()+"iso", scale_factors, itr->second);
+        shared_ptr<MassDispersionModel const> model = fit_dispersion_model(itr->first->name()+"iso", scale_factors, itr->second, true);
         for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
         {
             shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];

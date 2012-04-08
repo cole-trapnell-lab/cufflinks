@@ -88,7 +88,8 @@ void calc_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
 boost::shared_ptr<MassDispersionModel const> 
 fit_dispersion_model(const string& condition_name,
                      const std::vector<double>& scale_factors,
-                     const std::vector<LocusCountList>& sample_count_table);
+                     const std::vector<LocusCountList>& sample_count_table,
+                     bool exclude_zero_samples);
 
 // This factory merges bundles in a requested locus from several replicates
 class ReplicatedBundleFactory
@@ -286,7 +287,7 @@ public:
         }
         
         shared_ptr<MassDispersionModel const> disperser;
-        disperser = ::fit_dispersion_model(_condition_name,scale_factors, sample_count_table);
+        disperser = ::fit_dispersion_model(_condition_name,scale_factors, sample_count_table, false);
         
         foreach (shared_ptr<BundleFactory> fac, _factories)
         {
