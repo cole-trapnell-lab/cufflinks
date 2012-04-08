@@ -124,6 +124,9 @@ extern boost::thread_specific_ptr<std::string> bundle_label; // for consistent, 
 extern boost::shared_ptr<std::string> bundle_label;
 #endif
 
+// Global switch to mark when we're in the middle of learning bias.
+extern bool bias_run;
+
 
 bool gaurd_assembly();
 
@@ -471,6 +474,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NUM_FRAG_COUNT_DRAWS    304
 #define OPT_NUM_FRAG_ASSIGN_DRAWS   305
 #define OPT_MAX_MULTIREAD_FRACTION  306
-
+#define OPT_LOCUS_COUNT_DISPERSION  307
 
 #endif

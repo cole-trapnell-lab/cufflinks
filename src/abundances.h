@@ -37,6 +37,8 @@ struct ConfidenceInterval
 
 enum AbundanceStatus { NUMERIC_OK, NUMERIC_FAIL, NUMERIC_LOW_DATA, NUMERIC_HI_DATA };
 
+typedef map<shared_ptr<ReadGroupProperties const>, double> CountPerReplicateTable;
+
 class Abundance
 {
 public:
@@ -70,6 +72,9 @@ public:
 	
 	virtual double			num_fragments() const = 0;
 	virtual void			num_fragments(double nf) = 0;
+    
+    virtual CountPerReplicateTable num_fragments_by_replicate() const = 0;
+    virtual void            num_fragments_by_replicate(CountPerReplicateTable& cpr) = 0;
     
     virtual double          mass_fraction() const = 0;
 	virtual void            mass_fraction(double mf) = 0;
@@ -166,6 +171,9 @@ public:
 	double num_fragments() const			{ return _num_fragments; }
 	void num_fragments(double nf)			{ assert (!isnan(nf)); _num_fragments = nf; }
     
+    CountPerReplicateTable num_fragments_by_replicate() const { return _count_per_replicate; }
+    void num_fragments_by_replicate(CountPerReplicateTable& cpr) { _count_per_replicate = cpr; }
+    
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
 	
@@ -254,6 +262,7 @@ public:
 	
 	virtual const string&	reference_tag() const { return _ref_tag; }
 	virtual void			reference_tag(const string& r) { _ref_tag = r; } 
+    
 	
 private:
 	
@@ -276,6 +285,8 @@ private:
 	
     long double _sample_mass_fraction;
     long double _sample_mass_variance;
+    
+    CountPerReplicateTable _count_per_replicate;
 };
 
 class AbundanceGroup : public Abundance
@@ -347,6 +358,9 @@ public:
 	double num_fragments() const;
 	void num_fragments(double nf)			{  }
     
+    CountPerReplicateTable num_fragments_by_replicate() const;
+    void num_fragments_by_replicate(CountPerReplicateTable& cpr) { }
+    
     double mass_fraction() const;
 	void mass_fraction(double mf)			{  }
     
@@ -408,6 +422,18 @@ public:
     void total_frags(double nf) { _total_frags = nf; }
     
     const std::set<shared_ptr<ReadGroupProperties const> >& rg_props() const { return _read_group_props; }
+    
+    void init_rg_props(const std::set<shared_ptr<ReadGroupProperties const> >& rg) 
+    { 
+        _count_per_replicate.clear();
+        for ( std::set<shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg.begin();
+             itr != rg.end();
+             ++itr)
+        {
+            _count_per_replicate[*itr] = 0;
+        }
+    }
+    
     
 private:
 	

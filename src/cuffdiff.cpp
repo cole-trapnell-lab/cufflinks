@@ -52,6 +52,7 @@ using namespace boost;
 
 bool use_geometric_norm = false;
 bool use_raw_mapped_norm = false;
+bool use_isoform_count_dispersion = true;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
@@ -115,6 +116,7 @@ static struct option long_options[] = {
 {"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
 {"trim-read-length",        required_argument,	     0,          OPT_TRIM_READ_LENGTH},
 {"cov-delta",               required_argument,	     0,          OPT_MAX_DELTA_GAP},
+{"locus-count-dispersion",  no_argument,             0,          OPT_LOCUS_COUNT_DISPERSION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -413,6 +415,11 @@ int parse_options(int argc, char** argv)
                 num_frag_assignments = parseInt(1, "--num-frag-assign-draws must be at least 1", print_usage);
                 break;
             }
+            case OPT_LOCUS_COUNT_DISPERSION:
+            {
+                use_isoform_count_dispersion = false;
+                break;
+            }
                 
 			default:
 				print_usage();
@@ -612,6 +619,108 @@ void print_FPKM_tracking(FILE* fout,
 		fprintf(fout, "\n");
 	}
 }
+
+void print_count_tracking(FILE* fout, 
+						 const FPKMTrackingTable& tracking)
+{
+	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength");
+	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
+	if (first_itr != tracking.end())
+	{
+		const FPKMTracking& track = first_itr->second;
+		const vector<FPKMContext>& fpkms = track.fpkm_series;
+		for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            size_t num_rep = 1;
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
+                 itr != fpkms[i].count_per_rep.end(); 
+                 ++itr)
+            {
+                fprintf(fout, "\t%s_rep_%lu_count", sample_labels[i].c_str(), num_rep);
+                num_rep++;
+            }
+//			fprintf(fout, "\t%s_count\t%s_count_variance\t%s_conf_hi\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+		}
+	}
+	fprintf(fout, "\n");
+	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+	{
+		const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+		const vector<FPKMContext>& fpkms = track.fpkm_series;
+		
+        AbundanceStatus status = NUMERIC_OK;
+        foreach (const FPKMContext& c, fpkms)
+        {
+            if (c.status == NUMERIC_FAIL)
+                status = NUMERIC_FAIL;
+        }
+        
+        string all_gene_ids = cat_strings(track.gene_ids);
+		if (all_gene_ids == "")
+			all_gene_ids = "-";
+        
+		string all_gene_names = cat_strings(track.gene_names);
+		if (all_gene_names == "")
+			all_gene_names = "-";
+		
+		string all_tss_ids = cat_strings(track.tss_ids);
+		if (all_tss_ids == "")
+			all_tss_ids = "-";
+		
+        char length_buff[33] = "-";
+        if (track.length)
+            sprintf(length_buff, "%d", track.length);
+        
+        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s", 
+                description.c_str(),
+                track.classcode ? track.classcode : '-',
+                track.ref_match.c_str(),
+                all_gene_ids.c_str(),
+                all_gene_names.c_str(), 
+                all_tss_ids.c_str(),
+                track.locus_tag.c_str(),
+                length_buff);
+        
+		for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            const char* status_str = "OK";
+            
+            if (fpkms[i].status == NUMERIC_OK)
+            {
+                status_str = "OK";
+            }
+            else if (fpkms[i].status == NUMERIC_FAIL)
+            {
+                status_str = "FAIL";
+            }
+            else if (fpkms[i].status == NUMERIC_LOW_DATA)
+            {
+                status_str = "LOWDATA";
+            }
+            else if (fpkms[i].status == NUMERIC_HI_DATA)
+            {
+                status_str = "HIDATA";
+            }
+            else
+            {
+                assert(false);
+            }
+            
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
+                 itr != fpkms[i].count_per_rep.end(); 
+                 ++itr)
+            {
+                fprintf(fout, "\t%lg", itr->second);
+            }
+            
+			//fprintf(fout, "\t%lg\t%lg\t%lg\t%s", fpkm, fpkm_conf_lo, fpkm_conf_hi, status_str);
+		}
+		
+		fprintf(fout, "\n");
+	}
+}
+
 
 bool p_value_lt(const SampleDifference* lhs, const SampleDifference* rhs)
 {
@@ -895,6 +1004,99 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
         //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
     }
 
+}
+
+void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
+                                        vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+{
+    map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> > sample_count_table_for_disp_model;
+    
+    for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+    {
+        shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
+        vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+        //vector<double> count_table;
+        
+        vector<LocusCountList> sample_count_table;
+        
+        set<shared_ptr<ReadGroupProperties> > reps_for_condition;
+        
+        for (size_t i = 0; i < replicates.size(); ++i)
+        {
+            shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
+            reps_for_condition.insert(rg_props);
+        }
+    }
+
+    size_t iso_num = 0;
+    
+    for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
+    {
+        const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+        const vector<FPKMContext>& fpkms = track.fpkm_series;
+		
+        for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            size_t fac_idx = 0;
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
+                 itr != fpkms[i].count_per_rep.end(); 
+                 ++itr)
+            {
+                shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+                pair<map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator, bool >  p;
+                p = sample_count_table_for_disp_model.insert(make_pair(rg_props->mass_dispersion_model(),
+                                                                   vector<LocusCountList>()));
+                map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator lc_itr = p.first;
+                vector<LocusCountList>& lc_list = lc_itr->second;
+                double count = itr->second;
+                
+                if (iso_num >= lc_list.size())
+                {
+                    LocusCountList locus_count(description, fpkms[i].count_per_rep.size(), 1); 
+                    lc_list.push_back(locus_count);
+                    lc_list.back().counts[0] = count;
+                }
+                else
+                {
+                    const string& ld = lc_list[iso_num].locus_desc;
+                    if (ld != description)
+                    {
+                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                        exit(1);
+                    }
+                    lc_list[iso_num].counts[fac_idx] = count;
+                }
+                fac_idx++;
+            }
+        }
+        iso_num++;
+    }
+    
+    for (map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::const_iterator itr = sample_count_table_for_disp_model.begin(); 
+         itr != sample_count_table_for_disp_model.end(); 
+         ++itr)
+    {
+        if (itr->second.empty())
+            continue;
+        
+        vector<double> scale_factors(itr->second.front().counts.size(), 1);
+        shared_ptr<MassDispersionModel const> model = fit_dispersion_model(itr->first->name()+"iso", scale_factors, itr->second);
+        for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+        {
+            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
+            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+            
+            for (size_t i = 0; i < replicates.size(); ++i)
+            {
+                shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
+                if (rg_props->mass_dispersion_model() == itr->first)
+                {
+                    rg_props->mass_dispersion_model(model);
+                }
+            }
+        }
+    }
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
@@ -1294,21 +1496,26 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	
 	double num_bundles = (double)bundle_factories[0]->num_bundles();
 	
-    //test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), &tests, &tracking, samples_are_time_series, p_bar)
+//    if (corr_bias && corr_multi)
+//        p_bar = ProgressBar("Calculating initial abundance estimates for bias and multi-read correction.", num_bundles);
+//    else if (corr_bias)
+//        p_bar = ProgressBar("Calculating initial abundance estimates for bias correction.", num_bundles);
+//    else if (corr_multi)
+//        p_bar = ProgressBar("Calculating initial abundance estimates for multi-read correction.", num_bundles);
+//    else
     
-	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
+    p_bar = ProgressBar("Calculating preliminary abundance estimates", num_bundles);
+    
+    Tracking tracking;
+    
+    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), NULL, &tracking, samples_are_time_series, &p_bar));
+    
+	//if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
-        if (corr_bias && corr_multi)
-            p_bar = ProgressBar("Calculating initial abundance estimates for bias and multi-read correction.", num_bundles);
-        else if (corr_bias)
-            p_bar = ProgressBar("Calculating initial abundance estimates for bias correction.", num_bundles);
-        else if (corr_multi)
-            p_bar = ProgressBar("Calculating initial abundance estimates for multi-read correction.", num_bundles);
-
 		while (1) 
 		{
 			//p_bar.update("",1);
-            test_launcher = shared_ptr<TestLauncher>(new TestLauncher((int)bundle_factories.size(), NULL, NULL, samples_are_time_series, &p_bar));
+            //test_launcher = shared_ptr<TestLauncher>(new TestLauncher((int)bundle_factories.size(), NULL, &tracking, samples_are_time_series, &p_bar));
                                                      
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
 			quantitate_next_locus(rt, bundle_factories, test_launcher);
@@ -1354,6 +1561,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	}
     if (corr_bias)
     {
+        bias_run = true;
         p_bar = ProgressBar("Learning bias parameters.", 0);
 		foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
@@ -1402,9 +1610,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 		{
 			rep_fac->reset();
         }
+        bias_run = false;
 	}
     
+    if (use_isoform_count_dispersion)
+    {
+        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
+    }
     
+    test_launcher->clear_tracking_data();
 	
 	Tests tests;
     
@@ -1428,8 +1642,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         tests.diff_promoter_tests[i] = vector<SampleDiffs>(i);
         tests.diff_cds_tests[i] = vector<SampleDiffs>(i);
     }
-
-	Tracking tracking;
 	
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
@@ -1685,6 +1897,22 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
 	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
 	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
+
+    FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
+	fprintf(stderr, "Writing isoform-level count tracking\n");
+	print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
+	
+	FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
+	fprintf(stderr, "Writing TSS group-level count tracking\n");
+	print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
+	
+	FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
+	fprintf(stderr, "Writing gene-level count tracking\n");
+	print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
+	
+	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
+	fprintf(stderr, "Writing CDS-level count tracking\n");
+	print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
 }
 
 int main(int argc, char** argv)
@@ -1925,7 +2153,51 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	outfiles.gene_fpkm_tracking_out = gene_fpkm_out;
+
+    char isoform_count_tracking_name[filename_buf_size];
+	sprintf(isoform_count_tracking_name, "%s/isoforms.count_tracking", output_dir.c_str());
+	FILE* isoform_count_out = fopen(isoform_count_tracking_name, "w");
+	if (!isoform_count_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level count tracking file %s for writing\n",
+				isoform_count_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_count_tracking_out = isoform_count_out;
+    
+	char tss_group_count_tracking_name[filename_buf_size];
+	sprintf(tss_group_count_tracking_name, "%s/tss_groups.count_tracking", output_dir.c_str());
+	FILE* tss_group_count_out = fopen(tss_group_count_tracking_name, "w");
+	if (!tss_group_count_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level count tracking file %s for writing\n",
+				tss_group_count_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_count_tracking_out = tss_group_count_out;
+    
+	char cds_count_tracking_name[filename_buf_size];
+	sprintf(cds_count_tracking_name, "%s/cds.count_tracking", output_dir.c_str());
+	FILE* cds_count_out = fopen(cds_count_tracking_name, "w");
+	if (!cds_count_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level count tracking file %s for writing\n",
+				cds_count_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_count_tracking_out = cds_count_out;
 	
+	char gene_count_tracking_name[filename_buf_size];
+	sprintf(gene_count_tracking_name, "%s/genes.count_tracking", output_dir.c_str());
+	FILE* gene_count_out = fopen(gene_count_tracking_name, "w");
+	if (!gene_count_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level count tracking file %s for writing\n",
+				gene_count_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_count_tracking_out = gene_count_out;
+    
     driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
 	
 #if 0

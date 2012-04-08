@@ -129,6 +129,8 @@ double mle_accuracy = 1e-6;
 
 // END SECRET OPTIONS
 
+bool bias_run = false;
+
 
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
@@ -379,5 +381,5 @@ ReadGroupProperties::ReadGroupProperties() :
     _external_scale_factor(1.0),
     _complete_fragments(false)
 {
-    _mass_dispersion_model = boost::shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
+    _mass_dispersion_model = boost::shared_ptr<MassDispersionModel const>(new PoissonDispersionModel(""));
 } 

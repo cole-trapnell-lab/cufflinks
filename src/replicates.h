@@ -16,10 +16,12 @@ class MassDispersionModel
 {
 public:
     MassDispersionModel() {}
-    MassDispersionModel(const std::vector<double>& scaled_mass_means, 
+    MassDispersionModel(const std::string& name,
+                        const std::vector<double>& scaled_mass_means, 
                         const std::vector<double>& scaled_raw_variances,
                         const std::vector<double>& scaled_mass_variances);
 
+    virtual const std::string& name() const { return _name; }
     
     virtual double scale_mass_variance(double scaled_mass) const;
     
@@ -45,6 +47,7 @@ public:
     }
     
 private:
+    std::string         _name;
     std::vector<double> _scaled_mass_means;
     std::vector<double> _scaled_raw_variances;
     std::vector<double> _scaled_mass_variances;
@@ -54,8 +57,12 @@ private:
 
 class PoissonDispersionModel : public MassDispersionModel
 {
-public:
+    std::string         _name;
     
+public:
+    PoissonDispersionModel(const std::string& name) : _name(name) {}
+        
+        virtual const std::string& name() const { return _name; }
     virtual double scale_mass_variance(double scaled_mass) const 
     { 
         return scaled_mass; 

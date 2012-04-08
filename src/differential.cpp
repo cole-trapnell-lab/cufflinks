@@ -38,6 +38,96 @@ void decr_pool_count()
 }
 #endif
 
+void add_to_tracking_table(size_t sample_index,
+                           Abundance& ab,
+						   FPKMTrackingTable& track)
+
+{
+	pair<FPKMTrackingTable::iterator,bool> inserted;
+	pair<string, FPKMTracking > p;
+	p = make_pair(ab.description(), FPKMTracking());
+	inserted = track.insert(p);
+	
+	FPKMTracking& fpkm_track = inserted.first->second;
+	
+	set<string> tss = ab.tss_id();
+    set<string> gene_ids = ab.gene_id();
+	set<string> genes = ab.gene_name();
+	set<string> proteins = ab.protein_id();
+	
+	fpkm_track.tss_ids.insert(tss.begin(), tss.end());
+    fpkm_track.gene_ids.insert(gene_ids.begin(), gene_ids.end());
+	fpkm_track.gene_names.insert(genes.begin(), genes.end());
+	fpkm_track.protein_ids.insert(proteins.begin(), proteins.end());
+	
+	if (inserted.second)
+	{
+		fpkm_track.locus_tag = ab.locus_tag();
+		fpkm_track.description = ab.description();
+		shared_ptr<Scaffold> transfrag = ab.transfrag();
+		if (transfrag && transfrag->nearest_ref_id() != "")
+		{
+			fpkm_track.classcode = transfrag->nearest_ref_classcode();
+			fpkm_track.ref_match = transfrag->nearest_ref_id();
+		}
+		else
+		{
+			fpkm_track.classcode = 0;
+			fpkm_track.ref_match = "-";
+		}
+        if (transfrag)
+        {
+            fpkm_track.length = transfrag->length(); 
+        }
+        else
+        {
+            fpkm_track.length = 0;
+        }
+	}
+	
+	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
+                                 ab.num_fragments_by_replicate(),
+								 ab.FPKM(), 
+								 ab.FPKM_variance(),
+                                 ab.status());
+    
+    
+	
+    vector<FPKMContext>& fpkms = inserted.first->second.fpkm_series;
+    if (sample_index < fpkms.size())
+    {
+        // if the fpkm series already has an entry matching this description
+        // for this sample index, then we are dealing with a group of transcripts
+        // that occupies multiple (genomically disjoint) bundles.  We need
+        // to add this bundle's contribution to the FPKM, fragments, and variance 
+        // to whatever's already there.  
+        
+        // NOTE: we can simply sum the FKPM_variances, because we are currently
+        // assuming that transcripts in disjoint bundles share no alignments and 
+        // thus have FPKM covariance == 0;  This assumption will no longer be
+        // true if we decide to do multireads the right way.
+        
+        FPKMContext& existing = fpkms[sample_index];
+        existing.FPKM += r1.FPKM;
+        existing.mean_count += r1.mean_count;
+        existing.FPKM_variance += r1.FPKM_variance;
+        if (existing.status == NUMERIC_FAIL || r1.status == NUMERIC_FAIL)
+        {
+            existing.status = NUMERIC_FAIL;
+        }
+        else 
+        {
+            existing.status = NUMERIC_OK;
+        }
+        
+    }
+    else 
+    {
+        fpkms.push_back(r1);
+    }
+}
+
+
 TestLauncher::launcher_sample_table::iterator TestLauncher::find_locus(const string& locus_id)
 {
     launcher_sample_table::iterator itr = _samples.begin();
@@ -94,6 +184,10 @@ bool TestLauncher::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >
     return true;
 }
 
+#if ENABLE_THREADS
+mutex test_storage_lock; // don't modify the above struct without locking here
+#endif
+
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself. 
 void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abundances)
@@ -119,11 +213,71 @@ void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abunda
         }
     }
     
-    // Test differential both extracts and records the FPKMs and performs the 
-    // testing itself. 
-    // FIXME: FPKM extraction should be split off into a separate routine 
-    // for clarity.
     test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
+}
+
+// Note: this routine should be called under lock - it doesn't
+// acquire the lock itself. 
+void TestLauncher::record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances)
+{
+    assert (abundances.size() == _orig_workers);
+    
+    // Just verify that all the loci from each factory match up.
+    for (size_t i = 1; i < abundances.size(); ++i)
+    {
+        const SampleAbundances& curr = *(abundances[i]);
+        const SampleAbundances& prev = *(abundances[i-1]);
+        
+        assert (curr.locus_tag == prev.locus_tag);
+        
+        const AbundanceGroup& s1 = curr.transcripts;
+        const AbundanceGroup& s2 =  prev.transcripts;
+        
+        assert (s1.abundances().size() == s2.abundances().size());
+        
+        for (size_t j = 0; j < s1.abundances().size(); ++j)
+        {
+            assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
+        }
+    }
+    
+#if ENABLE_THREADS
+	test_storage_lock.lock();
+#endif
+    
+    // Add all the transcripts, CDS groups, TSS groups, and genes to their
+    // respective FPKM tracking table.  Whether this is a time series or an
+    // all pairs comparison, we should be calculating and reporting FPKMs for 
+    // all objects in all samples
+	for (size_t i = 0; i < abundances.size(); ++i)
+	{
+		const AbundanceGroup& ab_group = abundances[i]->transcripts;
+        //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
+		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
+		{
+			add_to_tracking_table(i, *ab, _tracking->isoform_fpkm_tracking);
+            //assert (_tracking->isoform_fpkm_tracking.num_fragments_by_replicate().empty() == false);
+		}
+		
+		foreach (AbundanceGroup& ab, abundances[i]->cds)
+		{
+			add_to_tracking_table(i, ab, _tracking->cds_fpkm_tracking);
+		}
+		
+		foreach (AbundanceGroup& ab, abundances[i]->primary_transcripts)
+		{
+			add_to_tracking_table(i, ab, _tracking->tss_group_fpkm_tracking);
+		}
+		
+		foreach (AbundanceGroup& ab, abundances[i]->genes)
+		{
+			add_to_tracking_table(i, ab, _tracking->gene_fpkm_tracking);
+		}
+	}
+    
+#if ENABLE_THREADS
+    test_storage_lock.unlock();
+#endif
     
 }
 
@@ -148,6 +302,7 @@ void TestLauncher::test_finished_loci()
                     verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
+                record_tracking_data(itr->second);
                 perform_testing(itr->second);
             }
             else
@@ -157,6 +312,7 @@ void TestLauncher::test_finished_loci()
                     //verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
+                record_tracking_data(itr->second);
             }
             itr = _samples.erase(itr);
         }
@@ -712,93 +868,6 @@ string make_ref_tag(const string& ref, char classcode)
 	
 	return string(tag_buf);
 }
-void add_to_tracking_table(size_t sample_index,
-                           Abundance& ab,
-						   FPKMTrackingTable& track)
-
-{
-	pair<FPKMTrackingTable::iterator,bool> inserted;
-	pair<string, FPKMTracking > p;
-	p = make_pair(ab.description(), FPKMTracking());
-	inserted = track.insert(p);
-	
-	FPKMTracking& fpkm_track = inserted.first->second;
-	
-	set<string> tss = ab.tss_id();
-    set<string> gene_ids = ab.gene_id();
-	set<string> genes = ab.gene_name();
-	set<string> proteins = ab.protein_id();
-	
-	fpkm_track.tss_ids.insert(tss.begin(), tss.end());
-    fpkm_track.gene_ids.insert(gene_ids.begin(), gene_ids.end());
-	fpkm_track.gene_names.insert(genes.begin(), genes.end());
-	fpkm_track.protein_ids.insert(proteins.begin(), proteins.end());
-	
-	if (inserted.second)
-	{
-		fpkm_track.locus_tag = ab.locus_tag();
-		fpkm_track.description = ab.description();
-		shared_ptr<Scaffold> transfrag = ab.transfrag();
-		if (transfrag && transfrag->nearest_ref_id() != "")
-		{
-			fpkm_track.classcode = transfrag->nearest_ref_classcode();
-			fpkm_track.ref_match = transfrag->nearest_ref_id();
-		}
-		else
-		{
-			fpkm_track.classcode = 0;
-			fpkm_track.ref_match = "-";
-		}
-        if (transfrag)
-        {
-            fpkm_track.length = transfrag->length(); 
-        }
-        else
-        {
-            fpkm_track.length = 0;
-        }
-	}
-	
-	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
-								 ab.FPKM(), 
-								 ab.FPKM_variance(),
-                                 ab.status());
-    
-    
-	
-    vector<FPKMContext>& fpkms = inserted.first->second.fpkm_series;
-    if (sample_index < fpkms.size())
-    {
-        // if the fpkm series already has an entry matching this description
-        // for this sample index, then we are dealing with a group of transcripts
-        // that occupies multiple (genomically disjoint) bundles.  We need
-        // to add this bundle's contribution to the FPKM, fragments, and variance 
-        // to whatever's already there.  
-        
-        // NOTE: we can simply sum the FKPM_variances, because we are currently
-        // assuming that transcripts in disjoint bundles share no alignments and 
-        // thus have FPKM covariance == 0;  This assumption will no longer be
-        // true if we decide to do multireads the right way.
-        
-        FPKMContext& existing = fpkms[sample_index];
-        existing.FPKM += r1.FPKM;
-        existing.counts += r1.counts;
-        existing.FPKM_variance += r1.FPKM_variance;
-        if (existing.status == NUMERIC_FAIL || r1.status == NUMERIC_FAIL)
-        {
-            existing.status = NUMERIC_FAIL;
-        }
-        else 
-        {
-            existing.status = NUMERIC_OK;
-        }
-
-    }
-    else 
-    {
-        fpkms.push_back(r1);
-    }
-}
 
 string bundle_locus_tag(const RefSequenceTable& rt, 
 						const HitBundle& bundle)
@@ -817,11 +886,8 @@ string bundle_locus_tag(const RefSequenceTable& rt,
 	return string(locus_buf);
 }
 
-#if ENABLE_THREADS
-mutex test_storage_lock; // don't modify the above struct without locking here
-#endif
-
 void sample_abundance_worker(const string& locus_tag,
+                             const set<shared_ptr<ReadGroupProperties const> >& rg_props,
                              SampleAbundances& sample,
                              HitBundle* sample_bundle,
                              bool perform_cds_analysis,
@@ -840,6 +906,7 @@ void sample_abundance_worker(const string& locus_tag,
     }
     
     sample.transcripts = AbundanceGroup(abundances);
+    sample.transcripts.init_rg_props(rg_props);
     
     vector<MateHit> hits_in_cluster;
     
@@ -1076,6 +1143,9 @@ mutex variance_info_lock; // don't modify the above struct without locking here
 
 vector<LocusVarianceInfo> locus_variance_info_table;
 
+// We'll use this tracking table to collect per replicate counts for each 
+// transcript, so we can re-fit the variance model.
+FPKMTrackingTable transcript_count_tracking; 
 
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
@@ -1090,7 +1160,7 @@ void sample_worker(const RefSequenceTable& rt,
     HitBundle bundle;
     bool non_empty = sample_factory.next_bundle(bundle);
     
-    if (!non_empty || (!corr_multi && !final_est_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
+    if (!non_empty || (bias_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS
         // If Cuffdiff was built without threads, we need to manually invoke 
@@ -1132,7 +1202,15 @@ void sample_worker(const RefSequenceTable& rt,
         }
     }
 
+    set<shared_ptr<ReadGroupProperties const> > rg_props;
+    for (size_t i = 0; i < sample_factory.factories().size(); ++i)
+    {
+        shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
+        rg_props.insert(bf->read_group_properties());
+    }
+    
     sample_abundance_worker(boost::cref(locus_tag),
+                            boost::cref(rg_props),
                             boost::ref(*abundance),
                             &bundle,
                             perform_cds_analysis,
@@ -1142,99 +1220,106 @@ void sample_worker(const RefSequenceTable& rt,
     variance_info_lock.lock();
 #endif
     
-    ///////////////////////////////////////////////
-    shared_ptr<MassDispersionModel const> disperser = sample_factory.mass_dispersion_model();
-    pair<double, double> locus_mv = disperser->get_raw_mean_and_var(locus_tag);
-    if (locus_mv.first != 0 && locus_mv.second != 0)
-    {
-        LocusVarianceInfo info;
-        info.factory_id = factory_id;
-        info.mean_count = locus_mv.first;
-        info.count_empir_var = locus_mv.second;
-        info.locus_count_fitted_var = disperser->scale_mass_variance(info.mean_count);
-        
-        double total_iso_scaled_var = 0.0;
-        
-        const AbundanceGroup& ab_group = abundance->transcripts;
-        info.locus_total_frags = ab_group.total_frags();
-        info.locus_salient_frags = ab_group.salient_frags();
-        //double group_counts = ab_group.total_frags();
-        ublas::matrix<double> cov = ab_group.iterated_count_cov();
-        if (ab_group.num_fragments())
-            cov /= ab_group.num_fragments();
-        
-        double total_length = 0.0;
-        for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
-        {
-            total_length += ab_group.abundances()[i]->effective_length();
-        }
-        
-//        if (total_length)
+    //fprintf(stderr, "\nTesting in %s (%d total tests)\n", locus_tag.c_str(), total_tests);
+    
+	// Add all the transcripts, CDS groups, TSS groups, and genes to their
+    // respective FPKM tracking table.  Whether this is a time series or an
+    // all pairs comparison, we should be calculating and reporting FPKMs for 
+    // all objects in all samples
+    
+//    ///////////////////////////////////////////////
+//    shared_ptr<MassDispersionModel const> disperser = sample_factory.mass_dispersion_model();
+//    pair<double, double> locus_mv = disperser->get_raw_mean_and_var(locus_tag);
+//    if (locus_mv.first != 0 && locus_mv.second != 0)
+//    {
+//        LocusVarianceInfo info;
+//        info.factory_id = factory_id;
+//        info.mean_count = locus_mv.first;
+//        info.count_empir_var = locus_mv.second;
+//        info.locus_count_fitted_var = disperser->scale_mass_variance(info.mean_count);
+//        
+//        double total_iso_scaled_var = 0.0;
+//        
+//        const AbundanceGroup& ab_group = abundance->transcripts;
+//        info.locus_total_frags = ab_group.total_frags();
+//        info.locus_salient_frags = ab_group.salient_frags();
+//        //double group_counts = ab_group.total_frags();
+//        ublas::matrix<double> cov = ab_group.iterated_count_cov();
+//        if (ab_group.num_fragments())
+//            cov /= ab_group.num_fragments();
+//        
+//        double total_length = 0.0;
+//        for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
 //        {
-//            for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
-//            {
-//                fprintf(stderr, 
-//                        "%lg, %lg, %lg\n", 
-//                        _abundances[i]->gamma(), 
-//                        _abundances[i]->effective_length()/total_length, 
-//                        log2(_abundances[i]->gamma()/(_abundances[i]->effective_length()/total_length)));
-//            }
+//            total_length += ab_group.abundances()[i]->effective_length();
 //        }
-        
-		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
-		{
-            
-//            double count_var = cov(i,i);
-//            double max_count_covar = 0.0;
-//            size_t max_covar_idx = 0.0;
-//            for (size_t j = 0; j < cov.size1(); ++j)
-//            {
-//                if (j != i && abs(cov(i,j)) > max_count_covar)
-//                {
-//                    max_count_covar = abs(cov(i,j));
-//                    max_covar_idx = j;
-//                }
-//            }
-            double count_sharing = 0.0;
-//            if (cov(i,i) != 0 && cov(max_covar_idx,max_covar_idx) != 0)
-//                count_sharing = -1.0 * cov(i,max_covar_idx) / sqrt(cov(i,i) * cov(max_covar_idx,max_covar_idx));
-            
-            
-            if (total_length)
-                count_sharing = log2(ab_group.abundances()[i]->gamma()/(ab_group.abundances()[i]->effective_length()/total_length));
-            
-            shared_ptr<Abundance> ab = ab_group.abundances()[i];
-            double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
-			total_iso_scaled_var += scaled_var;
-            info.gamma.push_back(ab->gamma());
-            info.gamma_var.push_back(ab_group.gamma_cov()(i,i));
-            info.count_sharing.push_back(count_sharing);
-            info.transcript_ids.push_back(ab->description());
-		}
-
-        
-        const ublas::matrix<double>& gamma_cov = ab_group.gamma_cov();
-        info.bayes_gamma_trace = 0;
-        info.empir_gamma_trace = 0;
-        for (size_t i = 0; i < ab_group.abundances().size(); ++i)
-        {
-            //for (size_t j = 0; j < ab_group.abundances().size(); ++j)
-            {
-                info.bayes_gamma_trace += gamma_cov(i,i);
-            }
-        }
-
-        
-        info.cross_replicate_js = 30;
-        //assert (abundance->cluster_mass == locus_mv.first);
-        //assert (total_iso_scaled_var >= info.mean_count);
-        
-        info.isoform_fitted_var_sum = total_iso_scaled_var;
-        info.num_transcripts = ab_group.abundances().size();
+//        
+////        if (total_length)
+////        {
+////            for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
+////            {
+////                fprintf(stderr, 
+////                        "%lg, %lg, %lg\n", 
+////                        _abundances[i]->gamma(), 
+////                        _abundances[i]->effective_length()/total_length, 
+////                        log2(_abundances[i]->gamma()/(_abundances[i]->effective_length()/total_length)));
+////            }
+////        }
+//        
+//		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
+//		{
+//            
+////            double count_var = cov(i,i);
+////            double max_count_covar = 0.0;
+////            size_t max_covar_idx = 0.0;
+////            for (size_t j = 0; j < cov.size1(); ++j)
+////            {
+////                if (j != i && abs(cov(i,j)) > max_count_covar)
+////                {
+////                    max_count_covar = abs(cov(i,j));
+////                    max_covar_idx = j;
+////                }
+////            }
+//            double count_sharing = 0.0;
+////            if (cov(i,i) != 0 && cov(max_covar_idx,max_covar_idx) != 0)
+////                count_sharing = -1.0 * cov(i,max_covar_idx) / sqrt(cov(i,i) * cov(max_covar_idx,max_covar_idx));
+//            
+//            
+//            if (total_length)
+//                count_sharing = log2(ab_group.abundances()[i]->gamma()/(ab_group.abundances()[i]->effective_length()/total_length));
+//            
+//            shared_ptr<Abundance> ab = ab_group.abundances()[i];
+//            double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
+//			total_iso_scaled_var += scaled_var;
+//            info.gamma.push_back(ab->gamma());
+//            info.gamma_var.push_back(ab_group.gamma_cov()(i,i));
+//            info.count_sharing.push_back(count_sharing);
+//            info.transcript_ids.push_back(ab->description());
+//		}
+//
+//        
+//        const ublas::matrix<double>& gamma_cov = ab_group.gamma_cov();
 //        info.bayes_gamma_trace = 0;
 //        info.empir_gamma_trace = 0;
-        locus_variance_info_table.push_back(info);
-    }
+//        for (size_t i = 0; i < ab_group.abundances().size(); ++i)
+//        {
+//            //for (size_t j = 0; j < ab_group.abundances().size(); ++j)
+//            {
+//                info.bayes_gamma_trace += gamma_cov(i,i);
+//            }
+//        }
+//
+//        
+//        info.cross_replicate_js = 30;
+//        //assert (abundance->cluster_mass == locus_mv.first);
+//        //assert (total_iso_scaled_var >= info.mean_count);
+//        
+//        info.isoform_fitted_var_sum = total_iso_scaled_var;
+//        info.num_transcripts = ab_group.abundances().size();
+////        info.bayes_gamma_trace = 0;
+////        info.empir_gamma_trace = 0;
+//        locus_variance_info_table.push_back(info);
+//    }
     
 #if ENABLE_THREADS
     variance_info_lock.unlock();
@@ -1344,46 +1429,6 @@ void test_differential(const string& locus_tag,
 {
 	if (samples.empty())
 		return;
-    
-#if ENABLE_THREADS
-	test_storage_lock.lock();
-    total_tests++;
-#endif
-    
-    //fprintf(stderr, "\nTesting in %s (%d total tests)\n", locus_tag.c_str(), total_tests);
-    
-	// Add all the transcripts, CDS groups, TSS groups, and genes to their
-    // respective FPKM tracking table.  Whether this is a time series or an
-    // all pairs comparison, we should be calculating and reporting FPKMs for 
-    // all objects in all samples
-	for (size_t i = 0; i < samples.size(); ++i)
-	{
-		const AbundanceGroup& ab_group = samples[i]->transcripts;
-        //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
-		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
-		{
-			add_to_tracking_table(i, *ab, tracking.isoform_fpkm_tracking);
-		}
-		
-		foreach (AbundanceGroup& ab, samples[i]->cds)
-		{
-			add_to_tracking_table(i, ab, tracking.cds_fpkm_tracking);
-		}
-		
-		foreach (AbundanceGroup& ab, samples[i]->primary_transcripts)
-		{
-			add_to_tracking_table(i, ab, tracking.tss_group_fpkm_tracking);
-		}
-		
-		foreach (AbundanceGroup& ab, samples[i]->genes)
-		{
-			add_to_tracking_table(i, ab, tracking.gene_fpkm_tracking);
-		}
-	}
-    
-#if ENABLE_THREADS
-    test_storage_lock.unlock();
-#endif
     
     if (no_differential == true)
     {

@@ -18,10 +18,13 @@ extern "C" {
 boost::mutex _locfit_lock;
 #endif
 
-MassDispersionModel::MassDispersionModel(const std::vector<double>& scaled_mass_means, 
+MassDispersionModel::MassDispersionModel(const std::string& name,
+                                         const std::vector<double>& scaled_mass_means, 
                                          const std::vector<double>& scaled_raw_variances,
                                          const std::vector<double>& scaled_mass_variances) 
 {
+    _name = name;
+    
     if (scaled_mass_means.size() != scaled_mass_variances.size())
     {
         fprintf (stderr, "Error: dispersion model table is malformed\n");
@@ -248,14 +251,17 @@ fit_dispersion_model_helper(const string& condition_name,
             mean /= p.counts.size();
         
         double var = 0.0;
+        double num_non_zero = 0;
         foreach (double d, p.counts)
         {
+            if (d > 0)
+                num_non_zero++;
             var += (d - mean) * (d - mean);
         }
         if (var > 0.0 && p.counts.size())
             var /= p.counts.size();
         labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-        if (mean > 0 && var > 0.0)
+        if (mean > 0 && var > 0.0 && num_non_zero > 1)
         {
             //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
             raw_means_and_vars.push_back(make_pair(mean, var));
@@ -265,7 +271,7 @@ fit_dispersion_model_helper(const string& condition_name,
     if (raw_means_and_vars.size() < min_loci_for_fitting)
     {
         shared_ptr<MassDispersionModel> disperser;
-        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
+        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
         
         for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
              itr != labeled_mv_table.end();
@@ -333,9 +339,9 @@ fit_dispersion_model_helper(const string& condition_name,
     }
     
     shared_ptr<MassDispersionModel> disperser;
-    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(raw_means, raw_variances, fitted_values));
+    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(condition_name, raw_means, raw_variances, fitted_values));
     if (poisson_dispersion)
-        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel);
+        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
     
     for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
          itr != labeled_mv_table.end();
@@ -365,7 +371,7 @@ fit_dispersion_model(const string& condition_name,
         if (sample_count_table[i].counts.size() <= 1)
         {
             // only one replicate - no point in fitting variance
-            return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel);
+            return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel(condition_name));
         }
     }
 #if ENABLE_THREADS

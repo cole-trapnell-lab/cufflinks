@@ -99,6 +99,11 @@ struct Outfiles
 	FILE* tss_group_fpkm_tracking_out;
 	FILE* gene_fpkm_tracking_out;
 	FILE* cds_fpkm_tracking_out;
+    
+    FILE* isoform_count_tracking_out;
+	FILE* tss_group_count_tracking_out;
+	FILE* gene_count_tracking_out;
+	FILE* cds_count_tracking_out;
 };
 
 struct Tests
@@ -115,9 +120,10 @@ struct Tests
 
 struct FPKMContext
 {
-	FPKMContext(double c, double r, double v, AbundanceStatus s)
-		: counts(c), FPKM(r), FPKM_variance(v), status(s) {}
-	double counts;
+	FPKMContext(double c, const CountPerReplicateTable& cpr, double r, double v, AbundanceStatus s)
+		: mean_count(c), count_per_rep(cpr), FPKM(r), FPKM_variance(v), status(s) {}
+	double mean_count;
+    CountPerReplicateTable count_per_rep;
 	double FPKM;
 	double FPKM_variance;
     AbundanceStatus status;
@@ -148,6 +154,14 @@ struct Tracking
 	FPKMTrackingTable tss_group_fpkm_tracking;
 	FPKMTrackingTable gene_fpkm_tracking;
 	FPKMTrackingTable cds_fpkm_tracking;
+    
+    void clear() 
+    {
+        isoform_fpkm_tracking.clear();
+        tss_group_fpkm_tracking.clear();
+        gene_fpkm_tracking.clear();
+        cds_fpkm_tracking.clear();
+    }
 };
 
 struct SampleAbundances
@@ -194,8 +208,11 @@ public:
                          size_t factory_id);
     void test_finished_loci();
     void perform_testing(vector<shared_ptr<SampleAbundances> >& abundances);
+    void record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(const string& locus_id);
+    
+    void clear_tracking_data() { _tracking->clear(); }
     
     typedef list<pair<string, vector<shared_ptr<SampleAbundances> > > > launcher_sample_table;
     
