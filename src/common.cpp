@@ -127,6 +127,7 @@ int trim_read_length = -1;
 double mle_accuracy = 1e-6;
 
 
+
 // END SECRET OPTIONS
 
 bool bias_run = false;

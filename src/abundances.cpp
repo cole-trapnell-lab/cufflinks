@@ -785,27 +785,33 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
             
             // cond_prob_i vector is a scalar multiple of cond_prob_k, so we
             // can collapse k into i via the mass.
-            if (equiv && last_cond_prob > 0.0)
+            if (equiv)
             {
-                //assert(curr_align->read_group_props() == alignments[k].read_group_props());
-                assert (last_cond_prob > 0);
-                //double mass_muliplier = sqrt(last_cond_prob);
-                double mass_multiplier = log(last_cond_prob);
-                //assert(last_cond_prob < 5);
-                assert (!isinf(mass_multiplier) && !isnan(mass_multiplier));
-                log_conv_factors[log_conv_factors.size() - 1] += mass_multiplier; 
-                replaced[k] = true;
-                cached_cond_probs[k].clear();
-                vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
-                num_replaced++;
-                
-                //double scale_factor = alignments[k].internal_scale_mass();
-                //double curr_align_mass = curr_align->collapse_mass();
-                
-                //double more_mass = alignments[k].internal_scale_mass() * alignments[k].collapse_mass() ;
-                double more_mass = alignments[k].collapse_mass();
-                curr_align->incr_collapse_mass(more_mass);
+                if (last_cond_prob > 0.0)
+                {
+                    //assert(curr_align->read_group_props() == alignments[k].read_group_props());
+                    assert (last_cond_prob > 0);
+                    //double mass_muliplier = sqrt(last_cond_prob);
+                    double mass_multiplier = log(last_cond_prob);
+                    //assert(last_cond_prob < 5);
+                    assert (!isinf(mass_multiplier) && !isnan(mass_multiplier));
+                    log_conv_factors[log_conv_factors.size() - 1] += mass_multiplier; 
+                    replaced[k] = true;
+                    cached_cond_probs[k].clear();
+                    vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
+                    num_replaced++;
+                    double more_mass = alignments[k].collapse_mass();
+                    curr_align->incr_collapse_mass(more_mass);
+                }
+                else
+                {
+                    replaced[k] = true;
+                    num_replaced++;
+                    cached_cond_probs[k].clear();
+                    vector<double>(cached_cond_probs[k]).swap(cached_cond_probs[k]);
+                }
             }
+            
         }
     }
     
@@ -952,8 +958,11 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         non_equiv_alignments = nr_alignments;
         compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
-        
-	calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);
+       
+    if (final_est_run || corr_multi || corr_bias) // don't do the pooled estimation run if we're just getting the replicate mles for dispersion modeling
+    {
+        calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);
+    }
     
     ublas::vector<double> mean_per_rep_gammas;
     ublas::matrix<double> gamma_covariance;
@@ -963,31 +972,34 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 	{
         mles_for_read_groups.insert(make_pair(itr->first, ublas::vector<double>(_abundances.size(), 0)));
 	}
-        
-    empirical_mean_replicate_gamma_mle(transcripts,
-                                       non_equiv_alignments,
-                                       log_conv_factors,
-                                       mean_per_rep_gammas,
-                                       gamma_covariance,
-                                       mles_for_read_groups,
-                                       _count_per_replicate);
     
-    for (size_t i = 0; i < _abundances.size(); ++i)
+    if (!final_est_run && !corr_multi && !corr_bias)
     {
-        CountPerReplicateTable cpr;
-    
-        for (std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >::const_iterator itr = mles_for_read_groups.begin();
-             itr != mles_for_read_groups.end();
-             ++itr)
+        empirical_mean_replicate_gamma_mle(transcripts,
+                                           non_equiv_alignments,
+                                           log_conv_factors,
+                                           mean_per_rep_gammas,
+                                           gamma_covariance,
+                                           mles_for_read_groups,
+                                           _count_per_replicate);
+        
+        for (size_t i = 0; i < _abundances.size(); ++i)
         {
-            const ublas::vector<double>& mles_for_rep = itr->second;
-            std::map<shared_ptr<ReadGroupProperties const >, double>::const_iterator rep_itr = _count_per_replicate.find(itr->first);
-            assert (rep_itr != _count_per_replicate.end());
-            double count_for_rep = rep_itr->second;
-            ublas::vector<double> trans_counts = mles_for_rep * count_for_rep;
-            cpr[itr->first] = trans_counts[i];
+            CountPerReplicateTable cpr;
+        
+            for (std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >::const_iterator itr = mles_for_read_groups.begin();
+                 itr != mles_for_read_groups.end();
+                 ++itr)
+            {
+                const ublas::vector<double>& mles_for_rep = itr->second;
+                std::map<shared_ptr<ReadGroupProperties const >, double>::const_iterator rep_itr = _count_per_replicate.find(itr->first);
+                assert (rep_itr != _count_per_replicate.end());
+                double count_for_rep = rep_itr->second;
+                ublas::vector<double> trans_counts = mles_for_rep * count_for_rep;
+                cpr[itr->first] = trans_counts[i];
+            }
+            _abundances[i]->num_fragments_by_replicate(cpr);
         }
-        _abundances[i]->num_fragments_by_replicate(cpr);
     }
     
     mapped_transcripts.clear();
@@ -2516,20 +2528,39 @@ void Estep (int N,
         }
     }
     
-    Eigen::ArrayXd x = frag_prob_sums.array() * alignment_multiplicities.array();
+    Eigen::VectorXd x = frag_prob_sums.array() * alignment_multiplicities.array();
+//    Eigen::MatrixXd y = p.transpose() * cond_probs;
+//    Eigen::MatrixXd UU = y.array() * x.array();
+    
+//    cerr << UU <<endl;
+//    for (j = 0; j < N; ++j) 
+//    {
+//        for (i = 0; i < M; ++i) 
+//        {
+//            //double ProbY = frag_prob_sums(i);
+//            double exp_i_j = cond_probs(j,i) * p(j) * x(i);
+//            U(j,i) = exp_i_j;
+//        }
+//    }
+    
+    U = Eigen::MatrixXd(N,M);
+
+    for (i = 0; i < M; ++i) 
+    {
+        //double ProbY = frag_prob_sums(i);
+        //double exp_i_j = cond_probs(j,i) * p(j) * x(i);
+        //U.r = exp_i_j;
+        U.col(i) = cond_probs.col(i).array() * p.array();
+    }
     for (j = 0; j < N; ++j) 
     {
-        for (i = 0; i < M; ++i) 
-        {
-            //double ProbY = frag_prob_sums(i);
-            double exp_i_j = cond_probs(j,i) * p(j) * x(i);
-            assert (!isnan(cond_probs(j,i)) && !isinf(cond_probs(j,i)));
-            assert (!isnan(p(j)) && !isinf(p(j)));
-            assert (!isnan(x(i)) && !isinf(x(i)));
-            assert (!isnan(exp_i_j) && !isinf(exp_i_j));
-            U(j,i) = exp_i_j;
-        }
+        U.array().row(j) *= x.transpose().array();
     }
+    
+    //cerr << UU << endl;
+    //cerr << "==========" << endl;
+    //cerr << U << endl;
+    //cerr << "**********" << endl;
     //Eigen::ArrayXXd a_cond_probs = cond_probs.array();
     //Eigen::ArrayXXd a_p = p.array();
     //Eigen::ArrayXXd a_U = a_p * a_cond_probs.colwise();
