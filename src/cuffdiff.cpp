@@ -1055,7 +1055,8 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
                 {
                     LocusCountList locus_count(description, fpkms[i].count_per_rep.size(), 1); 
                     lc_list.push_back(locus_count);
-                    lc_list.back().counts[0] = count;
+                    assert (lc_list.size() -1 == iso_num);
+                    lc_list[iso_num].counts[0] = count;
                 }
                 else
                 {

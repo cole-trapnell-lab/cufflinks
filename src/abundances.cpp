@@ -707,7 +707,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
         
         for(int k = i + 1 ; k < M; ++k)
         {
-            if (replaced[k] || (corr_multi && alignments[k].is_multi()) /*|| alignments[i].read_group_props() != alignments[k].read_group_props()*/)
+            if (replaced[k] || (corr_multi && alignments[k].is_multi()) || alignments[i].read_group_props() != alignments[k].read_group_props())
                 continue;
             if (require_overlap && !::overlap_in_genome(curr_align->left(), curr_align->right(),
                                      alignments[k].left(), alignments[k].right()))
@@ -969,7 +969,8 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
                                        log_conv_factors,
                                        mean_per_rep_gammas,
                                        gamma_covariance,
-                                       mles_for_read_groups);
+                                       mles_for_read_groups,
+                                       _count_per_replicate);
     
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
@@ -988,6 +989,9 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         }
         _abundances[i]->num_fragments_by_replicate(cpr);
     }
+    
+    mapped_transcripts.clear();
+    compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     
     //non_equiv_alignments.clear();
 	//collapse_hits(alignments, nr_alignments);
@@ -1772,7 +1776,7 @@ void AbundanceGroup::calculate_conf_intervals()
 	}
 }
 
-void AbundanceGroup::compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
+void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 															  vector<shared_ptr<Abundance> >& transcripts,
 															  vector<shared_ptr<Abundance> >& mapped_transcripts)
 {		
@@ -2770,12 +2774,13 @@ AbundanceStatus compute_posterior_expectation(const vector<ublas::vector<double>
     return NUMERIC_OK;
 }
 
-AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> >& transcripts,
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups)
+                                                   std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
+                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate)
 {
     size_t N = transcripts.size();	
 	size_t M = nr_alignments.size();
@@ -2795,22 +2800,30 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abund
     {
         vector<MateHit> rep_hits;
         vector<double> rep_log_conv_factors;
-        rep_hit_counts.push_back(0);
+        //rep_hit_counts.push_back(0);
         for (size_t i = 0; i < M; ++i)
         {
-            rep_hits.push_back(nr_alignments[i]);
-            rep_log_conv_factors.push_back(log_conv_factors[i]);
+            //rep_hits.push_back(nr_alignments[i]);
+            //rep_log_conv_factors.push_back(log_conv_factors[i]);
 
-            if (nr_alignments[i].read_group_props() != itr->first)
+            if (nr_alignments[i].read_group_props() == itr->first)
             {
-                rep_hits.back().collapse_mass(0);
-                rep_log_conv_factors[rep_log_conv_factors.size() - 1] = 0;
+                //rep_hits.back().collapse_mass(0);
+                rep_hits.push_back(nr_alignments[i]);
+                rep_log_conv_factors.push_back(log_conv_factors[i]);
+                //rep_log_conv_factors[rep_log_conv_factors.size() - 1] = 0;
             }
-            rep_hit_counts[rep_hit_counts.size() - 1] += rep_hits.back().collapse_mass();
+            
+            //rep_hit_counts[rep_hit_counts.size() - 1] += rep_hits.back().collapse_mass();
         }
+        
+        rep_hit_counts.push_back(count_per_replicate.find(itr->first)->second);
         
         //fprintf(stderr,"Replicate # %lu has %lu fragments \n", mle_gammas.size(), rep_hits.size());
         vector<double> rep_gammas(0.0, transcripts.size());
+        vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
+        
+        compute_cond_probs_and_effective_lengths(rep_hits, transcripts, mapped_transcripts);
         
         AbundanceStatus mle_success = gamma_mle(transcripts,
                                                 rep_hits,
@@ -2961,12 +2974,13 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
     return NUMERIC_OK;
 }
 
-AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus empirical_replicate_gammas(vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,
                                            const vector<double>& log_conv_factors,
                                            ublas::vector<double>& gamma_estimate,
                                            ublas::matrix<double>& gamma_covariance,
-                                           std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups)
+                                           std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
+                                           std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate)
 {
     ublas::vector<double> empirical_gamma_mle = gamma_estimate;
     ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
@@ -2980,7 +2994,8 @@ AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >&
                                                                               log_conv_factors,
                                                                               empirical_gamma_mle,
                                                                               empirical_gamma_covariance,
-                                                                              mles_for_read_groups);
+                                                                              mles_for_read_groups,
+                                                                              count_per_replicate);
     
     
     if (empirical_mle_status != NUMERIC_OK)

@@ -461,11 +461,6 @@ private:
     
     
 	void update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts);
-
-    
-	void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
-												  vector<shared_ptr<Abundance> >& transcripts,
-												  vector<shared_ptr<Abundance> >& mapped_transcripts);
     
     void update_transcript_expression(double locus_mass, double locus_mass_fraction);
     
@@ -510,6 +505,10 @@ private:
     //std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
 };
 
+void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
+                                              vector<shared_ptr<Abundance> >& transcripts,
+                                              vector<shared_ptr<Abundance> >& mapped_transcripts);
+
 void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 							 const vector<MateHit>& alignments,
 							 vector<vector<char> >& compatibilities);
@@ -517,14 +516,15 @@ void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
 								   vector<MateHit>& alignments);
 
-AbundanceStatus empirical_mean_replicate_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> >& transcripts,
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups);
+                                                   std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
+                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate);
 
-AbundanceStatus empirical_replicate_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus empirical_replicate_gammas(vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,
                                            const vector<double>& log_conv_factors,
                                            ublas::vector<double>& gamma_map_estimate,
