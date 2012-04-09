@@ -2312,28 +2312,29 @@ void AbundanceGroup::calculate_kappas()
 //        return;
 //    }
 //    
-//    size_t num_count_draws = _assigned_count_samples.size();
-//    vector<Eigen::VectorXd > relative_abundances (num_count_draws, Eigen::VectorXd::Zero(num_members));
-//    
-//    // We'll use the effective lengths to transform counts into relative abundances,
-//    // and then use that to calculate the kappa variances and covariances.
-//    Eigen::VectorXd effective_length_recip = Eigen::VectorXd::Zero(_abundances.size());
-//    for (size_t i = 0; i < _abundances.size(); ++i)
-//    {
-//        if (_abundances[i]->effective_length() > 0)
-//            effective_length_recip(i) = 1.0 / _abundances[i]->effective_length();
-//    }
-//    
-//    for (size_t i = 0; i < num_count_draws; ++i)
-//    {
-//        
-//        Eigen::VectorXd relative_abundance = effective_length_recip.array() * _assigned_count_samples[i].array();
-//        double total = relative_abundance.sum();
-//        if (total > 0)
-//            relative_abundance /= total;
-//        //cerr << relative_abundance.transpose() << endl;
-//        relative_abundances[i] = relative_abundance;
-//    }
+    size_t num_count_draws = _assigned_count_samples.size();
+    vector<Eigen::VectorXd > relative_abundances (num_count_draws, Eigen::VectorXd::Zero(num_members));
+    
+    // We'll use the effective lengths to transform counts into relative abundances,
+    // and then use that to calculate the kappa variances and covariances.
+    Eigen::VectorXd effective_length_recip = Eigen::VectorXd::Zero(_abundances.size());
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        if (_abundances[i]->effective_length() > 0)
+            effective_length_recip(i) = 1.0 / _abundances[i]->effective_length();
+    }
+    
+    for (size_t i = 0; i < num_count_draws; ++i)
+    {
+        
+        Eigen::VectorXd relative_abundance = effective_length_recip.array() * _assigned_count_samples[i].array();
+        double total = relative_abundance.sum();
+        if (total > 0)
+            relative_abundance /= total;
+        //cerr << relative_abundance.transpose() << endl;
+        relative_abundances[i] = relative_abundance;
+    }
+    
 //    
 //    Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
 //    
@@ -2405,14 +2406,14 @@ void AbundanceGroup::calculate_kappas()
         multinormal_generator<double> generator(kappa_mean, kappa_cov_chol);
         vector<Eigen::VectorXd> multinormal_samples;
         
-        generate_importance_samples(generator, multinormal_samples, 10000, false);
+        //generate_importance_samples(generator, multinormal_samples, 10000, false);
 
         // We used to sample the JS using the real assigned count samples, but
         // that's not quite as accurate as simulating from a multinomial built from
         // the bounded covariance matrices.
         
-        //generate_null_js_samples(relative_abundances, 100000, js_samples);
-        generate_null_js_samples(multinormal_samples, 100000, js_samples);
+        generate_null_js_samples(relative_abundances, 100000, js_samples);
+        //generate_null_js_samples(multinormal_samples, 100000, js_samples);
         
         _null_js_samples = js_samples;
         //if (_null_js_samples.size() > 0)
