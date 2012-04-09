@@ -1036,6 +1036,18 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
 		const FPKMTracking& track = itr->second;
         const vector<FPKMContext>& fpkms = track.fpkm_series;
 		
+        bool skip_iso = false;
+        for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            if (fpkms[i].count_per_rep.empty())
+            {
+                skip_iso = true;
+                break;
+            }
+        }
+        if (skip_iso)
+            continue;
+        
         for (size_t i = 0; i < fpkms.size(); ++i)
 		{
             size_t fac_idx = 0;
@@ -1055,8 +1067,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
                 {
                     LocusCountList locus_count(description, fpkms[i].count_per_rep.size(), 1); 
                     lc_list.push_back(locus_count);
-                    assert (lc_list.size() -1 == iso_num);
-                    lc_list[iso_num].counts[0] = count;
+                    lc_list[lc_list.size() - 1].counts[0] = count;
                 }
                 else
                 {
