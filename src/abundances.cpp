@@ -973,7 +973,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         mles_for_read_groups.insert(make_pair(itr->first, ublas::vector<double>(_abundances.size(), 0)));
 	}
     
-    if (!final_est_run && !corr_multi && !corr_bias)
+    if (!final_est_run || (!corr_multi && !corr_bias))
     {
         empirical_mean_replicate_gamma_mle(transcripts,
                                            non_equiv_alignments,
