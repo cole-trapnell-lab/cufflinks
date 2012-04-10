@@ -1625,10 +1625,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         bias_run = false;
 	}
     
-    if (use_isoform_count_dispersion)
-    {
-        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
-    }
+//    if (use_isoform_count_dispersion)
+//    {
+//        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
+//    }
     
     test_launcher->clear_tracking_data();
 	
