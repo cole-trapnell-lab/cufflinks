@@ -586,7 +586,8 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
         for (size_t j = 0; j < N; ++j)
         {
             double scaled_variance;
-            scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());   
+            //scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
+            scaled_variance = _abundances[j]->gamma() * disperser->scale_mass_variance(scaled_mass);
             avg_mass_variances[j] += scaled_variance;
         }
         assert (disperser->scale_mass_variance(scaled_mass) != 0 || scaled_mass == 0); 
@@ -2418,7 +2419,7 @@ void AbundanceGroup::calculate_kappas()
         multinormal_generator<double> generator(kappa_mean, kappa_cov_chol);
         vector<Eigen::VectorXd> multinormal_samples;
         
-        //generate_importance_samples(generator, multinormal_samples, 10000, false);
+        generate_importance_samples(generator, multinormal_samples, 10000, false);
 
         // We used to sample the JS using the real assigned count samples, but
         // that's not quite as accurate as simulating from a multinomial built from
