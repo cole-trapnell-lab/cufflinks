@@ -2424,8 +2424,8 @@ void AbundanceGroup::calculate_kappas()
         // that's not quite as accurate as simulating from a multinomial built from
         // the bounded covariance matrices.
         
-        generate_null_js_samples(relative_abundances, 100000, js_samples);
-        //generate_null_js_samples(multinormal_samples, 100000, js_samples);
+        //generate_null_js_samples(relative_abundances, 100000, js_samples);
+        generate_null_js_samples(multinormal_samples, 100000, js_samples);
         
         _null_js_samples = js_samples;
         //if (_null_js_samples.size() > 0)
