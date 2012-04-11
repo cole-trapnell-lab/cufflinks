@@ -795,7 +795,15 @@ bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
         }
         else
         {
-            bundle.add_raw_mass(next_valid_alignment(bh));
+            double raw_mass = next_valid_alignment(bh);
+            if (bh && bh->num_hits() > max_frag_multihits)
+            {
+                skip_read = true;
+            }
+            else
+            {
+                bundle.add_raw_mass(raw_mass);
+            }
         }
 	}
 	
@@ -824,7 +832,15 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
             if ((read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction) ||
                 bundle.hits().size() >= max_frags_per_bundle)
             {
-                bundle.add_raw_mass(next_valid_alignment(bh));
+                double raw_mass = next_valid_alignment(bh);
+                if (bh && bh->num_hits() > max_frag_multihits)
+                {
+                    
+                }
+                else
+                {
+                    bundle.add_raw_mass(raw_mass);
+                }
             }
 		}
         bundle.finalize();
@@ -856,7 +872,15 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
         }
         else
         {
-            bundle.add_raw_mass(next_valid_alignment(bh));
+            double raw_mass = next_valid_alignment(bh);
+            if (bh && bh->num_hits() > max_frag_multihits)
+            {
+                skip_read = true;
+            }
+            else
+            {
+                bundle.add_raw_mass(raw_mass);
+            }
         }
 
         if (bh == NULL)
@@ -1035,7 +1059,14 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
         else
         {
             double raw_mass = next_valid_alignment(bh);
-            bundle.add_raw_mass(raw_mass);
+            if (bh && bh->num_hits() > max_frag_multihits)
+            {
+                skip_read = true;
+            }
+            else
+            {
+                bundle.add_raw_mass(raw_mass);
+            }
 		}
         
 		if (bh == NULL)
