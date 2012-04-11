@@ -229,6 +229,34 @@ CountPerReplicateTable AbundanceGroup::num_fragments_by_replicate() const
 	return cpr;
 }
 
+FPKMPerReplicateTable AbundanceGroup::FPKM_by_replicate() const
+{
+	FPKMPerReplicateTable fpr;
+	
+	foreach(shared_ptr<Abundance> ab, _abundances)
+	{
+		if (fpr.empty())
+        {
+            fpr = ab->FPKM_by_replicate();
+        }
+        else
+        {
+            FPKMPerReplicateTable ab_fpr = ab->FPKM_by_replicate();
+            for (FPKMPerReplicateTable::const_iterator itr = ab_fpr.begin(); 
+                 itr != ab_fpr.end();
+                 ++itr)
+            {
+                FPKMPerReplicateTable::iterator fpr_itr = fpr.find(itr->first);
+                assert (fpr_itr != fpr.end());
+                fpr_itr->second += itr->second;
+            }
+        }
+	}
+    
+    //assert (cpr.empty() != false);
+	return fpr;
+}
+
 double AbundanceGroup::mass_fraction() const
 {
 	double mass = 0;
@@ -974,7 +1002,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         mles_for_read_groups.insert(make_pair(itr->first, ublas::vector<double>(_abundances.size(), 0)));
 	}
     
-    if (!final_est_run || (!corr_multi && !corr_bias))
+    if (final_est_run || (!corr_multi && !corr_bias))
     {
         empirical_mean_replicate_gamma_mle(transcripts,
                                            non_equiv_alignments,
@@ -987,6 +1015,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         for (size_t i = 0; i < _abundances.size(); ++i)
         {
             CountPerReplicateTable cpr;
+            FPKMPerReplicateTable fpr;
         
             for (std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >::const_iterator itr = mles_for_read_groups.begin();
                  itr != mles_for_read_groups.end();
@@ -997,9 +1026,26 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
                 assert (rep_itr != _count_per_replicate.end());
                 double count_for_rep = rep_itr->second;
                 ublas::vector<double> trans_counts = mles_for_rep * count_for_rep;
+                ublas::vector<double> trans_fpkms = trans_counts;
+                for (size_t i = 0; i < trans_fpkms.size(); ++i)
+                {
+                    if (_abundances[i]->effective_length() && (itr->first)->normalized_map_mass())
+                    {
+                        trans_fpkms(i) /= (itr->first)->normalized_map_mass();
+                        trans_fpkms(i) *= 1000000000;
+                        trans_fpkms(i) /= _abundances[i]->effective_length();
+                        trans_fpkms(i) /= (itr->first)->external_scale_factor();
+                    }
+                    else
+                    {
+                        trans_fpkms(i) = 0;
+                    }
+                }
                 cpr[itr->first] = trans_counts[i];
+                fpr[itr->first] = trans_fpkms[i];
             }
             _abundances[i]->num_fragments_by_replicate(cpr);
+            _abundances[i]->FPKM_by_replicate(fpr);
         }
     }
     

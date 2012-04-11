@@ -88,7 +88,8 @@ void add_to_tracking_table(size_t sample_index,
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
                                  ab.num_fragments_by_replicate(),
 								 ab.FPKM(), 
-								 ab.FPKM_variance(),
+								 ab.FPKM_by_replicate(),
+                                 ab.FPKM_variance(),
                                  ab.status());
     
     
@@ -790,7 +791,17 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
 	AbundanceStatus prev_status = curr_abundance.status();
 	AbundanceStatus curr_status = prev_abundance.status();
     
-	if (prev_abundance.abundances().size() > 1 &&
+    if (prev_abundance.abundances().size() == 1 ||
+        prev_status == NUMERIC_OK && prev_abundance.num_fragments() == 0 ||
+        curr_status == NUMERIC_OK && curr_abundance.num_fragments() == 0)
+    {
+        test.p_value = 1;
+        test.value_1 = 0;
+        test.value_2 = 0;
+        test.differential = 0;
+        test.test_status = NOTEST;
+    }
+	else if (prev_abundance.abundances().size() > 1 &&
         /*prev_abundance.has_member_with_status(NUMERIC_LOW_DATA) == false &&
         filtered_curr.has_member_with_status(NUMERIC_LOW_DATA) == false &&*/ 
         prev_status == NUMERIC_OK && prev_abundance.num_fragments() > 0 &&
@@ -1420,6 +1431,30 @@ bool group_has_record_above_thresh(const AbundanceGroup& ab_group)
     return false;
 }
 
+bool group_has_record_badly_fit(const AbundanceGroup& ab_group)
+{
+    for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
+    {
+        const Abundance& ab = *(ab_group.abundances()[ab_idx]);
+        if (ab.num_fragments() && ab.effective_length())
+        {
+            double pooled_fpkm = ab.FPKM();
+            double pooled_fpkm_var = ab.FPKM_variance();
+            normal norm(pooled_fpkm, sqrt(pooled_fpkm_var));
+            FPKMPerReplicateTable fpkm_by_rep = ab.FPKM_by_replicate();
+            for (FPKMPerReplicateTable::const_iterator f_itr = fpkm_by_rep.begin();
+                 f_itr != fpkm_by_rep.end(); ++f_itr)
+            {
+                double rep_fpkm = f_itr->second;
+                double p_value = cdf(norm, rep_fpkm);
+                if (p_value < 0.05)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 int total_tests = 0;
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
@@ -1680,7 +1715,9 @@ void test_differential(const string& locus_tag,
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                     group_has_record_above_thresh(prev_abundance));
+                                     group_has_record_above_thresh(prev_abundance) &&
+                                     group_has_record_badly_fit(curr_abundance) == false &&
+                                     group_has_record_badly_fit(prev_abundance) == false);
                 SampleDifference test;
                 test = get_ds_tests(prev_abundance, 
                                     curr_abundance,
@@ -1719,7 +1756,9 @@ void test_differential(const string& locus_tag,
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                     group_has_record_above_thresh(prev_abundance));                
+                                     group_has_record_above_thresh(prev_abundance) &&
+                                     group_has_record_badly_fit(curr_abundance) == false &&
+                                     group_has_record_badly_fit(prev_abundance) == false);                
                 SampleDifference test;
                 test = get_ds_tests(prev_abundance, 
                                     curr_abundance,
@@ -1757,7 +1796,9 @@ void test_differential(const string& locus_tag,
                 const string& desc = curr_abundance.description();
                 
                 bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                     group_has_record_above_thresh(prev_abundance));
+                                     group_has_record_above_thresh(prev_abundance) &&
+                                     group_has_record_badly_fit(curr_abundance) == false &&
+                                     group_has_record_badly_fit(prev_abundance) == false);
                 
                 SampleDifference test;
                 test = get_ds_tests(prev_abundance, 

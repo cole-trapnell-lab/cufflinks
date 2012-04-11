@@ -621,7 +621,7 @@ void print_FPKM_tracking(FILE* fout,
 }
 
 void print_count_tracking(FILE* fout, 
-						 const FPKMTrackingTable& tracking)
+						  const FPKMTrackingTable& tracking)
 {
 	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
@@ -636,7 +636,7 @@ void print_count_tracking(FILE* fout,
                  itr != fpkms[i].count_per_rep.end(); 
                  ++itr)
             {
-                fprintf(fout, "\t%s_rep_%lu_count", sample_labels[i].c_str(), num_rep);
+                fprintf(fout, "\t%s_rep_%lu_count\t%s_rep_%lu_fpkm", sample_labels[i].c_str(), num_rep, sample_labels[i].c_str(), num_rep);
                 num_rep++;
             }
 //			fprintf(fout, "\t%s_count\t%s_count_variance\t%s_conf_hi\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
@@ -711,7 +711,12 @@ void print_count_tracking(FILE* fout,
                  itr != fpkms[i].count_per_rep.end(); 
                  ++itr)
             {
-                fprintf(fout, "\t%lg", itr->second);
+                FPKMPerReplicateTable::const_iterator f_itr = fpkms[i].fpkm_per_rep.find(itr->first);
+                if (f_itr == fpkms[i].fpkm_per_rep.end())
+                {
+                    fprintf(stderr, "Error: missing per-replicate FPKM data\n");
+                }
+                fprintf(fout, "\t%lg\t%lg", itr->second, f_itr->second);
             }
             
 			//fprintf(fout, "\t%lg\t%lg\t%lg\t%s", fpkm, fpkm_conf_lo, fpkm_conf_hi, status_str);

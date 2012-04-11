@@ -120,10 +120,11 @@ struct Tests
 
 struct FPKMContext
 {
-	FPKMContext(double c, const CountPerReplicateTable& cpr, double r, double v, AbundanceStatus s)
-		: mean_count(c), count_per_rep(cpr), FPKM(r), FPKM_variance(v), status(s) {}
+	FPKMContext(double c, const CountPerReplicateTable& cpr, double r, const FPKMPerReplicateTable& fpr, double v, AbundanceStatus s)
+		: mean_count(c), count_per_rep(cpr), fpkm_per_rep(fpr), FPKM(r), FPKM_variance(v), status(s) {}
 	double mean_count;
     CountPerReplicateTable count_per_rep;
+    FPKMPerReplicateTable fpkm_per_rep;
 	double FPKM;
 	double FPKM_variance;
     AbundanceStatus status;

@@ -38,6 +38,7 @@ struct ConfidenceInterval
 enum AbundanceStatus { NUMERIC_OK, NUMERIC_FAIL, NUMERIC_LOW_DATA, NUMERIC_HI_DATA };
 
 typedef map<shared_ptr<ReadGroupProperties const>, double> CountPerReplicateTable;
+typedef map<shared_ptr<ReadGroupProperties const>, double> FPKMPerReplicateTable;
 
 class Abundance
 {
@@ -75,6 +76,9 @@ public:
     
     virtual CountPerReplicateTable num_fragments_by_replicate() const = 0;
     virtual void            num_fragments_by_replicate(CountPerReplicateTable& cpr) = 0;
+    
+    virtual FPKMPerReplicateTable FPKM_by_replicate() const = 0;
+    virtual void            FPKM_by_replicate(CountPerReplicateTable& cpr) = 0;
     
     virtual double          mass_fraction() const = 0;
 	virtual void            mass_fraction(double mf) = 0;
@@ -124,19 +128,19 @@ public:
         _sample_mass_fraction(0.0),
         _sample_mass_variance(0.0){}
 	
-	TranscriptAbundance(const TranscriptAbundance& other)
-	{
-		_status = other._status;
-		_transfrag = other._transfrag;
-		_FPKM = other._FPKM;
-		_FPKM_conf = other._FPKM_conf;
-		_gamma = other._gamma;
-		_num_fragments = other._num_fragments;
-		_eff_len = other._eff_len;
-		_cond_probs = other._cond_probs;
-        _sample_mass_fraction = other._sample_mass_fraction;
-        _sample_mass_variance = other._sample_mass_variance;
-	}
+//	TranscriptAbundance(const TranscriptAbundance& other)
+//	{
+//		_status = other._status;
+//		_transfrag = other._transfrag;
+//		_FPKM = other._FPKM;
+//		_FPKM_conf = other._FPKM_conf;
+//		_gamma = other._gamma;
+//		_num_fragments = other._num_fragments;
+//		_eff_len = other._eff_len;
+//		_cond_probs = other._cond_probs;
+//        _sample_mass_fraction = other._sample_mass_fraction;
+//        _sample_mass_variance = other._sample_mass_variance;
+//	}
 	
 	~TranscriptAbundance()
 	{
@@ -171,8 +175,11 @@ public:
 	double num_fragments() const			{ return _num_fragments; }
 	void num_fragments(double nf)			{ assert (!isnan(nf)); _num_fragments = nf; }
     
-    CountPerReplicateTable num_fragments_by_replicate() const { return _count_per_replicate; }
-    void num_fragments_by_replicate(CountPerReplicateTable& cpr) { _count_per_replicate = cpr; }
+    CountPerReplicateTable num_fragments_by_replicate() const { return _num_fragments_per_replicate; }
+    void num_fragments_by_replicate(CountPerReplicateTable& cpr) { _num_fragments_per_replicate = cpr; }
+    
+    FPKMPerReplicateTable FPKM_by_replicate() const { return _fpkm_per_replicate; }
+    void FPKM_by_replicate(FPKMPerReplicateTable& fpr) { _fpkm_per_replicate = fpr; }
     
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
@@ -286,7 +293,8 @@ private:
     long double _sample_mass_fraction;
     long double _sample_mass_variance;
     
-    CountPerReplicateTable _count_per_replicate;
+    CountPerReplicateTable _num_fragments_per_replicate;
+    FPKMPerReplicateTable _fpkm_per_replicate;
 };
 
 class AbundanceGroup : public Abundance
@@ -360,6 +368,9 @@ public:
     
     CountPerReplicateTable num_fragments_by_replicate() const;
     void num_fragments_by_replicate(CountPerReplicateTable& cpr) { }
+    
+    FPKMPerReplicateTable FPKM_by_replicate() const;
+    void FPKM_by_replicate(FPKMPerReplicateTable& fpr) { }
     
     double mass_fraction() const;
 	void mass_fraction(double mf)			{  }
