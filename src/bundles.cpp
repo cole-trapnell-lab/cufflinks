@@ -821,7 +821,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		const ReadHit* bh = NULL;
 		while(_hit_fac->records_remain())
 		{
-            if (read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction ||
+            if ((read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction) ||
                 bundle.hits().size() >= max_frags_per_bundle)
             {
                 bundle.add_raw_mass(next_valid_alignment(bh));
@@ -848,7 +848,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
         bool skip_read = false;
 		// If we are randomly throwing out reads, check to see
         // whether this one should be kept.
-        if (read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction ||
+        if ((read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction) ||
             bundle.hits().size() >= max_frags_per_bundle)
         {
             next_valid_alignment(bh);
@@ -1028,13 +1028,14 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
         bool skip_read = false;
         const ReadHit* bh = NULL;
         
-        if (read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction)
+        if ((read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction))
         {
             skip_read = true;
         }
         else
         {
-            bundle.add_raw_mass(next_valid_alignment(bh));
+            double raw_mass = next_valid_alignment(bh);
+            bundle.add_raw_mass(raw_mass);
 		}
         
 		if (bh == NULL)

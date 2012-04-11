@@ -23,6 +23,7 @@
 using namespace std;
 
 double min_read_count = 10;
+double min_outlier_p = 0.01;
 
 #if ENABLE_THREADS
 mutex _launcher_lock;
@@ -1431,6 +1432,25 @@ bool group_has_record_above_thresh(const AbundanceGroup& ab_group)
     return false;
 }
 
+bool is_badly_fit(const Abundance& ab)
+{
+    double pooled_fpkm = ab.FPKM();
+    double pooled_fpkm_var = ab.FPKM_variance();
+    if (pooled_fpkm == 0 || pooled_fpkm_var <= 0)
+        return false;
+    normal norm(pooled_fpkm, sqrt(pooled_fpkm_var));
+    FPKMPerReplicateTable fpkm_by_rep = ab.FPKM_by_replicate();
+    for (FPKMPerReplicateTable::const_iterator f_itr = fpkm_by_rep.begin();
+         f_itr != fpkm_by_rep.end(); ++f_itr)
+    {
+        double rep_fpkm = f_itr->second;
+        double p_value = cdf(norm, rep_fpkm);
+        if (p_value < min_outlier_p)
+            return true;
+    }
+    return false;
+}
+
 bool group_has_record_badly_fit(const AbundanceGroup& ab_group)
 {
     for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
@@ -1438,18 +1458,8 @@ bool group_has_record_badly_fit(const AbundanceGroup& ab_group)
         const Abundance& ab = *(ab_group.abundances()[ab_idx]);
         if (ab.num_fragments() && ab.effective_length())
         {
-            double pooled_fpkm = ab.FPKM();
-            double pooled_fpkm_var = ab.FPKM_variance();
-            normal norm(pooled_fpkm, sqrt(pooled_fpkm_var));
-            FPKMPerReplicateTable fpkm_by_rep = ab.FPKM_by_replicate();
-            for (FPKMPerReplicateTable::const_iterator f_itr = fpkm_by_rep.begin();
-                 f_itr != fpkm_by_rep.end(); ++f_itr)
-            {
-                double rep_fpkm = f_itr->second;
-                double p_value = cdf(norm, rep_fpkm);
-                if (p_value < 0.05)
-                    return true;
-            }
+            if (is_badly_fit(ab))
+                return true;
         }
     }
     return false;
@@ -1527,6 +1537,12 @@ void test_differential(const string& locus_tag,
                     if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
+                
+                if (enough_reads)
+                {
+                    if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+                        enough_reads = false;
+                }
 
                 SampleDifference test;
                 test = get_de_tests(desc,
@@ -1577,6 +1593,13 @@ void test_differential(const string& locus_tag,
                         enough_reads = true;
                 }
                 
+                if (enough_reads)
+                {
+                    if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+                        enough_reads = false;
+                }
+
+                
                 SampleDifference test;
                 test = get_de_tests(desc,
                                     itr->second.fpkm_series[j], 
@@ -1626,6 +1649,13 @@ void test_differential(const string& locus_tag,
                     if (frags_per_kb >= min_read_count)
                         enough_reads = true;
                 }
+                
+                if (enough_reads)
+                {
+                    if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+                        enough_reads = false;
+                }
+
                 
                 SampleDifference test;
                 test = get_de_tests(desc,

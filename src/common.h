@@ -104,6 +104,7 @@ extern bool no_differential;
 extern double num_frag_count_draws;
 extern double num_frag_assignments;
 extern double max_multiread_fraction;
+extern double max_frag_multihits;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -475,5 +476,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NUM_FRAG_ASSIGN_DRAWS   305
 #define OPT_MAX_MULTIREAD_FRACTION  306
 #define OPT_LOCUS_COUNT_DISPERSION  307
+#define OPT_MIN_OUTLIER_P           308
+#define OPT_FRAG_MAX_MULTIHITS     309
 
 #endif

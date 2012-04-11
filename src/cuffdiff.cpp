@@ -117,6 +117,8 @@ static struct option long_options[] = {
 {"trim-read-length",        required_argument,	     0,          OPT_TRIM_READ_LENGTH},
 {"cov-delta",               required_argument,	     0,          OPT_MAX_DELTA_GAP},
 {"locus-count-dispersion",  no_argument,             0,          OPT_LOCUS_COUNT_DISPERSION},
+{"min-outlier-p",           required_argument,       0,          OPT_MIN_OUTLIER_P},
+{"max-frag-multihits",      required_argument,             0,          OPT_FRAG_MAX_MULTIHITS},
 {0, 0, 0, 0} // terminator
 };
 
@@ -163,6 +165,8 @@ void print_usage()
     fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
     fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
     fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
+    fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
+    fprintf(stderr, "  --min-outlier-p              Min replicate p value to admit for testing            [ default:   0.01 ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
@@ -418,6 +422,16 @@ int parse_options(int argc, char** argv)
             case OPT_LOCUS_COUNT_DISPERSION:
             {
                 use_isoform_count_dispersion = false;
+                break;
+            }
+            case OPT_FRAG_MAX_MULTIHITS:
+            {
+                max_frag_multihits = parseInt(1, "--max-frag-multihits must be at least 1", print_usage);
+                break;
+            }
+            case OPT_MIN_OUTLIER_P:
+            {
+                min_outlier_p = parseFloat(0, 1.0, "--min-outlier-p must be between 0 and 1.0", print_usage);
                 break;
             }
                 

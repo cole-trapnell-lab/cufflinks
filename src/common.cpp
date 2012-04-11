@@ -117,6 +117,7 @@ bool no_differential = false;
 double num_frag_count_draws = 1000;
 double num_frag_assignments = 1;
 double max_multiread_fraction = 0.75;
+double max_frag_multihits = 10000000;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
