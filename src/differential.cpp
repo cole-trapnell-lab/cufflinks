@@ -793,8 +793,8 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
 	AbundanceStatus curr_status = prev_abundance.status();
     
     if (prev_abundance.abundances().size() == 1 ||
-        prev_status == NUMERIC_OK && prev_abundance.num_fragments() == 0 ||
-        curr_status == NUMERIC_OK && curr_abundance.num_fragments() == 0)
+        (prev_status == NUMERIC_OK && prev_abundance.num_fragments() == 0) ||
+        (curr_status == NUMERIC_OK && curr_abundance.num_fragments() == 0))
     {
         test.p_value = 1;
         test.value_1 = 0;
