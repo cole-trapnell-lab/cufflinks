@@ -1159,11 +1159,6 @@ void assemble_bundle(const RefSequenceTable& rt,
 	{
 		case REF_DRIVEN:
 			scaffolds = bundle.ref_scaffolds();
-			if (!final_est_run && scaffolds.size() != 1) // Only learn bias on single isoforms
-			{
-				delete bundle_ptr;
-				return;
-			}
 			break;
 		case REF_GUIDED:
 			successfully_assembled = scaffolds_for_bundle(bundle, scaffolds, &bundle.ref_scaffolds());
@@ -1238,9 +1233,9 @@ void assemble_bundle(const RefSequenceTable& rt,
 	{
 		for (size_t i = 0; i < genes.size(); ++i)
 		{
-			if (genes[i].isoforms().size() == 1)
-			{
-				bl_ptr -> preProcessTranscript(genes[i].isoforms()[0].scaffold()); 
+            for (size_t j = 0; j <genes[i].isoforms().size(); ++j)
+            {
+                bl_ptr -> preProcessTranscript(genes[i].isoforms()[j].scaffold()); 
 			}
 		}
 	}

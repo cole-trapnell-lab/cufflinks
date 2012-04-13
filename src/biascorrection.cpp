@@ -120,7 +120,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 		if (progress_bar)
 			p_bar.update(bundle_label_buf, bundle.raw_mass());
 		
-		if (bundle.non_redundant_hits().size()==0 || bundle.ref_scaffolds().size() != 1)
+		if (bundle.non_redundant_hits().size()==0)// || bundle.ref_scaffolds().size() != 1)
 		{
 			delete bundle_ptr;
 			continue;
@@ -264,10 +264,10 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 		if (i - min_frag_len > endBinCutoff)
 			endBinCutoff = positionBins[++currEndBin]*(seqLen - min_frag_len);
 			
-		_startPosParams(currStartBin, lenClass) += startHist[i]/fpkm;
-		_startPosExp(currStartBin, lenClass) += !(_frag_len_dist->too_short(seqLen-i));
-		_endPosParams(currEndBin, lenClass) += endHist[i]/fpkm;
-		_endPosExp(currEndBin, lenClass) += !(_frag_len_dist->too_short(i+1));
+		_startPosParams(currStartBin, lenClass) += startHist[i];
+		_startPosExp(currStartBin, lenClass) += fpkm*(_frag_len_dist->cdf(seqLen-i));
+		_endPosParams(currEndBin, lenClass) += endHist[i];
+		_endPosExp(currEndBin, lenClass) += fpkm*(_frag_len_dist->cdf(i+1));
 
 		
 		bool start_in_bounds = i-CENTER >= 0 && i+(_m-1)-CENTER < seqLen;
@@ -287,8 +287,8 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 				int v = seqToInt(seqSlice,paramTypes[j]);
 				if (v >= 0)
 				{
-					_startSeqParams(j,v) += startHist[i]/fpkm;
-					_startSeqExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
+					_startSeqParams(j,v) += startHist[i];
+					_startSeqExp(j,v) += fpkm*(_frag_len_dist->cdf(seqLen-i));
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -296,8 +296,8 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 					genNList(seqSlice, 0, paramTypes[j],nList);
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
-						_startSeqParams(j,*it) += startHist[i]/(fpkm * (double)nList.size());
-						_startSeqExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
+						_startSeqParams(j,*it) += startHist[i]/((double)nList.size());
+						_startSeqExp(j,*it) += fpkm*(_frag_len_dist->cdf(seqLen-i))/(double)nList.size();
 					}
 				}
 			}
@@ -309,8 +309,8 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 				int v = seqToInt(seqSlice, paramTypes[j]);
 				if (v >= 0)
 				{
-					_endSeqParams(j,v) += endHist[i]/fpkm;
-					_endSeqExp(j,v) += !(_frag_len_dist->too_short(seqLen-i));
+					_endSeqParams(j,v) += endHist[i];
+					_endSeqExp(j,v) += fpkm*(_frag_len_dist->cdf(seqLen-i));
 				}
 				else // There is an N.  Average over all possible values of N
 				{
@@ -318,8 +318,8 @@ void BiasLearner::processTranscript(const std::vector<double>& startHist, const 
 					genNList(seqSlice, 0, paramTypes[j], nList);
 					for (list<int>::iterator it=nList.begin(); it!=nList.end(); ++it)
 					{
-						_endSeqParams(j,*it) += endHist[i]/(fpkm * (double)nList.size());
-						_endSeqExp(j,*it) += !(_frag_len_dist->too_short(seqLen-i))/(double)nList.size();
+						_endSeqParams(j,*it) += endHist[i]/((double)nList.size());
+						_endSeqExp(j,*it) += fpkm*(_frag_len_dist->cdf(seqLen-i))/(double)nList.size();
 					}
 				}
 			}
