@@ -126,8 +126,13 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 			continue;
 		}
 
-		bl.preProcessTranscript(*(bundle.ref_scaffolds()[0]));
-			
+		//bl.preProcessTranscript(*(bundle.ref_scaffolds()[0]));
+		
+        for (size_t j = 0; j < bundle.ref_scaffolds().size(); ++j)
+        {
+            bl.preProcessTranscript(*(bundle.ref_scaffolds()[j]));
+        }
+        
 		delete bundle_ptr;
 	}
 	
