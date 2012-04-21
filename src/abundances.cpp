@@ -2339,7 +2339,8 @@ void AbundanceGroup::calculate_kappas()
                     kappa_var = 0.0;
                 }
                 
-                assert (!isnan(kappa_var) && !isinf(kappa_var));
+                if (isnan(kappa_var) || isinf(kappa_var)) // to protect against underflow
+                    kappa_var = 0;
                 _kappa_covariance(k,m) = kappa_var;
             }
             else

@@ -832,6 +832,9 @@ void Scaffold::fill_gaps(int filled_gap_size)
 {
 	OpList ops;
 	
+    if (filled_gap_size <= 0)
+        return;
+    
 	const vector<AugmentedCuffOp>& orig_ops = augmented_ops();
 	for (size_t i = 0; i < orig_ops.size(); ++i)
 	{

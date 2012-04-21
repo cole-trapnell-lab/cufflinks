@@ -99,6 +99,7 @@ static struct option long_options[] = {
 {"num-frag-count-draws",	required_argument,		 0,			 OPT_NUM_FRAG_COUNT_DRAWS},
 {"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
 {"max-multiread-fraction",	required_argument,		 0,			 OPT_MAX_MULTIREAD_FRACTION},
+{"overlap-radius",       	required_argument,		 0,			 OPT_OLAP_RADIUS},
 {0, 0, 0, 0} // terminator
 };
 
@@ -148,6 +149,7 @@ void print_usage()
     fprintf(stderr, "  --trim-3-avgcov-thresh       minimum avg coverage required to attempt 3' trimming  [ default:     10 ]\n");
     fprintf(stderr, "  --trim-3-dropoff-frac        fraction of avg coverage below which to trim 3' end   [ default:    0.1 ]\n");
     fprintf(stderr, "  --max-multiread-fraction     maximum fraction of allowed multireads per transcript [ default:   0.75 ]\n");
+    fprintf(stderr, "  --overlap-radius             maximum gap size to fill between transfrags (in bp)   [ default:     50 ]\n");
     
     fprintf(stderr, "\nAdvanced Reference Annotation Guided Assembly Options:\n");
 //    fprintf(stderr, "  --tile-read-len              length of faux-reads                                  [ default:    405 ]\n");
@@ -412,6 +414,11 @@ int parse_options(int argc, char** argv)
             case OPT_MAX_MULTIREAD_FRACTION:
             {
                 max_multiread_fraction = parseFloat(0, 1.0, "--max-multiread-fraction must be between 0 and 1.0", print_usage);
+                break;
+            }
+            case OPT_OLAP_RADIUS:
+            {
+                olap_radius = parseInt(1, "--max-multiread-fraction must be at least 1", print_usage);
                 break;
             }
 			default:
