@@ -167,7 +167,7 @@ void print_usage()
     fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     fprintf(stderr, "  --min-outlier-p              Min replicate p value to admit for testing            [ default:   0.01 ]\n");
-    fprintf(stderr, "  --min-rep-for-js-test        Replicates needed for relative isoform shift testing  [ default:      3 ]\n");
+    fprintf(stderr, "  --min-reps-for-js-test        Replicates needed for relative isoform shift testing  [ default:      3 ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
