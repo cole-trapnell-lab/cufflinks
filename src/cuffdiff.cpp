@@ -676,31 +676,10 @@ void print_count_tracking(FILE* fout,
                 status = NUMERIC_FAIL;
         }
         
-        string all_gene_ids = cat_strings(track.gene_ids);
-		if (all_gene_ids == "")
-			all_gene_ids = "-";
+       
         
-		string all_gene_names = cat_strings(track.gene_names);
-		if (all_gene_names == "")
-			all_gene_names = "-";
-		
-		string all_tss_ids = cat_strings(track.tss_ids);
-		if (all_tss_ids == "")
-			all_tss_ids = "-";
-		
-        char length_buff[33] = "-";
-        if (track.length)
-            sprintf(length_buff, "%d", track.length);
-        
-        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s", 
-                description.c_str(),
-                track.classcode ? track.classcode : '-',
-                track.ref_match.c_str(),
-                all_gene_ids.c_str(),
-                all_gene_names.c_str(), 
-                all_tss_ids.c_str(),
-                track.locus_tag.c_str(),
-                length_buff);
+        fprintf(fout, "%s", 
+                description.c_str());
         
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
@@ -727,24 +706,68 @@ void print_count_tracking(FILE* fout,
                 assert(false);
             }
             
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
-                 itr != fpkms[i].count_per_rep.end(); 
-                 ++itr)
-            {
-                FPKMPerReplicateTable::const_iterator f_itr = fpkms[i].fpkm_per_rep.find(itr->first);
-                if (f_itr == fpkms[i].fpkm_per_rep.end())
-                {
-                    fprintf(stderr, "Error: missing per-replicate FPKM data\n");
-                }
-                fprintf(fout, "\t%lg\t%lg", itr->second, f_itr->second);
-            }
-            
-			//fprintf(fout, "\t%lg\t%lg\t%lg\t%s", fpkm, fpkm_conf_lo, fpkm_conf_hi, status_str);
+            double external_counts = fpkms[i].mean_count;
+            double external_count_var = 0.0;
+			fprintf(fout, "\t%lg\t%lg\t%s", external_counts, external_count_var, status_str);
 		}
 		
 		fprintf(fout, "\n");
 	}
 }
+
+void print_read_group_tracking(FILE* fout, 
+                               const FPKMTrackingTable& tracking)
+{
+	fprintf(fout,"tracking_id\tcondition\treplicate\traw_frags\tinternal_scaled_frags\texternal_scaled_frags\tFPKM\teffective_length\tstatus");
+	
+	fprintf(fout, "\n");
+	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+	{
+		const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+		const vector<FPKMContext>& fpkms = track.fpkm_series;
+		
+        AbundanceStatus status = NUMERIC_OK;
+                
+		for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
+                 itr != fpkms[i].count_per_rep.end(); 
+                 ++itr)
+            { 
+                FPKMPerReplicateTable::const_iterator f_itr = fpkms[i].fpkm_per_rep.find(itr->first);
+                
+                
+                if (f_itr == fpkms[i].fpkm_per_rep.end())
+                {
+                    fprintf(stderr, "Error: missing per-replicate FPKM data\n");
+                }
+                
+                double FPKM = f_itr->second;
+                double internal_count = itr->second;
+                double external_count = internal_count / itr->first->external_scale_factor();
+                double raw_count = internal_count * itr->first->internal_scale_factor();
+                const  string& condition_name = itr->first->condition_name();
+                
+                int rep_num = itr->first->replicate_num();
+                
+                fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s",
+                        description.c_str(),
+                        condition_name.c_str(),
+                        rep_num,
+                        raw_count,
+                        internal_count,
+                        external_count,
+                        FPKM,
+                        "-",
+                        "OK");
+            }
+		}
+		
+		fprintf(fout, "\n");
+	}
+}
+
 
 
 bool p_value_lt(const SampleDifference* lhs, const SampleDifference* rhs)
@@ -1154,6 +1177,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         tokenize(sam_hit_filename_lists[i], ",", sam_hit_filenames);
         
         vector<shared_ptr<BundleFactory> > replicate_factories;
+        
+        string condition_name = sample_labels[i];
+        
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
             shared_ptr<HitFactory> hs;
@@ -1191,6 +1217,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 *rg_props = hs->read_group_properties();
             }
             
+            rg_props->condition_name(condition_name);
+            rg_props->replicate_num(j);
+            rg_props->file_path(sam_hit_filename_lists[i]);
+            
             all_read_groups.push_back(rg_props);
             
             hf->read_group_properties(rg_props);
@@ -1199,7 +1229,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        string condition_name = sample_labels[i];
+        
         bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
@@ -1919,6 +1949,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
     }
 	
+    // FPKM tracking
+    
 	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
 	fprintf(stderr, "Writing isoform-level FPKM tracking\n");
 	print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
@@ -1935,6 +1967,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
 	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
 
+    // Count tracking
+    
     FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
 	fprintf(stderr, "Writing isoform-level count tracking\n");
 	print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
@@ -1950,6 +1984,24 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
 	fprintf(stderr, "Writing CDS-level count tracking\n");
 	print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
+    
+    // Read group tracking
+    
+    FILE* fiso_rep_tracking =  outfiles.isoform_rep_tracking_out;
+	fprintf(stderr, "Writing isoform-level read group tracking\n");
+	print_read_group_tracking(fiso_rep_tracking,tracking.isoform_fpkm_tracking); 
+	
+	FILE* ftss_rep_tracking =  outfiles.tss_group_rep_tracking_out;
+	fprintf(stderr, "Writing TSS group-level read group tracking\n");
+	print_read_group_tracking(ftss_rep_tracking,tracking.tss_group_fpkm_tracking);
+	
+	FILE* fgene_rep_tracking =  outfiles.gene_rep_tracking_out;
+	fprintf(stderr, "Writing gene-level read group tracking\n");
+	print_read_group_tracking(fgene_rep_tracking,tracking.gene_fpkm_tracking);
+	
+	FILE* fcds_rep_tracking =  outfiles.cds_rep_tracking_out;
+	fprintf(stderr, "Writing CDS-level read group tracking\n");
+	print_read_group_tracking(fcds_rep_tracking,tracking.cds_fpkm_tracking);
 }
 
 int main(int argc, char** argv)
@@ -2234,6 +2286,72 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	outfiles.gene_count_tracking_out = gene_count_out;
+    
+    char isoform_rep_tracking_name[filename_buf_size];
+	sprintf(isoform_rep_tracking_name, "%s/isoforms.read_group_tracking", output_dir.c_str());
+	FILE* isoform_rep_out = fopen(isoform_rep_tracking_name, "w");
+	if (!isoform_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level read group tracking file %s for writing\n",
+				isoform_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_rep_tracking_out = isoform_rep_out;
+    
+	char tss_group_rep_tracking_name[filename_buf_size];
+	sprintf(tss_group_rep_tracking_name, "%s/tss_groups.read_group_tracking", output_dir.c_str());
+	FILE* tss_group_rep_out = fopen(tss_group_rep_tracking_name, "w");
+	if (!tss_group_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level read group tracking file %s for writing\n",
+				tss_group_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_rep_tracking_out = tss_group_rep_out;
+    
+	char cds_rep_tracking_name[filename_buf_size];
+	sprintf(cds_rep_tracking_name, "%s/cds.read_group_tracking", output_dir.c_str());
+	FILE* cds_rep_out = fopen(cds_rep_tracking_name, "w");
+	if (!cds_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level read group tracking file %s for writing\n",
+				cds_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_rep_tracking_out = cds_rep_out;
+	
+	char gene_rep_tracking_name[filename_buf_size];
+	sprintf(gene_rep_tracking_name, "%s/genes.read_group_tracking", output_dir.c_str());
+	FILE* gene_rep_out = fopen(gene_rep_tracking_name, "w");
+	if (!gene_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level read group tracking file %s for writing\n",
+				gene_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_rep_tracking_out = gene_rep_out;
+    
+    char read_group_info_name[filename_buf_size];
+	sprintf(read_group_info_name, "%s/read_groups.info", output_dir.c_str());
+	FILE* read_group_out = fopen(read_group_info_name, "w");
+	if (!read_group_out)
+	{
+		fprintf(stderr, "Error: cannot open read group info file %s for writing\n",
+				read_group_info_name);
+		exit(1);
+	}
+	outfiles.read_group_info_out = read_group_out;
+    
+    char run_info_name[filename_buf_size];
+	sprintf(run_info_name, "%s/run.info", output_dir.c_str());
+	FILE* run_info_out = fopen(run_info_name, "w");
+	if (!run_info_out)
+	{
+		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
+				run_info_name);
+		exit(1);
+	}
+	outfiles.run_info_out = run_info_out;
     
     driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
 	

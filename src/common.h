@@ -374,7 +374,15 @@ public:
 	
 //    const string& description() const { return _description; }
 //    void description(const string& d) { _description = d; }
-   
+    
+    const std::string& condition_name() const { return _condition_name; }
+    void condition_name(const std::string& cd) { _condition_name = cd; }
+    
+    const std::string& file_path() const { return _file_path; }
+    void file_path(const std::string& fp) { _file_path = fp; }
+    
+    int replicate_num() const { return _replicate_num; }
+    void replicate_num(int rn) { _replicate_num = rn; }
     
 private:
     
@@ -395,6 +403,10 @@ private:
     std::vector<LocusCount> _raw_counts;
     
     bool _complete_fragments;
+    
+    std::string _condition_name;
+    std::string _file_path;
+    int _replicate_num;
 };
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;

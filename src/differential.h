@@ -104,6 +104,14 @@ struct Outfiles
 	FILE* tss_group_count_tracking_out;
 	FILE* gene_count_tracking_out;
 	FILE* cds_count_tracking_out;
+    
+    FILE* isoform_rep_tracking_out;
+	FILE* tss_group_rep_tracking_out;
+	FILE* gene_rep_tracking_out;
+	FILE* cds_rep_tracking_out;
+    
+    FILE* run_info_out;
+    FILE* read_group_info_out;
 };
 
 struct Tests
