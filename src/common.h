@@ -129,6 +129,8 @@ extern boost::shared_ptr<std::string> bundle_label;
 // Global switch to mark when we're in the middle of learning bias.
 extern bool bias_run;
 
+// Hold the command line string used to run the program
+extern std::string cmd_str;
 
 bool gaurd_assembly();
 

@@ -31,6 +31,7 @@
 #include "update_check.h"
 
 #include <boost/thread.hpp>
+#include <boost/version.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -670,8 +671,6 @@ void print_count_tracking(FILE* fout,
                 status = NUMERIC_FAIL;
         }
         
-       
-        
         fprintf(fout, "%s", 
                 description.c_str());
         
@@ -760,7 +759,33 @@ void print_read_group_tracking(FILE* fout,
 	}
 }
 
+void print_read_group_info(FILE* fout, 
+                           const vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
+{
+    fprintf(fout, "file\tcondition\treplicate_num\ttotal_mass\tnorm_mass\tinternal_scale\texternal_scale\n");
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties const> rg_props = all_read_groups[i];
+        fprintf(fout, "%s\t%s\t%d\t%Lg\t%Lg\t%lg\t%lg\n",
+                rg_props->file_path().c_str(),
+                rg_props->condition_name().c_str(),
+                rg_props->replicate_num(),
+                rg_props->total_map_mass(),
+                rg_props->normalized_map_mass(),
+                rg_props->internal_scale_factor(),
+                rg_props->external_scale_factor());
+                
+    }
+}
 
+void print_run_info(FILE* fout)
+{
+    fprintf(fout, "param\tvalue\n");
+    fprintf(fout, "cmd_line\t%s\n", cmd_str.c_str());
+    fprintf(fout, "version\t%s\n", PACKAGE_VERSION);
+    fprintf(fout, "SVN_revision\t%s\n",SVN_REVISION); 
+    fprintf(fout, "boost_version\t%d\n", BOOST_VERSION);
+}
 
 bool p_value_lt(const SampleDifference* lhs, const SampleDifference* rhs)
 {
@@ -1184,7 +1209,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 try
                 {
                     fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-                            sam_hit_filename_lists[i].c_str());
+                            sam_hit_filenames[j].c_str());
                     hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
                 }
                 catch (std::runtime_error& e)
@@ -1211,7 +1236,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             
             rg_props->condition_name(condition_name);
             rg_props->replicate_num(j);
-            rg_props->file_path(sam_hit_filename_lists[i]);
+            rg_props->file_path(sam_hit_filenames[j]);
             
             all_read_groups.push_back(rg_props);
             
@@ -1994,10 +2019,23 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	FILE* fcds_rep_tracking =  outfiles.cds_rep_tracking_out;
 	fprintf(stderr, "Writing CDS-level read group tracking\n");
 	print_read_group_tracking(fcds_rep_tracking,tracking.cds_fpkm_tracking);
+    
+    FILE* fread_group_info =  outfiles.read_group_info_out;
+	fprintf(stderr, "Writing read group info\n");
+	print_read_group_info(fread_group_info,all_read_groups);
+
+    FILE* frun_info =  outfiles.run_info_out;
+	fprintf(stderr, "Writing run info\n");
+	print_run_info(frun_info);
 }
 
 int main(int argc, char** argv)
 {
+    for (int i = 0; i < argc; ++i)
+    {
+        cmd_str += string(argv[i]) + " ";
+    }
+    
     init_library_table();
     
     min_isoform_fraction = 1e-5;

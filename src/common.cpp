@@ -134,6 +134,7 @@ double mle_accuracy = 1e-6;
 
 bool bias_run = false;
 
+std::string cmd_str;
 
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
