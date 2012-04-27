@@ -238,12 +238,68 @@
         <!-- End of "rightside" -->
         <div id="leftside">
 			<h2>1.4.0 release - 4/XXX/2012</h2>
-			  <p>This release improves Cuffdiff accuracy and resolves several user-reported issues and bugs.
+			  <p>This release substantially improves the robustness of 
+				differential analysis with Cuffdiff. The update also  
+				resolves several user-reported issues and bugs, and several requested features.
 				<ul>
-					<li>Some users were reporting a high FAIL rate on gene and transcripts quantification.  This has been resolved according to a battery of tests using real and simulated data.  The root cause was that in conditions with substantial overdispersion across replicates, the FPKM variance-covariance matrices  produced by the Cuffdiff model were not always positive-definite.  Cuffdiff was detecting this, and marking those genes as having unreliable confidence intervals.  Prior to 1.4.0, the model contained a heuristic approximation of the covariances between assigned fragment counts (which are necessary for calculating the variance on each gene's expression level), and this approximation was producing poorly conditioned matrices. We have replaced the heuristic approximation with a direct sampling approach.  By simulating fragment generation and assignment to each transcript, we are reconstructing variance-covariance matrices for assigned fragment counts that are always properly condition.  This sampling approach produces more accurate estimates of variance and covariance as well, improving accuracy of transcript and gene level differential analysis.  
+					<li>Some users were reporting a high FAIL rate on gene and
+						transcripts quantification.  This has been resolved 
+						according to a battery of tests using real and simulated data.  
+						The root cause was that in conditions with substantial
+						overdispersion across replicates, the FPKM variance-covariance 
+						matrices  produced by the Cuffdiff model were not always 
+						positive-definite.  Cuffdiff was detecting this, 
+						and marking those genes as having unreliable confidence intervals. 
+						Prior to 1.4.0, the model contained a heuristic approximation of the 
+						covariances between assigned fragment counts (which are necessary 
+						for calculating the variance on each gene's expression level),
+						and this approximation was producing poorly conditioned matrices. 
+						We have replaced the heuristic approximation with a direct sampling 
+						approach, in effect "simulating" the assignment of fragments 
+						to each isoform many times for each gene.  
+						By simulating fragment generation and assignment to each transcript, 
+						we are reconstructing variance-covariance matrices for assigned fragment 
+						counts that are always properly condition.  This sampling 
+						approach produces more accurate estimates of variance and covariance as well, 
+						improving accuracy of transcript and gene level differential analysis. 
+						Users should expect more accurate quantification and shorter, 
+						more conservative lists of differentially expressed genes and trasncripts. 
+					<li>After substantial performance testing, we have determined that
+						the false discovery rate of Jensen-Shannon-based tests 
+						(differential splicing, CDS switching, and promoter switching) can be 
+						unnacceptably high when used with fewer than three replicates in the
+						conditions being compared.  Cuffdiff now refrains from 
+						performing significance tests when one of the conditions involved has 
+						fewer than three replicates.  You can change this behavior with the new
+						<tt>--min-reps-for-js-test</tt> option.  Cuffdiff still produces
+						<tt>splicing.diff</tt>, <tt>cds.diff</tt>, and <tt>promoters.diff</tt> 
+						regardless of how many replicates you have.  These files will include
+						the JS distance scores, but none of the genes will be marked significant if you
+						have fewer than the required number of replicates.
+					<li>Cufflinks and Cuffdiff can now be told to ignore fragments that map 
+						to the genome more than a specified number of times using the 
+						<tt>--max-frag-multihits</tt> option.  By default, Cufflinks 
+						and Cuffdiff still consider all fragments in the alignment file.
+					<li>Before testing for differential expression or regulation of genes and transcripts,
+						Cuffdiff now checks that the variance model for the gene or transcript in question is a good fit.  
+						This behavior can be controlled or disabled with the <tt>--min-outlier-p</tt> option.
+						See the relevant section in the "How Cufflinks works" page for more on this.
+					<li>A few bugs in the bias correction code.</li>
+					<li>Positional bias correction was reducing accuracy on 
+						certain datasets in some genes, so we have changed the
+						 default bias correction algorithm to model sequence-specific 
+						bias only.  Bias correction is still disabled by default, 
+						and positional bias correction is still available as an 
+						optional mode.</li>
 					<li>Several minor issues related to library size normalization have been fixed.
-					<li>A new library size normalization mode based on the geometric mean has been added, and is now the default for Cuffdiff. This method was introduced by Anders and Huber (Genome Biology, 2010).
-					<li>Cuffdiff now uses the <a href="http://eigen.tuxfamily.org">Eigen</a> linear algebra libraries.  Eigen is a fast package for matrix operations and makes good use of vector registers in modern processors, providing Cufflinks and Cuffdiff with a speed boost.
+					<li>A new library size normalization mode based on the 
+						geometric mean has been added, and is now the default 
+						for Cuffdiff. This method was introduced by Anders and
+						 Huber (Genome Biology, 2010).
+					<li>Cuffdiff now uses the <a href="http://eigen.tuxfamily.org">Eigen</a> 
+						linear algebra libraries.  Eigen is a fast package for 
+						matrix operations and makes good use of vector registers 
+						in modern processors.
 					<li>Cuffdiff now requires Boost version 1.47 or later.
 				</ul>
 			  <br/>

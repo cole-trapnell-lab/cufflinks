@@ -71,8 +71,13 @@ public:
 	virtual double			kappa() const	= 0;
 	virtual void			kappa(double k)	= 0;
 	
+    // This tracks the final modeled variance in the assigned counts.
 	virtual double			num_fragments() const = 0;
 	virtual void			num_fragments(double nf) = 0;
+    
+    // This tracks the final modeled variance in the assigned counts.
+    virtual double num_fragment_var() const	= 0;
+	virtual void num_fragment_var(double nfv) = 0;
     
     virtual CountPerReplicateTable num_fragments_by_replicate() const = 0;
     virtual void            num_fragments_by_replicate(CountPerReplicateTable& cpr) = 0;
@@ -83,6 +88,8 @@ public:
     virtual double          mass_fraction() const = 0;
 	virtual void            mass_fraction(double mf) = 0;
     
+    // This tracks the fitted variance from the overdispersion model,
+    // and does not include the fragment assignment uncertainty.
     virtual double          mass_variance() const = 0;
 	virtual void            mass_variance(double mv) = 0;
     
@@ -123,6 +130,7 @@ public:
 		_gamma(0), 
 		_kappa(1.0), 
 		_num_fragments(0),
+        _num_fragment_var(0),
 		_eff_len(0),
 		_cond_probs(NULL),
         _sample_mass_fraction(0.0),
@@ -172,8 +180,13 @@ public:
 	double kappa() const					{ return _kappa; }
 	void kappa(double k)					{ _kappa = k; }
 	
+    // This returns the estimated number of fragments
 	double num_fragments() const			{ return _num_fragments; }
 	void num_fragments(double nf)			{ assert (!isnan(nf)); _num_fragments = nf; }
+    
+    // This tracks the final modeled variance in the assigned counts.
+    double num_fragment_var() const			{ return _num_fragment_var; }
+	void num_fragment_var(double nfv)		{ assert (!isnan(nfv)); _num_fragment_var = nfv; }
     
     CountPerReplicateTable num_fragments_by_replicate() const { return _num_fragments_per_replicate; }
     void num_fragments_by_replicate(CountPerReplicateTable& cpr) { _num_fragments_per_replicate = cpr; }
@@ -283,6 +296,7 @@ private:
 	double _gamma;
 	double _kappa;
 	double _num_fragments;
+    double _num_fragment_var;
 	double _eff_len;
 	vector<double>* _cond_probs;
 	
@@ -365,6 +379,10 @@ public:
 	
 	double num_fragments() const;
 	void num_fragments(double nf)			{  }
+    
+    // This tracks the final modeled variance in the assigned counts.
+    double num_fragment_var() const;
+	void num_fragment_var(double nfv)		{  }
     
     CountPerReplicateTable num_fragments_by_replicate() const;
     void num_fragments_by_replicate(CountPerReplicateTable& cpr) { }

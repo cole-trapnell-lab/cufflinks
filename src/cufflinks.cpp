@@ -416,6 +416,11 @@ int parse_options(int argc, char** argv)
                 max_multiread_fraction = parseFloat(0, 1.0, "--max-multiread-fraction must be between 0 and 1.0", print_usage);
                 break;
             }
+            case OPT_FRAG_MAX_MULTIHITS:
+            {
+                max_frag_multihits = parseInt(1, "--max-frag-multihits must be at least 1", print_usage);
+                break;
+            }
             case OPT_OLAP_RADIUS:
             {
                 olap_radius = parseInt(1, "--max-multiread-fraction must be at least 1", print_usage);

@@ -87,6 +87,7 @@ void add_to_tracking_table(size_t sample_index,
 	}
 	
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
+                                 ab.num_fragment_var(),
                                  ab.num_fragments_by_replicate(),
 								 ab.FPKM(), 
 								 ab.FPKM_by_replicate(),
@@ -111,7 +112,7 @@ void add_to_tracking_table(size_t sample_index,
         
         FPKMContext& existing = fpkms[sample_index];
         existing.FPKM += r1.FPKM;
-        existing.mean_count += r1.mean_count;
+        existing.count_mean += r1.count_mean;
         existing.FPKM_variance += r1.FPKM_variance;
         if (existing.status == NUMERIC_FAIL || r1.status == NUMERIC_FAIL)
         {
@@ -1131,7 +1132,7 @@ void sample_abundance_worker(const string& locus_tag,
 struct LocusVarianceInfo
 {
     int factory_id;
-    double mean_count;
+    double count_mean;
     double count_empir_var;
     double locus_count_fitted_var;
     double isoform_fitted_var_sum;
@@ -1246,9 +1247,9 @@ void sample_worker(const RefSequenceTable& rt,
 //    {
 //        LocusVarianceInfo info;
 //        info.factory_id = factory_id;
-//        info.mean_count = locus_mv.first;
+//        info.count_mean = locus_mv.first;
 //        info.count_empir_var = locus_mv.second;
-//        info.locus_count_fitted_var = disperser->scale_mass_variance(info.mean_count);
+//        info.locus_count_fitted_var = disperser->scale_mass_variance(info.count_mean);
 //        
 //        double total_iso_scaled_var = 0.0;
 //        
@@ -1324,7 +1325,7 @@ void sample_worker(const RefSequenceTable& rt,
 //        
 //        info.cross_replicate_js = 30;
 //        //assert (abundance->cluster_mass == locus_mv.first);
-//        //assert (total_iso_scaled_var >= info.mean_count);
+//        //assert (total_iso_scaled_var >= info.count_mean);
 //        
 //        info.isoform_fitted_var_sum = total_iso_scaled_var;
 //        info.num_transcripts = ab_group.abundances().size();
@@ -1370,7 +1371,7 @@ void dump_locus_variance_info(const string& filename)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {
-            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.mean_count, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i], L.locus_salient_frags, L.locus_total_frags, L.count_sharing[i]);
+            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.count_mean, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i], L.locus_salient_frags, L.locus_total_frags, L.count_sharing[i]);
         }
         
     }

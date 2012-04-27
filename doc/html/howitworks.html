@@ -169,9 +169,12 @@
   	  	  <li><a href="#hsbi">How does Cufflinks identify and correct for sequence bias?</a></li>
   	  	  <li><a href="#hmul">How does Cufflinks handle multi-mapped reads?</a></li>
    	  	  <li><a href="#hrga">How does Reference Annotation Based Transcript (RABT) assembly work?</a></li>
-  	  	  <li><a href="#hdif">How does Cuffdiff test for differential expression and differential regulation?</a></li>
+		  <!-- <li><a href="#mrge">How does Cuffmerge work?</a></li> -->
+  	  	  <li><a href="#diff">What is Cuffdiff?</a></li>
+		  <li><a href="#hdif">How does Cuffdiff test for differential expression and differential regulation?</a></li>
  	   	  <li><a href="#huqn">How does upper-quartile normalization work?</a></li>
 		  <li><a href="#reps">How does Cuffdiff treat replicates?</a></li>
+		  <li><a href="#mfit">How does Cuffdiff check that its variance model is a good fit for a gene or transcript?</a></li>
  	   </ul>
 
   	    </ul><br/>
@@ -382,7 +385,9 @@
 			Science, Volume 291, 1304 - 1351 (2001)
 	  </ul><br/>
 	
-	<h2 id="whis">What is Cuffdiff?</h2><br/>
+	<!-- <h2 id="mrge">How does Cuffmerge work?</h2><br/> -->
+	
+	<h2 id="diff">What is Cuffdiff?</h2><br/>
   	<p> Cuffdiff is a program that uses the Cufflinks transcript quantification
 	engine to calculate gene and transcript expression levels in more than one condition and 
 	test them for signficant differences.  You can use it to find differentially expressed genes 
@@ -598,8 +603,64 @@
 		<br/>
 		<p>Cuffdiff takes an approach to differential expression analysis that is <a href="faq.html#cuffdiff">radically different</a> from most other RNA-seq analysis packages.   Because Cufflinks calculates individual transcript abundances, it is very sensitive when looking for differentially expressed genes, especially when those genes are alternatively spliced.  However, in order to deal with the overdispersion that is known to exist among biological replicates, Cuffdiff fits a model for fragment count variances in each condition prior to doing any testing.  Cuffdiff uses the LOCFIT regression package, written by Catherine Loader and Jiayang Sun, for this purpose. Cuffdiff models fragment count overdispersion the same way Anders and Huber do in their DEseq package to derive a count dispersion model for each experimental condition.  If only one replicate is available in each condtion, Cuffdiff pools the conditions together to derive a dispersion model.  The dispersion model, which describes variances of fragment <em>counts</em> across replicates, is then used to calculate the variances on a gene's <em>relative expression level</em> across replicates. It is these expression level variances that are used during testing for differences at the gene and transcript level.
 		
-		<p>One of the major advantages of using Cuffdiff for differential analysis over most other tools is that Cuffdiff tells you which genes are being differentially spliced. However, there may be some amount of variance in the <em>relative</em> abundances of a gene's alternative isoforms across replicates.  In order to capture this variance for use in differential expression and regulation testing, Cuffdiff pools the fragments before calculating the individual isoform abundances and then examines the likelihood surface of the replicate pool via importance sampling. On the likelihood surface, if the neighborhood around the maximum is relatively "flat", there is a great deal of variability across replicates in the maximum likelihood assignment of abundances to the isoforms.  If the neighborhood is more like a sharp peak, Cuffdiff can be very certain about the isoform abundances, and the variability in their expression levels (relative to each other) is small across replicates.  The overdisperion model produced by LOCFIT is combined with the uncertainty estimate from the bootstrapping procedure to set the parameters of a beta negative binomial distribution. This distribution provides a variance model for number of fragments that originate from each isoform of an alternatively spliced gene. Thus, Cuffdiff not only learns the level of fragment count overdispersion across replicates, it also uses the replicates to capture the fragment assignment uncertainty between alternative isoforms of each gene.
+		<p>One of the major advantages of using Cuffdiff for differential 
+			analysis over most other tools is that Cuffdiff tells you which 
+			genes are being differentially spliced. However, there may be some 
+			amount of variance in the <em>relative</em> abundances of a gene's 
+			alternative isoforms across replicates.  In order to capture this 
+			variance for use in differential expression and regulation testing,
+			 Cuffdiff pools the fragments before calculating the individual 
+			isoform abundances and then examines the likelihood surface of the 
+			replicate pool via importance sampling. On the likelihood surface, 
+			if the neighborhood around the maximum is relatively "flat", there 
+			is a great deal of variability across replicates in the maximum 
+			likelihood assignment of abundances to the isoforms.  If the neighborhood 
+			is more like a sharp peak, Cuffdiff can be very certain about the 
+			isoform abundances, and the variability in their expression levels 
+			(relative to each other) is small across replicates.  The overdisperion 
+			model produced by LOCFIT is combined with the uncertainty estimate 
+			from the bootstrapping procedure to set the parameters of a beta 
+			negative binomial distribution. This distribution provides a 
+			variance model for number of fragments that originate from each 
+			isoform of an alternatively spliced gene. Thus, Cuffdiff not only
+			 learns the level of fragment count overdispersion across replicates, 
+			it also uses the replicates to capture the fragment assignment
+			uncertainty between alternative isoforms of each gene.
+			</p>
+	
+	<br/>
+	<h2 id="mfit">How does Cuffdiff check that its variance model is a good fit for a gene or transcript?</h2><br/>
+	<p>In a perfect world, we'd have enough replicates of the conditions we're 
+		comparing to empirically estimate not only the expression levels of 
+		genes and transcripts in each condition, but also the variances of 
+		those expression levels.  Unfortunately, we're rarely so fortunate. 
+		Cuffdiff is built to work well with few replicates for each condition. 
+		It works by building a model to predict what the variance of a gene or 
+		transcript expression level will be given how deeply it was sequenced and 
+		how highly it is expressed.  Cuffdiff assumes that gene's and transcripts 
+		with similar expression levels have similar variances in those expression levels.  
+		However, that's not always the case - some genes have unusually high variability, 
+		for biologically meaningful reasonss.  Thus, Cuffdiff checks that the 
+		variability model is good fit before performing any signficance testing. 
+		 This works as follows: Cuffdiff first calculates the expression level of the 
+		gene or transcript in each condition begin compared.  It does so by pooling the 
+		data for the replicates of a condition together.  The model gives an expression 
+		and variance estimate for each condition, along with confidence intervals around 
+		the expression estimates.  Then, Cuffdiff calculates the expression level of the 
+		gene in each replicate independently.  If the expression level of one or more 
+		replicates lies outside the confidence interval generated by the model, Cuffdiff flags 
+		the transcript as poorly fit by the model, and no signficance testing is 
+		performed.  This greatly reduces the false discovery rate by the software, 
+		which are often caused by either insufficient data for a stable expression 
+		calculation, or excessive (and possibly biologically meaningful) 
+		intra-replicate variability.  
 		
+		<p>You can set the size of the confidence 
+		interval using the <tt>--min-outlier-p</tt> option, which has a default 
+		value of 0.01, corresponding to a 99% confidence interval.  That is, if 
+		a replicate lies outside of the 99% confidence interval around the 
+		pooled expression estimate, the gene or transcript is not tested for 
+		differential expression or regulation.
 	</div>
   </div>
   <div id="footer">

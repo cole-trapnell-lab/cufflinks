@@ -279,6 +279,20 @@ double AbundanceGroup::mass_variance() const
 	return mass_var;
 }
 
+// This tracks the final modeled variance in the assigned counts.
+double AbundanceGroup::num_fragment_var() const			
+{ 
+    double frag_var = 0.0;
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        for (size_t j = 0; j < _abundances.size(); ++j)
+        {
+            frag_var += _count_covariance(i,j);
+        }
+    }
+    return frag_var;
+}
+
 double AbundanceGroup::FPKM() const
 {
 	double fpkm = 0;
@@ -1699,6 +1713,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
                 assert (fpkm == 0 || fpkm_var > 0 || _abundances[i]->status() != NUMERIC_OK);
                 assert (!isinf(fpkm_var) && !isnan(fpkm_var));
                 _abundances[i]->FPKM_variance(fpkm_var);
+                _abundances[i]->num_fragment_var(_count_covariance(i,j));
                 
             }
             

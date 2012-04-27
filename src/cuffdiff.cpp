@@ -643,7 +643,7 @@ void print_FPKM_tracking(FILE* fout,
 void print_count_tracking(FILE* fout, 
 						  const FPKMTrackingTable& tracking)
 {
-	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength");
+	fprintf(fout,"tracking_id");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
 	if (first_itr != tracking.end())
 	{
@@ -651,15 +651,9 @@ void print_count_tracking(FILE* fout,
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
-            size_t num_rep = 1;
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
-                 itr != fpkms[i].count_per_rep.end(); 
-                 ++itr)
-            {
-                fprintf(fout, "\t%s_rep_%lu_count\t%s_rep_%lu_fpkm", sample_labels[i].c_str(), num_rep, sample_labels[i].c_str(), num_rep);
-                num_rep++;
-            }
-//			fprintf(fout, "\t%s_count\t%s_count_variance\t%s_conf_hi\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+            
+            
+			fprintf(fout, "\t%s_count\t%s_count_variance\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
 		}
 	}
 	fprintf(fout, "\n");
@@ -706,8 +700,8 @@ void print_count_tracking(FILE* fout,
                 assert(false);
             }
             
-            double external_counts = fpkms[i].mean_count;
-            double external_count_var = 0.0;
+            double external_counts = fpkms[i].count_mean;
+            double external_count_var = fpkms[i].count_var;
 			fprintf(fout, "\t%lg\t%lg\t%s", external_counts, external_count_var, status_str);
 		}
 		
@@ -751,7 +745,7 @@ void print_read_group_tracking(FILE* fout,
                 
                 int rep_num = itr->first->replicate_num();
                 
-                fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s",
+                fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
                         description.c_str(),
                         condition_name.c_str(),
                         rep_num,
@@ -763,8 +757,6 @@ void print_read_group_tracking(FILE* fout,
                         "OK");
             }
 		}
-		
-		fprintf(fout, "\n");
 	}
 }
 
