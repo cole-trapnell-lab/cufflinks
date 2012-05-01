@@ -93,6 +93,11 @@ public:
     virtual double          mass_variance() const = 0;
 	virtual void            mass_variance(double mv) = 0;
     
+    // This tracks the fragment assignment uncertainty,
+    // and does not include the overdispersion.
+    virtual double          num_fragment_uncertainty_var() const = 0;
+	virtual void            num_fragment_uncertainty_var(double mv) = 0;
+    
 	virtual double			effective_length() const= 0;
 	virtual void			effective_length(double el) = 0;
 	
@@ -131,6 +136,7 @@ public:
 		_kappa(1.0), 
 		_num_fragments(0),
         _num_fragment_var(0),
+        _num_fragment_uncertainty_var(0),
 		_eff_len(0),
 		_cond_probs(NULL),
         _sample_mass_fraction(0.0),
@@ -187,6 +193,11 @@ public:
     // This tracks the final modeled variance in the assigned counts.
     double num_fragment_var() const			{ return _num_fragment_var; }
 	void num_fragment_var(double nfv)		{ assert (!isnan(nfv)); _num_fragment_var = nfv; }
+    
+    // This tracks the fragment assignment uncertainty,
+    // and does not include the overdispersion.
+    double          num_fragment_uncertainty_var() const { return _num_fragment_uncertainty_var; }
+	void            num_fragment_uncertainty_var(double nfv) { assert (!isnan(nfv)); _num_fragment_uncertainty_var = nfv; }
     
     CountPerReplicateTable num_fragments_by_replicate() const { return _num_fragments_per_replicate; }
     void num_fragments_by_replicate(CountPerReplicateTable& cpr) { _num_fragments_per_replicate = cpr; }
@@ -297,6 +308,7 @@ private:
 	double _kappa;
 	double _num_fragments;
     double _num_fragment_var;
+    double _num_fragment_uncertainty_var;
 	double _eff_len;
 	vector<double>* _cond_probs;
 	
@@ -383,6 +395,10 @@ public:
     // This tracks the final modeled variance in the assigned counts.
     double num_fragment_var() const;
 	void num_fragment_var(double nfv)		{  }
+    
+    // This tracks the uncertainty in the assigned counts
+    double num_fragment_uncertainty_var() const;
+	void num_fragment_uncertainty_var(double nfv)		{  }
     
     CountPerReplicateTable num_fragments_by_replicate() const;
     void num_fragments_by_replicate(CountPerReplicateTable& cpr) { }

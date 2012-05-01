@@ -88,6 +88,8 @@ void add_to_tracking_table(size_t sample_index,
 	
 	FPKMContext r1 = FPKMContext(ab.num_fragments(), 
                                  ab.num_fragment_var(),
+                                 ab.num_fragment_uncertainty_var(),
+                                 ab.mass_variance(),
                                  ab.num_fragments_by_replicate(),
 								 ab.FPKM(), 
 								 ab.FPKM_by_replicate(),

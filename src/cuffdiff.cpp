@@ -652,9 +652,7 @@ void print_count_tracking(FILE* fout,
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
-            
-            
-			fprintf(fout, "\t%s_count\t%s_count_variance\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+			fprintf(fout, "\t%s_count\t%s_count_variance\t%s_count_uncertainty_var\t%s_count_dispersion_var\t%s_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
 		}
 	}
 	fprintf(fout, "\n");
@@ -701,7 +699,9 @@ void print_count_tracking(FILE* fout,
             
             double external_counts = fpkms[i].count_mean;
             double external_count_var = fpkms[i].count_var;
-			fprintf(fout, "\t%lg\t%lg\t%s", external_counts, external_count_var, status_str);
+            double uncertainty_var = fpkms[i].count_uncertainty_var;
+            double dispersion_var = fpkms[i].count_dispersion_var;
+			fprintf(fout, "\t%lg\t%lg\t%lg\t%lg\t%s", external_counts, external_count_var, uncertainty_var, dispersion_var, status_str);
 		}
 		
 		fprintf(fout, "\n");
@@ -744,9 +744,8 @@ void print_read_group_tracking(FILE* fout,
                 
                 int rep_num = itr->first->replicate_num();
                 
-                fprintf(fout, "%s\t%s\t%s_%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
+                fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
                         description.c_str(),
-                        condition_name.c_str(),
                         condition_name.c_str(),
                         rep_num,
                         raw_count,
@@ -999,7 +998,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
         {
             total += sample_count_table[i].counts[j];
         }
-        fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+        //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
     }
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
@@ -1419,7 +1418,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             {
                 total += sample_count_table[i].counts[j];
             }
-            fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
+            //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
         }
         
         if (use_quartile_norm)

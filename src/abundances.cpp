@@ -293,6 +293,20 @@ double AbundanceGroup::num_fragment_var() const
     return frag_var;
 }
 
+// This tracks the final modeled variance in the assigned counts.
+double AbundanceGroup::num_fragment_uncertainty_var() const			
+{ 
+    double frag_var = 0.0;
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        for (size_t j = 0; j < _abundances.size(); ++j)
+        {
+            frag_var += _iterated_exp_count_covariance(i,j);
+        }
+    }
+    return frag_var;
+}
+
 double AbundanceGroup::FPKM() const
 {
 	double fpkm = 0;
@@ -2294,6 +2308,7 @@ void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHi
                 //assert(c <= 0);
             }
         }
+        _abundances[i]->num_fragment_uncertainty_var(_iterated_exp_count_covariance(i,i));
     }
 }
 
