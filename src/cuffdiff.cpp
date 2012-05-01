@@ -744,8 +744,9 @@ void print_read_group_tracking(FILE* fout,
                 
                 int rep_num = itr->first->replicate_num();
                 
-                fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
+                fprintf(fout, "%s\t%s\t%s_%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
                         description.c_str(),
+                        condition_name.c_str(),
                         condition_name.c_str(),
                         rep_num,
                         raw_count,
