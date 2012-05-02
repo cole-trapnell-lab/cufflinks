@@ -131,25 +131,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.3.0</td>
+                    <td>version 2.0.0 (BETA)</td>
                     <td align="right">1/2/2012</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.3.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-2.0.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.3.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.0.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.3.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.0.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -237,11 +237,23 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
-			<h2>1.4.0 release - 4/XXX/2012</h2>
-			  <p>This release substantially improves the robustness of 
+			<h2>2.0.0 release - 4/XXX/2012</h2>
+			  <p>This release substantially improves the accuracy and robustness of 
 				differential analysis with Cuffdiff. The update also  
-				resolves several user-reported issues and bugs, and several requested features.
+				resolves several user-reported issues and bugs, and several requested features.  
+				Due to the large number of enchancements and fixes, users are 
+				encouraged to treat this as a beta release.  A manuscript 
+				describing the algorithmic improvements to the software is in preparation. Changes include:
 				<ul>
+					<li>Cuffdiff now reports estimated counts assigned to each gene and transcript, 
+						along with count variances due to uncertainty and cross-replicate variability. 
+						See the <a href="manual.html#count_tracking_format">manual</a> for 
+						more details on the new count tracking file format.
+				    <li>Cuffdiff now tracks and records per-replicate FPKMs and counts. See the manual for
+						more details on the new replicate tracking files. A version of 
+						<a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a> 
+						that exposes this information in many plot types will be forthcoming.
+					<li>Cuffdiff reports replicate and run metadata as part of each run.
 					<li>Some users were reporting a high FAIL rate on gene and
 						transcripts quantification.  This has been resolved 
 						according to a battery of tests using real and simulated data.  
@@ -250,7 +262,7 @@
 						matrices  produced by the Cuffdiff model were not always 
 						positive-definite.  Cuffdiff was detecting this, 
 						and marking those genes as having unreliable confidence intervals. 
-						Prior to 1.4.0, the model contained a heuristic approximation of the 
+						Prior to 2.0.0, the model contained a heuristic approximation of the 
 						covariances between assigned fragment counts (which are necessary 
 						for calculating the variance on each gene's expression level),
 						and this approximation was producing poorly conditioned matrices. 
@@ -280,11 +292,19 @@
 						to the genome more than a specified number of times using the 
 						<tt>--max-frag-multihits</tt> option.  By default, Cufflinks 
 						and Cuffdiff still consider all fragments in the alignment file.
+					<li>Cufflinks by default doesn't report assembled transfrags that 
+						are built mostly from multiply mapping reads.  
+						This behavior can now be controlled or disabled with the 
+						new <tt>--max-multiread-fraction</tt> option.
+					<li>Cufflinks by default fills small gaps in coverage when assembling transcripts.  
+						Gaps smaller than 50bp are filled and the transfrags joined.  
+						This behavior can be controlled or disabled with the new 
+						<tt>--overlap-radius</tt> option.
 					<li>Before testing for differential expression or regulation of genes and transcripts,
 						Cuffdiff now checks that the variance model for the gene or transcript in question is a good fit.  
 						This behavior can be controlled or disabled with the <tt>--min-outlier-p</tt> option.
 						See the relevant section in the "How Cufflinks works" page for more on this.
-					<li>A few bugs in the bias correction code.</li>
+					<li>A few bugs in the bias correction code and isoform deconvolution routines have been fixed, improving transcript-level expression accuracy.</li>
 					<li>Positional bias correction was reducing accuracy on 
 						certain datasets in some genes, so we have changed the
 						 default bias correction algorithm to model sequence-specific 
@@ -299,7 +319,7 @@
 					<li>Cuffdiff now uses the <a href="http://eigen.tuxfamily.org">Eigen</a> 
 						linear algebra libraries.  Eigen is a fast package for 
 						matrix operations and makes good use of vector registers 
-						in modern processors.
+						in modern processors, speeding up some of the numerical routines used during abundance estimation.
 					<li>Cuffdiff now requires Boost version 1.47 or later.
 				</ul>
 			  <br/>

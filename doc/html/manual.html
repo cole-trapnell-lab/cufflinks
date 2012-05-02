@@ -74,7 +74,7 @@
 		    </ul>
 		  </div>
 		
-          <a href="./downloads">
+		<a href="./downloads">
             <h2><u>Releases</u></h2>
           </a>
           <div class="box">
@@ -82,25 +82,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 1.3.0</td>
+                    <td>version 2.0.0 (BETA)</td>
                     <td align="right">1/2/2012</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-1.3.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-2.0.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.3.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.0.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-1.3.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.0.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -195,12 +195,19 @@
   	  	  <li><a href="#cuffdiff_output">Output Files</a></li>
 			<ul>
 				<li><a href="#fpkm_track">FPKM tracking</a></li>
+				<li><a href="#count_track">Count tracking</a></li>
+				<li><a href="#count_track">Read group tracking</a></li>
 				<li><a href="#gene_exp_diff">Differential expression</a></li>
 				<li><a href="#splicing_diff">Differential splicing</a></li>
 				<li><a href="#cds_diff">Differential coding sequence output</a></li>
+				<li><a href="#promoter_diff">Differential promoter use</a></li>
+				<li><a href="#read_group_info">Read group info</a></li>
+				<li><a href="#run_info">Run info</a></li>
 			</ul>
  	    </ul>
- 	    <li><a href="#tracking_format">FPKM Tracking Format</a></li>
+ 	    <li><a href="#fpkm_tracking_format">FPKM Tracking Format</a></li>
+		<li><a href="#count_tracking_format">Count Tracking Format</a></li>
+		<li><a href="#read_group_tracking_format">Read Group Tracking Format</a></li>
 		<li><a href="#library">Library Types</a></li>
 
   	    </ul><br/>
@@ -485,6 +492,18 @@
 	  </td><td VALIGN=top>
 	  The fraction of average coverage below which to trim the 3' end of an assembled
 	  transcript.  The default is 0.1.
+	  </t></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--max-multiread-fraction &lt;0.0-1.0&gt;</tt>
+	  </td><td VALIGN=top>
+	  The fraction a transfrag's supporting reads that may be multiply mapped to the genome. A transcript composed of more than this fraction will not be reported by the assembler.  Default: 0.75 (75% multireads or more is suppressed). 
+	  </t></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--overlap-radius &lt;int&gt;</tt>
+	  </td><td VALIGN=top>
+	  Transfrags that are separated by less than this distance get merged together, and the gap is filled.  Default: 50 (in bp).
 	  </t></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
@@ -1476,7 +1495,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		and gene in each sample.  Primary transcript and gene FPKMs are computed
 		by summing the FPKMs of transcripts in each primary transcript group 
 		or gene group.  The results are output in FPKM tracking files in the format
-		described <a href="#tracking_format">here</a>.
+		described <a href="#fpkm_tracking_format">here</a>.
 		
 		There are <strong>four</strong> FPKM tracking files:
 		
@@ -1496,9 +1515,60 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </tr>
 		  </table>
 		
+		<h2 id="fpkm_track">2) Count tracking files</h2>
+		<p>
+		Cuffdiff estimates the number of fragments that originated from each transcript, primary transcript, 
+		and gene in each sample.  Primary transcript and gene counts are computed
+		by summing the counts of transcripts in each primary transcript group 
+		or gene group.  The results are output in count tracking files in the format
+		described <a href="#count_tracking_format">here</a>.
+
+		There are <strong>four</strong> Count tracking files:
+
+		<table CELLSPACING=15>
+
+		  <tr>
+			<td VALIGN=top><tt>isoforms.count_tracking</tt></td><td VALIGN=top>Transcript counts</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>genes.count_tracking</tt></td><td VALIGN=top>Gene counts.  Tracks the summed counts of transcripts sharing each <tt>gene_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>cds.count_tracking</tt></td><td VALIGN=top>Coding sequence counts. Tracks the summed counts of transcripts sharing each <tt>p_id</tt>, independent of <tt>tss_id</tt></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>tss_groups.count_tracking</tt></td><td VALIGN=top>Primary transcript counts. Tracks the summed counts of transcripts sharing each <tt>tss_id</tt></td>
+		  </tr>
+		  </table>
+		
 		<br/>
+		
+		<h2 id="read_group_track">3) Read group tracking files</h2>
+		<p>
+		Cuffdiff calculates the expression and fragment count for each transcript, primary transcript, 
+		and gene in each replicate. The results are output in per-replicate tracking files in the format
+		described <a href="#read_group_tracking_format">here</a>.
+		
+		There are <strong>four</strong> read group tracking files:
+		
+		<table CELLSPACING=15>
+		  
+		  <tr>
+			<td VALIGN=top><tt>isoforms.read_group_tracking</tt></td><td VALIGN=top>Transcript read group tracking</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>genes.read_group_tracking</tt></td><td VALIGN=top>Gene read group tracking.  Tracks the summed expression and counts of transcripts sharing each <tt>gene_id</tt> in each replicate</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>cds.read_group_tracking</tt></td><td VALIGN=top>Coding sequence FPKMs. Tracks the summed expression and counts of transcripts sharing each <tt>p_id</tt>, independent of <tt>tss_id</tt> in each replicate</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top><tt>tss_groups.read_group_tracking</tt></td><td VALIGN=top>Primary transcript FPKMs. Tracks the summed expression and counts of transcripts sharing each <tt>tss_id</tt> in each replicate</td>
+		  </tr>
+		  </table>
+		
 		<br/>
-		<h2 id="gene_exp_diff">2) Differential expression tests</h2>
+		<h2 id="gene_exp_diff">4) Differential expression tests</h2>
 		<p>
 		This tab delimited file lists the results of differential
 		expression testing between samples for spliced transcripts, 
@@ -1567,7 +1637,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </tr>
 		  </table>
 		
-		<h2 id="splicing_diff">3) Differential splicing tests - splicing.diff</h2>
+		<h2 id="splicing_diff">5) Differential splicing tests - splicing.diff</h2>
 		<p>
 		This tab delimited file lists, for each primary transcript, the amount of overloading
 		detected among its isoforms, i.e. how much differential splicing exists between
@@ -1612,11 +1682,14 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.000174982</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>12</td><td VALIGN=top>q value</td><td VALIGN=top><tt>0.985216</tt></td><td VALIGN=top>The <b>FDR-adjusted</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>13</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		
-		<h2 id="cds_diff">4) Differential coding output - cds.diff</h2>
+		<h2 id="cds_diff">6) Differential coding output - cds.diff</h2>
 		<p>
 		This tab delimited file lists, for each gene, the amount of overloading
 		detected among its coding sequences, i.e. how much differential 
@@ -1662,11 +1735,14 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.00546783</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>12</td><td VALIGN=top>q value</td><td VALIGN=top><tt>0.985216</tt></td><td VALIGN=top>The <b>FDR-adjusted</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>13</td><td VALIGN=top>significant</td><td VALIGN=top><tt>yes</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		
-		<h2 id="promoter_diff">5) Differential promoter use - promoters.diff</h2>
+		<h2 id="promoter_diff">7) Differential promoter use - promoters.diff</h2>
 		<p>
 		This tab delimited file lists, for each gene, the amount of overloading
 		detected among its primary transcripts, i.e. how much differential 
@@ -1713,14 +1789,63 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>11</td><td VALIGN=top>p value</td><td VALIGN=top><tt>0.394327</tt></td><td VALIGN=top>The <b>uncorrected</b> <em>p</em>-value of the test statistic</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>12</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
+			<td VALIGN=top>12</td><td VALIGN=top>q value</td><td VALIGN=top><tt>0.985216</tt></td><td VALIGN=top>The <b>FDR-adjusted</b> <em>p</em>-value of the test statistic</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>13</td><td VALIGN=top>significant</td><td VALIGN=top><tt>no</tt></td><td VALIGN=top>Can be either "yes" or "no", depending on whether <em>p</em> is greater then the FDR <b>after</b> Benjamini-Hochberg correction for multiple-testing</td>
 		  </tr>
 		  </table>
 		
+		<br/>
+		<h2 id="read_group_info">8) Read group info - read_groups.info</h2>
+		<p>
+		This tab delimited file lists, for each replicate, key properties used by Cuffdiff during quantification, such as library normalization factors.
+		The read_groups.info file has the following format:
+		<!-- test_id	gene	locus	status	value_1	tvalue_2	log(fold_change)	test_stat	p_value	significant	tested	protein_ids -->
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>1</td><td VALIGN=top>file</td><td VALIGN=top><tt>mCherry_rep_A/accepted_hits.bam</tt></td><td VALIGN=top>BAM or SAM file containing the data for the read group</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>2</td><td VALIGN=top>condition</td><td VALIGN=top><tt>mCherry</tt></td><td VALIGN=top>Condition to which the read group belongs</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>3</td><td VALIGN=top>replicate_num</td><td VALIGN=top><tt>0</tt></td><td VALIGN=top>Replicate number of the read group</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>4</td><td VALIGN=top>total_mass</td><td VALIGN=top><tt>4.72517e+06</tt></td><td VALIGN=top>Total number of fragments for the read group</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>5</td><td VALIGN=top>norm_mass</td><td VALIGN=top><tt>4.72517e+06</tt></td><td VALIGN=top>Fragment normalization constant used during calculation of FPKMs.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>6</td><td VALIGN=top>internal_scale</td><td VALIGN=top><tt>1.23916</tt></td><td VALIGN=top>Internal scaling factor, used to transform replicates of a single condition onto the "internal" common count scale.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>7</td><td VALIGN=top>external_scale</td><td VALIGN=top><tt>0.96</tt></td><td VALIGN=top>External scaling factor, used to transform counts from different conditions onto an internal common count scale.</td>
+		  </tr>
+		  </table>
+		</p>
+		
+		<br/>
+		<h2 id="run_info">8) Run info - run.info</h2>
+		<p>
+		This tab delimited file lists various bits of information about a Cuffdiff run to help track what options were provided. For example:
+		</p>
+		<pre>
+param   value
+cmd_line        cuffdiff  base_ref.gtf mCherry/accepted_hits.bam R49/accepted_hits.bam 
+version 2.0.0
+SVN_revision    3258
+boost_version   104700
+		</pre>
 	</div>
   </div>
   </ol>
-    <h2 id="tracking_format">FPKM Tracking Files</h2><br/>
+    <h2 id="fpkm_tracking_format">FPKM Tracking Files</h2><br/>
 
   FPKM tracking files use a generic format to output estimated expression values.  Each FPKM tracking file has the following format:
 		
@@ -1756,6 +1881,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </tr>
 		  <tr>
 			<td VALIGN=top>9</td><td VALIGN=top>coverage</td><td VALIGN=top><tt>43.4279</tt></td><td VALIGN=top>Estimate for the absolute depth of read coverage across the object</td>
+		  </tr>
 		  <tr>
 			<td VALIGN=top>10</td><td VALIGN=top>q0_FPKM</td><td VALIGN=top><tt>8.01089</tt></td><td VALIGN=top>FPKM of the object in sample 0</td>
 		  </tr>
@@ -1766,10 +1892,10 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>12</td><td VALIGN=top>q0_FPKM_hi</td><td VALIGN=top><tt>8.98595</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>13</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
+			<td VALIGN=top>13</td><td VALIGN=top>q0_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 0. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>14</td><td VALIGN=top>q0_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			<td VALIGN=top>14</td><td VALIGN=top>q1_FPKM</td><td VALIGN=top><tt>8.55155</tt></td><td VALIGN=top>FPKM of the object in sample 1</td>
 		  </tr>
 		  <tr>
 			<td VALIGN=top>15</td><td VALIGN=top>q1_FPKM_lo</td><td VALIGN=top><tt>7.77692</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample 0</td>
@@ -1781,19 +1907,120 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<td VALIGN=top>17<td VALIGN=top>q1_status</td><td VALIGN=top><tt>9.32617</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 13</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
+			<td VALIGN=top>3<em>N</em> + 12</td><td VALIGN=top>q<em>N</em>_FPKM</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>FPKM of the object in sample <em>N</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 14</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+			<td VALIGN=top>3<em>N</em> + 13</td><td VALIGN=top>q<em>N</em>_FPKM_lo</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>the lower bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 15</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
+			<td VALIGN=top>3<em>N</em> + 14</td><td VALIGN=top>q<em>N</em>_FPKM_hi</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>the upper bound of the 95% confidence interval on the FPKM of the object in sample <em>N</em></td>
 		  </tr>
 		  <tr>
-			<td VALIGN=top>3<em>N</em> + 16</td><td VALIGN=top>q<em>N</em>_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample <em>N</em>. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			<td VALIGN=top>3<em>N</em> + 15</td><td VALIGN=top>q<em>N</em>_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample <em>N</em>. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
 		  </tr>
 		  </table>
 		 <br/> 
+		
+		<h2 id="count_tracking_format">Count Tracking Files</h2><br/>
+
+	  Count tracking files use a generic format to output estimated fragment count values.  Each Count tracking file has the following format:
+
+			<!-- ref_trans_id	class_code	gene_short_name	tss_id	locus	q0_FPKM	q0_conf_lo	q0_conf_hi	q1_FPKM	q1_conf_lo	q1_conf_hi	q2_FPKM	q2_conf_loq2_conf_hi	q3_FPKM	q3_conf_lo	q3_conf_hi -->
+
+			<table CELLSPACING=15>
+			  <tr>
+				<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>1</td><td VALIGN=top>tracking_id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript)</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>2</td><td VALIGN=top>q0_count</td><td VALIGN=top><tt>201.334</tt></td><td VALIGN=top>Estimated (externally scaled) number of fragments generated by the object in sample 0</td>
+			  </tr>
+		  	 <tr>
+				<td VALIGN=top>3</td><td VALIGN=top>q0_count_variance</td><td VALIGN=top><tt>5988.24</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample 0</td>
+			  </tr>
+		   	  <tr>
+				<td VALIGN=top>4</td><td VALIGN=top>q0_count_uncertainty_var</td><td VALIGN=top><tt>170.21</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample 0 due to fragment assignment uncertainty.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>5</td><td VALIGN=top>q0_count_dispersion_var</td><td VALIGN=top><tt>4905.63</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample 0 due to cross-replicate variability.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>6</td><td VALIGN=top>q0_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 0. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>7</td><td VALIGN=top>q1_count</td><td VALIGN=top><tt>201.334</tt></td><td VALIGN=top>Estimated (externally scaled) number of fragments generated by the object in sample 1</td>
+			  </tr>
+		  	 <tr>
+				<td VALIGN=top>8</td><td VALIGN=top>q1_count_variance</td><td VALIGN=top><tt>5988.24</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample 1</td>
+			  </tr>
+		   	  <tr>
+				<td VALIGN=top>9</td><td VALIGN=top>q1_count_uncertainty_var</td><td VALIGN=top><tt>170.21</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample 1 due to fragment assignment uncertainty.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>10</td><td VALIGN=top>q1_count_dispersion_var</td><td VALIGN=top><tt>4905.63</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample 1 due to cross-replicate variability.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>11</td><td VALIGN=top>q1_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample 1. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>7</td><td VALIGN=top>q<em>N</em>_count</td><td VALIGN=top><tt>201.334</tt></td><td VALIGN=top>Estimated (externally scaled) number of fragments generated by the object in sample <em>N</em></td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>4<em>N</em> + 6</td><td VALIGN=top>q<em>N</em>_count_variance</td><td VALIGN=top><tt>7.34115</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample <em>N</em></td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>4<em>N</em> + 7</td><td VALIGN=top>q<em>N</em>_count_uncertainty_var</td><td VALIGN=top><tt>6.33394</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample <em>N</em> due to fragment assignment uncertainty.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>4<em>N</em> + 8</td><td VALIGN=top>q<em>N</em>_count_dispersion_var</td><td VALIGN=top><tt>8.34836</tt></td><td VALIGN=top>Estimated variance in the number of fragments generated by the object in sample <em>N</em> due to cross-replicate variability.</td>
+			  </tr>
+			  <tr>
+				<td VALIGN=top>4<em>N</em> + 9</td><td VALIGN=top>q<em>N</em>_status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object in sample <em>N</em>. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+			  </tr>
+			  </table>
+			 <br/>
+			
+			<h2 id="read_group_tracking_format">Read Group Tracking Files</h2><br/>
+
+		  	Read group tracking files record per-replicate expression and count data.  Each Count tracking file has the following format:
+
+				<!-- ref_trans_id	class_code	gene_short_name	tss_id	locus	q0_FPKM	q0_conf_lo	q0_conf_hi	q1_FPKM	q1_conf_lo	q1_conf_hi	q2_FPKM	q2_conf_loq2_conf_hi	q3_FPKM	q3_conf_lo	q3_conf_hi -->
+
+				<table CELLSPACING=15>
+				  <tr>
+					<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+				  </tr>
+				  <tr>
+					<td VALIGN=top>1</td><td VALIGN=top>tracking_id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript)</td>
+				  </tr>
+				  <tr>
+					<td VALIGN=top>2</td><td VALIGN=top>condition</td><td VALIGN=top><tt>Fibroblasts</tt></td><td VALIGN=top>Name of the condition</td>
+				  </tr>
+			  	 <tr>
+					<td VALIGN=top>3</td><td VALIGN=top>replicate</td><td VALIGN=top><tt>1</tt></td><td VALIGN=top>Name of the replicate of the condition</td>
+				  </tr>
+			   	  <tr>
+					<td VALIGN=top>4</td><td VALIGN=top>raw_frags</td><td VALIGN=top><tt>170.21</tt></td><td VALIGN=top>The estimate number of (unscaled) fragments originating from the object in this replicate</td>
+				  </tr>
+				  <tr>
+					<td VALIGN=top>5</td><td VALIGN=top>internal_scaled_frags</td><td VALIGN=top><tt>4905.63</tt></td><td VALIGN=top>Estimated number of fragments originating from the object, after transforming to the internal common count scale (for comparison between replicates of this condition.)</td>
+				  </tr>
+				  <tr>
+					<td VALIGN=top>6</td><td VALIGN=top>external_scaled_frags</td><td VALIGN=top><tt>99.21</tt></td><td VALIGN=top>Estimated number of fragments originating from the object, after transforming to the external common count scale (for comparison between conditions)</td>
+				  </tr>
+				  <tr>
+					<td VALIGN=top>7</td><td VALIGN=top>FPKM</td><td VALIGN=top><tt>201.334</tt></td><td VALIGN=top>FPKM of this object in this replicate</td>
+				  </tr>
+			  	 <tr>
+					<td VALIGN=top>8</td><td VALIGN=top>effective_length</td><td VALIGN=top><tt>5988.24</tt></td><td VALIGN=top>The effective length of the object in this replicate.  Currently a reserved, unreported field.</td>
+				  </tr>
+			   	  <tr>
+					<td VALIGN=top>9</td><td VALIGN=top>status</td><td VALIGN=top><tt>OK</tt></td><td VALIGN=top>Quantification status for the object. Can be one of OK (deconvolution successful), LOWDATA (too complex or shallowly sequenced), HIDATA (too many fragments in locus), or FAIL, when an ill-conditioned covariance matrix or other numerical exception prevents deconvolution.</td>
+				  </tr>
+				  </table>
+				 <br/>
   <h2 id="library">Library Types</h2><br/>
   <p>
   In cases where Cufflinks cannot determine the platform and protocol used to generate 
@@ -1810,7 +2037,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  <tr><td VALIGN=top nowrap>fr-secondstrand</td><td VALIGN=top nowrap><tt>Directional Illumina (Ligation), Standard SOLiD</tt></td><td VALIGN=top>Same as above except we enforce the rule that the left-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads).  Equivalently, it is assumed that only the strand generated during second strand synthesis is sequenced.</td></tr>
 		  </table>
   <p>
-  Please contact <a href="http://cs.berkeley.edu/~adarob">Adam Roberts</a> to request support for a new protocol.
+  Please contact <a href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a> to request support for a new protocol.
   </p>
   <br />
   <div id="footer">
