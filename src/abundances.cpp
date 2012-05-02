@@ -257,6 +257,52 @@ FPKMPerReplicateTable AbundanceGroup::FPKM_by_replicate() const
 	return fpr;
 }
 
+StatusPerReplicateTable AbundanceGroup::status_by_replicate() const
+{
+	StatusPerReplicateTable fpr;
+	
+	foreach(shared_ptr<Abundance> ab, _abundances)
+	{
+		if (fpr.empty())
+        {
+            fpr = ab->status_by_replicate();
+        }
+        else
+        {
+            StatusPerReplicateTable ab_fpr = ab->status_by_replicate();
+            for (StatusPerReplicateTable::const_iterator itr = ab_fpr.begin(); 
+                 itr != ab_fpr.end();
+                 ++itr)
+            {
+                StatusPerReplicateTable::iterator fpr_itr = fpr.find(itr->first);
+                assert (fpr_itr != fpr.end());
+                
+                AbundanceStatus s = itr->second;
+                
+                if (s == NUMERIC_FAIL)
+                {
+                    fpr_itr->second = NUMERIC_FAIL;
+                }
+                else if (s == NUMERIC_LOW_DATA && (fpr_itr->second != NUMERIC_HI_DATA && fpr_itr->second != NUMERIC_FAIL && fpr_itr->second != NUMERIC_OK))
+                {
+                    fpr_itr->second = NUMERIC_LOW_DATA;
+                }
+                else if (s == NUMERIC_HI_DATA)
+                {
+                    fpr_itr->second = NUMERIC_HI_DATA;
+                }
+                else if (s == NUMERIC_OK && (fpr_itr->second != NUMERIC_HI_DATA && fpr_itr->second != NUMERIC_FAIL))
+                {
+                    fpr_itr->second = NUMERIC_OK;
+                }
+            }
+        }
+	}
+    
+    //assert (cpr.empty() != false);
+	return fpr;
+}
+
 double AbundanceGroup::mass_fraction() const
 {
 	double mass = 0;
@@ -1024,6 +1070,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     ublas::vector<double> mean_per_rep_gammas;
     ublas::matrix<double> gamma_covariance;
     std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > mles_for_read_groups;
+    std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus > status_per_replicate;
     
 	for (std::map<shared_ptr<ReadGroupProperties const >, double >::const_iterator itr =_count_per_replicate.begin(); itr != _count_per_replicate.end(); ++itr)
 	{
@@ -1038,13 +1085,14 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
                                            mean_per_rep_gammas,
                                            gamma_covariance,
                                            mles_for_read_groups,
-                                           _count_per_replicate);
+                                           _count_per_replicate,
+                                           status_per_replicate);
         
         for (size_t i = 0; i < _abundances.size(); ++i)
         {
             CountPerReplicateTable cpr;
             FPKMPerReplicateTable fpr;
-        
+            StatusPerReplicateTable spr;
             for (std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >::const_iterator itr = mles_for_read_groups.begin();
                  itr != mles_for_read_groups.end();
                  ++itr)
@@ -1055,25 +1103,32 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
                 double count_for_rep = rep_itr->second;
                 ublas::vector<double> trans_counts = mles_for_rep * count_for_rep;
                 ublas::vector<double> trans_fpkms = trans_counts;
-                for (size_t i = 0; i < trans_fpkms.size(); ++i)
+                std::vector<AbundanceStatus> trans_status(trans_fpkms.size(), NUMERIC_OK);
+                for (size_t j = 0; j < trans_fpkms.size(); ++j)
                 {
                     if (_abundances[i]->effective_length() && (itr->first)->normalized_map_mass())
                     {
-                        trans_fpkms(i) /= (itr->first)->normalized_map_mass();
-                        trans_fpkms(i) *= 1000000000;
-                        trans_fpkms(i) /= _abundances[i]->effective_length();
-                        trans_fpkms(i) /= (itr->first)->external_scale_factor();
+                        trans_fpkms(j) /= (itr->first)->normalized_map_mass();
+                        trans_fpkms(j) *= 1000000000;
+                        trans_fpkms(j) /= _abundances[i]->effective_length();
+                        trans_fpkms(j) /= (itr->first)->external_scale_factor();
                     }
                     else
                     {
-                        trans_fpkms(i) = 0;
+                        trans_fpkms(j) = 0;
                     }
+                    
                 }
+                
+                std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus>::const_iterator status_rep_itr = status_per_replicate.find(itr->first);
+                assert (status_rep_itr != status_per_replicate.end());
                 cpr[itr->first] = trans_counts[i];
                 fpr[itr->first] = trans_fpkms[i];
+                spr[itr->first] = status_rep_itr->second;
             }
             _abundances[i]->num_fragments_by_replicate(cpr);
             _abundances[i]->FPKM_by_replicate(fpr);
+            _abundances[i]->status_by_replicate(spr);
         }
     }
     
@@ -2890,7 +2945,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
                                                    ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance,
                                                    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate)
+                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate,
+                                                   std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus >& status_per_replicate)
 {
     size_t N = transcripts.size();	
 	size_t M = nr_alignments.size();
@@ -2941,16 +2997,17 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
                                                 rep_gammas,
                                                 false);
         //if (mle_success == NUMERIC_OK)
+        
+        ublas::vector<double> mle = ublas::zero_vector<double>(N);
+        for(size_t i = 0; i < N; ++i)
         {
-            ublas::vector<double> mle = ublas::zero_vector<double>(N);
-            for(size_t i = 0; i < N; ++i)
-            {
-                mle(i) = rep_gammas[i];
-            }
-            //cerr << mle << endl;
-            mle_gammas.push_back(mle);
-            itr->second = mle;
+            mle(i) = rep_gammas[i];
         }
+        //cerr << mle << endl;
+        mle_gammas.push_back(mle);
+        itr->second = mle;
+        status_per_replicate[itr->first] = mle_success;
+        
 //        else
 //        {
 //            // if one replicate fails, let's just not trust any of them
@@ -3081,39 +3138,6 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
 		return NUMERIC_FAIL;
 	}
     
-    return NUMERIC_OK;
-}
-
-AbundanceStatus empirical_replicate_gammas(vector<shared_ptr<Abundance> >& transcripts,
-                                           const vector<MateHit>& nr_alignments,
-                                           const vector<double>& log_conv_factors,
-                                           ublas::vector<double>& gamma_estimate,
-                                           ublas::matrix<double>& gamma_covariance,
-                                           std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
-                                           std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate)
-{
-    ublas::vector<double> empirical_gamma_mle = gamma_estimate;
-    ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
-    
-    // Calculate the mean gamma MLE and covariance matrix across replicates, so
-    // we can use it as the proposal distribution for importance sampling.  This will
-    // make the Bayesian prior more conservative than using the inverse of the 
-    // Fisher Information matrix on the mixed likelihood function.
-    AbundanceStatus empirical_mle_status = empirical_mean_replicate_gamma_mle(transcripts,
-                                                                              nr_alignments,
-                                                                              log_conv_factors,
-                                                                              empirical_gamma_mle,
-                                                                              empirical_gamma_covariance,
-                                                                              mles_for_read_groups,
-                                                                              count_per_replicate);
-    
-    
-    if (empirical_mle_status != NUMERIC_OK)
-        return empirical_mle_status;
-    
-    gamma_estimate = empirical_gamma_mle;
-    gamma_covariance = empirical_gamma_covariance;
-
     return NUMERIC_OK;
 }
 

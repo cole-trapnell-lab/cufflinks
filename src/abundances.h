@@ -39,6 +39,7 @@ enum AbundanceStatus { NUMERIC_OK, NUMERIC_FAIL, NUMERIC_LOW_DATA, NUMERIC_HI_DA
 
 typedef map<shared_ptr<ReadGroupProperties const>, double> CountPerReplicateTable;
 typedef map<shared_ptr<ReadGroupProperties const>, double> FPKMPerReplicateTable;
+typedef map<shared_ptr<ReadGroupProperties const>, AbundanceStatus> StatusPerReplicateTable;
 
 class Abundance
 {
@@ -84,6 +85,9 @@ public:
     
     virtual FPKMPerReplicateTable FPKM_by_replicate() const = 0;
     virtual void            FPKM_by_replicate(CountPerReplicateTable& cpr) = 0;
+    
+    virtual StatusPerReplicateTable status_by_replicate() const = 0;
+    virtual void status_by_replicate(StatusPerReplicateTable& fpr) = 0;
     
     virtual double          mass_fraction() const = 0;
 	virtual void            mass_fraction(double mf) = 0;
@@ -205,6 +209,9 @@ public:
     FPKMPerReplicateTable FPKM_by_replicate() const { return _fpkm_per_replicate; }
     void FPKM_by_replicate(FPKMPerReplicateTable& fpr) { _fpkm_per_replicate = fpr; }
     
+    StatusPerReplicateTable status_by_replicate() const { return _status_per_replicate; }
+    void status_by_replicate(StatusPerReplicateTable& fpr) { _status_per_replicate = fpr; }
+    
 	double mass_fraction() const			{ return _sample_mass_fraction; }
 	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
 	
@@ -321,6 +328,7 @@ private:
     
     CountPerReplicateTable _num_fragments_per_replicate;
     FPKMPerReplicateTable _fpkm_per_replicate;
+    StatusPerReplicateTable _status_per_replicate;
 };
 
 class AbundanceGroup : public Abundance
@@ -405,6 +413,9 @@ public:
     
     FPKMPerReplicateTable FPKM_by_replicate() const;
     void FPKM_by_replicate(FPKMPerReplicateTable& fpr) { }
+    
+    StatusPerReplicateTable status_by_replicate() const;
+    void status_by_replicate(StatusPerReplicateTable& fpr) { }
     
     double mass_fraction() const;
 	void mass_fraction(double mf)			{  }
@@ -567,7 +578,8 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
                                                    ublas::vector<double>& gamma_map_estimate,
                                                    ublas::matrix<double>& gamma_covariance,
                                                    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate);
+                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate,
+                                                   std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus >& status_per_replicate);
 
 AbundanceStatus empirical_replicate_gammas(vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,

@@ -100,6 +100,7 @@ static struct option long_options[] = {
 {"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
 {"max-multiread-fraction",	required_argument,		 0,			 OPT_MAX_MULTIREAD_FRACTION},
 {"overlap-radius",       	required_argument,		 0,			 OPT_OLAP_RADIUS},
+{"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
 {0, 0, 0, 0} // terminator
 };
 
@@ -133,6 +134,7 @@ void print_usage()
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  TRUE  ]\n");
     fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
     fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
+    fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");

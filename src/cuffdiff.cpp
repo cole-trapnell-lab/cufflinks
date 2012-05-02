@@ -118,6 +118,7 @@ static struct option long_options[] = {
 {"trim-read-length",        required_argument,	     0,          OPT_TRIM_READ_LENGTH},
 {"cov-delta",               required_argument,	     0,          OPT_MAX_DELTA_GAP},
 {"locus-count-dispersion",  no_argument,             0,          OPT_LOCUS_COUNT_DISPERSION},
+{"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
 {"min-outlier-p",           required_argument,       0,          OPT_MIN_OUTLIER_P},
 {"min-reps-for-js-test",      required_argument,     0,          OPT_MIN_REPS_FOR_JS_TEST},
 {0, 0, 0, 0} // terminator
@@ -719,8 +720,6 @@ void print_read_group_tracking(FILE* fout,
 		const string& description = itr->first;
 		const FPKMTracking& track = itr->second;
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
-		
-        AbundanceStatus status = NUMERIC_OK;
                 
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
@@ -729,6 +728,7 @@ void print_read_group_tracking(FILE* fout,
                  ++itr)
             { 
                 FPKMPerReplicateTable::const_iterator f_itr = fpkms[i].fpkm_per_rep.find(itr->first);
+                StatusPerReplicateTable::const_iterator s_itr = fpkms[i].status_per_rep.find(itr->first);
                 
                 
                 if (f_itr == fpkms[i].fpkm_per_rep.end())
@@ -741,8 +741,32 @@ void print_read_group_tracking(FILE* fout,
                 double external_count = internal_count / itr->first->external_scale_factor();
                 double raw_count = internal_count * itr->first->internal_scale_factor();
                 const  string& condition_name = itr->first->condition_name();
+                AbundanceStatus status = s_itr->second;
                 
                 int rep_num = itr->first->replicate_num();
+                
+                const char* status_str = "OK";
+                
+                if (status == NUMERIC_OK)
+                {
+                    status_str = "OK";
+                }
+                else if (status == NUMERIC_FAIL)
+                {
+                    status_str = "FAIL";
+                }
+                else if (status == NUMERIC_LOW_DATA)
+                {
+                    status_str = "LOWDATA";
+                }
+                else if (status == NUMERIC_HI_DATA)
+                {
+                    status_str = "HIDATA";
+                }
+                else
+                {
+                    assert(false);
+                }
                 
                 fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
                         description.c_str(),
@@ -753,7 +777,7 @@ void print_read_group_tracking(FILE* fout,
                         external_count,
                         FPKM,
                         "-",
-                        "OK");
+                        status_str);
             }
 		}
 	}

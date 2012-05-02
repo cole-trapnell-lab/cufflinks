@@ -94,7 +94,8 @@ void add_to_tracking_table(size_t sample_index,
 								 ab.FPKM(), 
 								 ab.FPKM_by_replicate(),
                                  ab.FPKM_variance(),
-                                 ab.status());
+                                 ab.status(),
+                                 ab.status_by_replicate());
     
     
 	
