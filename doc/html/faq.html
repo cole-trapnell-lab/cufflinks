@@ -167,7 +167,7 @@
  	    <li><a href="#hssd">Can Cufflinks handle strand-specific RNA-Seq data?</li>
  	  	<li><a href="#bact">Can I use Cufflinks with RNA-Seq data from Bacteria?</a></li>
  	  	<li><a href="#count">I want to find differentially expressed genes.  Can I use Cufflinks in conjunction with count-based differential expression packages?</a></li>
-		<li><a href="#numfrags">Will you please report how many fragments come from each transcript in a future release?</a></li>
+		<li><a href="#numfrags">How can I find out how many fragments come from each transcript?</a></li>
 		<li><a href="#cuffdiff">How is Cuffdiff different from other differential expression tools?</a></li>
  	  	<li><a href="#snps">Can I use Cufflinks to find SNPs or RNA editing sites?</a></li>
   	  	<li><a href="#fusi">Does Cufflinks discover gene fusions or trans-spliced transcripts?</a></li>
@@ -206,8 +206,8 @@
 
 	  </p><br/>
 	
-	  <h2 id="numfrags">Will you please report how many fragments come from each transcript in a future release?</h2><br/><p>
-	  For the foreseeable future, we will not be reporting the number of fragments we think originated from each transcript.  People who have asked for this almost always want to use Cufflinks in conjunction with count-based differential expression packages, which is not a good idea.  We're trying to keep our output formats as simple as possible.
+	  <h2 id="numfrags">How can I find out how many fragments come from each transcript?</h2><br/><p>
+	  In response to user-demand and support the development of analysis methods downstream of abundance estimation, we have added this functionality in Cuffdiff 2.0.  See the <a href="manual.html#count_tracking_format">count tracking</a> table description in the manual page.  Support for count tracking will be coming to Cufflinks soon. However, people who have asked for this almost always want to use Cufflinks in conjunction with count-based differential expression packages, which is not a good idea.  
 	  </p><br/>
 	
 	  <h2 id="cuffdiff">How is Cuffdiff different from other differential expression tools?</h2><br/><p>
@@ -218,7 +218,7 @@
 		<p>
 		Cuffdiff looks for differentially expressed genes by estimating how many fragments came from each isoform and then converting the counts into isoform expression levels.  To find differentially expressed genes, Cuffdiff calculates expression levels in each condition for each gene by adding up the expression levels for each gene's splice isoforms.  Cuffdiff tests for differences in each gene's expression level across conditions.  See <a href="howitworks.html#hdif">here</a> for more details about how this works.
 		</p>
-	<br/>
+	  <br/>
 	
 	  <h2 id="snps">Can I use Cufflinks to find SNPs or RNA editing sites?</h2><br/><p>
 	  Not at the moment, because Cufflinks doesn't do any base calling of its own.  We recommend that you check out the <a href="http://samtools.sourceforge.net">samtools</a> for this purpose.

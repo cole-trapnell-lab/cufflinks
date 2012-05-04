@@ -237,7 +237,7 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
-			<h2>2.0.0 release - 4/XXX/2012</h2>
+			<h2>2.0.0 release - 5/4/2012</h2>
 			  <p>This release substantially improves the accuracy and robustness of 
 				differential analysis with Cuffdiff. The update also  
 				resolves several user-reported issues and bugs, and several requested features.  
@@ -248,7 +248,9 @@
 					<li>Cuffdiff now reports estimated counts assigned to each gene and transcript, 
 						along with count variances due to uncertainty and cross-replicate variability. 
 						See the <a href="manual.html#count_tracking_format">manual</a> for 
-						more details on the new count tracking file format.
+						more details on the new count tracking file format. 
+						Count tracking is not yet available in Cufflinks (e.g. with the -G option), 
+						but this functionality will be ported over in a future release.
 				    <li>Cuffdiff now tracks and records per-replicate FPKMs and counts. See the manual for
 						more details on the new replicate tracking files. A version of 
 						<a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a> 

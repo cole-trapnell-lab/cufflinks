@@ -224,7 +224,7 @@
                   <strong>Building Cufflinks from source</strong><br/>
                   <p> In order to build Cufflinks, you must have the <a
                       href="http://www.boost.org">Boost C++ libraries</a>
-                    (version 1.38 or higher) installed on your system.
+                    (version 1.47 or higher) installed on your system.
                     See below for instructions on installing Boost. </p>
                   <br/>
                   <h3 id="boost">Installing Boost</h3>
@@ -292,7 +292,15 @@
                     </li>
                     <li>Copy the samtools binary to some directory in
                       your PATH.</li>
-                  </ol>
+					</ol>
+					<h3 id="samtools">Installing the Eigen libraries</h3>
+	                  <br/>
+	                  <ol>
+						<li>Download <a href="http://eigen.tuxfamily.org/">Eigen</a></li>
+						<li>Unpack the Eigen tarball and <tt>cd</tt> to
+	                      the Eigen source directory.</li>
+						<li>Copy the <tt>Eigen/</tt> subdirectory someplace on your system where you keep header files (e.g. <tt>/usr/local/include</tt>)
+                  	  </ol>
                   <br/>
                   <h3 id="boost">Building Cufflinks</h3>
                   <br/>
@@ -311,9 +319,9 @@
                       option.
                       <blockquote>./configure
                         --prefix=/path/to/cufflinks/install
-                        --with-boost=/path/to/boost</blockquote>
+                        --with-boost=/path/to/boost --with-eigen=/path/to/eigen</blockquote>
                       If you see any errors during configuration, verify
-                      that you are using Boost version 1.38 or higher,
+                      that you are using Boost version 1.47 or higher,
                       and that the directory you specified via <tt>--with-boost</tt>
                       contains the boost header files and libraries. See
                       the Boost <a href="">Getting started</a> page for
