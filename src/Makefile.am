@@ -100,6 +100,7 @@ noinst_HEADERS = \
     locfit/vari.hpp \
     replicates.h \
     multireads.h \
+    rounding.h \
 	common.h 
 
 noinst_LIBRARIES = libcufflinks.a libgc.a
