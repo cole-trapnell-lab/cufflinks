@@ -121,7 +121,8 @@ static struct option long_options[] = {
 {"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
 {"min-outlier-p",           required_argument,       0,          OPT_MIN_OUTLIER_P},
 {"min-reps-for-js-test",      required_argument,     0,          OPT_MIN_REPS_FOR_JS_TEST},
-{"no-effective-length-correction",  no_argument,     0,          OPT_NO_LENGTH_CORRECTION},
+{"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
+{"no-length-correction",  no_argument,     0,          OPT_NO_LENGTH_CORRECTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -171,6 +172,7 @@ void print_usage()
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     fprintf(stderr, "  --min-outlier-p              Min replicate p value to admit for testing            [ default:   0.01 ]\n");
     fprintf(stderr, "  --min-reps-for-js-test       Replicates needed for relative isoform shift testing  [ default:      3 ]\n");
+    fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
@@ -444,9 +446,14 @@ int parse_options(int argc, char** argv)
                 min_reps_for_js_test = parseInt(1, "--min-reps-for-js-test must be at least 1", print_usage);
                 break;
             }
-            case OPT_NO_LENGTH_CORRECTION:
+            case OPT_NO_EFFECTIVE_LENGTH_CORRECTION:
             {
                 no_effective_length_correction = true;
+                break;
+            }
+            case OPT_NO_LENGTH_CORRECTION:
+            {
+                no_length_correction = true;
                 break;
             }
 			default:

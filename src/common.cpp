@@ -120,6 +120,7 @@ double max_multiread_fraction = 0.75;
 double max_frag_multihits = 10000000;
 int min_reps_for_js_test = 3;
 bool no_effective_length_correction = false;
+bool no_length_correction = false;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
