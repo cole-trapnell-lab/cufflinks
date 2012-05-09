@@ -808,6 +808,8 @@ double BiasCorrectionHelper::get_effective_length()
 	if (_size==0)
 		return _transcript->length();
 
+    if (no_effective_length_correction)
+        return _transcript->length();
 	
 	double tot_mass = accumulate( _rg_masses.begin(), _rg_masses.end(), 0.0 );
 	double eff_len = 0.0;
