@@ -941,7 +941,23 @@ void sample_abundance_worker(const string& locus_tag,
         foreach(shared_ptr<Abundance>  ab, abundances)
         {
             ab->status(NUMERIC_HI_DATA);
+
+            CountPerReplicateTable cpr;
+            FPKMPerReplicateTable fpr;
+            StatusPerReplicateTable spr;
+            for (set<shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg_props.begin();
+                 itr != rg_props.end();
+                 ++itr)
+            {
+                cpr[*itr] = 0;
+                fpr[*itr] = 0;
+                spr[*itr] = NUMERIC_HI_DATA;
+            }
+            ab->num_fragments_by_replicate(cpr);
+            ab->FPKM_by_replicate(fpr);
+            ab->status_by_replicate(spr);
         }
+        
     }
     
     // Cluster transcripts by gene_id
