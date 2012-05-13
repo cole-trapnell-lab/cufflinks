@@ -829,26 +829,27 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		const ReadHit* bh = NULL;
 		while(_hit_fac->records_remain())
 		{
-            if ((read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction) ||
-                bundle.hits().size() >= max_frags_per_bundle)
-            {
-                double raw_mass = next_valid_alignment(bh);
-                if (bh && bh->num_hits() > max_frag_multihits)
-                {
-                    
-                }
-                else
-                {
-                    bundle.add_raw_mass(raw_mass);
-                }
-            }
+		    if ((read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction) ||
+		        bundle.hits().size() >= max_frags_per_bundle)
+		    {
+		      double raw_mass = next_valid_alignment(bh);
+		      if (bh && bh->num_hits() > max_frag_multihits)
+		        {
+
+		        }
+		      else
+		        {
+		            bundle.add_raw_mass(raw_mass);
+		        }
+		      if (bh) { delete bh; }
+		    }
 		}
-        bundle.finalize();
+		bundle.finalize();
 		return false;
 	}
 	
 	bundle.add_ref_scaffold(*next_ref_scaff);
-	next_ref_scaff++;
+	++next_ref_scaff;
 		
 	_expand_by_refs(bundle);
 	

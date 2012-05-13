@@ -1617,13 +1617,15 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	if (corr_bias || corr_multi) final_est_run = false;
 
 	assemble_hits(bundle_factory, bl_ptr);
-    
+
 	if (final_est_run) 
-    {
-        ref_mRNAs.clear();
-        return;
-    }
-    
+	{
+	  delete &bundle_factory;
+	  delete bl_ptr;
+	  ref_mRNAs.clear();
+	  return;
+	}
+
 	hit_factory->reset();
 	delete &bundle_factory;
 	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
@@ -1657,6 +1659,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	final_est_run = true;
 	assemble_hits(bundle_factory2, bl_ptr);
 	ref_mRNAs.clear();
+	delete bl_ptr;
 }
 
 int main(int argc, char** argv)
