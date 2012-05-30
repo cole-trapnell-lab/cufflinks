@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 #simple script to pack up a precompiled binary package, with the boost thread
-# library statically linked in.
+# library statically linked in; on x86_64 Linux, libstc++ and libgcc are linked statically also
 if [[ -z "$2" ]]; then
  echo -e "Usage:\n./make_bin.sh <package_base_name> <boost_prefix> [<bam_prefix> [<Eigen_prefix>]]"
  exit 1
