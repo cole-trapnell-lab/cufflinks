@@ -201,7 +201,7 @@ CLEANFILES = $(bin_SCRIPTS)
 
 cufflinks_SOURCES = cufflinks.cpp  
 cufflinks_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 
-cufflinks_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS) 
+cufflinks_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS) 
 
 cuffcompare_SOURCES = cuffcompare.cpp
 cuffcompare_LDADD = libgc.a
@@ -211,20 +211,20 @@ gffread_LDADD = libgc.a
 
 cuffdiff_SOURCES = cuffdiff.cpp
 cuffdiff_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
-cuffdiff_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+cuffdiff_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 gtf_to_sam_SOURCES = gtf_to_sam.cpp
 gtf_to_sam_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
-gtf_to_sam_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+gtf_to_sam_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 #cuffcluster_SOURCES = cuffcluster.cpp
 #cuffcluster_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
-#cuffcluster_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+#cuffcluster_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 compress_gtf_SOURCES = compress_gtf.cpp
 compress_gtf_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB)
-compress_gtf_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+compress_gtf_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
 
 #gtf_reads_SOURCES = gtf_reads.cpp
 #gtf_reads_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BAM_LIB) 
-#gtf_reads_LDFLAGS =  $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS)
+#gtf_reads_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) #$(ZLIB_LDFLAGS)

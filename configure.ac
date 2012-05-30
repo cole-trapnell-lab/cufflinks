@@ -103,7 +103,8 @@ AC_ARG_ENABLE(profiling,      [  --enable-profiling        enable profiling with
 CFLAGS="${generic_CFLAGS} ${ext_CFLAGS} ${user_CFLAGS} ${debug_CFLAGS} ${OPENMP_CFLAGS}"
 CXXFLAGS="$CFLAGS"
 CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN_CPPFLAGS}"
-LDFLAGS="$ext_LDFLAGS"
+user_LDFLAGS="$LDFLAGS"
+LDFLAGS="${ext_LDFLAGS} ${user_LDFLAGS}"
 
 # Checks for structures/functions that can be used to determine system memory
 AC_CHECK_MEMBERS([struct sysinfo.totalram], [], [], [#include <sys/sysinfo.h>])
