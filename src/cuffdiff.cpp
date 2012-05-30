@@ -1739,6 +1739,12 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 //        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
 //    }
     
+    // Allow the multiread tables to do their thing...
+    foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    {
+        rg_props->multi_read_table()->valid_mass(true);
+    }
+    
     test_launcher->clear_tracking_data();
 	
 	Tests tests;
