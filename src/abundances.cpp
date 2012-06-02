@@ -1826,38 +1826,28 @@ void AbundanceGroup::calculate_conf_intervals()
 		// This will compute the transcript level FPKM confidence intervals
 		for (size_t j = 0; j < _abundances.size(); ++j)
 		{
-            if (_abundances[j]->effective_length() > 0.0 && mass_fraction() > 0)
-			{
-                assert (!isnan(_gamma_covariance(j,j)));
-                
-                long double fpkm_var = _abundances[j]->FPKM_variance();
-                double FPKM_hi = 0.0;      
-                double FPKM_lo = 0.0;
-                if (_abundances[j]->status() != NUMERIC_FAIL)
+            long double fpkm_var = _abundances[j]->FPKM_variance();
+            double FPKM_hi = 0.0;      
+            double FPKM_lo = 0.0;
+            if (_abundances[j]->status() != NUMERIC_FAIL)
+            {
+                FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
+                FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
+                if (!(FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi))
                 {
-                    FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
-                    FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
-                    if (!(FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi))
-                    {
-                        //fprintf(stderr, "Error: confidence intervals are illegal! var = %Lg, fpkm = %lg, lo = %lg, hi %lg, status = %d\n", fpkm_var, _abundances[j]->FPKM(), FPKM_lo, FPKM_hi, _abundances[j]->status());
-                    }
-                    assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
-                    ConfidenceInterval conf(FPKM_lo, FPKM_hi);
-                    _abundances[j]->FPKM_conf(conf);
-                    //_abundances[j]->FPKM_variance(fpkm_var);
+                    //fprintf(stderr, "Error: confidence intervals are illegal! var = %Lg, fpkm = %lg, lo = %lg, hi %lg, status = %d\n", fpkm_var, _abundances[j]->FPKM(), FPKM_lo, FPKM_hi, _abundances[j]->status());
                 }
-                else
-                {
-                    // we shouldn't be able to get here
-                    assert(false);
-                    // TODO: nothing to do here?
-                }
-			}
-			else
-			{
-				_abundances[j]->FPKM_conf(ConfidenceInterval(0.0, 0.0));
-				//_abundances[j]->FPKM_variance(0.0);
-			}
+                assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
+                ConfidenceInterval conf(FPKM_lo, FPKM_hi);
+                _abundances[j]->FPKM_conf(conf);
+                //_abundances[j]->FPKM_variance(fpkm_var);
+            }
+            else
+            {
+                // we shouldn't be able to get here
+                assert(false);
+                // TODO: nothing to do here?
+            }
 		}
 		
         // Now build a confidence interval for the whole abundance group
