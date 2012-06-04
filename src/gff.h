@@ -136,6 +136,8 @@ class GffLine {
       ftype=NULL;
       fstart=0;
       fend=0;
+      strand=0;phase=0;
+      llen=0;score=0;
       info=NULL;
       _parents=NULL;
       _parents_len=0;
@@ -223,9 +225,8 @@ protected:
    int idx;
  public:
    char* name;
-   GffNameInfo() { name=NULL; idx=-1; }
-   GffNameInfo(const char* n) {
-     name=Gstrdup(n);
+   GffNameInfo(const char* n=NULL):idx(-1),name(NULL) {
+     if (n) name=Gstrdup(n);
      }
 
    ~GffNameInfo() {
