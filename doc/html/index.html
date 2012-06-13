@@ -131,25 +131,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 2.0.0 (BETA)</td>
-                    <td align="right">5/4/2012</td>
+                    <td>version 2.0.1 (BETA)</td>
+                    <td align="right">6/XX/2012</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-2.0.0.tar.gz"
+                    <td><a href="./downloads/cufflinks-2.0.1.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-2.0.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.0.1.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-2.0.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.0.1.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -237,9 +237,26 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
-	  <h2> iGenomes index and annotation have been updated to include Bowtie2 indexes (in addition to Bowtie1 indexes) - 5/23/2012</h2>
-	  <br/>
-
+			<h2>2.0.1 release - 6/13/2012</h2>
+				<p>This release addresses several bugs, most of which were introduced as 
+				part of the 2.0.0 release:
+				<ul>
+					<li>Some users were experiencing a problem with the Linux 
+						pre-compiled binary packages where Cuffdiff was reporting
+						many genes and transcripts as having expression levels of
+						zero or "nan" or "inf".  This was determined to be caused 
+						by a recent change in the binary packaging process we use 
+						to distribute pre-compiled binaries.  
+					<li>Multi-read correction in Cuffdiff 2.0 was not always being
+						applied when the user specified <tt>-u/--multi-read-correct</tt>.
+					<li>Some rarely encountered GTF parsing issues have been corrected.
+				</ul>
+				</p>
+				<br/>
+			
+			<h2> Illumina iGenomes now include both Bowtie1 and Bowtie2 indexes - 5/23/2012</h2>
+				  <br/>
+				
 			<h2>2.0.0 release - 5/4/2012</h2>
 			  <p>This release substantially improves the accuracy and robustness of 
 				differential analysis with Cuffdiff. The update also  
