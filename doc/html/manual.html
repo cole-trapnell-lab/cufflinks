@@ -395,6 +395,12 @@
 	  Sets the maximum number of fragments a locus may have before being skipped. Skipped loci are listed in <tt>skipped.gtf</tt>. Default: 1000000  
 	  </td></tr>
 	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-effective-length-correction</tt>
+	  </td><td VALIGN=top>
+	  Cuffdiff will not employ its "effective" length normalization to transcript FPKM. 
+	  </td></tr>
+	
 	  <tr><td VALIGN=top>
 	  <b>Advanced Assembly Options:</b>
 	  </td><td VALIGN=top>
@@ -1483,6 +1489,12 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	  <tt>--min-reps-for-js-test &lt;int&gt;</tt>
 	  </td><td VALIGN=top>
 	  Cuffdiff won't test genes for differential regulation unless the conditions in question have at least this many replicates.  Default: 3. 
+	  </td></tr>
+	
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-effective-length-correction</tt>
+	  </td><td VALIGN=top>
+	  Cuffdiff will not employ its "effective" length normalization to transcript FPKM. 
 	  </td></tr>
 	  
 	  </table><br/>
