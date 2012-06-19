@@ -74,7 +74,7 @@ static struct option long_options[] = {
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
-{"mask-gtf",                required_argument,		 0,			 'M'},
+{"mask-file",                required_argument,		 0,			 'M'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},

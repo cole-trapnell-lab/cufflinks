@@ -435,30 +435,7 @@ void HitBundle::remove_hitless_scaffolds()
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
 }
 
-void HitBundle::remove_unmapped_hits()
-{
-	
-	foreach (MateHit& hit, _hits)
-	{
-		if (unmapped_hit(hit))
-		{
-			delete hit.left_alignment();
-			delete hit.right_alignment();
-		} 
-	}
-	
-	vector<MateHit>::iterator new_end = remove_if(_hits.begin(),
-												  _hits.end(),
-												  unmapped_hit);
 
-	_hits.erase(new_end, _hits.end());	
-	
-	new_end = remove_if(_non_redundant.begin(),
-						_non_redundant.end(),
-						unmapped_hit);
-	_non_redundant.erase(new_end, _non_redundant.end());
-
-}
 
 void HitBundle::combine(const vector<HitBundle*>& in_bundles,
                         HitBundle& out_bundle)
@@ -576,9 +553,22 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
 void HitBundle::finalize(bool is_combined)
 {
 	_final = true;
-    
-	if (!is_combined)
+    if (!is_combined)
 	{
+        // only perform read skipping on primary bundles 
+        // (i.e. don't do it on bundles we're making by combining two or more other bundles)
+        size_t num_skipped = _hits.size() * read_skip_fraction;
+        if (num_skipped > 0 && num_skipped < _hits.size())
+        {
+            random_shuffle(_hits.begin(), _hits.end());
+            _hits.resize(_hits.size() - num_skipped);
+            is_combined = false;
+        }
+        else if (num_skipped >= _hits.size())
+        {
+            _hits.clear();
+        }
+
 		sort(_hits.begin(), _hits.end(), mate_hit_lt);
         if (cond_prob_collapse)
         {
@@ -787,8 +777,7 @@ bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
         
         // If we are randomly throwing out reads, check to see
         // whether this one should be kept.
-        if (read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction ||
-            bundle.hits().size() >= max_frags_per_bundle)
+        if (bundle.hits().size() >= max_frags_per_bundle)
         {
             skip_read = true;
             next_valid_alignment(bh);
@@ -829,8 +818,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		const ReadHit* bh = NULL;
 		while(_hit_fac->records_remain())
 		{
-		    if ((read_skip_fraction == 0.0 || _zeroone() >= read_skip_fraction) ||
-		        bundle.hits().size() >= max_frags_per_bundle)
+		    if (bundle.hits().size() >= max_frags_per_bundle)
 		    {
 		      double raw_mass = next_valid_alignment(bh);
 		      if (bh && bh->num_hits() > max_frag_multihits)
@@ -865,8 +853,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
         bool skip_read = false;
 		// If we are randomly throwing out reads, check to see
         // whether this one should be kept.
-        if ((read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction) ||
-            bundle.hits().size() >= max_frags_per_bundle)
+        if (bundle.hits().size() >= max_frags_per_bundle)
         {
             next_valid_alignment(bh);
             skip_read = true;
@@ -1053,23 +1040,16 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
         bool skip_read = false;
         const ReadHit* bh = NULL;
         
-        if ((read_skip_fraction > 0.0 && _zeroone() < read_skip_fraction))
+        double raw_mass = next_valid_alignment(bh);
+        if (bh && bh->num_hits() > max_frag_multihits)
         {
             skip_read = true;
         }
         else
         {
-            double raw_mass = next_valid_alignment(bh);
-            if (bh && bh->num_hits() > max_frag_multihits)
-            {
-                skip_read = true;
-            }
-            else
-            {
-                bundle.add_raw_mass(raw_mass);
-            }
-		}
-        
+            bundle.add_raw_mass(raw_mass);
+        }
+
 		if (bh == NULL)
 		{
 			if (_hit_fac->records_remain())

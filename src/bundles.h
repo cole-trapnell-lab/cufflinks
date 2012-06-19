@@ -159,7 +159,7 @@ public:
 	void finalize(bool is_combined=false);
 	
 	void remove_hitless_scaffolds();
-	void remove_unmapped_hits();
+
 	void collapse_hits();
 	
     int num_replicates() const { return _num_replicates; }

@@ -44,7 +44,7 @@ static struct option long_options[] = {
 // general options
 {"GTF",					    required_argument,		 0,			 'G'},
 {"GTF-guide",			    required_argument,		 0,			 'g'},
-{"mask-gtf",                required_argument,		 0,			 'M'},
+{"mask-file",                required_argument,		 0,			 'M'},
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 
