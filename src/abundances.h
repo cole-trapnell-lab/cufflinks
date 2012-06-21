@@ -646,4 +646,9 @@ void calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities,
                                 const Eigen::MatrixXd& transcript_cond_probs,
                                 const Eigen::VectorXd& proposed_gammas,
                                 Eigen::MatrixXd& assignment_probs);
+
+void calculate_average_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
+                                const Eigen::MatrixXd& transcript_cond_probs,
+                                const Eigen::VectorXd& proposed_gammas,
+                                Eigen::MatrixXd& assignment_probs);
 #endif

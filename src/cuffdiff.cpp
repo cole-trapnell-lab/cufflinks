@@ -1493,12 +1493,14 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             {
                 if (total_mass > 0)
                 {
-                    double scaling_factor = total_mass / total_norm_mass;
+                    //double scaling_factor = total_mass / total_norm_mass;
+                    double external_scaling_factor = upper_quartiles[fac_idx] / (total_norm_mass / upper_quartiles.size());
                     foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
                     {
-                        double scaled_mass = scaling_factor * upper_quartiles[fac_idx];
-                        bf->read_group_properties()->normalized_map_mass(scaled_mass);
-                        bf->read_group_properties()->external_scale_factor(1.0);
+                        //double scaled_mass = scaling_factor * upper_quartiles[fac_idx];
+                        bf->read_group_properties()->normalized_map_mass(total_mass / total_common_masses.size());
+                        //bf->read_group_properties()->external_scale_factor(1.0);
+                        bf->read_group_properties()->external_scale_factor(external_scaling_factor);
                     }
                 }
             }

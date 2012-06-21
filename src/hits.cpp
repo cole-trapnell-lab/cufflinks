@@ -188,7 +188,7 @@ bool hits_eq_non_multi(const MateHit& lhs, const MateHit& rhs)
 // and won't return true for hits from different read groups (e.g. replicate samples)
 bool hits_eq_non_multi_non_replicate(const MateHit& lhs, const MateHit& rhs)
 {
-	if ((lhs.is_multi() || rhs.is_multi() || lhs.read_group_props() != rhs.read_group_props()) && lhs.insert_id() != rhs.insert_id())
+	if (((lhs.is_multi() || rhs.is_multi()) && lhs.insert_id() != rhs.insert_id()) || lhs.read_group_props() != rhs.read_group_props())
 		return false;
 	return hits_equals(lhs, rhs);
 }
@@ -311,6 +311,11 @@ bool mate_hit_lt(const MateHit& lhs, const MateHit& rhs)
 	if (lhs.is_multi() != rhs.is_multi())
 	{
 		return rhs.is_multi();
+	}
+    
+    if (lhs.read_group_props() != rhs.read_group_props())
+	{
+		return lhs.read_group_props() < rhs.read_group_props();
 	}
 	
 	return false;

@@ -818,19 +818,25 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		const ReadHit* bh = NULL;
 		while(_hit_fac->records_remain())
 		{
-		    if (bundle.hits().size() >= max_frags_per_bundle)
-		    {
-		      double raw_mass = next_valid_alignment(bh);
-		      if (bh && bh->num_hits() > max_frag_multihits)
-		        {
-
-		        }
-		      else
-		        {
-		            bundle.add_raw_mass(raw_mass);
-		        }
-		      if (bh) { delete bh; }
-		    }
+            double raw_mass = next_valid_alignment(bh);
+            if (bundle.hits().size() < max_frags_per_bundle)
+            {
+                if (bh && bh->num_hits() > max_frag_multihits)
+                {
+                    
+                }
+                else
+                {
+                    bundle.add_raw_mass(raw_mass);
+                }
+                if (bh) { delete bh; }
+            }
+            else
+            {
+                delete bh;
+                bh = NULL;
+            }
+		    
 		}
 		bundle.finalize();
 		return false;
@@ -838,7 +844,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 	
 	bundle.add_ref_scaffold(*next_ref_scaff);
 	++next_ref_scaff;
-		
+    
 	_expand_by_refs(bundle);
 	
 	// The most recent RefID and position we've seen in the hit stream
@@ -870,7 +876,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
                 bundle.add_raw_mass(raw_mass);
             }
         }
-
+        
         if (bh == NULL)
         {
 			if (_hit_fac->records_remain())
@@ -878,7 +884,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			else
 				break;
         }
-				
+        
 		last_hit_ref_id_seen = bh->ref_id();
 		last_hit_pos_seen = bh->left();
 		

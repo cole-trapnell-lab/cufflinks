@@ -1059,6 +1059,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     else
     {
         non_equiv_alignments = nr_alignments;
+        log_conv_factors = vector<double>(nr_alignments.size(), 0);
         compute_cond_probs_and_effective_lengths(non_equiv_alignments, transcripts, mapped_transcripts);
     }
        
@@ -1549,11 +1550,12 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         
         proposed_gammas /= total_sample_frags;
         
+        expected_generated_counts += generated_counts[i];
+
+        // This is the full fragment assignment scheme:
+        
         Eigen::MatrixXd assign_probs;
         calculate_assignment_probs(aligment_multiplicities, transcript_cond_probs, proposed_gammas, assign_probs);
-        
-        expected_generated_counts += generated_counts[i];
-        
         for (size_t j = 0; j < num_frag_assignments; ++j)
         {
             Eigen::VectorXd assigned_frag_counts = Eigen::VectorXd::Zero(_abundances.size());
@@ -1575,6 +1577,38 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
             }
             assigned_counts[i*num_frag_assignments + j] = assigned_frag_counts;
         }
+        
+//        // This is the sampled pseudofragment scheme:
+//        Eigen::MatrixXd avg_assign_probs;
+//        calculate_average_assignment_probs(aligment_multiplicities, transcript_cond_probs, proposed_gammas, avg_assign_probs);
+//        for (size_t j = 0; j < num_frag_assignments; ++j)
+//        {
+//            Eigen::VectorXd assigned_frag_counts = Eigen::VectorXd::Zero(_abundances.size());
+//            
+//            for (size_t trans_idx = 0; trans_idx < generated_counts[i].size(); ++trans_idx)
+//            {
+//                size_t frags_from_transcript = generated_counts[i][trans_idx];
+//                for (size_t frag_idx = 0; frag_idx < frags_from_transcript; ++frag_idx)
+//                {
+//                    double s = 0.0;
+//                    double p = uniform_gen();
+//                    for (size_t a_idx = 0; a_idx < generated_counts[i].size(); ++a_idx)
+//                    {
+//                        if (p < s + avg_assign_probs(trans_idx, a_idx))
+//                        {
+//                            assigned_frag_counts(a_idx) += 1;
+//                            break;
+//                        }
+//                        s += avg_assign_probs(trans_idx, a_idx);
+//                    }
+//                }
+//            }
+//            
+//            assigned_counts[i*num_frag_assignments + j] = assigned_frag_counts;
+//            //assigned_counts[i*num_frag_assignments + j] = avg_assign_probs.transpose() * generated_counts[i];
+//            //cerr << assigned_counts[i*num_frag_assignments + j].transpose() << endl;
+//        }
+        
     }
     
     Eigen::VectorXd expected_counts = Eigen::VectorXd::Zero(_abundances.size());
@@ -2215,6 +2249,62 @@ void calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities,
     
     assignment_probs = marg_cond_prob;
 }
+
+void calculate_average_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
+                                        const Eigen::MatrixXd& transcript_cond_probs,
+                                        const Eigen::VectorXd& proposed_gammas,
+                                        Eigen::MatrixXd& assignment_probs)
+{
+    //ublas::vector<double> total_cond_prob = ublas::prod(proposed_gammas,transcript_cond_probs);
+    Eigen::VectorXd total_cond_prob = proposed_gammas.transpose() * transcript_cond_probs ;
+    
+    // Compute the marginal conditional probability for each fragment against each isoform
+    //ublas::matrix<double>  marg_cond_prob = ublas::zero_matrix<double>(transcript_cond_probs.size1(), transcript_cond_probs.size2());
+    Eigen::MatrixXd marg_cond_prob(transcript_cond_probs.rows(), transcript_cond_probs.cols());
+    
+    for (size_t i = 0; i < alignment_multiplicities.size(); ++i)
+    {
+        marg_cond_prob.array().col(i) = proposed_gammas.array() * transcript_cond_probs.array().col(i);
+        
+        if (total_cond_prob(i) > 0)
+        {
+            marg_cond_prob.array().col(i) /= total_cond_prob(i);
+            //column(marg_cond_prob,i) /= total_cond_prob(i);
+        }
+    }
+    
+    assignment_probs = Eigen::MatrixXd::Zero(proposed_gammas.size(), proposed_gammas.size());
+    
+    vector<double> num_compatible(proposed_gammas.size(), 0);
+    
+    for (size_t i = 0; i < alignment_multiplicities.size(); ++i)
+    {
+        for (size_t j = 0; j < proposed_gammas.size(); ++j)
+        {
+            if (marg_cond_prob(j,i) > 0)
+            {
+                assignment_probs.col(j) += marg_cond_prob.col(i) * alignment_multiplicities[i];
+                num_compatible[j] += alignment_multiplicities[i];
+            }
+        }
+    }
+    
+//    cerr << "marg cond prob:" << endl;
+//    cerr << marg_cond_prob << endl;
+    
+    for (size_t j = 0; j < proposed_gammas.size(); ++j)
+    {
+        if (num_compatible[j] > 0)
+            assignment_probs.col(j) /= num_compatible[j];
+    }
+    
+//    cerr << "multiplicities:" << endl;
+//    cerr << alignment_multiplicities << endl;
+//    cerr << "avg matrix:" << endl;
+//    cerr << assignment_probs << endl;
+    //assignment_probs = marg_cond_prob;
+}
+
 
 
 void AbundanceGroup::calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
@@ -2995,6 +3085,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
         }
         //cerr << mle << endl;
         mle_gammas.push_back(mle);
+
         itr->second = mle;
         status_per_replicate[itr->first] = mle_success;
         
