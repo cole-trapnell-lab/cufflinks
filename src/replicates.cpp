@@ -564,8 +564,8 @@ fit_dispersion_model_helper(const string& condition_name,
             var *= p.counts.size() / (p.counts.size() - 1);
         }
         labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-        double scv = (var - xim * mean) / (mean * var);
-        if (mean > 0 && var > 0.0 && scv > 0 && (!exclude_zero_samples || num_non_zero == p.counts.size()))
+        //double scv = (var - xim * mean) / (mean * var);
+        if (mean > 0 && var > 0.0 && /*scv > 0*/ && (!exclude_zero_samples || num_non_zero == p.counts.size()))
         {
             //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
             raw_means_and_vars.push_back(make_pair(mean, var));
@@ -647,7 +647,7 @@ fit_dispersion_model_helper(const string& condition_name,
         //double fitted_dispersion = 0;
         //if (cp->dpr[i] >0)
         //    fitted_dispersion = 1.0 / fitted_dispersion;
-        if (cp->dpr[i] > 0)
+        if (cp->dpr[i] >= 0)
         {
             //fprintf (stderr, "%lg\t%lg\n", raw_means[i], cp->dpr[i]);
             double corrected_scv = true_to_est_scv_table.interpolate_scv(cp->dpr[i]);
