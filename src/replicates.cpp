@@ -12,7 +12,11 @@ extern "C" {
 #include "locfit/local.h"
 }
 
+#include <boost/random/gamma_distribution.hpp>
+#include <boost/random/poisson_distribution.hpp>
+
 #include "replicates.h"
+//#include "rounding.h"
 
 #if ENABLE_THREADS	
 boost::mutex _locfit_lock;
@@ -235,6 +239,287 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
 
 static const int min_loci_for_fitting = 30;
 
+struct SCVInterpolator
+{
+    void add_scv_pair(double est_scv, double true_scv)
+    {
+        true_scvs.push_back(true_scv);
+        est_scvs.push_back(est_scv);
+    }
+    
+    void finalize() 
+    {
+        vector<pair<double, double> > pv;
+        for (size_t i =0; i < true_scvs.size(); ++i)
+        {
+            pv.push_back(make_pair(est_scvs[i], true_scvs[i]));
+        }
+        sort(pv.begin(), pv.end());
+    }
+    
+    // This was built from the dispersion model interpolator - we should refactor these 
+    // into a single routine.
+    double interpolate_scv(double est_scv)
+    {
+        if (est_scv <= 0)
+            return 0.0;
+        
+        if (est_scvs.size() < 2 || true_scvs.size() < 2)
+        {
+            return est_scv; // revert to poisson.
+        }
+        if (est_scv > est_scvs.back())
+        {
+            // extrapolate to the right
+            // off the right end
+            double x1_mean = est_scvs[est_scvs.size()-2];
+            double x2_mean = est_scvs[est_scvs.size()-1];
+            
+            double y1_var = true_scvs[est_scvs.size()-2];
+            double y2_var = true_scvs[est_scvs.size()-1];
+            double slope = 0.0;                
+            if (x2_mean != x1_mean)
+            {
+                slope = (y2_var - y1_var) / (x2_mean-x1_mean);
+            }
+            else if (y1_var == y2_var)
+            {
+                assert (false); // should have a unique'd table
+            }
+            double mean_interp = true_scvs[est_scvs.size()-1] -
+            slope*(est_scv - est_scvs.size()-1);
+            if (mean_interp < est_scv)
+                mean_interp = est_scv;
+            assert (!isnan(mean_interp) && !isinf(mean_interp));
+            return mean_interp;
+        }
+        else if (est_scv < est_scvs.front())
+        {
+            // extrapolate to the left
+            // off the left end?
+            double x1_mean = est_scvs[0];
+            double x2_mean = est_scvs[1];
+            
+            double y1_var = true_scvs[0];
+            double y2_var = true_scvs[1];
+            double slope = 0.0;                
+            if (x2_mean != x1_mean)
+            {
+                slope = (y2_var - y1_var) / (x2_mean-x1_mean);
+            }
+            else if (y1_var == y2_var)
+            {
+                assert (false); // should have a unique'd table
+            }
+            double mean_interp = true_scvs[0] - slope*(est_scvs[0] - est_scv);
+            if (mean_interp < est_scv)
+                mean_interp = est_scv;
+            
+            assert (!isnan(mean_interp) && !isinf(mean_interp));
+            return mean_interp;
+        }
+        
+        vector<double>::const_iterator lb;
+        lb = lower_bound(est_scvs.begin(), 
+                         est_scvs.end(), 
+                         est_scv);
+        if (lb < est_scvs.end())
+        {
+            int d = lb - est_scvs.begin();
+            if (*lb == est_scv || lb == est_scvs.begin())
+            {
+                double var = true_scvs[d];
+                if (var < est_scv) // revert to poisson if underdispersed
+                    var = est_scv;
+                assert (!isnan(var) && !isinf(var));
+                return var;
+            }
+            
+            
+            //in between two points on the scale.
+            d--;
+            
+            if (d < 0)
+            {
+                fprintf(stderr, "ARG d < 0, d = %d \n", d);
+            }
+            
+            if (d >= est_scvs.size())
+            {
+                fprintf(stderr, "ARG d >= est_scvs.size(), d = %d\n", d);
+            }
+            if (d >= true_scvs.size())
+            {
+                fprintf(stderr, "ARG d >= true_scvs.size(), d = %d\n", d);
+            }
+            
+            double x1_mean = est_scvs[d];
+            double x2_mean = est_scvs[d + 1];
+            
+            double y1_var = true_scvs[d];
+            double y2_var = true_scvs[d + 1];
+            double slope = 0.0;                
+            if (x2_mean != x1_mean)
+            {
+                slope = (y2_var - y1_var) / (x2_mean-x1_mean);
+            }
+            else if (y1_var == y2_var)
+            {
+                assert (false); // should have a unique'd table
+            }
+            double mean_interp = true_scvs[d] + slope*(est_scv - est_scvs[d]);
+            if (mean_interp < est_scv) // revert to poisson if underdispersed
+                mean_interp = est_scv;
+            
+            assert (!isnan(mean_interp) && !isinf(mean_interp));
+            return mean_interp;
+        }
+        else
+        {
+            assert (!isnan(est_scv) && !isinf(est_scv));
+            return est_scv; // revert to poisson assumption
+        }
+        
+        return 0.0;
+    }
+    
+private:
+    vector<double> true_scvs;
+    vector<double> est_scvs;
+};
+
+void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpolator& true_to_est_scv_table)
+{    
+    setuplf();  
+    
+    vector<pair<double, double> > alpha_vs_scv;
+   
+    boost::mt19937 rng;
+    vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
+    
+    vector<double> alpha_range;
+    for(double a = 0.02; a < 2.0; a += (2.0 / 100.0))
+    {
+        alpha_range.push_back(a);
+    }
+    
+    for (double a = 2; a < 10.0; a += (8.0 / 20.0))
+    {
+        alpha_range.push_back(a);
+    }
+    
+    foreach (double alpha, alpha_range)
+    {
+        double k = 1.0/alpha;
+        double p = k / (k + mean_count);
+        double r = (mean_count * p) / (1-p);
+
+        //boost::random::negative_binomial_distribution<int, double> nb(r, p);
+        
+        boost::random::gamma_distribution<double> gamma(r, (1-p)/p);
+        
+        
+        vector<double> scvs_for_alpha;
+        vector<double> draws;
+        for (size_t i = 0; i < ngenes; ++i)
+        {
+            LocusCountList locus_count("", nreps, 1); 
+            for (size_t rep_idx = 0; rep_idx < nreps; ++rep_idx)
+            {
+                boost::random::poisson_distribution<long, double> poisson(gamma(rng));
+                locus_count.counts[rep_idx] = poisson(rng);
+                draws.push_back(locus_count.counts[rep_idx]);
+                //fprintf(stderr, "%lg\t", locus_count.counts[rep_idx]);
+            }
+            
+            double mean = accumulate(locus_count.counts.begin(), locus_count.counts.end(), 0);
+            if (mean == 0)
+                continue;
+            mean /= locus_count.counts.size();
+            double var = 0.0;
+            foreach(double c,  locus_count.counts)
+            {
+                var += (c-mean)*(c-mean);
+            }
+            var /= locus_count.counts.size();
+            var *= locus_count.counts.size() / (locus_count.counts.size() - 1);
+            
+            double scv = var / (mean*mean);
+            scvs_for_alpha.push_back(scv);
+            //fprintf(stderr, " : mean = %lg, var = %lg, scv = %lg\n", mean, var, scv);
+            
+            //fprintf(stderr, "\n");
+        }
+        
+        double mean = accumulate(draws.begin(), draws.end(), 0);
+        mean /= draws.size();
+        double var = 0.0;
+        foreach(int c,  draws)
+        {
+            var += (c - mean)*(c-mean);
+        }
+        var /= draws.size();
+        var *= draws.size() / (draws.size() - 1);
+        
+       
+        
+        //fprintf(stderr, "##########\n");
+        //fprintf(stderr, "mean = %lf, var = %lg\n", mean, var);
+        if (scvs_for_alpha.size() > 0)
+        {
+            double mean_scv = accumulate(scvs_for_alpha.begin(),scvs_for_alpha.end(), 0.0);
+            mean_scv /= scvs_for_alpha.size();
+            //fprintf(stderr, "alpha = %lg scv = %lg\n", alpha, mean_scv);
+            alpha_vs_scv.push_back(make_pair(alpha, mean_scv));
+        }
+    }
+    
+    //fprintf(stderr, "$$$$$$$$$\n");
+    
+    //sort (alpha_range.begin(), alpha_range.end());
+    
+    char namebuf[256];
+    sprintf(namebuf, "trueSCV");
+    vari* cm = createvar(namebuf,STREGULAR,alpha_vs_scv.size(),VDOUBLE);
+    for (size_t i = 0; i < alpha_vs_scv.size(); ++i)
+    {
+        cm->dpr[i] = alpha_vs_scv[i].first;
+    }
+    
+    sprintf(namebuf, "estSCV");
+    vari* cv = createvar(namebuf,STREGULAR,alpha_vs_scv.size(),VDOUBLE);
+    for (size_t i = 0; i < alpha_vs_scv.size(); ++i)
+    {
+        cv->dpr[i] = alpha_vs_scv[i].second;
+    }
+    
+    char locfit_cmd[2048];
+    sprintf(locfit_cmd, "locfit trueSCV~estSCV");
+    
+    locfit_dispatch(locfit_cmd);
+    
+    sprintf(namebuf, "domainSCV");
+    vari* cd = createvar(namebuf,STREGULAR,alpha_vs_scv.size(),VDOUBLE);
+    for (size_t i = 0; i < alpha_vs_scv.size(); ++i)
+    {
+        cd->dpr[i] = alpha_vs_scv[i].second;
+    }
+    
+    sprintf(locfit_cmd, "fittedSCV=predict domainSCV");
+    locfit_dispatch(locfit_cmd);
+    
+    int n = 0;
+    sprintf(namebuf, "fittedSCV");
+    vari* cp = findvar(namebuf, 1, &n);
+    assert(cp != NULL);
+    
+    for (size_t i = 0; i < cp->n; ++i)
+    {
+        //fprintf(stderr, "%lg\t%lg\n",alpha_range[i], cp->dpr[i]);
+        true_to_est_scv_table.add_scv_pair(alpha_range[i], cp->dpr[i]);
+    }
+}
+
 boost::shared_ptr<MassDispersionModel const> 
 fit_dispersion_model_helper(const string& condition_name,
                             const vector<double>& scale_factors,
@@ -243,6 +528,20 @@ fit_dispersion_model_helper(const string& condition_name,
 {
     vector<pair<double, double> > raw_means_and_vars;
     map<string, pair<double, double> > labeled_mv_table;
+    
+    SCVInterpolator true_to_est_scv_table;
+    
+    build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
+    
+    setuplf();  
+    
+    double xim = 0;
+    foreach(double s, scale_factors)
+    {
+        if (s)
+            xim += 1.0 / s;
+    }
+    xim /= scale_factors.size();
     
     for (size_t i = 0; i < sample_count_table.size(); ++i)
     {
@@ -260,9 +559,13 @@ fit_dispersion_model_helper(const string& condition_name,
             var += (d - mean) * (d - mean);
         }
         if (var > 0.0 && p.counts.size())
+        {
             var /= p.counts.size();
+            var *= p.counts.size() / (p.counts.size() - 1);
+        }
         labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-        if (mean > 0 && var > 0.0 && (!exclude_zero_samples || num_non_zero == p.counts.size()))
+        double scv = (var - xim * mean) / (mean * var);
+        if (mean > 0 && var > 0.0 && scv > 0 && (!exclude_zero_samples || num_non_zero == p.counts.size()))
         {
             //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
             raw_means_and_vars.push_back(make_pair(mean, var));
@@ -290,16 +593,16 @@ fit_dispersion_model_helper(const string& condition_name,
     
     vector<double> raw_means(raw_means_and_vars.size(), 0.0);
     vector<double> raw_variances(raw_means_and_vars.size(), 0.0);
+    vector<double> raw_scvs(raw_means_and_vars.size(), 0.0);
     
     for(size_t i = 0; i < raw_means_and_vars.size(); ++i)
     {
         raw_means[i] = raw_means_and_vars[i].first;
         raw_variances[i] = raw_means_and_vars[i].second;
+        raw_scvs[i] = (raw_variances[i] - xim * raw_means[i]) / (raw_means[i] * raw_means[i]);
     }
     
     vector<double> fitted_values(raw_means_and_vars.size(), 0.0);
-    
-    setuplf();  
     
     // WARNING: locfit doesn't like undescores - need camel case for 
     // variable names
@@ -312,15 +615,18 @@ fit_dispersion_model_helper(const string& condition_name,
         cm->dpr[i] = log(raw_means[i]);
     }
     
-    sprintf(namebuf, "countVariances");
+    sprintf(namebuf, "countSCV");
+    //sprintf(namebuf, "countVariances");
     vari* cv = createvar(namebuf,STREGULAR,raw_variances.size(),VDOUBLE);
     for (size_t i = 0; i < raw_variances.size(); ++i)
     {
-        cv->dpr[i] = raw_variances[i]; 
+        //cv->dpr[i] = raw_variances[i] 
+        cv->dpr[i] = raw_scvs[i];
     }
     
     char locfit_cmd[2048];
-    sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
+    //sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
+    sprintf(locfit_cmd, "locfit countSCV~countMeans family=gamma");
     
     locfit_dispatch(locfit_cmd);
     
@@ -336,7 +642,22 @@ fit_dispersion_model_helper(const string& condition_name,
     assert(cp != NULL);
     for (size_t i = 0; i < cp->n; ++i)
     {
-        fitted_values[i] = cp->dpr[i];
+        // var[NB] = mu + mu^2 / (fitted_disp^-1)
+        // var[NB] = mu + mu^2 * fitted_disp
+        //double fitted_dispersion = 0;
+        //if (cp->dpr[i] >0)
+        //    fitted_dispersion = 1.0 / fitted_dispersion;
+        if (cp->dpr[i] > 0)
+        {
+            //fprintf (stderr, "%lg\t%lg\n", raw_means[i], cp->dpr[i]);
+            double corrected_scv = true_to_est_scv_table.interpolate_scv(cp->dpr[i]);
+            //double corrected_scv = cp->dpr[i];
+            fitted_values[i] = raw_means[i] + (raw_means[i] * raw_means[i]) * corrected_scv;
+        }
+        else
+        {
+            fitted_values[i] = raw_means[i];
+        }
     }
     
     shared_ptr<MassDispersionModel> disperser;
