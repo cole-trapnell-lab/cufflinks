@@ -615,8 +615,8 @@ fit_dispersion_model_helper(const string& condition_name,
         cm->dpr[i] = log(raw_means[i]);
     }
     
-    sprintf(namebuf, "countSCV");
-    //sprintf(namebuf, "countVariances");
+    //sprintf(namebuf, "countSCV");
+    sprintf(namebuf, "countVariances");
     vari* cv = createvar(namebuf,STREGULAR,raw_variances.size(),VDOUBLE);
     for (size_t i = 0; i < raw_variances.size(); ++i)
     {
@@ -626,7 +626,7 @@ fit_dispersion_model_helper(const string& condition_name,
     
     char locfit_cmd[2048];
     //sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
-    sprintf(locfit_cmd, "locfit countSCV~countMeans family=gamma");
+    sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
     
     locfit_dispatch(locfit_cmd);
     
@@ -655,8 +655,12 @@ fit_dispersion_model_helper(const string& condition_name,
             double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
             //double corrected_scv = cp->dpr[i];
             
-            fitted_values[i] = mean + (mean*mean) * corrected_scv;
-            //fprintf(stderr, "mean = %lg, variance = %lg, uncorrected scv = %lg, corrected scv = %lg, var = %lg\n", cm->dpr[i], cp->dpr[i], fitted_scv, corrected_scv, fitted_values[i]);
+            // uncorrected fitted variance:
+            //fitted_values[i] = mean + (cp->dpr[i] - xim * mean);
+            
+            // bias corrected fitted_variance:
+            fitted_values[i] = mean + corrected_scv * (mean * mean);
+            fprintf(stderr, "mean = %lg, variance = %lg, uncorrected scv = %lg, corrected scv = %lg, var = %lg\n", cm->dpr[i], cp->dpr[i], fitted_scv, corrected_scv, fitted_values[i]);
         }
         else
         {

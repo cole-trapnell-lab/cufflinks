@@ -409,6 +409,7 @@ bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 void HitBundle::collapse_hits()
 {
 	::collapse_hits(_hits, _non_redundant);
+    //_non_redundant = _hits;
 }
 
 void HitBundle::finalize_open_mates()
