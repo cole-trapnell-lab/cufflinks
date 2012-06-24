@@ -658,9 +658,16 @@ fit_dispersion_model_helper(const string& condition_name,
             // uncorrected fitted variance:
             fitted_values[i] = mean + (cp->dpr[i] - xim * mean);
             
+//            double k = 1.0/corrected_scv;
+//            double p = k / (k + 100000);
+//            double r = (100000 * p) / (1-p);
+//            
+//            double hypothetical_mean = p*r/ (1-p);
+//            double hypothetical_var = p*r/((1-p)*(1-p));
+//            double raw_var = hypothetical_var - hypothetical_mean;
             // bias corrected fitted_variance:
-            //fitted_values[i] = mean + corrected_scv * (mean * mean);
-            //fprintf(stderr, "mean = %lg, variance = %lg, uncorrected scv = %lg, corrected scv = %lg, var = %lg\n", cm->dpr[i], cp->dpr[i], fitted_scv, corrected_scv, fitted_values[i]);
+            //fitted_values[i] = mean + raw_var;
+            //fprintf(stderr, "mean = %lg, variance = %lg, uncorrected scv = %lg, corrected scv = %lg, var = %lg\n", mean, cp->dpr[i], fitted_scv, corrected_scv, fitted_values[i]);
         }
         else
         {
