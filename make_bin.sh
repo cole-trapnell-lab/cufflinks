@@ -11,8 +11,8 @@ mkdir $1
 #make clean
 make distclean
 if [[ $(uname -m) = "x86_64" ]]; then
- echo "Linking statically on x86_64 (only for gcc 4.5+).."
- export LDFLAGS="-static-libgcc -static-libstdc++"
+ #echo "Linking statically on x86_64 (only for gcc 4.5+).."
+ #export LDFLAGS="-static-libgcc -static-libstdc++"
 fi 
 l2="$2"
 l3="$3"

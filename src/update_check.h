@@ -72,6 +72,7 @@ bool get_current_version(char* curr_version)
 	}
 	
 	char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
 	strcpy(buffer, "GET /curr_cuff_version HTTP/1.1\nHost: cufflinks.cbcb.umd.edu\n\n");
 	n = write(sockfd,buffer,1024);
 	
