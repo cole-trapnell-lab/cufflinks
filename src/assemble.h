@@ -23,7 +23,7 @@
 
 class BiasLearner;
 
-bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr);
+bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr);
 
 //bool intron_compatible(const MateHit& lhs, const MateHit& rhs);
 bool read_hits_overlap(const ReadHit* lhs, const ReadHit* rhs);

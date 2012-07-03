@@ -1149,7 +1149,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
-					 BiasLearner* bl_ptr,
+					 shared_ptr<BiasLearner> bl_ptr,
 					 long double map_mass,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
@@ -1409,7 +1409,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	delete bundle_ptr;
 }
 
-bool assemble_hits(BundleFactory& bundle_factory, BiasLearner* bl_ptr)
+bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr)
 {
 	//srand(time(0));
 		
@@ -1618,7 +1618,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     //fprintf(stderr, "ReadHit delete count is %d\n", num_deleted);
     
-	BiasLearner* bl_ptr = new BiasLearner(rg_props->frag_len_dist());
+	shared_ptr<BiasLearner> bl_ptr(new BiasLearner(rg_props->frag_len_dist()));
     bundle_factory.read_group_properties(rg_props);
 
 	//if (ref_gtf) -- why? bad introns are bad
@@ -1635,7 +1635,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	if (final_est_run) 
 	{
 	  delete &bundle_factory;
-	  delete bl_ptr;
+	  //delete bl_ptr;
 	  ref_mRNAs.clear();
 	  return;
 	}
@@ -1673,7 +1673,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	final_est_run = true;
 	assemble_hits(bundle_factory2, bl_ptr);
 	ref_mRNAs.clear();
-	delete bl_ptr;
+	//delete bl_ptr;
 }
 
 int main(int argc, char** argv)
