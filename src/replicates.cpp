@@ -208,9 +208,9 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
         for (size_t j = 0; j < p.counts.size(); ++j)
         {
             //assert (log_geom_means.size() > j);
-            if (p.counts[j] > 0)
+            if (floor(p.counts[j]) > 0)
             {
-                log_geom_means[i] += (1.0/p.counts.size()) * log(p.counts[j]);
+                log_geom_means[i] += (1.0/p.counts.size()) * log(floor(p.counts[j]));
             }
             
         }
@@ -222,9 +222,9 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
         vector<double> tmp_counts;
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
-            if (log_geom_means[i] && !isinf(log_geom_means[i]) && !isnan(log_geom_means[i]) && sample_count_table[i].counts[j])
+            if (log_geom_means[i] && !isinf(log_geom_means[i]) && !isnan(log_geom_means[i]) && floor(sample_count_table[i].counts[j]))
             {
-                double gm = (double)log(sample_count_table[i].counts[j]) - log_geom_means[i];
+                double gm = (double)log(floor(sample_count_table[i].counts[j])) - log_geom_means[i];
                 assert (!isinf(gm));
                 tmp_counts.push_back(gm);
             }

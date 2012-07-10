@@ -1017,7 +1017,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
             }
             double scaled = raw_count_table[j].count;
             //sample_count_table[j].counts[i] = scaled * unscaling_factor;
-            sample_count_table[j].counts[i] = scaled;
+            sample_count_table[j].counts[i] = floor(scaled);
             assert(sample_count_table[j].counts[i] >= 0 && !isinf(sample_count_table[j].counts[i]));
         }
     }

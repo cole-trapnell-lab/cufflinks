@@ -1634,7 +1634,7 @@ void inspect_map(BundleFactory& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            count_table.push_back(LocusCount(bundle_label_buf, bundle.raw_mass(), bundle.ref_scaffolds().size()));
+            count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size()));
 		}
         
         if (!valid_bundle)
