@@ -30,7 +30,7 @@ fi
 
 
 #./configure --enable-intel64 --with-boost=$l2 --with-boost-thread=$l3 --with-bam=$l4 --with-eigen=$l5
-./configure --enable-intel64 --with-boost=$l2 --with-boost-thread=$l2/lib/libboost_thread.a --with-bam=$l3 --with-eigen=$l4
+./configure --with-boost=$l2 --with-boost-thread=$l2/lib/libboost_thread.a --with-bam=$l3 --with-eigen=$l4
 make
 cp src/cufflinks $1
 cp src/cuffcompare $1
