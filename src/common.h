@@ -108,6 +108,7 @@ extern double max_frag_multihits;
 extern int min_reps_for_js_test;
 extern bool no_effective_length_correction;
 extern bool no_length_correction;
+extern bool no_js_tests;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -499,6 +500,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_OLAP_RADIUS             311
 #define OPT_NO_LENGTH_CORRECTION    312
 #define OPT_NO_EFFECTIVE_LENGTH_CORRECTION    313
+#define OPT_NO_JS_TESTS             314
 
 
 #endif

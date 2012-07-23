@@ -1752,6 +1752,10 @@ void test_differential(const string& locus_tag,
 #endif
             }
             
+            // Skip all the JS based testing for genes with an isoform switch?
+            if (no_js_tests)
+                continue;
+            
             // FIXME: the code below will not properly test for differential
             // splicing/promoter use when a gene (e.g.) occupies two
             // disjoint bundles.  We need to store the covariance matrices (etc)

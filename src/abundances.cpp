@@ -1169,7 +1169,10 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         calculate_conf_intervals();
         
         // Calculate the inter-group relative abundances and variances
-        calculate_kappas();
+        if (no_js_tests == false)
+        {
+            calculate_kappas();
+        }
     }
     
     for (size_t i = 0; i < _abundances.size(); ++i)

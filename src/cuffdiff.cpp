@@ -55,6 +55,7 @@ bool use_geometric_norm = false;
 bool use_raw_mapped_norm = false;
 bool use_isoform_count_dispersion = true;
 
+
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
 const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:";
@@ -122,7 +123,8 @@ static struct option long_options[] = {
 {"min-outlier-p",           required_argument,       0,          OPT_MIN_OUTLIER_P},
 {"min-reps-for-js-test",      required_argument,     0,          OPT_MIN_REPS_FOR_JS_TEST},
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
-{"no-length-correction",  no_argument,     0,          OPT_NO_LENGTH_CORRECTION},
+{"no-length-correction",    no_argument,             0,          OPT_NO_LENGTH_CORRECTION},
+{"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
 {0, 0, 0, 0} // terminator
 };
 
@@ -151,6 +153,7 @@ void print_usage()
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
     fprintf(stderr, "  --no-diff                    Don't generate differential analysis files            [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-js-tests                Don't perform isoform switching tests                 [ default:  FALSE ]\n");
 	fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
@@ -454,6 +457,11 @@ int parse_options(int argc, char** argv)
             case OPT_NO_LENGTH_CORRECTION:
             {
                 no_length_correction = true;
+                break;
+            }
+            case OPT_NO_JS_TESTS:
+            {
+                no_js_tests = true;
                 break;
             }
 			default:

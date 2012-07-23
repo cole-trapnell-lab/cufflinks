@@ -121,6 +121,7 @@ double max_frag_multihits = 10000000;
 int min_reps_for_js_test = 3;
 bool no_effective_length_correction = false;
 bool no_length_correction = false;
+bool no_js_tests = false;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -129,6 +130,7 @@ float read_skip_fraction = 0.0;
 bool no_read_pairs = false;
 int trim_read_length = -1;
 double mle_accuracy = 1e-6;
+
 
 
 
