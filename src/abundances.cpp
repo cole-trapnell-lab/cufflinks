@@ -136,7 +136,11 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
     
     
     calculate_conf_intervals();
-    calculate_kappas();
+    
+    if (no_js_tests == false)
+    {
+        calculate_kappas();
+    }
 }
 
 AbundanceStatus AbundanceGroup::status() const
