@@ -212,7 +212,7 @@ void BiasLearner::preProcessTranscript(const Scaffold& transcript)
 	vector<double> startHist(transcript.length()+1, 0.0); // +1 catches overhangs
 	vector<double> endHist(transcript.length()+1, 0.0);
 
-	foreach (const MateHit* hit_p, transcript.mate_hits())
+	BOOST_FOREACH (const MateHit* hit_p, transcript.mate_hits())
 	{
 		const MateHit& hit = *hit_p;
 		if (!hit.left_alignment() && !hit.right_alignment())

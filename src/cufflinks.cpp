@@ -520,7 +520,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 	{
 		for(size_t l = 0; l < lhs.size(); ++l)
 		{			
-			foreach(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
+			BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
 			{
                 // if we're past all the overlaps, just stop
 				if (ref_scaff->left() >= lhs[l].right() + overhang_3)
@@ -553,7 +553,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 		}
 		for(size_t r = 0; r < rhs.size(); ++r)
 		{			
-			foreach(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
+			BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
 			{
 				if (ref_scaff->left() >= rhs[r].right() + overhang_3)
 				{
@@ -714,7 +714,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	if (ref_guided && enable_faux_reads && !hits.empty())
 	{
 		vector<Scaffold> pseudohits;
-		foreach(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
+		BOOST_FOREACH(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 		{
 			ref_scaff->tile_with_scaffs(pseudohits, tile_len, tile_off);
 		}
@@ -891,7 +891,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	}
 	if (assembled_successfully)
 	{
-		foreach(Scaffold& scaff, tmp_scaffs)
+		BOOST_FOREACH(Scaffold& scaff, tmp_scaffs)
 		{
 			scaffolds.push_back(shared_ptr<Scaffold>(new Scaffold(scaff)));
 		}
@@ -935,7 +935,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	
 	// need the avg read length for depth of coverage calculation 
 	double avg_read_length = 0;
-	foreach (MateHit& hit, hits_in_cluster)
+	BOOST_FOREACH (MateHit& hit, hits_in_cluster)
 	{
 		if (hit.left_alignment())
 			avg_read_length += hit.left_alignment()->read_len(); 
@@ -954,7 +954,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
         }
         else
         {
-            foreach(shared_ptr<Abundance>  ab, transfrag_cluster.abundances())
+            BOOST_FOREACH(shared_ptr<Abundance>  ab, transfrag_cluster.abundances())
             {
                 ab->status(NUMERIC_HI_DATA);
             }
@@ -988,7 +988,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
         {
             shared_ptr<Abundance> ab_i = abundances[i];
             bool found = false;
-            foreach (shared_ptr<Abundance> ab_j, filtered_transcripts)
+            BOOST_FOREACH (shared_ptr<Abundance> ab_j, filtered_transcripts)
             {
                 if (ab_i == ab_j)
                 {
@@ -1010,7 +1010,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 										 transfrags_by_strand);
 	
 	
-	foreach (const AbundanceGroup& strand_group, transfrags_by_strand)
+	BOOST_FOREACH (const AbundanceGroup& strand_group, transfrags_by_strand)
 	{	
 		vector<AbundanceGroup> transfrags_by_gene;
 		
@@ -1023,7 +1023,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 			cluster_transcripts<ConnectByExonOverlap>(strand_group, transfrags_by_gene);
 		}
 
-		foreach(const AbundanceGroup& gene, transfrags_by_gene)
+		BOOST_FOREACH(const AbundanceGroup& gene, transfrags_by_gene)
 		{
 			const vector<shared_ptr<Abundance> >& iso_abundances = gene.abundances();
 			vector<Isoform> isoforms;
@@ -1034,7 +1034,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 			string ref_gene_id = "";
 			
 			double major_isoform_FPKM = 0;
-			foreach (shared_ptr<Abundance> iso_ab, iso_abundances)
+			BOOST_FOREACH (shared_ptr<Abundance> iso_ab, iso_abundances)
 			{
 				if (iso_ab->transfrag()->is_ref())
 				{
@@ -1051,7 +1051,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				major_isoform_FPKM = max(iso_ab->FPKM(), major_isoform_FPKM);
 			}
 			
-			foreach (shared_ptr<Abundance> iso_ab, iso_abundances)
+			BOOST_FOREACH (shared_ptr<Abundance> iso_ab, iso_abundances)
 			{
 				// Calculate transcript depth of coverage and FMI from FPKM
 				double FPKM = iso_ab->FPKM();
@@ -1116,7 +1116,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
     { 
         vector<Scaffold> c; 
         scaffolds[i]->get_complete_subscaffolds(c); 
-        foreach (Scaffold& s, c)
+        BOOST_FOREACH (Scaffold& s, c)
         {
             split_partials.push_back(shared_ptr<Scaffold>(new Scaffold(s))); 
         }
@@ -1125,7 +1125,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
     scaffolds = split_partials;
 	
 	vector<shared_ptr<Abundance> > abundances;
-	foreach(shared_ptr<Scaffold> s, scaffolds)
+	BOOST_FOREACH(shared_ptr<Scaffold> s, scaffolds)
 	{
 		TranscriptAbundance* pT = new TranscriptAbundance;
 		pT->transfrag(s);
@@ -1140,7 +1140,7 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	cluster_transcripts<ConnectByExonOverlap>(transfrags,
                                               transfrags_by_cluster);
 	
-	foreach(AbundanceGroup& cluster, transfrags_by_cluster)
+	BOOST_FOREACH(AbundanceGroup& cluster, transfrags_by_cluster)
 	{
 		quantitate_transcript_cluster(cluster, total_map_mass, genes, bundle_too_large);
 	}
@@ -1277,10 +1277,10 @@ void assemble_bundle(const RefSequenceTable& rt,
     if (init_bundle_mode == REF_GUIDED)
     {
         hit_introns = new set<AugmentedCuffOp>();
-        foreach(const MateHit& h, bundle.non_redundant_hits())
+        BOOST_FOREACH(const MateHit& h, bundle.non_redundant_hits())
         {
             Scaffold s(h);
-            foreach (AugmentedCuffOp a, s.augmented_ops())
+            BOOST_FOREACH (AugmentedCuffOp a, s.augmented_ops())
             {
                 if (a.opcode == CUFF_INTRON)
                 {
@@ -1611,7 +1611,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     verbose_msg("%d ReadHits still live\n", num_deleted);
     verbose_msg("Found %lu reference contigs\n", rt.size());
     
-    foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
+    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
     {
         ref_scaff->clear_hits();
     }

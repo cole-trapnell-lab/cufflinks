@@ -745,7 +745,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
     
     if (library_type != "transfrags")
     {
-        foreach (Scaffold& scaff, scaffolds)
+        BOOST_FOREACH (Scaffold& scaff, scaffolds)
         {
             if (!(scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_REV))
                 continue;
@@ -754,7 +754,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             vector<double> coverage(scaff_len, 0.0);
             
             double total = 0;
-            foreach(const MateHit* hit, scaff.mate_hits())
+            BOOST_FOREACH(const MateHit* hit, scaff.mate_hits())
             {
                 int start, end, frag_len;
                 if (!scaff.map_frag(*hit, start, end, frag_len)) continue;
@@ -899,7 +899,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
     }
     else
     {
-        foreach (Scaffold& scaff, scaffolds)
+        BOOST_FOREACH (Scaffold& scaff, scaffolds)
         {
             if (!(scaff.strand() == CUFF_FWD || scaff.strand() == CUFF_REV))
                 continue;
@@ -908,7 +908,7 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             vector<double> coverage(scaff_len, 0.0);
             
             double total = 0;
-            foreach(const MateHit* hit, scaff.mate_hits())
+            BOOST_FOREACH(const MateHit* hit, scaff.mate_hits())
             {
                 int start, end, frag_len;
                 if (!scaff.map_frag(*hit, start, end, frag_len)) continue;

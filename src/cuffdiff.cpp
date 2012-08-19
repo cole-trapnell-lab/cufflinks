@@ -594,7 +594,7 @@ void print_FPKM_tracking(FILE* fout,
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
 		
         AbundanceStatus status = NUMERIC_OK;
-        foreach (const FPKMContext& c, fpkms)
+        BOOST_FOREACH (const FPKMContext& c, fpkms)
         {
             if (c.status == NUMERIC_FAIL)
                 status = NUMERIC_FAIL;
@@ -685,7 +685,7 @@ void print_count_tracking(FILE* fout,
 		const vector<FPKMContext>& fpkms = track.fpkm_series;
 		
         AbundanceStatus status = NUMERIC_OK;
-        foreach (const FPKMContext& c, fpkms)
+        BOOST_FOREACH (const FPKMContext& c, fpkms)
         {
             if (c.status == NUMERIC_FAIL)
                 status = NUMERIC_FAIL;
@@ -1087,7 +1087,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
         shared_ptr<MassDispersionModel const> disperser;
         disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table, false);
         
-        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+        BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
         {
             rg_props->mass_dispersion_model(disperser);
         }
@@ -1108,7 +1108,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
         avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
     }
     
-    foreach(shared_ptr<ReadGroupProperties> rg, all_read_groups)
+    BOOST_FOREACH(shared_ptr<ReadGroupProperties> rg, all_read_groups)
     {
         rg->normalized_map_mass(avg_total_common_scaled_count);
         //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
@@ -1305,7 +1305,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
     }
     
-    foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+    BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
         fac->set_ref_rnas(ref_mRNAs);
         if (mask_gtf) 
@@ -1320,7 +1320,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	int tmp_max_frag_len = 0;
 	
 	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
-	foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+	BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
 #if ENABLE_THREADS	
         while(1)
@@ -1503,7 +1503,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 {
                     //double scaling_factor = total_mass / total_norm_mass;
                     double external_scaling_factor = upper_quartiles[fac_idx] / (total_norm_mass / upper_quartiles.size());
-                    foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
+                    BOOST_FOREACH(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
                     {
                         //double scaled_mass = scaling_factor * upper_quartiles[fac_idx];
                         bf->read_group_properties()->normalized_map_mass(total_mass / total_common_masses.size());
@@ -1536,14 +1536,14 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             
             for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
             {
-                foreach(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
+                BOOST_FOREACH(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
                 {
                     bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
                 }
             }
         }  
         
-        foreach (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
         {
             // for now, "borrow" the dispersion model for the condition with the most replicates
             size_t borrowed_disp_model_idx = most_reps_idx;
@@ -1553,7 +1553,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
                 double borrowed_internal_size_factor = scale_factors[borrowed_disp_model_idx];
                 double borrowed_external_size_factor = scale_factors[borrowed_disp_model_idx];
                 double borrowed_norm_map_mass = bundle_factories[borrowed_disp_model_idx]->factories().front()->read_group_properties()->normalized_map_mass();
-                foreach(shared_ptr<BundleFactory> bf, fac->factories())
+                BOOST_FOREACH(shared_ptr<BundleFactory> bf, fac->factories())
                 {
                     // we need to adjust the scaling factors so that the FPKMs aren't skewed
                     // and the variance function from the dispersion model is correct.
@@ -1578,7 +1578,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 //    {
 //        // scale the normalized masses so that both quantile total count normalization
 //        // are roughly on the same numerical scale
-//        foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+//        BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
 //        {
 //            long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
 //            rg_props->normalized_map_mass(new_norm);
@@ -1614,7 +1614,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
     long double total_norm_mass = 0.0;
     long double total_mass = 0.0;
-    foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         total_norm_mass += rg_props->normalized_map_mass();
         total_mass += rg_props->total_map_mass();
@@ -1651,7 +1651,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
 			quantitate_next_locus(rt, bundle_factories, test_launcher);
 			bool more_loci_remain = false;
-            foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
             {
                 if (rep_fac->bundles_remain())
                 {
@@ -1683,7 +1683,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             }
 		}
         
-        foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
 			rep_fac->reset();
         }
@@ -1694,9 +1694,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     {
         bias_run = true;
         p_bar = ProgressBar("Learning bias parameters.", 0);
-		foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+		BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
-			foreach (shared_ptr<BundleFactory> fac, rep_fac->factories())
+			BOOST_FOREACH (shared_ptr<BundleFactory> fac, rep_fac->factories())
 			{
 #if ENABLE_THREADS	
 				while(1)
@@ -1737,7 +1737,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 		}
 #endif
-        foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
 			rep_fac->reset();
         }
@@ -1750,7 +1750,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 //    }
     
     // Allow the multiread tables to do their thing...
-    foreach (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         rg_props->multi_read_table()->valid_mass(true);
     }
@@ -1790,7 +1790,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
         quantitate_next_locus(rt, bundle_factories, test_launcher);
         bool more_loci_remain = false;
-        foreach (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
         {
             if (rep_fac->bundles_remain())
             {

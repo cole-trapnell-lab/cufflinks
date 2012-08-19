@@ -180,7 +180,7 @@ void TestLauncher::abundance_avail(const string& locus_id,
 // acquire the lock itself. 
 bool TestLauncher::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances)
 {    
-    foreach (shared_ptr<SampleAbundances> ab, abundances)
+    BOOST_FOREACH (shared_ptr<SampleAbundances> ab, abundances)
     {
         if (!ab)
         {
@@ -259,23 +259,23 @@ void TestLauncher::record_tracking_data(vector<shared_ptr<SampleAbundances> >& a
 	{
 		const AbundanceGroup& ab_group = abundances[i]->transcripts;
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
-		foreach (shared_ptr<Abundance> ab, ab_group.abundances())
+		BOOST_FOREACH (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
 			add_to_tracking_table(i, *ab, _tracking->isoform_fpkm_tracking);
             //assert (_tracking->isoform_fpkm_tracking.num_fragments_by_replicate().empty() == false);
 		}
 		
-		foreach (AbundanceGroup& ab, abundances[i]->cds)
+		BOOST_FOREACH (AbundanceGroup& ab, abundances[i]->cds)
 		{
 			add_to_tracking_table(i, ab, _tracking->cds_fpkm_tracking);
 		}
 		
-		foreach (AbundanceGroup& ab, abundances[i]->primary_transcripts)
+		BOOST_FOREACH (AbundanceGroup& ab, abundances[i]->primary_transcripts)
 		{
 			add_to_tracking_table(i, ab, _tracking->tss_group_fpkm_tracking);
 		}
 		
-		foreach (AbundanceGroup& ab, abundances[i]->genes)
+		BOOST_FOREACH (AbundanceGroup& ab, abundances[i]->genes)
 		{
 			add_to_tracking_table(i, ab, _tracking->gene_fpkm_tracking);
 		}
@@ -598,7 +598,7 @@ SampleDifference get_de_tests(const string& description,
 //    ublas::vector<double> null_kappa_mean;
 //    null_kappa_mean = ublas::zero_vector<double>(curr_kappa_cov.size1());
 //    
-//    foreach(ublas::vector<double>& sample, samples)
+//    BOOST_FOREACH(ublas::vector<double>& sample, samples)
 //    {
 //        null_kappa_mean += sample;
 //    }
@@ -911,7 +911,7 @@ void sample_abundance_worker(const string& locus_tag,
 {
     vector<shared_ptr<Abundance> > abundances;
     
-    foreach(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+    BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
     {
         TranscriptAbundance* pT = new TranscriptAbundance;
         pT->transfrag(s);
@@ -938,7 +938,7 @@ void sample_abundance_worker(const string& locus_tag,
     }
     else
     {
-        foreach(shared_ptr<Abundance>  ab, abundances)
+        BOOST_FOREACH(shared_ptr<Abundance>  ab, abundances)
         {
             ab->status(NUMERIC_HI_DATA);
 
@@ -965,7 +965,7 @@ void sample_abundance_worker(const string& locus_tag,
     cluster_transcripts<ConnectByAnnotatedGeneId>(sample.transcripts,
                                                   transcripts_by_gene_id);
     
-	foreach(AbundanceGroup& ab_group, transcripts_by_gene_id)
+	BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_gene_id)
     {
         ab_group.locus_tag(locus_tag);
         set<string> gene_ids = ab_group.gene_id();
@@ -1005,7 +1005,7 @@ void sample_abundance_worker(const string& locus_tag,
                                                          &cds_fpkm_cov,
                                                          &cds_assigned_counts);
         
-        foreach(AbundanceGroup& ab_group, transcripts_by_cds)
+        BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_cds)
         {
             ab_group.locus_tag(locus_tag);
             set<string> protein_ids = ab_group.protein_id();
@@ -1024,7 +1024,7 @@ void sample_abundance_worker(const string& locus_tag,
         vector<shared_ptr<Abundance> > cds_abundances;
         double max_cds_mass_variance = 0.0; 
         set<shared_ptr<ReadGroupProperties const> > rg_props;
-        foreach (AbundanceGroup& ab_group, sample.cds)
+        BOOST_FOREACH (AbundanceGroup& ab_group, sample.cds)
         {
             //if (ab_group.description() != "")
             {
@@ -1047,7 +1047,7 @@ void sample_abundance_worker(const string& locus_tag,
         cluster_transcripts<ConnectByAnnotatedGeneId>(cds,
                                                       cds_by_gene);
         
-        foreach(AbundanceGroup& ab_group, cds_by_gene)
+        BOOST_FOREACH(AbundanceGroup& ab_group, cds_by_gene)
         {
             ab_group.locus_tag(locus_tag);
             set<string> gene_ids = ab_group.gene_id();
@@ -1090,7 +1090,7 @@ void sample_abundance_worker(const string& locus_tag,
                                                      &tss_assigned_counts);
         
         
-        foreach(AbundanceGroup& ab_group, transcripts_by_tss)
+        BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_tss)
         {
             ab_group.locus_tag(locus_tag);
             set<string> tss_ids = ab_group.tss_id();
@@ -1107,7 +1107,7 @@ void sample_abundance_worker(const string& locus_tag,
         // Group TSS clusters by gene
         vector<shared_ptr<Abundance> > primary_transcript_abundances;
         set<shared_ptr<ReadGroupProperties const> > rg_props;
-        foreach (AbundanceGroup& ab_group, sample.primary_transcripts)
+        BOOST_FOREACH (AbundanceGroup& ab_group, sample.primary_transcripts)
         {
             primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
             max_tss_mass_variance = max(max_tss_mass_variance, ab_group.max_mass_variance());
@@ -1128,13 +1128,13 @@ void sample_abundance_worker(const string& locus_tag,
         cluster_transcripts<ConnectByAnnotatedGeneId>(primary_transcripts,
                                                       primary_transcripts_by_gene);
         
-        foreach(AbundanceGroup& ab_group, primary_transcripts_by_gene)
+        BOOST_FOREACH(AbundanceGroup& ab_group, primary_transcripts_by_gene)
         {
             ab_group.locus_tag(locus_tag);
             set<string> gene_ids = ab_group.gene_id();
 //            if (gene_ids.size() > 1)
 //            {
-//                foreach (string st, gene_ids)
+//                BOOST_FOREACH (string st, gene_ids)
 //                {
 //                    fprintf(stderr, "%s\n", st.c_str());
 //                }
@@ -1222,7 +1222,7 @@ void sample_worker(const RefSequenceTable& rt,
     bool perform_cds_analysis = false;
     bool perform_tss_analysis = false;
 
-    foreach(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
     {
         if (s->annotated_tss_id() != "")
         {
@@ -1360,7 +1360,7 @@ void sample_worker(const RefSequenceTable& rt,
     ///////////////////////////////////////////////
     
     
-    foreach(shared_ptr<Scaffold> ref_scaff,  bundle.ref_scaffolds())
+    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle.ref_scaffolds())
     {
         ref_scaff->clear_hits();
     }
@@ -1386,7 +1386,7 @@ void dump_locus_variance_info(const string& filename)
     
     fprintf(fdump, 
             "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tlocus_salient_frags\tlocus_total_frags\tcount_sharing\n");
-    foreach (LocusVarianceInfo& L, locus_variance_info_table)
+    BOOST_FOREACH (LocusVarianceInfo& L, locus_variance_info_table)
     {
         for (size_t i = 0; i < L.gamma.size(); ++i)
         {

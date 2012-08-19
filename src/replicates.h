@@ -110,7 +110,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        foreach (boost::shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, _factories)
         {
             if (fac->bundles_remain())
                 return true;
@@ -126,7 +126,7 @@ public:
         std::vector<HitBundle*> bundles;
         
         bool non_empty_bundle = false;
-        foreach (boost::shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, _factories)
         {
             bundles.push_back(new HitBundle());
             if (fac->next_bundle(*(bundles.back())))
@@ -137,7 +137,7 @@ public:
         
         if (non_empty_bundle == false)
         {
-            foreach (HitBundle* in_bundle, bundles)
+            BOOST_FOREACH (HitBundle* in_bundle, bundles)
             {
                 in_bundle->ref_scaffolds().clear();
                 in_bundle->clear_hits();
@@ -160,7 +160,7 @@ public:
         // Merge the replicates into a combined bundle of hits.
         HitBundle::combine(bundles, bundle_out);
         
-        foreach (HitBundle* in_bundle, bundles)
+        BOOST_FOREACH (HitBundle* in_bundle, bundles)
         {
             in_bundle->ref_scaffolds().clear();
             in_bundle->clear_hits();
@@ -174,7 +174,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        foreach (shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH (shared_ptr<BundleFactory> fac, _factories)
         {
             fac->reset();
         }
@@ -289,7 +289,7 @@ public:
         shared_ptr<MassDispersionModel const> disperser;
         disperser = ::fit_dispersion_model(_condition_name,scale_factors, sample_count_table, false);
         
-        foreach (shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH (shared_ptr<BundleFactory> fac, _factories)
         {
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             rg_props->mass_dispersion_model(disperser);
@@ -304,7 +304,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        foreach(shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH(shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_ref_rnas(mRNAs);
         }
@@ -315,7 +315,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        foreach(shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH(shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_mask_rnas(mRNAs);
         }
@@ -328,7 +328,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        foreach(shared_ptr<BundleFactory>& fac, _factories)
+        BOOST_FOREACH(shared_ptr<BundleFactory>& fac, _factories)
         {
             fac->read_group_properties()->mass_dispersion_model(disperser);
         }

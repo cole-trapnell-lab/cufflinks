@@ -22,8 +22,6 @@
 using boost::math::normal;
 
 #include <boost/foreach.hpp>
-#define foreach         BOOST_FOREACH
-#define reverse_foreach BOOST_REVERSE_FOREACH
 
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>

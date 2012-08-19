@@ -620,7 +620,7 @@ void Scaffold::tile_with_scaffs(vector<Scaffold>& tile_scaffs, int max_len, int 
 
         // genomic_offset actually could be zero - from an exon starting at coord
         // 1 in some chromosome of the ref.
-//		foreach(const AugmentedCuffOp& op, ops)
+//		BOOST_FOREACH(const AugmentedCuffOp& op, ops)
 //        {
 //            assert (op.genomic_offset != 0);
 //        }
@@ -819,7 +819,7 @@ void Scaffold::merge(const vector<Scaffold>& s,
     if (library_type == "transfrags")
     {
         double avg_fpkm = 0.0;
-        foreach (const Scaffold& sc, s)
+        BOOST_FOREACH (const Scaffold& sc, s)
         {
             avg_fpkm += sc.fpkm();
         }
@@ -874,7 +874,7 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
     
     vector<AugmentedCuffOp> tmp_filler = filler;
     
-    foreach(const AugmentedCuffOp& op, orig_ops)
+    BOOST_FOREACH(const AugmentedCuffOp& op, orig_ops)
     {
 		assert (op.g_left() < op.g_right());
 		
@@ -891,7 +891,7 @@ void Scaffold::fill_gaps(const vector<AugmentedCuffOp>& filler)
     AugmentedCuffOp::merge_ops(tmp_filler, padded_filler, false);
     	
     vector<AugmentedCuffOp> overlapping;
-    foreach (const AugmentedCuffOp& op, padded_filler)
+    BOOST_FOREACH (const AugmentedCuffOp& op, padded_filler)
     {
 		//if (left() <= op.g_left() && right() >= op.g_right()
 		if(::overlap_in_genome(op.g_left(),op.g_right(), left(), right())
@@ -1633,7 +1633,7 @@ void Scaffold::get_complete_subscaffolds(vector<Scaffold>& complete)
                     
                    // const vector<const MateHit*>& hits = known.mate_hits();
                    // bool contains_spliced_hit = false;
-                   // foreach (const MateHit* h, hits)
+                   // BOOST_FOREACH (const MateHit* h, hits)
                    // {
                    //     const ReadHit* left = h->left_alignment();
                    //     const ReadHit* right = h->right_alignment();
@@ -1673,7 +1673,7 @@ double Scaffold::internal_exon_coverage() const
     int left = augmented_ops()[2].g_left();
     int right = augmented_ops()[augmented_ops().size() - 3].g_right();
     vector<bool> covered(right-left, 0);
-    foreach(const MateHit* h, mate_hits())
+    BOOST_FOREACH(const MateHit* h, mate_hits())
     {
         if (::overlap_in_genome(h->left(),h->right(), left, right))
         {
@@ -1697,7 +1697,7 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	if (has_intron())
 		return true;
 	
-	foreach (const MateHit* h, mate_hits())
+	BOOST_FOREACH (const MateHit* h, mate_hits())
 	{
 		if (h->strand() == strand())
 			return true;
@@ -1707,7 +1707,7 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	if (ref_scaffs == NULL)
 		return false;
 	
-	foreach (shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
+	BOOST_FOREACH (shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 	{
 		if (ref_scaff->strand() == strand() && exons_overlap(*this, *ref_scaff))
 			return true;
@@ -1732,10 +1732,10 @@ bool Scaffold::hits_support_introns() const
 {
     set<AugmentedCuffOp> hit_introns;
     set<AugmentedCuffOp> scaffold_introns;
-    foreach(const MateHit* h, _mates_in_scaff)
+    BOOST_FOREACH(const MateHit* h, _mates_in_scaff)
     {
         Scaffold s(*h);
-        foreach (AugmentedCuffOp a, s.augmented_ops())
+        BOOST_FOREACH (AugmentedCuffOp a, s.augmented_ops())
         {
             if (a.opcode == CUFF_INTRON)
             {
@@ -1743,7 +1743,7 @@ bool Scaffold::hits_support_introns() const
             }
         }
     }
-    foreach (AugmentedCuffOp a, _augmented_ops)
+    BOOST_FOREACH (AugmentedCuffOp a, _augmented_ops)
     {
         if (a.opcode == CUFF_INTRON)
         {
@@ -1754,13 +1754,13 @@ bool Scaffold::hits_support_introns() const
     if (hit_introns != scaffold_introns)
     {
         fprintf(stderr, "********************\n");
-        foreach(const AugmentedCuffOp& a, hit_introns)
+        BOOST_FOREACH(const AugmentedCuffOp& a, hit_introns)
         {
             fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
         }
         
         fprintf(stderr, "####################\n");    
-        foreach(const AugmentedCuffOp& a, scaffold_introns)
+        BOOST_FOREACH(const AugmentedCuffOp& a, scaffold_introns)
         {
             fprintf(stderr, "%d - %d\n", a.g_left(), a.g_right());
         }
@@ -1773,7 +1773,7 @@ bool Scaffold::hits_support_introns(set<AugmentedCuffOp>& hit_introns) const
 {
     set<AugmentedCuffOp> scaffold_introns;
 
-    foreach (AugmentedCuffOp a, _augmented_ops)
+    BOOST_FOREACH (AugmentedCuffOp a, _augmented_ops)
     {
         if (a.opcode == CUFF_INTRON)
         {

@@ -222,7 +222,7 @@ void assign_to_nearest_cluster(vector<ExprRecord>& expr_records, vector<ClusterS
     int num_clusters = clusters.size();
     int num_conditions = expr_records.front().cond_density.size();
     
-    foreach(ClusterStats& c, clusters)
+    BOOST_FOREACH(ClusterStats& c, clusters)
     {
         c.members.clear();
     }
@@ -280,7 +280,7 @@ void assign_to_nearest_cluster(vector<ExprRecord>& expr_records, vector<ClusterS
     for (size_t c = 0; c < clusters.size(); ++c)
     {
         ClusterStats& cluster = clusters[c];
-        foreach(int m, cluster.members)
+        BOOST_FOREACH(int m, cluster.members)
         {
             tmp_means[c] += expr_records[m].cond_density;
         }
@@ -304,7 +304,7 @@ void assign_to_nearest_cluster(vector<ExprRecord>& expr_records, vector<ClusterS
         vector<ublas::vector<double> >  kappas;
         kappas.push_back(cluster.mean);
         kappas.push_back(ublas::zero_vector<double>());
-        foreach (int m, cluster.members)
+        BOOST_FOREACH (int m, cluster.members)
         {
             kappas[1] = expr_records[m].cond_density;
             double js = jensen_shannon_distance(kappas);
@@ -318,7 +318,7 @@ void assign_to_nearest_cluster(vector<ExprRecord>& expr_records, vector<ClusterS
 void get_assignments(const vector<ClusterStats>& clusters, 
                      vector<int>& assignments)
 {
-    foreach (int& i, assignments)
+    BOOST_FOREACH (int& i, assignments)
     {
         i = -1;
     }

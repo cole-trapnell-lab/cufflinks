@@ -15,6 +15,7 @@
 #   This macro calls:
 #
 #     AC_SUBST(BOOST_THREAD_LIB)
+#     AC_SUBST(BOOST_SYSTEM_LIB)
 #
 #   And sets:
 #
@@ -41,6 +42,7 @@ AC_DEFUN([AX_BOOST_THREAD],
         elif test "$withval" = "yes"; then
             want_boost="yes"
             ax_boost_user_thread_lib=""
+            ax_booth_user_system_lib=""
         else
 		    want_boost="yes"
 			echo "using $withval"
@@ -109,7 +111,7 @@ AC_DEFUN([AX_BOOST_THREAD],
                                  [link_thread="no"])
   				done
                 if test "x$link_thread" != "xyes"; then
-                for libextension in `ls $BOOSTLIBDIR/boost_thread*.dll* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_thread.*\)\.dll.*$;\1;'` `ls $BOOSTLIBDIR/boost_thread*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_thread.*\)\.a*$;\1;'` ; do
+                for libextension in `ls $BOOSTLIBDIR/boost_thread*.dll* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_thread.*\)\.dll.*$;\1;'` `ls $BOOSTLIBDIR/libboost_thread*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_thread.*\)\.a*$;\1;'` ; do
                      ax_lib=${libextension}
 				    AC_CHECK_LIB($ax_lib, exit,
                                  [BOOST_THREAD_LIB="-l$ax_lib"; AC_SUBST(BOOST_THREAD_LIB) link_thread="yes"; break],
@@ -135,6 +137,30 @@ AC_DEFUN([AX_BOOST_THREAD],
                            esac
 
 			fi
+            
+            if test "x$ax_boost_user_system_lib" = "x"; then
+                for libextension in `ls $BOOSTLIBDIR/libboost_system*.so* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.so.*$;\1;'` `ls $BOOSTLIBDIR/libboost_system*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.a*$;\1;'`; do
+                     ax_lib=${libextension}
+				    AC_CHECK_LIB($ax_lib, exit,
+                                 [BOOST_SYSTEM_LIB="-l$ax_lib"; AC_SUBST(BOOST_SYSTEM_LIB) link_system="yes"; break],
+                                 [link_system="no"])
+  				done
+                if test "x$link_system" != "xyes"; then
+                for libextension in `ls $BOOSTLIBDIR/boost_system*.dll* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_system.*\)\.dll.*$;\1;'` `ls $BOOSTLIBDIR/libboost_system*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_system.*\)\.a*$;\1;'` ; do
+                     ax_lib=${libextension}
+				    AC_CHECK_LIB($ax_lib, exit,
+                                 [BOOST_SYSTEM_LIB="-l$ax_lib"; AC_SUBST(BOOST_SYSTEM_LIB) link_system="yes"; break],
+                                 [link_system="no"])
+  				done
+                fi
+
+            else
+                BOOST_SYSTEM_LIB="$ax_boost_user_system_lib"; 
+				AC_SUBST(BOOST_SYSTEM_LIB) 
+				link_system="yes";
+               
+
+            fi
 		fi
 
 		CPPFLAGS="$CPPFLAGS_SAVED"
