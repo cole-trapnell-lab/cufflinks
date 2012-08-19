@@ -1,0 +1,18 @@
+
+==================================================================
+                        LICENSE
+==================================================================
+
+FSA is licensed under the GNU GPL.
+MAD is licensed under the GNU GPL.
+
+Please see the file COPYING for the text of version 3 of the
+GNU General Public License.
+
+The bundled Java Media Framework 2.1.1e API,
+located in display/JMF-2.1.1e/
+is covered by the
+JavaTM Media Framework (JMF) 2.1.x Binary Code License Agreement.
+
+Please see the file display/JMF-2.1.1e/readme.html for a 
+copy of the JavaTM Media Framework (JMF) 2.1.x Binary Code License Agreement.

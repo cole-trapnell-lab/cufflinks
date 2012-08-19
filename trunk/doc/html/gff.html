@@ -1,0 +1,376 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+    
+<title>Cufflinks RNA-Seq analysis tools - GFF/GTF Format Guide</title>  
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="description" content="Overview of the GTF and GFF formats needed by Cufflinks">
+<link rel="stylesheet" type="text/css" href="css/style.css" media="screen">
+  </head>
+  <body>
+    
+<div id="wrap">
+      <div id="top">
+        <div class="lefts">
+          <table width="100%" cellpadding="2">
+            <tbody>
+              <tr>
+                <td> <a href="./index.html">
+                    <h1>Cufflinks</h1>
+                  </a>
+                  <h2>Transcript assembly, differential expression, and
+                    differential regulation for RNA-Seq</h2>
+                </td>
+                <td align="right" valign="middle"> 
+                  <a href="http://bio.math.berkeley.edu/">
+                  <img style="vertical-align:middle;padding-top:4px" 
+                    src="images/UCBerkeley-seal.scaled.gif" border="0">
+                  </a>&nbsp;
+                  <a href="http://genomics.jhu.edu/">
+                  <img style="vertical-align:middle;padding-top:4px"
+                      src="images/JHU-seal.gif" border="0">
+                  </a>&nbsp;
+                  
+                  <a href="http://www.cbcb.umd.edu/"><img style="vertical-align:middle;padding-top:4px" src="images/cbcb_logo.gif" border="0"></a>&nbsp;&nbsp;
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="main">
+        <div id="rightside">
+          <h2>Site Map</h2>
+          <div class="box">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li><a href="tutorial.html">Getting started</a></li>
+              <li><a href="manual.html">Manual</a></li>
+              <li><a href="howitworks.html">How Cufflinks works</a></li>
+			  <li><a href="igenomes.html">Index and annotation downloads</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+			  <li><a href="http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html">Protocol</a></li>
+            </ul>
+          </div>
+          <h2><u>News and updates</u></h2>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>New releases and related tools will be announced
+                      through the <a href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing list</b></a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+          <h2><u>Getting Help</u></h2>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>Questions about Cufflinks should be sent to <a href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a>.
+                      Please do not email technical questions to
+                      Cufflinks contributors directly.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+
+
+          <a href="./downloads">
+            <h2><u>Releases</u></h2>
+          </a>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>version 2.0.2 (BETA)</td>
+                    <td align="right">7/8/2012</td>
+                  </tr>
+                  <tr>
+                    <td><a href="./downloads/cufflinks-2.0.2.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks_source');
+                        ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+                  </tr>
+                  <tr>
+                    <td><a
+                        href="./downloads/cufflinks-2.0.2.Linux_x86_64.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks');
+                        ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+                  </tr>
+                  <tr>
+                    <td><a
+                        href="./downloads/cufflinks-2.0.2.OSX_x86_64.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks');
+                        ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+
+
+          <h2>Related Tools</h2>
+          <div class="box">
+            <ul>
+				<li><a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a>:
+	                Visualization of RNA-Seq differential analysis</li>
+              <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>:
+                Alignment of short RNA-Seq reads</li>
+              <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>:
+                Ultrafast short read alignment</li>
+            </ul>
+          </div>
+
+		<h2>Publications</h2>
+		<div class="box">
+		<ul>
+			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a href="http://dx.doi.org/10.1038/nbt.1621">Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation</b></a> <br/><i><a href="http://www.nature.com/nbt">Nature Biotechnology</a></i> doi:10.1038/nbt.1621</p><br/></li>
+ 			  <li style="font-size: x-small; line-height: 130%"><p>Roberts A, Trapnell C, Donaghey J, Rinn JL, Pachter L.<b> <a href="http://genomebiology.com/2011/12/3/R22/abstract">Improving RNA-Seq expression estimates by correcting for fragment bias</b></a> <br/><i><a href="http://www.genomebiology.com">Genome Biology</a></i> doi:10.1186/gb-2011-12-3-r22</p><br/></li>
+		      <li style="font-size: x-small; line-height: 130%"><p>Roberts A, Pimentel H, Trapnell C, Pachter L.<b> <a href="http://bioinformatics.oxfordjournals.org/content/early/2011/06/21/bioinformatics.btr355.abstract">Identification of novel transcripts in annotated genomes using RNA-Seq</a></b> <br><i><a href="http://bioinformatics.oxfordjournals.org/">Bioinformatics</a></i> doi:10.1093/bioinformatics/btr355</p><br></li>
+		</ul>
+		</div>
+          <h2>Contributors</h2>
+          <div class="box">
+            <ul>
+              <li><a href="http://www.cs.umd.edu/%7Ecole/">Cole Trapnell</a></li>
+              <li><a href="http://www.cs.berkeley.edu/%7Eadarob/">Adam
+                  Roberts</a></li>
+              <li>Geo Pertea</li>
+              <li>Brian Williams</li>
+              <li><a href="http://wormlab.caltech.edu/members/">Ali
+                  Mortazavi</a></li>
+              <li>Gordon Kwan</li>
+              <li>Jeltje van Baren</li>
+              <li><a href="http://www.cbcb.umd.edu/%7Esalzberg/">Steven
+                  Salzberg</a></li>
+              <li><a href="http://biology.caltech.edu/Members/Wold">Barbara
+
+
+
+                  Wold</a></li>
+              <li><a href="http://www.math.berkeley.edu/%7Elpachter/">Lior
+
+
+
+                  Pachter</a></li>
+            </ul>
+          </div>
+          <h2>Links</h2>
+          <div class="box">
+            <ul>
+              <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
+              <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
+              <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
+            </ul>
+          </div>
+        </div>
+        <!-- End of "rightside" -->
+        <div id="leftside">
+          <table>
+            <tbody>
+              <tr>
+                <td cellpadding="7">
+                  <h1>GFF files</h1>
+                  <br>
+                  Some of the Cufflinks modules take as input a file (or
+                  more) containing known gene annotations or other
+                  transcript data in GFF format (General Feature
+                  Format). GFF has many versions, but the two most
+                  popular that are supported by Cufflinks (and other
+                  programs in the Tuxedo suite, like Tophat) are GTF2
+                  (Gene Transfer Format, described <a href="http://mblab.wustl.edu/GTF2.html">here</a>)
+                  and GFF3 (defined <a href="http://www.sequenceontology.org/gff3.shtml">here</a>).
+
+                  Here are a few notes about the way these formats are
+                  interpreted by the Cufflinks programs.<br>
+                  <br>
+                  <h2 id="inst">GTF2</h2>
+                  
+                  <p>As seen in the <a href="http://mblab.wustl.edu/GTF2.html">GTF2
+                    specification</a>, the <b>transcript_id</b> attribute is also required by
+                  our GFF parser, and a <b>gene_id</b> attribute, though not strictly
+                  required in our programs, is very useful for grouping alternative transcripts under a gene/locus identifier.
+                  An optional <b>gene_name</b>
+                  attribute, if found, will be taken and shown as&nbsp;
+                  a symbolic gene name or short-form abbreviation (e.g.
+                  gene symbols from HGNC or Entrez Gene). Some annotation
+                  sources (e.g. Ensembl) place a "human readable" gene
+                  name/symbol in the <b>gene_name</b>
+                  attribute, like a HUGO symbol (while <b>gene_id</b> might be
+                  just an automatically generated numeric identifier for the
+                  gene). <br>
+                  <br>
+                  TopHat and Cufflinks generally expect <i>exon</i> features to
+                  define a transcript structure, with optional <i>CDS</i> features to
+                  specify the coding segments. Our GFF reader will
+                  ignore redundant features like start_codon, stop_codon
+                  when whole <i>CDS</i> features were provided, or <i>*UTR</i> features when whole <i>exon</i> features
+                  were also given. However, it is still possible to
+                  provide only <i>CDS</i> and <i>*UTR</i>
+                  features and our GFF parser will reassemble the exonic
+                  structure accordingly.<br>
+                  </p><p>Example of a GTF2 transcript record with minimal attributes:</p>
+                  <div style="margin:2px;">
+                    <textarea rows="8" cols="138" readonly="readonly" wrap="off" class="tcode">20	protein_coding	exon	9873504	9874841	.	+	.	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	CDS	9873504	9874841	.	+	0	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	exon	9877488	9877679	.	+	.	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	CDS	9877488	9877679	.	+	0	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	exon	9888412	9888586	.	+	.	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	CDS	9888412	9888586	.	+	0	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	exon	9891475	9891998	.	+	.	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";
+20	protein_coding	CDS	9891475	9891995	.	+	2	gene_id "ENSBTAG00000020601"; transcript_id "ENSBTAT00000027448"; gene_name "ZNF366";</textarea>
+                    
+                  </div>
+                  <br>
+                  <h2 id="inst">GFF3</h2>
+                  As defined by the <a href="http://www.sequenceontology.org/gff3.shtml">GFF3 specification</a>, 
+                  the parent features (usually transcripts, i.e. "mRNA" features) are required to
+                  have an <b>ID</b> attribute, but here again an optional <b>gene_name</b>
+                  attribute can be used to specify a common gene name abbreviation. If gene_name is not given, it can be
+                  also inferred from the Name or ID attributes of the parent <i>gene</i> feature of the current parent mRNA feature (if
+                  given in the input file). Exon or CDS features arerequired to have a <b>Parent</b>
+                  attribute whose value must match the value of the <b>ID</b> attribute of a parent transcript feature (usually a "mRNA" feature).<br>
+                  <br>
+                  <h2 id="inst">Feature restrictions</h2>
+                  For various reasons we currently assume the following limits (maximum
+                  values) for the genomic length (span) of gene and transcript features:<br>
+                  <ul>
+                    <li>genes and transcripts cannot span more than 7 Megabases on the genomic sequence</li>
+                    <li>exons cannot be longer than 30 Kilobases</li>
+                    <li>introns cannot be larger than 6 Megabases<br>
+                    </li>
+                  </ul>
+                  Also, transcript IDs are expected to be unique per GFF input file (though we relaxed this
+                  restriction by limiting it to a chromosome/contig scope).<br>
+                  <br>
+                  Due to these requirements, Cufflinks programs may fail to load the user provided GFF file, and an error
+                  message should specify the offending GFF record. The user is expected to remove or correct such GFF records
+                  in order to continue the analysis.
+                  <p>Example of a GFF3 transcript record with minimal attributes:</p>
+                  <div style="margin:2px;">
+                    <textarea rows="9" cols="79" readonly="readonly" wrap="off" class="tcode">ctg123	example	mRNA	1300	9950	.	+	.	ID=t_012143;gene_name=EDEN
+ctg123	example	exon	1300	1500	.	+	.	Parent=t_012143
+ctg123	example	exon	3000	3902	.	+	.	Parent=t_012143
+ctg123	example	exon	5000	5500	.	+	.	Parent=t_012143
+ctg123	example	exon	7000	9000	.	+	.	Parent=t_012143
+ctg123	example	exon	9400	9950	.	+	.	Parent=t_012143
+ctg123	example	CDS	3301	3902	.	+	0	Parent=t_012143
+ctg123	example	CDS	5000	5500	.	+	1	Parent=t_012143
+ctg123	example	CDS	7000	7600	.	+	1	Parent=t_012143</textarea>
+                  </div>
+                  <br>
+
+                  <h2 id="inst">The gffread utility</h2>
+                  
+                  A program called <b>gffread</b>
+                  is included with the Cufflinks package and it can be used to verify or perform various operations on GFF
+                  files (use <span class="tcode">gffread -h</span> to see the various usage options). Because the program 
+                  shares the same  GFF parser code with Cufflinks and other programs in the Tuxedo suite, it could be used to verify that a GFF file 
+                  from a certain annotation source is correctly "understood" by these programs. Thus the gffread utility can be used 
+                  to simply read the transcripts from the file and print these transcripts back, in either GFF3 (default) or GTF2 format 
+                  (-T option), discarding any extra attributes and keeping only the essential ones, so the user can quickly verify if 
+                  the transcripts in that file are properly parsed by 
+the GFF reader code.  The command line for such a quick cleanup and 
+                  visual inspection of a given GFF file could be:<br>
+                  <br>
+                  <pre><big>gffread -E annotation.gff -o- | more</big></pre>
+                  <br>
+                  This will show the minimalist GFF3 re-formatting of 
+the transcript records given in the input file (annotation.gff in this 
+example).
+                  The -E option directs gffread to "expose" (display 
+warnings about) any potential issues encountered while parsing the given
+ GFF file.<br>
+                                    
+                  In order to see the GTF2 version of the same 
+transcripts the -T option should be added:<br>
+                  <br>
+                  <pre><big>gffread -E annotation.gff -T -o- | more</big></pre>
+                  <br>
+                  
+                  From these examples it can be seen that gffread can also be used to convert a file between GTF2 and GFF3 formats.
+<br>
+                  
+                  <strong><br>
+Extracting transcript sequences</strong><br>
+                  
+                  The gffread utility can be used to generate a FASTA 
+file with the DNA sequences for all transcripts in a GFF file. 
+                  For this operation a fasta file with the genomic 
+sequences have to be provided as well.
+                  For example, one might want to extract the sequence of
+ all transfrags assembled from a Cufflinks assembly session.
+                  This can be accomplished with a command line like 
+this:<br>
+                  <br>
+                  <pre><big>gffread -w transcripts.fa -g /path/to/genome.fa transcripts.gtf</big></pre>
+                  <br>
+                  The file genome.fa in this example would be a multi 
+fasta file with the genomic sequences of the 
+                  target genome.  This also requires that every contig 
+or chromosome name found in the 1st column of the input GFF file 
+                  (transcript.gtf in this example) must have a 
+corresponding sequence entry in chromosomes.fa. This should be the case 
+in our
+                  example if genome.fa is the file corresponding to the 
+same genome (index) that was used for mapping the reads with Tophat.
+                  
+                  Note that the retrieval of the transcript sequences 
+this way is going to be quicker if a fasta index file 
+                  (genome.fa.fai in this example) is found in the same 
+directory with the genomic fasta file. Such an index file can be created
+ 
+                  with samtools prior to running gffread, like this:
+                  <br><br>
+                  <pre><big>samtools faidx genome.fa</big></pre>
+                  <br>
+                  Then in subsequent runs using the -g option gffread 
+will find the fasta index and use it to speed up the extraction of the 
+transcript sequences.
+
+                  <br>
+<br>
+                  <div id="footer">
+                    <table width="100%" cellspacing="15">
+                      <tbody>
+                        <tr>
+                          <td> This research was supported in part by
+                            NIH grants R01-LM06845 and R01-GM083873, NSF
+                            grant CCF-0347992 and the Miller Institute
+                            for Basic Research in Science at UC
+                            Berkeley. </td>
+                          <td align="right"> Administrator: <a href="mailto:cole@cs.umd.edu">Cole
+                              Trapnell</a>. Design by <a href="http://www.free-css-templates.com" title="Design by David Herreman">David
+                              Herreman</a> </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- Google analytics code -->
+                  <script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+                  <script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-6101038-2");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+                  <!-- End google analytics code --> </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+</body></html>

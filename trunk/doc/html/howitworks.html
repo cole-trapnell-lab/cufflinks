@@ -1,0 +1,688 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Cufflinks RNA-Seq analysis tools - Background</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+</head>
+<body>
+<div id="wrap">
+  <div id="top">
+    <div class="lefts">
+    <table width="100%" cellpadding="2">
+      <tr><td>
+        <a href="./index.html"><h1>Cufflinks</h1></a>
+        <h2>Transcript assembly, differential expression, and differential regulation for RNA-Seq</h2>
+      </td><td align="right" valign="middle">
+        <a href="http://bio.math.berkeley.edu/">
+        <img style="vertical-align:middle;padding-top:4px" 
+          border=0 src="images/UCBerkeley-seal.scaled.gif">
+        </a>&nbsp;
+        <a href="http://genomics.jhu.edu/">
+        <img style="vertical-align:middle;padding-top:4px"
+          src="images/JHU-seal.gif" border="0">
+        </a>&nbsp;
+        <a href="http://www.cbcb.umd.edu/"><img style="vertical-align:middle;padding-top:4px" border=0 src="images/cbcb_logo.gif"></a>&nbsp;&nbsp;
+      </td></tr>
+    </table>
+    </div>
+  </div>
+  <div id="subheader">
+  <table width="100%"><tr>
+  <td>
+  		<strong>Please Note</strong> If you have questions 
+		  about how to use Cufflinks or would like more information about 
+		  the software, please email <a href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a>, 
+		  though we ask you to have a look at the <a href="http://dx.doi.org/10.1038/nbt.1621">paper</a> 
+		  and the  <a href="http://www.nature.com/nbt/journal/v28/n5/extref/nbt.1621-S1.pdf">
+		  supplemental methods</a> first, as your question may be answered there.
+	</td><td align=right valign=middle>
+  </td></tr>
+  </table>
+  </div>
+  <div id="main">
+    <div id="rightside">
+		<h2>Site Map</h2>
+        <div class="box">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="tutorial.html">Getting started</a></li>
+            <li><a href="manual.html">Manual</a></li>
+            <li><a href="howitworks.html">How Cufflinks works</a></li>
+			  <li><a href="igenomes.html">Index and annotation downloads</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+			  <li><a href="http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html">Protocol</a></li>
+          </ul>
+        </div>
+		
+		  <h2><u>News and updates</u></h2>
+		  <div class="box">
+		    <ul>
+		      <table width="100%">
+				<tr><td>New releases and related tools will be announced through the <a href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing list</b></a></td></tr>
+			  </table>
+		    </ul>
+		  </div>
+		
+		  <h2><u>Getting Help</u></h2>
+		  <div class="box">
+		    <ul>
+		      <table width="100%">
+				<tr><td>Questions about Cufflinks should be sent to <a href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a>.  Please do not email technical questions to Cufflinks contributors directly.</td></tr>
+			  </table>
+		    </ul>
+		  </div>
+		
+          <a href="./downloads">
+            <h2><u>Releases</u></h2>
+          </a>
+          <div class="box">
+            <ul>
+              <table width="100%">
+                <tbody>
+                  <tr>
+                    <td>version 2.0.2 (BETA)</td>
+                    <td align="right">7/8/2012</td>
+                  </tr>
+                  <tr>
+                    <td><a href="./downloads/cufflinks-2.0.2.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks_source');
+                        ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+                  </tr>
+                  <tr>
+                    <td><a
+                        href="./downloads/cufflinks-2.0.2.Linux_x86_64.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks');
+                        ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+                  </tr>
+                  <tr>
+                    <td><a
+                        href="./downloads/cufflinks-2.0.2.OSX_x86_64.tar.gz"
+                        onclick="javascript:
+                        pageTracker._trackPageview('/downloads/cufflinks');
+                        ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+		
+		  <h2>Related Tools</h2>
+          <div class="box">
+            <ul>
+				<li><a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a>:
+	                Visualization of RNA-Seq differential analysis</li>
+              <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>:
+                Alignment of short RNA-Seq reads</li>
+              <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>:
+                Ultrafast short read alignment</li>
+            </ul>
+          </div>
+
+		  <h2>Publications</h2>
+		  <div class="box">
+		    <ul>
+			  <li style="font-size: x-small; line-height: 130%"><p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a href="http://dx.doi.org/10.1038/nbt.1621">Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation</b></a> <br/><i><a href="http://www.nature.com/nbt">Nature Biotechnology</a></i> doi:10.1038/nbt.1621</p><br/></li>
+ 			  <li style="font-size: x-small; line-height: 130%"><p>Roberts A, Trapnell C, Donaghey J, Rinn JL, Pachter L.<b> <a href="http://genomebiology.com/2011/12/3/R22/abstract">Improving RNA-Seq expression estimates by correcting for fragment bias</b></a> <br/><i><a href="http://www.genomebiology.com">Genome Biology</a></i> doi:10.1186/gb-2011-12-3-r22</p><br/></li>
+		      <li style="font-size: x-small; line-height: 130%"><p>Roberts A, Pimentel H, Trapnell C, Pachter L.<b> <a href="http://bioinformatics.oxfordjournals.org/content/early/2011/06/21/bioinformatics.btr355.abstract">Identification of novel transcripts in annotated genomes using RNA-Seq</a></b> <br><i><a href="http://bioinformatics.oxfordjournals.org/">Bioinformatics</a></i> doi:10.1093/bioinformatics/btr355</p><br></li>
+		    </ul>
+		  </div>
+
+		  <h2>Contributors</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://www.cs.umd.edu/~cole/">Cole Trapnell</a></li>
+		      <li><a href="http://www.cs.berkeley.edu/~adarob/">Adam Roberts</a></li>
+			  <li>Geo Pertea</li>
+			  <li>Brian Williams</li>
+			  <li><a href="http://wormlab.caltech.edu/members/">Ali Mortazavi</a></li>
+			  <li>Gordon Kwan</a></li>
+			  <li>Jeltje van Baren</a></li>
+		      <li><a href="http://www.cbcb.umd.edu/~salzberg/">Steven Salzberg</a></li>
+		      <li><a href="http://biology.caltech.edu/Members/Wold">Barbara Wold</a></li>
+			  <li><a href="http://www.math.berkeley.edu/~lpachter/">Lior Pachter</a></li>
+		    </ul>
+		  </div>
+
+		  <h2>Links</h2>
+		  <div class="box">
+		    <ul>
+		      <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
+		      <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
+			  <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
+		    </ul>
+		  </div>          
+          
+    </div> <!-- End of "rightside" -->
+    <div id="leftside">
+  	  <table><tr><td cellpadding=7>
+  	  <h1>How Cufflinks works</h1><br/>
+      <div id="toc">
+  	    <ul>
+  	    <li><a href="#whis">What is Cufflinks?</a></li>
+  	    <ul>
+  	      <li><a href="#hass">How does Cufflinks assemble transcripts?</a></li>
+  	  	  <li><a href="#hqua">How does Cufflinks calculate transcript abundances?</a></li>
+  	  	  <li><a href="#hdis">How does Cufflinks estimate the fragment length distribution?</a></li>
+  	  	  <li><a href="#hsbi">How does Cufflinks identify and correct for sequence bias?</a></li>
+  	  	  <li><a href="#hmul">How does Cufflinks handle multi-mapped reads?</a></li>
+   	  	  <li><a href="#hrga">How does Reference Annotation Based Transcript (RABT) assembly work?</a></li>
+		  <!-- <li><a href="#mrge">How does Cuffmerge work?</a></li> -->
+  	  	  <li><a href="#diff">What is Cuffdiff?</a></li>
+		  <li><a href="#hdif">How does Cuffdiff test for differential expression and differential regulation?</a></li>
+ 	   	  <li><a href="#huqn">How does upper-quartile normalization work?</a></li>
+		  <li><a href="#reps">How does Cuffdiff treat replicates?</a></li>
+		  <li><a href="#mfit">How does Cuffdiff check that its variance model is a good fit for a gene or transcript?</a></li>
+ 	   </ul>
+
+  	    </ul><br/>
+  	  </div>
+  	  <h2 id="whis">What is Cufflinks?</h2><br/>
+  	  <p> Cufflinks is a program that assembles aligned RNA-Seq reads into 
+		transcripts, estimates their abundances, and tests for 
+		differential expression and regulation transcriptome-wide.
+	  	Cufflinks runs on <strong>Linux</strong> and <strong>OS X</strong>.
+	 <p>
+        Cufflinks is described in our recent <b><a href="http://dx.doi.org/10.1038/nbt.1621">paper</a></b>, 
+        and much of the algorithmic and mathematical material is presented in the 	
+        <a href="http://www.nature.com/nbt/journal/v28/n5/extref/nbt.1621-S1.pdf">
+		supplemental methods</a>
+	  </p> 
+  	  <br/>
+	  <h2 id="hass">How does Cufflinks assemble transcripts?</h2><br/>
+	  <p>Cufflinks constructs a parsimonious set of transcripts that "explain" the 
+	  reads observed in an RNA-Seq experiment.  It does so by reducing the 
+	  comparative assembly problem to a problem in maximum matching in bipartite
+	  graphs.  In essence, Cufflinks implements a constructive proof of 
+	  <a href="http://en.wikipedia.org/wiki/Dilworth%27s_theorem">Dilworth's Theorem</a> 
+	  by constructing a covering relation on the read alignments, and finding a 
+	  minimum path cover on the directed acyclic graph for the relation.</p>
+	
+	  <p>While Cufflinks works well with unpaired RNA-Seq reads, it is designed 
+		with paired reads in mind. The assembly algorithm explicitly handles paired end reads by treating
+		the alignment for a given pair as a single object in the covering relation. 
+		The proof of Dilworth's theorem finds a maximum cardinality matching on the 
+		bipartite graph of the transitive closure of the DAG.  However, there is not 
+		necessarily a unique maximum cardinality matching, reflecting the fact 
+		that due to the limited size of RNA-Seq cDNA fragments, we may not know
+		with certainty which outcomes of alternative splicing events go together
+		in the same transcripts.  Cufflinks tries to find the correct parsimonious
+		set of transcripts by performing a <strong>minimum cost</strong> maximum 
+		matching. The cost of associating splicing events is based on the "percent-spliced-in" 
+		score introduced in
+		<p>
+		<ul>
+		<li>Eric T. Wang, Rickard Sandberg, Shujun Luo, Irina Khrebtukova, Lu Zhang, Christine Mayr, Stephen F. Kingsmore, Gary P. Schroth, and Christopher B. Burge,
+			<a href="http://www.nature.com/nature/journal/v456/n7221/abs/nature07509.html">Alternative isoform regulation in human tissue transcriptomes</a>
+			Nature, Volume 456, 470 - 476 (2008)
+	   </ul>
+		
+		<p>
+	    This matching is then extended to a minimum cost path cover of the DAG,
+	    with each path representing a different transcript.</p> <br/>
+		
+		The algorithm builds on ideas behind the  
+		<a href="http://www.bsse.ethz.ch/cbg/software/shorah">ShoRAH</a> algorithm 
+		for haplotype abundance estimation in viral populations, described in:
+		<p>
+		<ul>
+			<li>Nicholas Eriksson, Lior Pachter, Yumi Mitsuya, Soo-Yon Rhee, Chunlin Wang, Baback Gharizadeh, Mostafa Ronaghi, Robert W. Shafer, Niko Beerenwinkel
+		<a href="http://www.ploscompbiol.org/doi/pcbi.1000074">Viral population estimation using pyrosequencing</a>,
+		PLoS Computational Biology, 4(5):e1000074
+		</ul>
+		The assembler also borrows some ideas introduced with the <a href="http://pasa.sourceforge.net/">PASA</a> algorithm for annotating genomes from EST and full length mRNA evidence, described in:
+		<ul>
+			<li>Haas, B.J., Delcher, A.L., Mount, S.M., Wortman, J.R., Smith Jr, R.K., Jr., Hannick, L.I., Maiti, R., Ronning, C.M., Rusch, D.B., Town, C.D. et al. (2003) Improving the Arabidopsis genome annotation using maximal transcript alignment assemblies. <a href="http://nar.oxfordjournals.org/cgi/content/full/31/19/5654">Nucleic Acids Res, 31, 5654-5666</a>. 
+		</ul>
+		<br/>
+		Cufflinks is implemented in C++ and makes substantial use of the 
+		<a href="http://www.boost.org">Boost Libraries</a> as well as the <a href="https://lemon.cs.elte.hu/trac/lemon">LEMON</a>
+		Graph Library, which was launched by the Egerváry Research Group on Combinatorial Optimization (EGRES).
+		
+	  <br/>
+	  <br/>
+  	  <h2 id="hqua">How does Cufflinks calculate transcript abundances?</h2><br/>
+	  <p>
+	  In RNA-Seq experiments, cDNA fragments are sequenced and mapped back to 
+	  genes and ideally, individual transcripts. Properly normalized, the RNA-Seq fragment counts
+	  can be used as a measure of relative abundance of transcripts, 
+	  and Cufflinks measures transcript abundances in <b>F</b>ragments <b>P</b>er 
+	  <b>K</b>ilobase of exon per <b>M</b>illion fragments mapped (<b>FPKM</b>), which is 
+	  analagous to single-read "RPKM", originally proposed in:
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>Ali Mortazavi, Brian A Williams, Kenneth McCue, Lorian Schaeffer and Barbara Wold
+			<a href="http://www.nature.com/nmeth/journal/v5/n7/abs/nmeth.1226.html">Mapping and quantifying mammalian transcriptomes by RNA-Seq</a>
+			Nature Methods, Volume 5, 621 - 628 (2008)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  	In paired-end RNA-Seq experiments, fragments are sequenced from both ends, 
+		providing two reads for each fragment.  To estimate isoform-level abundances, 
+		one must assign fragments to individual transcripts, which may be 
+		difficult because a read may align to multiple
+	  	isoforms of the same gene.  Cufflinks uses a statistical model of 
+	  	paired-end sequencing experiments to derive a likelihood for the abundances of a set of
+		transcripts given a set of fragments. This likelihood function can be
+		shown to have a unique maximum, which Cufflinks finds using a
+		numerical optimization algorithm.  The program then multiplies these probabilities 
+	  	to compute the overall likelihood that one would observe the fragments in the experiment, 
+	  	given the proposed abundances on the transcripts.  Because Cufflinks' statistical
+	  	model is linear, the likelihood function has a unique maximum value, and
+	  	Cufflinks finds it with a numerical optimization algorithm.</p>
+  
+	  <p>Using this statistical method, Cufflinks can estimate the abundances of the isoforms present in the sample,
+	  either using a known "reference" annotation, 	or after an ab-initio 
+		assembly of the transcripts using only the reference genome.
+      </p>
+	  <br/>
+	
+	  <h2 id="hdis">How does Cufflinks estimate the fragment length distribution?</h2><br/>
+	  <p>
+	  The probability distribution on the length of fragments plays an important role in assembly, abundance
+	  estimation, and bias correction.  The accuracy of this distribution will have a great impact on the 
+	  accuracy of our results.  Because of this, we now attempt to "learn" this distribution from the input
+	  data instead of relying on an approximate Gaussian distribution, whenever possible.
+	  </p>
+	  <ul><li>
+	  	If only single-end reads are provided, there is no way to estimate the empirical distribution,
+	  	so Cufflinks must use an approximate Gaussian distribution with either default or user-provided
+	  	parameters (see the manual for more details).  
+	  </li></ul>
+  
+	  <ul><li>If the alignment file contains paired-end reads and an asssembly is provided, Cufflinks is able to learn the distribution
+	  from reads that map to single-isoform genes. Because the assembly provides the splicing structure, introns can be removed from
+	  between the paired reads, providing the most accurate estimation.</ul></li>
+	  
+	  
+	  <ul><li>If given paired end reads and no assembly, Cufflinks will search for large "open ranges" where the alignments contain no splices within
+	  the reads. Within these ranges, Cufflinks uses the genomic length of the paired-end reads to estimate the distribution. If not enough reads can 
+	  be found within these ranges, Cufflinks will default to the Gaussian approximation as in the single-end case. To ensure an empirical distribution
+	  will be used, one can first assemble with the Gaussian and then supply the output GTF assembly in a second run of Cufflinks.</li></ul>
+	  <br/>
+	  
+	<h2 id="hsbi">How does Cufflinks identify and correct for sequence bias?</h2><br/>
+	  <p>
+	  Often in RNA-Seq experiments, a sequence-specific bias is introduced during the 
+	  library preparation that challenges the assumption of uniform coverage. For example, 
+	  a sequence-specific bias caused by the use of random hexamers was identified in
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>Kasper D. Hansen, Steven E. Brenner, Sandrine Dudoit,
+			<a href="http://nar.oxfordjournals.org/cgi/content/abstract/38/12/e131">Biases in Illumina transcriptome sequencing caused by random hexamer priming</a>
+			Nucleic Acids Research, Volume 38, Issue 12 (2010)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  	Because this bias is usually caused by primers used either in PCR or reverse transcription, it appears near 
+	  	the ends of the sequenced fragments.  We have developed a method to correct this bias by “learning” what sequences 
+	  	are being selected for (or ignored) in a given experiment, and including these measurements in the abundance 
+	  	estimation.  
+	  </p>
+  
+	  <p>The first step in the process is to generate an initial abundance estimation without using bias correction.  
+	  Since different transcripts will have different sequences appear in them, we use this approximate abundance to 
+	  weight reads by the expression level of the transcript from which they arise.  This helps us avoid over-counting 
+	  sequences that may be common in the mapping data due to high expression rather than bias.</p>
+	  
+	  <p>We next revisit each fragment in the alignment file and apply the abundance weighting as we “learn” features of the 
+	  sequence in a window surrounding the 5’ and 3’ end of the transcript using a graphical model of the statistical dependencies 
+	  between bases in the window.  We keep a separate model for each end of the read since the biases in the first 
+	  and second strand synthesis of the fragment are not always the same.</p>
+	  
+	  <p>Finally, we re-estimate the abundances using a new likelihood function that has been adjusted to take the sequence 
+	  bias into account, based on the parameters of the graphical model we computed in the previous step.  The result is a 
+	  new set of FPKMs that are less affected by sequence-specific bias.</p>
+	  
+	  <p> Note that since it must know which ends of reads are fragment ends, Cufflinks will not bias correct reads mapping to transcripts
+	  with unknown strandedness.
+	  </p>
+	  <p>The full details of our method can be found in</p>
+	  		
+	  <br/><ul>
+		<li>Adam Roberts, Cole Trapnell, Julie Donaghey, John L. Rinn and Lior Pachter,
+			<a href="http://genomebiology.com/2011/12/3/R22/abstract">Improving RNA-Seq expression estimates by correcting for fragment bias</a>
+			Genome Biology, Volume 12, R22 (2011)
+	  </ul><br/>
+	  
+	  
+	  <h2 id="hmul">How does Cufflinks handle multi-mapped reads?</h2><br/>
+	  <p> Individual reads will sometimes be mapped to multiple positions in the genome due to sequence repeats and homology. 
+	  By default, Cufflinks will uniformly divide each multi-mapped read to all of the positions it maps to.  In other words,
+	  a read mapping to 10 positions will count as 10% of a read at each position.</p>
+	  <p>If multi-mapped read correction is enabled (-u/--multi-read-correct), Cufflinks will improve its estimation in a manner
+	  inspired by (but using more information than) the 'rescue' method described in</p>	
+	  <br/><ul>
+		<li>Ali Mortazavi, Brian A Williams, Kenneth McCue, Lorian Schaeffer and Barbara Wold
+			<a href="http://www.nature.com/nmeth/journal/v5/n7/abs/nmeth.1226.html">Mapping and quantifying mammalian transcriptomes by RNA-Seq</a>
+			Nature Methods, Volume 5, 621 - 628 (2008)
+	  </ul><br/>
+	  <p>Cufflinks will first calculate initial abundance estimates for all transcripts using the uniform dividing scheme.  Cufflinks will
+	  then re-estimate the abundances dividing each multi-mapped read probabalistically based on the initial abundance estimation of the genes
+	  it maps to, the inferred fragment length, and fragment bias (if bias correction is enabled).</p>
+	  <br/>
+	  
+	  <h2 id="hrga">How does Reference Annotation Based Transcript (RABT) assembly work?</h2><br/>
+	  <p>Reference annotation based assembly seeks to build upon available information about the transcriptome of
+	  an organism to find novel genes and isoforms.  When a reference GTF is provided with the -g/--GTF-guide option,
+	  the reference transcripts are tiled with faux-reads that will aid in the assembly of novel isoforms. These
+	  faux reads are combined with the sequencing reads and are input into the regular Cufflinks assembler.  The assembled
+	  transfrags are then compared to the reference transcripts to determine if they are sufficiently different to be 
+	  considered novel.  Those that are labeled novel by our criteria (see Cufflinks options to adjust the parameters)
+	  are output along with the transcripts from the annotation.
+	  <p>The use of faux-reads was inspired by the methods of</p>
+	<br/><ul>
+		<li>J Venter, M Adams, E Myers, P Li, R Mural, G Sutton, H Smith, M Yandell, C Evans, R Holt, et al.
+			<a href="http://www.sciencemag.org/content/291/5507/1304.full">The sequence of the human genome</a>
+			Science, Volume 291, 1304 - 1351 (2001)
+	  </ul><br/>
+	
+	<!-- <h2 id="mrge">How does Cuffmerge work?</h2><br/> -->
+	
+	<h2 id="diff">What is Cuffdiff?</h2><br/>
+  	<p> Cuffdiff is a program that uses the Cufflinks transcript quantification
+	engine to calculate gene and transcript expression levels in more than one condition and 
+	test them for signficant differences.  You can use it to find differentially expressed genes 
+	and transcripts, as well as genes that are being differentially <em>regulated</em> at the 
+	transcriptional and post-transcriptional level.
+	</p>
+	<br/>
+		  
+	<h2 id="hdif">How does Cuffdiff test for differential expression and regulation?</h2><br/>
+		Cuffdiff takes a GTF file of transcripts as input, along with two or more 
+		SAM files containing the fragment alignments for two or more samples. 
+		It produces a number of output files that contain test results for 
+		changes in expression at the level of transcripts, primary transcripts, 
+		and genes. It also tracks changes in the relative abundance of transcripts sharing a common
+		transcription start site, and in the relative abundances of the primary 
+		transcripts of each gene.  Tracking the former allows one to see changes in 
+		splicing, and the latter lets one see changes in relative promoter use 
+		within a gene.
+		
+		Cuffdiff requires that transcripts in the input GTF be annotated with 
+		certain attributes in order to look for changes in primary transcript
+		expression, splicing, coding output, and promoter use.  These attributes 
+		are:
+		
+		<table CELLSPACING=15>
+		  <tr>
+			<td VALIGN=top><strong>Attribute</strong></td>
+			<td VALIGN=top><strong>Description</strong></td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>tss_id</td>
+			<td VALIGN=top>The ID of this transcript's inferred start site.  
+				Determines which primary transcript this processed transcript 
+				is believed to come from.</td>
+		  </tr>
+		  <tr>
+			<td VALIGN=top>p_id</td>
+			<td VALIGN=top>The ID of the coding sequence this transcript contains. This is 
+				attribute is attached to Cuffcompare output by Cuffcompare only 
+				when it is run with a reference annotation that include CDS 
+				records.  Further, differential CDS analysis is <b>only</b> 
+				performed when all isoforms of a gene have <tt>p_id</tt> 
+				attributes, because neither Cufflinks nor Cuffcompare attempt to
+				assign an open reading frame to transcripts.</td>
+		  </tr>
+		  </table>
+		<p>
+		The above attributes, along with the <tt>gene_id</tt> required by the 
+		GTF specification, make each transcript a member of a "gene group", 
+		"primary transcript group", and "CDS group".  Transcripts with the same
+		<tt>gene_id</tt> are part of the same gene group, and similarly, those
+		with the same <tt>tss_id</tt> and <tt>p_id</tt> are part of the same 
+		primary transcript group and CDS group.  Cuffdiff tracks changes not
+		only in absolute transcript, primary transcript, CDS, and gene FPKMs, but
+		also in the <em>relative</em> expression changes within these groups.  
+		
+		<p>
+		To test whether an observed difference in a gene's expression is significant, 
+		Cuffdiff compares the log ratio of gene's expression in two conditions against 
+		the log of one.  Suppose we write the ratio of expression of a transcript 
+	    "t" in condition a versus condition b as
+		<p style="text-align: center;">
+		<img border=0 src="images/fpkm_ratio.png"></img>
+		<p>
+		The log of the ratio (T) of expression in two conditions can actually be
+		used as a test statistic, because the quantity:
+		<p style="text-align: center;">
+		<img border=0 src="images/log_norm_ratio.png"></img>
+		<p>
+		is approximately normally distributed and can be calculated as
+		<p style="text-align: center;">
+		<img border=0 src="images/log_norm_ratio_approx.png"></img>
+		
+		<p>
+		Note that in order to calculate the test statistic T, we need to know the 
+		<em>variance</em> of the expression level in each condition. The variance 
+		needs to include the variability in the number of fragments generated by the transcript
+		across replicates, and should also incorporate any <em>uncertainty</em> in the expression estimate 
+		itself. If the transcript <em>t</em> is the only isoform of the gene it 
+		belongs to (and all its reads map to it uniquely), there's no uncertainty 
+		in the expression estimate. However, if the transcript is one of several 
+		isoforms, there will be some uncertainty about each isoform's expression 
+		level. Cuffdiff calculates the variance in a transcript's expression level as
+		
+		<p style="text-align: center;">
+		<img border=0 src="images/fpkm_var.png"></img>
+
+		<p>Where 
+		<p style="text-align: center;">
+		<img border=0 src="images/var_transcript_count.png"></img> 
+		<p>is the variance in the number of fragments that come from the transcript across replicates
+		in the experiment. If there are no replicates, the variance is measured across the conditions
+		under the assumption that most transcripts are not differentially expressed. 
+		However, if your experiment has replicates for each 
+		condition, Cuffdiff can better estimate the variance for fragment counts and thus
+		 provides more accurate differential expression calls. For single isoform genes, 
+		Cuffdiff models the variance in fragment counts across replicates using the negative
+		binomial distribution, similar to the method described by Anders and Huber (2010). 
+		 When a gene has multiple isoforms, Cuffdiff must incorporate its own uncertainty 
+		in how it assigns fragment to transcripts in its estimate of the variance for the 
+		counts.  Cuffdiff uses the beta negative binomial to model overdispersion and 
+		fragment assignment uncertainty simultaneously.  The beta negative binomial is a 
+		distribution that arises when mixing several negative binomials, so in a sense, 
+		Cuffdiff generalizes previous count based methods that use the negative binomial 
+		distribution.  For each gene, Cuffdiff fits the parameters of the beta negative 
+		binomial  (called <em>&alpha;</em>, <em>&beta;</em>, and <emph>r<emph>) by solving
+		the following system of equations:
+		
+		<p style="text-align: center;">
+		<img border=0 src="images/count_var_system.png"></img>
+		
+		<p>
+		Where A,B, and C are defined as:
+		
+		<p style="text-align: center;">
+		<img border=0 src="images/ABC.png"></img>
+		
+		<p>
+		And <em>p</em> is:
+		<p style="text-align: center;">
+		<img border=0 src="images/p_alpha_beta.png"></img>
+		
+		<p> 
+		In the above equations, <em>X<sub>g</sub></em> is the number of 
+		fragments that fall on any isoform of the gene <emph>g<emph> that transcript 
+		<emph>t<emph> belongs to. The value <img border=0 src="images/gamma_t.png"></img> 
+		is the estimated fraction ofthe gene's sequencing fra gments that came from transcript <em>t</em>.  The value 
+		<img border=0 src="images/psi_t_t.png"></img> is the algorithm's uncertainty in 
+		its own estimate of <img border=0 src="images/gamma_t.png"></img>. B is the count variance for transcripts that have a mean count similar to <emph>t</emph>. When you provide replicates to Cuffdiff, the fragment counts
+		are modeled using a nonlinear regression, as described <a href="#reps">below</a>. 
+		 
+		<p>
+		Once we have an estimate of the variance of a transcript's abudance in each condition, 
+		we can calculate the test statistic. Also, given the variance for the abundance for each isoform of a gene, we can calculate the variance of the <em>gene's'</em> abundance. Since the test statistic T is approximately 
+		normally distributed, we can use a (two tailed) Student's t-test to find genes 
+		and transcripts that are differentially expressed.  When looking for genes with 
+		statistically significant changes in absolute expression, Cufflinks uses a 
+		t-test to calculate the <em>p</em> values of the observed changes. 
+		
+		<p>
+		As mentioned above, Cufflinks also looks for changes in <em>relative</em> 
+		isoform abundance within biologically interesting groups of transcripts. 
+		One simple type of relative change in isoform abundance is when a gene with multiple promoters switches between them across conditions.  Another type is the inclusion or exclusion of alternative exons.
+	 	By grouping the transcripts together by their promoters  
+		and looking for changes within and between these groups, we
+		can make a hypothesis about what regulatory mechanism (trancriptional, splicing, etc.) is producing these
+		changes.
+		
+		<p>
+		Changes in relative output of one splice-variant over another from the 
+		same primary transcript group suggest that the splicing machinery is 
+		producing one variant more (or less) often in one sample than in another.  Similarly,
+		a change in the relative amounts of two primary transcripts from 
+		the same gene implies that the transcriptional regulation of the gene
+		has changed.  Examining mRNA output changes according to this grouping 
+		effectively allows you to discriminate between transcriptional and
+		splicing regulation in your samples.  It may help you focus further
+		investigation into specific genes that may be relevant for your system 
+		of interest.  Further, these changes in relative abundance within and between promoter groups are tested for 
+		statistical significance. The changes in relative abundance are quantified by the square 
+		root of the <em>Jensen-Shannon divergence</em> which has some key properties needed here.  
+		
+		For a group of transcripts, we can write their relative abundances 
+		<em>p<sub>1</sub></em>,<em>p<sub>2</sub></em>,...,<em>p<sub><em>n</em></sub></em> 
+		such that they sum to 1.  The <em>entropy</em> of this discrete distribution
+		<em>p</em> is defined as:
+		<p style="text-align: center;"> 
+		<img border=0 src="images/entropy.png"></img>
+		</p>
+		
+		<p>
+		The Jensen-Shannon divergence between a set of <em>m</em> distributions <em>p<sup>1</sup></em>,<em>p<sup>2</sup></em>...,<em>p<sup><em>m</em></em></sup>
+		is defined as 
+		<p style="text-align: center;"> 
+		<img border=0 src="images/JS.png"></img>
+		</p>
+		<p>That is, the JS diverence is the entropy of the average distribution 
+		minus the average of the individual entropies.  Cuffdiff uses the square root of this divergence
+		to measure the "distance" between the relative abundances of a group of 
+		transcripts in two difference conditions. Cuffdiff assigns <em>p</em>-values to the observed changes based on the JS divergence.  </p>
+		
+		<br/>
+	  <h2 id="huqn">How does upper-quartile normalization work?</h2><br/>
+	  <p>
+	  As discussed in the paper listed below, a small number of abundant, differentially expressed genes can create the (incorrect) impression that less abundant genes are also differentially expressed.  This issue can be mitigated by excluding these genes when normalizing expression values for the number of mapped reads in each sample. One method for doing this, called "upper-quartile normalization" was shown to be a good method for increasing the accuracy of differential analysis in
+	  </p>
+		<br/>
+	 
+	  <ul>
+		<li>James H. Bullard, Elizabeth Purdom, Kasper D. Hansen, and Sandrine Dudoit,
+			<a href="http://www.biomedcentral.com/1471-2105/11/94">Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments</a>
+			BMC Bioinformatics, Volume 11, Issue 94 (2010)
+	  </ul>
+	  <br/>
+	  
+	  <p>
+	  This correction is implemented in Cufflinks and Cuffdiff as a command-line option. If requested, Cufflinks/Cuffdiff will use the number of reads mapping to the 
+	  upper-quartile locus in place of the "map mass" (M) when calculating FPKM.
+	  </p>
+  
+	  <br/>
+
+	  <h2 id="reps">How does Cuffdiff treat biological replicates?</h2><br/>
+	  <p>RNA-seq is an extremely sensitive assay for measuring gene expression, and can be used to find genes that are differentially expressed between conditions.  Several early studies analyzed multiple sequencing libraries made from the same RNA and found that RNA-seq is extremely reproducible.  These studies concluded that technical replication of samples was not usually necessary. Numerous RNA-Seq studies have used the "Poisson model" to perform testing for differential gene expression.  This model says that the <em>variance</em> across replicates in the number of fragments generated by a gene is equal to the <em>mean</em> number of fragments from that gene across replicates.  It also leads to some simple ways to test for differentially expressed genes in a statistically principled way.  However, several recent studies have found that while the Poisson model is appropriate for technical replicates of the same RNA, it can be a poor fit for biological replicates.  Several groups have assessed alternative models for fragment count variance with good success.  Readers interested in further details of handling replicates in RNA-seq should see the papers below:
+		<p>
+		<br/>
+		<ul>
+		<li> Marioni, J.C., Mason, C.E., Mane, S.M., Stephens, M. and Gilad, Y. <a href="http://www.genome.org/cgi/pmidlookup?view=long&pmid=18550803">RNA-seq: An assessment of technical reproducibility and comparison with gene expression arrays</a>. Genome Research 18, 1509-1517 (2008).
+		<li> Robinson, M.D., McCarthy, D.J. and Smyth, G.K. <a href="http://bioinformatics.oxfordjournals.org/content/26/1/139.long">edgeR: a Bioconductor package for differential expression analysis of digital gene expression data</a>. Bioinformatics 26, 139-140 (2009).
+		<li> Langmead, B., Hansen, K.D. and Leek, J.T. <a href="http://genomebiology.com/2010/11/8/R83">Cloud-scale RNA-sequencing differential expression analysis with Myrna</a>. Genome Biol. 11, R83 (2010).
+		<li> Anders, S. and Huber, W. <a href="http://genomebiology.com/2010/11/10/R106">Differential expression analysis for sequence count data</a>. Genome Biol. 11, R106 (2010).
+		</ul>
+		<br/>
+		<p>Cuffdiff takes an approach to differential expression analysis that is <a href="faq.html#cuffdiff">radically different</a> from most other RNA-seq analysis packages.   Because Cufflinks calculates individual transcript abundances, it is very sensitive when looking for differentially expressed genes, especially when those genes are alternatively spliced.  However, in order to deal with the overdispersion that is known to exist among biological replicates, Cuffdiff fits a model for fragment count variances in each condition prior to doing any testing.  Cuffdiff uses the LOCFIT regression package, written by Catherine Loader and Jiayang Sun, for this purpose. Cuffdiff models fragment count overdispersion the same way Anders and Huber do in their DEseq package to derive a count dispersion model for each experimental condition.  If only one replicate is available in each condtion, Cuffdiff pools the conditions together to derive a dispersion model.  The dispersion model, which describes variances of fragment <em>counts</em> across replicates, is then used to calculate the variances on a gene's <em>relative expression level</em> across replicates. It is these expression level variances that are used during testing for differences at the gene and transcript level.
+		
+		<p>One of the major advantages of using Cuffdiff for differential 
+			analysis over most other tools is that Cuffdiff tells you which 
+			genes are being differentially spliced. However, there may be some 
+			amount of variance in the <em>relative</em> abundances of a gene's 
+			alternative isoforms across replicates.  In order to capture this 
+			variance for use in differential expression and regulation testing,
+			 Cuffdiff pools the fragments before calculating the individual 
+			isoform abundances and then examines the likelihood surface of the 
+			replicate pool via importance sampling. On the likelihood surface, 
+			if the neighborhood around the maximum is relatively "flat", there 
+			is a great deal of variability across replicates in the maximum 
+			likelihood assignment of abundances to the isoforms.  If the neighborhood 
+			is more like a sharp peak, Cuffdiff can be very certain about the 
+			isoform abundances, and the variability in their expression levels 
+			(relative to each other) is small across replicates.  The overdisperion 
+			model produced by LOCFIT is combined with the uncertainty estimate 
+			from the bootstrapping procedure to set the parameters of a beta 
+			negative binomial distribution. This distribution provides a 
+			variance model for number of fragments that originate from each 
+			isoform of an alternatively spliced gene. Thus, Cuffdiff not only
+			 learns the level of fragment count overdispersion across replicates, 
+			it also uses the replicates to capture the fragment assignment
+			uncertainty between alternative isoforms of each gene.
+			</p>
+	
+	<br/>
+	<h2 id="mfit">How does Cuffdiff check that its variance model is a good fit for a gene or transcript?</h2><br/>
+	<p>In a perfect world, we'd have enough replicates of the conditions we're 
+		comparing to empirically estimate not only the expression levels of 
+		genes and transcripts in each condition, but also the variances of 
+		those expression levels.  Unfortunately, we're rarely so fortunate. 
+		Cuffdiff is built to work well with few replicates for each condition. 
+		It works by building a model to predict what the variance of a gene or 
+		transcript expression level will be given how deeply it was sequenced and 
+		how highly it is expressed.  Cuffdiff assumes that gene's and transcripts 
+		with similar expression levels have similar variances in those expression levels.  
+		However, that's not always the case - some genes have unusually high variability, 
+		for biologically meaningful reasonss.  Thus, Cuffdiff checks that the 
+		variability model is good fit before performing any signficance testing. 
+		 This works as follows: Cuffdiff first calculates the expression level of the 
+		gene or transcript in each condition begin compared.  It does so by pooling the 
+		data for the replicates of a condition together.  The model gives an expression 
+		and variance estimate for each condition, along with confidence intervals around 
+		the expression estimates.  Then, Cuffdiff calculates the expression level of the 
+		gene in each replicate independently.  If the expression level of one or more 
+		replicates lies outside the confidence interval generated by the model, Cuffdiff flags 
+		the transcript as poorly fit by the model, and no signficance testing is 
+		performed.  This greatly reduces the false discovery rate by the software, 
+		which are often caused by either insufficient data for a stable expression 
+		calculation, or excessive (and possibly biologically meaningful) 
+		intra-replicate variability.  
+		
+		<p>You can set the size of the confidence 
+		interval using the <tt>--min-outlier-p</tt> option, which has a default 
+		value of 0.01, corresponding to a 99% confidence interval.  That is, if 
+		a replicate lies outside of the 99% confidence interval around the 
+		pooled expression estimate, the gene or transcript is not tested for 
+		differential expression or regulation.
+	</div>
+  </div>
+  <div id="footer">
+  	<table width="100%" cellspacing=15><tr><td>
+    This research was supported in part by NIH grants R01-LM06845 and R01-GM083873, NSF grant CCF-0347992 and the Miller Institute for Basic
+		Research in Science at UC Berkeley.
+    </td><td align=right>
+    Administrator: <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>. Design by <a href="http://www.free-css-templates.com" title="Design by David Herreman">David Herreman</a>
+    </td></tr></table>
+  </div>
+</div>
+
+<!-- Google analytics code -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-6101038-2");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<!-- End Google analytics code -->
+</body>
+</html>

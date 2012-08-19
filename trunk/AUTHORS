@@ -1,0 +1,16 @@
+Cufflinks authors
+Primary contact <cole@cs.umd.edu>
+
+Cole Trapnell designed and wrote Cufflinks and Cuffdiff, with substantial technical input 
+from Geo Pertea, Brian Williams, Ali Mortazavi, Jeltje van Baren, Steven Salzberg, Barbara Wold, 
+and Lior Pachter. Geo Pertea wrote Cuffcompare.  Adam Roberts made substantial improvements to
+the abundance estimation model used by Cufflinks and Cuffdiff.
+
+"Tuxedo" Websites:
+ Cufflinks:			 http://cufflinks.cbcb.umd.edu
+ TopHat:			 http://tophat.cbcb.umd.edu
+ Bowtie:             http://bowtie-bio.sf.net
+
+As of version 1.0, Cufflinks depends on and includes LOCFIT, a regression package originally written 
+by Catherine Loader and Jiayang Sun. Some modifications were made to LOCFIT.  Modified source
+for LOCFIT lives in src/locfit.

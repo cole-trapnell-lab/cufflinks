@@ -1,0 +1,524 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+<title>Cufflinks - Transcript assembly, differential expression, and
+          differential regulation for RNA-Seq</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+</head>
+<body>
+<div id="wrap">
+  <div id="top">
+    <div class="lefts">
+    <table width="100%" cellpadding="2">
+      <tr><td>
+           <a href="./index.html"><h1>Illumina iGenomes</h1></a>
+      </td><td align="right" valign="middle">
+        <a href="http://www.mcb.berkeley.edu/">
+          <img style="vertical-align:middle;padding-top:4px" 
+            border=0 src="images/UCBerkeley-seal.scaled.gif">
+        </a>&nbsp;
+        <a href="http://genomics.jhu.edu/">
+           <img style="vertical-align:middle;padding-top:4px"
+                src="images/JHU-seal.gif" border="0">
+           </a>&nbsp;
+        <a href="http://www.cbcb.umd.edu/"><img style="vertical-align:middle;padding-top:4px" border=0 src="images/cbcb_logo.gif"></a>&nbsp;&nbsp;
+      </td></tr>
+      </td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div id="main">
+	
+      <div id="rightside">
+          <h2>Site Map</h2>
+          <div class="box">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li><a href="tutorial.html">Getting started</a></li>
+              <li><a href="manual.html">Manual</a></li>
+              <li><a href="howitworks.html">How Cufflinks works</a></li>
+			  <li><a href="igenomes.html">Index and annotation downloads</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+			  <li><a href="http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html">Protocol</a></li>
+            </ul>
+          </div>
+         <h2><u>News and updates</u></h2>
+         <div class="box">
+           <ul>
+             <table width="100%">
+               <tbody>
+                 <tr>
+                   <td>New releases and related tools will be announced
+                     through the <a
+                       href="https://lists.sourceforge.net/lists/listinfo/bowtie-bio-announce"><b>mailing
+                         list</b></a></td>
+                 </tr>
+               </tbody>
+             </table>
+           </ul>
+         </div>
+         <h2><u>Getting Help</u></h2>
+         <div class="box">
+           <ul>
+             <table width="100%">
+               <tbody>
+                 <tr>
+                   <td>Questions about Cufflinks should be sent to <a
+                       href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a>.
+                     Please do not email technical questions to
+                     Cufflinks contributors directly.</td>
+                 </tr>
+               </tbody>
+             </table>
+           </ul>
+         </div>
+      
+         <a href="./downloads">
+           <h2><u>Releases</u></h2>
+         </a>
+         <div class="box">
+           <ul>
+             <table width="100%">
+               <tbody>
+                 <tr>
+                   <td>version 2.0.2 (BETA)</td>
+                   <td align="right">7/8/2012</td>
+                 </tr>
+                 <tr>
+                   <td><a href="./downloads/cufflinks-2.0.2.tar.gz"
+                       onclick="javascript:
+                       pageTracker._trackPageview('/downloads/cufflinks_source');
+                       ">&nbsp;&nbsp;&nbsp;Source code</a></td>
+                 </tr>
+                 <tr>
+                   <td><a
+                       href="./downloads/cufflinks-2.0.2.Linux_x86_64.tar.gz"
+                       onclick="javascript:
+                       pageTracker._trackPageview('/downloads/cufflinks');
+                       ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
+                 </tr>
+                 <tr>
+                   <td><a
+                       href="./downloads/cufflinks-2.0.2.OSX_x86_64.tar.gz"
+                       onclick="javascript:
+                       pageTracker._trackPageview('/downloads/cufflinks');
+                       ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
+                 </tr>
+               </tbody>
+             </table>
+           </ul>
+         </div>
+
+         <h2>Related Tools</h2>
+         <div class="box">
+           <ul>
+				<li><a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a>:
+	                Visualization of RNA-Seq differential analysis</li>
+             <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>:
+               Alignment of short RNA-Seq reads</li>
+             <li><a href="http://bowtie.cbcb.umd.edu">Bowtie</a>:
+               Ultrafast short read alignment</li>
+           </ul>
+         </div>
+
+         <h2>Publications</h2>
+         <div class="box">
+           <ul>
+             <li style="font-size: x-small; line-height: 130%">
+               <p>Trapnell C, Williams BA, Pertea G, Mortazavi AM, Kwan
+                 G, van Baren MJ, Salzberg SL, Wold B, Pachter L.<b> <a
+                     href="http://dx.doi.org/10.1038/nbt.1621">Transcript
+                     assembly and quantification by RNA-Seq reveals
+                     unannotated transcripts and isoform switching
+                     during cell differentiation</a></b> <br>
+                 <i><a href="http://www.nature.com/nbt">Nature
+                     Biotechnology</a></i> doi:10.1038/nbt.1621</p>
+               <br>
+             </li>
+             <li style="font-size: x-small; line-height: 130%">
+               <p>Roberts A, Trapnell C, Donaghey J, Rinn JL, Pachter
+                 L.<b> <a
+                     href="http://genomebiology.com/2011/12/3/R22/abstract">Improving
+                     RNA-Seq expression estimates by correcting for
+                     fragment bias</a></b> <br>
+                 <i><a href="http://www.genomebiology.com">Genome
+                     Biology</a></i> doi:10.1186/gb-2011-12-3-r22</p>
+               <br>
+             </li>
+             <li style="font-size: x-small; line-height: 130%">
+               <p>Roberts A, Pimentel H, Trapnell C, Pachter
+                 L.<b> <a
+                     href="http://bioinformatics.oxfordjournals.org/content/early/2011/06/21/bioinformatics.btr355.abstract">
+                     Identification of novel transcripts in annotated genomes using RNA-Seq</a></b> <br>
+                 <i><a href="http://bioinformatics.oxfordjournals.org/">Bioinformatics</a></i> doi:10.1093/bioinformatics/btr355</p>
+               <br>
+             </li>
+           </ul>
+         </div>
+         <h2>Contributors</h2>
+         <div class="box">
+           <ul>
+             <li><a href="http://www.cs.umd.edu/%7Ecole/">Cole Trapnell</a></li>
+             <li><a href="http://www.cs.berkeley.edu/%7Eadarob/">Adam
+                 Roberts</a></li>
+             <li>Geo Pertea</li>
+             <li>Brian Williams</li>
+             <li><a href="http://wormlab.caltech.edu/members/">Ali
+                 Mortazavi</a></li>
+             <li>Gordon Kwan</li>
+             <li>Jeltje van Baren</li>
+             <li><a href="http://www.cbcb.umd.edu/%7Esalzberg/">Steven
+                 Salzberg</a></li>
+             <li><a href="http://biology.caltech.edu/Members/Wold">Barbara
+                 Wold</a></li>
+             <li><a href="http://www.math.berkeley.edu/%7Elpachter/">Lior
+                 Pachter</a></li>
+           </ul>
+         </div>
+         <h2>Links</h2>
+         <div class="box">
+           <ul>
+             <li><a href="http://bio.math.berkeley.edu/">Berkeley LMCB</a></li>
+             <li><a href="http://www.cbcb.umd.edu/">UMD CBCB</a></li>
+             <li><a href="http://woldlab.caltech.edu/">Wold Lab</a></li>
+           </ul>
+         </div>
+       </div>
+      
+    </div> <!-- End of "rightside" -->
+    <div id="leftside">
+    Illumina has provided the RNA-Seq user community with a set of genome sequence indexes (including Bowtie indexes) as well as GTF transcript annotation files.  These files can be used with TopHat and Cufflinks to quickly perform expression analysis and gene discovery.  The annotation files are augmented with the <tt>tss_id</tt> and <tt>p_id</tt> GTF attributes that Cufflinks needs to perform differential splicing, CDS output, and promoter user analysis. We recommend that you download your Bowtie indexes and annotation files from this page. More information about Illumina's iGenomes project can be found <A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/README.txt">here</A>.
+    <br/>
+    <br/>
+    <TABLE id="box-table-a" CELLPADDING=3>
+      <TR>
+<TH ALIGN="LEFT">Organism</TH>
+<TH ALIGN="LEFT">Data source</TH>
+<TH ALIGN="LEFT">Version</TH>
+<TH ALIGN="LEFT">Size</TH>
+<TH ALIGN="LEFT">Last Modified</TH>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=6>Homo sapiens</TD>
+<TD ALIGN="LEFT" rowspan=1>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Homo_sapiens/Ensembl/GRCh37/Homo_sapiens_Ensembl_GRCh37.tar.gz">GRCh37</A></TD>
+<TD ALIGN="RIGHT">17297 MB</TD>
+<TD ALIGN="LEFT">May 14 17:23</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=3>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Homo_sapiens/NCBI/build36.3/Homo_sapiens_NCBI_build36.3.tar.gz">build36.3</A></TD>
+<TD ALIGN="RIGHT">15814 MB</TD>
+<TD ALIGN="LEFT">May 14 19:36</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Homo_sapiens/NCBI/build37.1/Homo_sapiens_NCBI_build37.1.tar.gz">build37.1</A></TD>
+<TD ALIGN="RIGHT">15850 MB</TD>
+<TD ALIGN="LEFT">May 14 19:04</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Homo_sapiens/NCBI/build37.2/Homo_sapiens_NCBI_build37.2.tar.gz">build37.2</A></TD>
+<TD ALIGN="RIGHT">21450 MB</TD>
+<TD ALIGN="LEFT">May 14 17:54</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Homo_sapiens/UCSC/hg18/Homo_sapiens_UCSC_hg18.tar.gz">hg18</A></TD>
+<TD ALIGN="RIGHT">17349 MB</TD>
+<TD ALIGN="LEFT">May 14 15:31</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Homo_sapiens/UCSC/hg19/Homo_sapiens_UCSC_hg19.tar.gz">hg19</A></TD>
+<TD ALIGN="RIGHT">21058 MB</TD>
+<TD ALIGN="LEFT">May 14 15:36</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=5>Mus musculus</TD>
+<TD ALIGN="LEFT" rowspan=1>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Mus_musculus/Ensembl/NCBIM37/Mus_musculus_Ensembl_NCBIM37.tar.gz">NCBIM37</A></TD>
+<TD ALIGN="RIGHT">14428 MB</TD>
+<TD ALIGN="LEFT">May 14 22:13</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Mus_musculus/NCBI/build37.1/Mus_musculus_NCBI_build37.1.tar.gz">build37.1</A></TD>
+<TD ALIGN="RIGHT">15260 MB</TD>
+<TD ALIGN="LEFT">May 15 17:53</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Mus_musculus/NCBI/build37.2/Mus_musculus_NCBI_build37.2.tar.gz">build37.2</A></TD>
+<TD ALIGN="RIGHT">15725 MB</TD>
+<TD ALIGN="LEFT">May 14 22:52</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Mus_musculus/UCSC/mm9/Mus_musculus_UCSC_mm9.tar.gz">mm9</A></TD>
+<TD ALIGN="RIGHT">14537 MB</TD>
+<TD ALIGN="LEFT">May 14 21:12</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Mus_musculus/UCSC/mm10/Mus_musculus_UCSC_mm10.tar.gz">mm10</A></TD>
+<TD ALIGN="RIGHT">14193 MB</TD>
+<TD ALIGN="LEFT">May 24 12:12</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=3>Rattus norvegicus</TD>
+<TD ALIGN="LEFT" rowspan=1>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Rattus_norvegicus/Ensembl/RGSC3.4/Rattus_norvegicus_Ensembl_RGSC3.4.tar.gz">RGSC3.4</A></TD>
+<TD ALIGN="RIGHT">13725 MB</TD>
+<TD ALIGN="LEFT">May 15 22:33</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=1>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Rattus_norvegicus/NCBI/RGSC_v3.4/Rattus_norvegicus_NCBI_RGSC_v3.4.tar.gz">RGSC_v3.4</A></TD>
+<TD ALIGN="RIGHT">14234 MB</TD>
+<TD ALIGN="LEFT">May 15 23:58</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=1>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Rattus_norvegicus/UCSC/rn4/Rattus_norvegicus_UCSC_rn4.tar.gz">rn4</A></TD>
+<TD ALIGN="RIGHT">13710 MB</TD>
+<TD ALIGN="LEFT">May 15 22:32</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=6>Bos taurus</TD>
+<TD ALIGN="LEFT" rowspan=2>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Bos_taurus/Ensembl/Btau_4.0/Bos_taurus_Ensembl_Btau_4.0.tar.gz">Btau_4.0</A></TD>
+<TD ALIGN="RIGHT">13315 MB</TD>
+<TD ALIGN="LEFT">May 11 14:18</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Bos_taurus/Ensembl/UMD3.1/Bos_taurus_Ensembl_UMD3.1.tar.gz">UMD3.1</A></TD>
+<TD ALIGN="RIGHT">14042 MB</TD>
+<TD ALIGN="LEFT">May 11 12:41</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=3>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Bos_taurus/NCBI/Btau_4.2/Bos_taurus_NCBI_Btau_4.2.tar.gz">Btau_4.2</A></TD>
+<TD ALIGN="RIGHT">13357 MB</TD>
+<TD ALIGN="LEFT">May 11 14:11</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Bos_taurus/NCBI/Btau_4.6.1/Bos_taurus_NCBI_Btau_4.6.1.tar.gz">Btau_4.6.1</A></TD>
+<TD ALIGN="RIGHT">13448 MB</TD>
+<TD ALIGN="LEFT">May 11 16:09</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Bos_taurus/NCBI/UMD_3.1/Bos_taurus_NCBI_UMD_3.1.tar.gz">UMD_3.1</A></TD>
+<TD ALIGN="RIGHT">13990 MB</TD>
+<TD ALIGN="LEFT">May 11 16:08</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=1>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Bos_taurus/UCSC/bosTau4/Bos_taurus_UCSC_bosTau4.tar.gz">bosTau4</A></TD>
+<TD ALIGN="RIGHT">13386 MB</TD>
+<TD ALIGN="LEFT">May 11 12:36</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=4>Canis familiaris</TD>
+<TD ALIGN="LEFT" rowspan=1>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Canis_familiaris/Ensembl/BROADD2/Canis_familiaris_Ensembl_BROADD2.tar.gz">BROADD2</A></TD>
+<TD ALIGN="RIGHT">13087 MB</TD>
+<TD ALIGN="LEFT">May 11 18:00</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Canis_familiaris/NCBI/build2.1/Canis_familiaris_NCBI_build2.1.tar.gz">build2.1</A></TD>
+<TD ALIGN="RIGHT">12847 MB</TD>
+<TD ALIGN="LEFT">May 11 19:22</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Canis_familiaris/NCBI/build3.1/Canis_familiaris_NCBI_build3.1.tar.gz">build3.1</A></TD>
+<TD ALIGN="RIGHT">12528 MB</TD>
+<TD ALIGN="LEFT">May 11 19:30</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=1>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Canis_familiaris/UCSC/canFam2/Canis_familiaris_UCSC_canFam2.tar.gz">canFam2</A></TD>
+<TD ALIGN="RIGHT">13138 MB</TD>
+<TD ALIGN="LEFT">May 11 17:50</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=4>Gallus gallus</TD>
+<TD ALIGN="LEFT" rowspan=1>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Gallus_gallus/Ensembl/WASHUC2/Gallus_gallus_Ensembl_WASHUC2.tar.gz">WASHUC2</A></TD>
+<TD ALIGN="RIGHT">5547 MB</TD>
+<TD ALIGN="LEFT">May 14 12:30</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Gallus_gallus/NCBI/build2.1/Gallus_gallus_NCBI_build2.1.tar.gz">build2.1</A></TD>
+<TD ALIGN="RIGHT">5592 MB</TD>
+<TD ALIGN="LEFT">May 14 13:08</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Gallus_gallus/NCBI/build3.1/Gallus_gallus_NCBI_build3.1.tar.gz">build3.1</A></TD>
+<TD ALIGN="RIGHT">5469 MB</TD>
+<TD ALIGN="LEFT">May 14 13:18</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=1>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Gallus_gallus/UCSC/galGal3/Gallus_gallus_UCSC_galGal3.tar.gz">galGal3</A></TD>
+<TD ALIGN="RIGHT">5546 MB</TD>
+<TD ALIGN="LEFT">May 14 11:52</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=6>Drosophila melanogaster</TD>
+<TD ALIGN="LEFT" rowspan=2>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Drosophila_melanogaster/Ensembl/BDGP5/Drosophila_melanogaster_Ensembl_BDGP5.tar.gz">BDGP5</A></TD>
+<TD ALIGN="RIGHT">669 MB</TD>
+<TD ALIGN="LEFT">May 11 19:35</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Drosophila_melanogaster/Ensembl/BDGP5.25/Drosophila_melanogaster_Ensembl_BDGP5.25.tar.gz">BDGP5.25</A></TD>
+<TD ALIGN="RIGHT">692 MB</TD>
+<TD ALIGN="LEFT">May 11 19:32</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=3>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Drosophila_melanogaster/NCBI/build4.1/Drosophila_melanogaster_NCBI_build4.1.tar.gz">build4.1</A></TD>
+<TD ALIGN="RIGHT">701 MB</TD>
+<TD ALIGN="LEFT">May 11 19:38</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Drosophila_melanogaster/NCBI/build5/Drosophila_melanogaster_NCBI_build5.tar.gz">build5</A></TD>
+<TD ALIGN="RIGHT">701 MB</TD>
+<TD ALIGN="LEFT">May 11 19:41</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Drosophila_melanogaster/NCBI/build5.3/Drosophila_melanogaster_NCBI_build5.3.tar.gz">build5.3</A></TD>
+<TD ALIGN="RIGHT">674 MB</TD>
+<TD ALIGN="LEFT">May 11 19:40</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=1>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Drosophila_melanogaster/UCSC/dm3/Drosophila_melanogaster_UCSC_dm3.tar.gz">dm3</A></TD>
+<TD ALIGN="RIGHT">763 MB</TD>
+<TD ALIGN="LEFT">May 11 19:28</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=4>Arabidopsis thaliana</TD>
+<TD ALIGN="LEFT" rowspan=2>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Arabidopsis_thaliana/Ensembl/TAIR9/Arabidopsis_thaliana_Ensembl_TAIR9.tar.gz">TAIR9</A></TD>
+<TD ALIGN="RIGHT">710 MB</TD>
+<TD ALIGN="LEFT">May 11 10:47</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Arabidopsis_thaliana/Ensembl/TAIR10/Arabidopsis_thaliana_Ensembl_TAIR10.tar.gz">TAIR10</A></TD>
+<TD ALIGN="RIGHT">679 MB</TD>
+<TD ALIGN="LEFT">May 11 10:46</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Arabidopsis_thaliana/NCBI/build9.1/Arabidopsis_thaliana_NCBI_build9.1.tar.gz">build9.1</A></TD>
+<TD ALIGN="RIGHT">721 MB</TD>
+<TD ALIGN="LEFT">May 11 10:51</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Arabidopsis_thaliana/NCBI/TAIR10/Arabidopsis_thaliana_NCBI_TAIR10.tar.gz">TAIR10</A></TD>
+<TD ALIGN="RIGHT">658 MB</TD>
+<TD ALIGN="LEFT">May 11 10:51</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=6>Caenorhabditis elegans</TD>
+<TD ALIGN="LEFT" rowspan=2>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/Ensembl/WS210/Caenorhabditis_elegans_Ensembl_WS210.tar.gz">WS210</A></TD>
+<TD ALIGN="RIGHT">597 MB</TD>
+<TD ALIGN="LEFT">May 11 16:16</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/Ensembl/WS220/Caenorhabditis_elegans_Ensembl_WS220.tar.gz">WS220</A></TD>
+<TD ALIGN="RIGHT">560 MB</TD>
+<TD ALIGN="LEFT">May 11 16:17</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/NCBI/WS190/Caenorhabditis_elegans_NCBI_WS190.tar.gz">WS190</A></TD>
+<TD ALIGN="RIGHT">566 MB</TD>
+<TD ALIGN="LEFT">May 11 16:21</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/NCBI/WS195/Caenorhabditis_elegans_NCBI_WS195.tar.gz">WS195</A></TD>
+<TD ALIGN="RIGHT">554 MB</TD>
+<TD ALIGN="LEFT">May 11 16:21</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/UCSC/ce6/Caenorhabditis_elegans_UCSC_ce6.tar.gz">ce6</A></TD>
+<TD ALIGN="RIGHT">617 MB</TD>
+<TD ALIGN="LEFT">May 11 16:13</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/UCSC/ce10/Caenorhabditis_elegans_UCSC_ce10.tar.gz">ce10</A></TD>
+<TD ALIGN="RIGHT">552 MB</TD>
+<TD ALIGN="LEFT">May 11 16:12</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=7>Saccharomyces cerevisiae</TD>
+<TD ALIGN="LEFT" rowspan=3>Ensembl</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/Ensembl/EF2/Saccharomyces_cerevisiae_Ensembl_EF2.tar.gz">EF2</A></TD>
+<TD ALIGN="RIGHT">74 MB</TD>
+<TD ALIGN="LEFT">May 15 22:35</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/Ensembl/EF3/Saccharomyces_cerevisiae_Ensembl_EF3.tar.gz">EF3</A></TD>
+<TD ALIGN="RIGHT">72 MB</TD>
+<TD ALIGN="LEFT">May 15 22:35</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/Ensembl/EF4/Saccharomyces_cerevisiae_Ensembl_EF4.tar.gz">EF4</A></TD>
+<TD ALIGN="RIGHT">71 MB</TD>
+<TD ALIGN="LEFT">May 15 22:34</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>NCBI</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/NCBI/build2.1/Saccharomyces_cerevisiae_NCBI_build2.1.tar.gz">build2.1</A></TD>
+<TD ALIGN="RIGHT">70 MB</TD>
+<TD ALIGN="LEFT">May 15 22:36</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/NCBI/build3.1/Saccharomyces_cerevisiae_NCBI_build3.1.tar.gz">build3.1</A></TD>
+<TD ALIGN="RIGHT">70 MB</TD>
+<TD ALIGN="LEFT">May 15 22:36</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT" rowspan=2>UCSC</TD>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/UCSC/sacCer2/Saccharomyces_cerevisiae_UCSC_sacCer2.tar.gz">sacCer2</A></TD>
+<TD ALIGN="RIGHT">70 MB</TD>
+<TD ALIGN="LEFT">May 15 22:34</TD>
+</TR>
+<TR>
+<TD ALIGN="LEFT"><A HREF="ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Saccharomyces_cerevisiae/UCSC/sacCer3/Saccharomyces_cerevisiae_UCSC_sacCer3.tar.gz">sacCer3</A></TD>
+<TD ALIGN="RIGHT">70 MB</TD>
+<TD ALIGN="LEFT">May 15 22:33</TD>
+</TR>
+</TABLE>
+  </div>
+    <br/>
+    <br/>
+
+  <div id="footer">
+    <table width="100%" cellspacing=15><tr><td>
+    This research was supported in part by NIH grants R01-LM06845 and R01-GM083873 and NSF grant CCF-0347992.
+    </td><td align=right>
+    Administrator: <a href="mailto:cole@cs.umd.edu">Cole Trapnell</a>. Design by <a href="http://www.free-css-templates.com" title="Design by David Herreman">David Herreman</a>
+    </td></tr></table>
+  </div>
+</div>
+
+<!-- Google analytics code -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-6101038-1");
+pageTracker._trackPageview();
+</script>
+
+<!-- End google analytics code -->
+
+</body>
+</html>
