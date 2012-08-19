@@ -314,7 +314,7 @@ public:
         if (library_type == "transfrags")
         {
             double avg_fpkm = 0.0;
-            foreach (const Scaffold& sc, hits)
+            BOOST_FOREACH (const Scaffold& sc, hits)
             {
                 avg_fpkm += sc.fpkm();
             }

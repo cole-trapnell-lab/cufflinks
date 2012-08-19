@@ -408,7 +408,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
         alpha_range.push_back(a);
     }
     
-    foreach (double alpha, alpha_range)
+    BOOST_FOREACH (double alpha, alpha_range)
     {
         double k = 1.0/alpha;
         double p = k / (k + mean_count);
@@ -437,7 +437,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
                 continue;
             mean /= locus_count.counts.size();
             double var = 0.0;
-            foreach(double c,  locus_count.counts)
+            BOOST_FOREACH(double c,  locus_count.counts)
             {
                 var += (c-mean)*(c-mean);
             }
@@ -454,7 +454,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
         double mean = accumulate(draws.begin(), draws.end(), 0);
         mean /= draws.size();
         double var = 0.0;
-        foreach(int c,  draws)
+        BOOST_FOREACH(int c,  draws)
         {
             var += (c - mean)*(c-mean);
         }
@@ -536,7 +536,7 @@ fit_dispersion_model_helper(const string& condition_name,
     setuplf();  
     
     double xim = 0;
-    foreach(double s, scale_factors)
+    BOOST_FOREACH(double s, scale_factors)
     {
         if (s)
             xim += 1.0 / s;
@@ -552,7 +552,7 @@ fit_dispersion_model_helper(const string& condition_name,
         
         double var = 0.0;
         double num_non_zero = 0;
-        foreach (double d, p.counts)
+        BOOST_FOREACH (double d, p.counts)
         {
             if (d > 0)
                 num_non_zero++;
@@ -719,7 +719,7 @@ fit_dispersion_model(const string& condition_name,
     ProgressBar p_bar("Modeling fragment count overdispersion.",0);
     
     int max_transcripts = 0;
-    foreach(const LocusCountList& L, sample_count_table)
+    BOOST_FOREACH(const LocusCountList& L, sample_count_table)
     {
         if (L.num_transcripts > max_transcripts)
         {
@@ -738,7 +738,7 @@ fit_dispersion_model(const string& condition_name,
         if (i != 0)
         {
 //            vector<LocusCountList> sample_count_subtable;
-//            foreach(const LocusCountList& L, sample_count_table)
+//            BOOST_FOREACH(const LocusCountList& L, sample_count_table)
 //            {
 //                if (L.num_transcripts == i)
 //                {

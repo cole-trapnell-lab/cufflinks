@@ -159,7 +159,7 @@ void compress_genes(FILE* ftranscripts,
         vector<shared_ptr<Scaffold> >& gene = grouped_scaffolds[i];
         vector<Scaffold> gene_scaffs;
         string gene_id;
-        foreach (shared_ptr<Scaffold> s, gene)
+        BOOST_FOREACH (shared_ptr<Scaffold> s, gene)
         {
             if (gene_id == "")
                 gene_id = s->annotated_gene_id();
@@ -175,7 +175,7 @@ void compress_genes(FILE* ftranscripts,
         Scaffold smashed_gene;
         if (!proj_intersection && !proj_union)
         {
-            foreach (shared_ptr<Scaffold> s, gene)
+            BOOST_FOREACH (shared_ptr<Scaffold> s, gene)
             {
                 /*
                  *transfrag,
@@ -224,7 +224,7 @@ void compress_genes(FILE* ftranscripts,
                 int gmax = -1;
                 int gmin = numeric_limits<int>::max();
                 
-                foreach (shared_ptr<Scaffold> s, gene)
+                BOOST_FOREACH (shared_ptr<Scaffold> s, gene)
                 {
                     //iso_ops.push_back(s->augmented_ops());
                     //sort (iso_ops.back().begin(), iso_ops.back().end());
@@ -234,7 +234,7 @@ void compress_genes(FILE* ftranscripts,
                         gmax = s->right();
                 }
                 
-                foreach (shared_ptr<Scaffold> s, gene)
+                BOOST_FOREACH (shared_ptr<Scaffold> s, gene)
                 {
                     if (s->left() > gmin)
                     {
@@ -347,7 +347,7 @@ void driver(vector<FILE*> ref_gtf_files, FILE* gtf_out)
 	vector<vector<shared_ptr<Scaffold> > > ref_mRNA_table;
 	vector<pair<string, vector<double> > > sample_count_table;
     
-    foreach (FILE* ref_gtf, ref_gtf_files)
+    BOOST_FOREACH (FILE* ref_gtf, ref_gtf_files)
     {
         vector<shared_ptr<Scaffold> > ref_mRNAs;
         ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, true);
@@ -393,7 +393,7 @@ int main(int argc, char** argv)
     
     vector<FILE*> ref_gtf_files;
     
-    foreach (const string& ref_gtf_in_filename, ref_gtf_filenames)
+    BOOST_FOREACH (const string& ref_gtf_in_filename, ref_gtf_filenames)
     {
         FILE* ref_gtf = NULL;
         if (ref_gtf_in_filename != "")

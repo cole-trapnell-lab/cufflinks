@@ -233,7 +233,7 @@ void collapse_hits(const vector<MateHit>& hits,
 	non_redundant.erase(new_end, non_redundant.end());
     non_redundant.resize(non_redundant.size());
 	
-	foreach(MateHit& hit, non_redundant)
+	BOOST_FOREACH(MateHit& hit, non_redundant)
 		hit.collapse_mass(0);
 	
 	size_t curr_aln = 0;
@@ -252,7 +252,7 @@ void collapse_hits(const vector<MateHit>& hits,
 		++curr_aln;
 	}
 	
-	//foreach(MateHit& hit, non_redundant)
+	//BOOST_FOREACH(MateHit& hit, non_redundant)
 		//assert(hit.collapse_mass() <= 1 || !hit.is_multi());
 	
 	//non_redundant.erase(remove_if(non_redundant.begin(),non_redundant.end(),has_no_collapse_mass), non_redundant.end()); 

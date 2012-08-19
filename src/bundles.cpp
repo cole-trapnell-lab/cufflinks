@@ -228,7 +228,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 			}
 		}
         
-        foreach (shared_ptr<Scaffold> s, ref_mRNAs)
+        BOOST_FOREACH (shared_ptr<Scaffold> s, ref_mRNAs)
         {
             assert (s);
         }
@@ -419,7 +419,7 @@ void HitBundle::finalize_open_mates()
 
     for(OpenMates::iterator itr = _open_mates.begin(); itr != _open_mates.end(); ++itr)
     {
-        foreach (MateHit& hit,  itr->second)
+        BOOST_FOREACH (MateHit& hit,  itr->second)
         {
             delete hit.left_alignment();
             delete hit.right_alignment();
@@ -577,7 +577,7 @@ void HitBundle::finalize(bool is_combined)
         }
         else
         {
-            foreach (MateHit& hit, _hits)
+            BOOST_FOREACH (MateHit& hit, _hits)
             {
                 hit.incr_collapse_mass(hit.internal_scale_mass());
             }
@@ -1333,7 +1333,7 @@ void identify_bad_splices(const HitBundle& bundle,
 	ins_itr = bad_splice_ops.insert(make_pair(ref_id, vector<AugmentedCuffOp>()));
 	vector<AugmentedCuffOp>& bad_introns = ins_itr.first->second;
 	
-	foreach (const MateHit& hit, bundle.hits())
+	BOOST_FOREACH (const MateHit& hit, bundle.hits())
 	{
 		if (hit.left_alignment())
 		{

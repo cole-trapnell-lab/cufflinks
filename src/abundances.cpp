@@ -147,7 +147,7 @@ AbundanceStatus AbundanceGroup::status() const
 {
     bool has_lowdata_member = false;
     bool has_ok_member = false;
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (ab->status() == NUMERIC_FAIL)
 		{
@@ -183,7 +183,7 @@ void TranscriptAbundance::FPKM_variance(double v)
 
 bool AbundanceGroup::has_member_with_status(AbundanceStatus member_status) const
 {
-    foreach(shared_ptr<Abundance> ab, _abundances)
+    BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (ab->status() == member_status)
 		{
@@ -197,7 +197,7 @@ double AbundanceGroup::num_fragments() const
 {
 	double num_f = 0;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		num_f += ab->num_fragments();
 	}
@@ -209,7 +209,7 @@ CountPerReplicateTable AbundanceGroup::num_fragments_by_replicate() const
 {
 	CountPerReplicateTable cpr;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (cpr.empty())
         {
@@ -237,7 +237,7 @@ FPKMPerReplicateTable AbundanceGroup::FPKM_by_replicate() const
 {
 	FPKMPerReplicateTable fpr;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (fpr.empty())
         {
@@ -265,7 +265,7 @@ StatusPerReplicateTable AbundanceGroup::status_by_replicate() const
 {
 	StatusPerReplicateTable fpr;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		if (fpr.empty())
         {
@@ -311,7 +311,7 @@ double AbundanceGroup::mass_fraction() const
 {
 	double mass = 0;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		mass += ab->mass_fraction();
 	}
@@ -322,7 +322,7 @@ double AbundanceGroup::mass_variance() const
 {
     double mass_var = 0;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		mass_var += ab->mass_variance();
 	}
@@ -361,7 +361,7 @@ double AbundanceGroup::FPKM() const
 {
 	double fpkm = 0;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		fpkm += ab->FPKM();
 	}
@@ -373,7 +373,7 @@ double AbundanceGroup::gamma() const
 {
 	double gamma = 0;
 	
-	foreach(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
 		gamma += ab->gamma();
 	}
@@ -389,7 +389,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 	assert (to_keep.size() == _abundances.size());
 	
 	size_t num_kept = 0;
-	foreach(bool keeper, to_keep)
+	BOOST_FOREACH(bool keeper, to_keep)
 	{
 		num_kept += keeper;
 	}
@@ -456,7 +456,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
 {
 	transfrags.clear();
-	foreach(shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> pA, _abundances)
 	{
 		shared_ptr<Scaffold> pS = pA->transfrag();
 		if (pS)
@@ -470,7 +470,7 @@ set<string> AbundanceGroup::gene_id() const
 {
 	set<string> s;
 	
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->gene_id();
 		s.insert(sub.begin(), sub.end());
@@ -483,7 +483,7 @@ set<string> AbundanceGroup::gene_name() const
 {
 	set<string> s;
 	
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->gene_name();
 		s.insert(sub.begin(), sub.end());
@@ -497,7 +497,7 @@ set<string> AbundanceGroup::tss_id() const
 {
 	set<string> s;
 
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->tss_id();
 		s.insert(sub.begin(), sub.end());
@@ -510,7 +510,7 @@ set<string> AbundanceGroup::protein_id() const
 {
 	set<string> s;
 	
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->protein_id();
 		s.insert(sub.begin(), sub.end());
@@ -523,7 +523,7 @@ const string& AbundanceGroup::locus_tag() const
 {
 	static string default_locus_tag = "-";
 	const string* pLast = NULL;
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pLast)
 		{
@@ -547,7 +547,7 @@ const string& AbundanceGroup::reference_tag() const
 {
 	static string default_reference_tag = "-";
 	const string* pLast = NULL;
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pLast)
 		{
@@ -573,7 +573,7 @@ double AbundanceGroup::effective_length() const
 	double group_fpkm = FPKM();
 	if (group_fpkm == 0)
 		return 0;
-	foreach (shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> ab, _abundances)
 	{
 		eff_len += (ab->effective_length() * (ab->FPKM() / group_fpkm));
 	}
@@ -1912,7 +1912,7 @@ void AbundanceGroup::calculate_conf_intervals()
 		double sum_transfrag_FPKM_hi = 0;
         double max_fpkm = 0.0;
         //double min_fpkm = 1e100;
-		foreach(shared_ptr<Abundance> pA, _abundances)
+		BOOST_FOREACH(shared_ptr<Abundance> pA, _abundances)
 		{
 			double FPKM_hi;
 			double FPKM_lo;
@@ -2008,7 +2008,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	if (mapped_transcripts.empty())
     {
 		//gammas = vector<double>(transfrags.size(), 0.0);
-		foreach (shared_ptr<Abundance> ab, _abundances)
+		BOOST_FOREACH (shared_ptr<Abundance> ab, _abundances)
 		{
 			ab->gamma(0);
 		}
@@ -2058,7 +2058,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	if (filtered_transcripts.empty())
 	{
 		//gammas = vector<double>(transfrags.size(), 0.0);
-		foreach (shared_ptr<Abundance> ab, _abundances)
+		BOOST_FOREACH (shared_ptr<Abundance> ab, _abundances)
 		{
 			ab->gamma(0);
 		}
@@ -2467,7 +2467,7 @@ void AbundanceGroup::calculate_kappas()
 	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
 	
 	double S_FPKM = 0.0;
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pA->effective_length() > 0)
 		{
@@ -2476,7 +2476,7 @@ void AbundanceGroup::calculate_kappas()
 	}
 	
     //fprintf (stderr, "*********\n");
-	foreach (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
 	{
 		if (S_FPKM > 0)
 		{
@@ -2662,7 +2662,7 @@ void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundan
 {
 	set<const MateHit*> hits_in_gene_set;
 
-	foreach(shared_ptr<Abundance> pA, abundances)
+	BOOST_FOREACH(shared_ptr<Abundance> pA, abundances)
 	{			
 		shared_ptr<Scaffold> pS = pA->transfrag();
 		assert (pS);
@@ -3108,7 +3108,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
     gamma_covariance = ublas::zero_matrix<double>(N,N);
     ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
 //
-    foreach(ublas::vector<double>& mle, mle_gammas)
+    BOOST_FOREACH(ublas::vector<double>& mle, mle_gammas)
     {
         expected_mle_gamma += mle;
     }
@@ -3477,7 +3477,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
     
     double round_err = 0.0;
     double num_good = 0;
-    foreach (double& g, gammas)
+    BOOST_FOREACH (double& g, gammas)
     {
         if (g < min_isoform_fraction)
         {
@@ -3489,7 +3489,7 @@ AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
             num_good += 1;
         }
     }
-    foreach (double& g, gammas)
+    BOOST_FOREACH (double& g, gammas)
     {
         if (g != 0)
         {

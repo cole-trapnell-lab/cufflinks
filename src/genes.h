@@ -169,7 +169,7 @@ public:
 	
 	bool has_ref_trans() const
 	{
-		foreach (const Isoform& iso, _isoforms)
+		BOOST_FOREACH (const Isoform& iso, _isoforms)
 		{
 			if (iso.is_ref_trans())
 				return true;
@@ -180,7 +180,7 @@ public:
     double estimated_count() const 
     {
         double est = 0.0;
-        foreach (const Isoform& iso, _isoforms)
+        BOOST_FOREACH (const Isoform& iso, _isoforms)
 		{
 			est += iso.estimated_count(); 
 		}
@@ -191,7 +191,7 @@ public:
     {
         double eff = 0.0;
         double total_fpkm = 0;
-        foreach (const Isoform& iso, _isoforms)
+        BOOST_FOREACH (const Isoform& iso, _isoforms)
 		{
 			eff += iso.FPKM() * iso.effective_length();
             total_fpkm += iso.FPKM();

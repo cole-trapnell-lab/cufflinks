@@ -57,7 +57,7 @@ public:
     ~HitBundle()
     {
         vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
-        foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
+        BOOST_FOREACH(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
         {
             // This bundle and the factory that actually owns the ref_mRNAs
             // are the only objects that should have access to these scaffolds
@@ -73,7 +73,7 @@ public:
             }
         }   
         
-        foreach (MateHit& hit, _hits)
+        BOOST_FOREACH (MateHit& hit, _hits)
 		{
 			delete hit.left_alignment();
 			delete hit.right_alignment();
@@ -81,7 +81,7 @@ public:
         
         for(OpenMates::iterator itr = _open_mates.begin(); itr != _open_mates.end(); ++itr)
 		{
-			foreach (MateHit& hit,  itr->second)
+			BOOST_FOREACH (MateHit& hit,  itr->second)
             {
                 delete hit.left_alignment();
                 delete hit.right_alignment();
@@ -113,7 +113,7 @@ public:
         _hits.clear(); 
         _non_redundant.clear();
         vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
-        foreach(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
+        BOOST_FOREACH(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
         {
             if (ref_scaff.use_count() <= 3)
             {
@@ -247,7 +247,7 @@ public:
 		next_ref_scaff = ref_mRNAs.begin(); 
         next_mask_scaff = mask_gtf_recs.begin();
         
-        foreach(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
+        BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
         {
             ref_scaff->clear_hits();
         }

@@ -241,13 +241,13 @@ void set_relative_fpkms(vector<shared_ptr<Scaffold> >& ref_mRNAs)
         vector<shared_ptr<Scaffold> >& gene = grouped_scaffolds[i];
         
         double total_fpkm = 0.0;
-        foreach(shared_ptr<Scaffold> scaff, gene)
+        BOOST_FOREACH(shared_ptr<Scaffold> scaff, gene)
         {
             total_fpkm += scaff->fpkm();
         }
         if (total_fpkm > 0)
         {
-            foreach (shared_ptr<Scaffold> scaff, gene)
+            BOOST_FOREACH (shared_ptr<Scaffold> scaff, gene)
             {
                 scaff->fpkm(scaff->fpkm() / total_fpkm);
             }
@@ -263,7 +263,7 @@ void driver(vector<FILE*> ref_gtf_files, FILE* sam_out)
 	vector<vector<shared_ptr<Scaffold> > > ref_mRNA_table;
 	vector<pair<string, vector<double> > > sample_count_table;
     
-    foreach (FILE* ref_gtf, ref_gtf_files)
+    BOOST_FOREACH (FILE* ref_gtf, ref_gtf_files)
     {
         vector<shared_ptr<Scaffold> > ref_mRNAs;
         ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, true);
@@ -314,7 +314,7 @@ int main(int argc, char** argv)
     
     vector<FILE*> ref_gtf_files;
     
-    foreach (const string& ref_gtf_in_filename, ref_gtf_filenames)
+    BOOST_FOREACH (const string& ref_gtf_in_filename, ref_gtf_filenames)
     {
         FILE* ref_gtf = NULL;
         if (ref_gtf_in_filename != "")
