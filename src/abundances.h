@@ -334,7 +334,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _total_frags(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0)  {}
 	
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -344,8 +344,7 @@ public:
         _fpkm_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
-		_FPKM_variance(0.0), 
-        _total_frags(0.0) {}
+		_FPKM_variance(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                    const ublas::matrix<double>& iterated_exp_count_covariance,
@@ -439,9 +438,6 @@ public:
     
 	void calculate_abundance(const vector<MateHit>& alignments);
 	
-    double total_frags() const { return _total_frags; }
-    void total_frags(double nf) { _total_frags = nf; }
-    
     const std::set<shared_ptr<ReadGroupProperties const> >& rg_props() const { return _read_group_props; }
     
     void init_rg_props(const std::set<shared_ptr<ReadGroupProperties const> >& rg) 
@@ -510,8 +506,6 @@ private:
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
-    double _total_frags;
-    
     
     vector<double> _null_js_samples;
     

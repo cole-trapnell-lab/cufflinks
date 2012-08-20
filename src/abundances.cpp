@@ -85,7 +85,6 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
     _iterated_exp_count_covariance(iterated_exp_count_covariance),
     _count_covariance(count_covariance),
     _fpkm_covariance(fpkm_covariance),
-    _total_frags(0.0),
     _read_group_props(rg_props)
 {
     // Calling calculate_FPKM_covariance() also estimates cross-replicate
