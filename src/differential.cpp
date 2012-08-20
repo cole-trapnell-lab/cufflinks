@@ -979,7 +979,6 @@ void sample_abundance_worker(const string& locus_tag,
     {
         // Cluster transcripts by CDS
         vector<AbundanceGroup> transcripts_by_cds;
-        ublas::matrix<double> cds_gamma_cov;
         ublas::matrix<double> cds_count_cov;
         ublas::matrix<double> cds_iterated_exp_count_cov;
         ublas::matrix<double> cds_fpkm_cov;
@@ -999,7 +998,6 @@ void sample_abundance_worker(const string& locus_tag,
         
         cluster_transcripts<ConnectByAnnotatedProteinId>(trans_with_p_id,
                                                          transcripts_by_cds,
-                                                         &cds_gamma_cov,
                                                          &cds_iterated_exp_count_cov,
                                                          &cds_count_cov,
                                                          &cds_fpkm_cov,
@@ -1034,7 +1032,6 @@ void sample_abundance_worker(const string& locus_tag,
             }
         }
         AbundanceGroup cds(cds_abundances,
-                           cds_gamma_cov,
                            cds_iterated_exp_count_cov,
                            cds_count_cov,
                            cds_fpkm_cov,
@@ -1063,7 +1060,6 @@ void sample_abundance_worker(const string& locus_tag,
         // Cluster transcripts by start site (TSS)
         vector<AbundanceGroup> transcripts_by_tss;
         
-        ublas::matrix<double> tss_gamma_cov;
         ublas::matrix<double> tss_count_cov;
         ublas::matrix<double> tss_iterated_exp_count_cov;
         ublas::matrix<double> tss_fpkm_cov;
@@ -1083,7 +1079,6 @@ void sample_abundance_worker(const string& locus_tag,
         
         cluster_transcripts<ConnectByAnnotatedTssId>(trans_with_tss,
                                                      transcripts_by_tss,
-                                                     &tss_gamma_cov,
                                                      &tss_iterated_exp_count_cov,
                                                      &tss_count_cov,
                                                      &tss_fpkm_cov,
@@ -1115,7 +1110,6 @@ void sample_abundance_worker(const string& locus_tag,
         }
         
         AbundanceGroup primary_transcripts(primary_transcript_abundances,
-                                           tss_gamma_cov,
                                            tss_iterated_exp_count_cov,
                                            tss_count_cov,
                                            tss_fpkm_cov,
@@ -1248,115 +1242,6 @@ void sample_worker(const RefSequenceTable& rt,
                             perform_cds_analysis,
                             perform_tss_analysis);
     
-#if ENABLE_THREADS
-    variance_info_lock.lock();
-#endif
-    
-    //fprintf(stderr, "\nTesting in %s (%d total tests)\n", locus_tag.c_str(), total_tests);
-    
-	// Add all the transcripts, CDS groups, TSS groups, and genes to their
-    // respective FPKM tracking table.  Whether this is a time series or an
-    // all pairs comparison, we should be calculating and reporting FPKMs for 
-    // all objects in all samples
-    
-//    ///////////////////////////////////////////////
-//    shared_ptr<MassDispersionModel const> disperser = sample_factory.mass_dispersion_model();
-//    pair<double, double> locus_mv = disperser->get_raw_mean_and_var(locus_tag);
-//    if (locus_mv.first != 0 && locus_mv.second != 0)
-//    {
-//        LocusVarianceInfo info;
-//        info.factory_id = factory_id;
-//        info.count_mean = locus_mv.first;
-//        info.count_empir_var = locus_mv.second;
-//        info.locus_count_fitted_var = disperser->scale_mass_variance(info.count_mean);
-//        
-//        double total_iso_scaled_var = 0.0;
-//        
-//        const AbundanceGroup& ab_group = abundance->transcripts;
-//        info.locus_total_frags = ab_group.total_frags();
-//        info.locus_salient_frags = ab_group.salient_frags();
-//        //double group_counts = ab_group.total_frags();
-//        ublas::matrix<double> cov = ab_group.iterated_count_cov();
-//        if (ab_group.num_fragments())
-//            cov /= ab_group.num_fragments();
-//        
-//        double total_length = 0.0;
-//        for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
-//        {
-//            total_length += ab_group.abundances()[i]->effective_length();
-//        }
-//        
-////        if (total_length)
-////        {
-////            for (unsigned i = 0; i < ab_group.abundances().size(); ++ i) 
-////            {
-////                fprintf(stderr, 
-////                        "%lg, %lg, %lg\n", 
-////                        _abundances[i]->gamma(), 
-////                        _abundances[i]->effective_length()/total_length, 
-////                        log2(_abundances[i]->gamma()/(_abundances[i]->effective_length()/total_length)));
-////            }
-////        }
-//        
-//		for (size_t i = 0; i < ab_group.abundances().size(); ++i)
-//		{
-//            
-////            double count_var = cov(i,i);
-////            double max_count_covar = 0.0;
-////            size_t max_covar_idx = 0.0;
-////            for (size_t j = 0; j < cov.size1(); ++j)
-////            {
-////                if (j != i && abs(cov(i,j)) > max_count_covar)
-////                {
-////                    max_count_covar = abs(cov(i,j));
-////                    max_covar_idx = j;
-////                }
-////            }
-//            double count_sharing = 0.0;
-////            if (cov(i,i) != 0 && cov(max_covar_idx,max_covar_idx) != 0)
-////                count_sharing = -1.0 * cov(i,max_covar_idx) / sqrt(cov(i,i) * cov(max_covar_idx,max_covar_idx));
-//            
-//            
-//            if (total_length)
-//                count_sharing = log2(ab_group.abundances()[i]->gamma()/(ab_group.abundances()[i]->effective_length()/total_length));
-//            
-//            shared_ptr<Abundance> ab = ab_group.abundances()[i];
-//            double scaled_var = disperser->scale_mass_variance(ab->num_fragments());
-//			total_iso_scaled_var += scaled_var;
-//            info.gamma.push_back(ab->gamma());
-//            info.gamma_var.push_back(ab_group.gamma_cov()(i,i));
-//            info.count_sharing.push_back(count_sharing);
-//            info.transcript_ids.push_back(ab->description());
-//		}
-//
-//        
-//        const ublas::matrix<double>& gamma_cov = ab_group.gamma_cov();
-//        info.bayes_gamma_trace = 0;
-//        info.empir_gamma_trace = 0;
-//        for (size_t i = 0; i < ab_group.abundances().size(); ++i)
-//        {
-//            //for (size_t j = 0; j < ab_group.abundances().size(); ++j)
-//            {
-//                info.bayes_gamma_trace += gamma_cov(i,i);
-//            }
-//        }
-//
-//        
-//        info.cross_replicate_js = 30;
-//        //assert (abundance->cluster_mass == locus_mv.first);
-//        //assert (total_iso_scaled_var >= info.count_mean);
-//        
-//        info.isoform_fitted_var_sum = total_iso_scaled_var;
-//        info.num_transcripts = ab_group.abundances().size();
-////        info.bayes_gamma_trace = 0;
-////        info.empir_gamma_trace = 0;
-//        locus_variance_info_table.push_back(info);
-//    }
-    
-#if ENABLE_THREADS
-    variance_info_lock.unlock();
-#endif
-    
     ///////////////////////////////////////////////
     
     
@@ -1373,30 +1258,6 @@ void sample_worker(const RefSequenceTable& rt,
     // the testing functor, which will check to see if all the workers
     // are done, and if so, perform the cross sample testing.
     //launcher->test_finished_loci();
-#endif
-}
-
-void dump_locus_variance_info(const string& filename)
-{
-#if ENABLE_THREADS
-    variance_info_lock.lock();
-#endif
-    
-    FILE* fdump = fopen(filename.c_str(), "w");
-    
-    fprintf(fdump, 
-            "condition\tdescription\tlocus_counts\tempir_var\tlocus_fit_var\tsum_iso_fit_var\tcross_replicate_js\tnum_transcripts\tbayes_gamma_trace\tempir_gamma_trace\tcount_mean\tgamma_var\tlocus_salient_frags\tlocus_total_frags\tcount_sharing\n");
-    BOOST_FOREACH (LocusVarianceInfo& L, locus_variance_info_table)
-    {
-        for (size_t i = 0; i < L.gamma.size(); ++i)
-        {
-            fprintf(fdump, "%d\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%d\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n", L.factory_id, L.transcript_ids[i].c_str(), L.count_mean, L.count_empir_var, L.locus_count_fitted_var, L.isoform_fitted_var_sum, L.cross_replicate_js, L.num_transcripts, L.bayes_gamma_trace, L.empir_gamma_trace,L.gamma[i],L.gamma_var[i], L.locus_salient_frags, L.locus_total_frags, L.count_sharing[i]);
-        }
-        
-    }
-    
-#if ENABLE_THREADS
-    variance_info_lock.unlock();
 #endif
 }
 

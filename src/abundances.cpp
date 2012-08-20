@@ -77,7 +77,6 @@ void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 }
 
 AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
-                               const ublas::matrix<double>& gamma_covariance,
                                const ublas::matrix<double>& iterated_exp_count_covariance,
                                const ublas::matrix<double>& count_covariance,
                                const ublas::matrix<double>& fpkm_covariance,
@@ -88,8 +87,6 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
     _iterated_exp_count_covariance(iterated_exp_count_covariance),
     _count_covariance(count_covariance),
     _fpkm_covariance(fpkm_covariance),
-    _gamma_covariance(gamma_covariance),
-    _max_mass_variance(max_mass_variance),
     _salient_frags(0.0),
     _total_frags(0.0),
     _read_group_props(rg_props),
@@ -416,7 +413,6 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 			{
 				if (to_keep[j])
 				{
-					new_cov(next_cov_row,next_cov_col) = _gamma_covariance(i, j);
                     new_iterated_em_count_cov(next_cov_row,next_cov_col) = _iterated_exp_count_covariance(i, j);
                     new_count_cov(next_cov_row,next_cov_col) = _count_covariance(i, j);
                     new_fpkm_cov(next_cov_row,next_cov_col) = _fpkm_covariance(i, j);
@@ -442,8 +438,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
         
     }
 
-	filtered_group = AbundanceGroup(new_ab, 
-                                    new_cov, 
+	filtered_group = AbundanceGroup(new_ab,
                                     new_iterated_em_count_cov, 
                                     new_count_cov, 
                                     new_fpkm_cov,
@@ -1073,7 +1068,6 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
     }
     
     ublas::vector<double> mean_per_rep_gammas;
-    ublas::matrix<double> gamma_covariance;
     std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > mles_for_read_groups;
     std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus > status_per_replicate;
     
@@ -1088,7 +1082,6 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
                                            non_equiv_alignments,
                                            log_conv_factors,
                                            mean_per_rep_gammas,
-                                           gamma_covariance,
                                            mles_for_read_groups,
                                            _count_per_replicate,
                                            status_per_replicate);
@@ -2012,8 +2005,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		{
 			ab->gamma(0);
 		}
-		_gamma_covariance = ublas::zero_matrix<double>(transcripts.size(), 
-                                                       transcripts.size());
         _count_covariance = ublas::zero_matrix<double>(transcripts.size(), 
                                                        transcripts.size());
         _iterated_exp_count_covariance = ublas::zero_matrix<double>(transcripts.size(), 
@@ -2062,8 +2053,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		{
 			ab->gamma(0);
 		}
-		_gamma_covariance = ublas::zero_matrix<double>(transcripts.size(), 
-													  transcripts.size());
+		
         _count_covariance = ublas::zero_matrix<double>(transcripts.size(), 
                                                        transcripts.size());
         _iterated_exp_count_covariance = ublas::zero_matrix<double>(transcripts.size(), 
@@ -2122,10 +2112,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	// MLE/MAP calculation
 	vector<double> updated_gammas = vector<double>(N, 0.0);
     
-    
-	ublas::matrix<double> updated_gamma_cov;
-	updated_gamma_cov = ublas::zero_matrix<double>(N, N);
-    
     ublas::matrix<double> updated_count_cov;
     updated_count_cov = ublas::zero_matrix<double>(N, N);
     ublas::matrix<double> updated_iterated_exp_count_cov;
@@ -2165,9 +2151,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 			{
 				if (scaff_present[j] != N)
 				{
-					updated_gamma_cov(i,j) = _gamma_covariance(scaff_present[i],
-															   scaff_present[j]);
-                    
                     updated_iterated_exp_count_cov(i,j) = _iterated_exp_count_covariance(scaff_present[i],
                                                                                          scaff_present[j]);
                     // Should still be empty but let's do these for consistency:
@@ -2175,8 +2158,6 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
                                                                scaff_present[j]);
                     updated_fpkm_cov(i,j) = _fpkm_covariance(scaff_present[i],
                                                              scaff_present[j]);
-					assert (!isinf(updated_gamma_cov(i,j)));
-					assert (!isnan(updated_gamma_cov(i,j)));
 				}
 			}
 		}
@@ -2217,7 +2198,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 		_abundances[i]->gamma(updated_gammas[i]);
 		_abundances[i]->status(numeric_status);
 	}
-	_gamma_covariance = updated_gamma_cov;
+
     _count_covariance = updated_count_cov;
     _iterated_exp_count_covariance = updated_iterated_exp_count_cov;
     _fpkm_covariance = updated_fpkm_cov;
@@ -2459,11 +2440,7 @@ void AbundanceGroup::calculate_kappas()
     size_t num_members = _abundances.size();
     _kappa_covariance = ublas::matrix<double>(num_members, 
 											  num_members);
-	//cerr << gamma_cov <<endl;
-	
-	assert (_gamma_covariance.size1() == num_members);
-	assert (_gamma_covariance.size2() == num_members);
-	
+
 	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
 	
 	double S_FPKM = 0.0;
@@ -3030,7 +3007,6 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
-                                                   ublas::matrix<double>& gamma_covariance,
                                                    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
                                                    std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate,
                                                    std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus >& status_per_replicate)
@@ -3105,7 +3081,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
     }
 
 //    cerr << "***" << endl;
-    gamma_covariance = ublas::zero_matrix<double>(N,N);
+    
     ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
 //
     BOOST_FOREACH(ublas::vector<double>& mle, mle_gammas)
@@ -3122,20 +3098,7 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
 //        expected_counts += mle * rep_hit_counts[i];
 //    }
 //    expected_counts /= mle_gammas.size();
-//    
-    for (size_t i = 0; i < N; ++i)
-    {
-        for (size_t j = 0; j < N; ++j)
-        {
-            for (size_t k = 0 ; k < mle_gammas.size(); ++k)
-            {
-                double c = (mle_gammas[k](i) - expected_mle_gamma(i)) * (mle_gammas[k](j) - expected_mle_gamma(j));
-                gamma_covariance(i,j) += c;
-            }
-        }
-    }
-    
-    gamma_covariance /= mle_gammas.size();
+//
 //    
 //    ublas::matrix<double> count_covariance = ublas::zero_matrix<double>(N,N);
 //    for (size_t k = 0 ; k < mle_gammas.size(); ++k)

@@ -336,32 +336,12 @@ class AbundanceGroup : public Abundance
 public:
 	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _salient_frags(0.0), _total_frags(0.0) {}
 	
-//	AbundanceGroup(const AbundanceGroup& other) 
-//	{
-//		_abundances = other._abundances;
-//		_iterated_exp_count_covariance = other._iterated_exp_count_covariance;
-//        _count_covariance = other._count_covariance;
-//        _fpkm_covariance = other._fpkm_covariance;
-//        _gamma_covariance = other._gamma_covariance;
-//		_FPKM_conf = other._FPKM_conf;
-//		_kappa = other._kappa;
-//		_kappa_covariance = other._kappa_covariance;
-//		_FPKM_variance = other._FPKM_variance;
-//		_description = other._description;
-//        _max_mass_variance = other._max_mass_variance;
-//        _salient_frags = other._salient_frags;
-//        _total_frags = other._total_frags;
-//        _read_group_props = other._read_group_props;
-//        _assigned_count_samples = other._assigned_count_samples;
-//        _null_js_samples = other._null_js_samples;
-//    }
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
 		_abundances(abundances), 
         _iterated_exp_count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
         _count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
-        _fpkm_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
-		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
+        _fpkm_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
@@ -370,7 +350,6 @@ public:
         _total_frags(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
-				   const ublas::matrix<double>& gamma_covariance,
                    const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
@@ -451,8 +430,6 @@ public:
 												 
 	vector<shared_ptr<Abundance> >& abundances() { return _abundances; }
 	const vector<shared_ptr<Abundance> >& abundances() const { return _abundances; }
-	
-	const ublas::matrix<double>& gamma_cov() const { return _gamma_covariance; }
     
     const ublas::matrix<double>& iterated_count_cov() const { return _iterated_exp_count_covariance; }
     
@@ -537,7 +514,6 @@ private:
     ublas::matrix<double> _count_covariance;
     
     ublas::matrix<double> _fpkm_covariance;
-	ublas::matrix<double> _gamma_covariance;
     
 	ConfidenceInterval _FPKM_conf;
 	
@@ -576,7 +552,6 @@ AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> 
                                                    const vector<MateHit>& nr_alignments,
                                                    const vector<double>& log_conv_factors,
                                                    ublas::vector<double>& gamma_map_estimate,
-                                                   ublas::matrix<double>& gamma_covariance,
                                                    std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
                                                    std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate,
                                                    std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus >& status_per_replicate);
