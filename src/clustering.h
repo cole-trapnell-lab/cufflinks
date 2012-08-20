@@ -124,12 +124,10 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
         const ublas::matrix<double>& trans_iterated_count_cov = transfrags.iterated_count_cov();
         const ublas::matrix<double>& trans_count_cov = transfrags.count_cov();
         const ublas::matrix<double>& trans_fpkm_cov = transfrags.fpkm_cov();
-        const vector<Eigen::VectorXd>& trans_assigned_counts = transfrags.assigned_counts();
         
         ublas::matrix<double>& iterated_count_cov = *new_iterated_count;
         ublas::matrix<double>& count_cov = *new_count;
         ublas::matrix<double>& fpkm_cov = *new_fpkm;
-        vector<Eigen::VectorXd>& assigned_counts = *new_assigned_counts;
         
 		// number of primary transcripts for this gene
 		size_t num_pt = cluster_indices.size();
@@ -137,7 +135,6 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
         count_cov = ublas::zero_matrix<double>(num_pt, num_pt);
         iterated_count_cov = ublas::zero_matrix<double>(num_pt, num_pt);
         fpkm_cov = ublas::zero_matrix<double>(num_pt, num_pt);
-        assigned_counts = vector<Eigen::VectorXd>(trans_assigned_counts.size(), Eigen::VectorXd::Zero(num_pt));
         
 		//cerr << "combined " << combined << endl;
 		
@@ -158,20 +155,6 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
 				}
 			}
 		}
-        for (size_t L = 0; L < cluster_indices.size(); ++L)
-        {
-            const vector<size_t>& L_isos = cluster_indices[L];
-            for (size_t i = 0; i < assigned_counts.size(); ++i)
-            {
-                double count = 0.0;
-                for (size_t l = 0; l < L_isos.size(); ++l)
-                {
-                    count += trans_assigned_counts[i](L_isos[l]);
-                }
-                assigned_counts[i](L) = count;
-            }
-        }
-        
 	}
 }
 

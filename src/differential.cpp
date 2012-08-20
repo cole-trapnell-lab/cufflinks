@@ -1034,9 +1034,7 @@ void sample_abundance_worker(const string& locus_tag,
                            cds_iterated_exp_count_cov,
                            cds_count_cov,
                            cds_fpkm_cov,
-                           max_cds_mass_variance,
-                           rg_props,
-                           cds_assigned_counts);
+                           rg_props);
         
         vector<AbundanceGroup> cds_by_gene;
         
@@ -1096,7 +1094,6 @@ void sample_abundance_worker(const string& locus_tag,
         }
         
         sample.primary_transcripts = transcripts_by_tss;
-        double max_tss_mass_variance = 0.0;
         
         // Group TSS clusters by gene
         vector<shared_ptr<Abundance> > primary_transcript_abundances;
@@ -1111,9 +1108,7 @@ void sample_abundance_worker(const string& locus_tag,
                                            tss_iterated_exp_count_cov,
                                            tss_count_cov,
                                            tss_fpkm_cov,
-                                           max_tss_mass_variance,
-                                           rg_props,
-                                           tss_assigned_counts);
+                                           rg_props);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
         

@@ -345,15 +345,13 @@ public:
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
-        
         _total_frags(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                    const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
-                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props,
-                   const vector<Eigen::VectorXd>& assigned_count_samples); 
+                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props); 
 	
 	AbundanceStatus status() const;
 	void status(AbundanceStatus s)			{ }
@@ -436,8 +434,6 @@ public:
 	const ublas::matrix<double>& kappa_cov() const { return _kappa_covariance; }
     
     const ublas::matrix<double>& fpkm_cov() const { return _fpkm_covariance; }
-	
-	const vector<Eigen::VectorXd>& assigned_counts() const { return _assigned_count_samples; }
     
     const vector<double> null_js_samples() const { return _null_js_samples; }
     
@@ -520,7 +516,6 @@ private:
     vector<double> _null_js_samples;
     
     std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
-    vector<Eigen::VectorXd> _assigned_count_samples;
     
     map<shared_ptr<ReadGroupProperties const>, double> _count_per_replicate;
     //std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;

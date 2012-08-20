@@ -80,15 +80,13 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                                const ublas::matrix<double>& iterated_exp_count_covariance,
                                const ublas::matrix<double>& count_covariance,
                                const ublas::matrix<double>& fpkm_covariance,
-                               const set<shared_ptr<ReadGroupProperties const> >& rg_props,
-                               const vector<Eigen::VectorXd>& assigned_count_samples) :
+                               const set<shared_ptr<ReadGroupProperties const> >& rg_props) :
     _abundances(abundances), 
     _iterated_exp_count_covariance(iterated_exp_count_covariance),
     _count_covariance(count_covariance),
     _fpkm_covariance(fpkm_covariance),
     _total_frags(0.0),
-    _read_group_props(rg_props),
-    _assigned_count_samples(assigned_count_samples)
+    _read_group_props(rg_props)
 {
     // Calling calculate_FPKM_covariance() also estimates cross-replicate
     // count variances
@@ -395,8 +393,6 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
     ublas::matrix<double> new_fpkm_cov = ublas::zero_matrix<double>(num_kept,num_kept);
     
 	vector<shared_ptr<Abundance> > new_ab;
-    
-	vector<Eigen::VectorXd> new_assigned_count_samples(_assigned_count_samples.size(), Eigen::VectorXd::Zero(num_kept));;
 	
     // rebuild covariance matrix and abundance vector after filtration
 	
@@ -420,28 +416,12 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
 			next_cov_row++;
 		}
 	}
-    
-    
-    size_t curr_abundance_idx = 0;
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        if (to_keep[i])
-		{
-            for (size_t j = 0; j < _assigned_count_samples.size(); ++j)
-            {
-                new_assigned_count_samples[j](curr_abundance_idx) = _assigned_count_samples[j](i);
-            }
-            curr_abundance_idx++;
-        }
-        
-    }
 
 	filtered_group = AbundanceGroup(new_ab,
                                     new_iterated_em_count_cov, 
                                     new_count_cov, 
                                     new_fpkm_cov,
-                                    _read_group_props,
-                                    new_assigned_count_samples);
+                                    _read_group_props);
     filtered_group.description(_description);
 }
 
@@ -1719,9 +1699,6 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
 //    std::cerr << expected_counts << std::endl;
 //    cerr << "======" << endl;
     
-        
-    _assigned_count_samples = assigned_counts;
-    
 //    for (size_t i = 0; i < num_count_draws; ++i)
 //    {
 //        cerr << generated_counts[i] << endl;
@@ -2497,98 +2474,6 @@ void AbundanceGroup::calculate_kappas()
 		}
 	}
 
-    
-//	size_t num_members = _abundances.size();
-//	_kappa_covariance = ublas::zero_matrix<double>(num_members, 
-//											  num_members);
-//    if (FPKM() == 0)
-//    {
-//        for (size_t k = 0; k < num_members; ++k)
-//        {
-//            _abundances[k]->kappa(0);
-//        }
-//        return;
-//    }
-//    
-    size_t num_count_draws = _assigned_count_samples.size();
-    vector<Eigen::VectorXd > relative_abundances (num_count_draws, Eigen::VectorXd::Zero(num_members));
-    
-    // We'll use the effective lengths to transform counts into relative abundances,
-    // and then use that to calculate the kappa variances and covariances.
-    Eigen::VectorXd effective_length_recip = Eigen::VectorXd::Zero(_abundances.size());
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        if (_abundances[i]->effective_length() > 0)
-            effective_length_recip(i) = 1.0 / _abundances[i]->effective_length();
-    }
-    
-    for (size_t i = 0; i < num_count_draws; ++i)
-    {
-        
-        Eigen::VectorXd relative_abundance = effective_length_recip.array() * _assigned_count_samples[i].array();
-        double total = relative_abundance.sum();
-        if (total > 0)
-            relative_abundance /= total;
-        //cerr << relative_abundance.transpose() << endl;
-        relative_abundances[i] = relative_abundance;
-    }
-    
-//    
-//    Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
-//    
-//    for (size_t i = 0; i < relative_abundances.size(); ++i)
-//    {
-//        expected_relative_abundances += relative_abundances[i];
-//    }
-//    
-//    if (relative_abundances.size() > 0)
-//    {
-//        expected_relative_abundances /= relative_abundances.size();
-//    }
-//    
-//    for (size_t k = 0; k < num_members; ++k)
-//    {
-//        _abundances[k]->kappa(expected_relative_abundances(k));
-//    }
-    
-//    cerr << "======" << endl;
-//    cerr << "updated expected relative abundances: " << endl;
-//    std::cerr << expected_relative_abundances << std::endl;
-//    cerr << "======" << endl;
-//    
-//    cerr << "simulated kappa deviations: " << endl;
-//    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (_kappa_covariance, i);
-//        cerr << i << " : " << _abundances[i]->kappa() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-    
-//    for (size_t i = 0; i < _abundances.size(); ++i)
-//    {
-//        for (size_t j = 0; j < _abundances.size(); ++j)
-//        {
-//            for (size_t k = 0 ; k < relative_abundances.size(); ++k)
-//            {
-//                double r = (relative_abundances[k](i) - expected_relative_abundances(i)) * (relative_abundances[k](j) - expected_relative_abundances(j));
-//                assert (r <= 1.0 && r >= -1);
-//                _kappa_covariance(i,j) += r;
-//                //assert (_kappa_covariance(i,j) >= -1 * relative_abundances.size() && _kappa_covariance(i,j) <= relative_abundances.size());
-//            }
-//        }
-//    }
-    
-//    cerr << "simulated kappa deviations: " << endl;
-//    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (_kappa_covariance, i);
-//        cerr << i << " : " << _abundances[i]->kappa() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-
-    
-//    _kappa_covariance /= relative_abundances.size();
-    
     vector<double> js_samples;
     
     ublas::vector<double> kappa_mean(_abundances.size());
