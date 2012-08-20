@@ -1142,33 +1142,6 @@ void sample_abundance_worker(const string& locus_tag,
     }
 }
 
-struct LocusVarianceInfo
-{
-    int factory_id;
-    double count_mean;
-    double count_empir_var;
-    double locus_count_fitted_var;
-    double isoform_fitted_var_sum;
-    double cross_replicate_js;
-    int num_transcripts;
-    double bayes_gamma_trace;
-    double empir_gamma_trace;
-    vector<double> gamma;
-    vector<double> gamma_var;
-    vector<double> gamma_bootstrap_var;
-    vector<string> transcript_ids;
-    vector<double> count_sharing;
-    double locus_salient_frags;
-    double locus_total_frags;
-
-};
-
-#if ENABLE_THREADS
-mutex variance_info_lock; // don't modify the above struct without locking here
-#endif
-
-vector<LocusVarianceInfo> locus_variance_info_table;
-
 // We'll use this tracking table to collect per replicate counts for each 
 // transcript, so we can re-fit the variance model.
 FPKMTrackingTable transcript_count_tracking; 

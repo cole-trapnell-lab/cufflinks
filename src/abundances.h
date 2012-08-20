@@ -334,7 +334,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _salient_frags(0.0), _total_frags(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _total_frags(0.0) {}
 	
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -346,7 +346,6 @@ public:
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
         _max_mass_variance(0.0),
-        _salient_frags(0.0),
         _total_frags(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
@@ -448,9 +447,6 @@ public:
     void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
     double max_mass_variance() const { return _max_mass_variance; }
     
-    double salient_frags() const { return _salient_frags; }
-    void salient_frags(double nf) { _salient_frags = nf; }
-    
     double total_frags() const { return _total_frags; }
     void total_frags(double nf) { _total_frags = nf; }
     
@@ -524,7 +520,6 @@ private:
 	double _FPKM_variance;
 	string _description;
     double _max_mass_variance;  // upper bound on the count variance that could come from this group.
-    double _salient_frags;
     double _total_frags;
     
     

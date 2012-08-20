@@ -87,7 +87,6 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
     _iterated_exp_count_covariance(iterated_exp_count_covariance),
     _count_covariance(count_covariance),
     _fpkm_covariance(fpkm_covariance),
-    _salient_frags(0.0),
     _total_frags(0.0),
     _read_group_props(rg_props),
     _assigned_count_samples(assigned_count_samples)
