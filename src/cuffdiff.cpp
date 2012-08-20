@@ -1883,7 +1883,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> gene_exp_diffs;
     fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    if (no_differential == false)
+    //if (no_differential == false)
     {
         for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
         {

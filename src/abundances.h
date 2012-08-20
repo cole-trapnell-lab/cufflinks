@@ -146,20 +146,6 @@ public:
         _sample_mass_fraction(0.0),
         _sample_mass_variance(0.0){}
 	
-//	TranscriptAbundance(const TranscriptAbundance& other)
-//	{
-//		_status = other._status;
-//		_transfrag = other._transfrag;
-//		_FPKM = other._FPKM;
-//		_FPKM_conf = other._FPKM_conf;
-//		_gamma = other._gamma;
-//		_num_fragments = other._num_fragments;
-//		_eff_len = other._eff_len;
-//		_cond_probs = other._cond_probs;
-//        _sample_mass_fraction = other._sample_mass_fraction;
-//        _sample_mass_variance = other._sample_mass_variance;
-//	}
-	
 	~TranscriptAbundance()
 	{
 		if (_cond_probs != NULL)
