@@ -1027,7 +1027,6 @@ void sample_abundance_worker(const string& locus_tag,
             //if (ab_group.description() != "")
             {
                 cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-                max_cds_mass_variance = max(ab_group.max_mass_variance(), max_cds_mass_variance);
                 rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end()); 
             }
         }
@@ -1105,7 +1104,6 @@ void sample_abundance_worker(const string& locus_tag,
         BOOST_FOREACH (AbundanceGroup& ab_group, sample.primary_transcripts)
         {
             primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-            max_tss_mass_variance = max(max_tss_mass_variance, ab_group.max_mass_variance());
             rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
         }
         

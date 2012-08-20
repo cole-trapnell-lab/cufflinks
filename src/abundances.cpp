@@ -80,7 +80,6 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                                const ublas::matrix<double>& iterated_exp_count_covariance,
                                const ublas::matrix<double>& count_covariance,
                                const ublas::matrix<double>& fpkm_covariance,
-                               const long double max_mass_variance,
                                const set<shared_ptr<ReadGroupProperties const> >& rg_props,
                                const vector<Eigen::VectorXd>& assigned_count_samples) :
     _abundances(abundances), 
@@ -441,7 +440,6 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
                                     new_iterated_em_count_cov, 
                                     new_count_cov, 
                                     new_fpkm_cov,
-                                    _max_mass_variance,
                                     _read_group_props,
                                     new_assigned_count_samples);
     filtered_group.description(_description);
@@ -696,12 +694,6 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
         avg_mass_fraction += (scaled_mass / scaled_total_mass);
     }
     
-    // Set the maximum mass variance in case we get an identifiability failure
-    // and need to bound the group expression.
-    if (!_count_per_replicate.empty())
-        max_mass_var /= _count_per_replicate.size();
-    
-    
     double num_replicates = _count_per_replicate.size();
     
     if (num_replicates)
@@ -714,8 +706,7 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
         }
     }
     
-    assert (max_mass_var != 0 || avg_X_g == 0);
-    max_mass_variance(max_mass_var);
+    assert (avg_X_g == 0);
     
     for (size_t j = 0; j < _abundances.size(); ++j)
 	{
@@ -1502,7 +1493,6 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
            
     }
     
-    ublas::matrix<double> assign_probs_transpose = ublas::trans(_assign_probs);
     vector<Eigen::VectorXd > assigned_counts (num_frag_count_draws * num_frag_assignments, Eigen::VectorXd::Zero(_abundances.size()));
     
     Eigen::MatrixXd transcript_cond_probs(_abundances.size(), nr_alignments.size());

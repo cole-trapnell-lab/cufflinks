@@ -334,7 +334,7 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _total_frags(0.0) {}
+	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _total_frags(0.0) {}
 	
 	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
@@ -345,14 +345,13 @@ public:
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
 		_FPKM_variance(0.0), 
-        _max_mass_variance(0.0),
+        
         _total_frags(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
                    const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
-                   const long double max_mass_variance,
                    const std::set<shared_ptr<ReadGroupProperties const > >& rg_props,
                    const vector<Eigen::VectorXd>& assigned_count_samples); 
 	
@@ -444,9 +443,6 @@ public:
     
 	void calculate_abundance(const vector<MateHit>& alignments);
 	
-    void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
-    double max_mass_variance() const { return _max_mass_variance; }
-    
     double total_frags() const { return _total_frags; }
     void total_frags(double nf) { _total_frags = nf; }
     
@@ -514,12 +510,10 @@ private:
 	ConfidenceInterval _FPKM_conf;
 	
 	ublas::matrix<double> _kappa_covariance;
-    ublas::matrix<double> _assign_probs;
     
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
-    double _max_mass_variance;  // upper bound on the count variance that could come from this group.
     double _total_frags;
     
     
