@@ -1458,14 +1458,19 @@ bool is_badly_fit(const Abundance& ab)
     double pooled_fpkm_var = ab.FPKM_variance();
     if (pooled_fpkm == 0 || pooled_fpkm_var <= 0)
         return false;
-    normal norm(pooled_fpkm, sqrt(pooled_fpkm_var));
+    normal norm(0, 1);
     FPKMPerReplicateTable fpkm_by_rep = ab.FPKM_by_replicate();
     for (FPKMPerReplicateTable::const_iterator f_itr = fpkm_by_rep.begin();
          f_itr != fpkm_by_rep.end(); ++f_itr)
     {
         double rep_fpkm = f_itr->second;
-        double p_value = cdf(norm, rep_fpkm);
-        if (p_value < min_outlier_p)
+        //double p_value = cdf(norm, rep_fpkm);
+        double z_score = (rep_fpkm - pooled_fpkm) / sqrt(pooled_fpkm_var);
+        double tail_1 = cdf(norm, z_score);
+        double tail_2 = cdf(norm, -z_score);
+        double p_value = 1.0 - (tail_1 - tail_2);
+        
+        if (p_value < min_outlier_p / fpkm_by_rep.size())
             return true;
     }
     return false;
