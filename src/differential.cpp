@@ -23,7 +23,7 @@
 using namespace std;
 
 double min_read_count = 10;
-double min_outlier_p = 0.01;
+double min_outlier_p = 0.0001;
 
 #if ENABLE_THREADS
 mutex _launcher_lock;
@@ -1470,7 +1470,7 @@ bool is_badly_fit(const Abundance& ab)
         double tail_2 = cdf(norm, -z_score);
         double p_value = 1.0 - (tail_1 - tail_2);
         
-        if (p_value < min_outlier_p / fpkm_by_rep.size())
+        if (p_value < (min_outlier_p / fpkm_by_rep.size()))
             return true;
     }
     return false;
