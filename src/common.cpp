@@ -143,6 +143,10 @@ std::string cmd_str;
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 
+map<string, DispersionMethod> dispersion_method_table;
+string default_dispersion_method= "per-condition";
+DispersionMethod dispersion_method = PER_CONDITION;
+
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
 #else
@@ -338,6 +342,20 @@ void init_library_table()
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
+//string get_dispersion_method_str(DispersionMethod disp_meth)
+//{
+//    switch (disp_meth)
+//    {
+//        case POOLED:
+//            return "pooled";
+//        case PER_CONDITION:
+//            return "per-condition";
+//        case BLIND:
+//            return "blind";
+//    }
+//    return "";
+//}
+
 void print_library_table()
 {
     fprintf (stderr, "\nSupported library types:\n");
@@ -349,12 +367,38 @@ void print_library_table()
         {
             fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
         }
+        else            
+        {
+            fprintf(stderr, "\t%s\n", itr->first.c_str());
+        }
+    }
+}
+
+void init_dispersion_method_table()
+{
+    //dispersion_method_table["pooled"] = POOLED;
+    dispersion_method_table["blind"] = BLIND;
+    dispersion_method_table["per-condition"] = PER_CONDITION;
+}
+
+void print_dispersion_method_table()
+{
+    fprintf (stderr, "\nSupported dispersion methods:\n");
+    for (map<string, DispersionMethod>::const_iterator itr = dispersion_method_table.begin();
+         itr != dispersion_method_table.end();
+         ++itr)
+    {
+        if (itr->first == default_dispersion_method)
+        {
+            fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
+        }
         else
         {
             fprintf(stderr, "\t%s\n", itr->first.c_str());
         }
     }
 }
+
 
 
 // c_seq is complement, *NOT* REVERSE complement

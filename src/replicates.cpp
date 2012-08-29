@@ -652,7 +652,7 @@ fit_dispersion_model_helper(const string& condition_name,
             //fprintf (stderr, "%lg\t%lg\n", raw_means[i], cp->dpr[i]);
             double mean = exp(cm->dpr[i]);
             double fitted_scv = (cp->dpr[i]) / (mean * mean);
-            double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
+            //double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
             //double corrected_scv = cp->dpr[i];
             
             // uncorrected fitted variance:

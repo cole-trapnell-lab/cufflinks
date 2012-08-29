@@ -125,6 +125,7 @@ static struct option long_options[] = {
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
 {"no-length-correction",    no_argument,             0,          OPT_NO_LENGTH_CORRECTION},
 {"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
+{"dispersion-method",       required_argument,             0,          OPT_DISPERSION_METHOD},
 {0, 0, 0, 0} // terminator
 };
 
@@ -156,6 +157,7 @@ void print_usage()
     fprintf(stderr, "  --no-js-tests                Don't perform isoform switching tests                 [ default:  FALSE ]\n");
 	fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
+    fprintf(stderr, "  --dispersion-method          Method used to estimate dispersion models             [ default:  below ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ DEPRECATED      ]\n");
@@ -182,6 +184,7 @@ void print_usage()
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
     print_library_table();
+    print_dispersion_method_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -189,7 +192,7 @@ int parse_options(int argc, char** argv)
     int option_index = 0;
     int next_option;
     string sample_label_list;
-    
+    string dispersion_method_str;
     do {
         next_option = getopt_long_only(argc, argv, short_options, long_options, &option_index);
         if (next_option == -1)     /* Done with options. */
@@ -464,6 +467,11 @@ int parse_options(int argc, char** argv)
                 no_js_tests = true;
                 break;
             }
+            case OPT_DISPERSION_METHOD:
+			{
+				dispersion_method_str = optarg;
+				break;
+			}
 			default:
 				print_usage();
 				return 1;
@@ -488,6 +496,22 @@ int parse_options(int argc, char** argv)
             global_read_properties = &lib_itr->second;
         }
     }
+    
+    if (dispersion_method_str != "")
+    {
+        map<string, DispersionMethod>::iterator disp_itr = 
+		dispersion_method_table.find(dispersion_method_str);
+        if (disp_itr == dispersion_method_table.end())
+        {
+            fprintf(stderr, "Error: Dispersion method %s not supported\n", library_type.c_str());
+            exit(1);
+        }
+        else 
+        {
+            dispersion_method = disp_itr->second;
+        }
+    }
+
     
     if (use_total_mass && use_compat_mass)
     {
@@ -1038,11 +1062,12 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
     for (size_t j = 0; j < scale_factors.size(); ++j)
     {
         double total = 0.0;
-        double sf = scale_factors[j];
+        
         for (size_t i = 0; i < sample_count_table.size(); ++i)
         {
             total += sample_count_table[i].counts[j];
         }
+        //double sf = scale_factors[j];
         //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
     }
     
@@ -1385,13 +1410,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
     }
     
-    if (most_reps == 1)
+    bool pool_all_samples = (most_reps <= 1 || dispersion_method == BLIND);
+    
+    if (pool_all_samples)
     {
+        ProgressBar("Modeling dispersion on all samples as a pool", 0);
         normalize_as_pool(all_read_groups);
     }
-    
-    if (most_reps != 1 && (use_quartile_norm || use_geometric_norm))
+    else if ((use_quartile_norm || use_geometric_norm))
     {
+        ProgressBar("Modeling dispersion by condition", 0);
         vector<LocusCountList> sample_count_table;
         
         //vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
@@ -1458,11 +1486,12 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             }
             
             double total = 0.0;
-            double sf = scale_factors[j];
+            
             for (size_t i = 0; i < sample_count_table.size(); ++i)
             {
                 total += sample_count_table[i].counts[j];
             }
+            //double sf = scale_factors[j];
             //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
         }
         
@@ -2090,6 +2119,7 @@ int main(int argc, char** argv)
     }
     
     init_library_table();
+    init_dispersion_method_table();
     
     min_isoform_fraction = 1e-5;
     

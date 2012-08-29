@@ -224,6 +224,13 @@ enum FLDSource
     DEFAULT
 };
 
+enum DispersionMethod
+{
+    BLIND,
+    PER_CONDITION,
+    POOLED
+};
+
 class EmpDist
 {
 	//Vectors only valid between min and max!
@@ -416,9 +423,14 @@ extern std::map<std::string, ReadGroupProperties> library_type_table;
 
 extern const ReadGroupProperties* global_read_properties;
 
+extern std::map<std::string, DispersionMethod> dispersion_method_table;
+extern DispersionMethod dispersion_method;
+
 void print_library_table();
 void init_library_table();
 
+void print_dispersion_method_table();
+void init_dispersion_method_table();
 
 template<typename T>
 std::string cat_strings(const T& container, const char* delimiter=",")
@@ -499,6 +511,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_LENGTH_CORRECTION    312
 #define OPT_NO_EFFECTIVE_LENGTH_CORRECTION    313
 #define OPT_NO_JS_TESTS             314
+#define OPT_DISPERSION_METHOD       315
 
 
 #endif
