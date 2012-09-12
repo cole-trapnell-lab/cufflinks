@@ -386,7 +386,7 @@ public:
 	int spl_rare; // number of GC-AG, AT-AC and other rare splice site consensi
 	int spl_wrong; //number of "wrong" (unrecognized) splice site consensi
 	int ichains; //number of multi-exon mrnas
-	int ichainTP;
+	int ichainTP; //number of intron chains fully matching reference introns
 	int ichainATP;
 	int mrnaTP;
 	int mrnaATP;
@@ -650,7 +650,7 @@ public:
 	
     //--- accuracy data after compared to ref loci:
   int locusQTP;
-	int locusTP;
+  int locusTP; // +1 if ichainTP+mrnaTP > 0
   int locusAQTP;
 	int locusATP; // 1 if ichainATP + mrnaATP > 0
 	int locusFP;
@@ -665,13 +665,13 @@ public:
 	int mrnaAFN;
 	int mrnaAFP;
 	//---intron level accuracy (comparing the ordered set of splice sites):
-	int ichainTP; // number of qry intron chains covering a reference intron chain
-	// (covering meaning that the ordered set of reference splice sites
-	//  is the same with a ordered subset of the query splice sites)
-	int ichainFP; // number of qry intron chains not covering a reference intron chain
+	int ichainTP; // number of qry intron chains fully matching a reference intron chain
+	
+	int ichainFP; // number of qry intron chains not matching a reference intron chain
 	int ichainFN; // number of ref intron chains in this region not being covered by a reference intron chain
-	// same as above, but approximate -- allowing a 10bp distance error for splice sites
-	int ichainATP;
+	// same as above, but Approximate -- allowing a 5bp distance around splice site coordinates
+	int ichainATP; //as opposed to ichainTP, this also includes ref intron chains which are 
+                   //sub-chains of qry intron chains (rare cases)
 	int ichainAFP;
 	int ichainAFN;
 	//---projected features ---
@@ -819,9 +819,9 @@ public:
 		mrnaTP+=s.mrnaTP;
 		mrnaATP+=s.mrnaATP;
 		locusTP+=s.locusTP;
-    locusQTP+=s.locusQTP;
+		locusQTP+=s.locusQTP;
 		locusATP+=s.locusATP;
-    locusAQTP+=s.locusAQTP;
+		locusAQTP+=s.locusAQTP;
 		m_exons+=s.m_exons;
 		w_exons+=s.w_exons;
 		m_introns+=s.m_introns;

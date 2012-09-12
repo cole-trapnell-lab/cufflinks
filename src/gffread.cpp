@@ -1,5 +1,5 @@
-#include "gff_utils.h"
 #include "GArgs.h"
+#include "gff_utils.h"
 #include <ctype.h>
 // don't care about cdb compression
 //#ifdef ENABLE_COMPRESSION
@@ -422,7 +422,7 @@ bool process_transcript(GFastaDb& gfasta, GffObj& gffrec) {
     int strandNum=0;
     int phaseNum=0;
   CDS_CHECK:
-    cdsnt=gffrec.getSpliced(faseq, true, &seqlen,NULL,NULL,&seglst);
+    cdsnt=gffrec.getSpliced(faseq, true, &seqlen, NULL, NULL, &seglst);
     if (cdsnt==NULL) trprint=false;
     if (validCDSonly) {
        cdsaa=translateDNA(cdsnt, aalen, seqlen);

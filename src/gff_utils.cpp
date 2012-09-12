@@ -179,14 +179,14 @@ GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons, bool
   // fuzzSpan==true: then genomic spans of transcripts are no longer required to be fully contained 
   //                 (i.e. they may extend each-other in opposite directions)
   
-  //if redundancy is found, the "bigger" transcript is returned (otherwise NULL is returned)
+  //if redundancy is detected, the "bigger" transcript is returned (otherwise NULL is returned)
  if (ti.start>=tj.end || tj.start>=ti.end || tj.strand!=ti.strand) return NULL; //no span overlap at all
  int imax=ti.exons.Count()-1;
  int jmax=tj.exons.Count()-1;
  GffObj* bigger=NULL;
  GffObj* smaller=NULL;
  if (matchAllIntrons) {
-   if (imax!=jmax) return false;
+   if (imax!=jmax) return NULL;
    if (ti.covlen>tj.covlen) {
        bigger=&ti;
        if (!fuzzSpan && (ti.start>tj.start || ti.end<tj.end)) return NULL;
@@ -345,7 +345,7 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
                                                bool matchAllIntrons, bool fuzzSpan) {
   GTData* tdata=new GTData(t);
   gdata->tdata.Add(tdata);
-  int tidx=-1;
+  //int tidx=-1;
   /*
   if (debug) {
      GMessage(">>Placing transcript %s\n", t->getID());
@@ -353,8 +353,10 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
      }
     else debugState=false; 
    */
-  if (t->exons.Count()>0)
-              tidx=gdata->rnas.Add(t); //added it in sorted order
+  if (t->exons.Count()>0) {
+              //tidx=
+              gdata->rnas.Add(t); //added it in sorted order
+              }
             else {
               gdata->gfs.Add(t);
               return; //nothing to do with these non-transcript objects

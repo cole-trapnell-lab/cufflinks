@@ -26,7 +26,7 @@ static char msg[4069];
 #endif
 */
 
-
+/*
 int saprintf(char **retp, const char *fmt, ...) {
   va_list argp;
   int len;
@@ -49,6 +49,7 @@ int saprintf(char **retp, const char *fmt, ...) {
   *retp = buf;
   return len;
 }
+*/
 
 //************************* Debug helpers **************************
 // Assert failed routine

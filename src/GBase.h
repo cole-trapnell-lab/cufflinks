@@ -142,6 +142,9 @@ typedef void* pointer;
 typedef unsigned int uint;
 
 typedef int GCompareProc(const pointer item1, const pointer item2);
+typedef long GFStoreProc(const pointer item1, FILE* fstorage); //for serialization
+typedef pointer GFLoadProc(FILE* fstorage); //for deserialization
+
 typedef void GFreeProc(pointer item); //usually just delete,
       //but may also support structures with embedded dynamic members
 
@@ -194,7 +197,7 @@ bool GRealloc(pointer* ptr,unsigned long size); // Resize memory
 void GFree(pointer* ptr); // Free memory, resets ptr to NULL
 
 
-int saprintf(char **retp, const char *fmt, ...);
+//int saprintf(char **retp, const char *fmt, ...);
 
 void GError(const char* format,...); // Error routine (aborts program)
 void GMessage(const char* format,...);// Log message to stderr

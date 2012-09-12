@@ -121,7 +121,7 @@ class GSeqTrack {
      }
 };
 
-char* getFastaFile(int gseq_id);
+//char* getFastaFile(int gseq_id);
 
 // ref globals
 bool haveRefs=false;  //true if a reference annotation (-r) is provide
@@ -172,6 +172,7 @@ int main(int argc, char * const argv[]) {
   if (!IsHeapProfilerRunning())
       HeapProfilerStart("./cuffcompare_dbg.hprof");
 #endif
+
   GArgs args(argc, argv, "XDTMNVGSCKRLhp:c:d:s:i:n:r:o:");
   int e;
   if ((e=args.isError())>0) {
@@ -444,7 +445,8 @@ void show_exons(FILE* f, GffObj& m) {
 
 bool ichainMatch(GffObj* t, GffObj* r, bool& exonMatch, int fuzz=0) {
   //t's intron chain is considered matching to reference r
-  //if r chain is the same or a subset of  t's chain
+  //if r's intron chain is the same with t's chain
+  //OR IF fuzz!=0 THEN also accepts r's intron chain to be a SUB-chain of t's chain
   exonMatch=false;
   int imax=r->exons.Count()-1;
   int jmax=t->exons.Count()-1;
@@ -476,30 +478,31 @@ bool ichainMatch(GffObj* t, GffObj* r, bool& exonMatch, int fuzz=0) {
      break; //here we have an intron overlap
      }
   if (i>1 || i>imax || j>jmax) {
-      return false; //no intron overlaps found at all
-                   //or first intron of ref not overlapping
+      //first ref intron not matching
+      //OR no intron match found at all
+      return false;
       }
   //from now on we expect intron matches up to imax
-  if (i!=j || imax!=jmax) { exmism=true; if (fuzz==0) return false; }
+  if (i!=j || imax!=jmax) { 
+      exmism=true; //not all introns match, so obviously there's "exon" mismatch
+      //FIXME: fuzz!=0 determines acceptance of *partial* chain match 
+      // but only r as a sub-chain of t, not the other way around!
+      if (jmax<imax) return false; // qry ichain cannot be a subchain of ref ichain
+      if (fuzz==0) return false;
+      }
   for (;i<=imax && j<=jmax;i++,j++) {
     if (abs((int)(r->exons[i-1]->end-t->exons[j-1]->end))>fuzz ||
         abs((int)(r->exons[i]->start-t->exons[j]->start))>fuzz) {
-        return false; //just run away
+        return false; //intron mismatch found
         }
     }
   //if we made it here, we have matching intron chains up to MIN(imax,jmax)
-  if (imax!=jmax) {
-     exmism=true;
-     if (jmax<imax) return false; // qry ichain included in ref ichain
-                     else //ref ichain included in qry ichain
-                      if (fuzz==0) return false;
-     }
-  if (exmism) {
-          //exonMatch=false; -- it's default
-          return true;
-          }
-  exonMatch = ( abs((int)(r->exons[0]->start-t->exons[0]->start))<=fuzz &&
+  if (!exmism) {
+          //check terminal exons:
+          exonMatch = ( abs((int)(r->exons[0]->start-t->exons[0]->start))<=fuzz &&
                abs((int)(r->exons[imax]->end-t->exons[jmax]->end))<=fuzz );
+          }
+        // else exonMatch is false
   return true;
 }
 
@@ -700,8 +703,11 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
       if (jend<istart) continue;
       //--- overlap here --
       bool exonMatch=false;
-      if ((super->qmrnas[i]->udata & 3) > 1) continue; //already counted a ichainTP for this qry
-      if (ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch, 5)) { //fuzzy match
+      if ((super->qmrnas[i]->udata & 2)!=0) continue; //already found matching a ref well
+      if ((super->qmrnas[i]->udata & 1) || ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch, 5)) { 
+         //fuzzy match
+         //also accepts the possibility that ref's i-chain be a subset of qry's i-chain
+         super->qmrnas[i]->udata|=1;
          GLocus* qlocus=((CTData*)super->qmrnas[i]->uptr)->locus;
          GLocus* rlocus=((CTData*)super->rmrnas[j]->uptr)->locus;
          if (super->qmrnas[i]->exons.Count()>1) {
@@ -709,20 +715,22 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
               qlocus->ichainATP++;
               rlocus->ichainATP++;
               }
-          if (exonMatch) {
+         if (exonMatch) {
                 super->mrnaATP++;
                 qlocus->mrnaATP++;
                 rlocus->mrnaATP++;
                 }
-         if (ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch)) { //exact match
+         //if ((super->qmrnas[i]->udata & 2)==0 && ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch)) { 
+         if (ichainMatch(super->qmrnas[i],super->rmrnas[j],exonMatch)) { 
+             //exact full match of intron chains
+             super->qmrnas[i]->udata|=2;
              if (super->qmrnas[i]->exons.Count()>1) {
-                super->qmrnas[i]->udata|=1;
+                //fprintf(stdout, "%s\t%s\n", super->qmrnas[i]->getID(), super->rmrnas[j]->getID());
                 super->ichainTP++;
                 qlocus->ichainTP++;
                 rlocus->ichainTP++;
                 }
              if (exonMatch) {
-                super->qmrnas[i]->udata|=2;
                 super->mrnaTP++;
                 qlocus->mrnaTP++;
                 rlocus->mrnaTP++;
@@ -1452,8 +1460,8 @@ void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
     fsn=(100.0*(double)ps->locusATP)/ps->total_rloci; //(ps->locusATP+ps->locusAFN);
     fprintf(fout, "       Locus level: \t%5.1f\t%5.1f\t%5.1f\t%5.1f\n",sn, sp, fsn, fsp);
     //fprintf(fout, "                   (locus TP=%d, total ref loci=%d)\n",ps->locusTP, ps->total_rloci);
-    fprintf(fout, "\nMatching intron chains: %7d\n",ps->ichainTP);
-    fprintf(fout, "         Matching loci: %7d\n",ps->locusTP);
+    fprintf(fout,"\n     Matching intron chains: %7d\n",ps->ichainTP);
+    fprintf(fout,  "              Matching loci: %7d\n",ps->locusTP);
     fprintf(fout, "\n");
     sn=(100.0*(double)ps->m_exons)/(ps->total_rexons);
     fprintf(fout, "          Missed exons: %7d/%d\t(%5.1f%%)\n",ps->m_exons, ps->total_rexons, sn);
@@ -1841,14 +1849,13 @@ void printITrack(FILE* ft, GList<GffObj>& mrnas, int qcount, int& cnum) {
    CTData* qtdata=(CTData*)qt.uptr;
    int qfidx=qtdata->qset;
    char ovlcode=qtdata->classcode;
-   //GList<GffObj> eqchain(false,false,false);
    CEqList* eqchain=qtdata->eqlist;
    GffObj* ref=NULL; //related ref -- it doesn't have to be fully matching
-   GffObj* eqref=NULL; //fully ichain-matching ref
+   //GffObj* eqref=NULL; //fully ichain-matching ref
    GffObj* tcons=NULL; //"consensus" (largest) transcript for a clique
    int tmaxcov=0;
    //eqchain.Add(&qt);
-   eqref=qtdata->eqref;
+   //eqref=qtdata->eqref;
    if (qtdata->ovls.Count()>0 && qtdata->ovls[0]->mrna!=NULL) {
        //if it has ovlcode with a ref
        ref=qtdata->ovls[0]->mrna;

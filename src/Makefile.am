@@ -30,6 +30,7 @@ noinst_HEADERS = \
 	GFastaIndex.h \
 	gff.h \
 	GHash.hh \
+	GVec.hh \
 	GList.hh \
 	GStr.h \
 	assemble.h \
