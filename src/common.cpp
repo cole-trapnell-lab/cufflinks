@@ -144,8 +144,8 @@ map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 
 map<string, DispersionMethod> dispersion_method_table;
-string default_dispersion_method= "per-condition";
-DispersionMethod dispersion_method = PER_CONDITION;
+string default_dispersion_method = "per-condition";
+DispersionMethod dispersion_method = NOT_SET;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;

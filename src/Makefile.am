@@ -102,7 +102,8 @@ noinst_HEADERS = \
     replicates.h \
     multireads.h \
     rounding.h \
-	common.h 
+    negative_binomial_distribution.h \
+	common.h
 
 noinst_LIBRARIES = libcufflinks.a libgc.a
 

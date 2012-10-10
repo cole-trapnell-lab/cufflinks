@@ -1410,7 +1410,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         }
     }
     
-    bool pool_all_samples = (most_reps <= 2 || dispersion_method == BLIND);
+    bool pool_all_samples = ((most_reps <= 2 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
     
     if (pool_all_samples)
     {
