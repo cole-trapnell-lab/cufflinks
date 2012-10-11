@@ -219,7 +219,7 @@ void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abunda
         }
     }
     
-    test_differential(abundances.front()->locus_tag, abundances, *_tests, *_tracking, _samples_are_time_series);
+    test_differential(abundances.front()->locus_tag, abundances, _contrasts, *_tests, *_tracking);
 }
 
 // Note: this routine should be called under lock - it doesn't
@@ -1493,9 +1493,9 @@ bool group_has_record_badly_fit(const AbundanceGroup& ab_group)
 int total_tests = 0;
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
+                       const vector<pair<size_t, size_t> >& contrasts,
 					   Tests& tests,
-					   Tracking& tracking,
-                       bool samples_are_time_series)
+					   Tracking& tracking)
 {
 	if (samples.empty())
 		return;
@@ -1527,372 +1527,367 @@ void test_differential(const string& locus_tag,
     // Perform pairwise significance testing between samples. If this is a
     // time series, only test between successive pairs of samples, as supplied 
     // by the user.
-	for (size_t i = 1; i < samples.size(); ++i)
-	{
-		//bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
-		
-        int sample_to_start_test_against = 0;
-        if (samples_are_time_series)
-            sample_to_start_test_against = i - 1;
-        
-        for (size_t j = sample_to_start_test_against; j < i; ++j)
+    
+    for (size_t contrast_idx = 0; contrast_idx < contrasts.size(); ++contrast_idx)
+    {
+        size_t i = contrasts[contrast_idx].first;
+        size_t j = contrasts[contrast_idx].second;
+        //            bool enough_reads = (samples[i]->cluster_mass >= min_read_count ||
+        //                                 samples[j]->cluster_mass >= min_read_count);
+        assert (samples[i]->transcripts.abundances().size() ==
+                samples[j]->transcripts.abundances().size());
+        for (size_t k = 0; k < samples[i]->transcripts.abundances().size(); ++k)
         {
-//            bool enough_reads = (samples[i]->cluster_mass >= min_read_count ||
-//                                 samples[j]->cluster_mass >= min_read_count);
-            assert (samples[i]->transcripts.abundances().size() == 
-                    samples[j]->transcripts.abundances().size());
-            for (size_t k = 0; k < samples[i]->transcripts.abundances().size(); ++k)
+            const Abundance& curr_abundance = *(samples[j]->transcripts.abundances()[k]);
+            const Abundance& prev_abundance = *(samples[i]->transcripts.abundances()[k]);
+            const string& desc = curr_abundance.description();
+            FPKMTrackingTable::iterator itr = tracking.isoform_fpkm_tracking.find(desc);
+            assert (itr != tracking.isoform_fpkm_tracking.end());
+            
+            bool enough_reads = false;
+            if (curr_abundance.num_fragments() && curr_abundance.effective_length())
             {
-                const Abundance& curr_abundance = *(samples[j]->transcripts.abundances()[k]);
-                const Abundance& prev_abundance = *(samples[i]->transcripts.abundances()[k]);
-                const string& desc = curr_abundance.description();
-                FPKMTrackingTable::iterator itr = tracking.isoform_fpkm_tracking.find(desc);
-                assert (itr != tracking.isoform_fpkm_tracking.end());
-                
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                
-                if (enough_reads)
-                {
-                    if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
-                        enough_reads = false;
-                }
-
-                SampleDifference test;
-                test = get_de_tests(desc,
-                                      itr->second.fpkm_series[j], 
-                                      itr->second.fpkm_series[i],
-                                      //tests.isoform_de_tests[i][j],
-                                      enough_reads);
-#if ENABLE_THREADS
-                test_storage_lock.lock();
-#endif
-                pair<SampleDiffs::iterator, bool> inserted; 
-                inserted = tests.isoform_de_tests[i][j].insert(make_pair(desc,
-                                                                     test)); 
-                
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = curr_abundance.gene_id();
-                meta_data->gene_names = curr_abundance.gene_name();
-                meta_data->protein_ids = curr_abundance.protein_id();
-                meta_data->locus_desc = curr_abundance.locus_tag();
-                meta_data->description = curr_abundance.description();
-                inserted.first->second.meta_data = meta_data;
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
+                double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+            {
+                double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
             }
             
-            for (size_t k = 0; k < samples[i]->cds.size(); ++k)
+            if (enough_reads)
             {
-                const Abundance& curr_abundance = samples[i]->cds[k];
-                const Abundance& prev_abundance = samples[j]->cds[k];
-                
-                const string& desc = curr_abundance.description();
-                FPKMTrackingTable::iterator itr = tracking.cds_fpkm_tracking.find(desc);
-                assert (itr != tracking.cds_fpkm_tracking.end());
-                
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                
-                if (enough_reads)
-                {
-                    if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
-                        enough_reads = false;
-                }
-
-                
-                SampleDifference test;
-                test = get_de_tests(desc,
-                                    itr->second.fpkm_series[j], 
-                                    itr->second.fpkm_series[i],
-                                    //tests.cds_de_tests[i][j],
-                                    enough_reads);
-#if ENABLE_THREADS
-                test_storage_lock.lock();
-#endif
-                
-                pair<SampleDiffs::iterator, bool> inserted; 
-                inserted = tests.cds_de_tests[i][j].insert(make_pair(desc,
-                                                                           test)); 
-                
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = curr_abundance.gene_id();
-                meta_data->gene_names = curr_abundance.gene_name();
-                meta_data->protein_ids = curr_abundance.protein_id();
-                meta_data->locus_desc = curr_abundance.locus_tag();
-                meta_data->description = curr_abundance.description();
-                inserted.first->second.meta_data = meta_data;
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
+                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+                    enough_reads = false;
             }
             
-            for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
-            {
-                const Abundance& curr_abundance = samples[i]->primary_transcripts[k];
-                const Abundance& prev_abundance = samples[j]->primary_transcripts[k];
-                
-                const string& desc = curr_abundance.description();
-                FPKMTrackingTable::iterator itr = tracking.tss_group_fpkm_tracking.find(desc);
-                assert (itr != tracking.tss_group_fpkm_tracking.end());
-                
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                
-                if (enough_reads)
-                {
-                    if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
-                        enough_reads = false;
-                }
-
-                
-                SampleDifference test;
-                test = get_de_tests(desc,
-                             itr->second.fpkm_series[j], 
-                             itr->second.fpkm_series[i],
-                             //tests.tss_group_de_tests[i][j],
-                             enough_reads);
+            SampleDifference test;
+            test = get_de_tests(desc,
+                                itr->second.fpkm_series[j],
+                                itr->second.fpkm_series[i],
+                                //tests.isoform_de_tests[i][j],
+                                enough_reads);
 #if ENABLE_THREADS
-                test_storage_lock.lock();
+            test_storage_lock.lock();
 #endif
-                pair<SampleDiffs::iterator, bool> inserted; 
-                inserted = tests.tss_group_de_tests[i][j].insert(make_pair(desc,
-                                                                      test)); 
-                
-                
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = curr_abundance.gene_id();
-                meta_data->gene_names = curr_abundance.gene_name();
-                meta_data->protein_ids = curr_abundance.protein_id();
-                meta_data->locus_desc = curr_abundance.locus_tag();
-                meta_data->description = curr_abundance.description();
-                inserted.first->second.meta_data = meta_data;
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
-            }
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.isoform_de_tests[i][j].insert(make_pair(desc,
+                                                                     test));
             
-            for (size_t k = 0; k < samples[i]->genes.size(); ++k)
-            {
-                const AbundanceGroup& curr_abundance = samples[i]->genes[k];
-                const AbundanceGroup& prev_abundance = samples[j]->genes[k];
-                const string& desc = curr_abundance.description();
-                FPKMTrackingTable::iterator itr = tracking.gene_fpkm_tracking.find(desc);
-                assert (itr != tracking.gene_fpkm_tracking.end());
-                
-                bool enough_reads = false;
-                if (curr_abundance.num_fragments() && curr_abundance.effective_length())
-                {
-                    double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                if (prev_abundance.num_fragments() && prev_abundance.effective_length())
-                {
-                    double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        enough_reads = true;
-                }
-                    
-                SampleDifference test;
-                test = get_de_tests(desc,
-                             itr->second.fpkm_series[j], 
-                             itr->second.fpkm_series[i],
-                             //tests.gene_de_tests[i][j],
-                             enough_reads);
-#if ENABLE_THREADS
-                test_storage_lock.lock();
-#endif
-                pair<SampleDiffs::iterator, bool> inserted; 
-                inserted = tests.gene_de_tests[i][j].insert(make_pair(desc,
-                                                                      test)); 
-                
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = curr_abundance.gene_id();
-                meta_data->gene_names = curr_abundance.gene_name();
-                meta_data->protein_ids = curr_abundance.protein_id();
-                meta_data->locus_desc = curr_abundance.locus_tag();
-                meta_data->description = curr_abundance.description();
-                inserted.first->second.meta_data = meta_data;
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
-            }
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
-            // Skip all the JS based testing for genes with an isoform switch?
-            if (no_js_tests)
-                continue;
-            
-            // FIXME: the code below will not properly test for differential
-            // splicing/promoter use when a gene (e.g.) occupies two
-            // disjoint bundles.  We need to store the covariance matrices (etc)
-            // in the FPKMContexts to handle that case properly.
-            
-            // Differential promoter use
-            for (size_t k = 0; k < samples[i]->gene_primary_transcripts.size(); ++k)
-            {
-                const AbundanceGroup& curr_abundance = filtered_promoter_groups[i][k];
-                const AbundanceGroup& prev_abundance = filtered_promoter_groups[j][k];
-                const string& desc = curr_abundance.description();
-                
-                bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                     group_has_record_above_thresh(prev_abundance) &&
-                                     group_has_record_badly_fit(curr_abundance) == false &&
-                                     group_has_record_badly_fit(prev_abundance) == false &&
-                                     curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test && 
-                                     prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
-                SampleDifference test;
-                test = get_ds_tests(prev_abundance, 
-                                    curr_abundance,
-                                    enough_reads);
-                
-                // The filtered group might be empty, so let's grab metadata from
-                // the unfiltered group
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = samples[i]->gene_primary_transcripts[k].gene_id();
-                meta_data->gene_names = samples[i]->gene_primary_transcripts[k].gene_name();
-                meta_data->protein_ids = samples[i]->gene_primary_transcripts[k].protein_id();
-                meta_data->locus_desc = samples[i]->gene_primary_transcripts[k].locus_tag();
-                meta_data->description = samples[i]->gene_primary_transcripts[k].description();
-                
-                test.meta_data = meta_data;
-                
+            meta_data->gene_ids = curr_abundance.gene_id();
+            meta_data->gene_names = curr_abundance.gene_name();
+            meta_data->protein_ids = curr_abundance.protein_id();
+            meta_data->locus_desc = curr_abundance.locus_tag();
+            meta_data->description = curr_abundance.description();
+            inserted.first->second.meta_data = meta_data;
 #if ENABLE_THREADS
-                test_storage_lock.lock();
+            test_storage_lock.unlock();
 #endif
-                
-                pair<SampleDiffs::iterator, bool> inserted;
-                inserted = tests.diff_promoter_tests[i][j].insert(make_pair(desc,test)); 
-                inserted.first->second = test;
-                
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
-            }
-            
-            // Differential coding sequence output
-            for (size_t k = 0; k < samples[i]->gene_cds.size(); ++k)
-            {
-                const AbundanceGroup& curr_abundance = filtered_cds_groups[i][k];
-                const AbundanceGroup& prev_abundance = filtered_cds_groups[j][k];
-                const string& desc = curr_abundance.description();
-                
-                bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                     group_has_record_above_thresh(prev_abundance) &&
-                                     group_has_record_badly_fit(curr_abundance) == false &&
-                                     group_has_record_badly_fit(prev_abundance) == false &&
-                                     curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test && 
-                                     prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);                
-                SampleDifference test;
-                test = get_ds_tests(prev_abundance, 
-                                    curr_abundance,
-                                    enough_reads);
-                
-                // The filtered group might be empty, so let's grab metadata from
-                // the unfiltered group
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = samples[i]->gene_cds[k].gene_id();
-                meta_data->gene_names = samples[i]->gene_cds[k].gene_name();
-                meta_data->protein_ids = samples[i]->gene_cds[k].protein_id();
-                meta_data->locus_desc = samples[i]->gene_cds[k].locus_tag();
-                meta_data->description = samples[i]->gene_cds[k].description();
-                
-                test.meta_data = meta_data;
-                
-#if ENABLE_THREADS
-                test_storage_lock.lock();
-#endif
-                pair<SampleDiffs::iterator, bool> inserted;
-                inserted = tests.diff_cds_tests[i][j].insert(make_pair(desc,test)); 
-                inserted.first->second = test;
-                
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
-            }
-            
-            // Differential splicing of primary transcripts
-            for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
-            {
-                const AbundanceGroup& curr_abundance = filtered_primary_trans_groups[i][k];
-                const AbundanceGroup& prev_abundance = filtered_primary_trans_groups[j][k];
-                const string& desc = curr_abundance.description();
-                
-                bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                     group_has_record_above_thresh(prev_abundance) &&
-                                     group_has_record_badly_fit(curr_abundance) == false &&
-                                     group_has_record_badly_fit(prev_abundance) == false &&
-                                     curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test && 
-                                     prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
-                
-                SampleDifference test;
-                test = get_ds_tests(prev_abundance, 
-                                    curr_abundance,
-                                    enough_reads);
-                
-                // The filtered group might be empty, so let's grab metadata from
-                // the unfiltered group
-                shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
-                
-                meta_data->gene_ids = samples[i]->primary_transcripts[k].gene_id();
-                meta_data->gene_names = samples[i]->primary_transcripts[k].gene_name();
-                meta_data->protein_ids = samples[i]->primary_transcripts[k].protein_id();
-                meta_data->locus_desc = samples[i]->primary_transcripts[k].locus_tag();
-                meta_data->description = samples[i]->primary_transcripts[k].description();
-                
-                test.meta_data = meta_data;
-                
-#if ENABLE_THREADS
-                test_storage_lock.lock();
-#endif
-                pair<SampleDiffs::iterator, bool> inserted;
-                inserted = tests.diff_splicing_tests[i][j].insert(make_pair(desc,test)); 
-                inserted.first->second = test;
-                
-#if ENABLE_THREADS
-                test_storage_lock.unlock();
-#endif
-            }
         }
-	}
+        
+        for (size_t k = 0; k < samples[i]->cds.size(); ++k)
+        {
+            const Abundance& curr_abundance = samples[i]->cds[k];
+            const Abundance& prev_abundance = samples[j]->cds[k];
+            
+            const string& desc = curr_abundance.description();
+            FPKMTrackingTable::iterator itr = tracking.cds_fpkm_tracking.find(desc);
+            assert (itr != tracking.cds_fpkm_tracking.end());
+            
+            bool enough_reads = false;
+            if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+            {
+                double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+            {
+                double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            
+            if (enough_reads)
+            {
+                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+                    enough_reads = false;
+            }
+            
+            
+            SampleDifference test;
+            test = get_de_tests(desc,
+                                itr->second.fpkm_series[j],
+                                itr->second.fpkm_series[i],
+                                //tests.cds_de_tests[i][j],
+                                enough_reads);
+#if ENABLE_THREADS
+            test_storage_lock.lock();
+#endif
+            
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.cds_de_tests[i][j].insert(make_pair(desc,
+                                                                 test));
+            
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            
+            meta_data->gene_ids = curr_abundance.gene_id();
+            meta_data->gene_names = curr_abundance.gene_name();
+            meta_data->protein_ids = curr_abundance.protein_id();
+            meta_data->locus_desc = curr_abundance.locus_tag();
+            meta_data->description = curr_abundance.description();
+            inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+            test_storage_lock.unlock();
+#endif
+        }
+        
+        for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
+        {
+            const Abundance& curr_abundance = samples[i]->primary_transcripts[k];
+            const Abundance& prev_abundance = samples[j]->primary_transcripts[k];
+            
+            const string& desc = curr_abundance.description();
+            FPKMTrackingTable::iterator itr = tracking.tss_group_fpkm_tracking.find(desc);
+            assert (itr != tracking.tss_group_fpkm_tracking.end());
+            
+            bool enough_reads = false;
+            if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+            {
+                double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+            {
+                double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            
+            if (enough_reads)
+            {
+                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+                    enough_reads = false;
+            }
+            
+            
+            SampleDifference test;
+            test = get_de_tests(desc,
+                                itr->second.fpkm_series[j],
+                                itr->second.fpkm_series[i],
+                                //tests.tss_group_de_tests[i][j],
+                                enough_reads);
+#if ENABLE_THREADS
+            test_storage_lock.lock();
+#endif
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.tss_group_de_tests[i][j].insert(make_pair(desc,
+                                                                       test));
+            
+            
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            
+            meta_data->gene_ids = curr_abundance.gene_id();
+            meta_data->gene_names = curr_abundance.gene_name();
+            meta_data->protein_ids = curr_abundance.protein_id();
+            meta_data->locus_desc = curr_abundance.locus_tag();
+            meta_data->description = curr_abundance.description();
+            inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+            test_storage_lock.unlock();
+#endif
+        }
+        
+        for (size_t k = 0; k < samples[i]->genes.size(); ++k)
+        {
+            const AbundanceGroup& curr_abundance = samples[i]->genes[k];
+            const AbundanceGroup& prev_abundance = samples[j]->genes[k];
+            const string& desc = curr_abundance.description();
+            FPKMTrackingTable::iterator itr = tracking.gene_fpkm_tracking.find(desc);
+            assert (itr != tracking.gene_fpkm_tracking.end());
+            
+            bool enough_reads = false;
+            if (curr_abundance.num_fragments() && curr_abundance.effective_length())
+            {
+                double frags_per_kb = curr_abundance.num_fragments() / (curr_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            if (prev_abundance.num_fragments() && prev_abundance.effective_length())
+            {
+                double frags_per_kb = prev_abundance.num_fragments() / (prev_abundance.effective_length() / 1000.0);
+                if (frags_per_kb >= min_read_count)
+                    enough_reads = true;
+            }
+            
+            SampleDifference test;
+            test = get_de_tests(desc,
+                                itr->second.fpkm_series[j],
+                                itr->second.fpkm_series[i],
+                                //tests.gene_de_tests[i][j],
+                                enough_reads);
+#if ENABLE_THREADS
+            test_storage_lock.lock();
+#endif
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.gene_de_tests[i][j].insert(make_pair(desc,
+                                                                  test));
+            
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            
+            meta_data->gene_ids = curr_abundance.gene_id();
+            meta_data->gene_names = curr_abundance.gene_name();
+            meta_data->protein_ids = curr_abundance.protein_id();
+            meta_data->locus_desc = curr_abundance.locus_tag();
+            meta_data->description = curr_abundance.description();
+            inserted.first->second.meta_data = meta_data;
+#if ENABLE_THREADS
+            test_storage_lock.unlock();
+#endif
+        }
+        
+        // Skip all the JS based testing for genes with an isoform switch?
+        if (no_js_tests)
+            continue;
+        
+        // FIXME: the code below will not properly test for differential
+        // splicing/promoter use when a gene (e.g.) occupies two
+        // disjoint bundles.  We need to store the covariance matrices (etc)
+        // in the FPKMContexts to handle that case properly.
+        
+        // Differential promoter use
+        for (size_t k = 0; k < samples[i]->gene_primary_transcripts.size(); ++k)
+        {
+            const AbundanceGroup& curr_abundance = filtered_promoter_groups[i][k];
+            const AbundanceGroup& prev_abundance = filtered_promoter_groups[j][k];
+            const string& desc = curr_abundance.description();
+            
+            bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
+                                 group_has_record_above_thresh(prev_abundance) &&
+                                 group_has_record_badly_fit(curr_abundance) == false &&
+                                 group_has_record_badly_fit(prev_abundance) == false &&
+                                 curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
+                                 prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
+            SampleDifference test;
+            test = get_ds_tests(prev_abundance,
+                                curr_abundance,
+                                enough_reads);
+            
+            // The filtered group might be empty, so let's grab metadata from
+            // the unfiltered group
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            
+            meta_data->gene_ids = samples[i]->gene_primary_transcripts[k].gene_id();
+            meta_data->gene_names = samples[i]->gene_primary_transcripts[k].gene_name();
+            meta_data->protein_ids = samples[i]->gene_primary_transcripts[k].protein_id();
+            meta_data->locus_desc = samples[i]->gene_primary_transcripts[k].locus_tag();
+            meta_data->description = samples[i]->gene_primary_transcripts[k].description();
+            
+            test.meta_data = meta_data;
+            
+#if ENABLE_THREADS
+            test_storage_lock.lock();
+#endif
+            
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.diff_promoter_tests[i][j].insert(make_pair(desc,test));
+            inserted.first->second = test;
+            
+#if ENABLE_THREADS
+            test_storage_lock.unlock();
+#endif
+        }
+        
+        // Differential coding sequence output
+        for (size_t k = 0; k < samples[i]->gene_cds.size(); ++k)
+        {
+            const AbundanceGroup& curr_abundance = filtered_cds_groups[i][k];
+            const AbundanceGroup& prev_abundance = filtered_cds_groups[j][k];
+            const string& desc = curr_abundance.description();
+            
+            bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
+                                 group_has_record_above_thresh(prev_abundance) &&
+                                 group_has_record_badly_fit(curr_abundance) == false &&
+                                 group_has_record_badly_fit(prev_abundance) == false &&
+                                 curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
+                                 prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
+            SampleDifference test;
+            test = get_ds_tests(prev_abundance,
+                                curr_abundance,
+                                enough_reads);
+            
+            // The filtered group might be empty, so let's grab metadata from
+            // the unfiltered group
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            
+            meta_data->gene_ids = samples[i]->gene_cds[k].gene_id();
+            meta_data->gene_names = samples[i]->gene_cds[k].gene_name();
+            meta_data->protein_ids = samples[i]->gene_cds[k].protein_id();
+            meta_data->locus_desc = samples[i]->gene_cds[k].locus_tag();
+            meta_data->description = samples[i]->gene_cds[k].description();
+            
+            test.meta_data = meta_data;
+            
+#if ENABLE_THREADS
+            test_storage_lock.lock();
+#endif
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.diff_cds_tests[i][j].insert(make_pair(desc,test));
+            inserted.first->second = test;
+            
+#if ENABLE_THREADS
+            test_storage_lock.unlock();
+#endif
+        }
+        
+        // Differential splicing of primary transcripts
+        for (size_t k = 0; k < samples[i]->primary_transcripts.size(); ++k)
+        {
+            const AbundanceGroup& curr_abundance = filtered_primary_trans_groups[i][k];
+            const AbundanceGroup& prev_abundance = filtered_primary_trans_groups[j][k];
+            const string& desc = curr_abundance.description();
+            
+            bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
+                                 group_has_record_above_thresh(prev_abundance) &&
+                                 group_has_record_badly_fit(curr_abundance) == false &&
+                                 group_has_record_badly_fit(prev_abundance) == false &&
+                                 curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
+                                 prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
+            
+            SampleDifference test;
+            test = get_ds_tests(prev_abundance, 
+                                curr_abundance,
+                                enough_reads);
+            
+            // The filtered group might be empty, so let's grab metadata from
+            // the unfiltered group
+            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            
+            meta_data->gene_ids = samples[i]->primary_transcripts[k].gene_id();
+            meta_data->gene_names = samples[i]->primary_transcripts[k].gene_name();
+            meta_data->protein_ids = samples[i]->primary_transcripts[k].protein_id();
+            meta_data->locus_desc = samples[i]->primary_transcripts[k].locus_tag();
+            meta_data->description = samples[i]->primary_transcripts[k].description();
+            
+            test.meta_data = meta_data;
+            
+#if ENABLE_THREADS
+            test_storage_lock.lock();
+#endif
+            pair<SampleDiffs::iterator, bool> inserted;
+            inserted = tests.diff_splicing_tests[i][j].insert(make_pair(desc,test)); 
+            inserted.first->second = test;
+            
+#if ENABLE_THREADS
+            test_storage_lock.unlock();
+#endif
+        }
+        
+    }
 }

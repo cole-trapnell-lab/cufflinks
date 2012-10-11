@@ -117,7 +117,10 @@ public:
     IntType operator()(URNG& urng) const
     {
         boost::random::gamma_distribution<RealType> gamma(_k, (1-_p)/_p);
-        boost::random::poisson_distribution<IntType, RealType> poisson(gamma(urng));
+        double lambda = gamma(urng);
+        if (lambda <= 0)
+            return 0;
+        boost::random::poisson_distribution<IntType, RealType> poisson(lambda);
         return poisson(urng);
     }
     

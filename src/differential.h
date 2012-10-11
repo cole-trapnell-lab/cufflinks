@@ -112,6 +112,7 @@ struct Outfiles
     
     FILE* run_info_out;
     FILE* read_group_info_out;
+    FILE* bias_out;
 };
 
 struct Tests
@@ -200,15 +201,15 @@ private:
     
 public:
     TestLauncher(int num_samples,
+                 const vector<pair<size_t, size_t> >& contrasts,
                  Tests* tests,
                  Tracking* tracking,
-                 bool ts,
                  ProgressBar* p_bar) 
     :
     _orig_workers(num_samples),
+    _contrasts(contrasts),
     _tests(tests),
     _tracking(tracking),
-    _samples_are_time_series(ts),
     _p_bar(p_bar)
     {
     }
@@ -234,12 +235,12 @@ private:
     launcher_sample_table::iterator find_locus(const string& locus_id);
     
     int _orig_workers;
+    vector<pair<size_t, size_t> > _contrasts;
     launcher_sample_table _samples;
     Tests* _tests;
     Tracking* _tracking;
-    bool _samples_are_time_series;
     ProgressBar* _p_bar;
-
+    
 };
 
 extern double min_read_count;
@@ -253,9 +254,9 @@ void sample_worker(const RefSequenceTable& rt,
 
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
+                       const vector<pair<size_t, size_t> >& constrasts,
 					   Tests& tests,
-					   Tracking& tracking,
-                       bool samples_are_time_series);
+					   Tracking& tracking);
 
 void dump_locus_variance_info(const string& filename);
 

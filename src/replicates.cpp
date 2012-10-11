@@ -531,7 +531,7 @@ fit_dispersion_model_helper(const string& condition_name,
     
     SCVInterpolator true_to_est_scv_table;
     
-    build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
+    //build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
     
     setuplf();  
     

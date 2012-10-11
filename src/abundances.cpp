@@ -1949,23 +1949,23 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
         
         long double count_var = 0.0;
         
-        // Check that we aren't below what the BNB model says we ought to be at
-        bool numerics_ok = estimate_count_variance(count_var,
-                                                   _abundances[i]->gamma(),
-                                                   _iterated_exp_count_covariance(i,i),
-                                                   num_fragments(),
-                                                   _abundances[i]->mass_variance(),
-                                                   _abundances[i]->effective_length());
-        //        if (numerics_ok == false)
-        //        {
-        //            fprintf(stderr, "Warning: BNB has no analytic solution\n");
-        //        }
-        
-        if (numerics_ok && _count_covariance(i,i) < ceil(count_var))
-        {
-            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
-            _count_covariance(i,i) = ceil(count_var);
-        }
+//        // Check that we aren't below what the BNB model says we ought to be at
+//        bool numerics_ok = estimate_count_variance(count_var,
+//                                                   _abundances[i]->gamma(),
+//                                                   _iterated_exp_count_covariance(i,i),
+//                                                   num_fragments(),
+//                                                   _abundances[i]->mass_variance(),
+//                                                   _abundances[i]->effective_length());
+//        //        if (numerics_ok == false)
+//        //        {
+//        //            fprintf(stderr, "Warning: BNB has no analytic solution\n");
+//        //        }
+//        
+//        if (numerics_ok && _count_covariance(i,i) < ceil(count_var))
+//        {
+//            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
+//            _count_covariance(i,i) = ceil(count_var);
+//        }
     }
     
     //    for (size_t i = 0; i < _abundances.size(); ++i)

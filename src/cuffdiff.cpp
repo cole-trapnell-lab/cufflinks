@@ -76,6 +76,7 @@ static struct option long_options[] = {
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 {"mask-file",                required_argument,		 0,			 'M'},
+{"contrast-file",           required_argument,		 0,			 'C'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},
@@ -144,6 +145,7 @@ void print_usage()
 	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
+    fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n");
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "  -N/--upper-quartile-norm     use upper-quartile normalization                      [ default:  FALSE ]\n");
@@ -253,6 +255,11 @@ int parse_options(int argc, char** argv)
 			case 'M':
 			{
 				mask_gtf_filename = optarg;
+				break;
+			}
+            case 'C':
+			{
+				contrast_filename = optarg;
 				break;
 			}
 			case 'v':
@@ -1246,7 +1253,113 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
     }
 }
 
-void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
+void parse_contrast_file(FILE* contrast_file,
+                         const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
+                         vector<pair<size_t, size_t > >& contrasts)
+{
+    
+    char pBuf[10 * 1024];
+    size_t non_blank_lines_read = 0;
+    
+    map<string, pair<string, string> > contrast_table;
+    map<string, size_t > factor_name_to_factory_idx;
+    
+    for (size_t j = 0; j < factories.size(); ++j)
+    {
+        string factor_name = factories[j]->condition_name();
+        if (factor_name_to_factory_idx.find(factor_name) != factor_name_to_factory_idx.end())
+        {
+            fprintf(stderr, "Error in contrast file: condition names must be unique! (%s is duplicated)", factor_name.c_str());
+            exit(1);
+        }
+        factor_name_to_factory_idx[factor_name] = j;
+    }
+    
+    while (fgets(pBuf, 10*1024, contrast_file))
+    {
+        if (strlen(pBuf) > 0)
+        {
+            char* nl = strchr(pBuf, '\n');
+            if (nl)
+                *nl = 0;
+            non_blank_lines_read++;
+            vector<string> columns;
+            tokenize(pBuf, "\t", columns);
+            
+            if (non_blank_lines_read == 1)
+                continue;
+            
+            if (columns.size() < 2)
+            {
+                if (columns.size() > 0)
+                    fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                else
+                    continue;
+            }
+            
+            string factor_1 = columns[0];
+            string factor_2 = columns[1];
+            
+            if (columns.size() >= 3)
+            {
+                string contrast_name = columns[2];
+                contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
+            }
+            else
+            {
+                char contrast_name[1024];
+                sprintf(contrast_name, "contrast_%lu", contrast_table.size());
+                contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
+            }
+        }
+    }
+    
+    for (map<string, pair<string, string> >::const_iterator itr = contrast_table.begin();
+         itr != contrast_table.end(); ++itr)
+    {
+        string factor_1 = itr->second.first;
+        map<string, size_t >::iterator f1_itr = factor_name_to_factory_idx.find(factor_1);
+        if (f1_itr == factor_name_to_factory_idx.end())
+        {
+            fprintf (stderr, "Error: condition %s not found among samples\n", factor_1.c_str());
+            exit(1);
+        }
+        size_t f1_idx = f1_itr->second;
+        
+        string factor_2 = itr->second.second;
+        map<string, size_t >::iterator f2_itr = factor_name_to_factory_idx.find(factor_2);
+        if (f2_itr == factor_name_to_factory_idx.end())
+        {
+            fprintf (stderr, "Error: condition %s not found among samples\n", factor_2.c_str());
+            exit(1);
+        }
+        size_t f2_idx = f2_itr->second;
+        contrasts.push_back(make_pair(f1_idx, f2_idx));
+    }
+ }
+
+void init_default_contrasts(const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
+                            bool samples_are_time_series,
+                            vector<pair<size_t, size_t > >& contrasts)
+{
+    
+    for (size_t i = 1; i < factories.size(); ++i)
+    {
+        //bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
+
+        int sample_to_start_test_against = 0;
+
+        if (samples_are_time_series)
+            sample_to_start_test_against = i - 1;
+
+        for (size_t j = sample_to_start_test_against; j < i; ++j)
+        {
+            contrasts.push_back(make_pair(i,j));
+        }
+    }
+}
+
+void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 
 	ReadTable it;
@@ -1316,7 +1429,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        
         bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
@@ -1336,6 +1448,17 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         if (mask_gtf) 
             fac->set_mask_rnas(mask_rnas);
     }
+    
+    vector<pair<size_t, size_t > > contrasts;
+    if (contrast_file != NULL)
+    {
+        parse_contrast_file(contrast_file, bundle_factories, contrasts);
+    }
+    else
+    {
+        init_default_contrasts(bundle_factories, samples_are_time_series, contrasts);
+    }
+    
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
@@ -1390,6 +1513,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
 #endif
+    
+    
     
     int most_reps = -1;
     int most_reps_idx = 0;
@@ -1601,18 +1726,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         // on a per condition basis.  External scale factors are set to 1.0 
         // by default
     }
-
-
-//    if (use_quartile_norm || use_raw_mapped_norm)
-//    {
-//        // scale the normalized masses so that both quantile total count normalization
-//        // are roughly on the same numerical scale
-//        BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-//        {
-//            long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
-//            rg_props->normalized_map_mass(new_norm);
-//        }
-//    }
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
@@ -1668,15 +1781,12 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
     Tracking tracking;
     
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), NULL, &tracking, samples_are_time_series, &p_bar));
+    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
     
 	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
-			//p_bar.update("",1);
-            //test_launcher = shared_ptr<TestLauncher>(new TestLauncher((int)bundle_factories.size(), NULL, &tracking, samples_are_time_series, &p_bar));
-                                                     
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
 			quantitate_next_locus(rt, bundle_factories, test_launcher);
 			bool more_loci_remain = false;
@@ -1773,6 +1883,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         bias_run = false;
 	}
     
+    fprintf(outfiles.bias_out, "condition_name\treplicate_num\tparam\tpos_i\tpos_j\tvalue\n");
+    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    {
+        if (rg_props->bias_learner())
+            rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
+    }
+    
 //    if (use_isoform_count_dispersion)
 //    {
 //        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
@@ -1812,7 +1929,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
                                                      
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), &tests, &tracking, samples_are_time_series, &p_bar));
+    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, &tests, &tracking, &p_bar));
                                                                                               
 	while (true)
 	{
@@ -1858,165 +1975,154 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> isoform_exp_diffs;
     fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_iso_de_tests += tests.isoform_de_tests[i][j].size();
-                extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
-            }
+            total_iso_de_tests += tests.isoform_de_tests[i][j].size();
+            extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
         }
-        
-        int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
-        fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
-        
-        for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+    }
+    
+    int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
+    fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
+    
+    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
-            }
+            print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
         }
-	}
+    }
+
     
 	int total_group_de_tests = 0;
 	vector<SampleDifference*> tss_group_exp_diffs;
     fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-	//if (no_differential == false)
+    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                extract_sample_diffs(tests.tss_group_de_tests[i][j], tss_group_exp_diffs);
-                total_group_de_tests += tests.tss_group_de_tests[i][j].size();
-            }
-        }
-    
-        int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
-        fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
-        
-        for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
-        {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
-            }
+            extract_sample_diffs(tests.tss_group_de_tests[i][j], tss_group_exp_diffs);
+            total_group_de_tests += tests.tss_group_de_tests[i][j].size();
         }
     }
+
+    int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
+    fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
+    
+    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
+        {
+            print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
+        }
+    }
+
 	
 	int total_gene_de_tests = 0;
 	vector<SampleDifference*> gene_exp_diffs;
     fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    if (no_differential == false)
+
+    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_gene_de_tests += tests.gene_de_tests[i][j].size();
-                extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
-            }
+            total_gene_de_tests += tests.gene_de_tests[i][j].size();
+            extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
         }
-    
-        //fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
-        int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
-        fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
-        
-        for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
-        {        
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
-            }
-        }	
     }
+
+    //fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+    int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
+    fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
+    
+    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+    {        
+        for (size_t j = 0; j < i; ++j)
+        {
+            print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
+        }
+    }	
+
     
 	int total_cds_de_tests = 0;
 	vector<SampleDifference*> cds_exp_diffs;
     fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_cds_de_tests += tests.cds_de_tests[i][j].size();
-                extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
-            }
+            total_cds_de_tests += tests.cds_de_tests[i][j].size();
+            extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
         }
+    }
+
+
+    int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
+    fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
     
-    
-        int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
-        fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
-        
-        for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
-            }
+            print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
         }
-	}
+    }
+
     
 	int total_diff_splice_tests = 0;
 	vector<SampleDifference*> splicing_diffs;
     fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
-                extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
-            }
+            total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
+            extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
         }
+    }
+
+    int splicing_tests = fdr_significance(FDR, splicing_diffs);
+    fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
     
-        int splicing_tests = fdr_significance(FDR, splicing_diffs);
-        fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
-        
-        for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
-                print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
-            }
+            const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
+            print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
         }
-	}
+    }
+
     
 	int total_diff_promoter_tests = 0;
 	vector<SampleDifference*> promoter_diffs;
     fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
-                extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
-            }
+            total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
+            extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
         }
+    }
+
+
+    int promoter_tests = fdr_significance(FDR, promoter_diffs);
+    fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
     
-    
-        int promoter_tests = fdr_significance(FDR, promoter_diffs);
-        fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
-        
-        for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
+    for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
-            }
+            print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
         }
     }
     
@@ -2024,29 +2130,27 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> cds_use_diffs;
     fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    //if (no_differential == false)
+    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
-                total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
-            }
-        }
-	
-    
-        int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
-        fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
-        
-        for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
-        {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
-            }
+            extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
+            total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
         }
     }
+
+
+    int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
+    fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
+    
+    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
+        {
+            print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
+        }
+    }
+
 	
     // FPKM tracking
     
@@ -2204,7 +2308,19 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 	}
+
 	
+    FILE* contrast_file = NULL;
+	if (contrast_filename != "")
+	{
+		contrast_file = fopen(contrast_filename.c_str(), "r");
+		if (!contrast_file)
+		{
+			fprintf(stderr, "Error: cannot open contrast file %s for reading\n",
+					contrast_filename.c_str());
+			exit(1);
+		}
+	}
     
 	
 	// Note: we don't want the assembly filters interfering with calculations 
@@ -2465,8 +2581,20 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	outfiles.run_info_out = run_info_out;
+
+    char bias_name[filename_buf_size];
+	sprintf(bias_name, "%s/bias_params.info", output_dir.c_str());
+	FILE* bias_out = fopen(bias_name, "w");
+	if (!bias_out)
+	{
+		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
+				bias_name);
+		exit(1);
+	}
+	outfiles.bias_out = bias_out;
+
     
-    driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
+    driver(ref_gtf, mask_gtf, contrast_file, sam_hit_filenames, outfiles);
 	
 #if 0
     if (emit_count_tables)

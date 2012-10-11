@@ -1543,7 +1543,11 @@ bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr
 	{
 		bl_ptr->normalizeParameters();
         if (output_bias_params)
-            bl_ptr->output();
+        {
+            
+            FILE* output_file = fopen(string(output_dir + "/bias_params.info").c_str(), "w");
+            bl_ptr->output(output_file, user_label, 0);
+        }
 	}
 	
 	fclose(ftranscripts);
