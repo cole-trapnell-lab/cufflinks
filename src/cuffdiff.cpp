@@ -58,9 +58,9 @@ bool use_isoform_count_dispersion = true;
 
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:";
+const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:C:";
 #else
-const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:";
+const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:C:";
 #endif
 
 
@@ -75,7 +75,7 @@ static struct option long_options[] = {
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
-{"mask-file",                required_argument,		 0,			 'M'},
+{"mask-file",               required_argument,		 0,			 'M'},
 {"contrast-file",           required_argument,		 0,			 'C'},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
