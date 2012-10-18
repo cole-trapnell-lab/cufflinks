@@ -108,6 +108,7 @@ extern int min_reps_for_js_test;
 extern bool no_effective_length_correction;
 extern bool no_length_correction;
 extern bool no_js_tests;
+extern bool background_subtraction;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -375,11 +376,17 @@ public:
         _mass_dispersion_model = nm; 
     }
     
-    const std::vector<LocusCount>& common_scale_counts() { return _common_scale_counts; }
-    void common_scale_counts(const std::vector<LocusCount>& counts) { _common_scale_counts = counts; }
+    const std::vector<LocusCount>& common_scale_compatible_counts() { return _common_scale_compatible_counts; }
+    void common_scale_compatible_counts(const std::vector<LocusCount>& counts) { _common_scale_compatible_counts = counts; }
     
-    const std::vector<LocusCount>& raw_counts() { return _raw_counts; }
-    void raw_counts(const std::vector<LocusCount>& counts) { _raw_counts = counts; }
+    const std::vector<LocusCount>& common_scale_total_counts() { return _common_scale_total_counts; }
+    void common_scale_total_counts(const std::vector<LocusCount>& counts) { _common_scale_total_counts = counts; }
+    
+    const std::vector<LocusCount>& raw_compatible_counts() { return _raw_compatible_counts; }
+    void raw_compatible_counts(const std::vector<LocusCount>& counts) { _raw_compatible_counts = counts; }
+    
+    const std::vector<LocusCount>& raw_total_counts() { return _raw_total_counts; }
+    void raw_total_counts(const std::vector<LocusCount>& counts) { _raw_total_counts = counts; }
     
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
@@ -411,8 +418,10 @@ private:
     double _internal_scale_factor;
     double _external_scale_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
-    std::vector<LocusCount> _common_scale_counts;
-    std::vector<LocusCount> _raw_counts;
+    std::vector<LocusCount> _common_scale_compatible_counts;
+    std::vector<LocusCount> _common_scale_total_counts;
+    std::vector<LocusCount> _raw_compatible_counts;
+    std::vector<LocusCount> _raw_total_counts;
     
     bool _complete_fragments;
     

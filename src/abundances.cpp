@@ -1033,6 +1033,7 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
 {
 	vector<shared_ptr<Abundance> > transcripts;
+    
 	get_transfrags(transcripts);
 	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
     

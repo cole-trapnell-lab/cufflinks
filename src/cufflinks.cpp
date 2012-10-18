@@ -1605,11 +1605,13 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    vector<LocusCount> count_table;
+    vector<LocusCount> compatible_count_table;
+    vector<LocusCount> total_count_table;
+    
     if (bundle_mode != HIT_DRIVEN)
-        inspect_map(bundle_factory, NULL, count_table);
+        inspect_map(bundle_factory, NULL, compatible_count_table, total_count_table);
     else 
-        inspect_map(bundle_factory, &bad_introns, count_table);
+        inspect_map(bundle_factory, &bad_introns, compatible_count_table, total_count_table);
     
     
     verbose_msg("%d ReadHits still live\n", num_deleted);

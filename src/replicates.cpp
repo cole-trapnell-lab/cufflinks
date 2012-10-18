@@ -23,30 +23,30 @@ boost::mutex _locfit_lock;
 #endif
 
 MassDispersionModel::MassDispersionModel(const std::string& name,
-                                         const std::vector<double>& scaled_mass_means, 
-                                         const std::vector<double>& scaled_raw_variances,
+                                         const std::vector<double>& scaled_compatible_mass_means, 
+                                         const std::vector<double>& scaled_compatible_variances,
                                          const std::vector<double>& scaled_mass_variances) 
 {
     _name = name;
     
-    if (scaled_mass_means.size() != scaled_mass_variances.size())
+    if (scaled_compatible_mass_means.size() != scaled_mass_variances.size())
     {
         fprintf (stderr, "Error: dispersion model table is malformed\n");
     }
     
     double last_val = 0;
-    for (size_t i = 0; i < scaled_mass_means.size(); i++)
+    for (size_t i = 0; i < scaled_compatible_mass_means.size(); i++)
     {
         
-        if (last_val > scaled_mass_means[i])
+        if (last_val > scaled_compatible_mass_means[i])
         {
             fprintf (stderr, "Error: DispersionModel input is malformed\n");
         }
         
-        if ( i == 0 || last_val < scaled_mass_means[i])
+        if ( i == 0 || last_val < scaled_compatible_mass_means[i])
         {
-            _scaled_mass_means.push_back(scaled_mass_means[i]);
-            _scaled_raw_variances.push_back(scaled_raw_variances[i]);
+            _scaled_compatible_mass_means.push_back(scaled_compatible_mass_means[i]);
+            _scaled_compatible_variances.push_back(scaled_compatible_variances[i]);
             _scaled_mass_variances.push_back(scaled_mass_variances[i]);
         }
         else
@@ -54,7 +54,7 @@ MassDispersionModel::MassDispersionModel(const std::string& name,
             // skip this element if it's equal to what we've already seen
         }
         
-        last_val = scaled_mass_means[i];
+        last_val = scaled_compatible_mass_means[i];
     }
 }
 
@@ -63,19 +63,19 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     if (scaled_mass <= 0)
         return 0.0;
     
-    if (_scaled_mass_means.size() < 2 || _scaled_mass_variances.size() < 2)
+    if (_scaled_compatible_mass_means.size() < 2 || _scaled_mass_variances.size() < 2)
     {
         return scaled_mass; // revert to poisson.
     }
-    if (scaled_mass > _scaled_mass_means.back())
+    if (scaled_mass > _scaled_compatible_mass_means.back())
     {
         // extrapolate to the right
         // off the right end
-        double x1_mean = _scaled_mass_means[_scaled_mass_means.size()-2];
-        double x2_mean = _scaled_mass_means[_scaled_mass_means.size()-1];
+        double x1_mean = _scaled_compatible_mass_means[_scaled_compatible_mass_means.size()-2];
+        double x2_mean = _scaled_compatible_mass_means[_scaled_compatible_mass_means.size()-1];
         
-        double y1_var = _scaled_mass_variances[_scaled_mass_means.size()-2];
-        double y2_var = _scaled_mass_variances[_scaled_mass_means.size()-1];
+        double y1_var = _scaled_mass_variances[_scaled_compatible_mass_means.size()-2];
+        double y2_var = _scaled_mass_variances[_scaled_compatible_mass_means.size()-1];
         double slope = 0.0;                
         if (x2_mean != x1_mean)
         {
@@ -85,19 +85,19 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         {
             assert (false); // should have a unique'd table
         }
-        double mean_interp = _scaled_mass_variances[_scaled_mass_means.size()-1] -
-        slope*(scaled_mass - _scaled_mass_means.size()-1);
+        double mean_interp = _scaled_mass_variances[_scaled_compatible_mass_means.size()-1] -
+        slope*(scaled_mass - _scaled_compatible_mass_means.size()-1);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
         assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
     }
-    else if (scaled_mass < _scaled_mass_means.front())
+    else if (scaled_mass < _scaled_compatible_mass_means.front())
     {
         // extrapolate to the left
         // off the left end?
-        double x1_mean = _scaled_mass_means[0];
-        double x2_mean = _scaled_mass_means[1];
+        double x1_mean = _scaled_compatible_mass_means[0];
+        double x2_mean = _scaled_compatible_mass_means[1];
         
         double y1_var = _scaled_mass_variances[0];
         double y2_var = _scaled_mass_variances[1];
@@ -110,7 +110,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         {
             assert (false); // should have a unique'd table
         }
-        double mean_interp = _scaled_mass_variances[0] - slope*(_scaled_mass_means[0] - scaled_mass);
+        double mean_interp = _scaled_mass_variances[0] - slope*(_scaled_compatible_mass_means[0] - scaled_mass);
         if (mean_interp < scaled_mass)
             mean_interp = scaled_mass;
 
@@ -119,13 +119,13 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     }
     
     vector<double>::const_iterator lb;
-    lb = lower_bound(_scaled_mass_means.begin(), 
-                     _scaled_mass_means.end(), 
+    lb = lower_bound(_scaled_compatible_mass_means.begin(), 
+                     _scaled_compatible_mass_means.end(), 
                      scaled_mass);
-    if (lb < _scaled_mass_means.end())
+    if (lb < _scaled_compatible_mass_means.end())
     {
-        int d = lb - _scaled_mass_means.begin();
-        if (*lb == scaled_mass || lb == _scaled_mass_means.begin())
+        int d = lb - _scaled_compatible_mass_means.begin();
+        if (*lb == scaled_mass || lb == _scaled_compatible_mass_means.begin())
         {
             double var = _scaled_mass_variances[d];
             if (var < scaled_mass) // revert to poisson if underdispersed
@@ -143,17 +143,17 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
             fprintf(stderr, "ARG d < 0, d = %d \n", d);
         }
         
-        if (d >= _scaled_mass_means.size())
+        if (d >= _scaled_compatible_mass_means.size())
         {
-            fprintf(stderr, "ARG d >= _scaled_mass_means.size(), d = %d\n", d);
+            fprintf(stderr, "ARG d >= _scaled_compatible_mass_means.size(), d = %d\n", d);
         }
         if (d >= _scaled_mass_variances.size())
         {
             fprintf(stderr, "ARG d >= _scaled_mass_variances.size(), d = %d\n", d);
         }
         
-        double x1_mean = _scaled_mass_means[d];
-        double x2_mean = _scaled_mass_means[d + 1];
+        double x1_mean = _scaled_compatible_mass_means[d];
+        double x2_mean = _scaled_compatible_mass_means[d + 1];
         
         double y1_var = _scaled_mass_variances[d];
         double y2_var = _scaled_mass_variances[d + 1];
@@ -166,7 +166,7 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
         {
             assert (false); // should have a unique'd table
         }
-        double mean_interp = _scaled_mass_variances[d] + slope*(scaled_mass - _scaled_mass_means[d]);
+        double mean_interp = _scaled_mass_variances[d] + slope*(scaled_mass - _scaled_compatible_mass_means[d]);
         if (mean_interp < scaled_mass) // revert to poisson if underdispersed
             mean_interp = scaled_mass;
  
@@ -181,12 +181,12 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
 }
 
 void transform_counts_to_common_scale(const vector<double>& scale_factors,
-                                      vector<LocusCountList>& sample_count_table)
+                                      vector<LocusCountList>& sample_compatible_count_table)
 {
     // Transform raw counts to the common scale
-    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
     {
-        LocusCountList& p = sample_count_table[i];
+        LocusCountList& p = sample_compatible_count_table[i];
         for (size_t j = 0; j < p.counts.size(); ++j)
         {
             assert (scale_factors.size() > j);
@@ -195,15 +195,15 @@ void transform_counts_to_common_scale(const vector<double>& scale_factors,
     }
 }
 
-void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
+void calc_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
                           vector<double>& scale_factors)
 {
     
-    vector<double> log_geom_means(sample_count_table.size(), 0.0);
+    vector<double> log_geom_means(sample_compatible_count_table.size(), 0.0);
     
-    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
     {
-        const LocusCountList& p = sample_count_table[i];
+        const LocusCountList& p = sample_compatible_count_table[i];
         
         for (size_t j = 0; j < p.counts.size(); ++j)
         {
@@ -220,11 +220,11 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_count_table,
     for (size_t j = 0; j < scale_factors.size(); ++j)
     {
         vector<double> tmp_counts;
-        for (size_t i = 0; i < sample_count_table.size(); ++i)
+        for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
         {
-            if (log_geom_means[i] && !isinf(log_geom_means[i]) && !isnan(log_geom_means[i]) && floor(sample_count_table[i].counts[j]))
+            if (log_geom_means[i] && !isinf(log_geom_means[i]) && !isnan(log_geom_means[i]) && floor(sample_compatible_count_table[i].counts[j]))
             {
-                double gm = (double)log(floor(sample_count_table[i].counts[j])) - log_geom_means[i];
+                double gm = (double)log(floor(sample_compatible_count_table[i].counts[j])) - log_geom_means[i];
                 assert (!isinf(gm));
                 tmp_counts.push_back(gm);
             }
@@ -520,32 +520,13 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
     }
 }
 
-boost::shared_ptr<MassDispersionModel const> 
-fit_dispersion_model_helper(const string& condition_name,
-                            const vector<double>& scale_factors,
-                            const vector<LocusCountList>& sample_count_table,
-                            bool exclude_zero_samples)
+void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compatible_count_table,
+                                    vector<pair<double, double> >& means_and_vars)
 {
-    vector<pair<double, double> > raw_means_and_vars;
-    map<string, pair<double, double> > labeled_mv_table;
     
-    SCVInterpolator true_to_est_scv_table;
-    
-    //build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
-    
-    setuplf();  
-    
-    double xim = 0;
-    BOOST_FOREACH(double s, scale_factors)
+    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
     {
-        if (s)
-            xim += 1.0 / s;
-    }
-    xim /= scale_factors.size();
-    
-    for (size_t i = 0; i < sample_count_table.size(); ++i)
-    {
-        const LocusCountList& p = sample_count_table[i];
+        const LocusCountList& p = sample_compatible_count_table[i];
         double mean = accumulate(p.counts.begin(), p.counts.end(), 0.0);
         if (mean > 0.0 && p.counts.size() > 0)
             mean /= p.counts.size();
@@ -563,56 +544,67 @@ fit_dispersion_model_helper(const string& condition_name,
             var /= p.counts.size();
             var *= p.counts.size() / (p.counts.size() - 1);
         }
-        labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-        //double scv = (var - xim * mean) / (mean * var);
-        if (mean > 0 && var > 0.0 && /*scv > 0 && */ (!exclude_zero_samples || num_non_zero == p.counts.size()))
-        {
-            //fprintf(stderr, "%s\t%lg\t%lg\n", p.locus_desc.c_str(), mean, var);
-            raw_means_and_vars.push_back(make_pair(mean, var));
-        }
+        means_and_vars.push_back(make_pair(mean, var));
     }
+}
+                              
+boost::shared_ptr<MassDispersionModel>
+fit_dispersion_model_helper(const string& condition_name,
+                            const vector<double>& scale_factors,
+                            const vector<LocusCountList>& sample_compatible_count_table)
+{
+    vector<pair<double, double> > compatible_means_and_vars;
     
-    if (raw_means_and_vars.size() < min_loci_for_fitting)
+    SCVInterpolator true_to_est_scv_table;
+    
+    //build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
+    
+    setuplf();  
+    
+    calculate_count_means_and_vars(sample_compatible_count_table, compatible_means_and_vars);
+
+    if (compatible_means_and_vars.size() < min_loci_for_fitting)
     {
         shared_ptr<MassDispersionModel> disperser;
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
         
-        for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
-             itr != labeled_mv_table.end();
-             ++itr)
-        {
-            string label = itr->first;
-            pair<double, double> p = itr->second;
-            disperser->set_raw_mean_and_var(itr->first, itr->second);
-        }
+//        for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
+//             itr != labeled_mv_table.end();
+//             ++itr)
+//        {
+//            string label = itr->first;
+//            pair<double, double> p = itr->second;
+//            disperser->set_compatible_mean_and_var(itr->first, p);
+//        }
         //fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
         return disperser;
     }
     
-    sort(raw_means_and_vars.begin(), raw_means_and_vars.end());
+    sort(compatible_means_and_vars.begin(), compatible_means_and_vars.end());
     
-    vector<double> raw_means(raw_means_and_vars.size(), 0.0);
-    vector<double> raw_variances(raw_means_and_vars.size(), 0.0);
-    vector<double> raw_scvs(raw_means_and_vars.size(), 0.0);
+    vector<double> compatible_count_means;
+    vector<double> raw_variances;
     
-    for(size_t i = 0; i < raw_means_and_vars.size(); ++i)
+    for(size_t i = 0; i < compatible_means_and_vars.size(); ++i)
     {
-        raw_means[i] = raw_means_and_vars[i].first;
-        raw_variances[i] = raw_means_and_vars[i].second;
-        raw_scvs[i] = (raw_variances[i] - xim * raw_means[i]) / (raw_means[i] * raw_means[i]);
+        if (compatible_means_and_vars[i].first > 0 && compatible_means_and_vars[i].second > 0.0)
+        {
+            compatible_count_means.push_back(compatible_means_and_vars[i].first);
+            raw_variances.push_back(compatible_means_and_vars[i].second);
+        }
     }
     
-    vector<double> fitted_values(raw_means_and_vars.size(), 0.0);
+    vector<double> fitted_values;
     
     // WARNING: locfit doesn't like undescores - need camel case for 
     // variable names
     
     char namebuf[256];
     sprintf(namebuf, "countMeans");
-    vari* cm = createvar(namebuf,STREGULAR,raw_means.size(),VDOUBLE);
-    for (size_t i = 0; i < raw_means.size(); ++i)
+    vari* cm = createvar(namebuf,STREGULAR,compatible_count_means.size(),VDOUBLE);
+    for (size_t i = 0; i < compatible_count_means.size(); ++i)
     {
-        cm->dpr[i] = log(raw_means[i]);
+        cm->dpr[i] = log(compatible_count_means[i]);
     }
     
     //sprintf(namebuf, "countSCV");
@@ -636,80 +628,62 @@ fit_dispersion_model_helper(const string& condition_name,
     //sprintf(locfit_cmd, "prfit x fhat h nlx");
     //locfit_dispatch(locfit_cmd);
     
+    double xim = 0;
+    BOOST_FOREACH(double s, scale_factors)
+    {
+        if (s)
+            xim += 1.0 / s;
+    }
+    xim /= scale_factors.size();
+    
     int n = 0;
     sprintf(namebuf, "fittedVars");
     vari* cp = findvar(namebuf, 1, &n);
     assert(cp != NULL);
     for (size_t i = 0; i < cp->n; ++i)
     {
-        // var[NB] = mu + mu^2 / (fitted_disp^-1)
-        // var[NB] = mu + mu^2 * fitted_disp
-        //double fitted_dispersion = 0;
-        //if (cp->dpr[i] >0)
-        //    fitted_dispersion = 1.0 / fitted_dispersion;
         if (cp->dpr[i] >= 0)
         {
-            //fprintf (stderr, "%lg\t%lg\n", raw_means[i], cp->dpr[i]);
             double mean = exp(cm->dpr[i]);
-            double fitted_scv = (cp->dpr[i]) / (mean * mean);
-            //double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
-            //double corrected_scv = cp->dpr[i];
-            
-            // uncorrected fitted variance:
-            fitted_values[i] = mean + (cp->dpr[i] - xim * mean);
-            
-//            double k = 1.0/corrected_scv;
-//            double p = k / (k + 100000);
-//            double r = (100000 * p) / (1-p);
-//            
-//            double hypothetical_mean = p*r/ (1-p);
-//            double hypothetical_var = p*r/((1-p)*(1-p));
-//            double raw_var = hypothetical_var - hypothetical_mean;
-            // bias corrected fitted_variance:
-            //fitted_values[i] = mean + raw_var;
-            //fprintf(stderr, "mean = %lg, variance = %lg, uncorrected scv = %lg, corrected scv = %lg, var = %lg\n", mean, cp->dpr[i], fitted_scv, corrected_scv, fitted_values[i]);
+            fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
         }
         else
         {
-            fitted_values[i] = raw_means[i];
+            fitted_values.push_back(compatible_count_means[i]);
         }
     }
     
     shared_ptr<MassDispersionModel> disperser;
-    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(condition_name, raw_means, raw_variances, fitted_values));
+    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(condition_name, compatible_count_means, raw_variances, fitted_values));
     if (poisson_dispersion)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
     
-    for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
-         itr != labeled_mv_table.end();
-         ++itr)
-    {
-        string label = itr->first;
-        pair<double, double> p = itr->second;
-        disperser->set_raw_mean_and_var(itr->first, itr->second);
-    }
-    
-    //pair<double, double> p = disperser->get_raw_mean_and_var("chr1:11873-29961");
+//    for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
+//         itr != labeled_mv_table.end();
+//         ++itr)
+//    {
+//        string label = itr->first;
+//        disperser->set_compatible_mean_and_var(itr->first, itr->second);
+//    }
     
     return disperser;
 }
 
-boost::shared_ptr<MassDispersionModel const> 
+boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model(const string& condition_name,
                      const vector<double>& scale_factors,
-                     const vector<LocusCountList>& sample_count_table,
-                     bool exclude_zero_samples)
+                     const vector<LocusCountList>& sample_compatible_count_table)
 {
 //    
 //#if ENABLE_THREADS
 //	boost::mutex::scoped_lock lock(_locfit_lock);
 //#endif
-    for (size_t i = 0; i < sample_count_table.size(); ++i)
+    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
     {
-        if (sample_count_table[i].counts.size() <= 1)
+        if (sample_compatible_count_table[i].counts.size() <= 1)
         {
             // only one replicate - no point in fitting variance
-            return shared_ptr<MassDispersionModel const>(new PoissonDispersionModel(condition_name));
+            return shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
         }
     }
 #if ENABLE_THREADS
@@ -719,7 +693,7 @@ fit_dispersion_model(const string& condition_name,
     ProgressBar p_bar("Modeling fragment count overdispersion.",0);
     
     int max_transcripts = 0;
-    BOOST_FOREACH(const LocusCountList& L, sample_count_table)
+    BOOST_FOREACH(const LocusCountList& L, sample_compatible_count_table)
     {
         if (L.num_transcripts > max_transcripts)
         {
@@ -727,85 +701,10 @@ fit_dispersion_model(const string& condition_name,
         }
     }
     
-    // This vector holds a dispersion model for each transcript multiplicity. 
-    // The model for multiplicity is fitted to all the data, and lives at index 0 in the 
-    // vector below.
-    vector<boost::shared_ptr<MassDispersionModel const> > disp_models(max_transcripts+1);
-
-    for (size_t i = 0; i < max_transcripts; i++)
-    {
-        boost::shared_ptr<MassDispersionModel const> model;
-        if (i != 0)
-        {
-//            vector<LocusCountList> sample_count_subtable;
-//            BOOST_FOREACH(const LocusCountList& L, sample_count_table)
-//            {
-//                if (L.num_transcripts == i)
-//                {
-//                    sample_count_subtable.push_back(L);
-//                }
-//            }
-//            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_subtable);
-        }
-        else
-        {
-            model = fit_dispersion_model_helper(condition_name, scale_factors, sample_count_table, exclude_zero_samples);
-        }
-        disp_models[i] = model;
-    }
-    
-    if (emit_count_tables)
-    {
-//        string cond_count_filename = output_dir + "/" + condition_name + "_counts.txt";
-//        
-//        FILE* sample_count_file = fopen(cond_count_filename.c_str(), "w");
-//        
-//        if (sample_count_file)
-//        {
-//            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\tnum_transcripts\n");
-//            for (size_t j = 0; j < max_transcripts; j++)
-//            {
-//                boost::shared_ptr<MassDispersionModel const> model = disp_models[j];
-//                const vector<double>& means = model->scaled_mass_means();
-//                const vector<double>& raw_vars  = model->scaled_raw_variances();
-//                
-//                for (size_t i = 0; i < means.size(); ++i)
-//                {
-//                    fprintf(sample_count_file, "%lg\t%lg\t%lg\t%lu\n", 
-//                            means[i], 
-//                            raw_vars[i],
-//                            model->scale_mass_variance(means[i]),
-//                            j);
-//                }
-//            }
-//            fclose(sample_count_file);
-//        } 
-
-        string cond_count_filename = output_dir + "/" + condition_name + "_counts.txt";
-        
-        FILE* sample_count_file = fopen(cond_count_filename.c_str(), "w");
-        
-        if (sample_count_file)
-        {
-            fprintf(sample_count_file, "count_mean\tcount_var\tfitted_var\n");
-            
-            boost::shared_ptr<MassDispersionModel const> model = disp_models[0];
-            const vector<double>& means = model->scaled_mass_means();
-            const vector<double>& raw_vars  = model->scaled_raw_variances();
-            
-            for (size_t i = 0; i < means.size(); ++i)
-            {
-                fprintf(sample_count_file, "%lg\t%lg\t%lg\n", 
-                        means[i], 
-                        raw_vars[i],
-                        model->scale_mass_variance(means[i]));
-            }
-            fclose(sample_count_file);
-        } 
-    }
+    boost::shared_ptr<MassDispersionModel>  model = fit_dispersion_model_helper(condition_name, scale_factors, sample_compatible_count_table);
 
 #if ENABLE_THREADS
     _locfit_lock.unlock();
 #endif
-    return disp_models[0];
+    return model;
 }

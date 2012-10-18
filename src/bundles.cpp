@@ -1561,7 +1561,8 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 
 void inspect_map(BundleFactory& bundle_factory,
                  BadIntronTable* bad_introns,
-                 vector<LocusCount>& count_table,
+                 vector<LocusCount>& compatible_count_table,
+                 vector<LocusCount>& total_count_table,
                  bool progress_bar,
                  bool show_stats)
 {
@@ -1634,7 +1635,8 @@ void inspect_map(BundleFactory& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size()));
+            compatible_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.compatible_mass()), bundle.ref_scaffolds().size()));
+            total_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size()));
 		}
         
         if (!valid_bundle)

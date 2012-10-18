@@ -921,6 +921,11 @@ void sample_abundance_worker(const string& locus_tag,
         abundances.push_back(ab);
     }
     
+//    BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+//    {
+//        
+//    }
+    
     sample.transcripts = AbundanceGroup(abundances);
     sample.transcripts.init_rg_props(rg_props);
     

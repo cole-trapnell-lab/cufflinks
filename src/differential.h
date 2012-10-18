@@ -113,6 +113,7 @@ struct Outfiles
     FILE* run_info_out;
     FILE* read_group_info_out;
     FILE* bias_out;
+    FILE* var_model_out;
 };
 
 struct Tests
