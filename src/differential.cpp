@@ -921,12 +921,52 @@ void sample_abundance_worker(const string& locus_tag,
         abundances.push_back(ab);
     }
     
-//    BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
-//    {
-//        
-//    }
+    if (background_subtraction)
+    {
+        vector<shared_ptr<Scaffold> > pseudo_primary_transcripts;
+        BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+        {
+            vector<AugmentedCuffOp> ops;
+            ops.push_back(AugmentedCuffOp(CUFF_MATCH, s->left(), s->right() - s->left()));
+            
+            shared_ptr<Scaffold> pt = shared_ptr<Scaffold>(new Scaffold(s->ref_id(), s->strand(), ops, false, true));
+            pt->annotated_trans_id(s->annotated_trans_id()+"_pseudoprimary");
+            pt->annotated_gene_id(s->annotated_gene_id()+"_pseudoprimary");
+            pseudo_primary_transcripts.push_back(pt);
+        }
+        vector<shared_ptr<Scaffold> >::iterator new_end = unique(pseudo_primary_transcripts.begin(),
+                                                                 pseudo_primary_transcripts.end(),
+                                                                 StructurallyEqualScaffolds());
+        pseudo_primary_transcripts.erase(new_end, pseudo_primary_transcripts.end());
+        vector<shared_ptr<Scaffold> >(pseudo_primary_transcripts).swap(pseudo_primary_transcripts);
+        BOOST_FOREACH(shared_ptr<Scaffold> s, pseudo_primary_transcripts)
+        {
+            TranscriptAbundance* pT = new TranscriptAbundance;
+            pT->transfrag(s);
+            shared_ptr<Abundance> ab(pT);
+            ab->description(s->annotated_trans_id());
+            ab->locus_tag(locus_tag);
+            abundances.push_back(ab);
+        }
+    }
+    
+
     
     sample.transcripts = AbundanceGroup(abundances);
+    
+    if (background_subtraction)
+    {
+        vector<bool> non_pseudo(abundances.size(), false);
+        for(size_t i = 0; i < abundances.size(); ++i)
+        {
+            shared_ptr<Abundance>  ab = abundances[i];
+            non_pseudo[i] = ab->transfrag()->is_pseudo_primary() == false;
+        }
+        AbundanceGroup kept_abundances;
+        sample.transcripts.filter_group(non_pseudo, kept_abundances);
+        sample.transcripts = kept_abundances;
+    }
+    
     sample.transcripts.init_rg_props(rg_props);
     
     vector<MateHit> hits_in_cluster;

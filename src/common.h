@@ -523,6 +523,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_EFFECTIVE_LENGTH_CORRECTION    313
 #define OPT_NO_JS_TESTS             314
 #define OPT_DISPERSION_METHOD       315
+#define OPT_NO_BACKGROUND_SUBTRACTION 316
 
 
 #endif

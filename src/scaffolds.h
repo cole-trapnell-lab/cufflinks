@@ -325,7 +325,7 @@ public:
 	
 	// For manually constructing scaffolds, for example when a reference is 
 	// available
-	Scaffold(RefID ref_id, CuffStrand strand, const vector<AugmentedCuffOp>& ops, bool is_ref = false)
+	Scaffold(RefID ref_id, CuffStrand strand, const vector<AugmentedCuffOp>& ops, bool is_ref = false, bool is_pseudo_primary = false)
 	: _ref_id(ref_id), 
 	  _augmented_ops(ops), 
 	  _strand(strand),
@@ -333,6 +333,7 @@ public:
 	{
 		_has_intron = has_intron(*this);
 		_is_ref = is_ref;
+        _is_pseudo_primary = is_pseudo_primary;
 		
 		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 
@@ -411,6 +412,9 @@ public:
     
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }
+    
+    bool is_pseudo_primary() const { return _is_pseudo_primary; }
+	void is_pseudo_primary(bool ip) { _is_pseudo_primary = ip; }
 	
 	CuffStrand strand() const 
     { 
@@ -659,6 +663,7 @@ private:
 	
 	bool _has_intron; 
 	bool _is_ref;
+    bool _is_pseudo_primary;
 	
 	vector<AugmentedCuffOp> _augmented_ops;
 	CuffStrand _strand;

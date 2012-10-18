@@ -126,6 +126,7 @@ static struct option long_options[] = {
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
 {"no-length-correction",    no_argument,             0,          OPT_NO_LENGTH_CORRECTION},
 {"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
+{"no-background-subtraction", no_argument,             0,          OPT_NO_BACKGROUND_SUBTRACTION},
 {"dispersion-method",       required_argument,             0,          OPT_DISPERSION_METHOD},
 {0, 0, 0, 0} // terminator
 };
@@ -479,6 +480,11 @@ int parse_options(int argc, char** argv)
 				dispersion_method_str = optarg;
 				break;
 			}
+            case OPT_NO_BACKGROUND_SUBTRACTION:
+            {
+                background_subtraction = false;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
