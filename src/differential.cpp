@@ -926,6 +926,8 @@ void sample_abundance_worker(const string& locus_tag,
         vector<shared_ptr<Scaffold> > pseudo_primary_transcripts;
         BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
         {
+            if (s->augmented_ops().size() == 1)
+                continue;
             vector<AugmentedCuffOp> ops;
             ops.push_back(AugmentedCuffOp(CUFF_MATCH, s->left(), s->right() - s->left()));
             
@@ -950,23 +952,8 @@ void sample_abundance_worker(const string& locus_tag,
         }
     }
     
-
-    
     sample.transcripts = AbundanceGroup(abundances);
-    
-    if (background_subtraction)
-    {
-        vector<bool> non_pseudo(abundances.size(), false);
-        for(size_t i = 0; i < abundances.size(); ++i)
-        {
-            shared_ptr<Abundance>  ab = abundances[i];
-            non_pseudo[i] = ab->transfrag()->is_pseudo_primary() == false;
-        }
-        AbundanceGroup kept_abundances;
-        sample.transcripts.filter_group(non_pseudo, kept_abundances);
-        sample.transcripts = kept_abundances;
-    }
-    
+        
     sample.transcripts.init_rg_props(rg_props);
     
     vector<MateHit> hits_in_cluster;
@@ -1004,6 +991,20 @@ void sample_abundance_worker(const string& locus_tag,
         }
         
     }
+    
+    if (background_subtraction)
+    {
+        vector<bool> non_pseudo(abundances.size(), false);
+        for(size_t i = 0; i < abundances.size(); ++i)
+        {
+            shared_ptr<Abundance>  ab = abundances[i];
+            non_pseudo[i] = ab->transfrag()->is_pseudo_primary() == false;
+        }
+        AbundanceGroup kept_abundances;
+        sample.transcripts.filter_group(non_pseudo, kept_abundances);
+        sample.transcripts = kept_abundances;
+    }
+
     
     // Cluster transcripts by gene_id
     vector<AbundanceGroup> transcripts_by_gene_id;
