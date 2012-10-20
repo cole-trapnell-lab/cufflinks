@@ -103,6 +103,7 @@ static struct option long_options[] = {
 {"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
 {"no-length-correction",  no_argument,     0,          OPT_NO_LENGTH_CORRECTION},
+{"no-background-subtraction", no_argument,             0,          OPT_NO_BACKGROUND_SUBTRACTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -139,6 +140,7 @@ void print_usage()
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-background-subtraction  No subtraction of inferred primary transcript FPKM    [ default:  FALSE ]\n");
     
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
@@ -440,6 +442,11 @@ int parse_options(int argc, char** argv)
             case OPT_NO_LENGTH_CORRECTION:
             {
                 no_length_correction = true;
+                break;
+            }
+            case OPT_NO_BACKGROUND_SUBTRACTION:
+            {
+                background_subtraction = false;
                 break;
             }
 			default:

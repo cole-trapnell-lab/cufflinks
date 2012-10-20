@@ -992,18 +992,18 @@ void sample_abundance_worker(const string& locus_tag,
         
     }
     
-    if (background_subtraction)
-    {
-        vector<bool> non_pseudo(abundances.size(), false);
-        for(size_t i = 0; i < abundances.size(); ++i)
-        {
-            shared_ptr<Abundance>  ab = abundances[i];
-            non_pseudo[i] = ab->transfrag()->is_pseudo_primary() == false;
-        }
-        AbundanceGroup kept_abundances;
-        sample.transcripts.filter_group(non_pseudo, kept_abundances);
-        sample.transcripts = kept_abundances;
-    }
+//    if (background_subtraction)
+//    {
+//        vector<bool> non_pseudo(abundances.size(), false);
+//        for(size_t i = 0; i < abundances.size(); ++i)
+//        {
+//            shared_ptr<Abundance>  ab = abundances[i];
+//            non_pseudo[i] = ab->transfrag()->is_pseudo_primary() == false;
+//        }
+//        AbundanceGroup kept_abundances;
+//        sample.transcripts.filter_group(non_pseudo, kept_abundances);
+//        sample.transcripts = kept_abundances;
+//    }
 
     
     // Cluster transcripts by gene_id

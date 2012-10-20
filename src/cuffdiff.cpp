@@ -182,6 +182,7 @@ void print_usage()
     fprintf(stderr, "  --min-reps-for-js-test       Replicates needed for relative isoform shift testing  [ default:      3 ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-background-subtraction  No subtraction of inferred primary transcript FPKM    [ default:  FALSE ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
