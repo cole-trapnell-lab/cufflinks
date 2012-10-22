@@ -133,11 +133,9 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
         assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
     }
     
-    
-    
     calculate_conf_intervals();
     
-    if (no_js_tests == false)
+    if (no_js_tests == false && _read_group_props.size() >= min_reps_for_js_test)
     {
         calculate_kappas();
     }
@@ -1174,7 +1172,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         calculate_conf_intervals();
         
         // Calculate the inter-group relative abundances and variances
-        if (no_js_tests == false)
+        if (no_js_tests == false && _read_group_props.size() >= min_reps_for_js_test)
         {
             calculate_kappas();
         }
