@@ -124,7 +124,7 @@ bool no_effective_length_correction = false;
 bool no_length_correction = false;
 bool no_js_tests = false;
 
-bool background_subtraction = true;
+bool background_subtraction = false;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
