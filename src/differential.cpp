@@ -348,40 +348,42 @@ bool test_diffexp(const FPKMContext& curr,
         
         if (curr.FPKM_variance > 0.0 || prev.FPKM_variance > 0.0)
         {
-            double curr_fpkm_sum = 0;
-            double prev_fpkm_sum = 0;
-            double curr_fpkm_variance_sum = 0;
-            double prev_fpkm_variance_sum = 0;
-            
-            for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
-                 itr != curr.fpkm_per_rep.end(); ++itr)
-            {
-                curr_fpkm_sum += itr->second;
-                curr_fpkm_variance_sum += curr.FPKM_variance;
-            }
-            
-            for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
-                 itr != prev.fpkm_per_rep.end(); ++itr)
-            {
-                prev_fpkm_sum += itr->second;
-                prev_fpkm_variance_sum += prev.FPKM_variance;
-            }
-            
-//            double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
-//            double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
+//            double curr_fpkm_sum = 0;
+//            double prev_fpkm_sum = 0;
+//            double curr_fpkm_variance_sum = 0;
+//            double prev_fpkm_variance_sum = 0;
 //            
-//            double numerator = log(prev.FPKM / curr.FPKM);
+//            for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
+//                 itr != curr.fpkm_per_rep.end(); ++itr)
+//            {
+//                curr_fpkm_sum += itr->second;
+//                curr_fpkm_variance_sum += curr.FPKM_variance;
+//            }
+//            
+//            for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
+//                 itr != prev.fpkm_per_rep.end(); ++itr)
+//            {
+//                prev_fpkm_sum += itr->second;
+//                prev_fpkm_variance_sum += prev.FPKM_variance;
+//            }
+//            
+//            double curr_log_fpkm_var = (curr_fpkm_variance_sum) / (curr_fpkm_sum * curr_fpkm_sum);
+//            double prev_log_fpkm_var = (prev_fpkm_variance_sum) / (prev_fpkm_sum * prev_fpkm_sum);
+//            
+//            double numerator = log(prev_fpkm_sum / curr_fpkm_sum);
 //            
 //            double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
 //            stat = numerator / denominator;
             
-            double curr_log_fpkm_var = (curr_fpkm_variance_sum) / (curr_fpkm_sum * curr_fpkm_sum);
-            double prev_log_fpkm_var = (prev_fpkm_variance_sum) / (prev_fpkm_sum * prev_fpkm_sum);
-
-            double numerator = log(prev_fpkm_sum / curr_fpkm_sum);
-
+            double curr_log_fpkm_var = (curr.FPKM_variance / curr.fpkm_per_rep.size()) / (curr.FPKM * curr.FPKM);
+            double prev_log_fpkm_var = (prev.FPKM_variance / prev.fpkm_per_rep.size()) / (prev.FPKM * prev.FPKM);
+            
+            double numerator = log(prev.FPKM / curr.FPKM);
+            
             double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
             stat = numerator / denominator;
+            
+
             
 		
             normal norm;
