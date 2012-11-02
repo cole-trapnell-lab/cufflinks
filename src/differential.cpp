@@ -13,6 +13,8 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
+#include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/distributions/chi_squared.hpp>
 
 #include "abundances.h"
 #include "differential.h"
@@ -95,7 +97,10 @@ void add_to_tracking_table(size_t sample_index,
 								 ab.FPKM_by_replicate(),
                                  ab.FPKM_variance(),
                                  ab.status(),
-                                 ab.status_by_replicate());
+                                 ab.status_by_replicate(),
+                                 ab.fpkm_samples(),
+                                 ab.fpkm_gamma_dist_k(),
+                                 ab.fpkm_gamma_dist_theta());
     
     
 	
@@ -330,34 +335,102 @@ void TestLauncher::test_finished_loci()
     }
 }
 
-// This performs a between-group test on an isoform or TSS grouping, on two 
-// different samples.
+// likelihood ratio test on gamma distributions:
 bool test_diffexp(const FPKMContext& curr,
 				  const FPKMContext& prev,
 				  SampleDifference& test)
 {
 	bool performed_test = false;
-	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
+//	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
 	{
 		//assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
-//		double log_curr = log(curr.counts);
-//		double log_prev = log(prev.counts);
+        //		double log_curr = log(curr.counts);
+        //		double log_prev = log(prev.counts);
         
         double stat = 0.0;
         double p_value = 1.0;
         
-        if (curr.FPKM_variance > 0.0 || prev.FPKM_variance > 0.0)
-        {
-            double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
-            double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
-            
-            double numerator = log(prev.FPKM / curr.FPKM);
-            
-            double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
-            stat = numerator / denominator;
+        vector<double> merged_samples = curr.fpkm_samples;
+        merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
         
-		
-            normal norm;
+        double null_gamma_k = 0.0;
+        double null_gamma_theta = 0.0;
+        bool good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
+        
+        double differential = 0.0;
+        
+        if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
+            differential = log2(curr.FPKM) - log2(prev.FPKM);
+        else if (curr.FPKM)
+            differential = numeric_limits<double>::max();
+        else if (curr.FPKM)
+            differential = -numeric_limits<double>::max();
+        
+        if (good_fit)
+        {
+            double d_stat_numerator = 0.0; // null hypothesis
+            double d_stat_denominator = 0.0; // alternative hypothesis
+            
+            double curr_k = curr.gamma_k;
+            double curr_theta = curr.gamma_theta;
+            
+            double prev_k = prev.gamma_k;
+            double prev_theta = prev.gamma_theta;
+            
+            double null_sum_log_fpkms = 0;
+            double null_sum_fpkm_over_theta = 0;
+
+            double curr_sum_log_fpkms = 0;
+            double curr_sum_fpkm_over_theta = 0;
+            
+            double prev_sum_log_fpkms = 0;
+            double prev_sum_fpkm_over_theta = 0;
+            
+            for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
+                 itr != curr.fpkm_per_rep.end(); ++itr)
+            {
+                if (itr->second > 0)
+                {
+                    null_sum_log_fpkms += log(itr->second);
+                    curr_sum_log_fpkms += log(itr->second);
+                }
+                if (null_gamma_theta > 0)
+                    null_sum_fpkm_over_theta += itr->second / null_gamma_theta;
+                if (curr_theta > 0)
+                    curr_sum_fpkm_over_theta += itr->second / curr_theta;
+            }
+            
+            double curr_log_lik = (curr_k - 1)*curr_sum_log_fpkms - curr_sum_fpkm_over_theta -
+                curr.fpkm_per_rep.size() * curr_k * log(curr_theta) - curr.fpkm_per_rep.size() * boost::math::tgamma(curr_k);
+            
+
+            for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
+                 itr != prev.fpkm_per_rep.end(); ++itr)
+            {
+                if (itr->second > 0)
+                {
+                    null_sum_log_fpkms += log(itr->second);
+                    prev_sum_log_fpkms += log(itr->second);
+                }
+                if (null_gamma_theta > 0)
+                    null_sum_fpkm_over_theta += itr->second / null_gamma_theta;
+                if (prev_theta > 0)
+                    prev_sum_fpkm_over_theta += itr->second / prev_theta;
+            }
+            
+            double prev_log_lik = (prev_k - 1)*prev_sum_log_fpkms - prev_sum_fpkm_over_theta -
+                prev.fpkm_per_rep.size() * prev_k * log(curr_theta) - prev.fpkm_per_rep.size() * boost::math::tgamma(prev_k);
+          
+            double null_log_lik = (null_gamma_k - 1)*null_sum_log_fpkms - null_sum_fpkm_over_theta -
+                (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta) - (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * boost::math::tgamma(null_gamma_k);
+            
+            d_stat_numerator = -2 * null_log_lik;
+            d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
+            
+            double stat = d_stat_numerator + d_stat_denominator;
+            double deg_freedom = 4 - 2;  // two per gamma distribution
+            boost::math::chi_squared_distribution<double> csd(deg_freedom);
+            
             double t1, t2;
             if (stat > 0.0)
             {
@@ -372,87 +445,162 @@ bool test_diffexp(const FPKMContext& curr,
             
             if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
             {
-                
+
                 //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
                 p_value = 1.0;
             }
             else
             {
-                double tail_1 = cdf(norm, t1);
-                double tail_2 = cdf(norm, t2);
-                p_value = 1.0 - (tail_1 - tail_2);                
+                double tail_1 = cdf(csd, t1);
+                double tail_2 = cdf(csd, t2);
+                p_value = 1.0 - (tail_1 - tail_2);
             }
+            
+            //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
+            test.p_value = p_value;
+            test.differential = differential;
+            test.test_stat = stat;
+            test.value_1 = prev.FPKM;
+            test.value_2 = curr.FPKM;
+            
+            performed_test = true;
         }
-		
-		double differential = log2(curr.FPKM) - log2(prev.FPKM);
-		
-		//test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
-		test.p_value = p_value;
-		test.differential = differential;
-		test.test_stat = stat;
-		test.value_1 = prev.FPKM;
-		test.value_2 = curr.FPKM;
-		
-		performed_test = true;
-	}
-	else
-	{
-		if (curr.FPKM > 0.0)
-		{
-            if (curr.status != NUMERIC_LOW_DATA && curr.FPKM_variance > 0.0)
-            {
-                normal norm(curr.FPKM, sqrt(curr.FPKM_variance));
-                test.p_value = cdf(norm, 0);
-                performed_test = true;
-                test.differential = numeric_limits<double>::max();;
-                test.test_stat = numeric_limits<double>::max();
-                test.value_1 = 0;
-                test.value_2 = curr.FPKM;
-            }
-            else
-            {
-                test.differential = -numeric_limits<double>::max();
-                test.test_stat = -numeric_limits<double>::max();
-                test.value_1 = prev.FPKM;
-                test.value_2 = 0;
-                test.p_value = 1;
-                performed_test = false;
-            }
-		}
-		else if (prev.FPKM > 0.0)
-		{
-            if (prev.status != NUMERIC_LOW_DATA && prev.FPKM_variance > 0.0)
-            {
-                normal norm(prev.FPKM, sqrt(prev.FPKM_variance));
-                test.p_value = cdf(norm, 0);
-                performed_test = true;
-                
-                test.differential = -numeric_limits<double>::max();
-                test.test_stat = -numeric_limits<double>::max();
-                test.value_1 = prev.FPKM;
-                test.value_2 = 0;
-            }
-            else
-            {
-                test.differential = -numeric_limits<double>::max();
-                test.test_stat = -numeric_limits<double>::max();
-                test.value_1 = prev.FPKM;
-                test.value_2 = 0;
-                test.p_value = 1;
-                performed_test = false;
-            }
-		}
         else
         {
-            assert (prev.FPKM == 0.0 && curr.FPKM == 0.0);
+            test.p_value = 1.0;
+            test.test_stat = 0.0;
             performed_test = false;
         }
-        
-	}	
+	}
 	
 	test.test_status = performed_test ? OK : NOTEST;
 	return performed_test;
 }
+
+
+// This performs a between-group test on an isoform or TSS grouping, on two 
+// different samples.
+//bool test_diffexp(const FPKMContext& curr,
+//				  const FPKMContext& prev,
+//				  SampleDifference& test)
+//{
+//	bool performed_test = false;
+//	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
+//	{
+//		//assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
+////		double log_curr = log(curr.counts);
+////		double log_prev = log(prev.counts);
+//        
+//        double stat = 0.0;
+//        double p_value = 1.0;
+//        
+//        if (curr.FPKM_variance > 0.0 || prev.FPKM_variance > 0.0)
+//        {
+//            double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
+//            double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
+//            
+//            double numerator = log(prev.FPKM / curr.FPKM);
+//            
+//            double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
+//            stat = numerator / denominator;
+//        
+//		
+//            normal norm;
+//            double t1, t2;
+//            if (stat > 0.0)
+//            {
+//                t1 = stat;
+//                t2 = -stat;
+//            }
+//            else
+//            {
+//                t1 = -stat;
+//                t2 = stat;
+//            }
+//            
+//            if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
+//            {
+//                
+//                //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
+//                p_value = 1.0;
+//            }
+//            else
+//            {
+//                double tail_1 = cdf(norm, t1);
+//                double tail_2 = cdf(norm, t2);
+//                p_value = 1.0 - (tail_1 - tail_2);                
+//            }
+//        }
+//		
+//		double differential = log2(curr.FPKM) - log2(prev.FPKM);
+//		
+//		//test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
+//		test.p_value = p_value;
+//		test.differential = differential;
+//		test.test_stat = stat;
+//		test.value_1 = prev.FPKM;
+//		test.value_2 = curr.FPKM;
+//		
+//		performed_test = true;
+//	}
+//	else
+//	{
+//		if (curr.FPKM > 0.0)
+//		{
+//            if (curr.status != NUMERIC_LOW_DATA && curr.FPKM_variance > 0.0)
+//            {
+//                normal norm(curr.FPKM, sqrt(curr.FPKM_variance));
+//                test.p_value = cdf(norm, 0);
+//                performed_test = true;
+//                test.differential = numeric_limits<double>::max();;
+//                test.test_stat = numeric_limits<double>::max();
+//                test.value_1 = 0;
+//                test.value_2 = curr.FPKM;
+//            }
+//            else
+//            {
+//                test.differential = -numeric_limits<double>::max();
+//                test.test_stat = -numeric_limits<double>::max();
+//                test.value_1 = prev.FPKM;
+//                test.value_2 = 0;
+//                test.p_value = 1;
+//                performed_test = false;
+//            }
+//		}
+//		else if (prev.FPKM > 0.0)
+//		{
+//            if (prev.status != NUMERIC_LOW_DATA && prev.FPKM_variance > 0.0)
+//            {
+//                normal norm(prev.FPKM, sqrt(prev.FPKM_variance));
+//                test.p_value = cdf(norm, 0);
+//                performed_test = true;
+//                
+//                test.differential = -numeric_limits<double>::max();
+//                test.test_stat = -numeric_limits<double>::max();
+//                test.value_1 = prev.FPKM;
+//                test.value_2 = 0;
+//            }
+//            else
+//            {
+//                test.differential = -numeric_limits<double>::max();
+//                test.test_stat = -numeric_limits<double>::max();
+//                test.value_1 = prev.FPKM;
+//                test.value_2 = 0;
+//                test.p_value = 1;
+//                performed_test = false;
+//            }
+//		}
+//        else
+//        {
+//            assert (prev.FPKM == 0.0 && curr.FPKM == 0.0);
+//            performed_test = false;
+//        }
+//        
+//	}	
+//	
+//	test.test_status = performed_test ? OK : NOTEST;
+//	return performed_test;
+//}
 
 SampleDiffMetaDataTable meta_data_table;
 #if ENABLE_THREADS

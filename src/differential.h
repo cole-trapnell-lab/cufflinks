@@ -130,8 +130,8 @@ struct Tests
 
 struct FPKMContext
 {
-	FPKMContext(double cm, double cv, double cuv, double cdv, const CountPerReplicateTable& cpr, double r, const FPKMPerReplicateTable& fpr, double v, AbundanceStatus s, const StatusPerReplicateTable& spr)
-		: count_mean(cm), count_var(cv), count_uncertainty_var(cuv), count_dispersion_var(cdv), count_per_rep(cpr), fpkm_per_rep(fpr), FPKM(r), FPKM_variance(v), status(s), status_per_rep(spr) {}
+	FPKMContext(double cm, double cv, double cuv, double cdv, const CountPerReplicateTable& cpr, double r, const FPKMPerReplicateTable& fpr, double v, AbundanceStatus s, const StatusPerReplicateTable& spr, const vector<double>& fs, double gk, double gt)
+		: count_mean(cm), count_var(cv), count_uncertainty_var(cuv), count_dispersion_var(cdv), count_per_rep(cpr), fpkm_per_rep(fpr), FPKM(r), FPKM_variance(v), status(s), status_per_rep(spr), fpkm_samples(fs) {}
 	double count_mean;
     double count_var;
     double count_uncertainty_var;
@@ -142,6 +142,9 @@ struct FPKMContext
 	double FPKM;
 	double FPKM_variance;
     AbundanceStatus status;
+    vector<double> fpkm_samples;
+    double gamma_k; // gamma distribution k parameter
+    double gamma_theta; // gamma distribution theta parameter
 };
 
 struct FPKMTracking

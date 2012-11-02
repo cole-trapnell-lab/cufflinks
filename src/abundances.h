@@ -41,6 +41,8 @@ typedef map<shared_ptr<ReadGroupProperties const>, double> CountPerReplicateTabl
 typedef map<shared_ptr<ReadGroupProperties const>, double> FPKMPerReplicateTable;
 typedef map<shared_ptr<ReadGroupProperties const>, AbundanceStatus> StatusPerReplicateTable;
 
+bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat);
+
 class Abundance
 {
 public:
@@ -104,13 +106,22 @@ public:
     
 	virtual double			effective_length() const= 0;
 	virtual void			effective_length(double el) = 0;
-	
+
+    virtual double			fpkm_gamma_dist_k() const = 0;
+	virtual void			fpkm_gamma_dist_k(double k) = 0;
+
+    virtual double			fpkm_gamma_dist_theta() const = 0;
+	virtual void			fpkm_gamma_dist_theta(double theta) = 0;
+    
 	virtual const vector<double>*	cond_probs() const		{ return NULL; }
 	virtual void					cond_probs(vector<double>* cp) = 0;
 	
 	// The structural information for the object, if defined.
 	virtual shared_ptr<Scaffold> transfrag() const		{ return shared_ptr<Scaffold>(); }
 	
+    virtual const vector<double>& fpkm_samples() const = 0;
+    virtual void  fpkm_samples(const vector<double>& s) = 0;
+    
 	
 	virtual set<string>		gene_id() const = 0;
 	virtual set<string>		gene_name() const = 0;
@@ -143,6 +154,8 @@ public:
         _num_fragment_uncertainty_var(0),
 		_eff_len(0),
 		_cond_probs(NULL),
+        _fpkm_gamma_k(0.0),
+        _fpkm_gamma_theta(0.0),
         _sample_mass_fraction(0.0),
         _sample_mass_variance(0.0){}
 	
@@ -223,6 +236,12 @@ public:
 	
 	double effective_length() const			{ return _eff_len; }
 	void effective_length(double el)		{ _eff_len = el; }
+    
+    double fpkm_gamma_dist_k() const { return _fpkm_gamma_k; }
+	void   fpkm_gamma_dist_k(double k) { _fpkm_gamma_k = k; }
+    
+    double fpkm_gamma_dist_theta() const { return _fpkm_gamma_theta; }
+	void   fpkm_gamma_dist_theta(double theta){ _fpkm_gamma_theta = theta; }
 	
 	const vector<double>* cond_probs() const	{ return _cond_probs; }
 	void cond_probs(vector<double>* cp) 	
@@ -231,8 +250,10 @@ public:
 		_cond_probs = cp;
 	}
 	
+    const vector<double>& fpkm_samples() const { return _fpkm_samples; }
+    void  fpkm_samples(const vector<double>& s) { _fpkm_samples = s; }
 	
-	set<string> gene_id() const	
+	set<string> gene_id() const
 	{
 		if (_transfrag)
 		{
@@ -318,6 +339,11 @@ private:
     double _num_fragment_uncertainty_var;
 	double _eff_len;
 	vector<double>* _cond_probs;
+    
+    double _fpkm_gamma_k;
+    double _fpkm_gamma_theta;
+    
+    vector<double> _fpkm_samples;
 	
 	string _description;
 	string _locus_tag;
@@ -334,7 +360,14 @@ private:
 class AbundanceGroup : public Abundance
 {
 public:
-	AbundanceGroup() : _kappa(1.0), _FPKM_variance(0.0), _max_mass_variance(0.0), _salient_frags(0.0), _total_frags(0.0) {}
+	AbundanceGroup() :
+        _kappa(1.0),
+        _FPKM_variance(0.0),
+        _max_mass_variance(0.0),
+        _salient_frags(0.0),
+        _total_frags(0.0),
+        _fpkm_gamma_k(0),
+        _fpkm_gamma_theta(0) {}
 	
 //	AbundanceGroup(const AbundanceGroup& other) 
 //	{
@@ -367,7 +400,9 @@ public:
 		_FPKM_variance(0.0), 
         _max_mass_variance(0.0),
         _salient_frags(0.0),
-        _total_frags(0.0) {}
+        _total_frags(0.0),
+        _fpkm_gamma_k(0.0),
+        _fpkm_gamma_theta(0.0) {}
     
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
 				   const ublas::matrix<double>& gamma_covariance,
@@ -443,8 +478,13 @@ public:
 	void effective_length(double ef) {}
 	void cond_probs(vector<double>* cp) {}
 
+    double fpkm_gamma_dist_k() const { return _fpkm_gamma_k; }
+	void   fpkm_gamma_dist_k(double k) { _fpkm_gamma_k = k; }
+    
+    double fpkm_gamma_dist_theta() const { return _fpkm_gamma_theta; }
+	void   fpkm_gamma_dist_theta(double theta){ _fpkm_gamma_theta = theta; }
 
-	void filter_group(const vector<bool>& to_keep, 
+	void filter_group(const vector<bool>& to_keep,
 					  AbundanceGroup& filtered_group) const;
 	
 	void get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const;
@@ -463,6 +503,9 @@ public:
     const ublas::matrix<double>& fpkm_cov() const { return _fpkm_covariance; }
 	
 	const vector<Eigen::VectorXd>& assigned_counts() const { return _assigned_count_samples; }
+    
+    const vector<double>& fpkm_samples() const { return _fpkm_samples; }
+    void  fpkm_samples(const vector<double>& s) { _fpkm_samples = s; }
     
     const vector<double> null_js_samples() const { return _null_js_samples; }
     
@@ -551,6 +594,10 @@ private:
     double _salient_frags;
     double _total_frags;
     
+    double _fpkm_gamma_k;
+    double _fpkm_gamma_theta;
+    
+    vector<double> _fpkm_samples;
     
     vector<double> _null_js_samples;
     

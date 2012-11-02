@@ -574,7 +574,7 @@
 		ED920F5513215828008DDA0B /* help.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = help.c; sourceTree = "<group>"; };
 		ED920F581321587C008DDA0B /* c_plot.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = c_plot.c; sourceTree = "<group>"; };
 		ED920F5B132158CA008DDA0B /* readfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = readfile.c; sourceTree = "<group>"; };
-		EDA5150910C72963000A4F41 /* abundances.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = abundances.h; path = src/abundances.h; sourceTree = "<group>"; };
+		EDA5150910C72963000A4F41 /* abundances.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = abundances.h; path = src/abundances.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		EDA5150A10C72963000A4F41 /* assemble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = assemble.h; path = src/assemble.h; sourceTree = "<group>"; };
 		EDA5150B10C72963000A4F41 /* bundles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = bundles.h; path = src/bundles.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		EDA5150C10C72963000A4F41 /* codons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = codons.h; path = src/codons.h; sourceTree = "<group>"; };

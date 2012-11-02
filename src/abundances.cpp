@@ -44,6 +44,250 @@
 #include <Eigen/Dense>
 //using Eigen::MatrixXd;
 
+//#ifdef  __USE_ISOC99
+///* INFINITY and NAN are defined by the ISO C99 standard */
+//#else
+//double my_infinity(void) {
+//    double zero = 0.0;
+//    return 1.0/zero;
+//}
+//double my_nan(void) {
+//    double zero = 0.0;
+//    return zero/zero;
+//}
+//#define INFINITY my_infinity()
+//#define NAN my_nan()
+//#endif
+
+#define EulerGamma 0.57721566490153286060651209008240243104215933593992
+
+/* The digamma function is the derivative of gammaln.
+ 
+ Reference:
+ J Bernardo,
+ Psi ( Digamma ) Function,
+ Algorithm AS 103,
+ Applied Statistics,
+ Volume 25, Number 3, pages 315-317, 1976.
+ 
+ From http://www.psc.edu/~burkardt/src/dirichlet/dirichlet.f
+ (with modifications for negative numbers and extra precision)
+ */
+double digamma(double x)
+{
+    double neginf = -INFINITY;
+    static const double c = 12,
+    d1 = -EulerGamma,
+    d2 = 1.6449340668482264365, /* pi^2/6 */
+    s = 1e-6,
+    s3 = 1./12,
+    s4 = 1./120,
+    s5 = 1./252,
+    s6 = 1./240,
+    s7 = 1./132;
+    /*static const double s8 = 691/32760.0, s9 = 1/12.0, s10 = 3617/8160.0;*/
+    double result;
+#if 0
+    static double cache_x = 0;
+    static int hits = 0, total = 0;
+    total++;
+    if(x == cache_x) {
+        hits++;
+    }
+    if(total % 1000 == 1) {
+        printf("hits = %d, total = %d, hits/total = %g\n", hits, total,
+               ((double)hits)/total);
+    }
+    cache_x = x;
+#endif
+    if( x==1.0 )
+        return d1;
+    
+    /* Illegal arguments */
+    if((x == neginf) || isnan(x)) {
+        return NAN;
+    }
+    /* Singularities */
+    if((x <= 0) && (floor(x) == x)) {
+        return neginf;
+    }
+    /* Negative values */
+    /* Use the reflection formula (Jeffrey 11.1.6):
+     * digamma(-x) = digamma(x+1) + pi*cot(pi*x)
+     *
+     * This is related to the identity
+     * digamma(-x) = digamma(x+1) - digamma(z) + digamma(1-z)
+     * where z is the fractional part of x
+     * For example:
+     * digamma(-3.1) = 1/3.1 + 1/2.1 + 1/1.1 + 1/0.1 + digamma(1-0.1)
+     *               = digamma(4.1) - digamma(0.1) + digamma(1-0.1)
+     * Then we use
+     * digamma(1-z) - digamma(z) = pi*cot(pi*z)
+     */
+    if(x < 0) {
+        return digamma(1-x) + M_PI/tan(-M_PI*x);
+    }
+    /* Use Taylor series if argument <= S */
+    if(x <= s) return d1 - 1/x + d2*x;
+    /* Reduce to digamma(X + N) where (X + N) >= C */
+    result = 0;
+    while(x < c) {
+        result -= 1/x;
+        x++;
+    }
+    /* Use de Moivre's expansion if argument >= C */
+    /* This expansion can be computed in Maple via asympt(Psi(x),x) */
+    if(x >= c) {
+        double r = 1/x, t;
+        result += log(x) - 0.5*r;
+        r *= r;
+#if 0
+        result -= r * (s3 - r * (s4 - r * (s5 - r * (s6 - r * s7))));
+#else
+        /* this version for lame compilers */
+        t = (s5 - r * (s6 - r * s7));
+        result -= r * (s3 - r * (s4 - r * t));
+#endif
+    }
+    return result;
+}
+
+
+/* The trigamma function is the derivative of the digamma function.
+ 
+ Reference:
+ 
+ B Schneider,
+ Trigamma Function,
+ Algorithm AS 121,
+ Applied Statistics,
+ Volume 27, Number 1, page 97-99, 1978.
+ 
+ From http://www.psc.edu/~burkardt/src/dirichlet/dirichlet.f
+ (with modification for negative arguments and extra precision)
+ */
+double trigamma(double x)
+{
+    double neginf = -INFINITY,
+    small = 1e-4,
+    large = 8,
+    c = 1.6449340668482264365, /* pi^2/6 = Zeta(2) */
+    c1 = -2.404113806319188570799476,  /* -2 Zeta(3) */
+    b2 =  1./6,
+    b4 = -1./30,
+    b6 =  1./42,
+    b8 = -1./30,
+    b10 = 5./66;
+    double result;
+    /* Illegal arguments */
+    if((x == neginf) || isnan(x)) {
+        return NAN;
+    }
+    /* Singularities */
+    if((x <= 0) && (floor(x) == x)) {
+        return neginf;
+    }
+    /* Negative values */
+    /* Use the derivative of the digamma reflection formula:
+     * -trigamma(-x) = trigamma(x+1) - (pi*csc(pi*x))^2
+     */
+    if(x < 0) {
+        result = M_PI/sin(-M_PI*x);
+        return -trigamma(1-x) + result*result;
+    }
+    /* Use Taylor series if argument <= small */
+    if(x <= small) {
+        return 1/(x*x) + c + c1*x;
+    }
+    result = 0;
+    /* Reduce to trigamma(x+n) where ( X + N ) >= B */
+    while(x < large) {
+        result += 1/(x*x);
+        x++;
+    }
+    /* Apply asymptotic formula when X >= B */
+    /* This expansion can be computed in Maple via asympt(Psi(1,x),x) */
+    if(x >= large) {
+        double r = 1/(x*x), t;
+#if 0
+        result += 0.5*r + (1 + r*(b2 + r*(b4 + r*(b6 + r*(b8 + r*b10)))))/x;
+#else
+        t = (b4 + r*(b6 + r*(b8 + r*b10)));
+        result += 0.5*r + (1 + r*(b2 + r*t))/x;
+#endif
+    }
+    return result;
+}
+
+
+bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
+{
+    
+    if (samples.size() == 0)
+    {
+        k = 0;
+        theta_hat = 0;
+        return true;
+    }
+    
+    double s_1 = 0.0;
+    double s_2 = 0.0;
+    double s = 0.0;
+    
+    double N = 0;
+    
+    BOOST_FOREACH(double sample, samples)
+    {
+        if (sample)
+        {
+            s_1 += sample;
+            s_2 += log(sample);
+            N++;
+        }
+    }
+    
+    if (s_1 > 0)
+    {
+        s = log(s_1/N) - (s_2/N);
+    }
+    else
+    {
+        k = 0;
+        theta_hat = 0;
+        return false;
+    }
+    
+    N = samples.size();
+    
+    k = (3 - s + sqrt(((s - 3) * (s - 3)) + 24*s)) / (12 * s);
+    double k_next = 0;
+    
+    static const double k_newton_raphson_conv_thresh = 0.001;
+    static const int max_iterations = 100;
+    int num_iter = 0;
+    
+    while (abs(k_next - k) < k_newton_raphson_conv_thresh && num_iter < max_iterations)
+    {
+        if (k > 0)
+        {
+            k_next = k - ( (log(k) - digamma(k) - s) / ( (1.0/k)  - trigamma(k) ) );
+        }
+        else
+        {
+            k = 0;
+            theta_hat = 0;
+            return false;
+        }
+        num_iter++;
+    }
+    
+    if (k != 0)
+    {
+        theta_hat = (1.0/(k*N)) * s_1;
+    }
+    
+    return true;
+}
 
 //#define USE_LOG_CACHE
 
@@ -1987,14 +2231,13 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     
     _assigned_count_samples = assigned_counts;
     
+    
     //    for (size_t i = 0; i < num_count_draws; ++i)
     //    {
     //        cerr << generated_counts[i] << endl;
     //        
     //    }
 }
-
-
 
 void AbundanceGroup::calculate_FPKM_covariance()
 {
@@ -2099,6 +2342,96 @@ void AbundanceGroup::calculate_FPKM_covariance()
 
         assert (FPKM() == 0 || _FPKM_variance > 0 || status() != NUMERIC_OK);
     }
+    
+    // set up individual vectors of FPKM samples for each abundance object in this group.
+    vector<vector<double> > fpkm_sample_vectors(_abundances.size());
+    vector<double> group_sum_fpkm_samples;
+    
+    vector<double> fpkm_means(_abundances.size(), 0);
+    
+    for(size_t i = 0; i < _assigned_count_samples.size(); ++i)
+    {
+        const Eigen::VectorXd sample = _assigned_count_samples[i];
+        double total_fpkm = 0;
+        
+        for (size_t j = 0; j < sample.size(); ++j)
+        {
+            if (_abundances[j]->effective_length() > 0)
+            {
+                /*
+                 trans_fpkms(j) /= (itr->first)->normalized_map_mass();
+                 trans_fpkms(j) *= 1000000000;
+                 trans_fpkms(j) /= _abundances[i]->effective_length();
+                 trans_fpkms(j) /= (itr->first)->external_scale_factor();
+                 */
+                
+                double fpkm_sample = sample[j] / M;
+                fpkm_sample *= 1000000000;
+                fpkm_sample /= _abundances[j]->effective_length();
+                fpkm_sample /= external_scale_factor;
+                double standard_fpkm = _abundances[j]->FPKM();
+                //fprintf(stderr, "count = %lg, fpkm = %lg, standard fpkm = %lg\n", sample[j], fpkm_sample, standard_fpkm);
+                fpkm_sample_vectors[j].push_back(fpkm_sample);
+                fpkm_means[j] += fpkm_sample;
+            }
+            else
+                fpkm_sample_vectors[j].push_back(0);
+            
+            total_fpkm += sample[j];
+        }
+        
+        if (effective_length() > 0)
+            group_sum_fpkm_samples.push_back(total_fpkm / (effective_length() * M));
+        else
+            group_sum_fpkm_samples.push_back(0);
+    }
+    
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        fpkm_means[i] /= _assigned_count_samples.size();
+        _abundances[i]->fpkm_samples(fpkm_sample_vectors[i]);
+        //fprintf(stderr, "standard fpkm = %lg, sample mean = %lg\n", _abundances[i]->FPKM(), fpkm_means[i]);
+    }
+    
+    fpkm_samples(group_sum_fpkm_samples);
+    
+    // Now fit a gamma distribution to the FPKM samples for each abundance object in this group.
+    for (size_t i = 0; i < fpkm_sample_vectors.size(); ++i)
+    {
+        double i_k = 0;
+        double i_theta = 0;
+        bool good_fit = fit_gamma_dist(fpkm_sample_vectors[i], i_k, i_theta);
+        if (good_fit == false)
+        {
+            _abundances[i]->status(NUMERIC_FAIL);   
+        }
+        else
+        {
+            _abundances[i]->fpkm_gamma_dist_k(i_k);
+            _abundances[i]->fpkm_gamma_dist_theta(i_theta);
+            //double fpkm_gamma_mean = i_k * i_theta;
+            //double fpkm_gamma_var = i_k * i_theta * i_theta;
+            //fprintf (stderr, "standard mean = %lg, standard var = %lg, sample mean = %lg, gamma_mean = %lg, gamma_var = %lg\n", _abundances[i]->FPKM(),_abundances[i]->FPKM_variance(), fpkm_means[i], fpkm_gamma_mean, fpkm_gamma_var);
+        }
+    }
+    
+    double group_k = 0;
+    double group_theta = 0;
+    bool good_fit = fit_gamma_dist(group_sum_fpkm_samples, group_k, group_theta);
+    if (good_fit == false)
+    {
+        for (size_t i = 0; i < _abundances.size(); ++i)
+        {
+            _abundances[i]->status(NUMERIC_FAIL);
+        }
+    }
+    else
+    {
+        fpkm_gamma_dist_k(group_k);
+        fpkm_gamma_dist_theta(group_theta);
+    }
+    
+    
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
 
@@ -2792,7 +3125,9 @@ void AbundanceGroup::calculate_kappas()
 //        }
 //        return;
 //    }
-//    
+//
+    
+    // FIXME:
     size_t num_count_draws = _assigned_count_samples.size();
     vector<Eigen::VectorXd > relative_abundances (num_count_draws, Eigen::VectorXd::Zero(num_members));
     
