@@ -234,15 +234,15 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
     double s_2 = 0.0;
     double s = 0.0;
     
-    double N = 0;
+    double N = samples.size();
     
     BOOST_FOREACH(double sample, samples)
     {
-        if (sample)
+        assert (isnan(sample) == false);
+        if (sample > 0)
         {
             s_1 += sample;
             s_2 += log(sample);
-            N++;
         }
     }
     
@@ -257,7 +257,7 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
         return false;
     }
     
-    N = samples.size();
+   
     
     k = (3 - s + sqrt(((s - 3) * (s - 3)) + 24*s)) / (12 * s);
     double k_next = 0;
@@ -2247,11 +2247,11 @@ void AbundanceGroup::fit_gamma_distributions()
     
     double M = 0;
     
-    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
-         itr != _count_per_replicate.end();
+    for (set<shared_ptr<ReadGroupProperties const> >::iterator itr = _read_group_props.begin();
+         itr != _read_group_props.end();
          ++itr)
     {
-        shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+        shared_ptr<ReadGroupProperties const> rg_props = *itr;
         M += rg_props->normalized_map_mass();
         
         if (external_scale_factor < 0)
@@ -2264,7 +2264,7 @@ void AbundanceGroup::fit_gamma_distributions()
         }
     }
     
-    M /= _count_per_replicate.size();
+    M /= _read_group_props.size();
     
     // set up individual vectors of FPKM samples for each abundance object in this group.
     vector<vector<double> > fpkm_sample_vectors(_abundances.size());
@@ -2279,34 +2279,36 @@ void AbundanceGroup::fit_gamma_distributions()
         
         for (size_t j = 0; j < sample.size(); ++j)
         {
+            double fpkm_sample = sample[j] / M;
+            
             if (_abundances[j]->effective_length() > 0)
             {
-                /*
-                 trans_fpkms(j) /= (itr->first)->normalized_map_mass();
-                 trans_fpkms(j) *= 1000000000;
-                 trans_fpkms(j) /= _abundances[i]->effective_length();
-                 trans_fpkms(j) /= (itr->first)->external_scale_factor();
-                 */
-                
-                double fpkm_sample = sample[j] / M;
                 fpkm_sample *= 1000000000;
                 fpkm_sample /= _abundances[j]->effective_length();
                 fpkm_sample /= external_scale_factor;
-                double standard_fpkm = _abundances[j]->FPKM();
+                //double standard_fpkm = _abundances[j]->FPKM();
                 //fprintf(stderr, "count = %lg, fpkm = %lg, standard fpkm = %lg\n", sample[j], fpkm_sample, standard_fpkm);
-                fpkm_sample_vectors[j].push_back(fpkm_sample);
-                fpkm_means[j] += fpkm_sample;
             }
             else
-                fpkm_sample_vectors[j].push_back(0);
+            {
+                fpkm_sample = 0;
+            }
             
-            total_fpkm += sample[j];
+            assert (isnan(fpkm_sample) == false);
+                
+            fpkm_sample_vectors[j].push_back(fpkm_sample);
+            fpkm_means[j] += fpkm_sample;
+            total_fpkm += fpkm_sample;
         }
         
         if (effective_length() > 0)
+        {
             group_sum_fpkm_samples.push_back(total_fpkm / (effective_length() * M));
+        }
         else
+        {
             group_sum_fpkm_samples.push_back(0);
+        }
     }
     
     for (size_t i = 0; i < _abundances.size(); ++i)

@@ -41,6 +41,19 @@ void decr_pool_count()
 }
 #endif
 
+SampleDifference::SampleDifference():
+    sample_1(-1),
+    sample_2(-1),
+    value_1(0.0),
+    value_2(0.0),
+    test_stat(0.0),
+    p_value(1.0),
+    corrected_p(1.0),
+    tested_group_id(-1),
+    test_status(NOTEST),
+    significant(false) {}
+
+
 void add_to_tracking_table(size_t sample_index,
                            Abundance& ab,
 						   FPKMTrackingTable& track)
@@ -341,7 +354,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
 {
 	bool performed_test = false;
 
-    SampleDifference test;
+    SampleDifference test = SampleDifference();
     
     //assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
     //		double log_curr = log(curr.counts);
@@ -356,6 +369,13 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     double null_gamma_k = 0.0;
     double null_gamma_theta = 0.0;
     bool good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
+    
+    if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
+    {
+        good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
+        fprintf(stderr, "Warning : null model fit failed!\n");
+    }
+    
     
     double differential = 0.0;
     
@@ -442,12 +462,19 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         double deg_freedom = 4 - 2;  // two per gamma distribution
         boost::math::chi_squared_distribution<double> csd(deg_freedom);
         
+        if (stat <= 0)
+            fprintf(stderr, "Warning : test statistic is %lg!\n", stat);
+        
+        if (null_log_lik == 1)
+            fprintf(stderr, "Warning : null log likelihood is 1!\n", stat);
+        
+        
         if (null_log_lik == 1 || stat <= 0 || isnan(stat) || isinf(stat))
         {
 
             //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
             p_value = 1.0;
-            performed_test = false;
+            performed_test = true;
         }
         else
         {
@@ -479,14 +506,14 @@ SampleDifference test_diffexp(const FPKMContext& curr,
 	return test;
 }
 
-
+// delta method test:
 // This performs a between-group test on an isoform or TSS grouping, on two 
 // different samples.
-//bool test_diffexp(const FPKMContext& curr,
-//				  const FPKMContext& prev,
-//				  SampleDifference& test)
+//SampleDifference test_diffexp(const FPKMContext& curr,
+//				  const FPKMContext& prev)
 //{
 //	bool performed_test = false;
+//    SampleDifference test;
 //	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
 //	{
 //		//assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
@@ -595,13 +622,18 @@ SampleDifference test_diffexp(const FPKMContext& curr,
 //        else
 //        {
 //            assert (prev.FPKM == 0.0 && curr.FPKM == 0.0);
+//            test.test_stat = 0;
+//            test.value_1 = prev.FPKM;
+//            test.value_2 = curr.FPKM;
+//            test.p_value = 1.0;
+//            test.differential = 0;
 //            performed_test = false;
 //        }
 //        
 //	}	
 //	
 //	test.test_status = performed_test ? OK : NOTEST;
-//	return performed_test;
+//	return test;
 //}
 
 SampleDiffMetaDataTable meta_data_table;

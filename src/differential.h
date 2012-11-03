@@ -49,19 +49,10 @@ struct SampleDifferenceMetaData
 
 // Stores the differential expression of an isoform or set of isoforms in two
 // different samples, along with a significance test statistic for the difference.
-struct SampleDifference
+class SampleDifference
 {
-	SampleDifference() :
-	sample_1(-1), 
-	sample_2(-1), 
-	value_1(0.0),
-	value_2(0.0),
-	test_stat(0.0),
-    p_value(1.0),
-	corrected_p(1.0),
-	tested_group_id(-1),
-	test_status(NOTEST),
-	significant(false){}
+public:
+	SampleDifference();
 	
 	size_t sample_1;
 	size_t sample_2;
