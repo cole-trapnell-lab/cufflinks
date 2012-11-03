@@ -533,6 +533,7 @@ public:
         }
     }
     
+    void fit_gamma_distributions();
     
 private:
 	

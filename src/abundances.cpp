@@ -377,6 +377,8 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
         assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
     }
     
+    fit_gamma_distributions();
+    
     calculate_conf_intervals();
     
     if (no_js_tests == false && _read_group_props.size() >= min_reps_for_js_test)
@@ -2239,6 +2241,120 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     //    }
 }
 
+void AbundanceGroup::fit_gamma_distributions()
+{
+    double external_scale_factor = -1.0;
+    
+    double M = 0;
+    
+    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+         itr != _count_per_replicate.end();
+         ++itr)
+    {
+        shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+        M += rg_props->normalized_map_mass();
+        
+        if (external_scale_factor < 0)
+        {
+            external_scale_factor = rg_props->external_scale_factor();
+        }
+        else
+        {
+            assert (external_scale_factor == rg_props->external_scale_factor());
+        }
+    }
+    
+    M /= _count_per_replicate.size();
+    
+    // set up individual vectors of FPKM samples for each abundance object in this group.
+    vector<vector<double> > fpkm_sample_vectors(_abundances.size());
+    vector<double> group_sum_fpkm_samples;
+    
+    vector<double> fpkm_means(_abundances.size(), 0);
+    
+    for(size_t i = 0; i < _assigned_count_samples.size(); ++i)
+    {
+        const Eigen::VectorXd sample = _assigned_count_samples[i];
+        double total_fpkm = 0;
+        
+        for (size_t j = 0; j < sample.size(); ++j)
+        {
+            if (_abundances[j]->effective_length() > 0)
+            {
+                /*
+                 trans_fpkms(j) /= (itr->first)->normalized_map_mass();
+                 trans_fpkms(j) *= 1000000000;
+                 trans_fpkms(j) /= _abundances[i]->effective_length();
+                 trans_fpkms(j) /= (itr->first)->external_scale_factor();
+                 */
+                
+                double fpkm_sample = sample[j] / M;
+                fpkm_sample *= 1000000000;
+                fpkm_sample /= _abundances[j]->effective_length();
+                fpkm_sample /= external_scale_factor;
+                double standard_fpkm = _abundances[j]->FPKM();
+                //fprintf(stderr, "count = %lg, fpkm = %lg, standard fpkm = %lg\n", sample[j], fpkm_sample, standard_fpkm);
+                fpkm_sample_vectors[j].push_back(fpkm_sample);
+                fpkm_means[j] += fpkm_sample;
+            }
+            else
+                fpkm_sample_vectors[j].push_back(0);
+            
+            total_fpkm += sample[j];
+        }
+        
+        if (effective_length() > 0)
+            group_sum_fpkm_samples.push_back(total_fpkm / (effective_length() * M));
+        else
+            group_sum_fpkm_samples.push_back(0);
+    }
+    
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        fpkm_means[i] /= _assigned_count_samples.size();
+        _abundances[i]->fpkm_samples(fpkm_sample_vectors[i]);
+        //fprintf(stderr, "standard fpkm = %lg, sample mean = %lg\n", _abundances[i]->FPKM(), fpkm_means[i]);
+    }
+    
+    fpkm_samples(group_sum_fpkm_samples);
+    
+    // Now fit a gamma distribution to the FPKM samples for each abundance object in this group.
+    for (size_t i = 0; i < fpkm_sample_vectors.size(); ++i)
+    {
+        double i_k = 0;
+        double i_theta = 0;
+        bool good_fit = fit_gamma_dist(fpkm_sample_vectors[i], i_k, i_theta);
+        if (good_fit == false)
+        {
+            _abundances[i]->status(NUMERIC_FAIL);
+        }
+        else
+        {
+            _abundances[i]->fpkm_gamma_dist_k(i_k);
+            _abundances[i]->fpkm_gamma_dist_theta(i_theta);
+            //double fpkm_gamma_mean = i_k * i_theta;
+            //double fpkm_gamma_var = i_k * i_theta * i_theta;
+            //fprintf (stderr, "standard mean = %lg, standard var = %lg, sample mean = %lg, gamma_mean = %lg, gamma_var = %lg\n", _abundances[i]->FPKM(),_abundances[i]->FPKM_variance(), fpkm_means[i], fpkm_gamma_mean, fpkm_gamma_var);
+        }
+    }
+    
+    double group_k = 0;
+    double group_theta = 0;
+    bool good_fit = fit_gamma_dist(group_sum_fpkm_samples, group_k, group_theta);
+    if (good_fit == false)
+    {
+        for (size_t i = 0; i < _abundances.size(); ++i)
+        {
+            _abundances[i]->status(NUMERIC_FAIL);
+        }
+    }
+    else
+    {
+        fpkm_gamma_dist_k(group_k);
+        fpkm_gamma_dist_theta(group_theta);
+    }
+}
+
 void AbundanceGroup::calculate_FPKM_covariance()
 {
 	if (mass_fraction() == 0 || effective_length() == 0)
@@ -2343,94 +2459,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
         assert (FPKM() == 0 || _FPKM_variance > 0 || status() != NUMERIC_OK);
     }
     
-    // set up individual vectors of FPKM samples for each abundance object in this group.
-    vector<vector<double> > fpkm_sample_vectors(_abundances.size());
-    vector<double> group_sum_fpkm_samples;
-    
-    vector<double> fpkm_means(_abundances.size(), 0);
-    
-    for(size_t i = 0; i < _assigned_count_samples.size(); ++i)
-    {
-        const Eigen::VectorXd sample = _assigned_count_samples[i];
-        double total_fpkm = 0;
-        
-        for (size_t j = 0; j < sample.size(); ++j)
-        {
-            if (_abundances[j]->effective_length() > 0)
-            {
-                /*
-                 trans_fpkms(j) /= (itr->first)->normalized_map_mass();
-                 trans_fpkms(j) *= 1000000000;
-                 trans_fpkms(j) /= _abundances[i]->effective_length();
-                 trans_fpkms(j) /= (itr->first)->external_scale_factor();
-                 */
-                
-                double fpkm_sample = sample[j] / M;
-                fpkm_sample *= 1000000000;
-                fpkm_sample /= _abundances[j]->effective_length();
-                fpkm_sample /= external_scale_factor;
-                double standard_fpkm = _abundances[j]->FPKM();
-                //fprintf(stderr, "count = %lg, fpkm = %lg, standard fpkm = %lg\n", sample[j], fpkm_sample, standard_fpkm);
-                fpkm_sample_vectors[j].push_back(fpkm_sample);
-                fpkm_means[j] += fpkm_sample;
-            }
-            else
-                fpkm_sample_vectors[j].push_back(0);
-            
-            total_fpkm += sample[j];
-        }
-        
-        if (effective_length() > 0)
-            group_sum_fpkm_samples.push_back(total_fpkm / (effective_length() * M));
-        else
-            group_sum_fpkm_samples.push_back(0);
-    }
-    
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        fpkm_means[i] /= _assigned_count_samples.size();
-        _abundances[i]->fpkm_samples(fpkm_sample_vectors[i]);
-        //fprintf(stderr, "standard fpkm = %lg, sample mean = %lg\n", _abundances[i]->FPKM(), fpkm_means[i]);
-    }
-    
-    fpkm_samples(group_sum_fpkm_samples);
-    
-    // Now fit a gamma distribution to the FPKM samples for each abundance object in this group.
-    for (size_t i = 0; i < fpkm_sample_vectors.size(); ++i)
-    {
-        double i_k = 0;
-        double i_theta = 0;
-        bool good_fit = fit_gamma_dist(fpkm_sample_vectors[i], i_k, i_theta);
-        if (good_fit == false)
-        {
-            _abundances[i]->status(NUMERIC_FAIL);   
-        }
-        else
-        {
-            _abundances[i]->fpkm_gamma_dist_k(i_k);
-            _abundances[i]->fpkm_gamma_dist_theta(i_theta);
-            //double fpkm_gamma_mean = i_k * i_theta;
-            //double fpkm_gamma_var = i_k * i_theta * i_theta;
-            //fprintf (stderr, "standard mean = %lg, standard var = %lg, sample mean = %lg, gamma_mean = %lg, gamma_var = %lg\n", _abundances[i]->FPKM(),_abundances[i]->FPKM_variance(), fpkm_means[i], fpkm_gamma_mean, fpkm_gamma_var);
-        }
-    }
-    
-    double group_k = 0;
-    double group_theta = 0;
-    bool good_fit = fit_gamma_dist(group_sum_fpkm_samples, group_k, group_theta);
-    if (good_fit == false)
-    {
-        for (size_t i = 0; i < _abundances.size(); ++i)
-        {
-            _abundances[i]->status(NUMERIC_FAIL);
-        }
-    }
-    else
-    {
-        fpkm_gamma_dist_k(group_k);
-        fpkm_gamma_dist_theta(group_theta);
-    }
-    
+    fit_gamma_distributions();
     
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
