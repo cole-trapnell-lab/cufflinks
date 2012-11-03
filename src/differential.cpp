@@ -360,7 +360,6 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     //		double log_curr = log(curr.counts);
     //		double log_prev = log(prev.counts);
     
-    double stat = 0.0;
     double p_value = 1.0;
     
     vector<double> merged_samples = curr.fpkm_samples;
@@ -463,11 +462,12 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         boost::math::chi_squared_distribution<double> csd(deg_freedom);
         
         if (stat <= 0)
-            fprintf(stderr, "Warning : test statistic is %lg!\n", stat);
-        
-        if (null_log_lik == 1)
-            fprintf(stderr, "Warning : null log likelihood is 1!\n", stat);
-        
+            stat = 0;
+            //fprintf(stderr, "Warning : test statistic is %lg!\n", stat);
+//        
+//        if (null_log_lik == 1)
+//            fprintf(stderr, "Warning : null log likelihood is 1!\n", stat);
+//        
         
         if (null_log_lik == 1 || stat <= 0 || isnan(stat) || isinf(stat))
         {

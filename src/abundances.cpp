@@ -254,7 +254,7 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
     {
         k = 0;
         theta_hat = 0;
-        return false;
+        return true;
     }
     
    
@@ -276,7 +276,7 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
         {
             k = 0;
             theta_hat = 0;
-            return false;
+            return true;
         }
         num_iter++;
     }
@@ -2303,7 +2303,7 @@ void AbundanceGroup::fit_gamma_distributions()
         
         if (effective_length() > 0)
         {
-            group_sum_fpkm_samples.push_back(total_fpkm / (effective_length() * M));
+            group_sum_fpkm_samples.push_back(total_fpkm);
         }
         else
         {
