@@ -336,145 +336,147 @@ void TestLauncher::test_finished_loci()
 }
 
 // likelihood ratio test on gamma distributions:
-bool test_diffexp(const FPKMContext& curr,
-				  const FPKMContext& prev,
-				  SampleDifference& test)
+SampleDifference test_diffexp(const FPKMContext& curr,
+                              const FPKMContext& prev)
 {
 	bool performed_test = false;
-//	if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
-	{
-		//assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
-        //		double log_curr = log(curr.counts);
-        //		double log_prev = log(prev.counts);
+
+    SampleDifference test;
+    
+    //assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
+    //		double log_curr = log(curr.counts);
+    //		double log_prev = log(prev.counts);
+    
+    double stat = 0.0;
+    double p_value = 1.0;
+    
+    vector<double> merged_samples = curr.fpkm_samples;
+    merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
+    
+    double null_gamma_k = 0.0;
+    double null_gamma_theta = 0.0;
+    bool good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
+    
+    double differential = 0.0;
+    
+    if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
+        differential = log2(curr.FPKM) - log2(prev.FPKM);
+    else if (curr.FPKM)
+        differential = numeric_limits<double>::max();
+    else if (curr.FPKM)
+        differential = -numeric_limits<double>::max();
+
+    double curr_k = curr.gamma_k;
+    double curr_theta = curr.gamma_theta;
+    
+    double prev_k = prev.gamma_k;
+    double prev_theta = prev.gamma_theta;
+    
+    static const double min_gamma_params = 1e-6;
+    
+    if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit &&
+        (prev_k > min_gamma_params && prev_theta > min_gamma_params) &&
+        (curr_k > min_gamma_params && curr_theta > min_gamma_params))
+    {
+        double d_stat_numerator = 0.0; // null hypothesis
+        double d_stat_denominator = 0.0; // alternative hypothesis
         
-        double stat = 0.0;
-        double p_value = 1.0;
+       
         
-        vector<double> merged_samples = curr.fpkm_samples;
-        merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
+        double null_sum_log_fpkms = 0;
+        double null_sum_fpkm_over_theta = 0;
+
+        double curr_sum_log_fpkms = 0;
+        double curr_sum_fpkm_over_theta = 0;
         
-        double null_gamma_k = 0.0;
-        double null_gamma_theta = 0.0;
-        bool good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
+        double prev_sum_log_fpkms = 0;
+        double prev_sum_fpkm_over_theta = 0;
         
-        double differential = 0.0;
         
-        if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
-            differential = log2(curr.FPKM) - log2(prev.FPKM);
-        else if (curr.FPKM)
-            differential = numeric_limits<double>::max();
-        else if (curr.FPKM)
-            differential = -numeric_limits<double>::max();
-        
-        if (good_fit)
+        for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
+             itr != curr.fpkm_per_rep.end(); ++itr)
         {
-            double d_stat_numerator = 0.0; // null hypothesis
-            double d_stat_denominator = 0.0; // alternative hypothesis
-            
-            double curr_k = curr.gamma_k;
-            double curr_theta = curr.gamma_theta;
-            
-            double prev_k = prev.gamma_k;
-            double prev_theta = prev.gamma_theta;
-            
-            double null_sum_log_fpkms = 0;
-            double null_sum_fpkm_over_theta = 0;
+            if (itr->second > 0)
+            {
+                null_sum_log_fpkms += log(itr->second);
+                curr_sum_log_fpkms += log(itr->second);
+            }
+            if (null_gamma_theta > 0)
+                null_sum_fpkm_over_theta += itr->second / null_gamma_theta;
+            if (curr_theta > 0)
+                curr_sum_fpkm_over_theta += itr->second / curr_theta;
+        }
+        
+        double curr_log_lik = (curr_k - 1)*curr_sum_log_fpkms - curr_sum_fpkm_over_theta -
+            curr.fpkm_per_rep.size() * curr_k * log(curr_theta) - curr.fpkm_per_rep.size() * log(boost::math::tgamma(curr_k));
+        
+        for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
+             itr != prev.fpkm_per_rep.end(); ++itr)
+        {
+            if (itr->second > 0)
+            {
+                null_sum_log_fpkms += log(itr->second);
+                prev_sum_log_fpkms += log(itr->second);
+            }
+            if (null_gamma_theta > 0)
+                null_sum_fpkm_over_theta += itr->second / null_gamma_theta;
+            if (prev_theta > 0)
+                prev_sum_fpkm_over_theta += itr->second / prev_theta;
+        }
+        
+        double prev_log_lik = (prev_k - 1)*prev_sum_log_fpkms - prev_sum_fpkm_over_theta -
+                prev.fpkm_per_rep.size() * prev_k * log(prev_theta) - prev.fpkm_per_rep.size() * log(boost::math::tgamma(prev_k));
+        
+    
+        double null_log_lik = 1;
+        if (null_gamma_k > min_gamma_params && null_gamma_theta > min_gamma_params)
+        {
+            null_log_lik = (null_gamma_k - 1)*null_sum_log_fpkms - null_sum_fpkm_over_theta -
+                (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta) - (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * log(boost::math::tgamma(null_gamma_k));
+        }
+        
+        d_stat_numerator = -2 * null_log_lik;
+        d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
+        
+        double stat = d_stat_numerator + d_stat_denominator;
+        double deg_freedom = 4 - 2;  // two per gamma distribution
+        boost::math::chi_squared_distribution<double> csd(deg_freedom);
+        
+        if (null_log_lik == 1 || stat <= 0 || isnan(stat) || isinf(stat))
+        {
 
-            double curr_sum_log_fpkms = 0;
-            double curr_sum_fpkm_over_theta = 0;
-            
-            double prev_sum_log_fpkms = 0;
-            double prev_sum_fpkm_over_theta = 0;
-            
-            for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
-                 itr != curr.fpkm_per_rep.end(); ++itr)
-            {
-                if (itr->second > 0)
-                {
-                    null_sum_log_fpkms += log(itr->second);
-                    curr_sum_log_fpkms += log(itr->second);
-                }
-                if (null_gamma_theta > 0)
-                    null_sum_fpkm_over_theta += itr->second / null_gamma_theta;
-                if (curr_theta > 0)
-                    curr_sum_fpkm_over_theta += itr->second / curr_theta;
-            }
-            
-            double curr_log_lik = (curr_k - 1)*curr_sum_log_fpkms - curr_sum_fpkm_over_theta -
-                curr.fpkm_per_rep.size() * curr_k * log(curr_theta) - curr.fpkm_per_rep.size() * boost::math::tgamma(curr_k);
-            
-
-            for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
-                 itr != prev.fpkm_per_rep.end(); ++itr)
-            {
-                if (itr->second > 0)
-                {
-                    null_sum_log_fpkms += log(itr->second);
-                    prev_sum_log_fpkms += log(itr->second);
-                }
-                if (null_gamma_theta > 0)
-                    null_sum_fpkm_over_theta += itr->second / null_gamma_theta;
-                if (prev_theta > 0)
-                    prev_sum_fpkm_over_theta += itr->second / prev_theta;
-            }
-            
-            double prev_log_lik = (prev_k - 1)*prev_sum_log_fpkms - prev_sum_fpkm_over_theta -
-                prev.fpkm_per_rep.size() * prev_k * log(curr_theta) - prev.fpkm_per_rep.size() * boost::math::tgamma(prev_k);
-          
-            double null_log_lik = (null_gamma_k - 1)*null_sum_log_fpkms - null_sum_fpkm_over_theta -
-                (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta) - (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * boost::math::tgamma(null_gamma_k);
-            
-            d_stat_numerator = -2 * null_log_lik;
-            d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
-            
-            double stat = d_stat_numerator + d_stat_denominator;
-            double deg_freedom = 4 - 2;  // two per gamma distribution
-            boost::math::chi_squared_distribution<double> csd(deg_freedom);
-            
-            double t1, t2;
-            if (stat > 0.0)
-            {
-                t1 = stat;
-                t2 = -stat;
-            }
-            else
-            {
-                t1 = -stat;
-                t2 = stat;
-            }
-            
-            if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
-            {
-
-                //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
-                p_value = 1.0;
-            }
-            else
-            {
-                double tail_1 = cdf(csd, t1);
-                double tail_2 = cdf(csd, t2);
-                p_value = 1.0 - (tail_1 - tail_2);
-            }
-            
-            //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
-            test.p_value = p_value;
-            test.differential = differential;
-            test.test_stat = stat;
-            test.value_1 = prev.FPKM;
-            test.value_2 = curr.FPKM;
-            
-            performed_test = true;
+            //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
+            p_value = 1.0;
+            performed_test = false;
         }
         else
         {
-            test.p_value = 1.0;
-            test.test_stat = 0.0;
-            performed_test = false;
+            assert (stat >= 0);
+            //fprintf(stderr, "stat = %lg\n", stat);
+            double tail_1 = cdf(csd, stat);
+            p_value = 1.0 - (tail_1);
+            performed_test = true;
         }
-	}
-	
+        
+        //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
+        test.p_value = p_value;
+        test.differential = differential;
+        test.test_stat = stat;
+        test.value_1 = prev.FPKM;
+        test.value_2 = curr.FPKM;
+    }
+    else
+    {
+        test.p_value = 1.0;
+        test.test_stat = 0.0;
+        test.value_1 = prev.FPKM;
+        test.value_2 = curr.FPKM;
+        test.differential = 0;
+        performed_test = false;
+    }
+
 	test.test_status = performed_test ? OK : NOTEST;
-	return performed_test;
+	return test;
 }
 
 
@@ -637,7 +639,7 @@ SampleDifference get_de_tests(const string& description,
         prev_abundance.status == NUMERIC_HI_DATA ||
         curr_abundance.status == NUMERIC_HI_DATA)
     {
-        test_diffexp(r1, r2, test);
+        test = test_diffexp(r1, r2);
         test.test_stat = 0;
 		test.p_value = 1.0;
 		test.differential = 0.0;
@@ -658,7 +660,7 @@ SampleDifference get_de_tests(const string& description,
         // perform the test, but mark it as not significant and don't add it to the 
         // pile. This way we don't penalize for multiple testing, but users can still
         // see the fold change.
-		test_diffexp(r1, r2, test);
+		test = test_diffexp(r1, r2);
         test.test_stat = 0;
         test.p_value = 1.0;
         //test.differential = 0.0;
@@ -667,22 +669,32 @@ SampleDifference get_de_tests(const string& description,
     }
     else // at least one is OK, the other might be LOW_DATA
 	{
-		test.test_status = FAIL;
-
-		if (test_diffexp(r1, r2, test))
-		{
-			total_iso_de_tests++;
-		}
-		else
-		{
+        test = test_diffexp(r1, r2);
+        if (test.test_status == OK && enough_reads)
+        {
+            total_iso_de_tests++;
+        }
+        else
+        {
+            test.test_status = NOTEST;
 			test.test_stat = 0;
 			test.p_value = 1.0;
 			test.differential = 0.0;
-		}
-		if (enough_reads) 
-			test.test_status = OK;
-		else
-			test.test_status = NOTEST;
+        }
+//		if (test_diffexp(r1, r2, test))
+//		{
+//			total_iso_de_tests++;
+//		}
+//		else
+//		{
+//			test.test_stat = 0;
+//			test.p_value = 1.0;
+//			test.differential = 0.0;
+//		}
+//		if (enough_reads)
+//			test.test_status = OK;
+//		else
+//			test.test_status = NOTEST;
 		
 	}
 	
@@ -1386,6 +1398,14 @@ void sample_worker(const RefSequenceTable& rt,
     HitBundle bundle;
     bool non_empty = sample_factory.next_bundle(bundle);
     
+    char bundle_label_buf[2048];
+    sprintf(bundle_label_buf,
+            "%s:%d-%d",
+            rt.get_name(bundle.ref_id()),
+            bundle.left(),
+            bundle.right());
+    string locus_tag = bundle_label_buf;
+    
     if (!non_empty || (bias_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS
@@ -1400,14 +1420,6 @@ void sample_worker(const RefSequenceTable& rt,
     }
     
     abundance->cluster_mass = bundle.mass();
-    
-    char bundle_label_buf[2048];
-    sprintf(bundle_label_buf, 
-            "%s:%d-%d", 
-            rt.get_name(bundle.ref_id()),
-            bundle.left(),
-            bundle.right());
-    string locus_tag = bundle_label_buf;
     
     launcher->register_locus(locus_tag);
     
