@@ -685,7 +685,9 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
         }
         
     }
-
+    
+   
+    
 	filtered_group = AbundanceGroup(new_ab, 
                                     new_cov, 
                                     new_iterated_em_count_cov, 
@@ -694,6 +696,8 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
                                     _max_mass_variance,
                                     _read_group_props,
                                     new_assigned_count_samples);
+     assert (filtered_group.FPKM() == 0 || new_assigned_count_samples.size() > 0);
+    
     filtered_group.description(_description);
 }
 
@@ -1440,6 +1444,8 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments)
         }
     }
     
+    assert (FPKM() == 0 || _assigned_count_samples.size() > 0);
+    
     //fprintf(stderr, "Total calls to get_cond_prob = %d\n", total_cond_prob_calls);
 }
 
@@ -1612,327 +1618,6 @@ bool estimate_count_variance(long double& variance,
     return numeric_ok;
 }
 
-//void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignments,
-//                                               const vector<shared_ptr<Abundance> >& transcripts)
-//{
-//    _count_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
-//    
-//    if (_abundances.size() <= 1)
-//    {
-//        _count_covariance(0,0) = _abundances[0]->mass_variance();
-//        return;
-//    }
-//    
-//    if (num_fragments() == 0)
-//    {
-//        return;
-//    }
-//    
-//    //size_t num_frag_count_draws = 1000;
-//    //const int num_multinomial_samples = 1;
-//    
-//    boost::mt19937 rng;
-//    
-//    vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
-//    vector<Eigen::VectorXd > generated_counts (num_frag_count_draws, Eigen::VectorXd::Zero(_abundances.size()));
-//    
-//    for (size_t j = 0; j < _abundances.size(); ++j)
-//    {
-//        double r = _abundances[j]->num_fragments();
-//        if (r > 0)
-//        {
-//            double fit_var = _abundances[j]->mass_variance();
-//            if (fit_var - _abundances[j]->num_fragments() > 1e-1)
-//            {
-//                r *= r;
-//                double over_disp_scale = fit_var - _abundances[j]->num_fragments();
-//                r /= over_disp_scale;
-//                r = rounding::roundhalfeven(r);
-//                
-//                if (r == 0)
-//                {
-//                    for (size_t i = 0; i < num_frag_count_draws; ++i)
-//                    {
-//                        generated_counts[i](j) = 0;
-//                    }
-//                    continue;
-//                }
-//                
-//                double p = _abundances[j]->num_fragments() / fit_var;
-//                
-//                boost::random::negative_binomial_distribution<int, double> nb_j(r, p);
-//                for (size_t i = 0; i < num_frag_count_draws; ++i)
-//                {
-//                    generated_counts[i](j) = nb_j(rng);
-//                }
-//            }
-//            else
-//            {
-//                r = rounding::roundhalfeven(r);
-//                if (r == 0)
-//                {
-//                    for (size_t i = 0; i < num_frag_count_draws; ++i)
-//                    {
-//                        generated_counts[i](j) = 0;
-//                    }
-//                    continue;
-//                }
-//                
-//                boost::random::poisson_distribution<int, double> nb_j(r);
-//                for (size_t i = 0; i < num_frag_count_draws; ++i)
-//                {
-//                    generated_counts[i](j) = nb_j(rng);
-//                }
-//            }
-//        }
-//        else
-//        {
-//            for (size_t i = 0; i < num_frag_count_draws; ++i)
-//            {
-//                generated_counts[i](j) = 0;
-//            }
-//        }
-//           
-//    }
-//    
-//    ublas::matrix<double> assign_probs_transpose = ublas::trans(_assign_probs);
-//    vector<Eigen::VectorXd > assigned_counts (num_frag_count_draws * num_frag_assignments, Eigen::VectorXd::Zero(_abundances.size()));
-//    
-//    Eigen::MatrixXd transcript_cond_probs(_abundances.size(), nr_alignments.size());
-//    for (int j = 0; j < transcript_cond_probs.rows(); ++j)
-//    {
-//        for (int i = 0; i < transcript_cond_probs.cols(); ++i)
-//        {
-//            transcript_cond_probs(j,i) = (*(transcripts[j]->cond_probs()))[i];
-//        }
-//    }
-//    
-//    Eigen::VectorXd aligment_multiplicities(nr_alignments.size());
-//    for (int i = 0; i < aligment_multiplicities.size(); ++i)
-//    {
-//        aligment_multiplicities[i] = nr_alignments[i].collapse_mass();
-//    }
-//    
-//    boost::uniform_01<> uniform_dist;
-//    boost::mt19937 null_rng; 
-//    boost::variate_generator<boost::mt19937&, boost::uniform_01<> > uniform_gen(null_rng, uniform_dist); 
-//    
-//    vector< vector<double> > selector_variates (num_frag_assignments, vector<double>(transcript_cond_probs.cols(), 0.0));
-//    for (size_t i = 0; i < num_frag_assignments; ++i)
-//    {
-//        vector<double>& selector = selector_variates[i];
-//        for (int frag_idx = 0; frag_idx < transcript_cond_probs.cols(); ++frag_idx)
-//        {
-//            selector[frag_idx] = uniform_gen();
-//        }
-//    }
-//    
-//    Eigen::VectorXd expected_generated_counts = Eigen::VectorXd::Zero(_abundances.size());
-//    
-//    for (size_t i = 0; i < num_frag_count_draws; ++i)
-//    {
-//        //ublas::vector<double> proposed_gammas = generated_counts[i];
-//        Eigen::VectorXd proposed_gammas = generated_counts[i];
-//        
-//        double total_sample_frags = generated_counts[i].sum();
-//        double total_true_frags = aligment_multiplicities.sum();
-//        
-//        if (total_sample_frags == 0)
-//            continue;
-//        
-//        proposed_gammas /= total_sample_frags;
-//        
-//        expected_generated_counts += generated_counts[i];
-//
-//        // This is the full fragment assignment scheme:
-//        
-//        Eigen::MatrixXd assign_probs;
-//        calculate_assignment_probs(aligment_multiplicities, transcript_cond_probs, proposed_gammas, assign_probs);
-//        for (size_t j = 0; j < num_frag_assignments; ++j)
-//        {
-//            Eigen::VectorXd assigned_frag_counts = Eigen::VectorXd::Zero(_abundances.size());
-//            vector<double>& selector = selector_variates[j];
-//            for (int frag_idx = 0; frag_idx < assign_probs.cols(); ++frag_idx)
-//            {
-//               
-//                double s = 0.0;
-//                double p = selector[frag_idx];
-//                for (size_t a_idx = 0; a_idx < _abundances.size(); ++a_idx)
-//                {
-//                    if (p < s + assign_probs(a_idx, frag_idx))
-//                    {
-//                        assigned_frag_counts(a_idx) += (aligment_multiplicities[frag_idx] / total_true_frags) * total_sample_frags;
-//                        break;
-//                    }
-//                    s += assign_probs(a_idx, frag_idx);
-//                }
-//            }
-//            assigned_counts[i*num_frag_assignments + j] = assigned_frag_counts;
-//        }
-//        
-////        // This is the sampled pseudofragment scheme:
-////        Eigen::MatrixXd avg_assign_probs;
-////        calculate_average_assignment_probs(aligment_multiplicities, transcript_cond_probs, proposed_gammas, avg_assign_probs);
-////        for (size_t j = 0; j < num_frag_assignments; ++j)
-////        {
-////            Eigen::VectorXd assigned_frag_counts = Eigen::VectorXd::Zero(_abundances.size());
-////            
-////            for (size_t trans_idx = 0; trans_idx < generated_counts[i].size(); ++trans_idx)
-////            {
-////                size_t frags_from_transcript = generated_counts[i][trans_idx];
-////                for (size_t frag_idx = 0; frag_idx < frags_from_transcript; ++frag_idx)
-////                {
-////                    double s = 0.0;
-////                    double p = uniform_gen();
-////                    for (size_t a_idx = 0; a_idx < generated_counts[i].size(); ++a_idx)
-////                    {
-////                        if (p < s + avg_assign_probs(trans_idx, a_idx))
-////                        {
-////                            assigned_frag_counts(a_idx) += 1;
-////                            break;
-////                        }
-////                        s += avg_assign_probs(trans_idx, a_idx);
-////                    }
-////                }
-////            }
-////            
-////            assigned_counts[i*num_frag_assignments + j] = assigned_frag_counts;
-////            //assigned_counts[i*num_frag_assignments + j] = avg_assign_probs.transpose() * generated_counts[i];
-////            //cerr << assigned_counts[i*num_frag_assignments + j].transpose() << endl;
-////        }
-//        
-//    }
-//    
-//    Eigen::VectorXd expected_counts = Eigen::VectorXd::Zero(_abundances.size());
-//    Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
-//    
-//    for (size_t i = 0; i < assigned_counts.size(); ++i)
-//    {
-//        for (int j = 0; j < assigned_counts[i].size(); ++j)
-//        {
-//            assert (!isnan(assigned_counts[i](j)) && !isinf(assigned_counts[i](j)));
-//        }
-//        expected_counts += assigned_counts[i];
-//        //
-//        //expected_relative_abundances += relative_abundances[i];
-//    }
-//    if (assigned_counts.size() > 0)
-//    {
-//        expected_counts /= assigned_counts.size();
-//        //expected_generated_counts /= assigned_counts.size();
-//        //expected_relative_abundances /= assigned_counts.size();
-//    }
-//    
-//    if (num_frag_assignments > 0)
-//    {
-//        expected_generated_counts /= num_frag_assignments;
-//        //expected_relative_abundances /= assigned_counts.size();
-//    }
-//    
-//      
-////    cerr << "======" << endl;
-////    cerr << "updated expected counts #1: " << endl;
-////    std::cerr << expected_counts << std::endl;
-////    cerr << "updated expected generated counts #1: " << endl;
-////    std::cerr << expected_generated_counts << std::endl;
-////    cerr << "======" << endl;
-//    
-//    for (size_t i = 0; i < _abundances.size(); ++i)
-//    {
-//        for (size_t j = 0; j < _abundances.size(); ++j)
-//        {
-//            for (size_t k = 0 ; k < assigned_counts.size(); ++k)
-//            {
-//                double c = (assigned_counts[k](i) - expected_counts(i)) * (assigned_counts[k](j) - expected_counts(j));
-//                _count_covariance(i,j) += c;
-//                
-//                assert (!isinf(_count_covariance(i,j)) && !isnan(_count_covariance(i,j)));
-//                //double r = (relative_abundances[k](i) - expected_relative_abundances(i)) * (relative_abundances[k](j) - expected_relative_abundances(j));
-//                //_kappa_covariance(i,j) += 
-//            }
-//        }
-//    }
-//    
-//    _count_covariance /= assigned_counts.size();
-//    
-////    double total_counts = expected_counts.sum();
-////    for (size_t i = 0; i < _abundances.size(); ++i)
-////    {
-////        if (total_counts > 0)
-////        {
-////            _abundances[i]->gamma(expected_counts(i) / total_counts);
-////        }
-////        else
-////        {
-////            _abundances[i]->gamma(0);
-////        }
-////    }
-//    
-//    for (size_t i = 0; i < _abundances.size(); ++i)
-//    {
-//        // Make sure we aren't below the fit for the single isoform case
-//        if (_count_covariance(i,i) < ceil(_abundances[i]->mass_variance()))
-//        {
-//            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to fitted variance model (%lg)\n", i, _count_covariance(i,i), ceil(_abundances[i]->mass_variance()));
-//            _count_covariance(i,i) = ceil(_abundances[i]->mass_variance());
-//        }
-//        
-//        // Check that we aren't below what the Poisson model says we ought to be at
-//        if (_count_covariance(i,i) < ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)))
-//        {
-//            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
-//            _count_covariance(i,i) = ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i));
-//        }
-//        
-//        long double count_var = 0.0;
-//        
-//        // Check that we aren't below what the BNB model says we ought to be at
-//        bool numerics_ok = estimate_count_variance(count_var,
-//                                                   _abundances[i]->gamma(),
-//                                                   _iterated_exp_count_covariance(i,i),
-//                                                   num_fragments(),
-//                                                   _abundances[i]->mass_variance(),
-//                                                   _abundances[i]->effective_length());
-////        if (numerics_ok == false)
-////        {
-////            fprintf(stderr, "Warning: BNB has no analytic solution\n");
-////        }
-//        
-//        if (numerics_ok && _count_covariance(i,i) < ceil(count_var))
-//        {
-//            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
-//            _count_covariance(i,i) = ceil(count_var);
-//        }
-//    }
-//    
-////    for (size_t i = 0; i < _abundances.size(); ++i)
-////    {
-////        _count_covariance(i,i) = ceil(_count_covariance(i,i));
-////    }
-//    
-////    cerr << "simulated count covariance: " << endl;
-////    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
-////    {
-////        ublas::matrix_row<ublas::matrix<double> > mr (_count_covariance, i);
-////        cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
-////        std::cerr << i << " : " << mr << std::endl;
-////    }
-////    cerr << "======" << endl;
-////    cerr << "updated expected counts: " << endl;
-////    std::cerr << expected_counts << std::endl;
-////    cerr << "======" << endl;
-//    
-//        
-//    _assigned_count_samples = assigned_counts;
-//    
-////    for (size_t i = 0; i < num_count_draws; ++i)
-////    {
-////        cerr << generated_counts[i] << endl;
-////        
-////    }
-//}
-//
-
 // This version of the function draws directly from the iterated expectation count covariance matrix
 // and treats the betas as normally distributed (which is a good approximation), allowing good capture
 // of their covariance without resorting to lots of expensive fragment level sampling.
@@ -1944,7 +1629,7 @@ void AbundanceGroup::simulate_count_covariance(const vector<MateHit>& nr_alignme
     if (_abundances.size() <= 1)
     {
         _count_covariance(0,0) = _abundances[0]->mass_variance();
-        return;
+        //return;
     }
     
     if (num_fragments() == 0)

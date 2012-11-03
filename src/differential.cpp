@@ -415,6 +415,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
              itr != curr.fpkm_per_rep.end(); ++itr)
         {
+            //fprintf(stderr, "curr: %lg\n", itr->second);
             if (itr->second > 0)
             {
                 null_sum_log_fpkms += log(itr->second);
@@ -426,12 +427,14 @@ SampleDifference test_diffexp(const FPKMContext& curr,
                 curr_sum_fpkm_over_theta += itr->second / curr_theta;
         }
         
-        double curr_log_lik = (curr_k - 1)*curr_sum_log_fpkms - curr_sum_fpkm_over_theta -
-            curr.fpkm_per_rep.size() * curr_k * log(curr_theta) - curr.fpkm_per_rep.size() * log(boost::math::tgamma(curr_k));
+        double curr_log_lik = -(((curr_k - 1)*curr_sum_log_fpkms) - curr_sum_fpkm_over_theta -
+            (curr.fpkm_per_rep.size() * curr_k * log(curr_theta)) -
+            (curr.fpkm_per_rep.size() * log(boost::math::tgamma<long double>(curr_k))));
         
         for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
              itr != prev.fpkm_per_rep.end(); ++itr)
         {
+            //fprintf(stderr, "prev: %lg\n", itr->second);
             if (itr->second > 0)
             {
                 null_sum_log_fpkms += log(itr->second);
@@ -443,15 +446,17 @@ SampleDifference test_diffexp(const FPKMContext& curr,
                 prev_sum_fpkm_over_theta += itr->second / prev_theta;
         }
         
-        double prev_log_lik = (prev_k - 1)*prev_sum_log_fpkms - prev_sum_fpkm_over_theta -
-                prev.fpkm_per_rep.size() * prev_k * log(prev_theta) - prev.fpkm_per_rep.size() * log(boost::math::tgamma(prev_k));
+        double prev_log_lik = -(((prev_k - 1)*prev_sum_log_fpkms) - prev_sum_fpkm_over_theta -
+                (prev.fpkm_per_rep.size() * prev_k * log(prev_theta)) -
+                (prev.fpkm_per_rep.size() * log(boost::math::tgamma<long double>(prev_k))));
         
     
         double null_log_lik = 1;
         if (null_gamma_k > min_gamma_params && null_gamma_theta > min_gamma_params)
         {
-            null_log_lik = (null_gamma_k - 1)*null_sum_log_fpkms - null_sum_fpkm_over_theta -
-                (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta) - (curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * log(boost::math::tgamma(null_gamma_k));
+            null_log_lik = -(((null_gamma_k - 1)*null_sum_log_fpkms) - null_sum_fpkm_over_theta -
+                ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta)) -
+                ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * log(boost::math::tgamma<long double>(null_gamma_k))));
         }
         
         d_stat_numerator = -2 * null_log_lik;
@@ -662,6 +667,11 @@ SampleDifference get_de_tests(const string& description,
 	int total_iso_de_tests = 0;
 			
 	SampleDifference test;
+    
+//    if (description == "XLOC_000009")
+//    {
+//        fprintf(stderr, "woah there");
+//    }
     
     const FPKMContext& r1 = curr_abundance;
     const FPKMContext& r2 = prev_abundance;
