@@ -348,7 +348,7 @@ void TestLauncher::test_finished_loci()
     }
 }
 
-// likelihood ratio test on gamma distributions:
+//// likelihood ratio test on gamma distributions:
 SampleDifference test_diffexp(const FPKMContext& curr,
                               const FPKMContext& prev)
 {
@@ -427,7 +427,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
                 curr_sum_fpkm_over_theta += itr->second / curr_theta;
         }
         
-        double curr_log_lik = -(((curr_k - 1)*curr_sum_log_fpkms) - curr_sum_fpkm_over_theta -
+        double curr_log_lik = (((curr_k - 1)*curr_sum_log_fpkms) - curr_sum_fpkm_over_theta -
             (curr.fpkm_per_rep.size() * curr_k * log(curr_theta)) -
             (curr.fpkm_per_rep.size() * log(boost::math::tgamma<long double>(curr_k))));
         
@@ -446,7 +446,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
                 prev_sum_fpkm_over_theta += itr->second / prev_theta;
         }
         
-        double prev_log_lik = -(((prev_k - 1)*prev_sum_log_fpkms) - prev_sum_fpkm_over_theta -
+        double prev_log_lik = (((prev_k - 1)*prev_sum_log_fpkms) - prev_sum_fpkm_over_theta -
                 (prev.fpkm_per_rep.size() * prev_k * log(prev_theta)) -
                 (prev.fpkm_per_rep.size() * log(boost::math::tgamma<long double>(prev_k))));
         
@@ -454,7 +454,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         double null_log_lik = 1;
         if (null_gamma_k > min_gamma_params && null_gamma_theta > min_gamma_params)
         {
-            null_log_lik = -(((null_gamma_k - 1)*null_sum_log_fpkms) - null_sum_fpkm_over_theta -
+            null_log_lik = (((null_gamma_k - 1)*null_sum_log_fpkms) - null_sum_fpkm_over_theta -
                 ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta)) -
                 ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * log(boost::math::tgamma<long double>(null_gamma_k))));
         }
