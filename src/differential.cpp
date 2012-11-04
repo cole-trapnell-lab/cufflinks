@@ -391,6 +391,22 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     double prev_k = prev.gamma_k;
     double prev_theta = prev.gamma_theta;
     
+    try
+    {
+        boost::math::tgamma<long double>(null_gamma_k);
+        boost::math::tgamma<long double>(prev_k);
+        boost::math::tgamma<long double>(curr_k);
+    }
+    catch (boost::exception_detail::error_info_injector<std::overflow_error>& e)
+    {
+        test.p_value = 1.0;
+        test.test_stat = 0.0;
+        test.value_1 = prev.FPKM;
+        test.value_2 = curr.FPKM;
+        test.differential = differential;
+        performed_test = false;
+    }
+    
     static const double min_gamma_params = 1e-6;
     
     if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit &&
