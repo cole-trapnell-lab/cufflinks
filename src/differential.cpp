@@ -348,6 +348,28 @@ void TestLauncher::test_finished_loci()
     }
 }
 
+double wrapped_tgamma(double gamma_k)
+{
+    double tgamma_k = 0;
+    try
+    {
+        boost::math::tgamma<long double>(gamma_k);
+    }
+    catch (boost::exception_detail::error_info_injector<std::overflow_error>& e)
+    {
+        tgamma_k = numeric_limits<double>::max();
+    }
+    catch (boost::exception_detail::error_info_injector<std::underflow_error>& e)
+    {
+        tgamma_k = 0;
+    }
+    catch (boost::exception_detail::error_info_injector<std::domain_error>& e)
+    {
+        tgamma_k = 0;
+    }
+    return tgamma_k;
+}
+
 //// likelihood ratio test on gamma distributions:
 SampleDifference test_diffexp(const FPKMContext& curr,
                               const FPKMContext& prev)
@@ -369,6 +391,8 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     double null_gamma_theta = 0.0;
     bool good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
     
+    double tgamma_null_gamma_k = wrapped_tgamma(null_gamma_k);
+    
     if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
     {
         good_fit = fit_gamma_dist(merged_samples, null_gamma_k, null_gamma_theta);
@@ -388,29 +412,34 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     double curr_k = curr.gamma_k;
     double curr_theta = curr.gamma_theta;
     
+    double tgamma_curr_gamma_k = wrapped_tgamma(curr_k);
+    
     double prev_k = prev.gamma_k;
     double prev_theta = prev.gamma_theta;
     
-    try
-    {
-        boost::math::tgamma<long double>(null_gamma_k);
-        boost::math::tgamma<long double>(prev_k);
-        boost::math::tgamma<long double>(curr_k);
-    }
-    catch (std::exception& e)
-    {
-        test.p_value = 1.0;
-        test.test_stat = 0.0;
-        test.value_1 = prev.FPKM;
-        test.value_2 = curr.FPKM;
-        test.differential = differential;
-        performed_test = false;
-        test.test_status = performed_test ? OK : NOTEST;
-        return test;
-    }
+    double tgamma_prev_gamma_k = wrapped_tgamma(prev_k);
     
     
-    static const double min_gamma_params = 1e-6;
+//    try
+//    {
+//        boost::math::tgamma<long double>(null_gamma_k);
+//        boost::math::tgamma<long double>(prev_k);
+//        boost::math::tgamma<long double>(curr_k);
+//    }
+//    catch (boost::exception_detail::error_info_injector<std::overflow_error>& e)
+//    {
+//        test.p_value = 1.0;
+//        test.test_stat = 0.0;
+//        test.value_1 = prev.FPKM;
+//        test.value_2 = curr.FPKM;
+//        test.differential = differential;
+//        performed_test = false;
+//        test.test_status = performed_test ? OK : NOTEST;
+//        return test;
+//    }
+    
+    
+    static const long double min_gamma_params = 1e-20;
     
     if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit &&
         (prev_k > min_gamma_params && prev_theta > min_gamma_params) &&
@@ -448,7 +477,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         
         double curr_log_lik = (((curr_k - 1)*curr_sum_log_fpkms) - curr_sum_fpkm_over_theta -
             (curr.fpkm_per_rep.size() * curr_k * log(curr_theta)) -
-            (curr.fpkm_per_rep.size() * log(boost::math::tgamma<long double>(curr_k))));
+            (curr.fpkm_per_rep.size() * log(tgamma_curr_gamma_k)));
         
         for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
              itr != prev.fpkm_per_rep.end(); ++itr)
@@ -467,7 +496,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         
         double prev_log_lik = (((prev_k - 1)*prev_sum_log_fpkms) - prev_sum_fpkm_over_theta -
                 (prev.fpkm_per_rep.size() * prev_k * log(prev_theta)) -
-                (prev.fpkm_per_rep.size() * log(boost::math::tgamma<long double>(prev_k))));
+                (prev.fpkm_per_rep.size() * log(tgamma_prev_gamma_k)));
         
     
         double null_log_lik = 1;
@@ -475,7 +504,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         {
             null_log_lik = (((null_gamma_k - 1)*null_sum_log_fpkms) - null_sum_fpkm_over_theta -
                 ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * null_gamma_k * log(null_gamma_theta)) -
-                ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * log(boost::math::tgamma<long double>(null_gamma_k))));
+                ((curr.fpkm_per_rep.size() + prev.fpkm_per_rep.size())  * log(tgamma_null_gamma_k)));
         }
         
         d_stat_numerator = -2 * null_log_lik;
