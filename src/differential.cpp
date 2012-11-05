@@ -397,7 +397,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         boost::math::tgamma<long double>(prev_k);
         boost::math::tgamma<long double>(curr_k);
     }
-    catch (boost::exception_detail::error_info_injector<std::overflow_error>& e)
+    catch (std::exception& e)
     {
         test.p_value = 1.0;
         test.test_stat = 0.0;
@@ -408,17 +408,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         test.test_status = performed_test ? OK : NOTEST;
         return test;
     }
-    catch (boost::exception_detail::error_info_injector<std::underflow_error>& e)
-    {
-        test.p_value = 1.0;
-        test.test_stat = 0.0;
-        test.value_1 = prev.FPKM;
-        test.value_2 = curr.FPKM;
-        test.differential = differential;
-        performed_test = false;
-        test.test_status = performed_test ? OK : NOTEST;
-        return test;
-    }
+    
     
     static const double min_gamma_params = 1e-6;
     
