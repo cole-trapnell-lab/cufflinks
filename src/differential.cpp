@@ -353,7 +353,7 @@ double wrapped_tgamma(double gamma_k)
     double tgamma_k = 0;
     try
     {
-        boost::math::tgamma<long double>(gamma_k);
+        tgamma_k = boost::math::tgamma<long double>(gamma_k);
     }
     catch (boost::exception_detail::error_info_injector<std::overflow_error>& e)
     {
