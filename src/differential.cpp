@@ -361,11 +361,11 @@ long double wrapped_lgamma(double gamma_k)
     }
     catch (boost::exception_detail::error_info_injector<std::underflow_error>& e)
     {
-        lgamma_k = -numeric_limits<long double>::max();
+        lgamma_k = numeric_limits<long double>::max();
     }
     catch (boost::exception_detail::error_info_injector<std::domain_error>& e)
     {
-        lgamma_k = -numeric_limits<long double>::max();
+        lgamma_k = numeric_limits<long double>::max();
     }
     return lgamma_k;
 }
