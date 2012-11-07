@@ -514,6 +514,11 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         double deg_freedom = 4 - 2;  // two per gamma distribution
         boost::math::chi_squared_distribution<double> csd(deg_freedom);
         
+        if (stat > 1000)
+        {
+            fprintf(stderr, "Warning: test stat is huge (%lg\n", stat);
+        }
+        
         if (stat <= 0)
             stat = 0;
             //fprintf(stderr, "Warning : test statistic is %lg!\n", stat);
