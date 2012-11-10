@@ -369,26 +369,6 @@ public:
         _fpkm_gamma_k(0),
         _fpkm_gamma_theta(0) {}
 	
-//	AbundanceGroup(const AbundanceGroup& other) 
-//	{
-//		_abundances = other._abundances;
-//		_iterated_exp_count_covariance = other._iterated_exp_count_covariance;
-//        _count_covariance = other._count_covariance;
-//        _fpkm_covariance = other._fpkm_covariance;
-//        _gamma_covariance = other._gamma_covariance;
-//		_FPKM_conf = other._FPKM_conf;
-//		_kappa = other._kappa;
-//		_kappa_covariance = other._kappa_covariance;
-//		_FPKM_variance = other._FPKM_variance;
-//		_description = other._description;
-//        _max_mass_variance = other._max_mass_variance;
-//        _salient_frags = other._salient_frags;
-//        _total_frags = other._total_frags;
-//        _read_group_props = other._read_group_props;
-//        _assigned_count_samples = other._assigned_count_samples;
-//        _null_js_samples = other._null_js_samples;
-//    }
-	
 	AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances) : 
 		_abundances(abundances), 
         _iterated_exp_count_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
@@ -410,8 +390,7 @@ public:
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
                    const long double max_mass_variance,
-                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props,
-                   const vector<Eigen::VectorXd>& assigned_count_samples); 
+                   const std::set<shared_ptr<ReadGroupProperties const > >& rg_props);
 	
 	AbundanceStatus status() const;
 	void status(AbundanceStatus s)			{ }
@@ -509,7 +488,7 @@ public:
     
     const vector<double> null_js_samples() const { return _null_js_samples; }
     
-	void calculate_abundance(const vector<MateHit>& alignments);
+	void calculate_abundance(const vector<MateHit>& alignments, bool perform_collapse = true, bool calculate_per_replicate = true);
 	
     void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
     double max_mass_variance() const { return _max_mass_variance; }
@@ -523,7 +502,8 @@ public:
     const std::set<shared_ptr<ReadGroupProperties const> >& rg_props() const { return _read_group_props; }
     
     void init_rg_props(const std::set<shared_ptr<ReadGroupProperties const> >& rg) 
-    { 
+    {
+        _read_group_props = rg;
         _count_per_replicate.clear();
         for ( std::set<shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg.begin();
              itr != rg.end();
@@ -546,15 +526,21 @@ private:
 	void calculate_FPKM_covariance();
     
     //void estimate_count_covariance();
-    
-    void simulate_count_covariance(const vector<MateHit>& nr_alignments,
-                                   const vector<shared_ptr<Abundance> >& transcripts);
+//    
+//    void simulate_count_covariance(const vector<MateHit>& nr_alignments,
+//                                   const vector<shared_ptr<Abundance> >& transcripts);
 
     void calculate_conf_intervals();
 	void calculate_locus_scaled_mass_and_variance(const vector<MateHit>& nr_alignments,
                           const vector<shared_ptr<Abundance> >& transcripts);
-    void calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
-                                                 const vector<shared_ptr<Abundance> >& transcripts);
+//    void calculate_iterated_exp_count_covariance(const vector<MateHit>& nr_alignments, 
+//                                                 const vector<shared_ptr<Abundance> >& transcripts);
+    
+    
+    AbundanceStatus calculate_per_replicate_abundances(vector<shared_ptr<Abundance> >& transcripts,
+                                                       const vector<MateHit>& nr_alignments,
+                                                       const vector<double>& log_conv_factors,
+                                                       std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate);
     
         
 	void calculate_kappas();
@@ -566,6 +552,8 @@ private:
     
     void collect_per_replicate_mass(const vector<MateHit>& alignments,
                                     vector<shared_ptr<Abundance> >& transcripts);
+    
+    void generate_fpkm_samples();
     
     //void collect_read_group_props();
 	
@@ -619,15 +607,6 @@ void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
 								   vector<MateHit>& alignments);
-
-AbundanceStatus empirical_mean_replicate_gamma_mle(vector<shared_ptr<Abundance> >& transcripts,
-                                                   const vector<MateHit>& nr_alignments,
-                                                   const vector<double>& log_conv_factors,
-                                                   ublas::vector<double>& gamma_map_estimate,
-                                                   ublas::matrix<double>& gamma_covariance,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> >& mles_for_read_groups,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, double >& count_per_replicate,
-                                                   std::map<shared_ptr<ReadGroupProperties const >, AbundanceStatus >& status_per_replicate);
 
 AbundanceStatus empirical_replicate_gammas(vector<shared_ptr<Abundance> >& transcripts,
                                            const vector<MateHit>& nr_alignments,
@@ -699,4 +678,17 @@ void calculate_average_assignment_probs(const Eigen::VectorXd& alignment_multipl
                                 const Eigen::MatrixXd& transcript_cond_probs,
                                 const Eigen::VectorXd& proposed_gammas,
                                 Eigen::MatrixXd& assignment_probs);
+
+void calculate_iterated_exp_count_covariance(const vector<double>& gammas,
+                                             const vector<MateHit>& nr_alignments,
+                                             const vector<shared_ptr<Abundance> >& transcripts,
+                                             ublas::matrix<double>& count_covariance);
+
+bool simulate_count_covariance(const vector<double>& num_fragments,
+                               const vector<double>& frag_variances,
+                               const ublas::matrix<double>& iterated_exp_count_covariances,
+                               const vector<MateHit>& nr_alignments,
+                               const vector<shared_ptr<Abundance> >& transcripts,
+                               ublas::matrix<double>& count_covariances,
+                               vector<Eigen::VectorXd>& assigned_count_samples);
 #endif

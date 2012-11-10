@@ -1284,7 +1284,6 @@ void sample_abundance_worker(const string& locus_tag,
         ublas::matrix<double> cds_count_cov;
         ublas::matrix<double> cds_iterated_exp_count_cov;
         ublas::matrix<double> cds_fpkm_cov;
-        vector<Eigen::VectorXd> cds_assigned_counts;
         
         vector<bool> mask(sample.transcripts.abundances().size(), true);
         for (size_t i = 0; i < sample.transcripts.abundances().size(); ++i)
@@ -1303,8 +1302,7 @@ void sample_abundance_worker(const string& locus_tag,
                                                          &cds_gamma_cov,
                                                          &cds_iterated_exp_count_cov,
                                                          &cds_count_cov,
-                                                         &cds_fpkm_cov,
-                                                         &cds_assigned_counts);
+                                                         &cds_fpkm_cov);
         
         BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_cds)
         {
@@ -1340,8 +1338,7 @@ void sample_abundance_worker(const string& locus_tag,
                            cds_count_cov,
                            cds_fpkm_cov,
                            max_cds_mass_variance,
-                           rg_props,
-                           cds_assigned_counts);
+                           rg_props);
         
         vector<AbundanceGroup> cds_by_gene;
         
@@ -1387,8 +1384,7 @@ void sample_abundance_worker(const string& locus_tag,
                                                      &tss_gamma_cov,
                                                      &tss_iterated_exp_count_cov,
                                                      &tss_count_cov,
-                                                     &tss_fpkm_cov,
-                                                     &tss_assigned_counts);
+                                                     &tss_fpkm_cov);
         
         
         BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_tss)
@@ -1421,8 +1417,7 @@ void sample_abundance_worker(const string& locus_tag,
                                            tss_count_cov,
                                            tss_fpkm_cov,
                                            max_tss_mass_variance,
-                                           rg_props,
-                                           tss_assigned_counts);
+                                           rg_props);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
         
