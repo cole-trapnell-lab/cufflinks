@@ -491,21 +491,17 @@ FPKMPerReplicateTable AbundanceGroup::FPKM_by_replicate() const
 	
 	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
 	{
-		if (fpr.empty())
+        FPKMPerReplicateTable ab_fpr = ab->FPKM_by_replicate();
+        
+        for (FPKMPerReplicateTable::const_iterator itr = ab_fpr.begin();
+             itr != ab_fpr.end();
+             ++itr)
         {
-            fpr = ab->FPKM_by_replicate();
-        }
-        else
-        {
-            FPKMPerReplicateTable ab_fpr = ab->FPKM_by_replicate();
-            for (FPKMPerReplicateTable::const_iterator itr = ab_fpr.begin(); 
-                 itr != ab_fpr.end();
-                 ++itr)
-            {
-                FPKMPerReplicateTable::iterator fpr_itr = fpr.find(itr->first);
-                assert (fpr_itr != fpr.end());
+            FPKMPerReplicateTable::iterator fpr_itr = fpr.find(itr->first);
+            if (fpr_itr != fpr.end())
                 fpr_itr->second += itr->second;
-            }
+            else
+                fpr[itr->first] = itr->second;
         }
 	}
     
@@ -1353,25 +1349,27 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                                                non_equiv_alignments,
                                                log_conv_factors,
                                                ab_group_per_replicate);
-        }
         
-        for (size_t i = 0; i < _abundances.size(); ++i)
-        {
-            CountPerReplicateTable cpr;
-            FPKMPerReplicateTable fpr;
-            StatusPerReplicateTable spr;
-            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                 itr != ab_group_per_replicate.end();
-                 ++itr)
+            for (size_t i = 0; i < _abundances.size(); ++i)
             {
-                cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
-                fpr[itr->first] = itr->second->abundances()[i]->FPKM();
-                spr[itr->first] = itr->second->abundances()[i]->status();
+                CountPerReplicateTable cpr;
+                FPKMPerReplicateTable fpr;
+                StatusPerReplicateTable spr;
+                for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+                     itr != ab_group_per_replicate.end();
+                     ++itr)
+                {
+                    assert(itr->second->abundances().size() == _abundances.size());
+                    cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
+                    //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
+                    fpr[itr->first] = itr->second->abundances()[i]->FPKM();
+                    spr[itr->first] = itr->second->abundances()[i]->status();
+                }
+                
+                _abundances[i]->num_fragments_by_replicate(cpr);
+                _abundances[i]->FPKM_by_replicate(fpr);
+                _abundances[i]->status_by_replicate(spr);
             }
-            
-            _abundances[i]->num_fragments_by_replicate(cpr);
-            _abundances[i]->FPKM_by_replicate(fpr);
-            _abundances[i]->status_by_replicate(spr);
         }
         
 //        CountPerReplicateTable cpr;
@@ -3390,7 +3388,19 @@ AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared
         itr != _read_group_props.end(); 
         ++itr)
     {
-        shared_ptr<AbundanceGroup> ab_group(new AbundanceGroup(transcripts));
+        vector<shared_ptr<Abundance> > new_transcripts;
+        BOOST_FOREACH(shared_ptr<Abundance> ab, transcripts)
+        {
+            boost::shared_ptr<TranscriptAbundance> d = boost::static_pointer_cast<TranscriptAbundance>(ab);
+            //new_transcripts.push_back(shared_ptr<Abundance>(new TranscriptAbundance(*boost::static_pointer_cast<TranscriptAbundance>(ab))));
+            TranscriptAbundance* pT = new TranscriptAbundance;
+            pT->transfrag(d->transfrag());
+            shared_ptr<Abundance> ab(pT);
+            ab->description(ab->description());
+            ab->locus_tag("");
+            new_transcripts.push_back(ab);
+        }
+        shared_ptr<AbundanceGroup> ab_group(new AbundanceGroup(new_transcripts));
         std::set<shared_ptr<ReadGroupProperties const > > rg_props;
         rg_props.insert(*itr);
         ab_group->init_rg_props(rg_props);
@@ -3411,6 +3421,7 @@ AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared
         //rep_hit_counts.push_back(count_per_replicate.find(*itr)->second);
         
         ab_group->calculate_abundance(rep_hits, false, false);
+        //fprintf (stderr, "FPKM = %lg\n", ab_group->FPKM());
         ab_group_per_replicate[*itr] = ab_group;
     }
 

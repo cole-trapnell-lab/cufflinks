@@ -721,10 +721,10 @@ SampleDifference get_de_tests(const string& description,
 			
 	SampleDifference test;
     
-//    if (description == "XLOC_000009")
-//    {
-//        fprintf(stderr, "woah there");
-//    }
+    if (description == "TCONS_00000007")
+    {
+        fprintf(stderr, "woah there");
+    }
     
     const FPKMContext& r1 = curr_abundance;
     const FPKMContext& r2 = prev_abundance;
