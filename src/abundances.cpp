@@ -1410,70 +1410,17 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         }
         
         ublas::matrix<double> count_assign_covariance = _iterated_exp_count_covariance;
-        if (calculate_per_replicate == false)
-        {
-            cerr << "+++++++++++++++" << endl;
-            
-            //cerr << "pooled:" << endl;
-            //cerr << _iterated_exp_count_covariance << endl;
-            
-            cerr << "before:" << endl;
-            cerr << count_assign_covariance << endl;
-            
-            if (max_count_assign_covariance)
-            {
-//                for (size_t i = 0; i < _abundances.size(); ++i)
-//                {
-//                    count_assign_covariance(i,i) = std::max<double>(count_assign_covariance(i,i), (*max_count_assign_covariance)(i,i));
-//                }
-                count_assign_covariance = *max_count_assign_covariance;
-            }
-            cerr << "after:" << endl;
-            cerr << count_assign_covariance << endl;
-        }
-        simulate_count_covariance(num_fragments, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
-    
+        
         // Calling calculate_FPKM_covariance() also estimates cross-replicate
         // count variances
         
-        
-        //if (calculate_per_replicate == false)
+        if (calculate_per_replicate == true)
         {
+            simulate_count_covariance(num_fragments, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+            
             generate_fpkm_samples();
+    
             fit_gamma_distributions();
-        }
-        //else
-        {
-
-//            for (size_t i = 0; i < _abundances.size(); ++i)
-//            {
-////                if (_abundances[i]->FPKM() > 0 && _count_covariance(i,i) == 0)
-////                {
-////                    simulate_count_covariance(num_fragments, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
-////                }
-//                
-//                vector<double> ab_i_fpkm_samples;
-//                
-//                for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-//                     itr != ab_group_per_replicate.end();
-//                     ++itr)
-//                {
-//
-//                    ab_i_fpkm_samples.insert(ab_i_fpkm_samples.end(), itr->second->abundances()[i]->fpkm_samples().begin(), itr->second->abundances()[i]->fpkm_samples().end());
-//                }
-//                _abundances[i]->fpkm_samples(ab_i_fpkm_samples);
-//            }
-//            
-//            vector<double> ab_group_fpkm_samples;
-//            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-//                 itr != ab_group_per_replicate.end();
-//                 ++itr)
-//            {
-//                
-//                ab_group_fpkm_samples.insert(ab_group_fpkm_samples.end(), itr->second->fpkm_samples().begin(), itr->second->fpkm_samples().end());
-//            }
-//            
-//            fpkm_samples(ab_group_fpkm_samples);
 
             calculate_FPKM_covariance();
             
@@ -1487,6 +1434,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
             {
                 calculate_kappas();
             }
+            assert (FPKM() == 0 || _assigned_count_samples.size() > 0);
         }
     }
     
@@ -1506,7 +1454,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         }
     }
     
-    assert (FPKM() == 0 || _assigned_count_samples.size() > 0);
+    //
     
     //fprintf(stderr, "Total calls to get_cond_prob = %d\n", total_cond_prob_calls);
 }
