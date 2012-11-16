@@ -721,7 +721,7 @@ SampleDifference get_de_tests(const string& description,
 			
 	SampleDifference test;
     
-    if (description == "TCONS_00000007")
+    if (description == "ucscCodingTCONS_00000166")
     {
         fprintf(stderr, "woah there");
     }

@@ -488,7 +488,10 @@ public:
     
     const vector<double> null_js_samples() const { return _null_js_samples; }
     
-	void calculate_abundance(const vector<MateHit>& alignments, bool perform_collapse = true, bool calculate_per_replicate = true);
+	void calculate_abundance(const vector<MateHit>& alignments,
+                             bool perform_collapse = true,
+                             bool calculate_per_replicate = true,
+                             const ublas::matrix<double>* max_count_assign_covariance = NULL);
 	
     void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
     double max_mass_variance() const { return _max_mass_variance; }
@@ -540,7 +543,8 @@ private:
     AbundanceStatus calculate_per_replicate_abundances(vector<shared_ptr<Abundance> >& transcripts,
                                                        const vector<MateHit>& nr_alignments,
                                                        const vector<double>& log_conv_factors,
-                                                       std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate);
+                                                       std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+                                                        const ublas::matrix<double>* max_count_assign_covariance);
     
         
 	void calculate_kappas();
