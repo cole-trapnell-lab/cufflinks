@@ -1522,8 +1522,9 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                      itr != ab_group_per_replicate.end();
                      ++itr)
                 {
-                    StatusPerReplicateTable::const_iterator si = _abundances[i]->status_by_replicate().find(itr->first);
-                    if (si == _abundances[i]->status_by_replicate().end() || si->second == NUMERIC_LOW_DATA)
+                    StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
+                    StatusPerReplicateTable::const_iterator si = st.find(itr->first);
+                    if (si == st.end() || si->second == NUMERIC_LOW_DATA)
                         continue;
                     ab_i_fpkm_samples.insert(ab_i_fpkm_samples.end(), itr->second->abundances()[i]->fpkm_samples().begin(), itr->second->abundances()[i]->fpkm_samples().end());
                 }
