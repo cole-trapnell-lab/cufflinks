@@ -25,7 +25,6 @@
 using namespace std;
 
 double min_read_count = 10;
-double min_outlier_p = 0.0001;
 
 #if ENABLE_THREADS
 mutex _launcher_lock;
@@ -463,6 +462,10 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
              itr != curr.fpkm_per_rep.end(); ++itr)
         {
+            StatusPerReplicateTable::const_iterator si = curr.status_per_rep.find(itr->first);
+            if (si == curr.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
+                continue;
+            
             //fprintf(stderr, "curr: %lg\n", itr->second);
             if (itr->second > 0)
             {
@@ -482,6 +485,9 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
              itr != prev.fpkm_per_rep.end(); ++itr)
         {
+            StatusPerReplicateTable::const_iterator si = prev.status_per_rep.find(itr->first);
+            if (si == prev.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
+                continue;
             //fprintf(stderr, "prev: %lg\n", itr->second);
             if (itr->second > 0)
             {
@@ -516,7 +522,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         
         if (stat > 1000)
         {
-            fprintf(stderr, "Warning: test stat is huge (%lg\n", stat);
+            //fprintf(stderr, "Warning: test stat is huge (%lg\n", stat);
         }
         
         if (stat <= 0)

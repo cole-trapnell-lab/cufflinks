@@ -239,7 +239,6 @@ private:
 };
 
 extern double min_read_count;
-extern double min_outlier_p;
 
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,

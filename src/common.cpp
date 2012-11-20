@@ -126,6 +126,9 @@ bool no_js_tests = false;
 
 bool background_subtraction = false;
 
+double min_outlier_p = 0.0001;
+
+
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
 

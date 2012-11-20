@@ -110,6 +110,9 @@ extern bool no_length_correction;
 extern bool no_js_tests;
 extern bool background_subtraction;
 
+extern double min_outlier_p;
+
+
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
 
