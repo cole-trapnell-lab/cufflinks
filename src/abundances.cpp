@@ -1494,6 +1494,186 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     return NUMERIC_OK;
 }
 
+bool generate_count_assignment_samples(int num_draws,
+                                       const vector<double>& count_mean,
+                                       const ublas::matrix<double>& count_covariance,
+                                       vector<ublas::vector<double> >& assigned_count_samples)
+{
+    double total_frag_counts = accumulate(count_mean.begin(), count_mean.end(), 0.0);
+    
+    if (total_frag_counts == 0)
+    {
+        assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
+        return true;
+    }
+    
+    //size_t num_frag_count_draws = 1000;
+    //const int num_multinomial_samples = 1;
+    
+    boost::mt19937 rng;
+    
+    //vector<Eigen::VectorXd > generated_counts (num_frag_count_draws, Eigen::VectorXd::Zero(transcripts.size()));
+    ublas::vector<double> mle_frag_counts = ublas::zero_vector<double>(count_mean.size());
+    
+    for (size_t j = 0; j < count_mean.size(); ++j)
+    {
+        mle_frag_counts(j) = count_mean[j];
+    }
+    
+    //    cerr << "********************" << endl;
+    //    cerr << "initial MLE counts: " << mle_frag_counts << endl;
+    
+    ublas::matrix<double> mle_count_covar = count_covariance;
+    
+    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(count_mean.size(),count_mean.size());
+	for (size_t i = 0; i < count_mean.size(); ++i)
+	{
+		epsilon(i,i) = 1e-6;
+	}
+	
+	mle_count_covar += epsilon; // modify matrix to avoid problems during inverse
+    
+    double ret = cholesky_factorize(mle_count_covar);
+    if (ret != 0)
+    {
+        fprintf(stderr, "Warning: Iterated expectation count covariance matrix cannot be cholesky factorized!\n");
+        //fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
+        //        for (size_t j = 0; j < _abundances.size(); ++j)
+        //        {
+        //            _abundances[j]->status(NUMERIC_FAIL);
+        //        }
+        return false;
+    }
+    
+    //    cerr << endl << "Cholesky factored covariance matrix: " << endl;
+    //    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i)
+    //    {
+    //        ublas::matrix_row<ublas::matrix<double> > mr (mle_count_covar, i);
+    //        cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
+    //        std::cerr << i << " : " << mr << std::endl;
+    //    }
+    //cerr << "======" << endl;
+    
+    multinormal_generator<double> generator(mle_frag_counts, mle_count_covar);
+    //vector<Eigen::VectorXd> multinormal_samples;
+    
+    assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
+    
+    boost::uniform_01<> uniform_dist;
+    boost::mt19937 null_rng;
+    boost::variate_generator<boost::mt19937&, boost::uniform_01<> > uniform_gen(null_rng, uniform_dist);
+    
+    
+    for (size_t assign_idx = 0; assign_idx < num_draws; ++assign_idx)
+    {
+        
+        boost::numeric::ublas::vector<double> random_count_assign = generator.next_rand();
+        //cerr << random_count_assign << endl;
+        
+        for (size_t r_idx = 0; r_idx < random_count_assign.size(); ++r_idx)
+        {
+            if (random_count_assign(r_idx) < 0)
+                random_count_assign(r_idx) = 0;
+        }
+        
+        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0);
+        if (total_sample_counts > 0)
+            random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
+        else
+            random_count_assign = ublas::zero_vector<double>(count_mean.size());
+        
+        assigned_count_samples[assign_idx] = random_count_assign;
+    }
+    
+    return true;
+}
+
+void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+                                                ublas::vector<double>& estimated_gamma_mean,
+                                                ublas::matrix<double>& estimated_gamma_covariance)
+{
+    vector<ublas::vector<double> > all_assigned_count_samples;
+    
+    if (ab_group_per_replicate.empty())
+        return;
+    int num_transcripts = ab_group_per_replicate.begin()->second->abundances().size();
+    if (num_transcripts == 1)
+    {
+        estimated_gamma_mean = ublas::vector<double>(1);
+        estimated_gamma_mean(0) = 1.0;
+        
+        estimated_gamma_covariance = ublas::matrix<double>(1,1);
+        estimated_gamma_covariance(0,0) = 0.0;
+        return;
+    }
+    
+    for(std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+        itr != ab_group_per_replicate.end();
+        ++itr)
+    {
+        vector<double> count_mean;
+        for (size_t i = 0; i < itr->second->abundances().size(); ++i)
+        {
+            count_mean.push_back(itr->second->abundances()[i]->num_fragments());
+        }
+        
+        vector<ublas::vector<double> > assigned_count_samples;
+        generate_count_assignment_samples(num_frag_assignments,
+                                          count_mean,
+                                          itr->second->iterated_count_cov(),
+                                          assigned_count_samples);
+        
+        all_assigned_count_samples.insert(all_assigned_count_samples.end(), assigned_count_samples.begin(), assigned_count_samples.end());
+    }
+    
+    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
+    {
+        double total = accumulate(all_assigned_count_samples[i].begin(), all_assigned_count_samples[i].end(), 0.0);
+        if (total > 0)
+            all_assigned_count_samples[i] /= total;
+    }
+    
+    estimated_gamma_mean = ublas::zero_vector<double>(num_transcripts);
+    estimated_gamma_covariance = ublas::zero_matrix<double>(num_transcripts, num_transcripts);
+    
+    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
+    {
+        for (int j = 0; j < all_assigned_count_samples[i].size(); ++j)
+        {
+            assert (!isnan(all_assigned_count_samples[i](j)) && !isinf(all_assigned_count_samples[i](j)));
+        }
+        
+        estimated_gamma_mean += all_assigned_count_samples[i];
+        //
+        //expected_relative_abundances += relative_abundances[i];
+    }
+    
+    if (all_assigned_count_samples.size() > 1)
+    {
+        estimated_gamma_mean /= (all_assigned_count_samples.size() - 1);
+    }
+       
+    for (size_t i = 0; i < num_transcripts; ++i)
+    {
+        for (size_t j = 0; j < num_transcripts; ++j)
+        {
+            for (size_t k = 0 ; k < all_assigned_count_samples.size(); ++k)
+            {
+                double c = (all_assigned_count_samples[k](i) - estimated_gamma_mean(i)) * (all_assigned_count_samples[k](j) - estimated_gamma_mean(j));
+                estimated_gamma_covariance(i,j) += c;
+                
+                assert (!isinf(estimated_gamma_covariance(i,j)) && !isnan(estimated_gamma_covariance(i,j)));
+            }
+        }
+    }
+    
+    if (all_assigned_count_samples.size() > 1)
+    {
+        estimated_gamma_covariance /= (all_assigned_count_samples.size() - 1);
+    }
+
+}
+
 
 #define PERFORM_EQUIV_COLLAPSE 1
 
@@ -1566,62 +1746,45 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
     calculate_iterated_exp_count_covariance(joint_mle_gammas, non_equiv_alignments, transcripts, _iterated_exp_count_covariance);
     //_iterated_exp_count_covariance/= _read_group_props.size();
     
-    AbundanceStatus bootstrap_status = NUMERIC_OK;
-    ublas::vector<double> bootstrap_mle;
-    ublas::matrix<double> bootstrap_mle_covariance;
-    double crjs;
-    
-    if ((final_est_run || (!corr_multi && !corr_bias)) && calculate_per_replicate == true)
+    if ((final_est_run || (!corr_multi && !corr_bias)))
     {
-        bootstrap_status = bootstrap_gammas(transcripts,
-                             non_equiv_alignments,
-                             log_conv_factors,
-                             bootstrap_mle,
-                             bootstrap_mle_covariance,
-                             crjs);
-    
-    
-        if (bootstrap_status == NUMERIC_OK)
+        if (calculate_per_replicate == true)
         {
-            if (calculate_per_replicate == true)
-            {
-                calculate_per_replicate_abundances(transcripts,
-                                                   non_equiv_alignments,
-                                                   log_conv_factors,
-                                                   ab_group_per_replicate,
-                                                   &bootstrap_mle_covariance);
+            calculate_per_replicate_abundances(transcripts,
+                                               non_equiv_alignments,
+                                               log_conv_factors,
+                                               ab_group_per_replicate,
+                                               &_iterated_exp_count_covariance);
 
 //                calculate_per_replicate_abundances(transcripts,
 //                                                   non_equiv_alignments,
 //                                                   log_conv_factors,
 //                                                   ab_group_per_replicate,
 //                                                   &_iterated_exp_count_covariance);
-                for (size_t i = 0; i < _abundances.size(); ++i)
+            for (size_t i = 0; i < _abundances.size(); ++i)
+            {
+                CountPerReplicateTable cpr;
+                FPKMPerReplicateTable fpr;
+                StatusPerReplicateTable spr;
+                for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+                     itr != ab_group_per_replicate.end();
+                     ++itr)
                 {
-                    CountPerReplicateTable cpr;
-                    FPKMPerReplicateTable fpr;
-                    StatusPerReplicateTable spr;
-                    for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                         itr != ab_group_per_replicate.end();
-                         ++itr)
-                    {
-                        assert(itr->second->abundances().size() == _abundances.size());
-                        cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
-                        //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
-                        fpr[itr->first] = itr->second->abundances()[i]->FPKM();
-                        spr[itr->first] = itr->second->abundances()[i]->status();
-                    }
-                    
-                    _abundances[i]->num_fragments_by_replicate(cpr);
-                    _abundances[i]->FPKM_by_replicate(fpr);
-                    _abundances[i]->status_by_replicate(spr);
+                    assert(itr->second->abundances().size() == _abundances.size());
+                    cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
+                    //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
+                    fpr[itr->first] = itr->second->abundances()[i]->FPKM();
+                    spr[itr->first] = itr->second->abundances()[i]->status();
                 }
+                
+                _abundances[i]->num_fragments_by_replicate(cpr);
+                _abundances[i]->FPKM_by_replicate(fpr);
+                _abundances[i]->status_by_replicate(spr);
             }
+            
+            
         }
-    }
-    else
-    {
-        bootstrap_status = NUMERIC_OK;
+        
     }
     
     // Calculate the initial estimates for the number of fragments originating
@@ -1641,38 +1804,32 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
 	{
         // Simulate NB draws and fragment assignment under uncertainty to sample
         // from the BNBs.
-        vector<double> frags_per_transcript;
-        vector<double> frag_variances;
-        
-        for (size_t i = 0; i < _abundances.size(); ++i)
-        {
-            frags_per_transcript.push_back(_abundances[i]->num_fragments());
-            frag_variances.push_back(_abundances[i]->mass_variance());
-        }
-        
+                
         ublas::matrix<double> count_assign_covariance;
-        if (calculate_per_replicate)
-        {
-            if (bootstrap_status != NUMERIC_FAIL)
-            {
-                count_assign_covariance = bootstrap_mle_covariance;
-            }
-            else
-            {
-                for (size_t i = 0; i < _abundances.size(); ++i)
-                {
-                    _abundances[i]->status(NUMERIC_FAIL);
-                }
-            }
-        }
-        else
-        {
-            count_assign_covariance = *max_count_assign_covariance;
-        }
         
-        if (calculate_per_replicate == false && bootstrap_status == NUMERIC_OK && (final_est_run || (!corr_multi && !corr_bias)))
-            simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
-        
+        if (calculate_per_replicate == true && (final_est_run || (!corr_multi && !corr_bias)))
+        {
+            ublas::vector<double> estimated_gamma_mean;
+            ublas::matrix<double> estimated_gamma_covariance;
+            calculate_fragment_assignment_distribution(ab_group_per_replicate,
+                                                       estimated_gamma_mean,
+                                                       estimated_gamma_covariance);
+            ublas::vector<double> estimated_count_mean = estimated_gamma_mean * num_fragments();
+            ublas::matrix<double>  estimated_count_covariance = estimated_gamma_covariance * num_fragments() * num_fragments();
+            
+            //cerr << estimated_count_mean << endl;
+            //cerr << estimated_count_covariance << endl;
+            vector<double> frags_per_transcript;
+            vector<double> frag_variances;
+            
+            for (size_t i = 0; i < _abundances.size(); ++i)
+            {
+                frags_per_transcript.push_back(estimated_count_mean[i]);
+                frag_variances.push_back(_abundances[i]->mass_variance());
+            }
+
+            simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+        }
 //        if (calculate_per_replicate == false)
 //        {
 //            //cerr << "+++++++++++++++" << endl;
@@ -1699,130 +1856,37 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         // count variances
         
         
-        if (calculate_per_replicate == false)
+        if (calculate_per_replicate == true)
         {
             generate_fpkm_samples();
             fit_gamma_distributions();
-        }
-        else
-        {
-//            double total_frags = 0.0;
-//            for (size_t i = 0; i < non_equiv_alignments.size(); ++i)
+                       
+//            for (size_t i = 0; i < _abundances.size(); ++i)
 //            {
-//                total_frags += non_equiv_alignments[i].collapse_mass();
-//            }
-//            
-//            total_frags = num_fragments();
-//            
-//            if (total_frags > 0)
-//            {
-//                ublas::vector<double> joint_mle = ublas::zero_vector<double>(_abundances.size());
-//                for (size_t i = 0; i < joint_mle.size(); ++i)
-//                {
-//                    joint_mle(i) = _abundances[i]->gamma() * total_frags;
-//                }
+//                vector<double> ab_i_fpkm_samples;
 //                
-//                //cerr << _iterated_exp_count_covariance << endl;
-//                
-//                ublas::matrix<double> chol_covariance = _iterated_exp_count_covariance;
-//                
-//                
-//                
-//                ublas::matrix<double> epsilon = ublas::zero_matrix<double>(_abundances.size(),_abundances.size());
-//                for (size_t i = 0; i < _abundances.size(); ++i)
-//                {
-//                    epsilon(i,i) = 1e-4;
-//                }
-//                
-//                chol_covariance  += epsilon; // modify matrix to avoid problems during inverse
-//                
-//                
-//                double ret = cholesky_factorize(chol_covariance);
-//                if (ret != 0)
-//                {
-//                    // set status fail?
-//                }
-//                
-//                ublas::matrix<double> inverse_covariance = _iterated_exp_count_covariance;
-//                bool invertible = chol_invert_matrix(chol_covariance, inverse_covariance);
-//                if (invertible == false)
-//                {
-//                    // set status fail?
-//                }
-//                
-//                //cerr << inverse_covariance << endl;
-//                
-//                // calculate the mahalanobis distance between each replicate and the joint mle to flag outliers
-//                // TODO: should re-do this to work on the kappas (or the gammas)
-//                
-//                std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > mle_per_replicate;
 //                for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
 //                     itr != ab_group_per_replicate.end();
 //                     ++itr)
 //                {
-//                    ublas::vector<double> mle = ublas::zero_vector<double>(_abundances.size());
-//                    for (size_t i = 0; i < mle.size(); ++i)
-//                    {
-//                        mle(i) = itr->second->abundances()[i]->gamma() * total_frags;
-//                    }
-//                    
-//                    ublas::vector<double> diff = (mle - joint_mle);
-//                    ublas::vector<double> p_diff = prod(diff, inverse_covariance);
-//                    double mahalonobis_dist = inner_prod(p_diff, diff);
-//                    
-//                    boost::math::chi_squared_distribution<double> csd(_abundances.size());
-//                    double tail_1 = cdf(csd, mahalonobis_dist);
-//                    double p_val = 1.0 - (tail_1);
-//                    
-//                    if (p_val < min_outlier_p)
-//                    {
-//                        cerr << "joint mle:" << joint_mle << endl;
-//                        cerr << "replicate mle:" << mle << endl;
-//                        cerr << "joint iterated exp count covar:" << endl;
-//                        for (unsigned i = 0; i < _iterated_exp_count_covariance.size1 (); ++ i)
-//                        {
-//                            ublas::matrix_row<ublas::matrix<double> > mr (_iterated_exp_count_covariance, i);
-//                            std::cerr << i << " : " << mr << std::endl;
-//                        }
-//                        cerr << "diff: " << diff << endl;
-//                        cerr << "dist: " << mahalonobis_dist << endl;
-//                        cerr << "p-value: " << p_val << endl;
-//                        for (size_t i = 0; i < _abundances.size(); ++i)
-//                        {
-//                            StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
-//                            st[itr->first] = NUMERIC_LOW_DATA;
-//                            _abundances[i]->status_by_replicate(st);
-//                        }
-//                    }
+//                    StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
+//                    StatusPerReplicateTable::const_iterator si = st.find(itr->first);
+//                    if (si == st.end() || si->second == NUMERIC_LOW_DATA)
+//                        continue;
+//                    ab_i_fpkm_samples.insert(ab_i_fpkm_samples.end(), itr->second->abundances()[i]->fpkm_samples().begin(), itr->second->abundances()[i]->fpkm_samples().end());
 //                }
+//                _abundances[i]->fpkm_samples(ab_i_fpkm_samples);
 //            }
-                
-            for (size_t i = 0; i < _abundances.size(); ++i)
-            {
-                vector<double> ab_i_fpkm_samples;
-                
-                for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                     itr != ab_group_per_replicate.end();
-                     ++itr)
-                {
-                    StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
-                    StatusPerReplicateTable::const_iterator si = st.find(itr->first);
-                    if (si == st.end() || si->second == NUMERIC_LOW_DATA)
-                        continue;
-                    ab_i_fpkm_samples.insert(ab_i_fpkm_samples.end(), itr->second->abundances()[i]->fpkm_samples().begin(), itr->second->abundances()[i]->fpkm_samples().end());
-                }
-                _abundances[i]->fpkm_samples(ab_i_fpkm_samples);
-            }
-            
-            vector<double> ab_group_fpkm_samples;
-            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                 itr != ab_group_per_replicate.end();
-                 ++itr)
-            {
-                ab_group_fpkm_samples.insert(ab_group_fpkm_samples.end(), itr->second->fpkm_samples().begin(), itr->second->fpkm_samples().end());
-            }
-            
-            fpkm_samples(ab_group_fpkm_samples);
+//            
+//            vector<double> ab_group_fpkm_samples;
+//            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+//                 itr != ab_group_per_replicate.end();
+//                 ++itr)
+//            {
+//                ab_group_fpkm_samples.insert(ab_group_fpkm_samples.end(), itr->second->fpkm_samples().begin(), itr->second->fpkm_samples().end());
+//            }
+//            
+//            fpkm_samples(ab_group_fpkm_samples);
             
             calculate_FPKM_covariance();
             
@@ -2625,7 +2689,7 @@ void AbundanceGroup::calculate_conf_intervals()
 		{
 			double FPKM_hi;
 			double FPKM_lo;
-			if (pA->effective_length() > 0)
+			if (pA->effective_length() > 0 && mass_fraction() > 0)
 			{
                 double norm_frag_density = 1000000000;
                 norm_frag_density /= pA->effective_length();
@@ -2633,7 +2697,9 @@ void AbundanceGroup::calculate_conf_intervals()
                 norm_frag_density *= mass_fraction();
                 double fpkm_high = norm_frag_density;
                 
-                double var_fpkm = fpkm_high; 
+                double total_mass = (num_fragments() / mass_fraction());
+                double fpkm_constant = 1000000000 / pA->effective_length() / total_mass;
+                double var_fpkm = mass_variance() * (fpkm_constant * fpkm_constant);
                 
 				FPKM_hi = fpkm_high + 2 * sqrt(var_fpkm);
 				FPKM_lo = 0.0;
