@@ -1908,7 +1908,8 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                     mle(i) = itr->second->abundances()[i]->gamma();
                 }
                 
-                ublas::vector<double> diff = (mle - joint_mle);
+                //ublas::vector<double> diff = (mle - joint_mle);
+                ublas::vector<double> diff = (mle - estimated_gamma_mean);
                 ublas::vector<double> p_diff = prod(diff, inverse_covariance);
                 double mahalonobis_dist = inner_prod(p_diff, diff);
                 
