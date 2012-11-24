@@ -1807,10 +1807,12 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                 
         ublas::matrix<double> count_assign_covariance;
         
+        ublas::vector<double> estimated_gamma_mean;
+        ublas::matrix<double> estimated_gamma_covariance;
+        
         if (calculate_per_replicate == true && (final_est_run || (!corr_multi && !corr_bias)))
         {
-            ublas::vector<double> estimated_gamma_mean;
-            ublas::matrix<double> estimated_gamma_covariance;
+
             calculate_fragment_assignment_distribution(ab_group_per_replicate,
                                                        estimated_gamma_mean,
                                                        estimated_gamma_covariance);
@@ -1858,6 +1860,73 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         
         if (calculate_per_replicate == true)
         {
+            ublas::vector<double> joint_mle = ublas::zero_vector<double>(_abundances.size());
+            for (size_t i = 0; i < joint_mle.size(); ++i)
+            {
+                joint_mle(i) = _abundances[i]->gamma();
+            }
+            
+            //cerr << _iterated_exp_count_covariance << endl;
+            
+            ublas::matrix<double> chol_covariance = estimated_gamma_covariance;
+            
+            ublas::matrix<double> epsilon = ublas::zero_matrix<double>(_abundances.size(),_abundances.size());
+            for (size_t i = 0; i < _abundances.size(); ++i)
+            {
+                epsilon(i,i) = 1e-6;
+            }
+            
+            chol_covariance  += epsilon; // modify matrix to avoid problems during inverse
+            
+            
+            double ret = cholesky_factorize(chol_covariance);
+            if (ret != 0)
+            {
+                // set status fail?
+            }
+            
+            ublas::matrix<double> inverse_covariance = estimated_gamma_covariance;
+            bool invertible = chol_invert_matrix(chol_covariance, inverse_covariance);
+            if (invertible == false)
+            {
+                // set status fail?
+            }
+            
+            //cerr << inverse_covariance << endl;
+            
+            // calculate the mahalanobis distance between each replicate and the joint mle to flag outliers
+            // TODO: should re-do this to work on the kappas (or the gammas)
+            
+            std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > mle_per_replicate;
+            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+                 itr != ab_group_per_replicate.end();
+                 ++itr)
+            {
+                ublas::vector<double> mle = ublas::zero_vector<double>(_abundances.size());
+                for (size_t i = 0; i < mle.size(); ++i)
+                {
+                    mle(i) = itr->second->abundances()[i]->gamma();
+                }
+                
+                ublas::vector<double> diff = (mle - joint_mle);
+                ublas::vector<double> p_diff = prod(diff, inverse_covariance);
+                double mahalonobis_dist = inner_prod(p_diff, diff);
+                
+                boost::math::chi_squared_distribution<double> csd(_abundances.size());
+                double tail_1 = cdf(csd, mahalonobis_dist);
+                double p_val = 1.0 - (tail_1);
+                
+                if (p_val < min_outlier_p)
+                {
+                    for (size_t i = 0; i < _abundances.size(); ++i)
+                    {
+                        StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
+                        st[itr->first] = NUMERIC_LOW_DATA;
+                        _abundances[i]->status_by_replicate(st);
+                    }
+                }
+            }
+            
             generate_fpkm_samples();
             fit_gamma_distributions();
                        
@@ -1889,8 +1958,6 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
 //            fpkm_samples(ab_group_fpkm_samples);
             
             calculate_FPKM_covariance();
-            
-            fit_gamma_distributions();
             
             // Derive confidence intervals from the FPKM variance/covariance matrix
             calculate_conf_intervals();
