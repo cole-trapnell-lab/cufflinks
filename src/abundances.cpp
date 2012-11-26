@@ -30,6 +30,7 @@
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/tools/roots.hpp>
 #include <complex>
+#include <boost/math/tools/tuple.hpp>
 
 #include <boost/math/distributions/chi_squared.hpp>
 
@@ -290,6 +291,113 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
     
     return true;
 }
+
+// Returns the log likelihood of the negative binomial with a given r and the mle value of p
+long double negbin_likelihood_helper(const vector<double>& samples, long double r)
+{
+    long double p = 0;
+    long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
+    if (samples.empty() == false)
+        mean_count /= samples.size();
+    
+    p = mean_count / (r + mean_count);
+    
+    long double T1 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T1 += lgamma(samples[i] + r);
+    }
+
+    long double T2 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T2 += lgamma(samples[i] + 1);
+    }
+
+    long double T3 = samples.size() * lgamma(r);
+    long double T4 = samples.size() * r * log(1 - p);
+    
+    long double T5 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T5 += samples[i] * log(p);
+    }
+    
+    assert ((isnan(T1) || isnan(T2) || isnan(T3) || isnan(T4) || isnan(T5)) == false);
+    return T1 - T2 - T3 + T4 + T5;
+}
+
+// Returns the log likelihood of the negative binomial with a given r and the mle value of p
+long double negbin_log_likelihood_helper(const vector<double>& samples, long double r)
+{
+    long double T1 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T1 += digamma(samples[i] + r);
+    }
+    
+    long double T2 = samples.size() * digamma(r);
+    
+    long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
+    if (samples.empty() == false)
+        mean_count /= samples.size();
+
+    long double T3 = samples.size() * log(r / (r + mean_count));
+    
+    assert ((isnan(T1) || isnan(T2) || isnan(T3)) == false);
+            
+    return T1 - T2 - T3;
+}
+
+
+struct negbin_ll_functor
+{
+    negbin_ll_functor(const vector<double>& count_samples) : samples(count_samples){}
+    boost::math::tuple<long double, long double> operator()(long double r)
+    {
+        long double lk = negbin_likelihood_helper(samples, r);
+        long double llk = negbin_log_likelihood_helper(samples, r);
+        return boost::math::make_tuple(lk, llk);
+    }
+private:
+    const vector<double>& samples;
+};
+
+
+bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
+{
+    
+    if (samples.size() == 0)
+    {
+        r = 0;
+        p = 0;
+        return true;
+    }
+    
+    long double guess = accumulate(samples.begin(), samples.end(), 0.0); 
+    if (samples.empty() == false)
+        guess /= samples.size();
+    
+    long double min = 0;
+    long double max = std::numeric_limits<long double>::max();
+    int digits = std::numeric_limits<long double>::digits; // Maximum possible binary digits accuracy for type T.
+    
+    r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits);
+    
+    long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
+    if (samples.empty() == false)
+        mean_count /= samples.size();
+    
+    p = mean_count / (r + mean_count);
+        
+    if (isnan(r) || isnan(p))
+    {
+        fprintf(stderr, "warning: negative binomial parameters are Nan!\n");
+        return false;
+    }
+    return true;
+}
+
 
 //#define USE_LOG_CACHE
 
@@ -1588,9 +1696,10 @@ bool generate_count_assignment_samples(int num_draws,
     return true;
 }
 
-void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
-                                                ublas::vector<double>& estimated_gamma_mean,
-                                                ublas::matrix<double>& estimated_gamma_covariance)
+
+void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+                                    ublas::vector<double>& estimated_gamma_mean,
+                                    ublas::matrix<double>& estimated_gamma_covariance)
 {
     vector<ublas::vector<double> > all_assigned_count_samples;
     
@@ -1611,27 +1720,21 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         itr != ab_group_per_replicate.end();
         ++itr)
     {
-        vector<double> count_mean;
+        ublas::vector<double> count_mean = ublas::zero_vector<double>(itr->second->abundances().size());
         for (size_t i = 0; i < itr->second->abundances().size(); ++i)
         {
-            count_mean.push_back(itr->second->abundances()[i]->num_fragments());
+            count_mean(i) = itr->second->abundances()[i]->gamma();
         }
         
-        vector<ublas::vector<double> > assigned_count_samples;
-        generate_count_assignment_samples(num_frag_assignments,
-                                          count_mean,
-                                          itr->second->iterated_count_cov(),
-                                          assigned_count_samples);
-        
-        all_assigned_count_samples.insert(all_assigned_count_samples.end(), assigned_count_samples.begin(), assigned_count_samples.end());
+        all_assigned_count_samples.push_back(count_mean);
     }
     
-    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
-    {
-        double total = accumulate(all_assigned_count_samples[i].begin(), all_assigned_count_samples[i].end(), 0.0);
-        if (total > 0)
-            all_assigned_count_samples[i] /= total;
-    }
+    //    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
+    //    {
+    //        double total = accumulate(all_assigned_count_samples[i].begin(), all_assigned_count_samples[i].end(), 0.0);
+    //        if (total > 0)
+    //            all_assigned_count_samples[i] /= total;
+    //    }
     
     estimated_gamma_mean = ublas::zero_vector<double>(num_transcripts);
     estimated_gamma_covariance = ublas::zero_matrix<double>(num_transcripts, num_transcripts);
@@ -1652,7 +1755,7 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
     {
         estimated_gamma_mean /= (all_assigned_count_samples.size() - 1);
     }
-       
+    
     for (size_t i = 0; i < num_transcripts; ++i)
     {
         for (size_t j = 0; j < num_transcripts; ++j)
@@ -1673,6 +1776,303 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
     }
 
 }
+
+bool calculate_fragment_assignment_distribution(const vector<MateHit>& alignments,
+                                                vector<shared_ptr<Abundance> > transcripts,
+                                                const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+                                                ublas::vector<double>& estimated_gamma_mean,
+                                                ublas::matrix<double>& estimated_gamma_covariance)
+{
+    calculate_gamma_mle_covariance(ab_group_per_replicate,
+                                   estimated_gamma_mean,
+                                   estimated_gamma_covariance);
+    return true;
+}
+
+//bool calculate_fragment_assignment_distribution(const vector<MateHit>& alignments,
+//                                                vector<shared_ptr<Abundance> > transcripts,
+//                                                const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+//                                                ublas::vector<double>& estimated_gamma_mean,
+//                                                ublas::matrix<double>& estimated_gamma_covariance)
+//{
+//    if (ab_group_per_replicate.empty() || alignments.empty() || transcripts.empty())
+//    {
+//        estimated_gamma_mean = ublas::zero_vector<double>(transcripts.size());
+//        estimated_gamma_covariance = ublas::zero_matrix<double>(transcripts.size(), transcripts.size());
+//        return true;
+//    }
+//    
+//    int num_transcripts = ab_group_per_replicate.begin()->second->abundances().size();
+//    if (num_transcripts == 1)
+//    {
+//        estimated_gamma_mean = ublas::vector<double>(1);
+//        estimated_gamma_mean(0) = 1.0;
+//        
+//        estimated_gamma_covariance = ublas::matrix<double>(1,1);
+//        estimated_gamma_covariance(0,0) = 0.0;
+//        return true;
+//    }
+//
+//    
+//    ublas::vector<double> estimated_gamma_mle_mean;
+//    ublas::matrix<double> estimated_gamma_mle_covariance;
+//    
+//    calculate_gamma_mle_covariance(ab_group_per_replicate,
+//                                   estimated_gamma_mle_mean,
+//                                   estimated_gamma_mle_covariance);
+//    
+//    Eigen::VectorXd alignment_multiplicities = Eigen::VectorXd::Zero(alignments.size());
+//    for (size_t i = 0; i < alignment_multiplicities.size(); ++i)
+//    {
+//        alignment_multiplicities[i] = alignments[i].collapse_mass();
+//    }
+//    
+//    
+//    Eigen::MatrixXd transcript_cond_probs(transcripts.size(), alignments.size());
+//    
+//    for (size_t j = 0; j < transcript_cond_probs.rows(); ++j)
+//    {
+//        for (size_t i = 0; i < transcript_cond_probs.cols(); ++i)
+//        {
+//            transcript_cond_probs(j,i) = (*(transcripts[j]->cond_probs()))[i];
+//        }
+//    }
+//
+//    static const int num_frag_assigns = 100;
+//    
+//    ublas::matrix<double> mle_covar = estimated_gamma_mle_covariance;
+//    
+//    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(transcripts.size(),transcripts.size());
+//	for (size_t i = 0; i < transcripts.size(); ++i)
+//	{
+//		epsilon(i,i) = 1e-6;
+//	}
+//	
+//	mle_covar += epsilon; // modify matrix to avoid problems during inverse
+//    
+//    double ret = cholesky_factorize(mle_covar);
+//    if (ret != 0)
+//    {
+//        fprintf(stderr, "Warning: Iterated expectation count covariance matrix cannot be cholesky factorized!\n");
+//        //fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
+//        //        for (size_t j = 0; j < _abundances.size(); ++j)
+//        //        {
+//        //            _abundances[j]->status(NUMERIC_FAIL);
+//        //        }
+//        return false;
+//    }
+//    
+//    multinormal_generator<double> generator(estimated_gamma_mle_mean, mle_covar);
+//    
+////    assigned_count_samples = vector<Eigen::VectorXd> (num_frag_count_draws * num_frag_assignments, Eigen::VectorXd::Zero(transcripts.size()));
+//    
+////    Eigen::VectorXd expected_generated_counts = Eigen::VectorXd::Zero(transcripts.size());
+//    
+//    vector<ublas::vector<double> > all_assigned_count_samples;
+//    
+//    for (size_t i = 0; i < num_frag_assigns; ++i)
+//    {
+//        boost::numeric::ublas::vector<double> random_gamma_assign = generator.next_rand();
+//        //cerr << random_count_assign << endl;
+//        
+//        for (size_t r_idx = 0; r_idx < random_gamma_assign.size(); ++r_idx)
+//        {
+//            if (random_gamma_assign(r_idx) < 0)
+//                random_gamma_assign(r_idx) = 0;
+//        }
+//        
+//        // sample from the distribution on the mle itself
+//        double total_sample_counts = accumulate(random_gamma_assign.begin(), random_gamma_assign.end(), 0.0);
+//        if (total_sample_counts > 0)
+//            random_gamma_assign = random_gamma_assign / total_sample_counts;
+//        else
+//            random_gamma_assign = boost::numeric::ublas::zero_vector<double>(transcripts.size());
+//
+//        vector<double> gamma_sample;
+//        for (size_t j = 0; j < random_gamma_assign.size(); ++j)
+//        {
+//            gamma_sample.push_back(random_gamma_assign[j]);
+//        }
+//        
+//        ublas::matrix<double> assign_covariance;
+//        
+//        // Now recalculate the count assignment covariances based on the gamma sample.
+//        calculate_iterated_exp_count_covariance(gamma_sample,
+//                                                alignments,
+//                                                transcripts,
+//                                                assign_covariance);
+//        
+//        
+//        assign_covariance += epsilon; // modify matrix to avoid problems during inverse
+//        
+//        double ret = cholesky_factorize(assign_covariance);
+//        if (ret != 0)
+//        {
+//            continue;
+//        }
+//        
+//        multinormal_generator<double> assign_generator(random_gamma_assign, assign_covariance);
+//        
+//        boost::numeric::ublas::vector<double> random_count_assign = assign_generator.next_rand();
+//        //cerr << random_count_assign << endl;
+//        
+//        for (size_t r_idx = 0; r_idx < random_count_assign.size(); ++r_idx)
+//        {
+//            if (random_count_assign(r_idx) < 0)
+//                random_count_assign(r_idx) = 0;
+//        }
+//        
+//        total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
+//        if (total_sample_counts > 0)
+//            random_count_assign = random_count_assign / total_sample_counts;
+//        else
+//        {
+//            cerr <<random_count_assign << endl;
+//            continue;
+//        }
+//        all_assigned_count_samples.push_back(random_count_assign);
+//        // now recalculate the fragment assignment probabilities
+//        //        Eigen::MatrixXd assignment_probs;
+//        
+////        calculate_assignment_probs(alignment_multiplicities,
+////                                   transcript_cond_probs,
+////                                   proposed_gammas,
+////                                   assignment_probs);
+//    }
+//    
+//
+//    estimated_gamma_mean = ublas::zero_vector<double>(transcripts.size());
+//    estimated_gamma_covariance = ublas::zero_matrix<double>(transcripts.size(), transcripts.size());
+//
+//    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
+//    {
+//        for (int j = 0; j < all_assigned_count_samples[i].size(); ++j)
+//        {
+//            assert (!isnan(all_assigned_count_samples[i](j)) && !isinf(all_assigned_count_samples[i](j)));
+//        }
+//
+//        estimated_gamma_mean += all_assigned_count_samples[i];
+//        //
+//        //expected_relative_abundances += relative_abundances[i];
+//    }
+//
+//    if (all_assigned_count_samples.size() > 1)
+//    {
+//        estimated_gamma_mean /= (all_assigned_count_samples.size() - 1);
+//    }
+//
+//    for (size_t i = 0; i < transcripts.size(); ++i)
+//    {
+//        for (size_t j = 0; j < transcripts.size(); ++j)
+//        {
+//            for (size_t k = 0 ; k < all_assigned_count_samples.size(); ++k)
+//            {
+//                double c = (all_assigned_count_samples[k](i) - estimated_gamma_mean(i)) * (all_assigned_count_samples[k](j) - estimated_gamma_mean(j));
+//                estimated_gamma_covariance(i,j) += c;
+//
+//                assert (!isinf(estimated_gamma_covariance(i,j)) && !isnan(estimated_gamma_covariance(i,j)));
+//            }
+//        }
+//    }
+//    
+//    if (all_assigned_count_samples.size() > 1)
+//    {
+//        estimated_gamma_covariance /= (all_assigned_count_samples.size() - 1);
+//    }
+//    
+//    cerr << estimated_gamma_mean << endl;
+//    
+//    cerr << estimated_gamma_covariance << endl;
+//    
+//    
+//    return true;
+//}
+
+//void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+//                                                ublas::vector<double>& estimated_gamma_mean,
+//                                                ublas::matrix<double>& estimated_gamma_covariance)
+//{
+//    vector<ublas::vector<double> > all_assigned_count_samples;
+//    
+//    if (ab_group_per_replicate.empty())
+//        return;
+//    int num_transcripts = ab_group_per_replicate.begin()->second->abundances().size();
+//    if (num_transcripts == 1)
+//    {
+//        estimated_gamma_mean = ublas::vector<double>(1);
+//        estimated_gamma_mean(0) = 1.0;
+//        
+//        estimated_gamma_covariance = ublas::matrix<double>(1,1);
+//        estimated_gamma_covariance(0,0) = 0.0;
+//        return;
+//    }
+//    
+//    for(std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+//        itr != ab_group_per_replicate.end();
+//        ++itr)
+//    {
+//        vector<double> count_mean;
+//        for (size_t i = 0; i < itr->second->abundances().size(); ++i)
+//        {
+//            count_mean.push_back(itr->second->abundances()[i]->num_fragments());
+//        }
+//        
+//        vector<ublas::vector<double> > assigned_count_samples;
+//        generate_count_assignment_samples(num_frag_assignments,
+//                                          count_mean,
+//                                          itr->second->iterated_count_cov(),
+//                                          assigned_count_samples);
+//        
+//        all_assigned_count_samples.insert(all_assigned_count_samples.end(), assigned_count_samples.begin(), assigned_count_samples.end());
+//    }
+//    
+//    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
+//    {
+//        double total = accumulate(all_assigned_count_samples[i].begin(), all_assigned_count_samples[i].end(), 0.0);
+//        if (total > 0)
+//            all_assigned_count_samples[i] /= total;
+//    }
+//    
+//    estimated_gamma_mean = ublas::zero_vector<double>(num_transcripts);
+//    estimated_gamma_covariance = ublas::zero_matrix<double>(num_transcripts, num_transcripts);
+//    
+//    for (size_t i = 0; i < all_assigned_count_samples.size(); ++i)
+//    {
+//        for (int j = 0; j < all_assigned_count_samples[i].size(); ++j)
+//        {
+//            assert (!isnan(all_assigned_count_samples[i](j)) && !isinf(all_assigned_count_samples[i](j)));
+//        }
+//        
+//        estimated_gamma_mean += all_assigned_count_samples[i];
+//        //
+//        //expected_relative_abundances += relative_abundances[i];
+//    }
+//    
+//    if (all_assigned_count_samples.size() > 1)
+//    {
+//        estimated_gamma_mean /= (all_assigned_count_samples.size() - 1);
+//    }
+//       
+//    for (size_t i = 0; i < num_transcripts; ++i)
+//    {
+//        for (size_t j = 0; j < num_transcripts; ++j)
+//        {
+//            for (size_t k = 0 ; k < all_assigned_count_samples.size(); ++k)
+//            {
+//                double c = (all_assigned_count_samples[k](i) - estimated_gamma_mean(i)) * (all_assigned_count_samples[k](j) - estimated_gamma_mean(j));
+//                estimated_gamma_covariance(i,j) += c;
+//                
+//                assert (!isinf(estimated_gamma_covariance(i,j)) && !isnan(estimated_gamma_covariance(i,j)));
+//            }
+//        }
+//    }
+//    
+//    if (all_assigned_count_samples.size() > 1)
+//    {
+//        estimated_gamma_covariance /= (all_assigned_count_samples.size() - 1);
+//    }
+//
+//}
 
 
 #define PERFORM_EQUIV_COLLAPSE 1
@@ -1813,7 +2213,9 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         if (calculate_per_replicate == true && (final_est_run || (!corr_multi && !corr_bias)))
         {
 
-            calculate_fragment_assignment_distribution(ab_group_per_replicate,
+            calculate_fragment_assignment_distribution(non_equiv_alignments,
+                                                       transcripts,
+                                                       ab_group_per_replicate,
                                                        estimated_gamma_mean,
                                                        estimated_gamma_covariance);
             ublas::vector<double> estimated_count_mean = estimated_gamma_mean * num_fragments();
@@ -1860,74 +2262,6 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         
         if (calculate_per_replicate == true)
         {
-            ublas::vector<double> joint_mle = ublas::zero_vector<double>(_abundances.size());
-            for (size_t i = 0; i < joint_mle.size(); ++i)
-            {
-                joint_mle(i) = _abundances[i]->gamma();
-            }
-            
-            //cerr << _iterated_exp_count_covariance << endl;
-            
-            ublas::matrix<double> chol_covariance = estimated_gamma_covariance;
-            
-            ublas::matrix<double> epsilon = ublas::zero_matrix<double>(_abundances.size(),_abundances.size());
-            for (size_t i = 0; i < _abundances.size(); ++i)
-            {
-                epsilon(i,i) = 1e-6;
-            }
-            
-            chol_covariance  += epsilon; // modify matrix to avoid problems during inverse
-            
-            
-            double ret = cholesky_factorize(chol_covariance);
-            if (ret != 0)
-            {
-                // set status fail?
-            }
-            
-            ublas::matrix<double> inverse_covariance = estimated_gamma_covariance;
-            bool invertible = chol_invert_matrix(chol_covariance, inverse_covariance);
-            if (invertible == false)
-            {
-                // set status fail?
-            }
-            
-            //cerr << inverse_covariance << endl;
-            
-            // calculate the mahalanobis distance between each replicate and the joint mle to flag outliers
-            // TODO: should re-do this to work on the kappas (or the gammas)
-            
-            std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > mle_per_replicate;
-            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                 itr != ab_group_per_replicate.end();
-                 ++itr)
-            {
-                ublas::vector<double> mle = ublas::zero_vector<double>(_abundances.size());
-                for (size_t i = 0; i < mle.size(); ++i)
-                {
-                    mle(i) = itr->second->abundances()[i]->gamma();
-                }
-                
-                //ublas::vector<double> diff = (mle - joint_mle);
-                ublas::vector<double> diff = (mle - estimated_gamma_mean);
-                ublas::vector<double> p_diff = prod(diff, inverse_covariance);
-                double mahalonobis_dist = inner_prod(p_diff, diff);
-                
-                boost::math::chi_squared_distribution<double> csd(_abundances.size());
-                double tail_1 = cdf(csd, mahalonobis_dist);
-                double p_val = 1.0 - (tail_1);
-                
-                if (p_val < min_outlier_p)
-                {
-                    for (size_t i = 0; i < _abundances.size(); ++i)
-                    {
-                        StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
-                        st[itr->first] = NUMERIC_LOW_DATA;
-                        _abundances[i]->status_by_replicate(st);
-                    }
-                }
-            }
-            
             generate_fpkm_samples();
             fit_gamma_distributions();
                        
@@ -2264,7 +2598,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                 random_count_assign(r_idx) = 0;
         }
         
-        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0);
+        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
         if (total_sample_counts > 0)
             random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
         else

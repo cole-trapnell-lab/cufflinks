@@ -42,6 +42,7 @@ typedef map<shared_ptr<ReadGroupProperties const>, double> FPKMPerReplicateTable
 typedef map<shared_ptr<ReadGroupProperties const>, AbundanceStatus> StatusPerReplicateTable;
 
 bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat);
+bool fit_negbin_dist(const vector<double> samples, double& r, double& p);
 
 class Abundance
 {
