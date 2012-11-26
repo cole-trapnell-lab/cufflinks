@@ -300,7 +300,7 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
 // Returns the log likelihood of the negative binomial with a given r and the mle value of p
 long double negbin_log_likelihood(const vector<double>& samples, long double r, long double p)
 {
-    if (samples.empty())
+    if (samples.empty() || r == 0 || p == 0)
     {
         return 1.0;
     }
@@ -339,7 +339,7 @@ long double negbin_log_likelihood_helper(const vector<double>& samples, long dou
     long double p = 0;
     long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
     
-    if (r == 0)
+    if (r == 0 || mean_count == 0)
     {
         fprintf(stderr, "Error: r must be > 0!\n");
         return 0;
@@ -436,8 +436,9 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
     }
     
     long double min = 0;
-    long double max = std::numeric_limits<long double>::max();
-    int digits = std::numeric_limits<long double>::digits; // Maximum possible binary digits accuracy for type T.
+    long double max = *std::max_element(samples.begin(), samples.end());
+    max *= max;
+    int digits = std::numeric_limits<double>::digits; // Maximum possible binary digits accuracy for type T.
     
     r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits);
     
