@@ -43,6 +43,7 @@ typedef map<shared_ptr<ReadGroupProperties const>, AbundanceStatus> StatusPerRep
 
 bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat);
 bool fit_negbin_dist(const vector<double> samples, double& r, double& p);
+long double negbin_log_likelihood(const vector<double>& samples, long double r, long double p);
 
 class Abundance
 {

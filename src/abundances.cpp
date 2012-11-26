@@ -8,6 +8,11 @@
  *  NOTE: some of the code in this file was derived from (Eriksson et al, 2008)
  */
 
+
+//#define BOOST_MATH_INSTRUMENT 1
+//#include <iostream>
+//#include <iomanip>
+
 #include "abundances.h"
 #include <numeric>
 #include <limits>
@@ -293,10 +298,53 @@ bool fit_gamma_dist(const vector<double> samples, double& k, double& theta_hat)
 }
 
 // Returns the log likelihood of the negative binomial with a given r and the mle value of p
-long double negbin_likelihood_helper(const vector<double>& samples, long double r)
+long double negbin_log_likelihood(const vector<double>& samples, long double r, long double p)
+{
+    if (samples.empty())
+    {
+        return 1.0;
+    }
+    
+    long double T1 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T1 += lgamma(samples[i] + r);
+    }
+    
+    long double T2 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T2 += lgamma(samples[i] + 1);
+    }
+    
+    long double T3 = samples.size() * lgamma(r);
+    long double T4 = samples.size() * r * log(1 - p);
+    
+    long double T5 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T5 += samples[i] * log(p);
+    }
+    
+    assert ((isnan(T1) || isnan(T2) || isnan(T3) || isnan(T4) || isnan(T5)) == false);
+    long double log_likelihood = T1 - T2 - T3 + T4 + T5;
+    return log_likelihood;
+}
+
+
+
+// Returns the log likelihood of the negative binomial with a given r and the mle value of p
+long double negbin_log_likelihood_helper(const vector<double>& samples, long double r)
 {
     long double p = 0;
     long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
+    
+    if (r == 0)
+    {
+        fprintf(stderr, "Error: r must be > 0!\n");
+        return 0;
+    }
+    
     if (samples.empty() == false)
         mean_count /= samples.size();
     
@@ -324,11 +372,12 @@ long double negbin_likelihood_helper(const vector<double>& samples, long double 
     }
     
     assert ((isnan(T1) || isnan(T2) || isnan(T3) || isnan(T4) || isnan(T5)) == false);
-    return T1 - T2 - T3 + T4 + T5;
+    long double log_likelihood = T1 - T2 - T3 + T4 + T5;
+    return log_likelihood;
 }
 
 // Returns the log likelihood of the negative binomial with a given r and the mle value of p
-long double negbin_log_likelihood_helper(const vector<double>& samples, long double r)
+long double negbin_log_likelihood_prime_helper(const vector<double>& samples, long double r)
 {
     long double T1 = 0;
     for (size_t i = 0; i < samples.size(); ++i)
@@ -345,8 +394,9 @@ long double negbin_log_likelihood_helper(const vector<double>& samples, long dou
     long double T3 = samples.size() * log(r / (r + mean_count));
     
     assert ((isnan(T1) || isnan(T2) || isnan(T3)) == false);
-            
-    return T1 - T2 - T3;
+    
+    long double log_likelihood_prime = T1 - T2 + T3;
+    return log_likelihood_prime;
 }
 
 
@@ -355,9 +405,9 @@ struct negbin_ll_functor
     negbin_ll_functor(const vector<double>& count_samples) : samples(count_samples){}
     boost::math::tuple<long double, long double> operator()(long double r)
     {
-        long double lk = negbin_likelihood_helper(samples, r);
         long double llk = negbin_log_likelihood_helper(samples, r);
-        return boost::math::make_tuple(lk, llk);
+        long double llk_d = negbin_log_likelihood_prime_helper(samples, r);
+        return boost::math::make_tuple(llk, llk_d);
     }
 private:
     const vector<double>& samples;
@@ -377,6 +427,13 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
     long double guess = accumulate(samples.begin(), samples.end(), 0.0); 
     if (samples.empty() == false)
         guess /= samples.size();
+    
+    if (guess == 0)
+    {
+        r = 0;
+        p = 0;
+        return true;
+    }
     
     long double min = 0;
     long double max = std::numeric_limits<long double>::max();
