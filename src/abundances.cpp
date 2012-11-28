@@ -442,7 +442,7 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
     
     boost::uintmax_t max_iters = 100;
     
-    r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits, max_iters);
+    r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits);
     
     long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
     if (samples.empty() == false)

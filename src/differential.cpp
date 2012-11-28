@@ -386,17 +386,25 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     double p_value = 1.0;
 
     vector<double> merged_samples = curr.fpkm_samples;
+    //vector<double> merged_samples;
     merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
 
+    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
+    {
+        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
+    }
+    
     double null_negbin_r = 0.0;
     double null_negbin_p = 0.0;
+    
+    
     bool good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
-
-    if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
-    {
-        good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
-        fprintf(stderr, "Warning : null model fit failed!\n");
-    }
+//
+//    if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
+//    {
+//        good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
+//        fprintf(stderr, "Warning : null model fit failed!\n");
+//    }
 
     double curr_negbin_r = 0.0;
     double curr_negbin_p = 0.0;
@@ -418,6 +426,66 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         fprintf(stderr, "Warning : curr model fit failed!\n");
     }
     
+    double curr_fit_mean = curr_negbin_r * curr_negbin_p;
+    double curr_fit_var = curr_fit_mean;
+    if (1 - curr_negbin_p > 0)
+    {
+        curr_fit_mean /= (1.0 - curr_negbin_p);
+        curr_fit_var /= (1.0 - curr_negbin_p) * (1.0 - curr_negbin_p);
+    }
+    else
+    {
+        curr_fit_mean = 0;
+        curr_fit_var = 0;
+    }
+    
+    double prev_fit_mean = prev_negbin_r * prev_negbin_p;
+    double prev_fit_var = prev_fit_mean;
+    if (1 - prev_negbin_p > 0)
+    {
+        prev_fit_mean /= (1.0 - prev_negbin_p);
+        prev_fit_var /= (1.0 - prev_negbin_p) * (1.0 - prev_negbin_p);
+    }
+    else
+    {
+        prev_fit_mean = 0.0;
+        prev_fit_var = 0.0;
+    }
+    
+    double null_fit_mean = (curr_fit_mean + prev_fit_mean)/2.0;
+    double null_fit_var = std::max(curr_fit_var, prev_fit_var);
+//    if (null_fit_mean == 0)
+//    {
+//        null_negbin_r = 0;
+//        null_negbin_p = 0;
+//    }
+//    else if (null_fit_var - null_fit_mean > 0)
+//    {
+//        null_negbin_r = null_fit_mean * null_fit_mean;
+//        null_negbin_r /= (null_fit_var - null_fit_mean);
+//        null_negbin_p = null_negbin_r / (null_negbin_r + null_fit_mean);
+//    }
+//    else
+//    {
+//        assert (false);
+//    }
+    
+    
+    
+    /*
+     r *= r;
+     double over_disp_scale = fit_var - frags;
+     r /= over_disp_scale;
+     
+     if (r == 0)
+     {
+     generated_and_assigned_counts(j) = 0;
+     continue;
+     }
+     
+     //double p = _abundances[j]->num_fragments() / fit_var;
+     double p = r / (r + frags);
+     */
 
     double differential = 0.0;
 
