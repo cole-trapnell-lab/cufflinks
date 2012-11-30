@@ -440,7 +440,7 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
     max *= max;
     int digits = std::numeric_limits<double>::digits; // Maximum possible binary digits accuracy for type T.
     
-    boost::uintmax_t max_iters = 100;
+    boost::uintmax_t max_iters = 50;
     
     r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits, max_iters);
     
@@ -2289,13 +2289,33 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
             for (size_t i = 0; i < _abundances.size(); ++i)
             {
                 //frags_per_transcript.push_back(estimated_count_mean[i]);
-                frags_per_transcript.push_back(_abundances[i]->num_fragments());
+                //frags_per_transcript.push_back(_abundances[i]->num_fragments());
                 
                 frag_variances.push_back(_abundances[i]->mass_variance());
             }
             
             count_assign_covariance = _iterated_exp_count_covariance / ab_group_per_replicate.size();
 
+//            estimated_gamma_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
+//            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+//                 itr != ab_group_per_replicate.end();
+//                 ++itr)
+//            {
+//                estimated_gamma_covariance += itr->second->iterated_count_cov();
+//            }
+//            
+            if (ab_group_per_replicate.empty() == false)
+            {
+                estimated_gamma_covariance = _iterated_exp_count_covariance;
+                estimated_gamma_covariance /= ab_group_per_replicate.size();
+            }
+//
+//            cerr << "pooled:" << endl;
+//            cerr << _iterated_exp_count_covariance << endl;
+//
+//            cerr << "averaged:" << endl;
+//            cerr << estimated_gamma_covariance << endl;
+            
             //simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
             //simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
             simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);

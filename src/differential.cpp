@@ -538,8 +538,8 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
 
         double stat = d_stat_numerator + d_stat_denominator;
-        //double deg_freedom = 4 - 2;  // two per gamma distribution
-        double deg_freedom = prev.fpkm_samples.size() + curr.fpkm_samples.size();
+        double deg_freedom = 4 - 2;  // two per gamma distribution
+        //double deg_freedom = prev.fpkm_samples.size() + curr.fpkm_samples.size();
         boost::math::chi_squared_distribution<double> csd(deg_freedom);
 
         if (stat > 1000)
