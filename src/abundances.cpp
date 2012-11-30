@@ -442,7 +442,7 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
     
     boost::uintmax_t max_iters = 100;
     
-    r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits);
+    r = boost::math::tools::newton_raphson_iterate(negbin_ll_functor(samples), guess, min, max, digits, max_iters);
     
     long double mean_count = accumulate(samples.begin(), samples.end(), 0.0);
     if (samples.empty() == false)
@@ -2293,9 +2293,12 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                 
                 frag_variances.push_back(_abundances[i]->mass_variance());
             }
+            
+            count_assign_covariance = _iterated_exp_count_covariance / ab_group_per_replicate.size();
 
             //simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
-            simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+            //simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+            simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
         }
 //        if (calculate_per_replicate == false)
 //        {
