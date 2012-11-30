@@ -2289,7 +2289,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
             for (size_t i = 0; i < _abundances.size(); ++i)
             {
                 //frags_per_transcript.push_back(estimated_count_mean[i]);
-                //frags_per_transcript.push_back(_abundances[i]->num_fragments());
+                frags_per_transcript.push_back(_abundances[i]->num_fragments());
                 
                 frag_variances.push_back(_abundances[i]->mass_variance());
             }
