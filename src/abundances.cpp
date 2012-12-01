@@ -2674,22 +2674,24 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
    
     for (size_t assign_idx = 0; assign_idx < num_frag_assignments; ++assign_idx)
     {
-        
-        boost::numeric::ublas::vector<double> random_count_assign = generator.next_rand();
-        //cerr << random_count_assign << endl;
+        boost::numeric::ublas::vector<double> random_count_assign;
+        double total_sample_counts = 0;
+        do {
+             random_count_assign = generator.next_rand();
+            //cerr << random_count_assign << endl;
 
-        for (size_t r_idx = 0; r_idx < random_count_assign.size(); ++r_idx)
-        {
-            if (random_count_assign(r_idx) < 0)
-                random_count_assign(r_idx) = 0;
-        }
-        
-        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
-        if (total_sample_counts > 0)
-            random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
-        else
-            random_count_assign = boost::numeric::ublas::zero_vector<double>(transcripts.size());
-        
+            for (size_t r_idx = 0; r_idx < random_count_assign.size(); ++r_idx)
+            {
+                if (random_count_assign(r_idx) < 0)
+                    random_count_assign(r_idx) = 0;
+            }
+            
+            total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
+            if (total_sample_counts > 0)
+                random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
+            else
+                random_count_assign = boost::numeric::ublas::zero_vector<double>(transcripts.size());
+        } while(total_sample_counts <= 0);
 
         
         //cerr << "*** sample around MLE: " << random_count_assign << endl;
