@@ -2084,6 +2084,54 @@ bool group_has_record_badly_fit(const AbundanceGroup& ab_group)
     return false;
 }
 
+// The two functions below just clear the FPKM samples and other data used to estimate
+// the FPKM distributions during testing.  Once testing for a locus is complete,
+// we can throw that stuff out.  We do so to save memory over the run.
+void clear_samples_from_fpkm_tracking_table(const string& locus_desc, FPKMTrackingTable& fpkm_tracking)
+{
+    FPKMTrackingTable::iterator itr = fpkm_tracking.find(locus_desc);
+    if (itr == fpkm_tracking.end())
+        return;
+    
+    for (size_t i = 0; i < itr->second.fpkm_series.size(); ++i)
+    {
+        itr->second.fpkm_series[i].fpkm_samples.clear();
+        std::vector<double>().swap(itr->second.fpkm_series[i].fpkm_samples);
+        //itr->second.fpkm_series[i].fpkm_samples.swap(vector<double>(itr->second.fpkm_series[i].fpkm_samples));
+    }
+}
+
+void clear_samples_from_tracking_table(shared_ptr<SampleAbundances> sample, Tracking& tracking)
+{
+    for (size_t k = 0; k < sample->transcripts.abundances().size(); ++k)
+    {
+        const Abundance& abundance = *(sample->transcripts.abundances()[k]);
+        const string& desc = abundance.description();
+        clear_samples_from_fpkm_tracking_table(desc, tracking.isoform_fpkm_tracking);
+    }
+
+    for (size_t k = 0; k < sample->cds.size(); ++k)
+    {
+        const Abundance& abundance = sample->cds[k];
+        const string& desc = abundance.description();
+        clear_samples_from_fpkm_tracking_table(desc, tracking.cds_fpkm_tracking);
+    }
+    
+    for (size_t k = 0; k < sample->primary_transcripts.size(); ++k)
+    {
+        const Abundance& abundance = sample->primary_transcripts[k];
+        const string& desc = abundance.description();
+        clear_samples_from_fpkm_tracking_table(desc, tracking.tss_group_fpkm_tracking);
+    }
+
+    for (size_t k = 0; k < sample->genes.size(); ++k)
+    {
+        const Abundance& abundance = sample->genes[k];
+        const string& desc = abundance.description();
+        clear_samples_from_fpkm_tracking_table(desc, tracking.gene_fpkm_tracking);
+    }
+}
+
 int total_tests = 0;
 void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
@@ -2099,6 +2147,10 @@ void test_differential(const string& locus_tag,
 //#if ENABLE_THREADS
 //        test_storage_lock.unlock();
 //#endif
+        for (size_t i = 0; i < samples.size(); ++i)
+        {
+            clear_samples_from_tracking_table(samples[i], tracking);
+        }
         return;
     }
 	
@@ -2483,5 +2535,10 @@ void test_differential(const string& locus_tag,
 #endif
         }
         
+    }
+    
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        clear_samples_from_tracking_table(samples[i], tracking);
     }
 }
