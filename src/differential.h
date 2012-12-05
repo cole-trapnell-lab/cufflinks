@@ -70,6 +70,16 @@ public:
 
 	TestStatus test_status;
 	bool significant;
+    
+    double sample_1_param_1;
+    double sample_1_param_2;
+    
+    
+    double sample_2_param_1;
+    double sample_2_param_2;
+    
+    double null_param_1;
+    double null_param_2;
 };
 
 typedef map<string, SampleDifference > SampleDiffs;

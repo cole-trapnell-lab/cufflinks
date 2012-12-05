@@ -318,16 +318,38 @@ long double negbin_log_likelihood(const vector<double>& samples, long double r, 
     }
     
     long double T3 = samples.size() * lgamma(r);
-    long double T4 = samples.size() * r * log(1 - p);
+    long double T4 = samples.size() * r * logl(1 - p);
     
     long double T5 = 0;
     for (size_t i = 0; i < samples.size(); ++i)
     {
-        T5 += samples[i] * log(p);
+        T5 += samples[i] * logl(p);
     }
     
     assert ((isnan(T1) || isnan(T2) || isnan(T3) || isnan(T4) || isnan(T5)) == false);
     long double log_likelihood = T1 - T2 - T3 + T4 + T5;
+    return log_likelihood;
+}
+
+
+// Returns the log likelihood of the negative binomial with a given r and the mle value of p
+long double poisson_log_likelihood(const vector<double>& samples, long double lambda)
+{
+    if (samples.empty() || lambda == 0.0)
+    {
+        return 1.0;
+    }
+    
+    long double T1 = 0;
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        T1 += samples[i] * logl(lambda);
+    }
+    
+    long double T2 = samples.size() * lambda;
+        
+    assert ((isnan(T1) || isnan(T2)) == false);
+    long double log_likelihood = T1 - T2;
     return log_likelihood;
 }
 
@@ -375,6 +397,7 @@ long double negbin_log_likelihood_helper(const vector<double>& samples, long dou
     long double log_likelihood = T1 - T2 - T3 + T4 + T5;
     return log_likelihood;
 }
+
 
 // Returns the log likelihood of the negative binomial with a given r and the mle value of p
 long double negbin_log_likelihood_prime_helper(const vector<double>& samples, long double r)
@@ -449,7 +472,9 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
         mean_count /= samples.size();
     
     p = mean_count / (r + mean_count);
-        
+    
+    //fprintf(stderr, "r = %lg, p = %lg, max_r = %Lg\n", r, p, max);
+    
     if (isnan(r) || isnan(p))
     {
         fprintf(stderr, "warning: negative binomial parameters are Nan!\n");

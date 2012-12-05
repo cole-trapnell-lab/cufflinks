@@ -593,6 +593,16 @@ void print_tests(FILE* fout,
         else
             sig = "no";
         
+        double s1_p1 = test.sample_1_param_1;
+        double s1_p2 = test.sample_1_param_2;
+        
+        double s2_p1 = test.sample_2_param_1;
+        double s2_p2 = test.sample_2_param_2;
+        
+        double n_p1 = test.null_param_1;
+        double n_p2 = test.null_param_2;
+        
+        
         const char* status;
         if (test.test_status == OK)
             status = "OK";
@@ -605,7 +615,7 @@ void print_tests(FILE* fout,
         else
             status = "FAIL";
         
-        fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
+        fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg", status, r1, r2, d, t, p, q, sig, s1_p1, s1_p2, s2_p1, s2_p2, n_p1, n_p2);
         fprintf(fout, "\n");
 	}
 }
@@ -1981,7 +1991,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
 	int total_iso_de_tests = 0;
 	
 	vector<SampleDifference*> isoform_exp_diffs;
-    fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+    fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\tsample_1_param_1\tsample_1_param_2\tsample_2_param_1\tsample_2_param_2\tnull_param_1\tnull_param_2\n");
     
 
     for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)

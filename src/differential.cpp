@@ -51,7 +51,13 @@ SampleDifference::SampleDifference():
     corrected_p(1.0),
     tested_group_id(-1),
     test_status(NOTEST),
-    significant(false) {}
+    significant(false),
+    sample_1_param_1(0.0),
+    sample_1_param_2(0.0),
+    sample_2_param_1(0.0),
+    sample_2_param_2(0.0),
+    null_param_1(0.0),
+    null_param_2(0.0) {}
 
 
 void add_to_tracking_table(size_t sample_index,
@@ -426,67 +432,19 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         fprintf(stderr, "Warning : curr model fit failed!\n");
     }
     
-    double curr_fit_mean = curr_negbin_r * curr_negbin_p;
-    double curr_fit_var = curr_fit_mean;
-    if (1 - curr_negbin_p > 0)
-    {
-        curr_fit_mean /= (1.0 - curr_negbin_p);
-        curr_fit_var /= (1.0 - curr_negbin_p) * (1.0 - curr_negbin_p);
-    }
-    else
-    {
-        curr_fit_mean = 0;
-        curr_fit_var = 0;
-    }
     
-    double prev_fit_mean = prev_negbin_r * prev_negbin_p;
-    double prev_fit_var = prev_fit_mean;
-    if (1 - prev_negbin_p > 0)
-    {
-        prev_fit_mean /= (1.0 - prev_negbin_p);
-        prev_fit_var /= (1.0 - prev_negbin_p) * (1.0 - prev_negbin_p);
-    }
-    else
-    {
-        prev_fit_mean = 0.0;
-        prev_fit_var = 0.0;
-    }
+    double curr_sample_mean = accumulate(curr.fpkm_samples.begin(), curr.fpkm_samples.end(), 0.0);
+    if (curr.fpkm_samples.size())
+        curr_sample_mean /= curr.fpkm_samples.size();
     
-    double null_fit_mean = (curr_fit_mean + prev_fit_mean)/2.0;
-    double null_fit_var = std::max(curr_fit_var, prev_fit_var);
-//    if (null_fit_mean == 0)
-//    {
-//        null_negbin_r = 0;
-//        null_negbin_p = 0;
-//    }
-//    else if (null_fit_var - null_fit_mean > 0)
-//    {
-//        null_negbin_r = null_fit_mean * null_fit_mean;
-//        null_negbin_r /= (null_fit_var - null_fit_mean);
-//        null_negbin_p = null_negbin_r / (null_negbin_r + null_fit_mean);
-//    }
-//    else
-//    {
-//        assert (false);
-//    }
+    double prev_sample_mean = accumulate(prev.fpkm_samples.begin(), prev.fpkm_samples.end(), 0.0);
+    if (prev.fpkm_samples.size())
+        prev_sample_mean /= prev.fpkm_samples.size();
     
+    double merged_sample_mean = accumulate(merged_samples.begin(), merged_samples.end(), 0.0);
+    if (merged_samples.size())
+        merged_sample_mean /= merged_samples.size();
     
-    
-    /*
-     r *= r;
-     double over_disp_scale = fit_var - frags;
-     r /= over_disp_scale;
-     
-     if (r == 0)
-     {
-     generated_and_assigned_counts(j) = 0;
-     continue;
-     }
-     
-     //double p = _abundances[j]->num_fragments() / fit_var;
-     double p = r / (r + frags);
-     */
-
     double differential = 0.0;
 
     if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
@@ -533,11 +491,26 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         vector<double> null_samples = curr_rep_samples;
         null_samples.insert(null_samples.end(), prev_rep_samples.begin(), prev_rep_samples.end());
         double null_log_lik = negbin_log_likelihood(null_samples, null_negbin_r, null_negbin_p);
-
+        
         d_stat_numerator = -2 * null_log_lik;
         d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
 
         double stat = d_stat_numerator + d_stat_denominator;
+        
+        
+        double curr_poisson_ll = poisson_log_likelihood(curr_rep_samples, curr_sample_mean);
+        double prev_poisson_ll = poisson_log_likelihood(prev_rep_samples, prev_sample_mean);
+        double merged_poisson_ll = poisson_log_likelihood(null_samples, merged_sample_mean);
+        
+        
+        double poisson_stat = -2 * merged_poisson_ll + (2 * (curr_poisson_ll + prev_poisson_ll));
+//        
+//        fprintf(stderr, "******\n");
+//        fprintf(stderr, "curr poisson ll = %lg, curr NB ll = %lg\n", curr_poisson_ll, curr_log_lik);
+//        fprintf(stderr, "prev poisson ll = %lg, prev NB ll = %lg\n", prev_poisson_ll, prev_log_lik);
+//        fprintf(stderr, "null poisson ll = %lg, null NB ll = %lg\n", merged_poisson_ll, null_log_lik);
+//        fprintf(stderr, "Poisson stat = %lg, NB stat = %lg\n", poisson_stat, stat);
+//        
         double deg_freedom = 4 - 2;  // two per gamma distribution
         //double deg_freedom = prev.fpkm_samples.size() + curr.fpkm_samples.size();
         boost::math::chi_squared_distribution<double> csd(deg_freedom);
@@ -588,6 +561,13 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         performed_test = false;
     }
 
+    test.sample_1_param_1 = prev_negbin_r;
+    test.sample_1_param_2 = prev_negbin_p;
+    test.sample_2_param_1 = curr_negbin_r;
+    test.sample_2_param_2 = curr_negbin_p;
+    test.null_param_1 = null_negbin_r;
+    test.null_param_2 = null_negbin_p;
+    
 	test.test_status = performed_test ? OK : NOTEST;
 	return test;
 }
