@@ -1187,7 +1187,7 @@ SampleDifference get_de_tests(const string& description,
     if (description == "ucscCodingTCONS_00000219")
     {
         fprintf(stderr, "woah there");
-        FILE* sample_file = fopen((output_dir + string("/ucscCodingTCONS_00000114.samples.txt")).c_str(), "w");
+        FILE* sample_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.samples.txt")).c_str(), "w");
         fprintf(sample_file, "condition\tsample\n");
         for (size_t i =0; i < prev_abundance.fpkm_samples.size(); ++i)
         {
@@ -1244,7 +1244,7 @@ SampleDifference get_de_tests(const string& description,
             fprintf(stderr, "Warning : curr model fit failed!\n");
         }
         
-        FILE* params_file = fopen((output_dir + string("/ucscCodingTCONS_00000114.params.txt")).c_str(), "w");
+        FILE* params_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.params.txt")).c_str(), "w");
         fprintf(params_file, "condition\tnegbin_r\tnegbin_p\n");
         fprintf(params_file, "prev\t%lg\t%lg\n", prev_negbin_r, prev_negbin_p);
         fprintf(params_file, "curr\t%lg\t%lg\n", curr_negbin_r, curr_negbin_p);

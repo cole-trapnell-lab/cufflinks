@@ -580,7 +580,7 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
         }
     }
     
-    fit_gamma_distributions();
+    //fit_gamma_distributions();
     
     calculate_conf_intervals();
     
@@ -2374,7 +2374,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         if (calculate_per_replicate == true)
         {
             generate_fpkm_samples();
-            fit_gamma_distributions();
+            //fit_gamma_distributions();
                        
 //            for (size_t i = 0; i < _abundances.size(); ++i)
 //            {
