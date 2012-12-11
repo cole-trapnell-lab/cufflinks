@@ -428,21 +428,21 @@ void estimate_trunc_normal_params(const TruncNormalMoments& m, double& location,
     
 }
 
-long double trunc_normal_log_likelihood(const vector<double>& samples, double location, double scale)
+long double trunc_normal_log_likelihood(const vector<double>& samples, double mean, double variance)
 {
     boost::math::normal norm; //standard normal
     
-    if (location < 0 || scale <= 0.0)
+    if (mean < 0 || variance <= 0.0)
         return 0;
     
-    double denom_sigma = 1.0/sqrt(scale);
+    double denom_sigma = 1.0/sqrt(variance);
     
     long double log_likelihood = 0.0;
     for (size_t i = 0; i < samples.size(); ++i)
     {
         long double sL = 0.0;
-        sL = denom_sigma * pdf(norm, (samples[i] - location) * denom_sigma);
-        double sL_denom = (1.0 - cdf(norm, (0.0 - location) * denom_sigma));
+        sL = denom_sigma * pdf(norm, (samples[i] - mean) * denom_sigma);
+        double sL_denom = (1.0 - cdf(norm, (0.0 - mean) * denom_sigma));
         if (sL_denom != 0)
             sL /= sL_denom;
         else

@@ -2319,16 +2319,16 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                 frag_variances.push_back(_abundances[i]->mass_variance());
             }
             
-            count_assign_covariance = _iterated_exp_count_covariance / ab_group_per_replicate.size();
+            //count_assign_covariance = _iterated_exp_count_covariance / ab_group_per_replicate.size();
 
-//            estimated_gamma_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
-//            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-//                 itr != ab_group_per_replicate.end();
-//                 ++itr)
-//            {
-//                estimated_gamma_covariance += itr->second->iterated_count_cov();
-//            }
-//            
+            count_assign_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
+            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+                 itr != ab_group_per_replicate.end();
+                 ++itr)
+            {
+                count_assign_covariance += itr->second->iterated_count_cov() / ab_group_per_replicate.size();
+            }
+//
             if (ab_group_per_replicate.empty() == false)
             {
                 estimated_gamma_covariance = _iterated_exp_count_covariance;
