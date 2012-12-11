@@ -2319,21 +2319,21 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
                 frag_variances.push_back(_abundances[i]->mass_variance());
             }
             
-            //count_assign_covariance = _iterated_exp_count_covariance / ab_group_per_replicate.size();
+            count_assign_covariance = _iterated_exp_count_covariance / ab_group_per_replicate.size();
 
-            count_assign_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
-            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                 itr != ab_group_per_replicate.end();
-                 ++itr)
-            {
-                count_assign_covariance += itr->second->iterated_count_cov() / ab_group_per_replicate.size();
-            }
-//
-            if (ab_group_per_replicate.empty() == false)
-            {
-                estimated_gamma_covariance = _iterated_exp_count_covariance;
-                estimated_gamma_covariance /= ab_group_per_replicate.size();
-            }
+//            count_assign_covariance = ublas::zero_matrix<double>(_abundances.size(), _abundances.size());
+//            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+//                 itr != ab_group_per_replicate.end();
+//                 ++itr)
+//            {
+//                count_assign_covariance += itr->second->iterated_count_cov() / ab_group_per_replicate.size();
+//            }
+////
+//            if (ab_group_per_replicate.empty() == false)
+//            {
+//                estimated_gamma_covariance = _iterated_exp_count_covariance;
+//                estimated_gamma_covariance /= ab_group_per_replicate.size();
+//            }
 //
 //            cerr << "pooled:" << endl;
 //            cerr << _iterated_exp_count_covariance << endl;
@@ -2341,9 +2341,9 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
 //            cerr << "averaged:" << endl;
 //            cerr << estimated_gamma_covariance << endl;
             
-            simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+            //simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
             //simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
-            //simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+            simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
         }
 //        if (calculate_per_replicate == false)
 //        {
