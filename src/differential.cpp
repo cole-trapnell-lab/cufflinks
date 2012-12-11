@@ -472,11 +472,11 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     //vector<double> merged_samples;
     merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
     
-    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
-    {
-        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
-    }
-    
+//    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
+//    {
+//        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
+//    }
+//    
     TruncNormalMoments curr_moments;
     calculate_sample_moments(curr.fpkm_samples, curr_moments);
     double curr_location = 0.0;
