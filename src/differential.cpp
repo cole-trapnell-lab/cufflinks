@@ -492,7 +492,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     static const size_t num_null_ratio_samples = 10000;
     
     boost::random::mt19937 rng;   
-    boost::random::uniform_int_distribution<> null_sampler(0, merged_samples.size());
+    boost::random::uniform_int_distribution<> null_sampler(0, merged_samples.size()-1);
     
     if ((curr.FPKM != 0 || prev.FPKM != 0))
     {
@@ -589,9 +589,14 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         //                p_value = 1.0 - (tail_1 - tail_2);                
         //            }
         
-        size_t num_samples_more_extreme = (null_log_ratio_samples.size() - num_smaller_upper_tail) + num_smaller_lower_tail ;
+        size_t num_samples_more_extreme = (null_log_ratio_samples.size() - num_smaller_upper_tail) + num_smaller_lower_tail;
         
         p_value = num_samples_more_extreme / (double)null_log_ratio_samples.size();
+        if (p_value == 0)
+            p_value = 1.0 / (double)null_log_ratio_samples.size();
+        if (p_value > 1)
+            p_value = 1.0;
+        
         double stat = 0;
         
         performed_test = true;

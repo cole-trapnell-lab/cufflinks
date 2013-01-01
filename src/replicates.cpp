@@ -432,7 +432,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
                 //fprintf(stderr, "%lg\t", locus_count.counts[rep_idx]);
             }
             
-            double mean = accumulate(locus_count.counts.begin(), locus_count.counts.end(), 0);
+            double mean = accumulate(locus_count.counts.begin(), locus_count.counts.end(), 0.0);
             if (mean == 0)
                 continue;
             mean /= locus_count.counts.size();
@@ -451,7 +451,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
             //fprintf(stderr, "\n");
         }
         
-        double mean = accumulate(draws.begin(), draws.end(), 0);
+        double mean = accumulate(draws.begin(), draws.end(), 0.0);
         mean /= draws.size();
         double var = 0.0;
         BOOST_FOREACH(int c,  draws)

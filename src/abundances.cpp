@@ -1769,7 +1769,7 @@ bool generate_count_assignment_samples(int num_draws,
                 random_count_assign(r_idx) = 0;
         }
         
-        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0);
+        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
         if (total_sample_counts > 0)
             random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
         else

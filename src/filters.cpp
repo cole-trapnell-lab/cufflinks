@@ -247,14 +247,14 @@ void pre_mrna_filter(int bundle_length,
                                 op_len += op.genomic_length;
                                 int L = left_off - bundle_left;
                                 int R = L + op.genomic_length;
-                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0); 
+                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0.0);
                             }
                             else
                             {
                                 op_len += i_right - left_off;
                                 int L = left_off - bundle_left;
                                 int R = L + (i_right - left_off);
-                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
+                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0.0);
                             }
                         }
                         else
@@ -264,14 +264,14 @@ void pre_mrna_filter(int bundle_length,
                                 op_len += (left_off + op.genomic_length - i_left);
                                 int L = left_off - bundle_left;
                                 int R = L + (left_off + op.genomic_length - i_left);
-                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
+                                op_doc += accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0.0);
                             }
                             else
                             {
                                 op_len = i_right - i_left;
                                 int L = left_off - bundle_left;
                                 int R = L + (i_right - i_left);
-                                op_doc = accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0);
+                                op_doc = accumulate(depth_of_coverage.begin() + L, depth_of_coverage.begin() + R, 0.0);
                             }
                         }
                     }
