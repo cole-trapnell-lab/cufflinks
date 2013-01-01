@@ -454,7 +454,7 @@ long double trunc_normal_log_likelihood(const vector<double>& samples, double me
     return log_likelihood;
 }
 
-//// likelihood ratio test on truncated normal distributions:
+//// Sampling-based test:
 SampleDifference test_diffexp(const FPKMContext& curr,
                               const FPKMContext& prev)
 {
@@ -462,51 +462,19 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     
     SampleDifference test = SampleDifference();
     
-    //assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
-    //		double log_curr = log(curr.counts);
-    //		double log_prev = log(prev.counts);
-    
     double p_value = 1.0;
+    
     
     vector<double> merged_samples = curr.fpkm_samples;
     //vector<double> merged_samples;
     merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
     
+//    vector<double> merged_samples;
+//    
 //    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
 //    {
 //        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
 //    }
-//    
-    TruncNormalMoments curr_moments;
-    calculate_sample_moments(curr.fpkm_samples, curr_moments);
-    double curr_location = 0.0;
-    double curr_scale = 0.0;
-    estimate_trunc_normal_params(curr_moments, curr_location, curr_scale);
-    
-    TruncNormalMoments prev_moments;
-    calculate_sample_moments(prev.fpkm_samples, prev_moments);
-    double prev_location = 0.0;
-    double prev_scale = 0.0;
-    estimate_trunc_normal_params(prev_moments, prev_location, prev_scale);
-    
-    TruncNormalMoments null_moments;
-    calculate_sample_moments(merged_samples, null_moments);
-    double null_location = 0.0;
-    double null_scale = 0.0;
-    estimate_trunc_normal_params(null_moments, null_location, null_scale);
-
-    
-//    double curr_sample_mean = accumulate(curr.fpkm_samples.begin(), curr.fpkm_samples.end(), 0.0);
-//    if (curr.fpkm_samples.size())
-//        curr_sample_mean /= curr.fpkm_samples.size();
-//    
-//    double prev_sample_mean = accumulate(prev.fpkm_samples.begin(), prev.fpkm_samples.end(), 0.0);
-//    if (prev.fpkm_samples.size())
-//        prev_sample_mean /= prev.fpkm_samples.size();
-//    
-//    double merged_sample_mean = accumulate(merged_samples.begin(), merged_samples.end(), 0.0);
-//    if (merged_samples.size())
-//        merged_sample_mean /= merged_samples.size();
     
     double differential = 0.0;
     
@@ -514,18 +482,20 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         differential = log2(curr.FPKM) - log2(prev.FPKM);
     else if (curr.FPKM)
         differential = numeric_limits<double>::max();
-    else if (curr.FPKM)
+    else if (prev.FPKM)
         differential = -numeric_limits<double>::max();
-    
-    
-    
+
     // static const long double min_gamma_params = 1e-20;
+    
+    vector<double> null_log_ratio_samples;
+    
+    static const size_t num_null_ratio_samples = 10000;
+    
+    boost::random::mt19937 rng;   
+    boost::random::uniform_int_distribution<> null_sampler(0, merged_samples.size());
     
     if ((curr.FPKM != 0 || prev.FPKM != 0))
     {
-        double d_stat_numerator = 0.0; // null hypothesis
-        double d_stat_denominator = 0.0; // alternative hypothesis
-        
         vector<double> prev_rep_samples;
         vector<double> curr_rep_samples;
         
@@ -539,8 +509,6 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             curr_rep_samples.push_back(itr->second);
         }
         
-        double curr_log_lik = trunc_normal_log_likelihood(curr_rep_samples, curr_location, curr_scale);
-        
         for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
              itr != prev.fpkm_per_rep.end(); ++itr)
         {
@@ -550,50 +518,98 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             prev_rep_samples.push_back(itr->second);
         }
         
-        double prev_log_lik = trunc_normal_log_likelihood(prev_rep_samples, prev_location, prev_scale);
-        
-        
-        vector<double> null_samples = curr_rep_samples;
-        null_samples.insert(null_samples.end(), prev_rep_samples.begin(), prev_rep_samples.end());
-        double null_log_lik = trunc_normal_log_likelihood(null_samples, null_location, null_scale);
-        
-        d_stat_numerator = -2 * null_log_lik;
-        d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
-        
-        double stat = d_stat_numerator + d_stat_denominator;
-        
-        double deg_freedom = 4 - 2;  // two per normal distribution
-        //double deg_freedom = prev.fpkm_samples.size() + curr.fpkm_samples.size();
-        boost::math::chi_squared_distribution<double> csd(deg_freedom);
-        
-        if (stat > 1000)
+        for (size_t i = 0; i < num_null_ratio_samples; ++i)
         {
-            //fprintf(stderr, "Warning: test stat is huge (%lg\n", stat);
+            double curr_set_sample = 0.0;
+            for (size_t k = 0; k < curr_rep_samples.size(); ++k)
+            {
+                curr_set_sample += merged_samples[null_sampler(rng)] / (double)curr.fpkm_per_rep.size();
+            }
+            
+            double prev_set_sample = 0.0;
+            for (size_t k = 0; k < prev_rep_samples.size(); ++k)
+            {
+                prev_set_sample += merged_samples[null_sampler(rng)] / (double)prev.fpkm_per_rep.size();
+            }
+            
+            double null_ratio_sample = 0.0;
+            if (curr_set_sample > 0.0 && prev_set_sample > 0.0)
+                null_ratio_sample = log2(curr_set_sample) - log2(prev_set_sample);
+            else if (curr_set_sample > 0.0)
+                null_ratio_sample = numeric_limits<double>::max();
+            else if (prev_set_sample)
+                null_ratio_sample = -numeric_limits<double>::max();
+            
+            null_log_ratio_samples.push_back(null_ratio_sample);
         }
         
-        if (stat <= 0)
-            stat = 0;
-        //fprintf(stderr, "Warning : test statistic is %lg!\n", stat);
-        //
-        //        if (null_log_lik == 1)
-        //            fprintf(stderr, "Warning : null log likelihood is 1!\n", stat);
-        //
-        
-        if (prev_log_lik == 1 || curr_log_lik == 1 || null_log_lik == 1 || stat <= 0 || isnan(stat) || isinf(stat))
+        sort(null_log_ratio_samples.begin(), null_log_ratio_samples.end());
+
+        double lower_tail_val;
+        double upper_tail_val;
+        if (differential > 0)
         {
-            
-            //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
-            p_value = 1.0;
-            performed_test = true;
+            upper_tail_val = differential;
+            lower_tail_val = -differential;
         }
         else
         {
-            assert (stat >= 0);
-            //fprintf(stderr, "stat = %lg\n", stat);
-            double tail_1 = cdf(csd, stat);
-            p_value = 1.0 - (tail_1);
-            performed_test = true;
+            upper_tail_val = -differential;
+            lower_tail_val = differential;
         }
+        
+        vector<double>::iterator lower_tail_null_range_iter = upper_bound(null_log_ratio_samples.begin(), null_log_ratio_samples.end(), lower_tail_val);
+        vector<double>::iterator upper_tail_null_range_iter = upper_bound(null_log_ratio_samples.begin(), null_log_ratio_samples.end(), upper_tail_val);
+        size_t num_smaller_lower_tail = lower_tail_null_range_iter - null_log_ratio_samples.begin();
+        size_t num_smaller_upper_tail = upper_tail_null_range_iter - null_log_ratio_samples.begin();
+        
+        //            normal norm;
+        //            double t1, t2;
+        //            if (stat > 0.0)
+        //            {
+        //                t1 = stat;
+        //                t2 = -stat;
+        //            }
+        //            else
+        //            {
+        //                t1 = -stat;
+        //                t2 = stat;
+        //            }
+        //
+        //            if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
+        //            {
+        //
+        //                //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
+        //                p_value = 1.0;
+        //            }
+        //            else
+        //            {
+        //                double tail_1 = cdf(norm, t1);
+        //                double tail_2 = cdf(norm, t2);
+        //                p_value = 1.0 - (tail_1 - tail_2);                
+        //            }
+        
+        size_t num_samples_more_extreme = (null_log_ratio_samples.size() - num_smaller_upper_tail) + num_smaller_lower_tail ;
+        
+        p_value = num_samples_more_extreme / (double)null_log_ratio_samples.size();
+        double stat = 0;
+        
+        performed_test = true;
+//        if (stat <= 0 || isnan(stat) || isinf(stat))
+//        {
+//            
+//            //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
+//            p_value = 1.0;
+//            performed_test = true;
+//        }
+//        else
+//        {
+//            assert (stat >= 0);
+//            //fprintf(stderr, "stat = %lg\n", stat);
+//            double tail_1 = cdf(csd, stat);
+//            p_value = 1.0 - (tail_1);
+//            performed_test = true;
+//        }
         
         //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
         test.p_value = p_value;
@@ -612,16 +628,179 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         performed_test = false;
     }
     
-    test.sample_1_param_1 = prev_location;
-    test.sample_1_param_2 = prev_scale;
-    test.sample_2_param_1 = curr_location;
-    test.sample_2_param_2 = curr_scale;
-    test.null_param_1 = null_location;
-    test.null_param_2 = null_scale;
-    
 	test.test_status = performed_test ? OK : NOTEST;
 	return test;
 }
+
+
+////// likelihood ratio test on truncated normal distributions:
+//SampleDifference test_diffexp(const FPKMContext& curr,
+//                              const FPKMContext& prev)
+//{
+//	bool performed_test = false;
+//    
+//    SampleDifference test = SampleDifference();
+//    
+//    //assert (curr.FPKM_variance > 0.0 && prev.FPKM_variance > 0.0);
+//    //		double log_curr = log(curr.counts);
+//    //		double log_prev = log(prev.counts);
+//    
+//    double p_value = 1.0;
+//    
+//    vector<double> merged_samples = curr.fpkm_samples;
+//    //vector<double> merged_samples;
+//    merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
+//    
+////    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
+////    {
+////        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
+////    }
+////    
+//    TruncNormalMoments curr_moments;
+//    calculate_sample_moments(curr.fpkm_samples, curr_moments);
+//    double curr_location = 0.0;
+//    double curr_scale = 0.0;
+//    estimate_trunc_normal_params(curr_moments, curr_location, curr_scale);
+//    
+//    TruncNormalMoments prev_moments;
+//    calculate_sample_moments(prev.fpkm_samples, prev_moments);
+//    double prev_location = 0.0;
+//    double prev_scale = 0.0;
+//    estimate_trunc_normal_params(prev_moments, prev_location, prev_scale);
+//    
+//    TruncNormalMoments null_moments;
+//    calculate_sample_moments(merged_samples, null_moments);
+//    double null_location = 0.0;
+//    double null_scale = 0.0;
+//    estimate_trunc_normal_params(null_moments, null_location, null_scale);
+//
+//    
+////    double curr_sample_mean = accumulate(curr.fpkm_samples.begin(), curr.fpkm_samples.end(), 0.0);
+////    if (curr.fpkm_samples.size())
+////        curr_sample_mean /= curr.fpkm_samples.size();
+////    
+////    double prev_sample_mean = accumulate(prev.fpkm_samples.begin(), prev.fpkm_samples.end(), 0.0);
+////    if (prev.fpkm_samples.size())
+////        prev_sample_mean /= prev.fpkm_samples.size();
+////    
+////    double merged_sample_mean = accumulate(merged_samples.begin(), merged_samples.end(), 0.0);
+////    if (merged_samples.size())
+////        merged_sample_mean /= merged_samples.size();
+//    
+//    double differential = 0.0;
+//    
+//    if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
+//        differential = log2(curr.FPKM) - log2(prev.FPKM);
+//    else if (curr.FPKM)
+//        differential = numeric_limits<double>::max();
+//    else if (curr.FPKM)
+//        differential = -numeric_limits<double>::max();
+//    
+//    
+//    
+//    // static const long double min_gamma_params = 1e-20;
+//    
+//    if ((curr.FPKM != 0 || prev.FPKM != 0))
+//    {
+//        double d_stat_numerator = 0.0; // null hypothesis
+//        double d_stat_denominator = 0.0; // alternative hypothesis
+//        
+//        vector<double> prev_rep_samples;
+//        vector<double> curr_rep_samples;
+//        
+//        
+//        for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
+//             itr != curr.fpkm_per_rep.end(); ++itr)
+//        {
+//            StatusPerReplicateTable::const_iterator si = curr.status_per_rep.find(itr->first);
+//            if (si == curr.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
+//                continue;
+//            curr_rep_samples.push_back(itr->second);
+//        }
+//        
+//        double curr_log_lik = trunc_normal_log_likelihood(curr_rep_samples, curr_location, curr_scale);
+//        
+//        for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
+//             itr != prev.fpkm_per_rep.end(); ++itr)
+//        {
+//            StatusPerReplicateTable::const_iterator si = prev.status_per_rep.find(itr->first);
+//            if (si == prev.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
+//                continue;
+//            prev_rep_samples.push_back(itr->second);
+//        }
+//        
+//        double prev_log_lik = trunc_normal_log_likelihood(prev_rep_samples, prev_location, prev_scale);
+//        
+//        
+//        vector<double> null_samples = curr_rep_samples;
+//        null_samples.insert(null_samples.end(), prev_rep_samples.begin(), prev_rep_samples.end());
+//        double null_log_lik = trunc_normal_log_likelihood(null_samples, null_location, null_scale);
+//        
+//        d_stat_numerator = -2 * null_log_lik;
+//        d_stat_denominator = 2 * (curr_log_lik + prev_log_lik);
+//        
+//        double stat = d_stat_numerator + d_stat_denominator;
+//        
+//        double deg_freedom = 4 - 2;  // two per normal distribution
+//        //double deg_freedom = prev.fpkm_samples.size() + curr.fpkm_samples.size();
+//        boost::math::chi_squared_distribution<double> csd(deg_freedom);
+//        
+//        if (stat > 1000)
+//        {
+//            //fprintf(stderr, "Warning: test stat is huge (%lg\n", stat);
+//        }
+//        
+//        if (stat <= 0)
+//            stat = 0;
+//        //fprintf(stderr, "Warning : test statistic is %lg!\n", stat);
+//        //
+//        //        if (null_log_lik == 1)
+//        //            fprintf(stderr, "Warning : null log likelihood is 1!\n", stat);
+//        //
+//        
+//        if (prev_log_lik == 1 || curr_log_lik == 1 || null_log_lik == 1 || stat <= 0 || isnan(stat) || isinf(stat))
+//        {
+//            
+//            //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
+//            p_value = 1.0;
+//            performed_test = true;
+//        }
+//        else
+//        {
+//            assert (stat >= 0);
+//            //fprintf(stderr, "stat = %lg\n", stat);
+//            double tail_1 = cdf(csd, stat);
+//            p_value = 1.0 - (tail_1);
+//            performed_test = true;
+//        }
+//        
+//        //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
+//        test.p_value = p_value;
+//        test.differential = differential;
+//        test.test_stat = stat;
+//        test.value_1 = prev.FPKM;
+//        test.value_2 = curr.FPKM;
+//    }
+//    else
+//    {
+//        test.p_value = 1.0;
+//        test.test_stat = 0.0;
+//        test.value_1 = prev.FPKM;
+//        test.value_2 = curr.FPKM;
+//        test.differential = 0;
+//        performed_test = false;
+//    }
+//    
+//    test.sample_1_param_1 = prev_location;
+//    test.sample_1_param_2 = prev_scale;
+//    test.sample_2_param_1 = curr_location;
+//    test.sample_2_param_2 = curr_scale;
+//    test.null_param_1 = null_location;
+//    test.null_param_2 = null_scale;
+//    
+//	test.test_status = performed_test ? OK : NOTEST;
+//	return test;
+//}
 
 
 
