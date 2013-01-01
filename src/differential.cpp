@@ -465,16 +465,16 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     double p_value = 1.0;
     
     
-    vector<double> merged_samples = curr.fpkm_samples;
-    //vector<double> merged_samples;
-    merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
+//    vector<double> merged_samples = curr.fpkm_samples;
+//    //vector<double> merged_samples;
+//    merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
     
-//    vector<double> merged_samples;
-//    
-//    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
-//    {
-//        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
-//    }
+    vector<double> merged_samples;
+    
+    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
+    {
+        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
+    }
     
     double differential = 0.0;
     
