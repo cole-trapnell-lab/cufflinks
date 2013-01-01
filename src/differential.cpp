@@ -523,13 +523,17 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             double curr_set_sample = 0.0;
             for (size_t k = 0; k < curr_rep_samples.size(); ++k)
             {
-                curr_set_sample += merged_samples[null_sampler(rng)] / (double)curr.fpkm_per_rep.size();
+                int next_sample_idx = null_sampler(rng);
+                if (next_sample_idx >= 0 && next_sample_idx < merged_samples.size())
+                    curr_set_sample += merged_samples[next_sample_idx] / (double)curr.fpkm_per_rep.size();
             }
             
             double prev_set_sample = 0.0;
             for (size_t k = 0; k < prev_rep_samples.size(); ++k)
             {
-                prev_set_sample += merged_samples[null_sampler(rng)] / (double)prev.fpkm_per_rep.size();
+                int next_sample_idx = null_sampler(rng);
+                if (next_sample_idx >= 0 && next_sample_idx < merged_samples.size())
+                    prev_set_sample += merged_samples[next_sample_idx] / (double)prev.fpkm_per_rep.size();
             }
             
             double null_ratio_sample = 0.0;
