@@ -741,7 +741,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             double curr_set_sample = 0.0;
             for (size_t k = 0; k < curr_rep_samples.size(); ++k)
             {
-                int next_sample_idx = prev_sampler(rng);
+                int next_sample_idx = curr_sampler(rng);
                 if (next_sample_idx >= 0 && next_sample_idx < curr.fpkm_samples.size())
                     curr_set_sample += curr.fpkm_samples[next_sample_idx] / (double)curr_rep_samples.size();
             }
@@ -749,7 +749,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             double prev_set_sample = 0.0;
             for (size_t k = 0; k < prev_rep_samples.size(); ++k)
             {
-                int next_sample_idx = prev_sampler(rng);
+                int next_sample_idx = curr_sampler(rng);
                 if (next_sample_idx >= 0 && next_sample_idx < curr.fpkm_samples.size())
                     prev_set_sample += curr.fpkm_samples[next_sample_idx] / (double)prev_rep_samples.size();
             }
