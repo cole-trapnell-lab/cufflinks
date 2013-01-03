@@ -573,10 +573,14 @@ AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
         if (_fpkm_samples.empty())
+        {
             _fpkm_samples = vector<double>(_abundances[i]->fpkm_samples().size(), 0);
+            _member_fpkm_samples = vector<Eigen::VectorXd>(_abundances[i]->fpkm_samples().size(), Eigen::VectorXd::Zero(_abundances.size()));
+        }
         for (size_t j = 0; j < _abundances[i]->fpkm_samples().size(); ++j)
         {
             _fpkm_samples[j] += _abundances[i]->fpkm_samples()[j];
+            _member_fpkm_samples[j](i) = _abundances[i]->fpkm_samples()[j];
         }
     }
     
@@ -2985,6 +2989,19 @@ void AbundanceGroup::generate_fpkm_samples()
         //fprintf(stderr, "standard fpkm = %lg, sample mean = %lg\n", _abundances[i]->FPKM(), fpkm_means[i]);
     }
     
+    vector<Eigen::VectorXd> mem_fpkm_samples;
+    for (size_t i = 0; i < fpkm_sample_vectors.size(); ++i)
+    {
+        Eigen::VectorXd sample(fpkm_sample_vectors[i].size());
+        mem_fpkm_samples.push_back(sample);
+        for (size_t j = 0; j < fpkm_sample_vectors[i].size(); ++j)
+        {
+            mem_fpkm_samples[i](j) = fpkm_sample_vectors[i][j];
+        }
+    }
+    
+    member_fpkm_samples(mem_fpkm_samples);
+    
     fpkm_samples(group_sum_fpkm_samples);
 }
 
@@ -3907,38 +3924,38 @@ void AbundanceGroup::calculate_kappas()
     
 //    _kappa_covariance /= relative_abundances.size();
     
-    vector<double> js_samples;
-    
-    ublas::vector<double> kappa_mean(_abundances.size());
-    for (size_t j = 0; j < _abundances.size(); ++j)
-    {
-        kappa_mean(j) = _abundances[j]->kappa();
-    }
-    
-    ublas::matrix<double> kappa_cov_chol = _kappa_covariance;
-    double ret = cholesky_factorize(kappa_cov_chol);
-    if (ret == 0)
-    {
-        multinormal_generator<double> generator(kappa_mean, kappa_cov_chol);
-        vector<Eigen::VectorXd> multinormal_samples;
-        
-        generate_importance_samples(generator, multinormal_samples, 10000, false);
-
-        // We used to sample the JS using the real assigned count samples, but
-        // that's not quite as accurate as simulating from a multinomial built from
-        // the bounded covariance matrices.
-        
-        //generate_null_js_samples(relative_abundances, 100000, js_samples);
-        generate_null_js_samples(multinormal_samples, 100000, js_samples);
-        
-        _null_js_samples = js_samples;
-        //if (_null_js_samples.size() > 0)
-        //    fprintf(stderr, "Max JS from null: %lg\n",_null_js_samples.back()); 
-    }
-    else
-    {
-        _null_js_samples.clear();
-    }
+//    vector<double> js_samples;
+//    
+//    ublas::vector<double> kappa_mean(_abundances.size());
+//    for (size_t j = 0; j < _abundances.size(); ++j)
+//    {
+//        kappa_mean(j) = _abundances[j]->kappa();
+//    }
+//    
+//    ublas::matrix<double> kappa_cov_chol = _kappa_covariance;
+//    double ret = cholesky_factorize(kappa_cov_chol);
+//    if (ret == 0)
+//    {
+//        multinormal_generator<double> generator(kappa_mean, kappa_cov_chol);
+//        vector<Eigen::VectorXd> multinormal_samples;
+//        
+//        generate_importance_samples(generator, multinormal_samples, 10000, false);
+//
+//        // We used to sample the JS using the real assigned count samples, but
+//        // that's not quite as accurate as simulating from a multinomial built from
+//        // the bounded covariance matrices.
+//        
+//        //generate_null_js_samples(relative_abundances, 100000, js_samples);
+//        generate_null_js_samples(multinormal_samples, 100000, js_samples);
+//        
+//        _null_js_samples = js_samples;
+//        //if (_null_js_samples.size() > 0)
+//        //    fprintf(stderr, "Max JS from null: %lg\n",_null_js_samples.back()); 
+//    }
+//    else
+//    {
+//        _null_js_samples.clear();
+//    }
 }
 
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,

@@ -1857,6 +1857,75 @@ bool one_sided_js_test(const AbundanceGroup& null_abundances,
     return true;
 }
 
+//bool test_js(const AbundanceGroup& prev_abundance,
+//             const AbundanceGroup& curr_abundance,
+//             double& js,
+//             double& p_val)
+//{
+//    vector<Eigen::VectorXd> sample_kappas;
+//    Eigen::VectorXd curr_kappas(Eigen::VectorXd::Zero(curr_abundance.abundances().size()));
+//    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
+//    {
+//        curr_kappas(i) = curr_abundance.abundances()[i]->kappa();
+//    }
+//    
+//    Eigen::VectorXd prev_kappas(Eigen::VectorXd::Zero(prev_abundance.abundances().size()));
+//    for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
+//    {
+//        prev_kappas(i) = prev_abundance.abundances()[i]->kappa();
+//    }
+//    
+//    sample_kappas.push_back(prev_kappas);
+//    sample_kappas.push_back(curr_kappas);
+//    
+//    js = jensen_shannon_distance(sample_kappas);
+//    
+//    if (isinf(js) || isnan(js))
+//        return false;
+//    
+//    double prev_p_val = 1.0;
+//    bool prev_succ = one_sided_js_test(prev_abundance, js, prev_p_val);
+//    
+//    double curr_p_val = 1.0;
+//    bool curr_succ = one_sided_js_test(curr_abundance, js, curr_p_val);
+//
+//    if (!curr_succ || !prev_succ)
+//        return false;
+//        
+//    p_val = (prev_p_val + curr_p_val)/2;
+////    double mean_js = accumulate(js_samples.begin(), js_samples.end(), 0.0);
+////    if (js_samples.size() == 0)
+////        return false;
+////    mean_js /= js_samples.size();
+////    
+////    double var_js = 0.0;
+////    for (size_t i = 0; i < js_samples.size(); ++i)
+////    {
+////        double s =  js_samples[i] - mean_js;
+////        s *= s;
+////        var_js += s;
+////    }
+////    var_js /= js_samples.size();
+////    
+////    if (var_js > 0.0)
+////    {
+////        // We're dealing with a standard normal that's been truncated below zero
+////        // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
+////        
+////        normal test_dist(0,1.0);
+////        //double denom = sqrt(js_var);
+////        double se_js = sqrt(var_js);
+////        double p = mean_js/se_js;
+////        p_val = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
+////    }
+////    else
+////    {
+////        return false;
+////    }
+//    
+//    return true;
+//}
+
 bool test_js(const AbundanceGroup& prev_abundance,
              const AbundanceGroup& curr_abundance,
              double& js,
@@ -1883,48 +1952,105 @@ bool test_js(const AbundanceGroup& prev_abundance,
     if (isinf(js) || isnan(js))
         return false;
     
-    double prev_p_val = 1.0;
-    bool prev_succ = one_sided_js_test(prev_abundance, js, prev_p_val);
+    vector<double> null_js_samples;
     
-    double curr_p_val = 1.0;
-    bool curr_succ = one_sided_js_test(curr_abundance, js, curr_p_val);
-
-    if (!curr_succ || !prev_succ)
-        return false;
+    static const size_t num_null_js_samples = 10000;
+    
+    boost::random::mt19937 rng;
+    boost::random::uniform_int_distribution<> prev_sampler(0, prev_abundance.member_fpkm_samples().size()-1);
+    boost::random::uniform_int_distribution<> curr_sampler(0, curr_abundance.member_fpkm_samples().size()-1);
+    
+    for (size_t i = 0; i < num_null_js_samples; ++i)
+    {
+        // Draw k values, from prev's fpkm_samples to make the first half of the null, where k is the number of replicates in *curr*
+        Eigen::VectorXd curr_set_sample = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
+        for (size_t k = 0; k < curr_abundance.rg_props().size(); ++k)
+        {
+            int next_sample_idx = prev_sampler(rng);
+            if (next_sample_idx >= 0 && next_sample_idx < prev_abundance.member_fpkm_samples().size())
+                curr_set_sample += prev_abundance.member_fpkm_samples()[next_sample_idx] / (double)curr_abundance.rg_props().size();
+        }
+        double total_curr_set_sample_fpkm = curr_set_sample.sum();
+        if (total_curr_set_sample_fpkm > 0.0)
+            curr_set_sample /= total_curr_set_sample_fpkm;
         
-    p_val = (prev_p_val + curr_p_val)/2;
-//    double mean_js = accumulate(js_samples.begin(), js_samples.end(), 0.0);
-//    if (js_samples.size() == 0)
-//        return false;
-//    mean_js /= js_samples.size();
-//    
-//    double var_js = 0.0;
-//    for (size_t i = 0; i < js_samples.size(); ++i)
-//    {
-//        double s =  js_samples[i] - mean_js;
-//        s *= s;
-//        var_js += s;
-//    }
-//    var_js /= js_samples.size();
-//    
-//    if (var_js > 0.0)
-//    {
-//        // We're dealing with a standard normal that's been truncated below zero
-//        // so pdf(js) is twice the standard normal, and cdf is 0.5 * (cdf of normal - 1)
-//        
-//        normal test_dist(0,1.0);
-//        //double denom = sqrt(js_var);
-//        double se_js = sqrt(var_js);
-//        double p = mean_js/se_js;
-//        p_val = 1.0 - ((cdf(test_dist, p) - 0.5) / 0.5);
-//    }
-//    else
-//    {
-//        return false;
-//    }
+        // Draw k values, from prev's fpkm_samples to make the first half of the null, where k is the number of replicates in *prev*
+        Eigen::VectorXd prev_set_sample = Eigen::VectorXd::Zero(prev_abundance.abundances().size());
+        for (size_t k = 0; k < prev_abundance.rg_props().size(); ++k)
+        {
+            int next_sample_idx = prev_sampler(rng);
+            if (next_sample_idx >= 0 && next_sample_idx < prev_abundance.member_fpkm_samples().size())
+                prev_set_sample += prev_abundance.member_fpkm_samples()[next_sample_idx] / (double)prev_abundance.rg_props().size();
+        }
+        double total_prev_set_sample_fpkm = prev_set_sample.sum();
+        if (total_prev_set_sample_fpkm > 0.0)
+            prev_set_sample /= total_prev_set_sample_fpkm;
+        
+        vector<Eigen::VectorXd> sample_kappas;
+        
+        sample_kappas.push_back(curr_set_sample);
+        sample_kappas.push_back(prev_set_sample);
+        
+        double js_sample = jensen_shannon_distance(sample_kappas);
+
+        null_js_samples.push_back(js_sample);
+    }
+    
+    for (size_t i = 0; i < num_null_js_samples; ++i)
+    {
+        // Draw k values, from curr's fpkm_samples to make the first half of the null, where k is the number of replicates in *curr*
+        Eigen::VectorXd curr_set_sample = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
+        for (size_t k = 0; k < curr_abundance.rg_props().size(); ++k)
+        {
+            int next_sample_idx = prev_sampler(rng);
+            if (next_sample_idx >= 0 && next_sample_idx < curr_abundance.member_fpkm_samples().size())
+                curr_set_sample += curr_abundance.member_fpkm_samples()[next_sample_idx] / (double)curr_abundance.rg_props().size();
+        }
+        double total_curr_set_sample_fpkm = curr_set_sample.sum();
+        if (total_curr_set_sample_fpkm > 0.0)
+            curr_set_sample /= total_curr_set_sample_fpkm;
+        
+        // Draw k values, from curr's fpkm_samples to make the first half of the null, where k is the number of replicates in *prev*
+        Eigen::VectorXd prev_set_sample = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
+        for (size_t k = 0; k < prev_abundance.rg_props().size(); ++k)
+        {
+            int next_sample_idx = prev_sampler(rng);
+            if (next_sample_idx >= 0 && next_sample_idx < curr_abundance.member_fpkm_samples().size())
+                prev_set_sample += curr_abundance.member_fpkm_samples()[next_sample_idx] / (double)prev_abundance.rg_props().size();
+        }
+        double total_prev_set_sample_fpkm = prev_set_sample.sum();
+        if (total_prev_set_sample_fpkm > 0.0)
+            prev_set_sample /= total_prev_set_sample_fpkm;
+        
+        vector<Eigen::VectorXd> sample_kappas;
+        
+        sample_kappas.push_back(curr_set_sample);
+        sample_kappas.push_back(prev_set_sample);
+        
+        double js_sample = jensen_shannon_distance(sample_kappas);
+        
+        null_js_samples.push_back(js_sample);
+    }    
+    
+    sort(null_js_samples.begin(), null_js_samples.end());
+    
+    double upper_tail_val = js;
+    
+    vector<double>::iterator upper_tail_null_range_iter = upper_bound(null_js_samples.begin(), null_js_samples.end(), upper_tail_val);
+    
+    size_t num_smaller_upper_tail = upper_tail_null_range_iter - null_js_samples.begin();
+    
+    size_t num_samples_more_extreme = (null_js_samples.size() - num_smaller_upper_tail);
+    
+    p_val = num_samples_more_extreme / (double)null_js_samples.size();
+    if (p_val == 0)
+        p_val = 1.0 / (double)null_js_samples.size();
+    if (p_val > 1)
+        p_val = 1.0;
     
     return true;
 }
+
 
 // This performs within-group tests on a set of isoforms or a set of TSS groups.
 // This is a way of looking for meaningful differential splicing or differential

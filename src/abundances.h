@@ -489,6 +489,9 @@ public:
     const vector<double>& fpkm_samples() const { return _fpkm_samples; }
     void  fpkm_samples(const vector<double>& s) { _fpkm_samples = s; }
     
+    const vector<Eigen::VectorXd>& member_fpkm_samples() const { return _member_fpkm_samples; }
+    void  member_fpkm_samples(const vector<Eigen::VectorXd>& s) { _member_fpkm_samples = s; }
+    
     const vector<double> null_js_samples() const { return _null_js_samples; }
     
 	void calculate_abundance(const vector<MateHit>& alignments,
@@ -594,6 +597,7 @@ private:
     double _fpkm_gamma_theta;
     
     vector<double> _fpkm_samples;
+    vector<Eigen::VectorXd> _member_fpkm_samples;
     
     vector<double> _null_js_samples;
     
