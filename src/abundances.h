@@ -701,5 +701,6 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                                const vector<MateHit>& nr_alignments,
                                const vector<shared_ptr<Abundance> >& transcripts,
                                ublas::matrix<double>& count_covariances,
-                               vector<Eigen::VectorXd>& assigned_count_samples);
+                               vector<Eigen::VectorXd>& assigned_count_samples,
+                               vector<ublas::vector<double> >* gamma_samples);
 #endif
