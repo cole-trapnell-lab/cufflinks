@@ -557,7 +557,7 @@ fit_dispersion_model_helper(const string& condition_name,
     
     SCVInterpolator true_to_est_scv_table;
     
-    //build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
+    build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
     
     setuplf();  
     
@@ -645,7 +645,12 @@ fit_dispersion_model_helper(const string& condition_name,
         if (cp->dpr[i] >= 0)
         {
             double mean = exp(cm->dpr[i]);
-            fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
+            double fitted_scv = (cp->dpr[i] - xim * mean) / (mean * mean);
+            double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
+            
+            //fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
+            
+            fitted_values.push_back(mean + corrected_scv * (mean * mean));
         }
         else
         {
