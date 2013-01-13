@@ -1962,7 +1962,7 @@ bool test_js(const AbundanceGroup& prev_abundance,
     
     for (size_t i = 0; i < num_null_js_samples; ++i)
     {
-        // Draw k values, from prev's fpkm_samples to make the first half of the null, where k is the number of replicates in *curr*
+        // Draw k values, from prev's fpkm_samples to make the first half of the null, where k is the number of replicates in *curr*, and compute their average
         Eigen::VectorXd curr_set_sample = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
         for (size_t k = 0; k < curr_abundance.rg_props().size(); ++k)
         {
@@ -1974,7 +1974,7 @@ bool test_js(const AbundanceGroup& prev_abundance,
         if (total_curr_set_sample_fpkm > 0.0)
             curr_set_sample /= total_curr_set_sample_fpkm;
         
-        // Draw k values, from prev's fpkm_samples to make the first half of the null, where k is the number of replicates in *prev*
+        // Draw k values, from prev's fpkm_samples to make the first half of the null, where k is the number of replicates in *prev*, and compute their average
         Eigen::VectorXd prev_set_sample = Eigen::VectorXd::Zero(prev_abundance.abundances().size());
         for (size_t k = 0; k < prev_abundance.rg_props().size(); ++k)
         {
@@ -1998,11 +1998,11 @@ bool test_js(const AbundanceGroup& prev_abundance,
     
     for (size_t i = 0; i < num_null_js_samples; ++i)
     {
-        // Draw k values, from curr's fpkm_samples to make the first half of the null, where k is the number of replicates in *curr*
+        // Draw k values, from curr's fpkm_samples to make the first half of the null, where k is the number of replicates in *curr*, and compute their average
         Eigen::VectorXd curr_set_sample = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
         for (size_t k = 0; k < curr_abundance.rg_props().size(); ++k)
         {
-            int next_sample_idx = prev_sampler(rng);
+            int next_sample_idx = curr_sampler(rng);
             if (next_sample_idx >= 0 && next_sample_idx < curr_abundance.member_fpkm_samples().size())
                 curr_set_sample += curr_abundance.member_fpkm_samples()[next_sample_idx] / (double)curr_abundance.rg_props().size();
         }
@@ -2010,11 +2010,11 @@ bool test_js(const AbundanceGroup& prev_abundance,
         if (total_curr_set_sample_fpkm > 0.0)
             curr_set_sample /= total_curr_set_sample_fpkm;
         
-        // Draw k values, from curr's fpkm_samples to make the first half of the null, where k is the number of replicates in *prev*
+        // Draw k values, from curr's fpkm_samples to make the first half of the null, where k is the number of replicates in *prev*, and compute their average
         Eigen::VectorXd prev_set_sample = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
         for (size_t k = 0; k < prev_abundance.rg_props().size(); ++k)
         {
-            int next_sample_idx = prev_sampler(rng);
+            int next_sample_idx = curr_sampler(rng);
             if (next_sample_idx >= 0 && next_sample_idx < curr_abundance.member_fpkm_samples().size())
                 prev_set_sample += curr_abundance.member_fpkm_samples()[next_sample_idx] / (double)prev_abundance.rg_props().size();
         }
