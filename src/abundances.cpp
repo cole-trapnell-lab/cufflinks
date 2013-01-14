@@ -1690,7 +1690,7 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     
     return NUMERIC_OK;
 }
-
+/*
 bool generate_count_assignment_samples(int num_draws,
                                        const vector<double>& count_mean,
                                        const ublas::matrix<double>& count_covariance,
@@ -1783,7 +1783,74 @@ bool generate_count_assignment_samples(int num_draws,
     
     return true;
 }
+*/
 
+bool generate_count_assignment_samples(int num_draws,
+                                       const vector<double>& count_mean,
+                                       const ublas::matrix<double>& count_covariance,
+                                       vector<ublas::vector<double> >& assigned_count_samples)
+{
+    double total_frag_counts = accumulate(count_mean.begin(), count_mean.end(), 0.0);
+    
+    if (total_frag_counts == 0)
+    {
+        assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
+        return true;
+    }
+    
+    //size_t num_frag_count_draws = 1000;
+    //const int num_multinomial_samples = 1;
+    
+    assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
+    
+    typedef boost::gamma_distribution<> Gamma;
+    typedef boost::variate_generator<boost::mt19937, boost::gamma_distribution<> > GammaGenerator;
+    vector<shared_ptr<Gamma> > gammas;
+    vector<shared_ptr<GammaGenerator> > gamma_generators;
+    boost::mt19937 rng;
+    
+    for (size_t i = 0; i < count_mean.size(); ++i)
+    {
+        if (count_mean[i] > 0)
+        {
+            shared_ptr<Gamma> pGamma(new Gamma(count_mean[i]));
+            gammas.push_back(pGamma);
+            shared_ptr<GammaGenerator> pD(new GammaGenerator(rng, *(gammas.back())));
+            gamma_generators.push_back(pD);
+        }
+        else
+        {
+            gamma_generators.push_back(shared_ptr<GammaGenerator>());
+        }
+    }
+    
+    //generator(rng, pdf);
+    
+    
+    for (size_t assign_idx = 0; assign_idx < num_draws; ++assign_idx)
+    {
+        
+        boost::numeric::ublas::vector<double> random_count_assign(count_mean.size());
+        
+        for (size_t i = 0; i < random_count_assign.size(); ++i)
+        {
+            if (gamma_generators[i])
+                random_count_assign[i] = (*gamma_generators[i])();
+            else
+                random_count_assign[i] = 0.0;
+        }
+        
+        double total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
+        if (total_sample_counts > 0)
+            random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
+        else
+            random_count_assign = ublas::zero_vector<double>(count_mean.size());
+        
+        assigned_count_samples[assign_idx] = random_count_assign;
+    }
+    
+    return true;
+}
 
 void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
                                     ublas::vector<double>& estimated_gamma_mean,
@@ -1862,7 +1929,6 @@ void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupPropertie
     {
         estimated_gamma_covariance /= (all_assigned_count_samples.size() - 1);
     }
-
 }
 
 //bool calculate_fragment_assignment_distribution(const vector<MateHit>& alignments,
@@ -2161,6 +2227,14 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
     if (all_assigned_count_samples.size() > 1)
     {
         estimated_gamma_covariance /= (all_assigned_count_samples.size() - 1);
+    }
+    
+    cerr << "Gamma covariance: " << endl;
+    for (unsigned i = 0; i < estimated_gamma_covariance.size1 (); ++ i)
+    {
+        ublas::matrix_row<ublas::matrix<double> > mr (estimated_gamma_covariance, i);
+        cerr << i << " : " << estimated_gamma_mean[i] << " : ";
+        std::cerr << i << " : " << mr << std::endl;
     }
 
 }
@@ -3083,6 +3157,14 @@ void AbundanceGroup::calculate_FPKM_covariance()
         }
 
         assert (FPKM() == 0 || _FPKM_variance > 0 || status() != NUMERIC_OK);
+    }
+    
+    cerr << "FPKM covariance: " << endl;
+    for (unsigned i = 0; i < _fpkm_covariance.size1 (); ++ i)
+    {
+        ublas::matrix_row<ublas::matrix<double> > mr (_fpkm_covariance, i);
+        cerr << i << " : " << _abundances[i]->FPKM() << " : ";
+        std::cerr << i << " : " << mr << std::endl;
     }
     
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
