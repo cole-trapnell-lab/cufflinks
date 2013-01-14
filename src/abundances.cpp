@@ -1778,7 +1778,6 @@ bool generate_count_assignment_samples(int num_draws,
             random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
         else
             random_count_assign = ublas::zero_vector<double>(count_mean.size());
-        
         assigned_count_samples[assign_idx] = random_count_assign;
     }
     
@@ -2122,6 +2121,7 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         double total = accumulate(all_assigned_count_samples[i].begin(), all_assigned_count_samples[i].end(), 0.0);
         if (total > 0)
             all_assigned_count_samples[i] /= total;
+        //cerr << all_assigned_count_samples[i] << endl;
     }
     
     estimated_gamma_mean = ublas::zero_vector<double>(num_transcripts);
@@ -2354,64 +2354,11 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
             
             //simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
             //simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
-        }
-//        if (calculate_per_replicate == false)
-//        {
-//            //cerr << "+++++++++++++++" << endl;
-//            
-//            //cerr << "pooled:" << endl;
-//            //cerr << _iterated_exp_count_covariance << endl;
-//            
-//            //cerr << "before:" << endl;
-//            //cerr << count_assign_covariance << endl;
-//            
-//            if (max_count_assign_covariance)
-//            {
-////                for (size_t i = 0; i < _abundances.size(); ++i)
-////                {
-////                    count_assign_covariance(i,i) = std::max<double>(count_assign_covariance(i,i), (*max_count_assign_covariance)(i,i));
-////                }
-//                count_assign_covariance = *max_count_assign_covariance;
-//            }
-//            //cerr << "after:" << endl;
-//            //cerr << count_assign_covariance << endl;
-//        }
-        
-        // Calling calculate_FPKM_covariance() also estimates cross-replicate
-        // count variances
-        
+        }        
         
         if (calculate_per_replicate == true)
         {
             generate_fpkm_samples();
-            //fit_gamma_distributions();
-                       
-//            for (size_t i = 0; i < _abundances.size(); ++i)
-//            {
-//                vector<double> ab_i_fpkm_samples;
-//                
-//                for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-//                     itr != ab_group_per_replicate.end();
-//                     ++itr)
-//                {
-//                    StatusPerReplicateTable st = _abundances[i]->status_by_replicate();
-//                    StatusPerReplicateTable::const_iterator si = st.find(itr->first);
-//                    if (si == st.end() || si->second == NUMERIC_LOW_DATA)
-//                        continue;
-//                    ab_i_fpkm_samples.insert(ab_i_fpkm_samples.end(), itr->second->abundances()[i]->fpkm_samples().begin(), itr->second->abundances()[i]->fpkm_samples().end());
-//                }
-//                _abundances[i]->fpkm_samples(ab_i_fpkm_samples);
-//            }
-//            
-//            vector<double> ab_group_fpkm_samples;
-//            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-//                 itr != ab_group_per_replicate.end();
-//                 ++itr)
-//            {
-//                ab_group_fpkm_samples.insert(ab_group_fpkm_samples.end(), itr->second->fpkm_samples().begin(), itr->second->fpkm_samples().end());
-//            }
-//            
-//            fpkm_samples(ab_group_fpkm_samples);
             
             calculate_FPKM_covariance();
             
@@ -2642,7 +2589,12 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     if (total_frag_counts == 0)
     {
         count_covariance = ublas::zero_matrix<double>(transcripts.size(), transcripts.size());
-        assigned_count_samples = vector<Eigen::VectorXd> (num_frag_count_draws * num_frag_assignments, Eigen::VectorXd::Zero(transcripts.size()));
+        
+        size_t num_frags = num_frag_assignments;
+        if (gamma_samples && gamma_samples->empty() == false)
+            num_frags = gamma_samples->size();
+        
+        assigned_count_samples = vector<Eigen::VectorXd> (num_frag_count_draws * num_frags, Eigen::VectorXd::Zero(transcripts.size()));
         return true;
     }
     
@@ -2650,7 +2602,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
    
     boost::mt19937 rng;
     
-    if (gamma_samples == NULL)
+    if (gamma_samples == NULL || gamma_samples->empty())
     {
         //size_t num_frag_count_draws = 1000;
         //const int num_multinomial_samples = 1;
@@ -2854,7 +2806,8 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         }
     }
     
-    count_covariance /= assigned_count_samples.size();
+    if (assigned_count_samples.empty() == false)
+        count_covariance /= assigned_count_samples.size();
         
     for (size_t i = 0; i < transcripts.size(); ++i)
     {
@@ -2863,6 +2816,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to fitted variance model (%lg)\n", i, _count_covariance(i,i), ceil(_abundances[i]->mass_variance()));
             count_covariance(i,i) = ceil(frag_variances[i]);
+            assert (!isinf(count_covariance(i,i)) && !isnan(count_covariance(i,i)));
         }
         
         // Check that we aren't below what the Poisson model says we ought to be at
@@ -2870,51 +2824,13 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         {
             //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
             count_covariance(i,i) = ceil(num_fragments[i] + iterated_exp_count_covariance(i,i));
+            assert (!isinf(count_covariance(i,i)) && !isnan(count_covariance(i,i)));
         }
-        
-//        long double count_var = 0.0;
-        
-//        // Check that we aren't below what the BNB model says we ought to be at
-//        bool numerics_ok = estimate_count_variance(count_var,
-//                                                   _abundances[i]->gamma(),
-//                                                   _iterated_exp_count_covariance(i,i),
-//                                                   num_fragments(),
-//                                                   _abundances[i]->mass_variance(),
-//                                                   _abundances[i]->effective_length());
-//        //        if (numerics_ok == false)
-//        //        {
-//        //            fprintf(stderr, "Warning: BNB has no analytic solution\n");
-//        //        }
-//        
-//        if (numerics_ok && _count_covariance(i,i) < ceil(count_var))
-//        {
-//            //fprintf(stderr, "Counts for %d (var = %lg) are underdispersed, reverting to additive variance model (%lg)\n", i, _count_covariance(i,i),  ceil(_abundances[i]->num_fragments() + _iterated_exp_count_covariance(i,i)));
-//            _count_covariance(i,i) = ceil(count_var);
-//        }
+        for (size_t j = 0; j < transcripts.size(); ++j)
+        {
+            assert (!isinf(count_covariance(i,j)) && !isnan(count_covariance(i,j)));
+        }
     }
-    
-    //    for (size_t i = 0; i < _abundances.size(); ++i)
-    //    {
-    //        _count_covariance(i,i) = ceil(_count_covariance(i,i));
-    //    }
-    
-//    cerr << endl << "simulated count covariance: " << endl;
-//    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i)
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (_count_covariance, i);
-//        cerr << i << " : " << _abundances[i]->num_fragments() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-//    cerr << "======" << endl;
-//    cerr << "updated expected counts: " << endl;
-//    std::cerr << expected_counts << std::endl;
-//    cerr << "======" << endl;
-
-    //    for (size_t i = 0; i < num_count_draws; ++i)
-    //    {
-    //        cerr << generated_counts[i] << endl;
-    //        
-    //    }
     
     return true;
 }
@@ -3010,6 +2926,8 @@ void AbundanceGroup::generate_fpkm_samples()
     member_fpkm_samples(mem_fpkm_samples);
     
     fpkm_samples(group_sum_fpkm_samples);
+    
+    assert (group_sum_fpkm_samples.empty() == false);
 }
 
 void AbundanceGroup::fit_gamma_distributions()
