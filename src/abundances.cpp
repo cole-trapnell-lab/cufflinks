@@ -1690,7 +1690,9 @@ AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcrip
     
     return NUMERIC_OK;
 }
-/*
+
+
+ // Sample from a multivariate normal to estimate the gamma distribution
 bool generate_count_assignment_samples(int num_draws,
                                        const vector<double>& count_mean,
                                        const ublas::matrix<double>& count_covariance,
@@ -1723,12 +1725,12 @@ bool generate_count_assignment_samples(int num_draws,
     ublas::matrix<double> mle_count_covar = count_covariance;
     
     ublas::matrix<double> epsilon = ublas::zero_matrix<double>(count_mean.size(),count_mean.size());
-	for (size_t i = 0; i < count_mean.size(); ++i)
-	{
-		epsilon(i,i) = 1e-6;
-	}
-	
-	mle_count_covar += epsilon; // modify matrix to avoid problems during inverse
+    for (size_t i = 0; i < count_mean.size(); ++i)
+    {
+        epsilon(i,i) = 1e-6;
+    }
+    
+    mle_count_covar += epsilon; // modify matrix to avoid problems during inverse
     
     double ret = cholesky_factorize(mle_count_covar);
     if (ret != 0)
@@ -1783,8 +1785,110 @@ bool generate_count_assignment_samples(int num_draws,
     
     return true;
 }
+ 
+
+
+/*
+// Sample from a logistic normal to estimate the gamma distribution
+bool generate_count_assignment_samples(int num_draws,
+                                       const vector<double>& count_mean,
+                                       const ublas::matrix<double>& count_covariance,
+                                       vector<ublas::vector<double> >& assigned_count_samples)
+{
+    double total_frag_counts = accumulate(count_mean.begin(), count_mean.end(), 0.0);
+    
+    if (total_frag_counts == 0)
+    {
+        assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
+        return true;
+    }
+    
+    //size_t num_frag_count_draws = 1000;
+    //const int num_multinomial_samples = 1;
+    
+    boost::mt19937 rng;
+    
+    //vector<Eigen::VectorXd > generated_counts (num_frag_count_draws, Eigen::VectorXd::Zero(transcripts.size()));
+    ublas::vector<double> mle_frag_counts = ublas::zero_vector<double>(count_mean.size());
+    
+    for (size_t j = 0; j < count_mean.size(); ++j)
+    {
+        mle_frag_counts(j) = count_mean[j];
+    }
+    
+    //    cerr << "********************" << endl;
+    //    cerr << "initial MLE counts: " << mle_frag_counts << endl;
+    
+    ublas::matrix<double> mle_count_covar = count_covariance;
+    
+    ublas::matrix<double> epsilon = ublas::zero_matrix<double>(count_mean.size(),count_mean.size());
+	for (size_t i = 0; i < count_mean.size(); ++i)
+	{
+		epsilon(i,i) = 1e-6;
+	}
+	
+	mle_count_covar += epsilon; // modify matrix to avoid problems during inverse
+    
+    double ret = cholesky_factorize(mle_count_covar);
+    
+    if (ret != 0)
+    {
+        fprintf(stderr, "Warning: Iterated expectation count covariance matrix cannot be cholesky factorized!\n");
+        //fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
+        //        for (size_t j = 0; j < _abundances.size(); ++j)
+        //        {
+        //            _abundances[j]->status(NUMERIC_FAIL);
+        //        }
+        return false;
+    }
+    
+    cerr << endl << "Cholesky inverse of matrix: " << endl;
+    for (unsigned i = 0; i < count_covariance_chol_inv.size1 (); ++ i)
+    {
+        ublas::matrix_row<ublas::matrix<double> > mr (count_covariance_chol_inv, i);
+        cerr << i << " : " << mle_frag_counts[i] << " : ";
+        std::cerr << i << " : " << mr << std::endl;
+    }
+    //cerr << "======" << endl;
+    
+    multinormal_generator<double> generator(mle_frag_counts, mle_count_covar);
+    //vector<Eigen::VectorXd> multinormal_samples;
+    
+    //assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
+    
+    boost::uniform_01<> uniform_dist;
+    boost::mt19937 null_rng;
+    boost::variate_generator<boost::mt19937&, boost::uniform_01<> > uniform_gen(null_rng, uniform_dist);
+    
+    
+    for (size_t assign_idx = 0; assign_idx < num_draws; ++assign_idx)
+    {
+        
+        boost::numeric::ublas::vector<double> random_count_assign = generator.next_rand();
+
+        double denom_logistic_normal = 0.0;
+        for (size_t r_idx = 0; r_idx < random_count_assign.size(); ++r_idx)
+        {
+            denom_logistic_normal += exp(random_count_assign[r_idx]);
+        }
+
+        denom_logistic_normal += 1.0;
+        
+        for (size_t r_idx = 0; r_idx < random_count_assign.size(); ++r_idx)
+        {
+            random_count_assign[r_idx] = exp(random_count_assign[r_idx])/denom_logistic_normal;
+        }
+        
+        assigned_count_samples.push_back(random_count_assign);
+    }
+    
+     return true;
+}
 */
 
+
+/*
+// Sample from dirichlets to estimate the gamma distribution
 bool generate_count_assignment_samples(int num_draws,
                                        const vector<double>& count_mean,
                                        const ublas::matrix<double>& count_covariance,
@@ -1851,7 +1955,8 @@ bool generate_count_assignment_samples(int num_draws,
     
     return true;
 }
-
+*/
+ 
 void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
                                     ublas::vector<double>& estimated_gamma_mean,
                                     ublas::matrix<double>& estimated_gamma_covariance)
