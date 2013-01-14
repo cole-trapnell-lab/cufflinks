@@ -1550,73 +1550,73 @@ SampleDifference get_de_tests(const string& description,
 			
 	SampleDifference test;
     
-    if (description == "ucscCodingTCONS_00000219")
-    {
-        fprintf(stderr, "woah there");
-        FILE* sample_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.samples.txt")).c_str(), "w");
-        fprintf(sample_file, "condition\tsample\n");
-        for (size_t i =0; i < prev_abundance.fpkm_samples.size(); ++i)
-        {
-            fprintf(sample_file, "prev\t%lg\n", prev_abundance.fpkm_samples[i]);
-        }
-        
-        for (size_t i =0; i < curr_abundance.fpkm_samples.size(); ++i)
-        {
-            fprintf(sample_file, "curr\t%lg\n", curr_abundance.fpkm_samples[i]);
-        }
-        
-        const FPKMContext& prev = prev_abundance;
-        const FPKMContext& curr = curr_abundance;
-        
-        vector<double> merged_samples;
-        
-        //vector<double> merged_samples = curr.fpkm_samples;
-        //merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
-        
-        
-        for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
-        {
-            merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
-            fprintf(sample_file, "null\t%lg\n", merged_samples.back());
-        }
-        
-        double null_negbin_r = 0.0;
-        double null_negbin_p = 0.0;
-        bool good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
-        
-        if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
-        {
-            good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
-            fprintf(stderr, "Warning : null model fit failed!\n");
-        }
-        
-        double curr_negbin_r = 0.0;
-        double curr_negbin_p = 0.0;
-        good_fit = fit_negbin_dist(curr.fpkm_samples, curr_negbin_r, curr_negbin_p);
-        
-        if (curr.FPKM != 0 && good_fit == false)
-        {
-            good_fit = fit_negbin_dist(curr.fpkm_samples, curr_negbin_r, curr_negbin_p);
-            fprintf(stderr, "Warning : curr model fit failed!\n");
-        }
-        
-        double prev_negbin_r = 0.0;
-        double prev_negbin_p = 0.0;
-        good_fit = fit_negbin_dist(prev.fpkm_samples, prev_negbin_r, prev_negbin_p);
-        
-        if (prev.FPKM != 0 && good_fit == false)
-        {
-            good_fit = fit_negbin_dist(prev.fpkm_samples, prev_negbin_r, prev_negbin_p);
-            fprintf(stderr, "Warning : curr model fit failed!\n");
-        }
-        
-        FILE* params_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.params.txt")).c_str(), "w");
-        fprintf(params_file, "condition\tnegbin_r\tnegbin_p\n");
-        fprintf(params_file, "prev\t%lg\t%lg\n", prev_negbin_r, prev_negbin_p);
-        fprintf(params_file, "curr\t%lg\t%lg\n", curr_negbin_r, curr_negbin_p);
-        fprintf(params_file, "null\t%lg\t%lg\n", null_negbin_r, null_negbin_p);
-
-    }
+//    if (description == "ucscCodingTCONS_00003875")
+//    {
+//        fprintf(stderr, "woah there");
+//        FILE* sample_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.samples.txt")).c_str(), "w");
+//        fprintf(sample_file, "condition\tsample\n");
+//        for (size_t i =0; i < prev_abundance.fpkm_samples.size(); ++i)
+//        {
+//            fprintf(sample_file, "prev\t%lg\n", prev_abundance.fpkm_samples[i]);
+//        }
+//        
+//        for (size_t i =0; i < curr_abundance.fpkm_samples.size(); ++i)
+//        {
+//            fprintf(sample_file, "curr\t%lg\n", curr_abundance.fpkm_samples[i]);
+//        }
+//        
+//        const FPKMContext& prev = prev_abundance;
+//        const FPKMContext& curr = curr_abundance;
+//        
+//        vector<double> merged_samples;
+//        
+//        //vector<double> merged_samples = curr.fpkm_samples;
+//        //merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
+//        
+//        
+//        for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
+//        {
+//            merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
+//            fprintf(sample_file, "null\t%lg\n", merged_samples.back());
+//        }
+//        
+//        double null_negbin_r = 0.0;
+//        double null_negbin_p = 0.0;
+//        bool good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
+//        
+//        if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
+//        {
+//            good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
+//            fprintf(stderr, "Warning : null model fit failed!\n");
+//        }
+//        
+//        double curr_negbin_r = 0.0;
+//        double curr_negbin_p = 0.0;
+//        good_fit = fit_negbin_dist(curr.fpkm_samples, curr_negbin_r, curr_negbin_p);
+//        
+//        if (curr.FPKM != 0 && good_fit == false)
+//        {
+//            good_fit = fit_negbin_dist(curr.fpkm_samples, curr_negbin_r, curr_negbin_p);
+//            fprintf(stderr, "Warning : curr model fit failed!\n");
+//        }
+//        
+//        double prev_negbin_r = 0.0;
+//        double prev_negbin_p = 0.0;
+//        good_fit = fit_negbin_dist(prev.fpkm_samples, prev_negbin_r, prev_negbin_p);
+//        
+//        if (prev.FPKM != 0 && good_fit == false)
+//        {
+//            good_fit = fit_negbin_dist(prev.fpkm_samples, prev_negbin_r, prev_negbin_p);
+//            fprintf(stderr, "Warning : curr model fit failed!\n");
+//        }
+//        
+//        FILE* params_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.params.txt")).c_str(), "w");
+//        fprintf(params_file, "condition\tnegbin_r\tnegbin_p\n");
+//        fprintf(params_file, "prev\t%lg\t%lg\n", prev_negbin_r, prev_negbin_p);
+//        fprintf(params_file, "curr\t%lg\t%lg\n", curr_negbin_r, curr_negbin_p);
+//        fprintf(params_file, "null\t%lg\t%lg\n", null_negbin_r, null_negbin_p);
+//
+//    }
     
     const FPKMContext& r1 = curr_abundance;
     const FPKMContext& r2 = prev_abundance;

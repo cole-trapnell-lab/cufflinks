@@ -2669,7 +2669,11 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     }
     else
     {
-        assigned_gamma_samples = *gamma_samples;
+        for (size_t assign_idx = 0; assign_idx < gamma_samples->size(); ++assign_idx)
+        {
+            boost::numeric::ublas::vector<double> random_count_assign = total_frag_counts * (*gamma_samples)[assign_idx];
+            assigned_gamma_samples.push_back(random_count_assign);
+        }
     }
     
     assigned_count_samples = vector<Eigen::VectorXd> (num_frag_count_draws * assigned_gamma_samples.size(), Eigen::VectorXd::Zero(transcripts.size()));
@@ -2686,6 +2690,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     {
         boost::numeric::ublas::vector<double>& random_count_assign = assigned_gamma_samples[assign_idx];
         
+        //cerr << random_count_assign << endl;
         for (size_t gen_idx = 0; gen_idx < num_frag_count_draws; ++gen_idx)
         {
             Eigen::VectorXd generated_and_assigned_counts = Eigen::VectorXd::Zero(transcripts.size());
