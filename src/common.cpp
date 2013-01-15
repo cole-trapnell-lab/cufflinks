@@ -115,8 +115,8 @@ double bootstrap_delta_gap = 0.001;
 int max_frags_per_bundle = 1000000;
 //bool analytic_diff = false;
 bool no_differential = false;
-double num_frag_count_draws = 1;
-double num_frag_assignments = 1000;
+double num_frag_count_draws = 100;
+double num_frag_assignments = 50;
 double max_multiread_fraction = 0.75;
 double max_frag_multihits = 10000000;
 int min_reps_for_js_test = 3;
@@ -135,7 +135,7 @@ double min_outlier_p = 0.0001;
 float read_skip_fraction = 0.0;
 bool no_read_pairs = false;
 int trim_read_length = -1;
-double mle_accuracy = 1e-6;
+double mle_accuracy = 1e-5;
 
 
 
