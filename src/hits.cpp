@@ -908,6 +908,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		if (length <= 0)
 		{
 			fprintf (stderr, "SAM error on line %d: CIGAR op has zero length\n", _line_num);
+            fprintf (stderr,"%s\n", orig_bwt_buf);
 			return false;
 		}
 		char op_char = toupper(*t);
