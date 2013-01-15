@@ -2838,7 +2838,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                 
                 total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
                 if (total_sample_counts > 0)
-                    random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
+                    random_count_assign = (random_count_assign / total_sample_counts);
                 else
                     random_count_assign = boost::numeric::ublas::zero_vector<double>(transcripts.size());
             } while(total_sample_counts <= 0);
@@ -2850,7 +2850,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     {
         for (size_t assign_idx = 0; assign_idx < gamma_samples->size(); ++assign_idx)
         {
-            boost::numeric::ublas::vector<double> random_count_assign = total_frag_counts * (*gamma_samples)[assign_idx];
+            boost::numeric::ublas::vector<double> random_count_assign = (*gamma_samples)[assign_idx];
             assigned_gamma_samples.push_back(random_count_assign);
         }
     }
@@ -2874,64 +2874,51 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         {
             Eigen::VectorXd generated_and_assigned_counts = Eigen::VectorXd::Zero(transcripts.size());
             
-            for (size_t j = 0; j < transcripts.size(); ++j)
+            double fit_var = total_var;
+            double frags = total_frag_counts;
+            
+            double drawn_count = 0.0;
+            
+            if (fit_var - frags > 1e-1)
             {
-                double r =  random_count_assign(j);
-                
-                //r = r < 1 ? 1 : r;
+                double r = frags;
+                r *= r;
+                double over_disp_scale = fit_var - frags;
+                r /= over_disp_scale;
                 
                 if (r > 0)
                 {
-                    //double fit_var = _abundances[j]->mass_variance();
+                    //double p = _abundances[j]->num_fragments() / fit_var;
+                    double p = r / (r + frags);
                     
-                    double fit_var = total_var * (random_count_assign(j) / total_frag_counts);
-                    double frags = random_count_assign(j);
+                    negative_binomial_distribution<int, double> nb_j(r, p);
                     
-                    if (fit_var - frags > 1e-1)
-                    {
-                        r *= r;
-                        double over_disp_scale = fit_var - frags;
-                        r /= over_disp_scale;
-                        
-                        if (r == 0)
-                        {
-                            generated_and_assigned_counts(j) = 0;
-                            continue;
-                        }
-                        
-                        //double p = _abundances[j]->num_fragments() / fit_var;
-                        double p = r / (r + frags);
-                        
-                        negative_binomial_distribution<int, double> nb_j(r, p);
-
-                        generated_and_assigned_counts(j) = nb_j(rng);
-
-                    }
-                    else
-                    {
-                        double after_decimal = r - (long)r;
-                        //fprintf( stderr, "after decimal = %lg\n", after_decimal);
-                        if (uniform_gen() < after_decimal)
-                            r = floor(r);
-                        else
-                            r = ceil(r);
-
-                        if (r == 0)
-                        {
-                            generated_and_assigned_counts(j) = 0;
-                            continue;
-                        }
-                        
-                        boost::random::poisson_distribution<int, double> nb_j(r);
-
-                        generated_and_assigned_counts(j) = nb_j(rng);
-                        
-                    }
+                    drawn_count = nb_j(rng);
                 }
+                
+            }
+            else
+            {
+                double r = frags;
+                double after_decimal = r - (long)r;
+                //fprintf( stderr, "after decimal = %lg\n", after_decimal);
+                if (uniform_gen() < after_decimal)
+                    r = floor(r);
                 else
+                    r = ceil(r);
+                
+                if (r > 0)
                 {
-                    generated_and_assigned_counts(j) = 0;
+                    boost::random::poisson_distribution<int, double> nb_j(r);
+                
+                    drawn_count = nb_j(rng);
                 }
+            }
+            
+            for (size_t j = 0; j < transcripts.size(); ++j)
+            {
+                double gamma =  random_count_assign(j);
+                generated_and_assigned_counts(j) = gamma * drawn_count;
             }
             //cerr << "     assigned count sample: " << generated_and_assigned_counts.transpose() << endl;
             assigned_count_samples[assign_idx*num_frag_count_draws + gen_idx] = generated_and_assigned_counts;
