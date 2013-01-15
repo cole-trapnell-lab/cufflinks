@@ -2279,11 +2279,11 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         }
         
         vector<ublas::vector<double> > assigned_count_samples;
-        generate_count_assignment_samples(500,
+        generate_count_assignment_samples(num_frag_assignments,
                                           count_mean,
                                           itr->second->iterated_count_cov(),
                                           assigned_count_samples);
-        
+
         all_assigned_count_samples.insert(all_assigned_count_samples.end(), assigned_count_samples.begin(), assigned_count_samples.end());
     }
     
@@ -2531,7 +2531,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
             simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples, &gamma_samples);
             //simulate_count_covariance(frags_per_transcript, frag_variances, estimated_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples, NULL);
             
-            //simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
+            //simulate_count_covariance(frags_per_transcript, frag_variances, _iterated_exp_count_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples, &gamma_samples);
             //simulate_count_covariance(frags_per_transcript, frag_variances, count_assign_covariance, non_equiv_alignments, transcripts, _count_covariance, _assigned_count_samples);
         }        
         
