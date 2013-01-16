@@ -2778,7 +2778,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     }
     
     vector<ublas::vector<double> > assigned_gamma_samples;
-   
+    
     boost::mt19937 rng;
     
     if (gamma_samples == NULL || gamma_samples->empty())
@@ -2786,7 +2786,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         //size_t num_frag_count_draws = 1000;
         //const int num_multinomial_samples = 1;
         
-
+        
         vector<Eigen::VectorXd > generated_counts (num_frag_count_draws, Eigen::VectorXd::Zero(transcripts.size()));
         ublas::vector<double> mle_frag_counts = ublas::zero_vector<double>(transcripts.size());
         
@@ -2795,9 +2795,9 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
             mle_frag_counts(j) = num_fragments[j];
         }
         
-    //    cerr << "********************" << endl;
-    //    cerr << "initial MLE counts: " << mle_frag_counts << endl;
-
+        //    cerr << "********************" << endl;
+        //    cerr << "initial MLE counts: " << mle_frag_counts << endl;
+        
         ublas::matrix<double> mle_count_covar = iterated_exp_count_covariance;
         
         ublas::matrix<double> epsilon = ublas::zero_matrix<double>(transcripts.size(),transcripts.size());
@@ -2813,17 +2813,17 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         {
             fprintf(stderr, "Warning: Iterated expectation count covariance matrix cannot be cholesky factorized!\n");
             //fprintf(stderr, "Warning: FPKM covariance is not positive definite (ret = %lg)!\n", ret);
-    //        for (size_t j = 0; j < _abundances.size(); ++j)
-    //        {
-    //            _abundances[j]->status(NUMERIC_FAIL);
-    //        }
+            //        for (size_t j = 0; j < _abundances.size(); ++j)
+            //        {
+            //            _abundances[j]->status(NUMERIC_FAIL);
+            //        }
             return false;
         }
         
         multinormal_generator<double> generator(mle_frag_counts, mle_count_covar);
         
         for (size_t assign_idx = 0; assign_idx < num_frag_assignments; ++assign_idx)
-        {        
+        {
             boost::numeric::ublas::vector<double> random_count_assign;
             double total_sample_counts = 0;
             do {
@@ -2838,7 +2838,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                 
                 total_sample_counts = accumulate(random_count_assign.begin(), random_count_assign.end(), 0.0);
                 if (total_sample_counts > 0)
-                    random_count_assign = (random_count_assign / total_sample_counts);
+                    random_count_assign = total_frag_counts * (random_count_assign / total_sample_counts);
                 else
                     random_count_assign = boost::numeric::ublas::zero_vector<double>(transcripts.size());
             } while(total_sample_counts <= 0);
@@ -2850,7 +2850,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     {
         for (size_t assign_idx = 0; assign_idx < gamma_samples->size(); ++assign_idx)
         {
-            boost::numeric::ublas::vector<double> random_count_assign = (*gamma_samples)[assign_idx];
+            boost::numeric::ublas::vector<double> random_count_assign = total_frag_counts * (*gamma_samples)[assign_idx];
             assigned_gamma_samples.push_back(random_count_assign);
         }
     }
@@ -2863,8 +2863,8 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     boost::uniform_01<> uniform_dist;
     boost::mt19937 null_rng;
     boost::variate_generator<boost::mt19937&, boost::uniform_01<> > uniform_gen(null_rng, uniform_dist);
-
-   
+    
+    
     for (size_t assign_idx = 0; assign_idx < assigned_gamma_samples.size(); ++assign_idx)
     {
         boost::numeric::ublas::vector<double>& random_count_assign = assigned_gamma_samples[assign_idx];
@@ -2874,57 +2874,70 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         {
             Eigen::VectorXd generated_and_assigned_counts = Eigen::VectorXd::Zero(transcripts.size());
             
-            double fit_var = total_var;
-            double frags = total_frag_counts;
-            
-            double drawn_count = 0.0;
-            
-            if (fit_var - frags > 1e-1)
-            {
-                double r = frags;
-                r *= r;
-                double over_disp_scale = fit_var - frags;
-                r /= over_disp_scale;
-                
-                if (r > 0)
-                {
-                    //double p = _abundances[j]->num_fragments() / fit_var;
-                    double p = r / (r + frags);
-                    
-                    negative_binomial_distribution<int, double> nb_j(r, p);
-                    
-                    drawn_count = nb_j(rng);
-                }
-                
-            }
-            else
-            {
-                double r = frags;
-                double after_decimal = r - (long)r;
-                //fprintf( stderr, "after decimal = %lg\n", after_decimal);
-                if (uniform_gen() < after_decimal)
-                    r = floor(r);
-                else
-                    r = ceil(r);
-                
-                if (r > 0)
-                {
-                    boost::random::poisson_distribution<int, double> nb_j(r);
-                
-                    drawn_count = nb_j(rng);
-                }
-            }
-            
             for (size_t j = 0; j < transcripts.size(); ++j)
             {
-                double gamma =  random_count_assign(j);
-                generated_and_assigned_counts(j) = gamma * drawn_count;
+                double r =  random_count_assign(j);
+                
+                //r = r < 1 ? 1 : r;
+                
+                if (r > 0)
+                {
+                    //double fit_var = _abundances[j]->mass_variance();
+                    
+                    double fit_var = total_var * (random_count_assign(j) / total_frag_counts);
+                    double frags = random_count_assign(j);
+                    
+                    if (fit_var - frags > 1e-1)
+                    {
+                        r *= r;
+                        double over_disp_scale = fit_var - frags;
+                        r /= over_disp_scale;
+                        
+                        if (r == 0)
+                        {
+                            generated_and_assigned_counts(j) = 0;
+                            continue;
+                        }
+                        
+                        //double p = _abundances[j]->num_fragments() / fit_var;
+                        double p = r / (r + frags);
+                        
+                        negative_binomial_distribution<int, double> nb_j(r, p);
+                        
+                        generated_and_assigned_counts(j) = nb_j(rng);
+                        
+                    }
+                    else
+                    {
+                        double after_decimal = r - (long)r;
+                        //fprintf( stderr, "after decimal = %lg\n", after_decimal);
+                        if (uniform_gen() < after_decimal)
+                            r = floor(r);
+                        else
+                            r = ceil(r);
+                        
+                        if (r == 0)
+                        {
+                            generated_and_assigned_counts(j) = 0;
+                            continue;
+                        }
+                        
+                        boost::random::poisson_distribution<int, double> nb_j(r);
+                        
+                        generated_and_assigned_counts(j) = nb_j(rng);
+                        
+                    }
+                }
+                else
+                {
+                    generated_and_assigned_counts(j) = 0;
+                }
             }
             //cerr << "     assigned count sample: " << generated_and_assigned_counts.transpose() << endl;
             assigned_count_samples[assign_idx*num_frag_count_draws + gen_idx] = generated_and_assigned_counts;
         }
     }
-        
+    
     Eigen::VectorXd expected_counts = Eigen::VectorXd::Zero(transcripts.size());
     Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(transcripts.size());
     
@@ -2947,11 +2960,11 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
         //expected_relative_abundances /= assigned_counts.size();
     }
     
-//    if (num_frag_assignments > 0)
-//    {
-//        expected_generated_counts /= num_frag_assignments;
-//        //expected_relative_abundances /= assigned_counts.size();
-//    }
+    //    if (num_frag_assignments > 0)
+    //    {
+    //        expected_generated_counts /= num_frag_assignments;
+    //        //expected_relative_abundances /= assigned_counts.size();
+    //    }
     
     
     //    cerr << "======" << endl;
@@ -2979,7 +2992,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     
     if (assigned_count_samples.empty() == false)
         count_covariance /= assigned_count_samples.size();
-        
+    
     for (size_t i = 0; i < transcripts.size(); ++i)
     {
         // Make sure we aren't below the fit for the single isoform case
@@ -3005,6 +3018,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     
     return true;
 }
+
 
 void AbundanceGroup::generate_fpkm_samples()
 {
