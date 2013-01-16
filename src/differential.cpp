@@ -1944,17 +1944,50 @@ bool test_js(const AbundanceGroup& prev_abundance,
              double& p_val)
 {
     vector<Eigen::VectorXd> sample_kappas;
-    Eigen::VectorXd curr_kappas(Eigen::VectorXd::Zero(curr_abundance.abundances().size()));
-    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
-    {
-        curr_kappas(i) = curr_abundance.abundances()[i]->kappa();
-    }
+//    Eigen::VectorXd curr_kappas(Eigen::VectorXd::Zero(curr_abundance.abundances().size()));
+//    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
+//    {
+//        curr_kappas(i) = curr_abundance.abundances()[i]->kappa();
+//    }
+//    
+//    Eigen::VectorXd prev_kappas(Eigen::VectorXd::Zero(prev_abundance.abundances().size()));
+//    for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
+//    {
+//        prev_kappas(i) = prev_abundance.abundances()[i]->kappa();
+//    }
     
-    Eigen::VectorXd prev_kappas(Eigen::VectorXd::Zero(prev_abundance.abundances().size()));
+    
+    ////////////
+    
+    Eigen::VectorXd prev_kappas = Eigen::VectorXd::Zero(prev_abundance.abundances().size());
     for (size_t i = 0; i < prev_abundance.abundances().size(); ++i)
     {
-        prev_kappas(i) = prev_abundance.abundances()[i]->kappa();
+        FPKMPerReplicateTable ab_i_by_rep = prev_abundance.abundances()[i]->FPKM_by_replicate();
+        for (FPKMPerReplicateTable::const_iterator itr = ab_i_by_rep.begin(); itr != ab_i_by_rep.end(); ++itr)
+        {
+            prev_kappas(i) += itr->second;
+        }
+        prev_kappas(i) /= ab_i_by_rep.size();
     }
+    
+    if (prev_kappas.sum() > 0)
+        prev_kappas /= prev_kappas.sum();
+
+    Eigen::VectorXd curr_kappas = Eigen::VectorXd::Zero(curr_abundance.abundances().size());
+    for (size_t i = 0; i < curr_abundance.abundances().size(); ++i)
+    {
+        FPKMPerReplicateTable ab_i_by_rep = curr_abundance.abundances()[i]->FPKM_by_replicate();
+        for (FPKMPerReplicateTable::const_iterator itr = ab_i_by_rep.begin(); itr != ab_i_by_rep.end(); ++itr)
+        {
+            curr_kappas(i) += itr->second;
+        }
+        curr_kappas(i) /= ab_i_by_rep.size();
+    }
+    
+    if (curr_kappas.sum() > 0)
+        curr_kappas /= curr_kappas.sum();
+    
+    ////////////
     
     sample_kappas.push_back(prev_kappas);
     sample_kappas.push_back(curr_kappas);
