@@ -2334,13 +2334,13 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         estimated_gamma_covariance /= (all_assigned_count_samples.size() - 1);
     }
     
-    cerr << "Gamma covariance: " << endl;
-    for (unsigned i = 0; i < estimated_gamma_covariance.size1 (); ++ i)
-    {
-        ublas::matrix_row<ublas::matrix<double> > mr (estimated_gamma_covariance, i);
-        cerr << i << " : " << estimated_gamma_mean[i] << " : ";
-        std::cerr << i << " : " << mr << std::endl;
-    }
+//    cerr << "Gamma covariance: " << endl;
+//    for (unsigned i = 0; i < estimated_gamma_covariance.size1 (); ++ i)
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (estimated_gamma_covariance, i);
+//        cerr << i << " : " << estimated_gamma_mean[i] << " : ";
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
 
 }
 
@@ -3265,13 +3265,13 @@ void AbundanceGroup::calculate_FPKM_covariance()
         assert (FPKM() == 0 || _FPKM_variance > 0 || status() != NUMERIC_OK);
     }
     
-    cerr << "FPKM covariance: " << endl;
-    for (unsigned i = 0; i < _fpkm_covariance.size1 (); ++ i)
-    {
-        ublas::matrix_row<ublas::matrix<double> > mr (_fpkm_covariance, i);
-        cerr << i << " : " << _abundances[i]->FPKM() << " : ";
-        std::cerr << i << " : " << mr << std::endl;
-    }
+//    cerr << "FPKM covariance: " << endl;
+//    for (unsigned i = 0; i < _fpkm_covariance.size1 (); ++ i)
+//    {
+//        ublas::matrix_row<ublas::matrix<double> > mr (_fpkm_covariance, i);
+//        cerr << i << " : " << _abundances[i]->FPKM() << " : ";
+//        std::cerr << i << " : " << mr << std::endl;
+//    }
     
     assert (!isinf(_FPKM_variance) && !isnan(_FPKM_variance));
 }
