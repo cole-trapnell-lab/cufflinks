@@ -666,13 +666,6 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         
     double differential = 0.0;
     
-    if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
-        differential = log2(curr.FPKM) - log2(prev.FPKM);
-    else if (curr.FPKM)
-        differential = numeric_limits<double>::max();
-    else if (prev.FPKM)
-        differential = -numeric_limits<double>::max();
-    
     // static const long double min_gamma_params = 1e-20;
     
     vector<double> null_log_ratio_samples;
@@ -706,6 +699,23 @@ SampleDifference test_diffexp(const FPKMContext& curr,
                 continue;
             prev_rep_samples.push_back(itr->second);
         }
+        
+        double curr_fpkm = accumulate(curr_rep_samples.begin(), curr_rep_samples.end(), 0.0);
+        if (curr_rep_samples.size() > 0)
+            curr_fpkm /= curr_rep_samples.size();
+        
+        double prev_fpkm = accumulate(prev_rep_samples.begin(), prev_rep_samples.end(), 0.0);
+        if (prev_rep_samples.size() > 0)
+            prev_fpkm /= prev_rep_samples.size();
+        
+        
+        if (curr_fpkm > 0.0 && prev_fpkm > 0.0)
+            differential = log2(curr_fpkm) - log2(prev_fpkm);
+        else if (curr_fpkm)
+            differential = numeric_limits<double>::max();
+        else if (prev_fpkm)
+            differential = -numeric_limits<double>::max();
+
         
         // Draw from prev fpkm_samples to make the first half of the null
         for (size_t i = 0; i < num_null_ratio_samples; ++i)
@@ -1668,7 +1678,7 @@ SampleDifference get_de_tests(const string& description,
             test.test_status = NOTEST;
 			test.test_stat = 0;
 			test.p_value = 1.0;
-			test.differential = 0.0;
+			//test.differential = 0.0;
         }
 //		if (test_diffexp(r1, r2, test))
 //		{
@@ -1994,7 +2004,9 @@ bool test_js(const AbundanceGroup& prev_abundance,
         sample_kappas.push_back(prev_set_sample);
         
         double js_sample = jensen_shannon_distance(sample_kappas);
-
+        
+        //cerr << curr_set_sample.transpose() << " vs. " << prev_set_sample.transpose() << " : " << js_sample << endl;
+        
         null_js_samples.push_back(js_sample);
     }
     
