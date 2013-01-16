@@ -907,7 +907,12 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
                 {
                     bundle.rem_raw_mass(mass);
                 }
-				break;  
+                else
+                {
+                    delete bh;
+                    bh = NULL;
+                }
+				break;
 			}
 		}	
 		
@@ -933,9 +938,14 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
             {
                 bundle.rem_raw_mass(rewind_hit(bh));
             }
+            else
+            {
+                delete bh;
+                bh = NULL;
+            }
 			break;
 		}
-	    else 
+	    else
         {
             // It's not within the bundle bounds, but it's also not past the 
             // right end, so skip it.
@@ -1080,6 +1090,12 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 		else
 		{
 			bundle.rem_raw_mass(rewind_hit(bh));
+            if (skip_read)
+            {
+                delete bh;
+                bh = NULL;
+            }
+
 			break;
 		}
 	}

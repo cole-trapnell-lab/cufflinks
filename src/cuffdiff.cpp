@@ -593,7 +593,7 @@ void print_tests(FILE* fout,
         else
             sig = "no";
         
-        const char* status;
+        const char* status = "OK";
         if (test.test_status == OK)
             status = "OK";
         else if (test.test_status == LOWDATA)
