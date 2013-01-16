@@ -562,11 +562,21 @@ void HitBundle::finalize(bool is_combined)
         if (num_skipped > 0 && num_skipped < _hits.size())
         {
             random_shuffle(_hits.begin(), _hits.end());
+            for (size_t i = num_skipped + 1; i < _hits.size(); ++i)
+            {
+                delete _hits[i].left_alignment();
+                delete _hits[i].right_alignment();
+            }
             _hits.resize(_hits.size() - num_skipped);
             is_combined = false;
         }
         else if (num_skipped >= _hits.size())
         {
+            for (size_t i = 0; i < _hits.size(); ++i)
+            {
+                delete _hits[i].left_alignment();
+                delete _hits[i].right_alignment();
+            }
             _hits.clear();
         }
 
@@ -797,7 +807,7 @@ bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
         }
 	}
 	
-	if (skip_read || !bundle.add_open_hit(read_group_properties(), bh))
+	if ((skip_read || !bundle.add_open_hit(read_group_properties(), bh)) && bh != NULL)
     {
         delete bh;
         bh = NULL;
@@ -898,6 +908,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			if (bh_chr_order < bundle_chr_order) // the hit stream has not caught up, skip
 			{
 				delete bh;
+                bh = NULL;
 				continue; 
 			}
 			else // the hit stream has gone too far, rewind and break
@@ -934,7 +945,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		}
 		else if (bh->left() >= bundle.right())
 		{
-            if (!skip_read)
+            if (skip_read == false)
             {
                 bundle.rem_raw_mass(rewind_hit(bh));
             }
@@ -950,6 +961,13 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
             // It's not within the bundle bounds, but it's also not past the 
             // right end, so skip it.
             delete bh;
+            bh = NULL;
+        }
+        
+        if (skip_read == true && bh != NULL)
+        {
+            delete bh;
+            bh = NULL;
         }
 	}
 	
