@@ -49,15 +49,8 @@ SampleDifference::SampleDifference():
     test_stat(0.0),
     p_value(1.0),
     corrected_p(1.0),
-    tested_group_id(-1),
     test_status(NOTEST),
-    significant(false),
-    sample_1_param_1(0.0),
-    sample_1_param_2(0.0),
-    sample_2_param_1(0.0),
-    sample_2_param_2(0.0),
-    null_param_1(0.0),
-    null_param_2(0.0) {}
+    significant(false) {}
 
 
 void add_to_tracking_table(size_t sample_index,
@@ -659,6 +652,15 @@ SampleDifference test_diffexp(const FPKMContext& curr,
 	bool performed_test = false;
     
     SampleDifference test = SampleDifference();
+    
+    test.p_value = 1.0;
+    test.differential = 0.0;
+    test.test_stat = 0.0;
+    test.test_status = NOTEST;
+    test.value_1 = 0;
+    test.value_2 = 0;
+    test.significant = 0;
+    test.corrected_p = 1.0;
     
     double p_value = 1.0;
         
@@ -2064,7 +2066,15 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
 	
 	SampleDifference test;
     
-	test.test_status = NOTEST;
+	test.p_value = 1.0;
+    test.differential = 0.0;
+    test.test_stat = 0.0;
+    test.test_status = NOTEST;
+    test.value_1 = 0;
+    test.value_2 = 0;
+    test.significant = 0;
+    test.corrected_p = 1.0;
+
 	
 	AbundanceStatus prev_status = curr_abundance.status();
 	AbundanceStatus curr_status = prev_abundance.status();

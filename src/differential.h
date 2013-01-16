@@ -64,22 +64,20 @@ public:
 	double p_value;
 	double corrected_p;
 	
-	size_t tested_group_id; // which scaffolds' FPKMs contribute
-	
     shared_ptr<SampleDifferenceMetaData> meta_data;
 
 	TestStatus test_status;
 	bool significant;
     
-    double sample_1_param_1;
-    double sample_1_param_2;
-    
-    
-    double sample_2_param_1;
-    double sample_2_param_2;
-    
-    double null_param_1;
-    double null_param_2;
+//    double sample_1_param_1;
+//    double sample_1_param_2;
+//    
+//    
+//    double sample_2_param_1;
+//    double sample_2_param_2;
+//    
+//    double null_param_1;
+//    double null_param_2;
 };
 
 typedef map<string, SampleDifference > SampleDiffs;
