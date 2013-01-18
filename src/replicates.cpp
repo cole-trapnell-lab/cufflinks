@@ -180,6 +180,118 @@ double MassDispersionModel::scale_mass_variance(double scaled_mass) const
     }
 }
 
+
+MleErrorModel::MleErrorModel(const std::string& name,
+                             const std::vector<double>& scaled_compatible_mass_means,
+                             const std::vector<double>& scaled_mle_variances)
+{
+    _name = name;
+    
+    if (scaled_compatible_mass_means.size() != scaled_mle_variances.size())
+    {
+        fprintf (stderr, "Error: dispersion model table is malformed\n");
+    }
+    
+    double last_val = 0;
+    for (size_t i = 0; i < scaled_compatible_mass_means.size(); i++)
+    {
+        
+        if (last_val > scaled_compatible_mass_means[i])
+        {
+            fprintf (stderr, "Error: MLEError input is malformed\n");
+        }
+        
+        if ( i == 0 || last_val < scaled_compatible_mass_means[i])
+        {
+            _scaled_compatible_mass_means.push_back(scaled_compatible_mass_means[i]);
+            _scaled_mle_variances.push_back(scaled_mle_variances[i]);
+        }
+        else
+        {
+            // skip this element if it's equal to what we've already seen
+        }
+        
+        last_val = scaled_compatible_mass_means[i];
+    }
+}
+
+double MleErrorModel::scale_mle_variance(double scaled_mass) const
+{
+    if (scaled_mass <= 0)
+        return 0.0;
+    
+    if (_scaled_compatible_mass_means.size() < 2 || _scaled_mle_variances.size() < 2)
+    {
+        return 0; // revert to poisson.
+    }
+    if (scaled_mass > _scaled_compatible_mass_means.back())
+    {
+        return 0; // we won't add anything if we're out of the range of the table
+    }
+    else if (scaled_mass < _scaled_compatible_mass_means.front())
+    {
+        return 0; // we won't add anything if we're out of the range of the table
+    }
+    
+    vector<double>::const_iterator lb;
+    lb = lower_bound(_scaled_compatible_mass_means.begin(),
+                     _scaled_compatible_mass_means.end(),
+                     scaled_mass);
+    if (lb < _scaled_compatible_mass_means.end())
+    {
+        int d = lb - _scaled_compatible_mass_means.begin();
+        if (*lb == scaled_mass || lb == _scaled_compatible_mass_means.begin())
+        {
+            double var = _scaled_mle_variances[d];
+            assert (!isnan(var) && !isinf(var));
+            return var;
+        }
+        
+        //in between two points on the scale.
+        d--;
+        
+        if (d < 0)
+        {
+            fprintf(stderr, "ARG d < 0, d = %d \n", d);
+        }
+        
+        if (d >= _scaled_compatible_mass_means.size())
+        {
+            fprintf(stderr, "ARG d >= _scaled_compatible_mass_means.size(), d = %d\n", d);
+        }
+        if (d >= _scaled_mle_variances.size())
+        {
+            fprintf(stderr, "ARG d >= _scaled_mass_variances.size(), d = %d\n", d);
+        }
+        
+        double x1_mean = _scaled_compatible_mass_means[d];
+        double x2_mean = _scaled_compatible_mass_means[d + 1];
+        
+        double y1_var = _scaled_mle_variances[d];
+        double y2_var = _scaled_mle_variances[d + 1];
+        double slope = 0.0;
+        if (x2_mean != x1_mean)
+        {
+            slope = (y2_var - y1_var) / (x2_mean-x1_mean);
+        }
+        else if (y1_var == y2_var)
+        {
+            assert (false); // should have a unique'd table
+        }
+        double mean_interp = _scaled_mle_variances[d] + slope*(scaled_mass - _scaled_compatible_mass_means[d]);
+        if (mean_interp < scaled_mass) // revert to poisson if underdispersed
+            mean_interp = scaled_mass;
+        
+        assert (!isnan(mean_interp) && !isinf(mean_interp));
+        return mean_interp;
+    }
+    else
+    {
+        assert (!isnan(scaled_mass) && !isinf(scaled_mass));
+        return 0; // revert to poisson assumption
+    }
+}
+
 void transform_counts_to_common_scale(const vector<double>& scale_factors,
                                       vector<LocusCountList>& sample_compatible_count_table)
 {

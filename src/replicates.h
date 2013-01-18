@@ -87,6 +87,30 @@ public:
     }
 };
 
+
+
+class MleErrorModel
+{
+public:
+    MleErrorModel() {}
+    MleErrorModel(const std::string& name,
+                        const std::vector<double>& scaled_compatible_mass_means,
+                        const std::vector<double>& scaled_mle_variances);
+    
+    virtual const std::string& name() const { return _name; }
+    
+    virtual double scale_mle_variance(double scaled_mass) const;
+    
+//    const vector<double>& scaled_compatible_mass_means() const { return _scaled_compatible_mass_means; }
+//    const vector<double>& scaled_compatible_variances() const { return _scaled_compatible_variances; }
+//    const vector<double>& scaled_mass_variances() const { return _scaled_mass_variances; }
+    
+private:
+    std::string         _name;
+    std::vector<double> _scaled_compatible_mass_means;
+    std::vector<double> _scaled_mle_variances;
+};
+
 struct LocusCountList
 {
     LocusCountList(std::string ld, int num_reps, int nt) : 
@@ -410,6 +434,22 @@ public:
     shared_ptr<MassDispersionModel const> mass_dispersion_model() const
     {
         return _factories.front()->read_group_properties()->mass_dispersion_model();
+    }
+    
+    void mle_error_model(shared_ptr<MleErrorModel const> mle_model)
+    {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_rep_factory_lock);
+#endif
+        BOOST_FOREACH(shared_ptr<BundleFactory>& fac, _factories)
+        {
+            fac->read_group_properties()->mle_error_model(mle_model);
+        }
+    }
+    
+    shared_ptr<MleErrorModel const> mle_error_model() const
+    {
+        return _factories.front()->read_group_properties()->mle_error_model();
     }
     
 private:

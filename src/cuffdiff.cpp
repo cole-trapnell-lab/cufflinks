@@ -42,6 +42,10 @@
 
 #include "differential.h"
 
+extern "C" {
+#include "locfit/local.h"
+}
+
 // Need at least this many reads in a locus to do any testing on it
 
 vector<string> sample_labels;
@@ -1529,13 +1533,16 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
 
 */
 
+
+
 void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
                                         vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
 {
-    map<shared_ptr<MassDispersionModel const>, vector<pair<double, double> > > sample_count_table_for_disp_model;
+    //map<shared_ptr<MassDispersionModel const>, vector<pair<double, double> > > sample_count_table_for_disp_model;
+        
+    vector<pair<double, double> > mean_and_mle_variance;
     
-    FILE* fmle_error_out = fopen((output_dir + "/" + string("mle_error_out.txt")).c_str(), "w");
-    fprintf(fmle_error_out, "isoform_id\tcondition\tmean_frags\tvar_frags\tdispersion_var\tuncertainty_var\tmle_var\n");
+    setuplf();  
     
     for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
     {
@@ -1563,21 +1570,92 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
                 var_frags += (itr->second - mean_frags) *  (itr->second - mean_frags) / (double)(fpkms[i].count_per_rep.size() - 1);
             }
             
-            /*
-             double count_mean;
-             double count_var;
-             double count_uncertainty_var;
-             double count_dispersion_var;
-             */
-
             double dispersion_var = fpkms[i].count_dispersion_var;
             double uncertainty_var = fpkms[i].count_uncertainty_var;
             double mle_var = var_frags - dispersion_var - uncertainty_var;
+            if (mean_frags > 1 && mean_frags < 1000)
+            {
+                mean_and_mle_variance.push_back(make_pair(log(mean_frags),mle_var));
+            }
             
-            fprintf(fmle_error_out, "%s\t%lu\t%lg\t%lg\t%lg\t%lg\t%lg\n", description.c_str(), i, mean_frags, var_frags, dispersion_var, uncertainty_var, mle_var);
         }
     }
     
+    sort(mean_and_mle_variance.begin(), mean_and_mle_variance.end());
+    
+    vector<double> compatible_count_means;
+    vector<double> mle_variances;
+    
+    for(size_t i = 0; i < mean_and_mle_variance.size(); ++i)
+    {
+        if (mean_and_mle_variance[i].first > 0)
+        {
+            compatible_count_means.push_back(mean_and_mle_variance[i].first);
+            mle_variances.push_back(mean_and_mle_variance[i].second);
+        }
+    }
+    
+    vector<double> fitted_values;
+    
+    // WARNING: locfit doesn't like undescores - need camel case for
+    // variable names
+    
+    char namebuf[256];
+    sprintf(namebuf, "logMeans");
+    vari* cm = createvar(namebuf,STREGULAR,compatible_count_means.size(),VDOUBLE);
+    for (size_t i = 0; i < compatible_count_means.size(); ++i)
+    {
+        cm->dpr[i] = compatible_count_means[i];
+    }
+    
+    //sprintf(namebuf, "countSCV");
+    sprintf(namebuf, "countMLEVariances");
+    vari* cv = createvar(namebuf,STREGULAR,mle_variances.size(),VDOUBLE);
+    for (size_t i = 0; i < mle_variances.size(); ++i)
+    {
+        cv->dpr[i] = mle_variances[i];
+        //cv->dpr[i] = raw_scvs[i];
+    }
+    
+    char locfit_cmd[2048];
+    //sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
+    sprintf(locfit_cmd, "locfit countMLEVariances~logMeans family=gaussian");
+    
+    locfit_dispatch(locfit_cmd);
+    
+    sprintf(locfit_cmd, "fittedMLEVars=predict logMeans");
+    locfit_dispatch(locfit_cmd);
+    
+    FILE* fmle_error_out = fopen((output_dir + "/" + string("mle_error_out.txt")).c_str(), "w");
+    fprintf(fmle_error_out, "mean_frags\tempir_var\tmle_var\n");
+    
+    int n = 0;
+    sprintf(namebuf, "fittedMLEVars");
+    vari* cp = findvar(namebuf, 1, &n);
+    assert(cp != NULL);
+    for (size_t i = 0; i < cp->n; ++i)
+    {
+        if (cp->dpr[i] >= 0)
+        {
+            double mean = exp(cm->dpr[i]);
+            double fitted_mle_var = cp->dpr[i];
+            fitted_values.push_back(fitted_mle_var);
+            fprintf (fmle_error_out, "%lg\t%lg\t%lg\n", mean, mle_variances[i], fitted_mle_var);
+        }
+        else
+        {
+            fitted_values.push_back(0);
+        }
+        
+    }
+
+    shared_ptr<MleErrorModel> mle_model;
+    mle_model = shared_ptr<MleErrorModel>(new MleErrorModel("", compatible_count_means, fitted_values));
+
+    for (size_t i = 0; i < bundle_factories.size(); ++i)
+    {
+        bundle_factories[i]->mle_error_model(mle_model);
+    }
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)

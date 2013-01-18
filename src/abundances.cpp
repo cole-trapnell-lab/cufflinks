@@ -2278,10 +2278,31 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
             count_mean.push_back(itr->second->abundances()[i]->num_fragments());
         }
         
+        ublas::matrix<double> count_covariance = itr->second->iterated_count_cov();
+        ublas::matrix<double> mle_error = ublas::zero_matrix<double>(count_mean.size(), count_mean.size());
+        shared_ptr<const MleErrorModel> mle_model = itr->first->mle_error_model();
+        if (mle_model != NULL)
+        {
+            for (size_t i = 0; i < count_mean.size(); ++i)
+            {
+                mle_error(i,i) = max(0.0, mle_model->scale_mle_variance(count_mean[i]));
+            }
+            count_covariance += mle_error;
+            cerr << endl << "MLE error correction: " << endl;
+            for (unsigned i = 0; i < mle_error.size1 (); ++ i)
+            {
+                ublas::matrix_row<ublas::matrix<double> > mr (mle_error, i);
+                cerr << i << " : " << count_mean[i] << " : ";
+                std::cerr << i << " : " << mr << std::endl;
+            }
+            cerr << "======" << endl;
+        }
+        
+        
         vector<ublas::vector<double> > assigned_count_samples;
         generate_count_assignment_samples(num_frag_assignments,
                                           count_mean,
-                                          itr->second->iterated_count_cov(),
+                                          count_covariance,
                                           assigned_count_samples);
 
         all_assigned_count_samples.insert(all_assigned_count_samples.end(), assigned_count_samples.begin(), assigned_count_samples.end());

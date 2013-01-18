@@ -309,6 +309,7 @@ class BiasLearner;
 class MultiReadTable;
 
 class MassDispersionModel;
+class MleErrorModel;
 
 struct LocusCount
 {
@@ -369,7 +370,7 @@ public:
         return unscaled_mass * (1.0 / _internal_scale_factor);
     }
     
-    boost::shared_ptr<const MassDispersionModel> mass_dispersion_model() const 
+    boost::shared_ptr<const MassDispersionModel> mass_dispersion_model() const
     { 
         return _mass_dispersion_model; 
     };
@@ -377,6 +378,16 @@ public:
     void mass_dispersion_model(boost::shared_ptr<const MassDispersionModel> nm) 
     { 
         _mass_dispersion_model = nm; 
+    }
+    
+    boost::shared_ptr<const MleErrorModel> mle_error_model() const
+    {
+        return _mle_error_model;
+    };
+    
+    void mle_error_model(boost::shared_ptr<const MleErrorModel> nm)
+    {
+        _mle_error_model = nm;
     }
     
     const std::vector<LocusCount>& common_scale_compatible_counts() { return _common_scale_compatible_counts; }
@@ -425,6 +436,8 @@ private:
     std::vector<LocusCount> _common_scale_total_counts;
     std::vector<LocusCount> _raw_compatible_counts;
     std::vector<LocusCount> _raw_total_counts;
+
+    boost::shared_ptr<const MleErrorModel> _mle_error_model;
     
     bool _complete_fragments;
     
