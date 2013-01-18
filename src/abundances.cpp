@@ -2386,7 +2386,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
     }
     
     vector<double> joint_mle_gammas;
-    if (final_est_run || corr_multi || corr_bias) 
+    //if (final_est_run || corr_multi || corr_bias)
     {
         calculate_gammas(non_equiv_alignments, log_conv_factors, transcripts, mapped_transcripts);
         for (size_t i = 0; i < _abundances.size(); ++i)
@@ -2415,6 +2415,12 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
     
     calculate_iterated_exp_count_covariance(joint_mle_gammas, non_equiv_alignments, transcripts, _iterated_exp_count_covariance);
     //_iterated_exp_count_covariance/= _read_group_props.size();
+    
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        _abundances[i]->num_fragment_uncertainty_var(_iterated_exp_count_covariance(i,i));
+    }
+    
     
     if ((final_est_run || (!corr_multi && !corr_bias)))
     {
@@ -2552,6 +2558,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
         }
     }
     
+    //cerr << _count_covariance << endl;
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
         for (size_t j = 0; j < _abundances.size(); ++j)

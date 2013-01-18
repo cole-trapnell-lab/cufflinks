@@ -1045,6 +1045,11 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     return true;
 }
 
+void fit_mle_error()
+{
+    
+}
+
 void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
 {
     vector<LocusCountList> sample_compatible_count_table;
@@ -1362,6 +1367,217 @@ void print_variability_models(FILE* var_model_out, const vector<shared_ptr<Repli
     }
     fclose(var_model_out);
 
+}
+
+
+/*
+void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
+                                        vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+{
+    map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> > sample_count_table_for_disp_model;
+    
+    for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+    {
+        shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
+        vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+        //vector<double> count_table;
+        
+        vector<LocusCountList> sample_count_table;
+        
+        set<shared_ptr<ReadGroupProperties> > reps_for_condition;
+        
+        for (size_t i = 0; i < replicates.size(); ++i)
+        {
+            shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
+            reps_for_condition.insert(rg_props);
+        }
+    }
+    
+    size_t iso_num = 0;
+    
+    for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
+    {
+        const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+        const vector<FPKMContext>& fpkms = track.fpkm_series;
+		
+        bool skip_iso = false;
+        for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            if (fpkms[i].count_per_rep.empty())
+            {
+                skip_iso = true;
+                break;
+            }
+        }
+        if (skip_iso)
+            continue;
+        
+        for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            size_t fac_idx = 0;
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
+                 itr != fpkms[i].count_per_rep.end();
+                 ++itr)
+            {
+                shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+                pair<map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator, bool >  p;
+                p = sample_count_table_for_disp_model.insert(make_pair(rg_props->mass_dispersion_model(),
+                                                                       vector<LocusCountList>()));
+                map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator lc_itr = p.first;
+                vector<LocusCountList>& lc_list = lc_itr->second;
+                double count = itr->second;
+                
+                if (iso_num >= lc_list.size())
+                {
+                    LocusCountList locus_count(description, fpkms[i].count_per_rep.size(), 1);
+                    lc_list.push_back(locus_count);
+                    lc_list[lc_list.size() - 1].counts[0] = count;
+                }
+                else
+                {
+                    const string& ld = lc_list[iso_num].locus_desc;
+                    if (ld != description)
+                    {
+                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                        exit(1);
+                    }
+                    lc_list[iso_num].counts[fac_idx] = count;
+                }
+                fac_idx++;
+            }
+        }
+        iso_num++;
+    }
+    
+    
+    
+    for (map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::const_iterator itr = sample_count_table_for_disp_model.begin();
+         itr != sample_count_table_for_disp_model.end();
+         ++itr)
+    {
+        FILE* fmle_error_out = fopen((output_dir + "/" + itr->first->name() + string("_mle_error_out.txt")).c_str(), "w");
+        fprintf(fmle_error_out, "mean_frags\tvar_frags\tfitted_var\tvariance_due_to_mle_error\n");
+        const vector<LocusCountList>& lc_list = itr->second;
+        if (lc_list.empty())
+            continue;
+
+        vector<double> mean_frags(lc_list.size(), 0.0);
+        vector<double> var_frags(lc_list.size(), 0.0);
+        vector<double> variance_due_to_mle_error(lc_list.size(), 0.0);
+        
+        for (size_t i = 0; i < lc_list.size(); ++i)
+        {
+            double mean_i = 0;
+            for (size_t j = 0; j < lc_list[i].counts.size(); ++j)
+            {
+                mean_i += lc_list[i].counts[j] / (double) (lc_list[i].counts.size());
+            }
+            
+            double var_i = 0.0;
+            
+            if (lc_list[i].counts.size() > 1)
+            {
+                for (size_t j = 0; j < lc_list[i].counts.size(); ++j)
+                {
+                    var_i += ((mean_i - lc_list[i].counts[j]) * (mean_i - lc_list[i].counts[j])) / (double) (lc_list[i].counts.size() - 1);
+                }
+            }
+            else
+            {
+                var_i = 0;
+            }
+            
+            mean_frags[i] = mean_i;
+            var_frags[i] = var_i;
+            
+            // look up the predicted variance using the DispersionModel and then subtract the mean
+            double fitted_var = itr->first->scale_mass_variance(mean_i);
+            
+            variance_due_to_mle_error[i] = var_i - fitted_var;
+            
+            fprintf(fmle_error_out, "%lg\t%lg\t%lg\t%lg\n", mean_frags[i], var_frags[i], fitted_var, variance_due_to_mle_error[i]);
+            
+        }
+    }
+    
+//    for (map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::const_iterator itr = sample_count_table_for_disp_model.begin();
+//         itr != sample_count_table_for_disp_model.end();
+//         ++itr)
+//    {
+//        if (itr->second.empty())
+//            continue;
+//        
+//        vector<double> scale_factors(itr->second.front().counts.size(), 1);
+//        shared_ptr<MassDispersionModel const> model = fit_dispersion_model(itr->first->name()+"iso", scale_factors, itr->second, true);
+//        for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+//        {
+//            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
+//            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+//            
+//            for (size_t i = 0; i < replicates.size(); ++i)
+//            {
+//                shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
+//                if (rg_props->mass_dispersion_model() == itr->first)
+//                {
+//                    rg_props->mass_dispersion_model(model);
+//                }
+//            }
+//        }
+//    }
+}
+
+*/
+
+void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
+                                        vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+{
+    map<shared_ptr<MassDispersionModel const>, vector<pair<double, double> > > sample_count_table_for_disp_model;
+    
+    FILE* fmle_error_out = fopen((output_dir + "/" + string("mle_error_out.txt")).c_str(), "w");
+    fprintf(fmle_error_out, "isoform_id\tcondition\tmean_frags\tvar_frags\tdispersion_var\tuncertainty_var\tmle_var\n");
+    
+    for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
+    {
+        const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+        const vector<FPKMContext>& fpkms = track.fpkm_series;
+		
+        for (size_t i = 0; i < fpkms.size(); ++i)
+		{
+            
+            double mean_frags = 0;
+            double var_frags = 0;
+            
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
+                 itr != fpkms[i].count_per_rep.end();
+                 ++itr)
+            {
+                mean_frags += itr->second / (double)fpkms[i].count_per_rep.size();
+            }
+            
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
+                 itr != fpkms[i].count_per_rep.end();
+                 ++itr)
+            {
+                var_frags += (itr->second - mean_frags) *  (itr->second - mean_frags) / (double)(fpkms[i].count_per_rep.size() - 1);
+            }
+            
+            /*
+             double count_mean;
+             double count_var;
+             double count_uncertainty_var;
+             double count_dispersion_var;
+             */
+
+            double dispersion_var = fpkms[i].count_dispersion_var;
+            double uncertainty_var = fpkms[i].count_uncertainty_var;
+            double mle_var = var_frags - dispersion_var - uncertainty_var;
+            
+            fprintf(fmle_error_out, "%s\t%lu\t%lg\t%lg\t%lg\t%lg\t%lg\n", description.c_str(), i, mean_frags, var_frags, dispersion_var, uncertainty_var, mle_var);
+        }
+    }
+    
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
@@ -1791,7 +2007,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
     
     test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
     
-	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
+	if (true || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
@@ -1898,10 +2114,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
             rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
     }
     
-//    if (use_isoform_count_dispersion)
-//    {
-//        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
-//    }
+    //if (use_isoform_count_dispersion)
+    {
+        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
+    }
     
     // Allow the multiread tables to do their thing...
     BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)

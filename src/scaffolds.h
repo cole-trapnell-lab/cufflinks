@@ -369,8 +369,13 @@ public:
 	const string& nearest_ref_id() const { return _nearest_ref_id; }
 	void nearest_ref_id(const string& ann_name) { _nearest_ref_id = ann_name; }	
 	
+    // fpkm() and num_fragments() are just used to cache values in scaffolds across
+    // multiple estimation runs (e.g. for use with bias correction
 	double fpkm() const {return _fpkm; }
 	void fpkm(double fpkm) { _fpkm = fpkm; }
+    
+    double num_fragments() const {return _num_fragments; }
+	void num_fragments(double nf) { _num_fragments = nf; }
  
 	const string& seq() const { return _seq; } 
 	void seq(const string& s) {	_seq = s; } 
@@ -678,7 +683,7 @@ private:
 	
 	string _seq;
 	double _fpkm;
-
+	double _num_fragments;
 };
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);

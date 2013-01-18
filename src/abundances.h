@@ -208,7 +208,12 @@ public:
 	
     // This returns the estimated number of fragments
 	double num_fragments() const			{ return _num_fragments; }
-	void num_fragments(double nf)			{ assert (!isnan(nf)); _num_fragments = nf; }
+	void num_fragments(double nf)
+    {
+        assert (!isnan(nf));
+        _num_fragments = nf;
+        _transfrag->num_fragments(nf);
+    }
     
     // This tracks the final modeled variance in the assigned counts.
     double num_fragment_var() const			{ return _num_fragment_var; }
