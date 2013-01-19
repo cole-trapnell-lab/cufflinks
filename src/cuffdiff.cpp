@@ -1575,7 +1575,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             double mle_var = var_frags - dispersion_var - uncertainty_var;
             if (mean_frags < 1000 && mean_frags > 1 && uncertainty_var > 0)
             {
-                mean_and_mle_variance.push_back(make_pair(log(mean_frags),mle_var));
+                mean_and_mle_variance.push_back(make_pair(mean_frags,mle_var));
             }
             
         }
@@ -1605,7 +1605,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
     vari* cm = createvar(namebuf,STREGULAR,compatible_count_means.size(),VDOUBLE);
     for (size_t i = 0; i < compatible_count_means.size(); ++i)
     {
-        cm->dpr[i] = compatible_count_means[i];
+        cm->dpr[i] = log(compatible_count_means[i]);
     }
     
     //sprintf(namebuf, "countSCV");
@@ -1648,6 +1648,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
         }
         
     }
+    fclose(fmle_error_out);
 
     shared_ptr<MleErrorModel> mle_model;
     mle_model = shared_ptr<MleErrorModel>(new MleErrorModel("", compatible_count_means, fitted_values));

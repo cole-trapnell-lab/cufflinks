@@ -2285,7 +2285,8 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         {
             for (size_t i = 0; i < count_mean.size(); ++i)
             {
-                mle_error(i,i) = max(0.0, mle_model->scale_mle_variance(count_mean[i]));
+                double mle_var = mle_model->scale_mle_variance(count_mean[i]);
+                mle_error(i,i) = max(0.0, mle_var);
             }
             count_covariance += mle_error;
             cerr << endl << "MLE error correction: " << endl;
