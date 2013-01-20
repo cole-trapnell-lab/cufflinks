@@ -1635,17 +1635,17 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
     assert(cp != NULL);
     for (size_t i = 0; i < cp->n; ++i)
     {
+        double mean = exp(cm->dpr[i]);
+        double fitted_mle_var = cp->dpr[i];
         if (cp->dpr[i] >= 0)
         {
-            double mean = exp(cm->dpr[i]);
-            double fitted_mle_var = cp->dpr[i];
             fitted_values.push_back(fitted_mle_var);
-            fprintf (fmle_error_out, "%lg\t%lg\t%lg\n", mean, mle_variances[i], fitted_mle_var);
         }
         else
         {
             fitted_values.push_back(0);
         }
+        fprintf (fmle_error_out, "%lg\t%lg\t%lg\n", mean, mle_variances[i], fitted_mle_var);
         
     }
     fclose(fmle_error_out);
