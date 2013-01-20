@@ -1567,7 +1567,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
                  itr != fpkms[i].count_per_rep.end();
                  ++itr)
             {
-                var_frags += (itr->second - mean_frags) *  (itr->second - mean_frags) / (double)(fpkms[i].count_per_rep.size() - 1);
+                var_frags += (itr->second - mean_frags) *  (itr->second - mean_frags) / (double)(fpkms[i].count_per_rep.size());
             }
             
             double dispersion_var = fpkms[i].count_dispersion_var;
