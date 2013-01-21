@@ -1546,7 +1546,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
     
     for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
     {
-        const string& description = itr->first;
+        //const string& description = itr->first;
 		const FPKMTracking& track = itr->second;
         const vector<FPKMContext>& fpkms = track.fpkm_series;
 		
@@ -1555,25 +1555,31 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             
             double mean_frags = 0;
             double var_frags = 0;
+            vector<double> sample_frags;
             
             for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
                  itr != fpkms[i].count_per_rep.end();
                  ++itr)
             {
-                mean_frags += itr->second / (double)fpkms[i].count_per_rep.size();
+                StatusPerReplicateTable::const_iterator si = fpkms[i].status_per_rep.find(itr->first);
+                if (si == fpkms[i].status_per_rep.end() || si->second == NUMERIC_LOW_DATA || si->second == NUMERIC_FAIL || si->second == NUMERIC_HI_DATA)
+                    continue;
+                sample_frags.push_back(itr->second);
             }
             
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
-                 itr != fpkms[i].count_per_rep.end();
+            mean_frags = accumulate(sample_frags.begin(), sample_frags.end(), 0.0);
+            
+            for (vector<double>::const_iterator itr = sample_frags.begin();
+                 itr != sample_frags.end();
                  ++itr)
             {
-                var_frags += (itr->second - mean_frags) *  (itr->second - mean_frags) / (double)(fpkms[i].count_per_rep.size());
+                var_frags += (*itr - mean_frags) *  (*itr - mean_frags) / (double)(sample_frags.size());
             }
             
             double dispersion_var = fpkms[i].count_dispersion_var;
             double uncertainty_var = fpkms[i].count_uncertainty_var;
             double mle_var = var_frags - dispersion_var - uncertainty_var;
-            if (mean_frags < 5000 && mean_frags > 1 && uncertainty_var > 0)
+            if (mean_frags < 2000 && mean_frags > 1 && uncertainty_var > 0)
             {
                 mean_and_mle_variance.push_back(make_pair(mean_frags,mle_var));
             }
