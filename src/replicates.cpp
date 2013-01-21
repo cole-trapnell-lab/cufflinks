@@ -226,7 +226,28 @@ double MleErrorModel::scale_mle_variance(double scaled_mass) const
     }
     if (scaled_mass > _scaled_compatible_mass_means.back())
     {
-        return 0; // we won't add anything if we're out of the range of the table
+        // extrapolate to the right
+        // off the right end
+        double x1_mean = _scaled_compatible_mass_means[_scaled_compatible_mass_means.size()-2];
+        double x2_mean = _scaled_compatible_mass_means[_scaled_compatible_mass_means.size()-1];
+        
+        double y1_var = _scaled_mle_variances[_scaled_compatible_mass_means.size()-2];
+        double y2_var = _scaled_mle_variances[_scaled_compatible_mass_means.size()-1];
+        double slope = 0.0;
+        if (x2_mean != x1_mean)
+        {
+            slope = (y2_var - y1_var) / (x2_mean-x1_mean);
+        }
+        else if (y1_var == y2_var)
+        {
+            assert (false); // should have a unique'd table
+        }
+        double mean_interp = _scaled_mle_variances[_scaled_compatible_mass_means.size()-1] -
+        slope*(scaled_mass - _scaled_compatible_mass_means.size()-1);
+        if (mean_interp < 0)
+            mean_interp = 0;
+        assert (!isnan(mean_interp) && !isinf(mean_interp));
+        return mean_interp;
     }
     else if (scaled_mass < _scaled_compatible_mass_means.front())
     {
@@ -244,6 +265,8 @@ double MleErrorModel::scale_mle_variance(double scaled_mass) const
         {
             double var = _scaled_mle_variances[d];
             assert (!isnan(var) && !isinf(var));
+            if (var < 0)
+                var = 0;
             return var;
         }
         
@@ -279,8 +302,8 @@ double MleErrorModel::scale_mle_variance(double scaled_mass) const
             assert (false); // should have a unique'd table
         }
         double mean_interp = _scaled_mle_variances[d] + slope*(scaled_mass - _scaled_compatible_mass_means[d]);
-        if (mean_interp < scaled_mass) // revert to poisson if underdispersed
-            mean_interp = scaled_mass;
+        if (mean_interp < 0)
+            mean_interp = 0;
         
         assert (!isnan(mean_interp) && !isinf(mean_interp));
         return mean_interp;
