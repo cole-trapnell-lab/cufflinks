@@ -1568,6 +1568,8 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             }
             
             mean_frags = accumulate(sample_frags.begin(), sample_frags.end(), 0.0);
+            if (mean_frags > 0)
+                mean_frags /= sample_frags.size();
             
             for (vector<double>::const_iterator itr = sample_frags.begin();
                  itr != sample_frags.end();
