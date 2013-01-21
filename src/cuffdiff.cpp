@@ -1581,7 +1581,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             double dispersion_var = fpkms[i].count_dispersion_var;
             double uncertainty_var = fpkms[i].count_uncertainty_var;
             double mle_var = var_frags - dispersion_var - uncertainty_var;
-            if (mean_frags < 1000 && mean_frags > 1 && uncertainty_var > 0)
+            if (mean_frags < 1000 && mean_frags > 1 && uncertainty_var > 0 && mle_var > 0)
             {
                 mean_and_mle_variance.push_back(make_pair(mean_frags,mle_var));
             }
