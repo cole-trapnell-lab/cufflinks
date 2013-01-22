@@ -111,8 +111,7 @@ void add_to_tracking_table(size_t sample_index,
                                  ab.status(),
                                  ab.status_by_replicate(),
                                  ab.fpkm_samples(),
-                                 ab.fpkm_gamma_dist_k(),
-                                 ab.fpkm_gamma_dist_theta());
+                                 ab.gamma());
     
     
 	
