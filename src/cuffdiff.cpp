@@ -1585,9 +1585,9 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             double ab_group_frags = 0.0;
             if (fpkms[i].gamma)
                 ab_group_frags = fpkms[i].count_mean / fpkms[i].gamma;
-            if (ab_group_frags < 1000 && mean_frags > 1 && uncertainty_var > 0)
+            if (ab_group_frags < 1000 && mean_frags > 1 && uncertainty_var > 0 && mle_var >= 0)
             {
-                mean_and_mle_variance.push_back(make_pair(mean_frags,mle_var));
+                mean_and_mle_variance.push_back(make_pair(mean_frags, mle_var));
             }
         }
     }
@@ -1624,7 +1624,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
     vari* cv = createvar(namebuf,STREGULAR,mle_variances.size(),VDOUBLE);
     for (size_t i = 0; i < mle_variances.size(); ++i)
     {
-        cv->dpr[i] = mle_variances[i];
+        cv->dpr[i] = sqrt(mle_variances[i]) / compatible_count_means[i];
         //cv->dpr[i] = raw_scvs[i];
     }
     
@@ -1647,8 +1647,9 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
     for (size_t i = 0; i < cp->n; ++i)
     {
         double mean = exp(cm->dpr[i]);
-        double fitted_mle_var = cp->dpr[i];
-        if (cp->dpr[i] >= 0)
+        double fitted_sd_fraction = cp->dpr[i];
+        double fitted_mle_var = (fitted_sd_fraction * mean) * (fitted_sd_fraction * mean);
+        if (fitted_mle_var >= 0)
         {
             fitted_values.push_back(fitted_mle_var);
         }
