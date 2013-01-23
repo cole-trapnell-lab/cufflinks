@@ -1534,6 +1534,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
 */
 
 
+static const int min_isos_for_fitting = 100;
 
 void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
                                         vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
@@ -1575,7 +1576,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
                  itr != sample_frags.end();
                  ++itr)
             {
-                var_frags += (*itr - mean_frags) *  (*itr - mean_frags) / (double)(sample_frags.size());
+                var_frags += (*itr - mean_frags) *  (*itr - mean_frags) / (double)((sample_frags.size() - 1));
             }
             
             double dispersion_var = fpkms[i].count_dispersion_var;
@@ -1605,8 +1606,8 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
             mle_variances.push_back(mean_and_mle_variance[i].second);
         }
     }
-    
-    if (mean_and_mle_variance.size() > 0)
+
+    if (mean_and_mle_variance.size() >= min_isos_for_fitting)
     {
         vector<double> fitted_values;
         
