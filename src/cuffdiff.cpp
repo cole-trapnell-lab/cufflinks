@@ -1606,68 +1606,71 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
         }
     }
     
-    vector<double> fitted_values;
-    
-    // WARNING: locfit doesn't like undescores - need camel case for
-    // variable names
-    
-    char namebuf[256];
-    sprintf(namebuf, "logMeans");
-    vari* cm = createvar(namebuf,STREGULAR,compatible_count_means.size(),VDOUBLE);
-    for (size_t i = 0; i < compatible_count_means.size(); ++i)
+    if (mean_and_mle_variance.size() > 0)
     {
-        cm->dpr[i] = log(compatible_count_means[i]);
-    }
-    
-    //sprintf(namebuf, "countSCV");
-    sprintf(namebuf, "countMLEVariances");
-    vari* cv = createvar(namebuf,STREGULAR,mle_variances.size(),VDOUBLE);
-    for (size_t i = 0; i < mle_variances.size(); ++i)
-    {
-        cv->dpr[i] = sqrt(mle_variances[i]) / compatible_count_means[i];
-        //cv->dpr[i] = raw_scvs[i];
-    }
-    
-    char locfit_cmd[2048];
-    //sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
-    sprintf(locfit_cmd, "locfit countMLEVariances~logMeans family=gaussian");
-    
-    locfit_dispatch(locfit_cmd);
-    
-    sprintf(locfit_cmd, "fittedMLEVars=predict logMeans");
-    locfit_dispatch(locfit_cmd);
-    
-    FILE* fmle_error_out = fopen((output_dir + "/" + string("mle_error_out.txt")).c_str(), "w");
-    fprintf(fmle_error_out, "mean_frags\tempir_var\tmle_var\n");
-    
-    int n = 0;
-    sprintf(namebuf, "fittedMLEVars");
-    vari* cp = findvar(namebuf, 1, &n);
-    assert(cp != NULL);
-    for (size_t i = 0; i < cp->n; ++i)
-    {
-        double mean = exp(cm->dpr[i]);
-        double fitted_sd_fraction = cp->dpr[i];
-        double fitted_mle_var = (fitted_sd_fraction * mean) * (fitted_sd_fraction * mean);
-        if (fitted_mle_var >= 0)
-        {
-            fitted_values.push_back(fitted_mle_var);
-        }
-        else
-        {
-            fitted_values.push_back(0);
-        }
-        fprintf (fmle_error_out, "%lg\t%lg\t%lg\n", mean, mle_variances[i], fitted_mle_var);
+        vector<double> fitted_values;
         
-    }
-    fclose(fmle_error_out);
+        // WARNING: locfit doesn't like undescores - need camel case for
+        // variable names
+        
+        char namebuf[256];
+        sprintf(namebuf, "logMeans");
+        vari* cm = createvar(namebuf,STREGULAR,compatible_count_means.size(),VDOUBLE);
+        for (size_t i = 0; i < compatible_count_means.size(); ++i)
+        {
+            cm->dpr[i] = log(compatible_count_means[i]);
+        }
+        
+        //sprintf(namebuf, "countSCV");
+        sprintf(namebuf, "countMLEVariances");
+        vari* cv = createvar(namebuf,STREGULAR,mle_variances.size(),VDOUBLE);
+        for (size_t i = 0; i < mle_variances.size(); ++i)
+        {
+            cv->dpr[i] = sqrt(mle_variances[i]) / compatible_count_means[i];
+            //cv->dpr[i] = raw_scvs[i];
+        }
+        
+        char locfit_cmd[2048];
+        //sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
+        sprintf(locfit_cmd, "locfit countMLEVariances~logMeans family=gaussian");
+        
+        locfit_dispatch(locfit_cmd);
+        
+        sprintf(locfit_cmd, "fittedMLEVars=predict logMeans");
+        locfit_dispatch(locfit_cmd);
+        
+        FILE* fmle_error_out = fopen((output_dir + "/" + string("mle_error_out.txt")).c_str(), "w");
+        fprintf(fmle_error_out, "mean_frags\tempir_var\tmle_var\n");
+        
+        int n = 0;
+        sprintf(namebuf, "fittedMLEVars");
+        vari* cp = findvar(namebuf, 1, &n);
+        assert(cp != NULL);
+        for (size_t i = 0; i < cp->n; ++i)
+        {
+            double mean = exp(cm->dpr[i]);
+            double fitted_sd_fraction = cp->dpr[i];
+            double fitted_mle_var = (fitted_sd_fraction * mean) * (fitted_sd_fraction * mean);
+            if (fitted_mle_var >= 0)
+            {
+                fitted_values.push_back(fitted_mle_var);
+            }
+            else
+            {
+                fitted_values.push_back(0);
+            }
+            fprintf (fmle_error_out, "%lg\t%lg\t%lg\n", mean, mle_variances[i], fitted_mle_var);
+            
+        }
+        fclose(fmle_error_out);
 
-    shared_ptr<MleErrorModel> mle_model;
-    mle_model = shared_ptr<MleErrorModel>(new MleErrorModel("", compatible_count_means, fitted_values));
+        shared_ptr<MleErrorModel> mle_model;
+        mle_model = shared_ptr<MleErrorModel>(new MleErrorModel("", compatible_count_means, fitted_values));
 
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
-    {
-        bundle_factories[i]->mle_error_model(mle_model);
+        for (size_t i = 0; i < bundle_factories.size(); ++i)
+        {
+            bundle_factories[i]->mle_error_model(mle_model);
+        }
     }
 }
 
