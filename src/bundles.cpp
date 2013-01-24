@@ -283,7 +283,9 @@ bool unmapped_hit(const MateHit& x)
 bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                              const ReadHit* bh,
 							 bool expand_by_partner)
-{	
+{
+    assert (bh != NULL);
+    
 	_leftmost = min(_leftmost, bh->left());
 	_ref_id = bh->ref_id();
     
@@ -562,10 +564,13 @@ void HitBundle::finalize(bool is_combined)
         if (num_skipped > 0 && num_skipped < _hits.size())
         {
             random_shuffle(_hits.begin(), _hits.end());
-            for (size_t i = num_skipped + 1; i < _hits.size(); ++i)
+            for (int i = (int)_hits.size() - num_skipped; i >= 0 && i < (int)_hits.size(); ++i)
             {
                 delete _hits[i].left_alignment();
+                _hits[i].left_alignment(NULL);
+                
                 delete _hits[i].right_alignment();
+                _hits[i].right_alignment(NULL);
             }
             _hits.resize(_hits.size() - num_skipped);
             is_combined = false;
