@@ -2289,14 +2289,14 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
                 mle_error(i,i) = max(0.0, mle_var);
             }
             count_covariance += mle_error;
-            cerr << endl << "MLE error correction: " << endl;
-            for (unsigned i = 0; i < mle_error.size1 (); ++ i)
-            {
-                ublas::matrix_row<ublas::matrix<double> > mr (mle_error, i);
-                cerr << i << " : " << count_mean[i] << " : ";
-                std::cerr << i << " : " << mr << std::endl;
-            }
-            cerr << "======" << endl;
+//            cerr << endl << "MLE error correction: " << endl;
+//            for (unsigned i = 0; i < mle_error.size1 (); ++ i)
+//            {
+//                ublas::matrix_row<ublas::matrix<double> > mr (mle_error, i);
+//                cerr << i << " : " << count_mean[i] << " : ";
+//                std::cerr << i << " : " << mr << std::endl;
+//            }
+//            cerr << "======" << endl;
         }
         
         

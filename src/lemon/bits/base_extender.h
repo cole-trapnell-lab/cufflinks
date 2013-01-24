@@ -359,10 +359,10 @@ namespace lemon {
 		}
 		
 		Node source(const UEdge& edge) const {
-			return aNode(edge);
+			return this->aNode(edge);
 		}
 		Node target(const UEdge& edge) const {
-			return bNode(edge);
+			return this->bNode(edge);
 		}
 		
 		void firstInc(UEdge& edge, bool& dir, const Node& node) const {
