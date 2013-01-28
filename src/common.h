@@ -62,10 +62,10 @@ extern int def_frag_len_std_dev;
 extern int max_mle_iterations;
 extern int num_importance_samples;
 extern float min_isoform_fraction;
-extern bool use_em;
 extern bool cond_prob_collapse;
 extern bool use_compat_mass;
 extern bool use_total_mass;
+extern bool model_mle_error;
 
 // Ref-guided assembly options
 extern int overhang_3;

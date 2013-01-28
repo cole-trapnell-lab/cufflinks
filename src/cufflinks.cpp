@@ -349,11 +349,6 @@ int parse_options(int argc, char** argv)
                 output_bias_params = true;
                 break;
             }
-            case OPT_USE_EM:
-            {
-                use_em = false;
-                break;
-            }
             case OPT_COLLAPSE_COND_PROB:
             {
                 cond_prob_collapse = false;

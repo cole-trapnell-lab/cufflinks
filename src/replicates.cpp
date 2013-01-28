@@ -677,23 +677,6 @@ fit_dispersion_model_helper(const string& condition_name,
     
     calculate_count_means_and_vars(sample_compatible_count_table, compatible_means_and_vars);
 
-    if (compatible_means_and_vars.size() < min_loci_for_fitting)
-    {
-        shared_ptr<MassDispersionModel> disperser;
-        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
-        
-//        for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
-//             itr != labeled_mv_table.end();
-//             ++itr)
-//        {
-//            string label = itr->first;
-//            pair<double, double> p = itr->second;
-//            disperser->set_compatible_mean_and_var(itr->first, p);
-//        }
-        //fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
-        return disperser;
-    }
-    
     sort(compatible_means_and_vars.begin(), compatible_means_and_vars.end());
     
     vector<double> compatible_count_means;
@@ -707,6 +690,24 @@ fit_dispersion_model_helper(const string& condition_name,
             raw_variances.push_back(compatible_means_and_vars[i].second);
         }
     }
+    
+    if (compatible_count_means.size() < min_loci_for_fitting)
+    {
+        shared_ptr<MassDispersionModel> disperser;
+        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
+        
+        //        for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
+        //             itr != labeled_mv_table.end();
+        //             ++itr)
+        //        {
+        //            string label = itr->first;
+        //            pair<double, double> p = itr->second;
+        //            disperser->set_compatible_mean_and_var(itr->first, p);
+        //        }
+        //fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
+        return disperser;
+    }
+    
     
     vector<double> fitted_values;
     

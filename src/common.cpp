@@ -77,7 +77,7 @@ int max_mle_iterations = 5000;
 int num_importance_samples = 10000;
 bool use_compat_mass = false;
 bool use_total_mass = false;
-
+bool model_mle_error = false;
 
 // Ref-guided assembly options
 int overhang_3 = 600;
@@ -102,7 +102,6 @@ double trim_3_dropoff_frac = .1;
 double trim_3_avgcov_thresh = 10.0;
 std::string user_label = "CUFF";
 
-bool use_em = true;
 bool cond_prob_collapse = true;
 
 bool emit_count_tables = false;

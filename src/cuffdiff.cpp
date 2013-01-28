@@ -1607,7 +1607,7 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
         }
     }
 
-    if (mean_and_mle_variance.size() >= min_isos_for_fitting)
+    if (compatible_count_means.size() >= min_isos_for_fitting)
     {
         vector<double> fitted_values;
         
@@ -2102,7 +2102,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
     
     test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
     
-	if (true || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
+	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
@@ -2209,7 +2209,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
             rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
     }
     
-    //if (use_isoform_count_dispersion)
+    if (model_mle_error)
     {
         fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
     }
