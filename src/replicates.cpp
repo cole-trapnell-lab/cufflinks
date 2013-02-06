@@ -762,10 +762,13 @@ fit_dispersion_model_helper(const string& condition_name,
             double mean = exp(cm->dpr[i]);
             double fitted_scv = (cp->dpr[i] - xim * mean) / (mean * mean);
             double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
-            
+            double corrected_variance = mean + (corrected_scv * (mean * mean));
+            double uncorrected_variance = mean + (fitted_scv * (mean * mean));
             //fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
-            
-            fitted_values.push_back(mean + corrected_scv * (mean * mean));
+            if (no_scv_correction)
+                fitted_values.push_back(uncorrected_variance);
+            else
+                fitted_values.push_back(corrected_variance);
         }
         else
         {

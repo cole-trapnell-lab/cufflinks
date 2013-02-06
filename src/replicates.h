@@ -265,7 +265,7 @@ public:
                         exit(1);
                     }
                     sample_compatible_count_table[i].counts[fac_idx] = raw_count;
-                    sample_total_count_table.back().counts[fac_idx] = total_count_table[i].count;
+                    sample_total_count_table[i].counts[fac_idx] = total_count_table[i].count;
                 }
             }
             

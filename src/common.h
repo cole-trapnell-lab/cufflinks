@@ -110,6 +110,8 @@ extern bool no_length_correction;
 extern bool no_js_tests;
 extern bool background_subtraction;
 
+extern bool no_scv_correction;
+
 extern double min_outlier_p;
 
 
@@ -540,6 +542,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_JS_TESTS             314
 #define OPT_DISPERSION_METHOD       315
 #define OPT_NO_BACKGROUND_SUBTRACTION 316
-
+#define OPT_NO_SCV_CORRECTION       317
 
 #endif

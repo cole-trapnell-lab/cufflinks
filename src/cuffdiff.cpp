@@ -132,6 +132,7 @@ static struct option long_options[] = {
 {"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
 {"no-background-subtraction", no_argument,             0,          OPT_NO_BACKGROUND_SUBTRACTION},
 {"dispersion-method",       required_argument,             0,          OPT_DISPERSION_METHOD},
+{"no-scv-correction",       no_argument,             0,          OPT_NO_SCV_CORRECTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -191,6 +192,7 @@ void print_usage()
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
+    fprintf(stderr, "  --no-scv-correction          Disable SCV correction                                [ default:  FALSE ]\n");
     print_library_table();
     print_dispersion_method_table();
 }
@@ -486,6 +488,11 @@ int parse_options(int argc, char** argv)
 				break;
 			}
             case OPT_NO_BACKGROUND_SUBTRACTION:
+            {
+                background_subtraction = false;
+                break;
+            }
+            case OPT_NO_SCV_CORRECTION:
             {
                 background_subtraction = false;
                 break;
@@ -1646,7 +1653,12 @@ void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tr
         int n = 0;
         sprintf(namebuf, "fittedMLEVars");
         vari* cp = findvar(namebuf, 1, &n);
-        assert(cp != NULL);
+        if (cp == NULL)
+        {
+            fprintf (stderr, "Error: could not fit MLE errors\n");
+            return;
+        }
+        
         for (size_t i = 0; i < cp->n; ++i)
         {
             double mean = exp(cm->dpr[i]);

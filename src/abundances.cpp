@@ -1148,7 +1148,7 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<MateH
         }
         assert (disperser->scale_mass_variance(scaled_mass) != 0 || scaled_mass == 0); 
         max_mass_var += disperser->scale_mass_variance(scaled_mass);
-        assert (scaled_total_mass != 0.0);
+        //assert (scaled_total_mass != 0.0);
         avg_mass_fraction += (scaled_mass / scaled_total_mass);
     }
     

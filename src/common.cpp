@@ -124,6 +124,7 @@ bool no_length_correction = false;
 bool no_js_tests = false;
 
 bool background_subtraction = false;
+bool no_scv_correction = false;
 
 double min_outlier_p = 0.0001;
 
