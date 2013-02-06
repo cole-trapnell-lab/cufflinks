@@ -494,7 +494,7 @@ int parse_options(int argc, char** argv)
             }
             case OPT_NO_SCV_CORRECTION:
             {
-                background_subtraction = false;
+                no_scv_correction = true;
                 break;
             }
 			default:
