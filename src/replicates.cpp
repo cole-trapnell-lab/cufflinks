@@ -375,8 +375,8 @@ struct SCVInterpolator
     // into a single routine.
     double interpolate_scv(double est_scv)
     {
-        if (est_scv <= 0)
-            return 0.0;
+//        if (est_scv <= 0)
+//            return 0.0;
         
         if (est_scvs.size() < 2 || true_scvs.size() < 2)
         {
@@ -494,7 +494,7 @@ struct SCVInterpolator
             return est_scv; // revert to poisson assumption
         }
         
-        return 0.0;
+        return est_scv;
     }
     
 private:
@@ -765,10 +765,10 @@ fit_dispersion_model_helper(const string& condition_name,
             double corrected_variance = mean + (corrected_scv * (mean * mean));
             double uncorrected_variance = mean + (fitted_scv * (mean * mean));
             //fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
-            if (no_scv_correction)
-                fitted_values.push_back(uncorrected_variance);
-            else
+            if (no_scv_correction == false && corrected_variance > 0)
                 fitted_values.push_back(corrected_variance);
+            else
+                fitted_values.push_back(uncorrected_variance);
         }
         else
         {
