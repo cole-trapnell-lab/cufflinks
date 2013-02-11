@@ -711,9 +711,9 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         if (curr_fpkm > 0.0 && prev_fpkm > 0.0)
             differential = log2(curr_fpkm) - log2(prev_fpkm);
         else if (curr_fpkm)
-            differential = numeric_limits<double>::max();
+            differential = numeric_limits<double>::infinity();
         else if (prev_fpkm)
-            differential = -numeric_limits<double>::max();
+            differential = -numeric_limits<double>::infinity();
 
         
         // Draw from prev fpkm_samples to make the first half of the null
@@ -739,9 +739,9 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             if (curr_set_sample > 0.0 && prev_set_sample > 0.0)
                 null_ratio_sample = log2(curr_set_sample) - log2(prev_set_sample);
             else if (curr_set_sample > 0.0)
-                null_ratio_sample = numeric_limits<double>::max();
+                null_ratio_sample = numeric_limits<double>::infinity();
             else if (prev_set_sample)
-                null_ratio_sample = -numeric_limits<double>::max();
+                null_ratio_sample = -numeric_limits<double>::infinity();
             
             null_log_ratio_samples.push_back(null_ratio_sample);
         }
@@ -769,9 +769,9 @@ SampleDifference test_diffexp(const FPKMContext& curr,
             if (curr_set_sample > 0.0 && prev_set_sample > 0.0)
                 null_ratio_sample = log2(curr_set_sample) - log2(prev_set_sample);
             else if (curr_set_sample > 0.0)
-                null_ratio_sample = numeric_limits<double>::max();
+                null_ratio_sample = numeric_limits<double>::infinity();
             else if (prev_set_sample)
-                null_ratio_sample = -numeric_limits<double>::max();
+                null_ratio_sample = -numeric_limits<double>::infinity();
             
             null_log_ratio_samples.push_back(null_ratio_sample);
         }

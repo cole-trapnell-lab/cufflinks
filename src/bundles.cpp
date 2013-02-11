@@ -637,7 +637,7 @@ void HitBundle::finalize(bool is_combined)
 		}
         if (hit.is_mapped())
         {
-            _compatible_mass += hit.mass();
+            _compatible_mass += hit.internal_scale_mass();
         }
 	}
     

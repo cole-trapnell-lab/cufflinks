@@ -1864,7 +1864,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
         }
     }
     
-    bool pool_all_samples = ((most_reps <= 2 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
+    bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
     
     if (pool_all_samples)
     {
