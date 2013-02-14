@@ -75,8 +75,7 @@ AC_DEFUN([AX_BOOST_SYSTEM],
 			 else
 				CXXFLAGS="-psystem $CXXFLAGS"
 			 fi
-			 AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[@%:@include <boost/system/system.hpp>]],
-                                   [[return 0;]]),
+			 AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[@%:@include <boost/system/system.hpp>]]),
                    ax_cv_boost_system=yes, ax_cv_boost_system=no)
 			 CXXFLAGS=$CXXFLAGS_SAVE
              AC_LANG_POP([C++])
