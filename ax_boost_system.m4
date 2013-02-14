@@ -8,7 +8,7 @@
 #
 # DESCRIPTION
 #
-#   Test for Thread library from the Boost C++ libraries. The macro requires
+#   Test for System library from the Boost C++ libraries. The macro requires
 #   a preceding call to AX_BOOST_BASE. Further documentation is available at
 #   <http://randspringer.de/boost/index.html>.
 #
@@ -34,7 +34,7 @@ AC_DEFUN([AX_BOOST_SYSTEM],
 [
 	AC_ARG_WITH([boost-system],
 	AS_HELP_STRING([--with-boost-system@<:@=special-lib@:>@],
-                   [use the Thread library from boost - it is possible to specify a certain library for the linker
+                   [use the System library from boost - it is possible to specify a certain library for the linker
                         e.g. --with-boost-system=boost_system-gcc-mt ]),
         [
         if test "$withval" = "no"; then
@@ -63,7 +63,7 @@ AC_DEFUN([AX_BOOST_SYSTEM],
 		LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
 		export LDFLAGS
 
-        AC_CACHE_CHECK(whether the Boost::Thread library is available,
+        AC_CACHE_CHECK(whether the Boost::System library is available,
 					   ax_cv_boost_system,
         [AC_LANG_PUSH([C++])
 			 CXXFLAGS_SAVE=$CXXFLAGS
