@@ -67,40 +67,19 @@ AC_DEFUN([AX_BOOST_SYSTEM],
 					   ax_cv_boost_system,
         [AC_LANG_PUSH([C++])
 			 CXXFLAGS_SAVE=$CXXFLAGS
-
-			 if test "x$build_os" = "xsolaris" ; then
-  				 CXXFLAGS="-psystems $CXXFLAGS"
-			 elif test "x$build_os" = "xming32" ; then
-				 CXXFLAGS="-msystems $CXXFLAGS"
-			 else
-				CXXFLAGS="-psystem $CXXFLAGS"
-			 fi
 			 AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[@%:@include <boost/system/system_error.hpp>]]),
                    ax_cv_boost_system=yes, ax_cv_boost_system=no)
 			 CXXFLAGS=$CXXFLAGS_SAVE
              AC_LANG_POP([C++])
 		])
 		if test "x$ax_cv_boost_system" = "xyes"; then
-           if test "x$build_os" = "xsolaris" ; then
-			  BOOST_CPPFLAGS="-psystems $BOOST_CPPFLAGS"
-		   elif test "x$build_os" = "xming32" ; then
-			  BOOST_CPPFLAGS="-msystems $BOOST_CPPFLAGS"
-		   else
-			  BOOST_CPPFLAGS="-psystem $BOOST_CPPFLAGS"
-		   fi
-
-			AC_SUBST(BOOST_CPPFLAGS)
+            AC_SUBST(BOOST_CPPFLAGS)
 
 			AC_DEFINE(HAVE_BOOST_SYSTEM,,[define if the Boost::System library is available])
             BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
 
 			LDFLAGS_SAVE=$LDFLAGS
-                        case "x$build_os" in
-                          *bsd* )
-                               LDFLAGS="-psystem $LDFLAGS"
-                          break;
-                          ;;
-                        esac
+
             if test "x$ax_boost_user_system_lib" = "x"; then
                 for libextension in `ls $BOOSTLIBDIR/libboost_system*.so* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.so.*$;\1;'` `ls $BOOSTLIBDIR/libboost_system*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.a*$;\1;'`; do
                      ax_lib=${libextension}
@@ -124,17 +103,6 @@ AC_DEFUN([AX_BOOST_SYSTEM],
                
 
             fi
-			if test "x$link_system" = "xno"; then
-				AC_MSG_ERROR(Could not link against $ax_lib !)
-                        else
-                           case "x$build_os" in
-                              *bsd* )
-			        BOOST_LDFLAGS="-psystem $BOOST_LDFLAGS"
-                              break;
-                              ;;
-                           esac
-
-			fi
             
             if test "x$ax_boost_user_system_lib" = "x"; then
                 for libextension in `ls $BOOSTLIBDIR/libboost_system*.so* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.so.*$;\1;'` `ls $BOOSTLIBDIR/libboost_system*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.a*$;\1;'`; do
