@@ -733,7 +733,7 @@ void HitFactory::finalize_rg_props()
     }
 }
 
-static const unsigned MAX_HEADER_LEN = 4 * 1024 * 1024; // 4 MB
+static const unsigned MAX_HEADER_LEN = 64 * 1024 * 1024; // 4 MB
 
 bool BAMHitFactory::inspect_header()
 {
@@ -745,11 +745,11 @@ bool BAMHitFactory::inspect_header()
         return false;
     }
     
-    if (header->l_text >= MAX_HEADER_LEN)
-    {
-        fprintf(stderr, "Warning: BAM header too large\n");
-        return false;
-    }
+//    if (header->l_text >= MAX_HEADER_LEN)
+//    {
+//        fprintf(stderr, "Warning: BAM header too large\n");
+//        return false;
+//    }
 
 	if (header->l_text == 0)
 	{
