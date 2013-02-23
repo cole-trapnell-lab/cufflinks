@@ -129,8 +129,35 @@ struct Tests
 
 struct FPKMContext
 {
-	FPKMContext(double cm, double cv, double cuv, double cdv, const CountPerReplicateTable& cpr, double r, const FPKMPerReplicateTable& fpr, double v, AbundanceStatus s, const StatusPerReplicateTable& spr, const vector<double>& fs, double g)
-		: count_mean(cm), count_var(cv), count_uncertainty_var(cuv), count_dispersion_var(cdv), count_per_rep(cpr), fpkm_per_rep(fpr), FPKM(r), FPKM_variance(v), status(s), status_per_rep(spr), fpkm_samples(fs), gamma(g) {}
+	FPKMContext(double cm,
+                double cv,
+                double cuv,
+                double cdv,
+                const CountPerReplicateTable& cpr,
+                double r,
+                const FPKMPerReplicateTable& fpr,
+                double v,
+                double fcl,
+                double fch,
+                AbundanceStatus s,
+                const StatusPerReplicateTable& spr,
+                const vector<double>& fs,
+                double g)
+		: count_mean(cm),
+          count_var(cv),
+          count_uncertainty_var(cuv),
+          count_dispersion_var(cdv),
+          count_per_rep(cpr),
+          fpkm_per_rep(fpr),
+          FPKM(r),
+          FPKM_variance(v),
+          FPKM_conf_lo(fcl),
+          FPKM_conf_hi(fch),
+          status(s),
+          status_per_rep(spr),
+          fpkm_samples(fs),
+          gamma(g) {}
+    
 	double count_mean;
     double count_var;
     double count_uncertainty_var;
@@ -140,6 +167,8 @@ struct FPKMContext
     StatusPerReplicateTable status_per_rep;
 	double FPKM;
 	double FPKM_variance;
+    double FPKM_conf_lo;
+    double FPKM_conf_hi;
     AbundanceStatus status;
     vector<double> fpkm_samples;
     double gamma;

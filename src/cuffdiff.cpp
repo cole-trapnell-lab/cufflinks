@@ -679,9 +679,9 @@ void print_FPKM_tracking(FILE* fout,
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
 			double fpkm = fpkms[i].FPKM;
-			double std_dev = sqrt(fpkms[i].FPKM_variance);
-			double fpkm_conf_hi = fpkm + 2.0 * std_dev;
-			double fpkm_conf_lo = max(0.0, fpkm - 2.0 * std_dev);
+			//double std_dev = sqrt(fpkms[i].FPKM_variance);
+			double fpkm_conf_hi = fpkms[i].FPKM_conf_hi;
+			double fpkm_conf_lo = fpkms[i].FPKM_conf_lo;
             const char* status_str = "OK";
             
             if (fpkms[i].status == NUMERIC_OK)
