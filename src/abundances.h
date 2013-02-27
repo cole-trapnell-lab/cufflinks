@@ -93,9 +93,6 @@ public:
     virtual StatusPerReplicateTable status_by_replicate() const = 0;
     virtual void status_by_replicate(StatusPerReplicateTable& fpr) = 0;
     
-    virtual double          mass_fraction() const = 0;
-	virtual void            mass_fraction(double mf) = 0;
-    
     // This tracks the fitted variance from the overdispersion model,
     // and does not include the fragment assignment uncertainty.
     virtual double          mass_variance() const = 0;
@@ -152,7 +149,6 @@ public:
 		_cond_probs(NULL),
         _fpkm_gamma_k(0.0),
         _fpkm_gamma_theta(0.0),
-        _sample_mass_fraction(0.0),
         _sample_mass_variance(0.0){}
 	
 	~TranscriptAbundance()
@@ -212,9 +208,6 @@ public:
     StatusPerReplicateTable status_by_replicate() const { return _status_per_replicate; }
     void status_by_replicate(StatusPerReplicateTable& fpr) { _status_per_replicate = fpr; }
     
-	double mass_fraction() const			{ return _sample_mass_fraction; }
-	void mass_fraction(double mf)			{ _sample_mass_fraction = mf; }
-	
     double mass_variance() const			{ return _sample_mass_variance; }
 	void mass_variance(double mv)			{ _sample_mass_variance = mv; }
 	
@@ -330,7 +323,6 @@ private:
 	string _locus_tag;
 	string _ref_tag;
 	
-    long double _sample_mass_fraction;
     long double _sample_mass_variance;
     
     CountPerReplicateTable _num_fragments_per_replicate;
@@ -344,7 +336,6 @@ public:
 	AbundanceGroup() :
         _kappa(1.0),
         _FPKM_variance(0.0),
-        _max_mass_variance(0.0),
         _salient_frags(0.0),
         _total_frags(0.0) {}
 	
@@ -356,8 +347,7 @@ public:
 		_gamma_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())), 
 		_kappa_covariance(ublas::zero_matrix<double>(abundances.size(), abundances.size())),
 		_kappa(1.0),
-		_FPKM_variance(0.0), 
-        _max_mass_variance(0.0),
+		_FPKM_variance(0.0),
         _salient_frags(0.0),
         _total_frags(0.0) {}
     
@@ -366,7 +356,6 @@ public:
                    const ublas::matrix<double>& iterated_exp_count_covariance,
                    const ublas::matrix<double>& count_covariance,
                    const ublas::matrix<double>& fpkm_covariance,
-                   const long double max_mass_variance,
                    const std::set<shared_ptr<ReadGroupProperties const > >& rg_props);
 	
 	AbundanceStatus status() const;
@@ -407,9 +396,6 @@ public:
     
     StatusPerReplicateTable status_by_replicate() const;
     void status_by_replicate(StatusPerReplicateTable& fpr) { }
-    
-    double mass_fraction() const;
-	void mass_fraction(double mf)			{  }
     
     double mass_variance() const;
 	void mass_variance(double mf)	{  }
@@ -463,12 +449,8 @@ public:
     const vector<double> null_js_samples() const { return _null_js_samples; }
     
 	void calculate_abundance(const vector<MateHit>& alignments,
-                             bool perform_collapse = true,
-                             bool calculate_per_replicate = true);
+                             bool perform_collapse = true);
 	
-    void max_mass_variance(double mmv) { _max_mass_variance = mmv; }
-    double max_mass_variance() const { return _max_mass_variance; }
-    
     double salient_frags() const { return _salient_frags; }
     void salient_frags(double nf) { _salient_frags = nf; }
     
@@ -493,6 +475,10 @@ public:
     
 private:
     
+    void aggregate_replicate_abundances(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate);
+    
+    void calculate_abundance_for_replicate(const vector<MateHit>& alignments, bool perform_collapse);
+    
     void calculate_abundance_group_variance(const vector<shared_ptr<Abundance> >& transcripts,
                                             const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate);
 
@@ -510,17 +496,15 @@ private:
    
     
     AbundanceStatus calculate_per_replicate_abundances(vector<shared_ptr<Abundance> >& transcripts,
-                                                       const vector<MateHit>& nr_alignments,
-                                                       const vector<double>& log_conv_factors,
-                                                       std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate);
+                                                       const std::map<shared_ptr<ReadGroupProperties const >, vector<MateHit> >& alignments_per_read_group,
+                                                       std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+                                                       bool perform_collapse = true);
     
         
 	void calculate_kappas();
     
     
 	void update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts);
-    
-    void update_transcript_expression(double locus_mass, double locus_mass_fraction);
     
     void collect_per_replicate_mass(const vector<MateHit>& alignments,
                                     vector<shared_ptr<Abundance> >& transcripts);
@@ -551,7 +535,6 @@ private:
 	double _kappa;
 	double _FPKM_variance;
 	string _description;
-    double _max_mass_variance;  // upper bound on the count variance that could come from this group.
     double _salient_frags;
     double _total_frags;
     

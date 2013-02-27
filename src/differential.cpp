@@ -1404,9 +1404,7 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
                               const AbundanceGroup& curr_abundance,
 //                              SampleDiffs& diff_tests,
                               bool enough_reads)
-{	
-	const string& name = curr_abundance.description();
-	
+{
 	SampleDifference test;
     
 	test.p_value = 1.0;
@@ -1691,14 +1689,13 @@ void sample_abundance_worker(const string& locus_tag,
         
         // Group the CDS clusters by gene
         vector<shared_ptr<Abundance> > cds_abundances;
-        double max_cds_mass_variance = 0.0; 
+        
         set<shared_ptr<ReadGroupProperties const> > rg_props;
         BOOST_FOREACH (AbundanceGroup& ab_group, sample.cds)
         {
             //if (ab_group.description() != "")
             {
                 cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-                max_cds_mass_variance = max(ab_group.max_mass_variance(), max_cds_mass_variance);
                 rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end()); 
             }
         }
@@ -1707,7 +1704,6 @@ void sample_abundance_worker(const string& locus_tag,
                            cds_iterated_exp_count_cov,
                            cds_count_cov,
                            cds_fpkm_cov,
-                           max_cds_mass_variance,
                            rg_props);
         
         vector<AbundanceGroup> cds_by_gene;
@@ -1765,11 +1761,9 @@ void sample_abundance_worker(const string& locus_tag,
             string desc = *(tss_ids.begin()); 
             assert (desc != "");
             ab_group.description(*(tss_ids.begin()));
-            
         }
         
         sample.primary_transcripts = transcripts_by_tss;
-        double max_tss_mass_variance = 0.0;
         
         // Group TSS clusters by gene
         vector<shared_ptr<Abundance> > primary_transcript_abundances;
@@ -1777,7 +1771,6 @@ void sample_abundance_worker(const string& locus_tag,
         BOOST_FOREACH (AbundanceGroup& ab_group, sample.primary_transcripts)
         {
             primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
-            max_tss_mass_variance = max(max_tss_mass_variance, ab_group.max_mass_variance());
             rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
         }
         
@@ -1786,7 +1779,6 @@ void sample_abundance_worker(const string& locus_tag,
                                            tss_iterated_exp_count_cov,
                                            tss_count_cov,
                                            tss_fpkm_cov,
-                                           max_tss_mass_variance,
                                            rg_props);
         
         vector<AbundanceGroup> primary_transcripts_by_gene;
