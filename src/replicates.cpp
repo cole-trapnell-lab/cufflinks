@@ -520,7 +520,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
         alpha_range.push_back(a);
     }
     
-    for (double a = 2; a < 10.0; a += (8.0 / 20.0))
+    for (double a = 2; a < 100.0; a += (98.0 / 20.0))
     {
         alpha_range.push_back(a);
     }
