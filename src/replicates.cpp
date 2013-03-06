@@ -757,8 +757,8 @@ fit_dispersion_model_helper(const string& condition_name,
     assert(cp != NULL);
     for (size_t i = 0; i < cp->n; ++i)
     {
-        if (cp->dpr[i] >= 0)
-        {
+//        if (cp->dpr[i] >= 0)
+//        {
             double mean = exp(cm->dpr[i]);
             double fitted_scv = (cp->dpr[i] - xim * mean) / (mean * mean);
             double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
@@ -767,13 +767,17 @@ fit_dispersion_model_helper(const string& condition_name,
             //fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
             if (no_scv_correction == false && corrected_variance > 0)
                 fitted_values.push_back(corrected_variance);
-            else
+            else if (uncorrected_variance > 0)
                 fitted_values.push_back(uncorrected_variance);
-        }
-        else
-        {
-            fitted_values.push_back(compatible_count_means[i]);
-        }
+            else
+                fitted_values.push_back(compatible_count_means[i]);
+        
+            
+//        }
+//        else
+//        {
+//            fitted_values.push_back(compatible_count_means[i]);
+//        }
     }
     
     shared_ptr<MassDispersionModel> disperser;
