@@ -150,7 +150,8 @@ map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 
 map<string, DispersionMethod> dispersion_method_table;
-string default_dispersion_method = "per-condition";
+//string default_dispersion_method = "per-condition";
+string default_dispersion_method = "pooled";
 DispersionMethod dispersion_method = NOT_SET;
 
 #if ENABLE_THREADS
@@ -382,7 +383,7 @@ void print_library_table()
 
 void init_dispersion_method_table()
 {
-    //dispersion_method_table["pooled"] = POOLED;
+    dispersion_method_table["pooled"] = POOLED;
     dispersion_method_table["blind"] = BLIND;
     dispersion_method_table["per-condition"] = PER_CONDITION;
 }

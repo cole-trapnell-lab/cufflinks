@@ -402,8 +402,8 @@ struct SCVInterpolator
             }
             double mean_interp = true_scvs[est_scvs.size()-1] -
             slope*(est_scv - est_scvs.size()-1);
-            if (mean_interp < est_scv)
-                mean_interp = est_scv;
+//            if (mean_interp < est_scv)
+//                mean_interp = est_scv;
             assert (!isnan(mean_interp) && !isinf(mean_interp));
             return mean_interp;
         }
@@ -426,8 +426,8 @@ struct SCVInterpolator
                 assert (false); // should have a unique'd table
             }
             double mean_interp = true_scvs[0] - slope*(est_scvs[0] - est_scv);
-            if (mean_interp < est_scv)
-                mean_interp = est_scv;
+//            if (mean_interp < est_scv)
+//                mean_interp = est_scv;
             
             assert (!isnan(mean_interp) && !isinf(mean_interp));
             return mean_interp;
@@ -443,8 +443,8 @@ struct SCVInterpolator
             if (*lb == est_scv || lb == est_scvs.begin())
             {
                 double var = true_scvs[d];
-                if (var < est_scv) // revert to poisson if underdispersed
-                    var = est_scv;
+//                if (var < est_scv) // revert to poisson if underdispersed
+//                    var = est_scv;
                 assert (!isnan(var) && !isinf(var));
                 return var;
             }
@@ -482,8 +482,8 @@ struct SCVInterpolator
                 assert (false); // should have a unique'd table
             }
             double mean_interp = true_scvs[d] + slope*(est_scv - est_scvs[d]);
-            if (mean_interp < est_scv) // revert to poisson if underdispersed
-                mean_interp = est_scv;
+//            if (mean_interp < est_scv) // revert to poisson if underdispersed
+//                mean_interp = est_scv;
             
             assert (!isnan(mean_interp) && !isinf(mean_interp));
             return mean_interp;

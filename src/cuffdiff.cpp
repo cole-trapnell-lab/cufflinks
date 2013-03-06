@@ -1161,7 +1161,7 @@ void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups
     shared_ptr<MassDispersionModel> disperser;
     if (poisson_dispersion == false)
     {
-        disperser = fit_dispersion_model("pooled", scale_factors, sample_compatible_count_table);
+        disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
     }
     else
     {
@@ -1792,6 +1792,34 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
     locus_num_threads = num_threads;
 #endif
     
+    // Validate the dispersion method the user's chosen.
+    int most_reps = -1;
+    int most_reps_idx = 0;
+    
+    bool single_replicate_fac = false;
+    
+    for (size_t i = 0; i < bundle_factories.size(); ++i)
+    {
+        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
+        if (fac.num_replicates() > most_reps)
+        {
+            most_reps = fac.num_replicates();
+            most_reps_idx = i;
+        }
+        if (most_reps == 1)
+        {
+            single_replicate_fac = true;
+            if (dispersion_method == PER_CONDITION)
+            {
+                fprintf(stderr, "Error: Dispersion method 'per-condition' requires that all conditions have at least 2 replicates.  Please use either 'pooled' or 'blind'\n");
+                exit(1);
+            }
+        }
+    }
+    
+    bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
+    
+    
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
 	
@@ -1841,30 +1869,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
 #endif
-    
-    
-    
-    
-    int most_reps = -1;
-    int most_reps_idx = 0;
-    
-    bool single_replicate_fac = false;
-    
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
-    {
-        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
-        if (fac.num_replicates() > most_reps)
-        {
-            most_reps = fac.num_replicates();
-            most_reps_idx = i;
-        }
-        if (most_reps == 1)
-        {
-            single_replicate_fac = true;
-        }
-    }
-    
-    bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
     
     if (pool_all_samples)
     {
@@ -2025,28 +2029,92 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
                 }
             }
         }  
-        
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+       
+        shared_ptr<MassDispersionModel const> pooled_model;
+        // Let's compute the pooled average of the dispersion models
+        if (dispersion_method != BLIND)
         {
-            // for now, "borrow" the dispersion model for the condition with the most replicates
-            size_t borrowed_disp_model_idx = most_reps_idx;
-            if (fac->num_replicates() == 1)
+            vector<shared_ptr<MassDispersionModel const> > disp_models;
+            double total_replicates = 0.0;
+            vector<double> disp_model_weight;
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
             {
-                fac->mass_dispersion_model(bundle_factories[borrowed_disp_model_idx]->mass_dispersion_model());
-                double borrowed_internal_size_factor = scale_factors[borrowed_disp_model_idx];
-                double borrowed_external_size_factor = scale_factors[borrowed_disp_model_idx];
-                double borrowed_norm_map_mass = bundle_factories[borrowed_disp_model_idx]->factories().front()->read_group_properties()->normalized_map_mass();
-                BOOST_FOREACH(shared_ptr<BundleFactory> bf, fac->factories())
+                total_replicates += fac->num_replicates();
+            }
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                if (fac->num_replicates() > 1)
                 {
-                    // we need to adjust the scaling factors so that the FPKMs aren't skewed
-                    // and the variance function from the dispersion model is correct.
-                    //bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-                    bf->read_group_properties()->internal_scale_factor(bf->read_group_properties()->external_scale_factor()/borrowed_internal_size_factor);
-                    bf->read_group_properties()->normalized_map_mass(borrowed_norm_map_mass);
-                    bf->read_group_properties()->external_scale_factor(borrowed_external_size_factor);
+                    disp_models.push_back(fac->mass_dispersion_model());
+                    disp_model_weight.push_back((double)fac->num_replicates() / total_replicates);
                 }
             }
+            
+            double max_mass = 0.0;
+            
+            BOOST_FOREACH(shared_ptr<MassDispersionModel const> disp, disp_models)
+            {
+                if (disp->scaled_compatible_mass_means().empty() == false && max_mass < disp->scaled_compatible_mass_means().back())
+                {
+                    max_mass = disp->scaled_compatible_mass_means().back();
+                }
+            }
+            
+            vector<double> compatible_mass;
+            vector<double> compatible_variances;
+            vector<double> est_fitted_var;
+            double epsilon = 0.2;
+            for (double frag_idx = 0.0; frag_idx < max_mass; frag_idx += epsilon)
+            {
+                compatible_mass.push_back(frag_idx);
+                double var_est = 0.0;
+                for(size_t i = 0; i < disp_models.size(); ++i)
+                {
+                    shared_ptr<MassDispersionModel const> disp = disp_models[i];
+                    double weight = disp_model_weight[i];
+                    var_est += disp->scale_mass_variance(frag_idx) * weight;
+                }
+                compatible_variances.push_back(var_est);
+                est_fitted_var.push_back(var_est);
+            }
+            
+            pooled_model = shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
+            
         }
+        
+        if (dispersion_method == POOLED)
+        {
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                fac->mass_dispersion_model(pooled_model);
+            }
+        }
+        else // The user must want "per-condition", so there's nothing more to do.
+        {
+            
+        }
+        
+//        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+//        {
+//            // for now, "borrow" the dispersion model for the condition with the most replicates
+//            size_t borrowed_disp_model_idx = most_reps_idx;
+//            if (fac->num_replicates() == 1)
+//            {
+//                fac->mass_dispersion_model(bundle_factories[borrowed_disp_model_idx]->mass_dispersion_model());
+//                double borrowed_internal_size_factor = scale_factors[borrowed_disp_model_idx];
+//                double borrowed_external_size_factor = scale_factors[borrowed_disp_model_idx];
+//                double borrowed_norm_map_mass = bundle_factories[borrowed_disp_model_idx]->factories().front()->read_group_properties()->normalized_map_mass();
+//                BOOST_FOREACH(shared_ptr<BundleFactory> bf, fac->factories())
+//                {
+//                    // we need to adjust the scaling factors so that the FPKMs aren't skewed
+//                    // and the variance function from the dispersion model is correct.
+//                    //bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
+//                    bf->read_group_properties()->internal_scale_factor(bf->read_group_properties()->external_scale_factor()/borrowed_internal_size_factor);
+//                    bf->read_group_properties()->normalized_map_mass(borrowed_norm_map_mass);
+//                    bf->read_group_properties()->external_scale_factor(borrowed_external_size_factor);
+//                }
+//            }
+//        }
     }
     else if (use_raw_mapped_norm)
     {
