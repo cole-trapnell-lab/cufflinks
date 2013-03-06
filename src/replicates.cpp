@@ -401,7 +401,7 @@ struct SCVInterpolator
                 assert (false); // should have a unique'd table
             }
             double mean_interp = true_scvs[est_scvs.size()-1] -
-            slope*(est_scv - est_scvs.size()-1);
+                slope*(est_scv - est_scvs.size()-1);
 //            if (mean_interp < est_scv)
 //                mean_interp = est_scv;
             assert (!isnan(mean_interp) && !isinf(mean_interp));
@@ -479,6 +479,7 @@ struct SCVInterpolator
             }
             else if (y1_var == y2_var)
             {
+                fprintf(stderr, "Warning: SCV table does not have unique keys\n!");
                 assert (false); // should have a unique'd table
             }
             double mean_interp = true_scvs[d] + slope*(est_scv - est_scvs[d]);
@@ -629,9 +630,10 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
     
     for (size_t i = 0; i < cp->n; ++i)
     {
-        //fprintf(stderr, "%lg\t%lg\n",alpha_range[i], cp->dpr[i]);
+        fprintf(stderr, "%lg\t%lg\n",alpha_range[i], cp->dpr[i]);
         true_to_est_scv_table.add_scv_pair(alpha_range[i], cp->dpr[i]);
     }
+    true_to_est_scv_table.finalize();
 }
 
 void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compatible_count_table,
