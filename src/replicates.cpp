@@ -384,6 +384,7 @@ struct SCVInterpolator
         }
         if (est_scv > est_scvs.back())
         {
+            fprintf(stderr, "Warning: extrapolating to the right\n");
             // extrapolate to the right
             // off the right end
             double x1_mean = est_scvs[est_scvs.size()-2];
@@ -409,6 +410,7 @@ struct SCVInterpolator
         }
         else if (est_scv < est_scvs.front())
         {
+            fprintf(stderr, "Warning: extrapolating to the left\n");
             // extrapolate to the left
             // off the left end?
             double x1_mean = est_scvs[0];
