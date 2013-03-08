@@ -384,7 +384,7 @@ struct SCVInterpolator
         }
         if (est_scv > est_scvs.back())
         {
-            fprintf(stderr, "Warning: extrapolating to the right\n");
+            //fprintf(stderr, "Warning: extrapolating to the right\n");
             // extrapolate to the right
             // off the right end
             double x1_mean = est_scvs[est_scvs.size()-2];
@@ -410,29 +410,32 @@ struct SCVInterpolator
         }
         else if (est_scv < est_scvs.front())
         {
-            fprintf(stderr, "Warning: extrapolating to the left\n");
-            // extrapolate to the left
-            // off the left end?
-            double x1_mean = est_scvs[0];
-            double x2_mean = est_scvs[1];
+            //fprintf(stderr, "Warning: extrapolating to the left\n");
             
-            double y1_var = true_scvs[0];
-            double y2_var = true_scvs[1];
-            double slope = 0.0;                
-            if (x2_mean != x1_mean)
-            {
-                slope = (y2_var - y1_var) / (x2_mean-x1_mean);
-            }
-            else if (y1_var == y2_var)
-            {
-                assert (false); // should have a unique'd table
-            }
-            double mean_interp = true_scvs[0] - slope*(est_scvs[0] - est_scv);
-//            if (mean_interp < est_scv)
-//                mean_interp = est_scv;
+            // If we're extrapolating to the left, our fit is too coarse, but
+            // that probably means we don't need SCV bias correction at all.
+            return est_scv;
             
-            assert (!isnan(mean_interp) && !isinf(mean_interp));
-            return mean_interp;
+//            double x1_mean = est_scvs[0];
+//            double x2_mean = est_scvs[1];
+//            
+//            double y1_var = true_scvs[0];
+//            double y2_var = true_scvs[1];
+//            double slope = 0.0;                
+//            if (x2_mean != x1_mean)
+//            {
+//                slope = (y2_var - y1_var) / (x2_mean-x1_mean);
+//            }
+//            else if (y1_var == y2_var)
+//            {
+//                assert (false); // should have a unique'd table
+//            }
+//            double mean_interp = true_scvs[0] - slope*(est_scvs[0] - est_scv);
+////            if (mean_interp < est_scv)
+////                mean_interp = est_scv;
+//            
+//            assert (!isnan(mean_interp) && !isinf(mean_interp));
+//            return mean_interp;
         }
         
         vector<double>::const_iterator lb;
