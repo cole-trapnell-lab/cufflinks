@@ -129,7 +129,7 @@ void calc_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
 
 boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model(const string& condition_name,
-                     const std::vector<double>& scale_factors,
+                     /*const std::vector<double>& scale_factors,*/
                      const std::vector<LocusCountList>& sample_count_table);
 
 void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compatible_count_table,
@@ -277,6 +277,7 @@ public:
 			max_len = max(max_len, rg_props->frag_len_dist()->max());
         }
         
+        /*
         vector<double> scale_factors(_factories.size(), 0.0);
         
         calc_scaling_factors(sample_compatible_count_table, scale_factors);
@@ -309,6 +310,8 @@ public:
             rg_props->common_scale_total_counts(common_scaled_total_counts);
         }
         fit_dispersion_model();
+        */
+        
     }
 
     void fit_dispersion_model()
@@ -357,7 +360,7 @@ public:
         }
         
         shared_ptr<MassDispersionModel> disperser;
-        disperser = ::fit_dispersion_model(_condition_name,scale_factors, sample_compatible_count_table);
+        disperser = ::fit_dispersion_model(_condition_name, /*scale_factors,*/ sample_compatible_count_table);
         
         vector<pair<double, double> > compatible_means_and_vars;
         calculate_count_means_and_vars(sample_compatible_count_table,

@@ -415,27 +415,6 @@ struct SCVInterpolator
             // If we're extrapolating to the left, our fit is too coarse, but
             // that probably means we don't need SCV bias correction at all.
             return est_scv;
-            
-//            double x1_mean = est_scvs[0];
-//            double x2_mean = est_scvs[1];
-//            
-//            double y1_var = true_scvs[0];
-//            double y2_var = true_scvs[1];
-//            double slope = 0.0;                
-//            if (x2_mean != x1_mean)
-//            {
-//                slope = (y2_var - y1_var) / (x2_mean-x1_mean);
-//            }
-//            else if (y1_var == y2_var)
-//            {
-//                assert (false); // should have a unique'd table
-//            }
-//            double mean_interp = true_scvs[0] - slope*(est_scvs[0] - est_scv);
-////            if (mean_interp < est_scv)
-////                mean_interp = est_scv;
-//            
-//            assert (!isnan(mean_interp) && !isinf(mean_interp));
-//            return mean_interp;
         }
         
         vector<double>::const_iterator lb;
@@ -518,12 +497,12 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
     vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
     
     vector<double> alpha_range;
-    for(double a = 0.02; a < 2.0; a += (2.0 / 100.0))
+    for(double a = 0.02; a < 2.0; a += 0.02)
     {
         alpha_range.push_back(a);
     }
     
-    for (double a = 2; a < 100.0; a += (98.0 / 20.0))
+    for (double a = 2; a < 100.0; a += 1)
     {
         alpha_range.push_back(a);
     }
@@ -546,10 +525,19 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
             LocusCountList locus_count("", nreps, 1); 
             for (size_t rep_idx = 0; rep_idx < nreps; ++rep_idx)
             {
-                boost::random::poisson_distribution<long, double> poisson(gamma(rng));
-                locus_count.counts[rep_idx] = poisson(rng);
-                draws.push_back(locus_count.counts[rep_idx]);
-                //fprintf(stderr, "%lg\t", locus_count.counts[rep_idx]);
+                double gamma_draw = gamma(rng);
+                if (gamma_draw == 0)
+                {
+                    locus_count.counts[rep_idx] = 0;
+                    draws.push_back(0);
+                }
+                else
+                {
+                    boost::random::poisson_distribution<long, double> poisson(gamma_draw);
+                    locus_count.counts[rep_idx] = poisson(rng);
+                    draws.push_back(locus_count.counts[rep_idx]);
+                    //fprintf(stderr, "%lg\t", locus_count.counts[rep_idx]);
+                }
             }
             
             double mean = accumulate(locus_count.counts.begin(), locus_count.counts.end(), 0.0);
@@ -635,7 +623,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
     
     for (size_t i = 0; i < cp->n; ++i)
     {
-        fprintf(stderr, "%lg\t%lg\n",alpha_range[i], cp->dpr[i]);
+        //fprintf(stderr, "%lg\t%lg\n",alpha_range[i], cp->dpr[i]);
         true_to_est_scv_table.add_scv_pair(alpha_range[i], cp->dpr[i]);
     }
     true_to_est_scv_table.finalize();
@@ -671,14 +659,16 @@ void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compati
                               
 boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model_helper(const string& condition_name,
-                            const vector<double>& scale_factors,
+                            //const vector<double>& scale_factors,
                             const vector<LocusCountList>& sample_compatible_count_table)
 {
     vector<pair<double, double> > compatible_means_and_vars;
     
     SCVInterpolator true_to_est_scv_table;
     
-    build_scv_correction_fit(scale_factors.size(), 10000, 100000, true_to_est_scv_table);
+    int num_samples = sample_compatible_count_table.front().counts.size();
+    
+    build_scv_correction_fit(num_samples, 10000, 100000, true_to_est_scv_table);
     
     setuplf();  
     
@@ -703,15 +693,6 @@ fit_dispersion_model_helper(const string& condition_name,
         shared_ptr<MassDispersionModel> disperser;
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
         
-        //        for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
-        //             itr != labeled_mv_table.end();
-        //             ++itr)
-        //        {
-        //            string label = itr->first;
-        //            pair<double, double> p = itr->second;
-        //            disperser->set_compatible_mean_and_var(itr->first, p);
-        //        }
-        //fprintf(stderr, "Warning: fragment count variances between replicates are all zero, reverting to Poisson model\n");
         return disperser;
     }
     
@@ -750,13 +731,13 @@ fit_dispersion_model_helper(const string& condition_name,
     //sprintf(locfit_cmd, "prfit x fhat h nlx");
     //locfit_dispatch(locfit_cmd);
     
-    double xim = 0;
-    BOOST_FOREACH(double s, scale_factors)
-    {
-        if (s)
-            xim += 1.0 / s;
-    }
-    xim /= scale_factors.size();
+//    double xim = 0;
+//    BOOST_FOREACH(double s, scale_factors)
+//    {
+//        if (s)
+//            xim += 1.0 / s;
+//    }
+//    xim /= scale_factors.size();
     
     int n = 0;
     sprintf(namebuf, "fittedVars");
@@ -767,7 +748,7 @@ fit_dispersion_model_helper(const string& condition_name,
 //        if (cp->dpr[i] >= 0)
 //        {
             double mean = exp(cm->dpr[i]);
-            double fitted_scv = (cp->dpr[i] - xim * mean) / (mean * mean);
+            double fitted_scv = (cp->dpr[i] - mean) / (mean * mean);
             double corrected_scv = true_to_est_scv_table.interpolate_scv(fitted_scv);
             double corrected_variance = mean + (corrected_scv * (mean * mean));
             double uncorrected_variance = mean + (fitted_scv * (mean * mean));
@@ -805,7 +786,7 @@ fit_dispersion_model_helper(const string& condition_name,
 
 boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model(const string& condition_name,
-                     const vector<double>& scale_factors,
+                     /*const vector<double>& scale_factors,*/
                      const vector<LocusCountList>& sample_compatible_count_table)
 {
 //    
@@ -835,7 +816,7 @@ fit_dispersion_model(const string& condition_name,
         }
     }
     
-    boost::shared_ptr<MassDispersionModel>  model = fit_dispersion_model_helper(condition_name, scale_factors, sample_compatible_count_table);
+    boost::shared_ptr<MassDispersionModel>  model = fit_dispersion_model_helper(condition_name, /*scale_factors,*/ sample_compatible_count_table);
 
 #if ENABLE_THREADS
     _locfit_lock.unlock();

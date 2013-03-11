@@ -1063,177 +1063,7 @@ void fit_mle_error()
 
 void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
 {
-    vector<LocusCountList> sample_compatible_count_table;
-    vector<LocusCountList> sample_total_count_table;
     
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        const vector<LocusCount>& raw_compatible_counts = rg_props->raw_compatible_counts();
-        const vector<LocusCount>& raw_total_counts = rg_props->raw_total_counts();
-                
-        for (size_t j = 0; j < raw_compatible_counts.size(); ++j)
-        {
-            if (sample_compatible_count_table.size() == j)
-            {
-                const string& locus_id = raw_compatible_counts[j].locus_desc;
-                int num_transcripts = raw_compatible_counts[j].num_transcripts;
-                sample_compatible_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
-                sample_total_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
-            }
-            double scaled = raw_compatible_counts[j].count;
-            //sample_compatible_count_table[j].counts[i] = scaled * unscaling_factor;
-            sample_compatible_count_table[j].counts[i] = floor(scaled);
-            sample_total_count_table[j].counts[i] = floor(raw_total_counts[j].count);
-            
-            assert(sample_compatible_count_table[j].counts[i] >= 0 && !isinf(sample_compatible_count_table[j].counts[i]));
-        }
-    }
-    
-    vector<double> scale_factors(all_read_groups.size(), 0.0);
-    
-    // TODO: needs to be refactored - similar code exists in replicates.cpp
-    calc_scaling_factors(sample_compatible_count_table, scale_factors);
-    
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        rg_props->internal_scale_factor(scale_factors[i]);
-        //rg_props->external_scale_factor(scale_factors[i]);
-    }
-    
-    assert(sample_compatible_count_table.size() == sample_total_count_table.size());
-    
-    // Transform raw counts to the common scale
-    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
-    {
-        LocusCountList& p = sample_compatible_count_table[i];
-        for (size_t j = 0; j < p.counts.size(); ++j)
-        {
-            assert (scale_factors.size() > j);
-            p.counts[j] *= (1.0 / scale_factors[j]);
-        }
-        
-        LocusCountList& t = sample_total_count_table[i];
-        for (size_t j = 0; j < t.counts.size(); ++j)
-        {
-            assert (scale_factors.size() > j);
-            t.counts[j] *= (1.0 / scale_factors[j]);
-        }
-    }
-    
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        vector<LocusCount> scaled_compatible_counts;
-        for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
-        {
-            string& locus_id = sample_compatible_count_table[j].locus_desc;
-            double count = sample_compatible_count_table[j].counts[i];
-            int num_transcripts = sample_compatible_count_table[j].num_transcripts;
-            LocusCount locus_count(locus_id, count, num_transcripts);
-            scaled_compatible_counts.push_back(locus_count);
-        }
-        rg_props->common_scale_compatible_counts(scaled_compatible_counts);
-        // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
-        
-        // rg_props->internal_scale_factor(1.0);         
-    }
-    
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        vector<LocusCount> scaled_total_counts;
-        for (size_t j = 0; j < sample_total_count_table.size(); ++j)
-        {
-            string& locus_id = sample_total_count_table[j].locus_desc;
-            double count = sample_total_count_table[j].counts[i];
-            int num_transcripts = sample_total_count_table[j].num_transcripts;
-            LocusCount locus_count(locus_id, count, num_transcripts);
-            scaled_total_counts.push_back(locus_count);
-        }
-        rg_props->common_scale_total_counts(scaled_total_counts);
-        // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
-        
-        // rg_props->internal_scale_factor(1.0);
-    }
-    
-    shared_ptr<MassDispersionModel> disperser;
-    if (poisson_dispersion == false)
-    {
-        disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
-    }
-    else
-    {
-        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(""));
-    }
-    
-    vector<pair<double, double> > compatible_means_and_vars;
-    calculate_count_means_and_vars(sample_compatible_count_table,
-                                   compatible_means_and_vars);
-    
-    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
-    {
-        const LocusCountList& p = sample_compatible_count_table[i];
-        double mean = compatible_means_and_vars[i].first;
-        double var = compatible_means_and_vars[i].second;
-        disperser->set_compatible_mean_and_var(p.locus_desc, make_pair(mean, var));
-        //labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-    }
-    
-    vector<pair<double, double> > total_means_and_vars;
-    calculate_count_means_and_vars(sample_total_count_table,
-                                   total_means_and_vars);
-    
-    for (size_t i = 0; i < sample_total_count_table.size(); ++i)
-    {
-        const LocusCountList& p = sample_compatible_count_table[i];
-        double mean = total_means_and_vars[i].first;
-        double var = total_means_and_vars[i].second;
-        disperser->set_total_mean_and_var(p.locus_desc, make_pair(mean, var));
-        //labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-    }
-
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-    {
-        rg_props->mass_dispersion_model(disperser);
-    }
-    
-//    vector<pair<double, double> > total_means_and_vars;
-//    calculate_count_means_and_vars(sample_total_count_table,
-//                                   total_means_and_vars);
-//    
-//    for (size_t i = 0; i < sample_total_count_table.size(); ++i)
-//    {
-//        const LocusCountList& p = sample_total_count_table[i];
-//        double mean = total_means_and_vars[i].first;
-//        double var = total_means_and_vars[i].second;
-//        disperser->set_total_mean_and_var(p.locus_desc, make_pair(mean, var));
-//        //labeled_mv_table[p.locus_desc] = make_pair(mean, var);
-//    }
-
-    
-    double avg_total_common_scaled_count = 0.0;
-    
-    for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
-    {
-        //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
-        //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
-        double total_common = 0.0;
-        for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
-        {
-            total_common += sample_compatible_count_table[j].counts[fac_idx];
-        }
-        
-        avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
-    }
-    
-    BOOST_FOREACH(shared_ptr<ReadGroupProperties> rg, all_read_groups)
-    {
-        rg->normalized_map_mass(avg_total_common_scaled_count);
-        //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
-    }
-
 }
 
 void parse_contrast_file(FILE* contrast_file,
@@ -1380,311 +1210,288 @@ void print_variability_models(FILE* var_model_out, const vector<shared_ptr<Repli
 
 }
 
-
-/*
-void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
-                                        vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups)
 {
-    map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> > sample_count_table_for_disp_model;
+    vector<LocusCountList> sample_compatible_count_table;
+    vector<LocusCountList> sample_total_count_table;
     
-    for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
-        vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
-        //vector<double> count_table;
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        const vector<LocusCount>& raw_compatible_counts = rg_props->raw_compatible_counts();
+        const vector<LocusCount>& raw_total_counts = rg_props->raw_total_counts();
         
-        vector<LocusCountList> sample_count_table;
-        
-        set<shared_ptr<ReadGroupProperties> > reps_for_condition;
-        
-        for (size_t i = 0; i < replicates.size(); ++i)
+        for (size_t j = 0; j < raw_compatible_counts.size(); ++j)
         {
-            shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
-            reps_for_condition.insert(rg_props);
+            if (sample_compatible_count_table.size() == j)
+            {
+                const string& locus_id = raw_compatible_counts[j].locus_desc;
+                int num_transcripts = raw_compatible_counts[j].num_transcripts;
+                sample_compatible_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
+                sample_total_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
+            }
+            double scaled = raw_compatible_counts[j].count;
+            //sample_compatible_count_table[j].counts[i] = scaled * unscaling_factor;
+            sample_compatible_count_table[j].counts[i] = floor(scaled);
+            sample_total_count_table[j].counts[i] = floor(raw_total_counts[j].count);
+            
+            assert(sample_compatible_count_table[j].counts[i] >= 0 && !isinf(sample_compatible_count_table[j].counts[i]));
         }
     }
     
-    size_t iso_num = 0;
+    vector<double> scale_factors(all_read_groups.size(), 0.0);
     
-    for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
+    // TODO: needs to be refactored - similar code exists in replicates.cpp
+    calc_scaling_factors(sample_compatible_count_table, scale_factors);
+    
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        const string& description = itr->first;
-		const FPKMTracking& track = itr->second;
-        const vector<FPKMContext>& fpkms = track.fpkm_series;
-		
-        bool skip_iso = false;
-        for (size_t i = 0; i < fpkms.size(); ++i)
-		{
-            if (fpkms[i].count_per_rep.empty())
-            {
-                skip_iso = true;
-                break;
-            }
-        }
-        if (skip_iso)
-            continue;
-        
-        for (size_t i = 0; i < fpkms.size(); ++i)
-		{
-            size_t fac_idx = 0;
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
-                 itr != fpkms[i].count_per_rep.end();
-                 ++itr)
-            {
-                shared_ptr<ReadGroupProperties const> rg_props = itr->first;
-                pair<map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator, bool >  p;
-                p = sample_count_table_for_disp_model.insert(make_pair(rg_props->mass_dispersion_model(),
-                                                                       vector<LocusCountList>()));
-                map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator lc_itr = p.first;
-                vector<LocusCountList>& lc_list = lc_itr->second;
-                double count = itr->second;
-                
-                if (iso_num >= lc_list.size())
-                {
-                    LocusCountList locus_count(description, fpkms[i].count_per_rep.size(), 1);
-                    lc_list.push_back(locus_count);
-                    lc_list[lc_list.size() - 1].counts[0] = count;
-                }
-                else
-                {
-                    const string& ld = lc_list[iso_num].locus_desc;
-                    if (ld != description)
-                    {
-                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
-                        exit(1);
-                    }
-                    lc_list[iso_num].counts[fac_idx] = count;
-                }
-                fac_idx++;
-            }
-        }
-        iso_num++;
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        rg_props->internal_scale_factor(scale_factors[i]);
+        //rg_props->external_scale_factor(scale_factors[i]);
     }
     
+    assert(sample_compatible_count_table.size() == sample_total_count_table.size());
     
-    
-    for (map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::const_iterator itr = sample_count_table_for_disp_model.begin();
-         itr != sample_count_table_for_disp_model.end();
-         ++itr)
+    // Transform raw counts to the common scale
+    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
     {
-        FILE* fmle_error_out = fopen((output_dir + "/" + itr->first->name() + string("_mle_error_out.txt")).c_str(), "w");
-        fprintf(fmle_error_out, "mean_frags\tvar_frags\tfitted_var\tvariance_due_to_mle_error\n");
-        const vector<LocusCountList>& lc_list = itr->second;
-        if (lc_list.empty())
-            continue;
-
-        vector<double> mean_frags(lc_list.size(), 0.0);
-        vector<double> var_frags(lc_list.size(), 0.0);
-        vector<double> variance_due_to_mle_error(lc_list.size(), 0.0);
-        
-        for (size_t i = 0; i < lc_list.size(); ++i)
+        LocusCountList& p = sample_compatible_count_table[i];
+        for (size_t j = 0; j < p.counts.size(); ++j)
         {
-            double mean_i = 0;
-            for (size_t j = 0; j < lc_list[i].counts.size(); ++j)
-            {
-                mean_i += lc_list[i].counts[j] / (double) (lc_list[i].counts.size());
-            }
-            
-            double var_i = 0.0;
-            
-            if (lc_list[i].counts.size() > 1)
-            {
-                for (size_t j = 0; j < lc_list[i].counts.size(); ++j)
-                {
-                    var_i += ((mean_i - lc_list[i].counts[j]) * (mean_i - lc_list[i].counts[j])) / (double) (lc_list[i].counts.size() - 1);
-                }
-            }
-            else
-            {
-                var_i = 0;
-            }
-            
-            mean_frags[i] = mean_i;
-            var_frags[i] = var_i;
-            
-            // look up the predicted variance using the DispersionModel and then subtract the mean
-            double fitted_var = itr->first->scale_mass_variance(mean_i);
-            
-            variance_due_to_mle_error[i] = var_i - fitted_var;
-            
-            fprintf(fmle_error_out, "%lg\t%lg\t%lg\t%lg\n", mean_frags[i], var_frags[i], fitted_var, variance_due_to_mle_error[i]);
-            
+            assert (scale_factors.size() > j);
+            p.counts[j] *= (1.0 / scale_factors[j]);
+        }
+        
+        LocusCountList& t = sample_total_count_table[i];
+        for (size_t j = 0; j < t.counts.size(); ++j)
+        {
+            assert (scale_factors.size() > j);
+            t.counts[j] *= (1.0 / scale_factors[j]);
         }
     }
     
-//    for (map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::const_iterator itr = sample_count_table_for_disp_model.begin();
-//         itr != sample_count_table_for_disp_model.end();
-//         ++itr)
-//    {
-//        if (itr->second.empty())
-//            continue;
-//        
-//        vector<double> scale_factors(itr->second.front().counts.size(), 1);
-//        shared_ptr<MassDispersionModel const> model = fit_dispersion_model(itr->first->name()+"iso", scale_factors, itr->second, true);
-//        for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-//        {
-//            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
-//            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
-//            
-//            for (size_t i = 0; i < replicates.size(); ++i)
-//            {
-//                shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
-//                if (rg_props->mass_dispersion_model() == itr->first)
-//                {
-//                    rg_props->mass_dispersion_model(model);
-//                }
-//            }
-//        }
-//    }
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        vector<LocusCount> scaled_compatible_counts;
+        for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
+        {
+            string& locus_id = sample_compatible_count_table[j].locus_desc;
+            double count = sample_compatible_count_table[j].counts[i];
+            int num_transcripts = sample_compatible_count_table[j].num_transcripts;
+            LocusCount locus_count(locus_id, count, num_transcripts);
+            scaled_compatible_counts.push_back(locus_count);
+        }
+        rg_props->common_scale_compatible_counts(scaled_compatible_counts);
+    }
+    
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        vector<LocusCount> scaled_total_counts;
+        for (size_t j = 0; j < sample_total_count_table.size(); ++j)
+        {
+            string& locus_id = sample_total_count_table[j].locus_desc;
+            double count = sample_total_count_table[j].counts[i];
+            int num_transcripts = sample_total_count_table[j].num_transcripts;
+            LocusCount locus_count(locus_id, count, num_transcripts);
+            scaled_total_counts.push_back(locus_count);
+        }
+        rg_props->common_scale_total_counts(scaled_total_counts);
+    }
+    
+    double avg_total_common_scaled_count = 0.0;
+    
+    for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
+    {
+        double total_common = 0.0;
+        for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
+        {
+            total_common += sample_compatible_count_table[j].counts[fac_idx];
+        }
+        
+        avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
+    }
+    
+    BOOST_FOREACH(shared_ptr<ReadGroupProperties> rg, all_read_groups)
+    {
+        rg->normalized_map_mass(avg_total_common_scaled_count);
+    }
 }
 
-*/
-
-
-static const int min_isos_for_fitting = 100;
-
-void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
-                                        vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
 {
-    //map<shared_ptr<MassDispersionModel const>, vector<pair<double, double> > > sample_count_table_for_disp_model;
-        
-    vector<pair<double, double> > mean_and_mle_variance;
-    
-    setuplf();  
-    
-    for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
+    if (dispersion_method == PER_CONDITION)
     {
-        //const string& description = itr->first;
-		const FPKMTracking& track = itr->second;
-        const vector<FPKMContext>& fpkms = track.fpkm_series;
-		
-        for (size_t i = 0; i < fpkms.size(); ++i)
-		{
-            
-            double mean_frags = 0;
-            double var_frags = 0;
-            vector<double> sample_frags;
-            
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin();
-                 itr != fpkms[i].count_per_rep.end();
-                 ++itr)
-            {
-                StatusPerReplicateTable::const_iterator si = fpkms[i].status_per_rep.find(itr->first);
-                if (si == fpkms[i].status_per_rep.end() || si->second == NUMERIC_LOW_DATA || si->second == NUMERIC_FAIL || si->second == NUMERIC_HI_DATA)
-                    continue;
-                sample_frags.push_back(itr->second);
-            }
-            
-            mean_frags = accumulate(sample_frags.begin(), sample_frags.end(), 0.0);
-            if (mean_frags > 0)
-                mean_frags /= sample_frags.size();
-            
-            for (vector<double>::const_iterator itr = sample_frags.begin();
-                 itr != sample_frags.end();
-                 ++itr)
-            {
-                var_frags += (*itr - mean_frags) *  (*itr - mean_frags) / (double)((sample_frags.size() - 1));
-            }
-            
-            double dispersion_var = fpkms[i].count_dispersion_var;
-            double uncertainty_var = fpkms[i].count_uncertainty_var;
-            double mle_var = var_frags - dispersion_var - uncertainty_var;
-            
-            double ab_group_frags = 0.0;
-            if (fpkms[i].gamma)
-                ab_group_frags = fpkms[i].count_mean / fpkms[i].gamma;
-            if (ab_group_frags < 1000 && mean_frags > 1 && uncertainty_var > 0 && mle_var >= 0)
-            {
-                mean_and_mle_variance.push_back(make_pair(mean_frags, mle_var));
-            }
-        }
-    }
-    
-    sort(mean_and_mle_variance.begin(), mean_and_mle_variance.end());
-    
-    vector<double> compatible_count_means;
-    vector<double> mle_variances;
-    
-    for(size_t i = 0; i < mean_and_mle_variance.size(); ++i)
-    {
-        if (mean_and_mle_variance[i].first > 0)
-        {
-            compatible_count_means.push_back(mean_and_mle_variance[i].first);
-            mle_variances.push_back(mean_and_mle_variance[i].second);
-        }
-    }
-
-    if (compatible_count_means.size() >= min_isos_for_fitting)
-    {
-        vector<double> fitted_values;
-        
-        // WARNING: locfit doesn't like undescores - need camel case for
-        // variable names
-        
-        char namebuf[256];
-        sprintf(namebuf, "logMeans");
-        vari* cm = createvar(namebuf,STREGULAR,compatible_count_means.size(),VDOUBLE);
-        for (size_t i = 0; i < compatible_count_means.size(); ++i)
-        {
-            cm->dpr[i] = log(compatible_count_means[i]);
-        }
-        
-        //sprintf(namebuf, "countSCV");
-        sprintf(namebuf, "countMLEVariances");
-        vari* cv = createvar(namebuf,STREGULAR,mle_variances.size(),VDOUBLE);
-        for (size_t i = 0; i < mle_variances.size(); ++i)
-        {
-            cv->dpr[i] = sqrt(mle_variances[i]) / compatible_count_means[i];
-            //cv->dpr[i] = raw_scvs[i];
-        }
-        
-        char locfit_cmd[2048];
-        //sprintf(locfit_cmd, "locfit countVariances~countMeans family=gamma");
-        sprintf(locfit_cmd, "locfit countMLEVariances~logMeans family=gaussian");
-        
-        locfit_dispatch(locfit_cmd);
-        
-        sprintf(locfit_cmd, "fittedMLEVars=predict logMeans");
-        locfit_dispatch(locfit_cmd);
-        
-        FILE* fmle_error_out = fopen((output_dir + "/" + string("mle_error_out.txt")).c_str(), "w");
-        fprintf(fmle_error_out, "mean_frags\tempir_var\tmle_var\n");
-        
-        int n = 0;
-        sprintf(namebuf, "fittedMLEVars");
-        vari* cp = findvar(namebuf, 1, &n);
-        if (cp == NULL)
-        {
-            fprintf (stderr, "Error: could not fit MLE errors\n");
-            return;
-        }
-        
-        for (size_t i = 0; i < cp->n; ++i)
-        {
-            double mean = exp(cm->dpr[i]);
-            double fitted_sd_fraction = cp->dpr[i];
-            double fitted_mle_var = (fitted_sd_fraction * mean) * (fitted_sd_fraction * mean);
-            if (fitted_mle_var >= 0)
-            {
-                fitted_values.push_back(fitted_mle_var);
-            }
-            else
-            {
-                fitted_values.push_back(0);
-            }
-            fprintf (fmle_error_out, "%lg\t%lg\t%lg\n", mean, mle_variances[i], fitted_mle_var);
-            
-        }
-        fclose(fmle_error_out);
-
-        shared_ptr<MleErrorModel> mle_model;
-        mle_model = shared_ptr<MleErrorModel>(new MleErrorModel("", compatible_count_means, fitted_values));
-
         for (size_t i = 0; i < bundle_factories.size(); ++i)
         {
-            bundle_factories[i]->mle_error_model(mle_model);
+            bundle_factories[i]->fit_dispersion_model();
         }
     }
+    else if (dispersion_method == BLIND)
+    {
+        //vector<double> scale_factors(all_read_groups.size(), 1.0);
+        
+        vector<LocusCountList> sample_compatible_count_table;
+        vector<LocusCountList> sample_total_count_table;
+        
+        for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
+        {
+            vector<shared_ptr<BundleFactory> > factories = bundle_factories[cond_idx]->factories();
+            for (size_t fac_idx = 0; fac_idx < factories.size(); ++fac_idx)
+            {
+                shared_ptr<BundleFactory> fac = factories[fac_idx];
+                
+                shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+                const vector<LocusCount>& compatible_count_table = rg_props->common_scale_compatible_counts();
+                const vector<LocusCount>& total_count_table = rg_props->common_scale_total_counts();
+                
+                for (size_t i = 0; i < compatible_count_table.size(); ++i)
+                {
+                    const LocusCount& c = compatible_count_table[i];
+                    double common_scale_compatible_count = c.count;
+                    double common_scale_total_count = total_count_table[i].count;
+                    
+                    if (i >= sample_compatible_count_table.size())
+                    {
+                        LocusCountList locus_count(c.locus_desc, factories.size(), c.num_transcripts);
+                        sample_compatible_count_table.push_back(locus_count);
+                        sample_compatible_count_table.back().counts[0] = common_scale_compatible_count;
+                        sample_total_count_table.push_back(locus_count);
+                        sample_total_count_table.back().counts[0] = common_scale_total_count;
+                    }
+                    else
+                    {
+                        if (sample_compatible_count_table[i].locus_desc != c.locus_desc)
+                        {
+                            fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                            exit(1);
+                        }
+                        sample_compatible_count_table[i].counts[fac_idx] = common_scale_compatible_count;
+                        sample_total_count_table[i].counts[fac_idx] = common_scale_total_count;
+                    }
+                }
+                //scale_factors.push_back(rg_props->internal_scale_factor());
+            }
+        }
+
+        shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", /*scale_factors,*/ sample_compatible_count_table);
+        
+        vector<pair<double, double> > compatible_means_and_vars;
+        calculate_count_means_and_vars(sample_compatible_count_table,
+                                       compatible_means_and_vars);
+        
+        for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
+        {
+            const LocusCountList& p = sample_compatible_count_table[i];
+            double mean = compatible_means_and_vars[i].first;
+            double var = compatible_means_and_vars[i].second;
+            disperser->set_compatible_mean_and_var(p.locus_desc, make_pair(mean, var));
+        }
+        
+        vector<pair<double, double> > total_means_and_vars;
+        calculate_count_means_and_vars(sample_total_count_table,
+                                       total_means_and_vars);
+        
+        for (size_t i = 0; i < sample_total_count_table.size(); ++i)
+        {
+            const LocusCountList& p = sample_compatible_count_table[i];
+            double mean = total_means_and_vars[i].first;
+            double var = total_means_and_vars[i].second;
+            disperser->set_total_mean_and_var(p.locus_desc, make_pair(mean, var));
+        }
+
+        for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
+        {
+            bundle_factories[cond_idx]->mass_dispersion_model(disperser);
+        }
+    }
+    else if (dispersion_method == POOLED)
+    {
+        for (size_t i = 0; i < bundle_factories.size(); ++i)
+        {
+            bundle_factories[i]->fit_dispersion_model();
+        }
+        // now need to replace them with the average
+        
+        shared_ptr<MassDispersionModel const> pooled_model;
+        // Let's compute the pooled average of the dispersion models
+        if (dispersion_method != BLIND)
+        {
+            vector<shared_ptr<MassDispersionModel const> > disp_models;
+            double total_replicates = 0.0;
+            vector<double> disp_model_weight;
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                total_replicates += fac->num_replicates();
+            }
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                if (fac->num_replicates() > 1)
+                {
+                    disp_models.push_back(fac->mass_dispersion_model());
+                    disp_model_weight.push_back((double)fac->num_replicates() / total_replicates);
+                }
+            }
+            
+            double max_mass = 0.0;
+            
+            BOOST_FOREACH(shared_ptr<MassDispersionModel const> disp, disp_models)
+            {
+                if (disp->scaled_compatible_mass_means().empty() == false && max_mass < disp->scaled_compatible_mass_means().back())
+                {
+                    max_mass = disp->scaled_compatible_mass_means().back();
+                }
+            }
+            
+            vector<double> compatible_mass;
+            vector<double> compatible_variances;
+            vector<double> est_fitted_var;
+            double epsilon = 0.2;
+            for (double frag_idx = 0.0; frag_idx < max_mass; frag_idx += epsilon)
+            {
+                compatible_mass.push_back(frag_idx);
+                double var_est = 0.0;
+                for(size_t i = 0; i < disp_models.size(); ++i)
+                {
+                    shared_ptr<MassDispersionModel const> disp = disp_models[i];
+                    double weight = disp_model_weight[i];
+                    var_est += disp->scale_mass_variance(frag_idx) * weight;
+                }
+                compatible_variances.push_back(var_est);
+                est_fitted_var.push_back(var_est);
+            }
+            
+            pooled_model = shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
+            
+        }
+        
+        if (dispersion_method == POOLED)
+        {
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                fac->mass_dispersion_model(pooled_model);
+            }
+        }
+    }
+    else if (dispersion_method == POISSON)
+    {
+        shared_ptr<MassDispersionModel> disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(""));
+        for (size_t i = 0; i < bundle_factories.size(); ++i)
+        {
+            bundle_factories[i]->mass_dispersion_model(disperser);
+        }
+
+    }
+    else
+    {
+        fprintf (stderr, "Error: unknown dispersion method requested\n");
+    }
+    
+    /*
+    */
+
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
@@ -1870,6 +1677,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
     }
 #endif
     
+    normalize_counts(all_read_groups);
+    fit_dispersions(bundle_factories);
+    
+    /*
     if (pool_all_samples)
     {
         ProgressBar("Modeling dispersion on all samples as a pool", 0);
@@ -2030,69 +1841,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
             }
         }  
        
-        shared_ptr<MassDispersionModel const> pooled_model;
-        // Let's compute the pooled average of the dispersion models
-        if (dispersion_method != BLIND)
-        {
-            vector<shared_ptr<MassDispersionModel const> > disp_models;
-            double total_replicates = 0.0;
-            vector<double> disp_model_weight;
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-            {
-                total_replicates += fac->num_replicates();
-            }
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-            {
-                if (fac->num_replicates() > 1)
-                {
-                    disp_models.push_back(fac->mass_dispersion_model());
-                    disp_model_weight.push_back((double)fac->num_replicates() / total_replicates);
-                }
-            }
-            
-            double max_mass = 0.0;
-            
-            BOOST_FOREACH(shared_ptr<MassDispersionModel const> disp, disp_models)
-            {
-                if (disp->scaled_compatible_mass_means().empty() == false && max_mass < disp->scaled_compatible_mass_means().back())
-                {
-                    max_mass = disp->scaled_compatible_mass_means().back();
-                }
-            }
-            
-            vector<double> compatible_mass;
-            vector<double> compatible_variances;
-            vector<double> est_fitted_var;
-            double epsilon = 0.2;
-            for (double frag_idx = 0.0; frag_idx < max_mass; frag_idx += epsilon)
-            {
-                compatible_mass.push_back(frag_idx);
-                double var_est = 0.0;
-                for(size_t i = 0; i < disp_models.size(); ++i)
-                {
-                    shared_ptr<MassDispersionModel const> disp = disp_models[i];
-                    double weight = disp_model_weight[i];
-                    var_est += disp->scale_mass_variance(frag_idx) * weight;
-                }
-                compatible_variances.push_back(var_est);
-                est_fitted_var.push_back(var_est);
-            }
-            
-            pooled_model = shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
-            
-        }
         
-        if (dispersion_method == POOLED)
-        {
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-            {
-                fac->mass_dispersion_model(pooled_model);
-            }
-        }
-        else // The user must want "per-condition", so there's nothing more to do.
-        {
-            
-        }
         
 //        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
 //        {
@@ -2124,6 +1873,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
         // by default
     }
     
+*/ 
+ 
     print_variability_models(outfiles.var_model_out, bundle_factories);
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
@@ -2289,10 +2040,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
             rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
     }
     
-    if (model_mle_error)
-    {
-        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
-    }
     
     // Allow the multiread tables to do their thing...
     BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)

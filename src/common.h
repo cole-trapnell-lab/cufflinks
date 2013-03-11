@@ -236,7 +236,8 @@ enum DispersionMethod
     NOT_SET,
     BLIND,
     PER_CONDITION,
-    POOLED
+    POOLED,
+    POISSON
 };
 
 class EmpDist
