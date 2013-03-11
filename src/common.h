@@ -55,7 +55,7 @@ extern std::string library_type;
 // Abundance estimation options
 extern bool corr_bias;
 extern bool corr_multi;
-extern bool use_quartile_norm;
+
 extern bool poisson_dispersion;
 extern int def_frag_len_mean;
 extern int def_frag_len_std_dev;
@@ -108,12 +108,14 @@ extern int min_reps_for_js_test;
 extern bool no_effective_length_correction;
 extern bool no_length_correction;
 extern bool no_js_tests;
-extern bool background_subtraction;
 
 extern bool no_scv_correction;
 
 extern double min_outlier_p;
 
+
+extern std::string default_dispersion_method;
+extern std::string default_lib_norm_method;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -233,11 +235,21 @@ enum FLDSource
 
 enum DispersionMethod
 {
-    NOT_SET,
+    DISP_NOT_SET,
     BLIND,
     PER_CONDITION,
     POOLED,
     POISSON
+};
+
+enum LibNormalizationMethod
+{
+    LIB_NORM_NOT_SET,
+    GEOMETRIC,
+    CLASSIC_FPKM,
+    TMM,
+    QUARTILE,
+    ABSOLUTE // Requires spike-in controls, not yet implemented
 };
 
 class EmpDist
@@ -456,11 +468,19 @@ extern const ReadGroupProperties* global_read_properties;
 extern std::map<std::string, DispersionMethod> dispersion_method_table;
 extern DispersionMethod dispersion_method;
 
+extern std::map<std::string, LibNormalizationMethod> lib_norm_method_table;
+extern LibNormalizationMethod lib_norm_method;
+
 void print_library_table();
 void init_library_table();
 
 void print_dispersion_method_table();
 void init_dispersion_method_table();
+
+void print_lib_norm_method_table();
+void init_lib_norm_method_table();
+void init_cufflinks_lib_norm_method_table();
+
 
 template<typename T>
 std::string cat_strings(const T& container, const char* delimiter=",")
@@ -542,7 +562,7 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_EFFECTIVE_LENGTH_CORRECTION    313
 #define OPT_NO_JS_TESTS             314
 #define OPT_DISPERSION_METHOD       315
-#define OPT_NO_BACKGROUND_SUBTRACTION 316
+#define OPT_LIB_NORM_METHOD         316
 #define OPT_NO_SCV_CORRECTION       317
 
 #endif

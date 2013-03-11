@@ -55,11 +55,6 @@ bool samples_are_time_series = false;
 using namespace std;
 using namespace boost;
 
-bool use_geometric_norm = false;
-bool use_raw_mapped_norm = false;
-bool use_isoform_count_dispersion = true;
-
-
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
 const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:C:";
@@ -112,12 +107,6 @@ static struct option long_options[] = {
 {"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
     
 // Some options for testing different stats policies
-{"fisher-covariance",       no_argument,	 		 0,	         OPT_USE_FISHER_COVARIANCE},
-{"empirical-covariance",    no_argument,	 		 0,	         OPT_USE_EMPIRICAL_COVARIANCE},
-{"split-mass",              no_argument,	 		 0,	         OPT_SPLIT_MASS},
-{"split-variance",          no_argument,	 		 0,	         OPT_SPLIT_VARIANCE},
-{"num-bootstrap-samples",   required_argument,	 	 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
-{"bootstrap-fraction",      required_argument,	 	 0,          OPT_BOOTSTRAP_FRACTION},
 {"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {"read-skip-fraction",      required_argument,	     0,          OPT_READ_SKIP_FRACTION},
 {"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
@@ -130,8 +119,8 @@ static struct option long_options[] = {
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
 {"no-length-correction",    no_argument,             0,          OPT_NO_LENGTH_CORRECTION},
 {"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
-{"no-background-subtraction", no_argument,             0,          OPT_NO_BACKGROUND_SUBTRACTION},
-{"dispersion-method",       required_argument,             0,          OPT_DISPERSION_METHOD},
+{"dispersion-method",       required_argument,       0,          OPT_DISPERSION_METHOD},
+{"library-norm-method",     required_argument,       0,          OPT_LIB_NORM_METHOD},
 {"no-scv-correction",       no_argument,             0,          OPT_NO_SCV_CORRECTION},
 {0, 0, 0, 0} // terminator
 };
@@ -154,9 +143,9 @@ void print_usage()
     fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n");
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
-    fprintf(stderr, "  -N/--upper-quartile-norm     use upper-quartile normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  --geometric-norm             use geometric mean normalization                      [ default:  TRUE ]\n");
-    fprintf(stderr, "  --raw-mapped-norm            use raw mapped count normalized (classic FPKM)        [ default:  FALSE ]\n");
+    fprintf(stderr, "  -N/--upper-quartile-norm     Deprecated, use --library-norm-method                 [ default:  FALSE ]\n");
+    fprintf(stderr, "  --geometric-norm             Deprecated, use --library-norm-method                 [ default:  TRUE ]\n");
+    fprintf(stderr, "  --raw-mapped-norm            Deprecated, use --library-norm-method                 [ default:  FALSE ]\n");
     fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
@@ -166,11 +155,9 @@ void print_usage()
 	fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  --dispersion-method          Method used to estimate dispersion models             [ default:  below ]\n");
+    fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ DEPRECATED      ]\n");
-	fprintf(stderr, "  --num-bootstrap-samples      Number of bootstrap replications                      [ DEPRECATED      ]\n");
-    fprintf(stderr, "  --bootstrap-fraction         Fraction of fragments in each bootstrap sample        [ DEPRECATED      ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
@@ -187,7 +174,7 @@ void print_usage()
     fprintf(stderr, "  --min-reps-for-js-test       Replicates needed for relative isoform shift testing  [ default:      3 ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
-    fprintf(stderr, "  --no-background-subtraction  No subtraction of inferred primary transcript FPKM    [ default:  FALSE ]\n");
+    
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
@@ -195,6 +182,7 @@ void print_usage()
     fprintf(stderr, "  --no-scv-correction          Disable SCV correction                                [ default:  FALSE ]\n");
     print_library_table();
     print_dispersion_method_table();
+    print_lib_norm_method_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -203,6 +191,7 @@ int parse_options(int argc, char** argv)
     int next_option;
     string sample_label_list;
     string dispersion_method_str;
+    string lib_norm_method_str;
     do {
         next_option = getopt_long_only(argc, argv, short_options, long_options, &option_index);
         if (next_option == -1)     /* Done with options. */
@@ -309,7 +298,7 @@ int parse_options(int argc, char** argv)
             }
             case 'N':
             {
-            	use_quartile_norm = true;
+            	lib_norm_method_str = "quartile";
             	break;
             }
             case 'u':
@@ -429,12 +418,12 @@ int parse_options(int argc, char** argv)
             }
             case OPT_GEOMETRIC_NORM:
             {
-                use_geometric_norm = true;
+                lib_norm_method_str = "geometric";
                 break;
             } 
             case OPT_RAW_MAPPED_NORM:
             {
-                use_raw_mapped_norm = true;
+                lib_norm_method_str = "classic-fpkm";
                 break;
             } 
             case OPT_NUM_FRAG_COUNT_DRAWS:
@@ -445,11 +434,6 @@ int parse_options(int argc, char** argv)
             case OPT_NUM_FRAG_ASSIGN_DRAWS:
             {
                 num_frag_assignments = parseInt(1, "--num-frag-assign-draws must be at least 1", print_usage);
-                break;
-            }
-            case OPT_LOCUS_COUNT_DISPERSION:
-            {
-                use_isoform_count_dispersion = false;
                 break;
             }
             case OPT_FRAG_MAX_MULTIHITS:
@@ -487,11 +471,11 @@ int parse_options(int argc, char** argv)
 				dispersion_method_str = optarg;
 				break;
 			}
-            case OPT_NO_BACKGROUND_SUBTRACTION:
-            {
-                background_subtraction = false;
-                break;
-            }
+            case OPT_LIB_NORM_METHOD:
+			{
+				lib_norm_method_str = optarg;
+				break;
+			}
             case OPT_NO_SCV_CORRECTION:
             {
                 no_scv_correction = true;
@@ -521,37 +505,53 @@ int parse_options(int argc, char** argv)
             global_read_properties = &lib_itr->second;
         }
     }
-    
-    if (dispersion_method_str != "")
+    else
     {
-        map<string, DispersionMethod>::iterator disp_itr = 
-		dispersion_method_table.find(dispersion_method_str);
-        if (disp_itr == dispersion_method_table.end())
-        {
-            fprintf(stderr, "Error: Dispersion method %s not supported\n", library_type.c_str());
-            exit(1);
-        }
-        else 
-        {
-            dispersion_method = disp_itr->second;
-        }
+        
     }
+    
+    // Set the count dispersion method to use
+    if (dispersion_method_str == "")
+    {
+        dispersion_method_str = default_dispersion_method;
+    }
+    
+    map<string, DispersionMethod>::iterator disp_itr = 
+    dispersion_method_table.find(dispersion_method_str);
+    if (disp_itr == dispersion_method_table.end())
+    {
+        fprintf(stderr, "Error: Dispersion method %s not supported\n", dispersion_method_str.c_str());
+        exit(1);
+    }
+    else 
+    {
+        dispersion_method = disp_itr->second;
+    }
+
+    // Set the library size normalization method to use
+    if (lib_norm_method_str == "")
+    {
+        lib_norm_method_str = default_lib_norm_method;
+    }
+    
+    map<string, LibNormalizationMethod>::iterator lib_norm_itr =
+    lib_norm_method_table.find(lib_norm_method_str);
+    if (lib_norm_itr == lib_norm_method_table.end())
+    {
+        fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
+        exit(1);
+    }
+    else
+    {
+        lib_norm_method = lib_norm_itr->second;
+    }
+
 
     
     if (use_total_mass && use_compat_mass)
     {
         fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
         exit(1);
-    }
-    
-    if (use_raw_mapped_norm + use_geometric_norm + use_quartile_norm > 1)
-    {
-        fprintf(stderr, "Error: Choose one of upper-quartile-norm, geometric-norm, or raw-mapped-norm\n");
-        exit(1);
-    }
-    if (use_raw_mapped_norm + use_geometric_norm + use_quartile_norm == 0)
-    {
-        use_geometric_norm = true;
     }
     
     tokenize(sample_label_list, ",", sample_labels);
@@ -1241,14 +1241,31 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     
     vector<double> scale_factors(all_read_groups.size(), 0.0);
     
-    // TODO: needs to be refactored - similar code exists in replicates.cpp
-    calc_scaling_factors(sample_compatible_count_table, scale_factors);
+    if (lib_norm_method == GEOMETRIC)
+    {
+        calc_geometric_scaling_factors(sample_compatible_count_table, scale_factors);
+    }
+    else if (lib_norm_method == CLASSIC_FPKM)
+    {
+        calc_classic_fpkm_scaling_factors(sample_compatible_count_table, scale_factors);
+    }
+    else if (lib_norm_method == QUARTILE)
+    {
+        calc_quartile_scaling_factors(sample_compatible_count_table, scale_factors);
+    }
+    else if (lib_norm_method == TMM)
+    {
+        calc_tmm_scaling_factors(sample_compatible_count_table, scale_factors);
+    }
+    else
+    {
+        assert (false);
+    }
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
         shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
         rg_props->internal_scale_factor(scale_factors[i]);
-        //rg_props->external_scale_factor(scale_factors[i]);
     }
     
     assert(sample_compatible_count_table.size() == sample_total_count_table.size());
@@ -1624,7 +1641,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
         }
     }
     
-    bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
+    //bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
     
     
 	int tmp_min_frag_len = numeric_limits<int>::max();
@@ -2370,6 +2387,7 @@ int main(int argc, char** argv)
     
     init_library_table();
     init_dispersion_method_table();
+    init_lib_norm_method_table();
     
     min_isoform_fraction = 1e-5;
     

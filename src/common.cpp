@@ -64,7 +64,7 @@ string library_type = default_library_type;
 // Abundance estimation options
 bool corr_bias = false;
 bool corr_multi = false;
-bool use_quartile_norm = false;
+
 bool poisson_dispersion = false;
 BiasMode bias_mode = VLMM;
 int def_frag_len_mean = 200;
@@ -123,7 +123,6 @@ bool no_effective_length_correction = false;
 bool no_length_correction = false;
 bool no_js_tests = false;
 
-bool background_subtraction = false;
 bool no_scv_correction = false;
 
 double min_outlier_p = 0.0001;
@@ -150,9 +149,13 @@ map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
 
 map<string, DispersionMethod> dispersion_method_table;
-//string default_dispersion_method = "per-condition";
 string default_dispersion_method = "pooled";
-DispersionMethod dispersion_method = NOT_SET;
+DispersionMethod dispersion_method = DISP_NOT_SET;
+
+map<string, LibNormalizationMethod> lib_norm_method_table;
+string default_lib_norm_method = "geometric";
+LibNormalizationMethod lib_norm_method = LIB_NORM_NOT_SET;
+
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
@@ -396,6 +399,42 @@ void print_dispersion_method_table()
          ++itr)
     {
         if (itr->first == default_dispersion_method)
+        {
+            fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
+        }
+        else
+        {
+            fprintf(stderr, "\t%s\n", itr->first.c_str());
+        }
+    }
+}
+
+
+void init_lib_norm_method_table()
+{
+    lib_norm_method_table["geometric"] = GEOMETRIC;
+    lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
+    lib_norm_method_table["quartile"] = QUARTILE;
+    lib_norm_method_table["tmm"] = TMM;
+    //lib_norm_method_table["absolute"] = ABSOLUTE;
+}
+
+void init_cufflinks_lib_norm_method_table()
+{
+    lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
+    lib_norm_method_table["quartile"] = QUARTILE;
+    //lib_norm_method_table["absolute"] = ABSOLUTE;
+}
+
+
+void print_lib_norm_method_table()
+{
+    fprintf (stderr, "\nSupported library normalization methods:\n");
+    for (map<string, LibNormalizationMethod>::const_iterator itr = lib_norm_method_table.begin();
+         itr != lib_norm_method_table.end();
+         ++itr)
+    {
+        if (itr->first == default_lib_norm_method)
         {
             fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
         }

@@ -309,8 +309,8 @@ void transform_counts_to_common_scale(const vector<double>& scale_factors,
     }
 }
 
-void calc_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
-                          vector<double>& scale_factors)
+void calc_geometric_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
+                                    vector<double>& scale_factors)
 {
     
     vector<double> log_geom_means(sample_compatible_count_table.size(), 0.0);
@@ -349,6 +349,70 @@ void calc_scaling_factors(const vector<LocusCountList>& sample_compatible_count_
         else
             scale_factors[j] = 1.0;
     }
+}
+
+void calc_classic_fpkm_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
+                                       vector<double>& scale_factors)
+{
+    scale_factors = vector<double>(sample_compatible_count_table.size(), 1.0);
+}
+
+void calc_quartile_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
+                                   vector<double>& scale_factors)
+{
+    
+    if (sample_compatible_count_table.empty())
+        return;
+    
+    vector<double> upper_quartiles(sample_compatible_count_table.front().counts.size(), 0.0);
+    vector<double> total_common_masses(sample_compatible_count_table.front().counts.size(), 0.0);
+    
+    for (size_t i = 0; i < sample_compatible_count_table.front().counts.size(); ++i)
+    {
+        vector<double> common_scaled_counts;
+        double total_common = 0.0;
+
+        for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
+        {
+        
+            //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
+            //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
+            
+            total_common += sample_compatible_count_table[j].counts[i];
+            common_scaled_counts.push_back(sample_compatible_count_table[j].counts[i]);
+        }
+    
+        sort(common_scaled_counts.begin(), common_scaled_counts.end());
+        if (common_scaled_counts.empty())
+            continue;
+        
+        int upper_quart_index = common_scaled_counts.size() * 0.75;
+        double upper_quart_count = common_scaled_counts[upper_quart_index];
+        upper_quartiles[i] = upper_quart_count;
+        total_common_masses[i] = total_common;
+    }
+    
+    long double total_mass = accumulate(total_common_masses.begin(), total_common_masses.end(), 0.0);
+    long double total_norm_mass = accumulate(upper_quartiles.begin(), upper_quartiles.end(), 0.0);
+    
+    for (size_t i = 0; i < sample_compatible_count_table.front().counts.size(); ++i)
+    {
+        if (total_mass > 0)
+        {
+            double scaling_factor = upper_quartiles[i] / (total_norm_mass / upper_quartiles.size());
+            scale_factors[i] = scaling_factor;
+        }
+        else
+        {
+            scale_factors[i] = 1.0;
+        }
+    }
+}
+
+void calc_tmm_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
+                              vector<double>& scale_factors)
+{
+    scale_factors = vector<double>(sample_compatible_count_table.size(), 1.0);
 }
 
 static const int min_loci_for_fitting = 30;

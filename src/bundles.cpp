@@ -1644,10 +1644,10 @@ void inspect_map(BundleFactory& bundle_factory,
             // Take raw mass even if bundle is "empty", since we could be out of refs
             // with remaining hits
             map_mass += bundle.compatible_mass();
-            if (use_quartile_norm && bundle.compatible_mass() > 0) 
-            {
-                mass_dist.push_back(bundle.compatible_mass());
-            }
+//            if (lib_norm_method == QUARTILE && bundle.compatible_mass() > 0)
+//            {
+//                mass_dist.push_back(bundle.compatible_mass());
+//            }
         }
         else if (use_total_mass) //use all raw mass
         { 
@@ -1655,10 +1655,10 @@ void inspect_map(BundleFactory& bundle_factory,
             // Take raw mass even if bundle is "empty", since we could be out of refs
             // with remaining hits
             map_mass += bundle.raw_mass();
-            if (use_quartile_norm && bundle.raw_mass() > 0) 
-            {
-                mass_dist.push_back(bundle.raw_mass());
-            }
+//            if (lib_norm_method == QUARTILE && bundle.raw_mass() > 0)
+//            {
+//                mass_dist.push_back(bundle.raw_mass());
+//            }
         }
         else
         {
@@ -1820,12 +1820,12 @@ void inspect_map(BundleFactory& bundle_factory,
 	
     norm_map_mass = map_mass;
     
-	if (use_quartile_norm && mass_dist.size() > 0)
-	{
-		sort(mass_dist.begin(),mass_dist.end());
-		int upper_quart_index = mass_dist.size() * 0.75;
-		norm_map_mass = mass_dist[upper_quart_index];
-	}
+//	if (lib_norm_method == QUARTILE && mass_dist.size() > 0)
+//	{
+//		sort(mass_dist.begin(),mass_dist.end());
+//		int upper_quart_index = mass_dist.size() * 0.75;
+//		norm_map_mass = mass_dist[upper_quart_index];
+//	}
 
     if (bad_introns != NULL)
     {
@@ -1962,8 +1962,8 @@ void inspect_map(BundleFactory& bundle_factory,
     if (show_stats)
     {
         fprintf(stderr, "> Map Properties:\n");
-        if (use_quartile_norm)
-            fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
+        //if (lib_norm_method == QUARTILE)
+        //    fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
         fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", norm_map_mass);
         fprintf(stderr, ">\tRaw Map Mass: %.2Lf\n", map_mass);
         if (corr_multi)

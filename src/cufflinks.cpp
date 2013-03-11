@@ -102,8 +102,8 @@ static struct option long_options[] = {
 {"overlap-radius",       	required_argument,		 0,			 OPT_OLAP_RADIUS},
 {"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
+{"library-norm-method",     required_argument,       0,          OPT_LIB_NORM_METHOD},
 {"no-length-correction",  no_argument,     0,          OPT_NO_LENGTH_CORRECTION},
-{"no-background-subtraction", no_argument,             0,          OPT_NO_BACKGROUND_SUBTRACTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -126,13 +126,14 @@ void print_usage()
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "  --library-type               library prep used for input reads                     [ default:  below ]\n");
+    fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
     
     fprintf(stderr, "\nAdvanced Abundance Estimation Options:\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
-    fprintf(stderr, "  --upper-quartile-norm        use upper-quartile normalization                      [ default:  FALSE ]\n");
+    fprintf(stderr, "  -N/--upper-quartile-norm     Deprecated, use --library-norm-method                 [ default:  FALSE ]\n");
+    fprintf(stderr, "  --raw-mapped-norm            Deprecated, use --library-norm-method                 [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [    DEPRECATED   ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  FALSE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  TRUE  ]\n");
     fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
@@ -140,7 +141,6 @@ void print_usage()
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
-    fprintf(stderr, "  --no-background-subtraction  No subtraction of inferred primary transcript FPKM    [ default:  FALSE ]\n");
     
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
@@ -178,7 +178,7 @@ int parse_options(int argc, char** argv)
     int option_index = 0;
     int next_option;
 	bool F_set = false;
-	
+	string lib_norm_method_str;
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, &option_index);
         switch (next_option) {
@@ -284,7 +284,7 @@ int parse_options(int argc, char** argv)
 			}
 			case 'N':
             {
-            	use_quartile_norm = true;
+            	lib_norm_method_str = "quartile";
             	break;
             }
 
@@ -304,7 +304,7 @@ int parse_options(int argc, char** argv)
 				corr_multi = true;
 				break;
 			}
-      case OPT_LIBRARY_TYPE:
+            case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
 				break;
@@ -439,11 +439,6 @@ int parse_options(int argc, char** argv)
                 no_length_correction = true;
                 break;
             }
-            case OPT_NO_BACKGROUND_SUBTRACTION:
-            {
-                background_subtraction = false;
-                break;
-            }
 			default:
 				print_usage();
 				return 1;
@@ -480,6 +475,21 @@ int parse_options(int argc, char** argv)
 //                allow_junk_filtering = false;
 //            }
             global_read_properties = &lib_itr->second;
+        }
+    }
+    
+    if (lib_norm_method_str != "")
+    {
+        map<string, LibNormalizationMethod>::iterator lib_norm_itr =
+		lib_norm_method_table.find(lib_norm_method_str);
+        if (lib_norm_itr == lib_norm_method_table.end())
+        {
+            fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
+            exit(1);
+        }
+        else
+        {
+            lib_norm_method = lib_norm_itr->second;
         }
     }
     
@@ -930,44 +940,6 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	vector<double> gammas;
     
 	vector<MateHit> hits_in_cluster;
-	
-    if (background_subtraction)
-    {
-        vector<shared_ptr<Abundance> > abundances;
-        vector<shared_ptr<Scaffold> > pseudo_primary_transcripts;
-        BOOST_FOREACH(shared_ptr<Abundance> pA, transfrag_cluster.abundances())
-        {
-            abundances.push_back(pA);
-            
-            shared_ptr<Scaffold> s  = pA->transfrag();
-            if (s->augmented_ops().size() == 1)
-                continue;
-            vector<AugmentedCuffOp> ops;
-            ops.push_back(AugmentedCuffOp(CUFF_MATCH, s->left(), s->right() - s->left()));
-            
-            shared_ptr<Scaffold> pt = shared_ptr<Scaffold>(new Scaffold(s->ref_id(), s->strand(), ops, false, true));
-            pt->annotated_trans_id(s->annotated_trans_id()+"_pseudoprimary");
-            pt->annotated_gene_id(s->annotated_gene_id()+"_pseudoprimary");
-            pseudo_primary_transcripts.push_back(pt);
-        }
-        vector<shared_ptr<Scaffold> >::iterator new_end = unique(pseudo_primary_transcripts.begin(),
-                                                                 pseudo_primary_transcripts.end(),
-                                                                 StructurallyEqualScaffolds());
-        pseudo_primary_transcripts.erase(new_end, pseudo_primary_transcripts.end());
-        vector<shared_ptr<Scaffold> >(pseudo_primary_transcripts).swap(pseudo_primary_transcripts);
-        BOOST_FOREACH(shared_ptr<Scaffold> s, pseudo_primary_transcripts)
-        {
-            TranscriptAbundance* pT = new TranscriptAbundance;
-            pT->transfrag(s);
-            shared_ptr<Abundance> ab(pT);
-            ab->description(s->annotated_trans_id());
-            ab->locus_tag("");
-            abundances.push_back(ab);
-        }
-        
-        transfrag_cluster = AbundanceGroup(abundances);
-    }
-
     
 	get_alignments_from_scaffolds(transfrag_cluster.abundances(),
 								  hits_in_cluster);
@@ -1043,19 +1015,6 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
         AbundanceGroup kept;
         transfrag_cluster.filter_group(to_keep, kept);
         transfrag_cluster = kept;
-    }
-    
-    if (background_subtraction)
-    {
-        vector<bool> non_pseudo(transfrag_cluster.abundances().size(), false);
-        for(size_t i = 0; i < transfrag_cluster.abundances().size(); ++i)
-        {
-            shared_ptr<Abundance>  ab = transfrag_cluster.abundances()[i];
-            non_pseudo[i] = ab->transfrag()->is_pseudo_primary() == false;
-        }
-        AbundanceGroup kept_abundances;
-        transfrag_cluster.filter_group(non_pseudo, kept_abundances);
-        transfrag_cluster = kept_abundances;
     }
     
 	vector<AbundanceGroup> transfrags_by_strand;
@@ -1738,6 +1697,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 int main(int argc, char** argv)
 {	
     init_library_table();
+    init_cufflinks_lib_norm_method_table();
+    
   string cmdline;
   for (int i=0;i<argc;i++) {
     cmdline+=argv[i];

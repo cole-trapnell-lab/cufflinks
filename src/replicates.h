@@ -123,8 +123,17 @@ struct LocusCountList
 void transform_counts_to_common_scale(const vector<double>& scale_factors,
                                       vector<LocusCountList>& sample_count_table);
 
-void calc_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
-                          std::vector<double>& scale_factors);
+void calc_geometric_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
+                                    std::vector<double>& scale_factors);
+
+void calc_classic_fpkm_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
+                                       std::vector<double>& scale_factors);
+
+void calc_quartile_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
+                                        std::vector<double>& scale_factors);
+
+void calc_tmm_scaling_factors(const std::vector<LocusCountList>& sample_count_table,
+                                        std::vector<double>& scale_factors);
 
 
 boost::shared_ptr<MassDispersionModel>
