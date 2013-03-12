@@ -561,7 +561,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
     vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
     
     vector<double> alpha_range;
-    for(double a = 0.02; a < 2.0; a += 0.02)
+    for(double a = 0.0002; a < 2.0; a += 0.0002)
     {
         alpha_range.push_back(a);
     }
@@ -723,7 +723,7 @@ void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compati
                               
 boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model_helper(const string& condition_name,
-                            //const vector<double>& scale_factors,
+                            const vector<double>& scale_factors,
                             const vector<LocusCountList>& sample_compatible_count_table)
 {
     vector<pair<double, double> > compatible_means_and_vars;
@@ -795,13 +795,13 @@ fit_dispersion_model_helper(const string& condition_name,
     //sprintf(locfit_cmd, "prfit x fhat h nlx");
     //locfit_dispatch(locfit_cmd);
     
-//    double xim = 0;
-//    BOOST_FOREACH(double s, scale_factors)
-//    {
-//        if (s)
-//            xim += 1.0 / s;
-//    }
-//    xim /= scale_factors.size();
+    double xim = 0;
+    BOOST_FOREACH(double s, scale_factors)
+    {
+        if (s)
+            xim += 1.0 / s;
+    }
+    xim /= scale_factors.size();
     
     int n = 0;
     sprintf(namebuf, "fittedVars");
@@ -817,7 +817,7 @@ fit_dispersion_model_helper(const string& condition_name,
             double corrected_variance = mean + (corrected_scv * (mean * mean));
             double uncorrected_variance = mean + (fitted_scv * (mean * mean));
             //fitted_values.push_back(mean + (cp->dpr[i] - xim * mean));
-            if (no_scv_correction == false && corrected_variance > 0)
+            if (no_scv_correction == false && corrected_variance > uncorrected_variance)
                 fitted_values.push_back(corrected_variance);
             else if (uncorrected_variance > 0)
                 fitted_values.push_back(uncorrected_variance);
@@ -850,7 +850,7 @@ fit_dispersion_model_helper(const string& condition_name,
 
 boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model(const string& condition_name,
-                     /*const vector<double>& scale_factors,*/
+                     const vector<double>& scale_factors,
                      const vector<LocusCountList>& sample_compatible_count_table)
 {
 //    
@@ -880,7 +880,7 @@ fit_dispersion_model(const string& condition_name,
         }
     }
     
-    boost::shared_ptr<MassDispersionModel>  model = fit_dispersion_model_helper(condition_name, /*scale_factors,*/ sample_compatible_count_table);
+    boost::shared_ptr<MassDispersionModel>  model = fit_dispersion_model_helper(condition_name, scale_factors, sample_compatible_count_table);
 
 #if ENABLE_THREADS
     _locfit_lock.unlock();

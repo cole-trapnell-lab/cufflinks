@@ -1359,7 +1359,16 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
     }
     else if (dispersion_method == BLIND)
     {
-        //vector<double> scale_factors(all_read_groups.size(), 1.0);
+        size_t num_samples = 0;
+        for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
+        {
+            const vector<shared_ptr<BundleFactory> >& factories = bundle_factories[cond_idx]->factories();
+            for (size_t fac_idx = 0; fac_idx < factories.size(); ++fac_idx)
+            {
+                num_samples++;
+            }
+        }
+        vector<double> scale_factors(num_samples, 1.0);
         
         vector<LocusCountList> sample_compatible_count_table;
         vector<LocusCountList> sample_total_count_table;
@@ -1400,11 +1409,11 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                         sample_total_count_table[i].counts[fac_idx] = common_scale_total_count;
                     }
                 }
-                //scale_factors.push_back(rg_props->internal_scale_factor());
+                scale_factors.push_back(rg_props->internal_scale_factor());
             }
         }
 
-        shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", /*scale_factors,*/ sample_compatible_count_table);
+        shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
         
         vector<pair<double, double> > compatible_means_and_vars;
         calculate_count_means_and_vars(sample_compatible_count_table,
@@ -1594,10 +1603,6 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
     {
         fprintf (stderr, "Error: unknown dispersion method requested\n");
     }
-    
-    /*
-    */
-
 }
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)

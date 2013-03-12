@@ -141,7 +141,7 @@ void calc_tmm_scaling_factors(const std::vector<LocusCountList>& sample_count_ta
 
 boost::shared_ptr<MassDispersionModel>
 fit_dispersion_model(const string& condition_name,
-                     /*const std::vector<double>& scale_factors,*/
+                     const std::vector<double>& scale_factors,
                      const std::vector<LocusCountList>& sample_count_table);
 
 void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compatible_count_table,
@@ -372,7 +372,7 @@ public:
         }
         
         shared_ptr<MassDispersionModel> disperser;
-        disperser = ::fit_dispersion_model(_condition_name, /*scale_factors,*/ sample_compatible_count_table);
+        disperser = ::fit_dispersion_model(_condition_name, scale_factors, sample_compatible_count_table);
         
         vector<pair<double, double> > compatible_means_and_vars;
         calculate_count_means_and_vars(sample_compatible_count_table,
