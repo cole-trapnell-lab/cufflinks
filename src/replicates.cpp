@@ -322,10 +322,10 @@ void calc_geometric_scaling_factors(const vector<LocusCountList>& sample_compati
         for (size_t j = 0; j < p.counts.size(); ++j)
         {
             //assert (log_geom_means.size() > j);
-            if (floor(p.counts[j]) > 0)
-            {
+            //if (floor(p.counts[j]) > 0)
+            //{
                 log_geom_means[i] += (1.0/p.counts.size()) * log(floor(p.counts[j]));
-            }
+            //}
             
         }
         //log_geom_means[i] = pow(log_geom_means[i], 1.0/(double)p.counts.size());
