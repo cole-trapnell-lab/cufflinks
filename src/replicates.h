@@ -63,6 +63,9 @@ public:
         _total_mv_by_locus[locus_desc] = p;
     }
     
+    const std::map<std::string, std::pair<double, double> >& total_mv_by_locus() const { return _total_mv_by_locus; }
+    const std::map<std::string, std::pair<double, double> >& compatible_mv_by_locus() const { return _compatible_mv_by_locus; }
+    
 private:
     std::string         _name;
     std::vector<double> _scaled_compatible_mass_means;

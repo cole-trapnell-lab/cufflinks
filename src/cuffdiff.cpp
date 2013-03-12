@@ -1337,6 +1337,17 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     }
 }
 
+struct DispModelAverageContext
+{
+    double compatible_count_mean;
+    double total_count_mean;
+    double compatible_count_var;
+    double total_count_var;
+    
+    double fitted_var;
+    double weight;
+};
+
 void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
 {
     if (dispersion_method == PER_CONDITION)
@@ -1432,7 +1443,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
         }
         // now need to replace them with the average
         
-        shared_ptr<MassDispersionModel const> pooled_model;
+        shared_ptr<MassDispersionModel> pooled_model;
         // Let's compute the pooled average of the dispersion models
         if (dispersion_method != BLIND)
         {
@@ -1462,6 +1473,71 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                 }
             }
             
+            map<std::string, vector<DispModelAverageContext> > disp_info_by_locus;
+            for (size_t disp_idx = 0; disp_idx < disp_models.size(); ++disp_idx)
+            {
+                shared_ptr<MassDispersionModel const> disp = disp_models[disp_idx];
+                
+                const std::map<std::string, std::pair<double, double> >& total_mv_by_locus = disp->total_mv_by_locus();
+                const std::map<std::string, std::pair<double, double> >& compatible_mv_by_locus = disp->compatible_mv_by_locus();
+                
+                for (map<std::string, std::pair<double, double> >::const_iterator itr = compatible_mv_by_locus.begin();
+                     itr != compatible_mv_by_locus.end(); ++itr)
+                {
+                                        
+                    std::map<std::string, std::pair<double, double> >::const_iterator total_itr = total_mv_by_locus.find(itr->first);
+                    if (total_itr == total_mv_by_locus.end())
+                        continue;
+                    
+                    pair<map<std::string, vector<DispModelAverageContext> >::iterator, bool> ins_pair =
+                    disp_info_by_locus.insert(make_pair(itr->first, vector<DispModelAverageContext>()));
+                    
+                    
+                    DispModelAverageContext ctx;
+                    ctx.compatible_count_mean = itr->second.first;
+                    ctx.compatible_count_var = itr->second.second;
+                    ctx.total_count_mean = total_itr->second.first;
+                    ctx.total_count_var = total_itr->second.second;
+                    if (use_compat_mass)
+                        ctx.fitted_var = disp->scale_mass_variance(ctx.compatible_count_mean);
+                    else
+                        ctx.fitted_var = disp->scale_mass_variance(ctx.total_count_mean);
+                    
+                    ctx.weight = disp_model_weight[disp_idx];
+                    
+                    ins_pair.first->second.push_back(ctx);
+                }
+            }
+            
+            map<string, DispModelAverageContext> pooled_info_by_locus;
+            
+            for (map<std::string, vector<DispModelAverageContext> >::const_iterator itr = disp_info_by_locus.begin();
+                 itr != disp_info_by_locus.end();
+                 ++itr)
+            {
+                DispModelAverageContext avg_ctx;
+                avg_ctx.compatible_count_mean = 0;
+                avg_ctx.compatible_count_var = 0;
+                avg_ctx.total_count_mean = 0;
+                avg_ctx.total_count_var = 0;
+                avg_ctx.fitted_var = 0;
+                
+                double total_weight = 0.0;
+                for (size_t i = 0; i < itr->second.size(); ++i)
+                {
+                    total_weight += itr->second[i].weight;
+                }
+                
+                for (size_t i = 0; i < itr->second.size(); ++i)
+                {
+                    avg_ctx.compatible_count_mean += (itr->second[i].weight / total_weight) * itr->second[i].compatible_count_mean;
+                    avg_ctx.compatible_count_var += (itr->second[i].weight / total_weight) * itr->second[i].compatible_count_var;
+                    avg_ctx.total_count_mean += (itr->second[i].weight / total_weight) * itr->second[i].total_count_mean;
+                    avg_ctx.total_count_var += (itr->second[i].weight / total_weight) * itr->second[i].total_count_var;
+                }
+                pooled_info_by_locus[itr->first] = avg_ctx;
+            }
+            
             vector<double> compatible_mass;
             vector<double> compatible_variances;
             vector<double> est_fitted_var;
@@ -1482,6 +1558,17 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
             
             pooled_model = shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
             
+            for (map<std::string, DispModelAverageContext>::iterator itr = pooled_info_by_locus.begin();
+                 itr != pooled_info_by_locus.end();
+                 ++itr)
+            {
+                const string& locus = itr->first;
+                pair<double, double> cmv = make_pair(itr->second.compatible_count_mean, itr->second.compatible_count_var);
+                pooled_model->set_compatible_mean_and_var(locus, cmv);
+
+                pair<double, double> tmv = make_pair(itr->second.total_count_mean, itr->second.total_count_var);
+                pooled_model->set_total_mean_and_var(locus, tmv);
+            }
         }
         
         if (dispersion_method == POOLED)
@@ -1491,6 +1578,8 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                 fac->mass_dispersion_model(pooled_model);
             }
         }
+        
+        
     }
     else if (dispersion_method == POISSON)
     {
