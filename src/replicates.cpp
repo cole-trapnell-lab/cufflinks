@@ -354,7 +354,32 @@ void calc_geometric_scaling_factors(const vector<LocusCountList>& sample_compati
 void calc_classic_fpkm_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
                                        vector<double>& scale_factors)
 {
-    scale_factors = vector<double>(sample_compatible_count_table.size(), 1.0);
+    vector<double> total_counts(sample_compatible_count_table.size(), 0.0);
+    
+    for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
+    {
+        const LocusCountList& p = sample_compatible_count_table[i];
+        
+        for (size_t j = 0; j < p.counts.size(); ++j)
+        {
+            total_counts[j] += floor(p.counts[j]);
+        }
+    }
+    
+    double all_library_counts = accumulate(total_counts.begin(), total_counts.end(), 0.0);
+    
+    for (size_t i = 0; i < scale_factors.size(); ++i)
+    {
+        scale_factors[i] = total_counts[i] / all_library_counts;
+    }
+    
+    double avg_scaling_factor = accumulate(scale_factors.begin(), scale_factors.end(), 0.0);
+    avg_scaling_factor /= scale_factors.size();
+    
+    for (size_t i = 0; i < scale_factors.size(); ++i)
+    {
+        scale_factors[i] = scale_factors[i] / avg_scaling_factor;
+    }
 }
 
 void calc_quartile_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
