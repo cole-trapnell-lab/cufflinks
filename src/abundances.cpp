@@ -1914,6 +1914,7 @@ void AbundanceGroup::calculate_abundance_group_variance(const vector<shared_ptr<
         
         for (size_t i = 0; i < _abundances.size(); ++i)
         {
+            assert (estimated_count_mean.size() > i);
             frags_per_transcript.push_back(estimated_count_mean[i]);
             //frags_per_transcript.push_back(_abundances[i]->num_fragments());
             
@@ -3916,6 +3917,10 @@ AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared
         rg_props.insert(*itr);
         ab_group->init_rg_props(rg_props);
         
+        map<shared_ptr<ReadGroupProperties const >, vector<MateHit> >::const_iterator al_itr =
+            alignments_per_read_group.find(*itr);
+        
+        assert(al_itr != alignments_per_read_group.end());
         const vector<MateHit>& rep_hits = alignments_per_read_group.find(*itr)->second;
        
         vector<MateHit> nr_alignments;

@@ -944,7 +944,6 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	get_alignments_from_scaffolds(transfrag_cluster.abundances(),
 								  hits_in_cluster);
 	
-	
 	// need the avg read length for depth of coverage calculation 
 	double avg_read_length = 0;
 	BOOST_FOREACH (MateHit& hit, hits_in_cluster)
@@ -1114,12 +1113,14 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 }
 
 void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
-									long double total_map_mass,
+									shared_ptr<ReadGroupProperties> rg_props,
 									vector<Gene>& genes,
                                     bool bundle_too_large)
 {	
 	//vector<shared_ptr<Scaffold> > partials;
 	//vector<shared_ptr<Scaffold> > completes;
+    
+    long double total_map_mass = rg_props->normalized_map_mass();
     
     vector<shared_ptr<Scaffold> > split_partials;
     // Cleave the partials at their unknowns to minimize FPKM dilation on  
@@ -1147,6 +1148,11 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	
 	AbundanceGroup transfrags = AbundanceGroup(abundances);
 	
+    set<shared_ptr<ReadGroupProperties const> > read_groups;
+    read_groups.insert(rg_props);
+    
+    transfrags.init_rg_props(read_groups);
+    
 	vector<AbundanceGroup> transfrags_by_cluster;
 	
 	cluster_transcripts<ConnectByExonOverlap>(transfrags,
@@ -1161,13 +1167,15 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
-					 shared_ptr<BiasLearner> bl_ptr,
-					 long double map_mass,
+					 shared_ptr<ReadGroupProperties> rg_props,
+                     shared_ptr<BiasLearner> bl_ptr,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
 					 FILE* ftrans_abundances,
 					 FILE* fskipped)
 {
+    long double map_mass = rg_props->normalized_map_mass();
+    
 	HitBundle& bundle = *bundle_ptr;
     
     char bundle_label_buf[2048];
@@ -1258,8 +1266,8 @@ void assemble_bundle(const RefSequenceTable& rt,
     
     // FIXME: this routine does more than just quantitation, and should be 
     // renamed or refactored.
-    quantitate_transcript_clusters(scaffolds, 
-                                   map_mass,
+    quantitate_transcript_clusters(scaffolds,
+                                   rg_props,
                                    genes,
                                    bundle_too_large);
     
@@ -1512,9 +1520,9 @@ bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr
 		
 		thread asmbl(assemble_bundle,
 					 boost::cref(rt), 
-					 bundle_ptr, 
+					 bundle_ptr,
+                     bundle_factory.read_group_properties(),
 					 bl_ptr,
-					 bundle_factory.read_group_properties()->normalized_map_mass(),
 					 ftranscripts, 
 					 fgene_abundances,
 					 ftrans_abundances,
@@ -1522,8 +1530,8 @@ bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr
 #else
 		assemble_bundle(boost::cref(rt), 
 						bundle_ptr, 
-						bl_ptr,
-						bundle_factory.read_group_properties()->normalized_map_mass(),
+						bundle_factory.read_group_properties(),
+                        bl_ptr,
 						ftranscripts,
 						fgene_abundances,
 						ftrans_abundances,

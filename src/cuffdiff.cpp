@@ -1007,7 +1007,7 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 	shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
 	learn_bias(*fac, *bl, false);
-	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
+	rg_props->bias_learner(shared_ptr<BiasLearner>(bl));
 }
 
 
