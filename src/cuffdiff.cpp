@@ -1368,11 +1368,11 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                 num_samples++;
             }
         }
-        vector<double> scale_factors(num_samples, 1.0);
+        vector<double> scale_factors;
         
         vector<LocusCountList> sample_compatible_count_table;
         vector<LocusCountList> sample_total_count_table;
-        
+        size_t curr_fac = 0;
         for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
         {
             vector<shared_ptr<BundleFactory> > factories = bundle_factories[cond_idx]->factories();
@@ -1392,7 +1392,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                     
                     if (i >= sample_compatible_count_table.size())
                     {
-                        LocusCountList locus_count(c.locus_desc, factories.size(), c.num_transcripts);
+                        LocusCountList locus_count(c.locus_desc, num_samples, c.num_transcripts);
                         sample_compatible_count_table.push_back(locus_count);
                         sample_compatible_count_table.back().counts[0] = common_scale_compatible_count;
                         sample_total_count_table.push_back(locus_count);
@@ -1405,12 +1405,15 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                             fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
                             exit(1);
                         }
-                        sample_compatible_count_table[i].counts[fac_idx] = common_scale_compatible_count;
-                        sample_total_count_table[i].counts[fac_idx] = common_scale_total_count;
+                        sample_compatible_count_table[i].counts[curr_fac + fac_idx] = common_scale_compatible_count;
+                        sample_total_count_table[i].counts[curr_fac + fac_idx] = common_scale_total_count;
                     }
                 }
                 scale_factors.push_back(rg_props->internal_scale_factor());
+                
             }
+            
+            curr_fac += factories.size();
         }
 
         shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
