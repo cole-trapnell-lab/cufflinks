@@ -1735,6 +1735,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
         }
     }
     
+    if (most_reps == 1 && (dispersion_method != BLIND || dispersion_method != POISSON))
+    {
+        fprintf(stderr, "Warning: No conditions are replicated, switching to 'blind' dispersion method\n");
+        dispersion_method = BLIND;
+    }
+
+    
     //bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
     
     
