@@ -627,14 +627,14 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         if (p_value > 1)
             p_value = 1.0;
         
-        double stat = 0;
+        
         
         performed_test = true;
 
         //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
         test.p_value = p_value;
         test.differential = differential;
-        test.test_stat = stat;
+        //test.test_stat = stat;
         test.value_1 = prev.FPKM;
         test.value_2 = curr.FPKM;
     }
