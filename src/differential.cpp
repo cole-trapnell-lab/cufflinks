@@ -523,7 +523,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         // set the asymptotic delta method test stat for backward compatibility
         double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
         double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
-        double numerator = log(prev.FPKM / curr.FPKM);
+        double numerator = log(curr.FPKM / prev.FPKM);
         double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
         if (denominator > 0.0)
             test.test_stat = numerator / denominator;
