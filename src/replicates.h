@@ -474,3 +474,5 @@ private:
 #endif
     string _condition_name; 
 };
+
+void normalize_counts(std::vector<boost::shared_ptr<ReadGroupProperties> > & all_read_groups);

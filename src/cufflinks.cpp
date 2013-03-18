@@ -31,6 +31,7 @@
 #include "assemble.h"
 #include "biascorrection.h"
 #include "multireads.h"
+#include "replicates.h"
 
 using namespace std;
 
@@ -284,8 +285,8 @@ int parse_options(int argc, char** argv)
 			}
 			case 'N':
             {
-            	lib_norm_method_str = "quartile";
-            	break;
+            	//lib_norm_method_str = "quartile";
+                break;
             }
 
             case 'o':
@@ -478,19 +479,22 @@ int parse_options(int argc, char** argv)
         }
     }
     
-    if (lib_norm_method_str != "")
+    // Set the library size normalization method to use
+    if (lib_norm_method_str == "")
     {
-        map<string, LibNormalizationMethod>::iterator lib_norm_itr =
-		lib_norm_method_table.find(lib_norm_method_str);
-        if (lib_norm_itr == lib_norm_method_table.end())
-        {
-            fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
-            exit(1);
-        }
-        else
-        {
-            lib_norm_method = lib_norm_itr->second;
-        }
+        lib_norm_method_str = default_cufflinks_lib_norm_method;
+    }
+    
+    map<string, LibNormalizationMethod>::iterator lib_norm_itr =
+    lib_norm_method_table.find(lib_norm_method_str);
+    if (lib_norm_itr == lib_norm_method_table.end())
+    {
+        fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
+        exit(1);
+    }
+    else
+    {
+        lib_norm_method = lib_norm_itr->second;
     }
     
     if (use_total_mass && use_compat_mass)
@@ -1633,6 +1637,14 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     else 
         inspect_map(bundle_factory, &bad_introns, compatible_count_table, total_count_table);
     
+    rg_props->raw_compatible_counts(compatible_count_table);
+    rg_props->raw_total_counts(total_count_table);
+    
+    vector<shared_ptr<ReadGroupProperties> > read_groups;
+    read_groups.push_back(rg_props);
+    
+    normalize_counts(read_groups);
+
     
     verbose_msg("%d ReadHits still live\n", num_deleted);
     verbose_msg("Found %lu reference contigs\n", rt.size());

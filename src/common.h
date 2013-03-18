@@ -116,6 +116,7 @@ extern double min_outlier_p;
 
 extern std::string default_dispersion_method;
 extern std::string default_lib_norm_method;
+extern std::string default_cufflinks_lib_norm_method;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code

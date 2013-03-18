@@ -448,204 +448,6 @@ long double trunc_normal_log_likelihood(const vector<double>& samples, double me
     return log_likelihood;
 }
 
-////// Sampling-based test:
-//SampleDifference test_diffexp(const FPKMContext& curr,
-//                              const FPKMContext& prev)
-//{
-//	bool performed_test = false;
-//    
-//    SampleDifference test = SampleDifference();
-//    
-//    double p_value = 1.0;
-//    
-//    
-////    vector<double> merged_samples = curr.fpkm_samples;
-////    //vector<double> merged_samples;
-////    merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
-////    
-//    vector<double> merged_samples;
-//    
-//    for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
-//    {
-//        merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
-//    }
-//    
-//    double merged_var = 0.0;
-//    double merged_mean = accumulate(merged_samples.begin(), merged_samples.end(), 0.0);
-//    merged_mean /= merged_samples.size();
-//    
-//    for (size_t i = 0; i < merged_samples.size(); ++i)
-//    {
-//        merged_var += (merged_samples[i] - merged_mean) * (merged_samples[i] - merged_mean);
-//    }
-//    merged_var /= merged_samples.size();
-//    
-//    double differential = 0.0;
-//    
-//    if (curr.FPKM > 0.0 && prev.FPKM > 0.0)
-//        differential = log2(curr.FPKM) - log2(prev.FPKM);
-//    else if (curr.FPKM)
-//        differential = numeric_limits<double>::max();
-//    else if (prev.FPKM)
-//        differential = -numeric_limits<double>::max();
-//
-//    // static const long double min_gamma_params = 1e-20;
-//    
-//    vector<double> null_log_ratio_samples;
-//    
-//    static const size_t num_null_ratio_samples = 10000;
-//    
-//    boost::random::mt19937 rng;   
-//    boost::random::uniform_int_distribution<> null_sampler(0, merged_samples.size()-1);
-//    
-//    if ((curr.FPKM != 0 || prev.FPKM != 0))
-//    {
-//        vector<double> prev_rep_samples;
-//        vector<double> curr_rep_samples;
-//        
-//        
-//        for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
-//             itr != curr.fpkm_per_rep.end(); ++itr)
-//        {
-//            StatusPerReplicateTable::const_iterator si = curr.status_per_rep.find(itr->first);
-//            if (si == curr.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
-//                continue;
-//            curr_rep_samples.push_back(itr->second);
-//        }
-//        
-//        for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
-//             itr != prev.fpkm_per_rep.end(); ++itr)
-//        {
-//            StatusPerReplicateTable::const_iterator si = prev.status_per_rep.find(itr->first);
-//            if (si == prev.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
-//                continue;
-//            prev_rep_samples.push_back(itr->second);
-//        }
-//        
-//        for (size_t i = 0; i < num_null_ratio_samples; ++i)
-//        {
-//            double curr_set_sample = 0.0;
-//            for (size_t k = 0; k < curr_rep_samples.size(); ++k)
-//            {
-//                int next_sample_idx = null_sampler(rng);
-//                if (next_sample_idx >= 0 && next_sample_idx < merged_samples.size())
-//                    curr_set_sample += merged_samples[next_sample_idx] / (double)curr.fpkm_per_rep.size();
-//            }
-//            
-//            double prev_set_sample = 0.0;
-//            for (size_t k = 0; k < prev_rep_samples.size(); ++k)
-//            {
-//                int next_sample_idx = null_sampler(rng);
-//                if (next_sample_idx >= 0 && next_sample_idx < merged_samples.size())
-//                    prev_set_sample += merged_samples[next_sample_idx] / (double)prev.fpkm_per_rep.size();
-//            }
-//            
-//            double null_ratio_sample = 0.0;
-//            if (curr_set_sample > 0.0 && prev_set_sample > 0.0)
-//                null_ratio_sample = log2(curr_set_sample) - log2(prev_set_sample);
-//            else if (curr_set_sample > 0.0)
-//                null_ratio_sample = numeric_limits<double>::max();
-//            else if (prev_set_sample)
-//                null_ratio_sample = -numeric_limits<double>::max();
-//            
-//            null_log_ratio_samples.push_back(null_ratio_sample);
-//        }
-//        
-//        sort(null_log_ratio_samples.begin(), null_log_ratio_samples.end());
-//
-//        double lower_tail_val;
-//        double upper_tail_val;
-//        if (differential > 0)
-//        {
-//            upper_tail_val = differential;
-//            lower_tail_val = -differential;
-//        }
-//        else
-//        {
-//            upper_tail_val = -differential;
-//            lower_tail_val = differential;
-//        }
-//        
-//        vector<double>::iterator lower_tail_null_range_iter = upper_bound(null_log_ratio_samples.begin(), null_log_ratio_samples.end(), lower_tail_val);
-//        vector<double>::iterator upper_tail_null_range_iter = upper_bound(null_log_ratio_samples.begin(), null_log_ratio_samples.end(), upper_tail_val);
-//        size_t num_smaller_lower_tail = lower_tail_null_range_iter - null_log_ratio_samples.begin();
-//        size_t num_smaller_upper_tail = upper_tail_null_range_iter - null_log_ratio_samples.begin();
-//        
-//        //            normal norm;
-//        //            double t1, t2;
-//        //            if (stat > 0.0)
-//        //            {
-//        //                t1 = stat;
-//        //                t2 = -stat;
-//        //            }
-//        //            else
-//        //            {
-//        //                t1 = -stat;
-//        //                t2 = stat;
-//        //            }
-//        //
-//        //            if (isnan(t1) || isinf(t1) || isnan(t2) || isnan(t2))
-//        //            {
-//        //
-//        //                //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
-//        //                p_value = 1.0;
-//        //            }
-//        //            else
-//        //            {
-//        //                double tail_1 = cdf(norm, t1);
-//        //                double tail_2 = cdf(norm, t2);
-//        //                p_value = 1.0 - (tail_1 - tail_2);                
-//        //            }
-//        
-//        size_t num_samples_more_extreme = (null_log_ratio_samples.size() - num_smaller_upper_tail) + num_smaller_lower_tail;
-//        
-//        p_value = num_samples_more_extreme / (double)null_log_ratio_samples.size();
-//        if (p_value == 0)
-//            p_value = 1.0 / (double)null_log_ratio_samples.size();
-//        if (p_value > 1)
-//            p_value = 1.0;
-//        
-//        double stat = 0;
-//        
-//        performed_test = true;
-////        if (stat <= 0 || isnan(stat) || isinf(stat))
-////        {
-////            
-////            //fprintf(stderr, "Warning: test statistic is NaN! %s (samples %lu and %lu)\n", test.locus_desc.c_str(), test.sample_1, test.sample_2);
-////            p_value = 1.0;
-////            performed_test = true;
-////        }
-////        else
-////        {
-////            assert (stat >= 0);
-////            //fprintf(stderr, "stat = %lg\n", stat);
-////            double tail_1 = cdf(csd, stat);
-////            p_value = 1.0 - (tail_1);
-////            performed_test = true;
-////        }
-//        
-//        //test = SampleDifference(sample1, sample2, prev.FPKM, curr.FPKM, stat, p_value, transcript_group_id);
-//        test.p_value = p_value;
-//        test.differential = differential;
-//        test.test_stat = stat;
-//        test.value_1 = prev.FPKM;
-//        test.value_2 = curr.FPKM;
-//    }
-//    else
-//    {
-//        test.p_value = 1.0;
-//        test.test_stat = 0.0;
-//        test.value_1 = prev.FPKM;
-//        test.value_2 = curr.FPKM;
-//        test.differential = 0;
-//        performed_test = false;
-//    }
-//    
-//	test.test_status = performed_test ? OK : NOTEST;
-//	return test;
-//}
-
-
 //// Sampling-based test:
 SampleDifference test_diffexp(const FPKMContext& curr,
                               const FPKMContext& prev)
@@ -718,6 +520,23 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         else if (prev_fpkm)
             differential = -numeric_limits<double>::infinity();
 
+        // set the asymptotic delta method test stat for backward compatibility
+        double curr_log_fpkm_var = (curr.FPKM_variance) / (curr.FPKM * curr.FPKM);
+        double prev_log_fpkm_var = (prev.FPKM_variance) / (prev.FPKM * prev.FPKM);
+        double numerator = log(prev.FPKM / curr.FPKM);
+        double denominator = sqrt(prev_log_fpkm_var + curr_log_fpkm_var);
+        if (denominator > 0.0)
+            test.test_stat = numerator / denominator;
+        else if (numerator > 0)
+            test.test_stat = numeric_limits<double>::infinity();
+        else if (numerator < 0)
+            test.test_stat = -numeric_limits<double>::infinity();
+        else
+            test.test_stat = 0;
+
+        
+        test.test_stat = numerator / denominator;
+        
         
         // Draw from prev fpkm_samples to make the first half of the null
         for (size_t i = 0; i < num_null_ratio_samples; ++i)
@@ -859,74 +678,6 @@ SampleDifference get_de_tests(const string& description,
 	int total_iso_de_tests = 0;
 			
 	SampleDifference test;
-    
-//    if (description == "ucscCodingTCONS_00003875")
-//    {
-//        fprintf(stderr, "woah there");
-//        FILE* sample_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.samples.txt")).c_str(), "w");
-//        fprintf(sample_file, "condition\tsample\n");
-//        for (size_t i =0; i < prev_abundance.fpkm_samples.size(); ++i)
-//        {
-//            fprintf(sample_file, "prev\t%lg\n", prev_abundance.fpkm_samples[i]);
-//        }
-//        
-//        for (size_t i =0; i < curr_abundance.fpkm_samples.size(); ++i)
-//        {
-//            fprintf(sample_file, "curr\t%lg\n", curr_abundance.fpkm_samples[i]);
-//        }
-//        
-//        const FPKMContext& prev = prev_abundance;
-//        const FPKMContext& curr = curr_abundance;
-//        
-//        vector<double> merged_samples;
-//        
-//        //vector<double> merged_samples = curr.fpkm_samples;
-//        //merged_samples.insert( merged_samples.end(), prev.fpkm_samples.begin(), prev.fpkm_samples.end() );
-//        
-//        
-//        for (size_t i = 0; i < curr.fpkm_samples.size() && i < prev.fpkm_samples.size(); ++i)
-//        {
-//            merged_samples.push_back((curr.fpkm_samples[i] + prev.fpkm_samples[i]) / 2.0);
-//            fprintf(sample_file, "null\t%lg\n", merged_samples.back());
-//        }
-//        
-//        double null_negbin_r = 0.0;
-//        double null_negbin_p = 0.0;
-//        bool good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
-//        
-//        if ((curr.FPKM != 0 || prev.FPKM != 0) && good_fit == false)
-//        {
-//            good_fit = fit_negbin_dist(merged_samples, null_negbin_r, null_negbin_p);
-//            fprintf(stderr, "Warning : null model fit failed!\n");
-//        }
-//        
-//        double curr_negbin_r = 0.0;
-//        double curr_negbin_p = 0.0;
-//        good_fit = fit_negbin_dist(curr.fpkm_samples, curr_negbin_r, curr_negbin_p);
-//        
-//        if (curr.FPKM != 0 && good_fit == false)
-//        {
-//            good_fit = fit_negbin_dist(curr.fpkm_samples, curr_negbin_r, curr_negbin_p);
-//            fprintf(stderr, "Warning : curr model fit failed!\n");
-//        }
-//        
-//        double prev_negbin_r = 0.0;
-//        double prev_negbin_p = 0.0;
-//        good_fit = fit_negbin_dist(prev.fpkm_samples, prev_negbin_r, prev_negbin_p);
-//        
-//        if (prev.FPKM != 0 && good_fit == false)
-//        {
-//            good_fit = fit_negbin_dist(prev.fpkm_samples, prev_negbin_r, prev_negbin_p);
-//            fprintf(stderr, "Warning : curr model fit failed!\n");
-//        }
-//        
-//        FILE* params_file = fopen((output_dir + string("/ucscCodingTCONS_00000219.params.txt")).c_str(), "w");
-//        fprintf(params_file, "condition\tnegbin_r\tnegbin_p\n");
-//        fprintf(params_file, "prev\t%lg\t%lg\n", prev_negbin_r, prev_negbin_p);
-//        fprintf(params_file, "curr\t%lg\t%lg\n", curr_negbin_r, curr_negbin_p);
-//        fprintf(params_file, "null\t%lg\t%lg\n", null_negbin_r, null_negbin_p);
-//
-//    }
     
     const FPKMContext& r1 = curr_abundance;
     const FPKMContext& r2 = prev_abundance;

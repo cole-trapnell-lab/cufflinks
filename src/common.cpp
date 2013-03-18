@@ -154,6 +154,7 @@ DispersionMethod dispersion_method = DISP_NOT_SET;
 
 map<string, LibNormalizationMethod> lib_norm_method_table;
 string default_lib_norm_method = "geometric";
+string default_cufflinks_lib_norm_method = "classic-fpkm";
 LibNormalizationMethod lib_norm_method = LIB_NORM_NOT_SET;
 
 
@@ -422,7 +423,7 @@ void init_lib_norm_method_table()
 void init_cufflinks_lib_norm_method_table()
 {
     lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
-    lib_norm_method_table["quartile"] = QUARTILE;
+    //lib_norm_method_table["quartile"] = QUARTILE;
     //lib_norm_method_table["absolute"] = ABSOLUTE;
 }
 
