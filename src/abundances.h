@@ -442,11 +442,18 @@ public:
     
     const vector<double>& fpkm_samples() const { return _fpkm_samples; }
     void  fpkm_samples(const vector<double>& s) { _fpkm_samples = s; }
+    void clear_fpkm_samples() {
+        _fpkm_samples.clear();
+        std::vector<double>().swap(_fpkm_samples);
+        for (size_t i = 0; i < _member_fpkm_samples.size(); ++i)
+        {
+            _member_fpkm_samples.clear();
+            std::vector<Eigen::VectorXd>().swap(_member_fpkm_samples);
+        }
+    }
     
     const vector<Eigen::VectorXd>& member_fpkm_samples() const { return _member_fpkm_samples; }
     void  member_fpkm_samples(const vector<Eigen::VectorXd>& s) { _member_fpkm_samples = s; }
-    
-    const vector<double> null_js_samples() const { return _null_js_samples; }
     
 	void calculate_abundance(const vector<MateHit>& alignments,
                              bool perform_collapse = true);
@@ -541,8 +548,6 @@ private:
     vector<double> _fpkm_samples;
     vector<Eigen::VectorXd> _member_fpkm_samples;
     
-    vector<double> _null_js_samples;
-    
     std::set<shared_ptr<ReadGroupProperties const > > _read_group_props;
     vector<Eigen::VectorXd> _assigned_count_samples;
     
@@ -617,10 +622,6 @@ AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& t
                                          const vector<MateHit>& alignments,
                                          const ublas::vector<double>& gamma_mean,
                                          ublas::matrix<double>& inverse_fisher);
-
-bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
-                              size_t num_js_samples,
-                              vector<double>& js_samples);
 
 void calculate_assignment_probs(const Eigen::VectorXd& alignment_multiplicities, 
                                 const Eigen::MatrixXd& transcript_cond_probs,

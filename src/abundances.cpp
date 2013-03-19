@@ -2788,33 +2788,45 @@ void AbundanceGroup::calculate_conf_intervals()
     for (size_t j = 0; j < _abundances.size(); ++j)
     {
         double FPKM_hi = 0.0;
-        double FPKM_lo = 0.0;
+        double FPKM_lo = numeric_limits<double>::max();
+        const vector<double> ab_j_samples = _abundances[j]->fpkm_samples();
+        vector<pair<double, double> > fpkm_samples;
+        for (size_t i = 0; i < ab_j_samples.size(); ++i)
+            fpkm_samples.push_back(make_pair(abs(ab_j_samples[i] - _abundances[j]->FPKM()), ab_j_samples[i]));
         
-        vector<double> fpkm_samples = _abundances[j]->fpkm_samples();
         sort(fpkm_samples.begin(), fpkm_samples.end());
-        size_t conf_lo_idx = 0.025 * fpkm_samples.size();
-        size_t conf_hi_idx = 0.975 * fpkm_samples.size();
         
-        if (conf_lo_idx < fpkm_samples.size())
-            FPKM_lo = fpkm_samples[conf_lo_idx];
-        if (conf_hi_idx < fpkm_samples.size())
-            FPKM_hi = fpkm_samples[conf_hi_idx];
+        for (size_t i = 0; i < 0.95*fpkm_samples.size(); ++i)
+        {
+            if (FPKM_lo > fpkm_samples[i].second)
+                FPKM_lo = fpkm_samples[i].second;
+            if (FPKM_hi < fpkm_samples[i].second)
+                FPKM_hi = fpkm_samples[i].second;
+        }
+        
+        
+        
         ConfidenceInterval conf(FPKM_lo, FPKM_hi);
-        FPKM_conf(conf);
+        _abundances[j]->FPKM_conf(conf);
     }
     
     double FPKM_hi = 0.0;
-    double FPKM_lo = 0.0;
+    double FPKM_lo = numeric_limits<double>::max();
+    const vector<double> ab_j_samples = _fpkm_samples;
+    vector<pair<double, double> > fpkm_samples;
+    for (size_t i = 0; i < ab_j_samples.size(); ++i)
+        fpkm_samples.push_back(make_pair(abs(ab_j_samples[i] - FPKM()), ab_j_samples[i]));
     
-    vector<double> fpkm_samples = _fpkm_samples;
     sort(fpkm_samples.begin(), fpkm_samples.end());
-    size_t conf_lo_idx = 0.025 * fpkm_samples.size();
-    size_t conf_hi_idx = 0.975 * fpkm_samples.size();
     
-    if (conf_lo_idx < fpkm_samples.size())
-        FPKM_lo = fpkm_samples[conf_lo_idx];
-    if (conf_hi_idx < fpkm_samples.size())
-        FPKM_hi = fpkm_samples[conf_hi_idx];
+    for (size_t i = 0; i < 0.95*fpkm_samples.size(); ++i)
+    {
+        if (FPKM_lo > fpkm_samples[i].second)
+            FPKM_lo = fpkm_samples[i].second;
+        if (FPKM_hi < fpkm_samples[i].second)
+            FPKM_hi = fpkm_samples[i].second;
+    }
+    
     ConfidenceInterval conf(FPKM_lo, FPKM_hi);
     FPKM_conf(conf);
     
@@ -3431,95 +3443,6 @@ void AbundanceGroup::calculate_kappas()
         //cerr << relative_abundance.transpose() << endl;
         relative_abundances[i] = relative_abundance;
     }
-    
-//    
-//    Eigen::VectorXd expected_relative_abundances = Eigen::VectorXd::Zero(_abundances.size());
-//    
-//    for (size_t i = 0; i < relative_abundances.size(); ++i)
-//    {
-//        expected_relative_abundances += relative_abundances[i];
-//    }
-//    
-//    if (relative_abundances.size() > 0)
-//    {
-//        expected_relative_abundances /= relative_abundances.size();
-//    }
-//    
-//    for (size_t k = 0; k < num_members; ++k)
-//    {
-//        _abundances[k]->kappa(expected_relative_abundances(k));
-//    }
-    
-//    cerr << "======" << endl;
-//    cerr << "updated expected relative abundances: " << endl;
-//    std::cerr << expected_relative_abundances << std::endl;
-//    cerr << "======" << endl;
-//    
-//    cerr << "simulated kappa deviations: " << endl;
-//    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (_kappa_covariance, i);
-//        cerr << i << " : " << _abundances[i]->kappa() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-    
-//    for (size_t i = 0; i < _abundances.size(); ++i)
-//    {
-//        for (size_t j = 0; j < _abundances.size(); ++j)
-//        {
-//            for (size_t k = 0 ; k < relative_abundances.size(); ++k)
-//            {
-//                double r = (relative_abundances[k](i) - expected_relative_abundances(i)) * (relative_abundances[k](j) - expected_relative_abundances(j));
-//                assert (r <= 1.0 && r >= -1);
-//                _kappa_covariance(i,j) += r;
-//                //assert (_kappa_covariance(i,j) >= -1 * relative_abundances.size() && _kappa_covariance(i,j) <= relative_abundances.size());
-//            }
-//        }
-//    }
-    
-//    cerr << "simulated kappa deviations: " << endl;
-//    for (unsigned i = 0; i < _count_covariance.size1 (); ++ i) 
-//    {
-//        ublas::matrix_row<ublas::matrix<double> > mr (_kappa_covariance, i);
-//        cerr << i << " : " << _abundances[i]->kappa() << " : ";
-//        std::cerr << i << " : " << mr << std::endl;
-//    }
-
-    
-//    _kappa_covariance /= relative_abundances.size();
-    
-//    vector<double> js_samples;
-//    
-//    ublas::vector<double> kappa_mean(_abundances.size());
-//    for (size_t j = 0; j < _abundances.size(); ++j)
-//    {
-//        kappa_mean(j) = _abundances[j]->kappa();
-//    }
-//    
-//    ublas::matrix<double> kappa_cov_chol = _kappa_covariance;
-//    double ret = cholesky_factorize(kappa_cov_chol);
-//    if (ret == 0)
-//    {
-//        multinormal_generator<double> generator(kappa_mean, kappa_cov_chol);
-//        vector<Eigen::VectorXd> multinormal_samples;
-//        
-//        generate_importance_samples(generator, multinormal_samples, 10000, false);
-//
-//        // We used to sample the JS using the real assigned count samples, but
-//        // that's not quite as accurate as simulating from a multinomial built from
-//        // the bounded covariance matrices.
-//        
-//        //generate_null_js_samples(relative_abundances, 100000, js_samples);
-//        generate_null_js_samples(multinormal_samples, 100000, js_samples);
-//        
-//        _null_js_samples = js_samples;
-//        //if (_null_js_samples.size() > 0)
-//        //    fprintf(stderr, "Max JS from null: %lg\n",_null_js_samples.back()); 
-//    }
-//    else
-//    {
-//        _null_js_samples.clear();
-//    }
 }
 
 void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
@@ -4600,56 +4523,4 @@ double get_scaffold_min_doc(int bundle_origin,
 	return min_doc;
 }
 
-bool generate_null_js_samples(const vector<Eigen::VectorXd>& rel_abundances,
-                              size_t num_js_samples,
-                              vector<double>& js_samples)
-{
-    if (rel_abundances.empty())
-        return true;
-    
-    size_t num_abundances = rel_abundances.front().size();
-    
-    if (num_abundances <= 1)
-        return true;
-    //    ublas::vector<double> null_kappa_mean(num_abundances);
-    //    for (size_t i = 0; i < num_abundances; ++i)
-    //    {
-    //        null_kappa_mean(i) = rel_abundances[i];
-    //    }
-    
-    //    cerr << endl << null_kappa_mean << endl;
-    //    for (unsigned i = 0; i < null_kappa_cov.size1 (); ++ i) 
-    //    {
-    //        ublas::matrix_row<ublas::matrix<double> > mr (null_kappa_cov, i);
-    //        std::cerr << i << " : " << mr << std::endl;
-    //    }
-    //    cerr << "======" << endl;
-    
-    //vector<ublas::vector<double> > null_samples;
-    
-    js_samples.clear();
-    
-    //size_t num_samples = std::min(prev_samples.size(), curr_samples.size());
-    size_t num_samples = num_js_samples;
-    vector<Eigen::VectorXd> sample_kappas(2);
-    
-    boost::uniform_int<> null_uniform_dist(0,rel_abundances.size()-1);
-    boost::mt19937 null_rng; 
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > null_uniform_gen(null_rng, null_uniform_dist); 
-    
-    for (size_t i = 0; i < num_samples; ++i)
-    {
-		sample_kappas[0] = rel_abundances[null_uniform_gen()];
-        sample_kappas[1] = rel_abundances[null_uniform_gen()];
-        
-		double js = jensen_shannon_distance(sample_kappas);  
-        assert(!isnan(js));
-        //cerr << sample_kappas[0].transpose() << " vs. " <<  sample_kappas[1].transpose() << " = " << js << endl;
-        js_samples.push_back(js);
-    }
-    
-    sort(js_samples.begin(), js_samples.end());
-    
-    return true;
-}
 
