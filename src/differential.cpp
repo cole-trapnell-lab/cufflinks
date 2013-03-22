@@ -1642,11 +1642,11 @@ void test_differential(const string& locus_tag,
                     enough_reads = true;
             }
             
-            if (enough_reads)
-            {
-                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
-                    enough_reads = false;
-            }
+//            if (enough_reads)
+//            {
+//                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+//                    enough_reads = false;
+//            }
             
             SampleDifference test;
             test = get_de_tests(desc,
@@ -1697,11 +1697,11 @@ void test_differential(const string& locus_tag,
                     enough_reads = true;
             }
             
-            if (enough_reads)
-            {
-                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
-                    enough_reads = false;
-            }
+//            if (enough_reads)
+//            {
+//                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+//                    enough_reads = false;
+//            }
             
             
             SampleDifference test;
@@ -1754,11 +1754,11 @@ void test_differential(const string& locus_tag,
                     enough_reads = true;
             }
             
-            if (enough_reads)
-            {
-                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
-                    enough_reads = false;
-            }
+//            if (enough_reads)
+//            {
+//                if (is_badly_fit(curr_abundance) || is_badly_fit(prev_abundance))
+//                    enough_reads = false;
+//            }
             
             
             SampleDifference test;
@@ -1854,8 +1854,8 @@ void test_differential(const string& locus_tag,
             
             bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
                                  group_has_record_above_thresh(prev_abundance) &&
-                                 group_has_record_badly_fit(curr_abundance) == false &&
-                                 group_has_record_badly_fit(prev_abundance) == false &&
+//                                 group_has_record_badly_fit(curr_abundance) == false &&
+//                                 group_has_record_badly_fit(prev_abundance) == false &&
                                  curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
                                  prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
             SampleDifference test;
@@ -1897,8 +1897,8 @@ void test_differential(const string& locus_tag,
             
             bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
                                  group_has_record_above_thresh(prev_abundance) &&
-                                 group_has_record_badly_fit(curr_abundance) == false &&
-                                 group_has_record_badly_fit(prev_abundance) == false &&
+//                                 group_has_record_badly_fit(curr_abundance) == false &&
+//                                 group_has_record_badly_fit(prev_abundance) == false &&
                                  curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
                                  prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
             SampleDifference test;
@@ -1939,8 +1939,8 @@ void test_differential(const string& locus_tag,
             
             bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
                                  group_has_record_above_thresh(prev_abundance) &&
-                                 group_has_record_badly_fit(curr_abundance) == false &&
-                                 group_has_record_badly_fit(prev_abundance) == false &&
+//                                 group_has_record_badly_fit(curr_abundance) == false &&
+//                                 group_has_record_badly_fit(prev_abundance) == false &&
                                  curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
                                  prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
             
