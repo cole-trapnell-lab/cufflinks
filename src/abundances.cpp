@@ -2028,32 +2028,30 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
             status_table[itr->second->abundances()[i]->status()] += 1;
         }
         
-        if (status_table[NUMERIC_OK] > 0)
+        for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+             itr != ab_group_per_replicate.end();
+             ++itr)
         {
-            for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
-                 itr != ab_group_per_replicate.end();
-                 ++itr)
-            {
-                assert(itr->second->abundances().size() == _abundances.size());
-                cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
-                //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
-                fpr[itr->first] = itr->second->abundances()[i]->FPKM();
-                spr[itr->first] = itr->second->abundances()[i]->status();
-                
-                if (itr->second->abundances()[i]->status() == NUMERIC_OK)
-                {
-                    avg_fpkm += itr->second->abundances()[i]->FPKM() / (double)status_table[NUMERIC_OK];
-                    avg_num_frags += itr->second->abundances()[i]->num_fragments() / (double)status_table[NUMERIC_OK];
-                    avg_gamma += itr->second->abundances()[i]->gamma() / (double)status_table[NUMERIC_OK];
-                    avg_mass_variance += itr->second->abundances()[i]->mass_variance() / (double)status_table[NUMERIC_OK];
-                }
-            }
+            assert(itr->second->abundances().size() == _abundances.size());
+            cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
+            //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
+            fpr[itr->first] = itr->second->abundances()[i]->FPKM();
+            spr[itr->first] = itr->second->abundances()[i]->status();
             
-            _abundances[i]->FPKM(avg_fpkm);
-            _abundances[i]->gamma(avg_gamma);
-            _abundances[i]->num_fragments(avg_num_frags);
-            _abundances[i]->mass_variance(avg_mass_variance);
+            if (itr->second->abundances()[i]->status() == NUMERIC_OK)
+            {
+                avg_fpkm += itr->second->abundances()[i]->FPKM() / (double)status_table[NUMERIC_OK];
+                avg_num_frags += itr->second->abundances()[i]->num_fragments() / (double)status_table[NUMERIC_OK];
+                avg_gamma += itr->second->abundances()[i]->gamma() / (double)status_table[NUMERIC_OK];
+                avg_mass_variance += itr->second->abundances()[i]->mass_variance() / (double)status_table[NUMERIC_OK];
+            }
         }
+        
+        _abundances[i]->FPKM(avg_fpkm);
+        _abundances[i]->gamma(avg_gamma);
+        _abundances[i]->num_fragments(avg_num_frags);
+        _abundances[i]->mass_variance(avg_mass_variance);
+        
         
         // if there was at least one good replicate, set the status to OK.  The reduced power will be reflected
         // during testing
