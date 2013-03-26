@@ -918,19 +918,14 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			}
 			else // the hit stream has gone too far, rewind and break
 			{
-                double mass = rewind_hit(bh);
-                if (skip_read == false)
-                {
-                    bundle.rem_raw_mass(mass);
-                }
-                else
-                {
-                    delete bh;
-                    bh = NULL;
-                }
-				break;
+                rewind_hit(bh);
+                bh = NULL;
+                break;
 			}
-		}	
+		}
+        
+        if (bh == NULL) // the hit stream has gone too far, break
+            break;
 		
         if (bh->left() >= bundle.left() && bh->right() <= bundle.right())
 		{
@@ -953,6 +948,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
             if (skip_read == false)
             {
                 bundle.rem_raw_mass(rewind_hit(bh));
+                bh = NULL;
             }
             else
             {
@@ -1009,7 +1005,8 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 		int scaff_chr_order = _hit_fac->ref_table().observation_order((*next_ref_scaff)->ref_id());
 		
 		bundle.rem_raw_mass(rewind_hit(bh));
-		
+		bh = NULL;
+        
 		if (bh_chr_order < scaff_chr_order)
 		{
 			return next_bundle_hit_driven(bundle);
@@ -1031,6 +1028,8 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 	else 
 	{
 		bundle.rem_raw_mass(rewind_hit(bh));
+        bh = NULL;
+        
 		bundle.add_ref_scaffold(*next_ref_scaff);
 		next_ref_scaff++;
 		_expand_by_refs(bundle);
@@ -1113,11 +1112,6 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 		else
 		{
 			bundle.rem_raw_mass(rewind_hit(bh));
-            if (skip_read)
-            {
-                delete bh;
-                bh = NULL;
-            }
 
 			break;
 		}
