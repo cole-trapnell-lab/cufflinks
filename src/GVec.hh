@@ -7,16 +7,13 @@ Sortable collection of pointers to objects
 #define _GVec_HH
 
 #include "GBase.h"
-//#include "assert.h"
 
-#ifdef __LINE__
-#define GVEC_INDEX_ERR "GVec error (%s:%d):Invalid index: %d\n"
-#define TEST_INDEX(x) \
- if (x<0 || x>=fCount) GError(GVEC_INDEX_ERR, __FILE__,__LINE__, x)
-#else
 #define GVEC_INDEX_ERR "GVec error: invalid index: %d\n"
-#define TEST_INDEX(x) \
- if (x<0 || x>=fCount) GError(GVEC_INDEX_ERR, x, __FILE__,__LINE__)
+ #if defined(NDEBUG) || defined(NODEBUG) || defined(_NDEBUG) || defined(NO_DEBUG)
+ #define TEST_INDEX(x) 
+#else 
+ #define TEST_INDEX(x) \
+ if (x<0 || x>=fCount) GError(GVEC_INDEX_ERR, x)
 #endif
 
 #define GVEC_CAPACITY_ERR "GVec error: invalid capacity: %d\n"
@@ -25,6 +22,45 @@ Sortable collection of pointers to objects
 #define MAXLISTSIZE INT_MAX-1
 
 #define FREEDATA (fFreeProc!=NULL)
+
+template<class T> struct IsPrimitiveType {
+    enum { VAL = 0 };
+};
+
+template<> struct IsPrimitiveType<bool> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<void*> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<float> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<double> { enum { VAL = 1 }; };
+
+template<> struct IsPrimitiveType<int> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<unsigned int> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<char> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<unsigned char> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<short> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<unsigned short> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<long> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<unsigned long> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<long long> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<unsigned long long> { enum { VAL = 1 }; };
+
+/*
+template<> struct IsPrimitiveType<int64_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<uint64_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<int32_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<uint32_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<int16_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<uint16_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<int8_t> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<uint8_t> { enum { VAL = 1 }; };
+*/
+
+
+template <class OBJ> int DefLTCompareProc(const pointer p1, const pointer p2) {
+ const OBJ& o1 = *((OBJ*) p1);
+ const OBJ& o2 = *((OBJ*) p2);
+ if (o1 < o2) return -1;
+   else return ((o2 < o1) ? 1 : 0 );
+}
 
 //basic template for array of objects;
 //so it doesn't require comparison operators to be defined
@@ -36,19 +72,24 @@ template <class OBJ> class GVec {
     void qSort(int L, int R, GCompareProc* cmpFunc);
   public:
     GVec(int init_capacity=2);
+    GVec(int init_count, const OBJ init_val);
     GVec(GVec<OBJ>& array); //copy constructor
     const GVec<OBJ>& operator=(GVec<OBJ>& array); //copy operator
     virtual ~GVec();
-    void idxInsert(int idx, OBJ& item);
+    void Insert(int idx, OBJ item) { Insert(idx, &item); }
+    void Insert(int idx, OBJ* item);
+    void idxInsert(int idx, OBJ& item) { Insert(idx, &item); }
     void Grow();
-    void Grow(int idx, OBJ& item);
+    void Grow(int idx, OBJ& item); //grow and add/insert item copy
     void Reverse(); //WARNING: will break the sort order if SORTED!
     int Add(OBJ* item); // simply append to the end of fArray, reallocating as needed
-    int Add(OBJ item) { return Add(&item); } //both will CREATE a new OBJ and COPY to it
-                       // using OBJ copy operator=
+    int Add(OBJ& item) { return Add(&item); } 
+    int cAdd(OBJ item) { return Add(&item); } //all these will CREATE a new OBJ and COPY to it
+    //                   // using OBJ copy operator=
     // -- stack/queue usage:
     //int Push(OBJ& item) { return Add(&item); }
-    int Push(OBJ item) { return Add(&item); }
+    int Push(OBJ& item) { return Add(&item); }
+    int cPush(OBJ item) { return Add(&item); }
     OBJ Pop();// Stack use; removes and returns a copy of the last item
     OBJ Shift(); //Queue use: removes and returns a copy of the first item
 
@@ -58,7 +99,7 @@ template <class OBJ> class GVec {
           TEST_INDEX(idx);
           return fArray[idx];
           }
-    OBJ& operator[](int i) {
+    inline OBJ& operator[](int i) {
           TEST_INDEX(i);
           return fArray[i];
           }
@@ -71,7 +112,6 @@ template <class OBJ> class GVec {
          return fArray[0];
          }
     void Clear();
-    void Insert(int idx, OBJ* item);
     void Delete(int index);
     void Replace(int idx, OBJ& item); //Put, use operator= to copy
     void Exchange(int idx1, int idx2);
@@ -82,15 +122,18 @@ template <class OBJ> class GVec {
     int  Count() { return fCount; }
 
     void setCount(int NewCount);         // will trim or expand the array as needed
-    void setCount(int NewCount, OBJ& v); //same as setCount(), but if expanding, new objects are set to v
+    void setCount(int NewCount, OBJ* v); //same as setCount() but new objects are set to v
+    void setCount(int NewCount, OBJ v);
     void Resize(int NewCount) { setCount(NewCount); }
-    void Resize(int NewCount, OBJ& v) { setCount(NewCount, v); }
+    //void Resize(int NewCount, OBJ* v) { setCount(NewCount, v); }
+    void Resize(int NewCount, OBJ v) { setCount(NewCount, &v); }
 
-    void Move(int curidx, int newidx);
+    //void Move(int curidx, int newidx);
     bool isEmpty() { return fCount==0; }
     bool notEmpty() { return fCount>0; }
 
     void Sort(GCompareProc* cmpFunc);
+    void Sort();
 };
 
 //---- template for dynamic array of object pointers
@@ -105,7 +148,6 @@ template <class OBJ> class GPVec {
     void Expand();
     void Grow();
     void Grow(int idx, OBJ* newitem);
-    void setCount(int NewCount); //will trim/expand the array as needed
     void qSort(int L, int R, GCompareProc* cmpFunc);
   public:  
     static void DefaultFreeProc(pointer item) {
@@ -113,6 +155,7 @@ template <class OBJ> class GPVec {
       }
     virtual ~GPVec();
     GPVec(int init_capacity=2, bool free_elements=true); //also the default constructor
+    GPVec(bool free_elements);
     GPVec(GPVec<OBJ>& list); //copy constructor?
     GPVec(GPVec<OBJ>* list); //kind of a copy constructor
     const GPVec<OBJ>& operator=(GPVec<OBJ>& list);
@@ -130,7 +173,7 @@ template <class OBJ> class GPVec {
     int Push(OBJ* item) { return Add(item); }
     OBJ* Pop();// Stack use; removes and returns last item,but does NOT FREE it
     OBJ* Shift(); //Queue use: removes and returns first item, but does NOT FREE it
-    void deallocate_item(OBJ* item); //forcefully call fFreeProc or delete on item
+    void deallocate_item(OBJ*& item); //forcefully call fFreeProc or delete on item
     void Clear();
     void Exchange(int idx1, int idx2);
     void Swap(int idx1, int idx2)  { Exchange(idx1, idx2); }
@@ -141,6 +184,7 @@ template <class OBJ> class GPVec {
     int Capacity() { return fCapacity; }
     int Count()   { return fCount; }
     void setCapacity(int NewCapacity);
+    void setCount(int NewCount); //the same as setCapacity() but the new item range is filled with NULLs
     int Add(OBJ* item); //simply append the pointer copy
     void Add(GPVec<OBJ>& list); //add all pointers from another list
     void Insert(int idx, OBJ* item);
@@ -152,6 +196,7 @@ template <class OBJ> class GPVec {
     int RemovePtr(pointer item); //always use linear search to find the pointer! calls Delete() if found
     int IndexOf(pointer item); //a linear search for pointer address!
     void Sort(GCompareProc* cmpFunc);
+    void Sort();
  };
 
 //-------------------- TEMPLATE IMPLEMENTATION-------------------------------
@@ -163,33 +208,54 @@ template <class OBJ> GVec<OBJ>::GVec(int init_capacity) {
   setCapacity(init_capacity);
 }
 
+
+template <class OBJ> GVec<OBJ>::GVec(int init_count, const OBJ init_val) {
+  fCount=0;
+  fCapacity=0;
+  fArray=NULL;
+  setCapacity(init_count);
+  fCount = init_count;
+  for (int i=0;i<fCount;i++)
+    fArray[i]=init_val;
+}
+
+
 template <class OBJ> GVec<OBJ>::GVec(GVec<OBJ>& array) { //copy constructor
  this->fCount=array.fCount;
  this->fCapacity=array.fCapacity;
  this->fArray=NULL;
  if (this->fCapacity>0) {
-    //GMALLOC(fArray, fCapacity*sizeof(OBJ));
-    fArray=new OBJ[this->fCapacity];
-    }
+   if (IsPrimitiveType<OBJ>::VAL) {
+     GMALLOC(fArray, fCapacity*sizeof(OBJ));
+     memcpy(fArray, array.fArray, fCount*sizeof(OBJ));
+   }
+   else {
+     fArray=new OBJ[this->fCapacity]; //]()
+     // uses OBJ operator=
+     for (int i=0;i<this->fCount;i++) fArray[i]=array[i];
+   }
+ }
  this->fCount=array.fCount;
- // uses OBJ operator=
- for (int i=0;i<this->fCount;i++) fArray[i]=array[i];
  }
 
 template <class OBJ> const GVec<OBJ>& GVec<OBJ>::operator=(GVec<OBJ>& array) {
  if (&array==this) return *this;
  Clear();
- fCount=array.fCount;
  fCapacity=array.fCapacity;
- if (fCapacity>0) {
-    //GMALLOC(fArray, fCapacity*sizeof(OBJ));
-    fArray=new OBJ[this->fCapacity];
-    }
  fCount=array.fCount;
- // uses OBJ operator=
- for (int i=0;i<fCount;i++) {
-   fArray[i]=array[i];
+ if (fCapacity>0) {
+   if (IsPrimitiveType<OBJ>::VAL) {
+     GMALLOC(fArray, fCapacity*sizeof(OBJ));
+     memcpy(fArray, array.fArray, fCount*sizeof(OBJ));
+     }
+   else {
+    fArray=new OBJ[this->fCapacity]; // ]()
+    // uses OBJ operator=
+    for (int i=0;i<fCount;i++) {
+      fArray[i]=array.fArray[i];
+    }
    }
+ }
  return *this;
 }
 
@@ -201,37 +267,50 @@ template <class OBJ> GVec<OBJ>::~GVec() {
 template <class OBJ> void GVec<OBJ>::setCapacity(int NewCapacity) {
   if (NewCapacity < fCount || NewCapacity > MAXLISTSIZE)
     GError(GVEC_CAPACITY_ERR, NewCapacity);
-    //error: capacity not within range
+    //error: NewCapacity MUST be > fCount
+   //if you want to shrink it use Resize() or setCount()
   if (NewCapacity!=fCapacity) {
    if (NewCapacity==0) {
-      delete[] fArray;
+      if (IsPrimitiveType<OBJ>::VAL) {
+       GFREE(fArray);
+      } else {
+       delete[] fArray;
+       fArray=NULL;
       }
-    else {
-      //GREALLOC(fArray, NewCapacity*sizeof(OBJ));
-      OBJ* oldArray=fArray;
-      fArray=new OBJ[NewCapacity];
-      for (int i=0;i<this->fCount;i++) {
-        fArray[i] = oldArray[i]; // operator=
-        }
-      delete[] oldArray;
-      }
-   fCapacity=NewCapacity;
    }
+   else {
+      if (IsPrimitiveType<OBJ>::VAL) {
+        GREALLOC(fArray, NewCapacity*sizeof(OBJ));
+      } else {
+        OBJ* oldArray=fArray;
+		//fArray=new OBJ[NewCapacity]();
+		fArray=new OBJ[NewCapacity];
+        for (int i=0;i<this->fCount;i++) {
+          fArray[i] = oldArray[i]; 
+          }// we need operator= here
+        //wouldn't be faster to use memcpy instead?
+        //memcpy(fArray, oldArray, fCount*sizeof(OBJ));
+        if (oldArray) delete[] oldArray;
+      }
+   }
+  fCapacity=NewCapacity;
+  }
 }
 
 template <class OBJ> void GVec<OBJ>::Clear() {
-  setCount(0);
-  setCapacity(0); //so the array itself is deallocated too!
+  fCount=0;
+  if (IsPrimitiveType<OBJ>::VAL) {
+    GFREE(fArray);
+  }
+  else {
+    delete[] fArray;
+    fArray=NULL;
+  }
+  fCapacity=0;
 }
 
 template <class OBJ> void GVec<OBJ>::Grow() {
- int delta;
- if (fCapacity > 64 ) {
-   delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
- }
- else {
-   delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
- }
+ int delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
  setCapacity(fCapacity + delta);
 }
 
@@ -247,41 +326,32 @@ template <class OBJ> void GVec<OBJ>::Reverse() {
 }
 
 template <class OBJ> void GVec<OBJ>::Grow(int idx, OBJ& item) {
- int delta;
- /*
- if (fCapacity > 64) delta = fCapacity/4;
-   else if (fCapacity > 8) delta = 16;
-                      else delta = 4;
- */
- if (fCapacity > 64 ) {
-   delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
- }
- else {
-   delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
- }
+ int delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
  int NewCapacity=fCapacity+delta;
-  if (NewCapacity <= fCount || NewCapacity >= MAXLISTSIZE)
+ if (NewCapacity <= fCount || NewCapacity >= MAXLISTSIZE)
     GError(GVEC_CAPACITY_ERR, NewCapacity);
     //error: capacity not within range
-
-  if (NewCapacity!=fCapacity) {
-    if (NewCapacity==0) {
-      //GFREE(fArray);
-      delete[] fArray;
-      fArray=NULL;
-      }
-    else { //add the new item
-      if (idx==fCount) { //append item
+ //if (NewCapacity!=fCapacity) { 
+ if (idx==fCount) { //append item
          //GREALLOC(fArray, NewCapacity*sizeof(OBJ));
          setCapacity(NewCapacity);
          fArray[idx]=item;
-         }
-       else { //insert item at idx
-        OBJ* newList;
-        //GMALLOC(newList, NewCapacity*sizeof(OBJ));
-        newList=new OBJ[NewCapacity];
+ }
+ else { //insert item at idx
+   OBJ* newList;
+   if (IsPrimitiveType<OBJ>::VAL) {
+        GMALLOC(newList, NewCapacity*sizeof(OBJ));
         //copy data before idx
-        //memmove(&newList[0],&fArray[0], idx*sizeof(OBJ));
+        memcpy(&newList[0],&fArray[0], idx*sizeof(OBJ));
+        newList[idx]=item;
+        //copy data after idx
+        memmove(&newList[idx+1],&fArray[idx], (fCount-idx)*sizeof(OBJ));
+        //..shouldn't do this:
+        memset(&newList[fCount+1], 0, (NewCapacity-fCount-1)*sizeof(OBJ));
+        //data copied:
+        GFREE(fArray);
+   } else {
+        newList=new OBJ[NewCapacity]; //]()
         // operator= required!
         for (int i=0;i<idx;i++) {
           newList[i]=fArray[i];
@@ -292,19 +362,13 @@ template <class OBJ> void GVec<OBJ>::Grow(int idx, OBJ& item) {
         for (int i=idx+1;i<=fCount;i++) {
           newList[i]=fArray[i-1];
           }
-        //memset(&newList[fCount+1], 0, (NewCapacity-fCount-1)*sizeof(OBJ));
-        //data copied:
-        //GFREE(fArray);
         delete[] fArray;
-        fArray=newList;
-        }
-      fCount++;
-      }
-   fCapacity=NewCapacity;
    }
+   fArray=newList;
+   fCapacity=NewCapacity;
+ }
+ fCount++;
 }
-
-
 template <class OBJ> int GVec<OBJ>::Add(OBJ* item) {
  if (item==NULL) return -1;
  if (fCount==fCapacity) Grow();
@@ -318,12 +382,15 @@ template <class OBJ> void GVec<OBJ>::Add(GVec<OBJ>& list) {
   if (list.Count()==0) return;
   //simply copy
   setCapacity(fCapacity+list.fCount);
-  int s=fCount;
-  for (int i=0;i<list.fCount;i++)
-           fArray[s+i]=list.fArray[i];
+  if (IsPrimitiveType<OBJ>::VAL) {
+    memcpy( &fArray[fCount], list.fArray, list.fCount*sizeof(OBJ));
+    }
+   else {
+    for (int i=0;i<list.fCount;i++)
+          fArray[fCount+i]=list.fArray[i];
+    }
   fCount+=list.fCount;
 }
-
 
 //Stack usage:
 template <class OBJ> OBJ GVec<OBJ>::Pop() {
@@ -332,7 +399,7 @@ template <class OBJ> OBJ GVec<OBJ>::Pop() {
  //OBJ o(fArray[fCount]); //copy constructor
  //o=fList[fCount];
  //fArray[fCount]=NULL;
- return fArray[fCount]; //copy of the last element
+ return fArray[fCount]; //copy of the last element (copy constructor called)
 }
 
 //Queue usage:
@@ -346,40 +413,39 @@ template <class OBJ> OBJ GVec<OBJ>::Shift() {
  return o;
 }
 
-template <class OBJ> void GVec<OBJ>::idxInsert(int idx, OBJ& item) {
+template <class OBJ> void GVec<OBJ>::Insert(int idx, OBJ* item) {
  //idx must be the new position this new item must have
  //so the allowed range is [0..fCount]
  //the old idx item all the above will be shifted to idx+1
  if (idx<0 || idx>fCount) GError(GVEC_INDEX_ERR, idx);
  if (fCount==fCapacity) { //need to resize the array
-    Grow(idx, item); //expand and also copy/move data and insert the new item
+    Grow(idx, *item); //expand and also copy/move data and insert the new item
     return;
     }
  //move data around to make room for the new item
  if (idx<fCount) {
-      //copy after-idx items (shift up) 
-      //memmove(&newList[idx+1],&fArray[idx], (fCount-idx)*sizeof(OBJ));
+   //copy after-idx items (shift up) 
+   if (IsPrimitiveType<OBJ>::VAL) {      
+      memmove(&fArray[idx+1],&fArray[idx], (fCount-idx)*sizeof(OBJ));
+   }
+   else {
       for (int i=fCount; i>idx; i--) {
           fArray[i]=fArray[i-1];
           }
-      }
- fArray[idx]=item;
+   }
+ }
+ fArray[idx]=*item;
  fCount++;
 }
 
-template <class OBJ> void GVec<OBJ>::Insert(int idx, OBJ* item) {
- //idx can be [0..fCount] so an item can be actually added
- idxInsert(idx, item);
-}
 
-
-template <class OBJ> void GVec<OBJ>::Move(int curidx, int newidx) {
+/*template <class OBJ> void GVec<OBJ>::Move(int curidx, int newidx) { //swap
  if (curidx!=newidx || newidx>=fCount)
      GError(GVEC_INDEX_ERR, newidx);
  OBJ tmp=fArray[curidx]; //copy constructor here
  fArray[curidx]=fArray[newidx];
  fArray[newidx]=tmp;
-}
+}*/
 
 
 template <class OBJ> void GVec<OBJ>::Replace(int idx, OBJ& item) {
@@ -399,30 +465,47 @@ template <class OBJ> void GVec<OBJ>::Exchange(int idx1, int idx2) {
 template <class OBJ> void GVec<OBJ>::Delete(int index) {
  TEST_INDEX(index);
  fCount--;
- while (index<fCount) {
+ if (IsPrimitiveType<OBJ>::VAL) {
+   if (index<fCount) 
     //move higher elements if any (shift down)
-    //memmove(&fArray[index], &fArray[index+1], (fCount-index)*sizeof(OBJ));
-    fArray[index]=fArray[index+1];
-    index++;
-    }
+      memmove(&fArray[index], &fArray[index+1], (fCount-index)*sizeof(OBJ));
+   }
+ else {
+   while (index<fCount) {
+      fArray[index]=fArray[index+1];
+      index++;
+      }
+  }
 }
 
 template <class OBJ> void GVec<OBJ>::setCount(int NewCount) {
-  if (NewCount<0 || NewCount > MAXLISTSIZE)
-     GError(GVEC_COUNT_ERR, NewCount);
-  if (NewCount > fCapacity) setCapacity(NewCount);
-  fCount = NewCount;
+	if (NewCount<0 || NewCount > MAXLISTSIZE)
+	   GError(GVEC_COUNT_ERR, NewCount);
+	//if (NewCount > fCapacity) setCapacity(NewCount);
+	while(NewCount > fCapacity) Grow();
+	fCount = NewCount; //new items will be populated by the default object constructor(!)
 }
 
-template <class OBJ> void GVec<OBJ>::setCount(int NewCount, OBJ& v) {
-  if (NewCount<0 || NewCount > MAXLISTSIZE)
-     GError(GVEC_COUNT_ERR, NewCount);
-  if (NewCount > fCapacity)	setCapacity(NewCount);
-  if (NewCount>fCount) {
-	for (int i=fCount;i<NewCount;i++)
-	   fArray[i]=v;
-  }
-  fCount = NewCount;
+template <class OBJ> void GVec<OBJ>::setCount(int NewCount, OBJ* v) {
+	if (NewCount<0 || NewCount > MAXLISTSIZE)
+	  GError(GVEC_COUNT_ERR, NewCount);
+	while (NewCount > fCapacity) Grow();
+	if (NewCount>fCount) {
+		for (int i=fCount;i<NewCount;i++)
+		  fArray[i]=*v;
+	}
+	fCount = NewCount;
+}
+
+template <class OBJ> void GVec<OBJ>::setCount(int NewCount, OBJ v) {
+	if (NewCount<0 || NewCount > MAXLISTSIZE)
+	   GError(GVEC_COUNT_ERR, NewCount);
+	while (NewCount > fCapacity) Grow();
+	if (NewCount>fCount) {
+		for (int i=fCount;i<NewCount;i++)
+		  fArray[i]=v;
+	}
+	fCount = NewCount;
 }
 
 
@@ -448,8 +531,17 @@ template <class OBJ> void GVec<OBJ>::qSort(int l, int r, GCompareProc* cmpFunc) 
 }
 
 template <class OBJ> void GVec<OBJ>::Sort(GCompareProc* cmpFunc) {
- if (this->fArray!=NULL && this->fCount>0 && cmpFunc!=NULL)
+ if (cmpFunc==NULL) {
+   GMessage("Warning: NULL compare function given, useless Sort() call.\n");
+   return;
+ }
+ if (this->fArray!=NULL && this->fCount>0)
      qSort(0, this->fCount-1, cmpFunc);
+}
+
+template <class OBJ> void GVec<OBJ>::Sort() {  
+  GCompareProc* cmpFunc = DefLTCompareProc<OBJ>;
+  Sort(cmpFunc);
 }
 
 
@@ -459,6 +551,7 @@ template <class OBJ> void GVec<OBJ>::Sort(GCompareProc* cmpFunc) {
 template <class OBJ> GPVec<OBJ>::GPVec(GPVec& list) { //copy constructor
  fCount=list.fCount;
  fCapacity=list.fCapacity;
+ fList=NULL;
  if (fCapacity>0) {
       GMALLOC(fList, fCapacity*sizeof(OBJ*));
       }
@@ -487,7 +580,10 @@ template <class OBJ> const GPVec<OBJ>& GPVec<OBJ>::operator=(GPVec& list) {
      fFreeProc=list.fFreeProc;
      //Attention: the object *POINTERS* are copied,
      // but the actual object content is NOT duplicated
-     for (int i=0;i<list.Count();i++) Add(list[i]);
+     //for (int i=0;i<list.Count();i++) Add(list[i]);
+     fCount=list.fCount;
+     GMALLOC(fList, fCapacity*sizeof(OBJ*));
+     memcpy(fList, list.fList, fCount*sizeof(OBJ*));
      }
  return *this;
 }
@@ -517,7 +613,15 @@ template <class OBJ> GPVec<OBJ>::GPVec(int init_capacity, bool free_elements) {
   fCapacity=0;
   fList=NULL;
   fFreeProc=(free_elements) ? DefaultFreeProc : NULL;
-  setCapacity(init_capacity);
+  if (init_capacity>0)
+    setCapacity(init_capacity);
+}
+
+template <class OBJ> GPVec<OBJ>::GPVec(bool free_elements) {
+  fCount=0;
+  fCapacity=0;
+  fList=NULL;
+  fFreeProc=(free_elements) ? DefaultFreeProc : NULL;
 }
 
 template <class OBJ> GPVec<OBJ>::~GPVec() {
@@ -539,13 +643,15 @@ template <class OBJ> void GPVec<OBJ>::setCapacity(int NewCapacity) {
    }
 }
 
-template <class OBJ> void GPVec<OBJ>::deallocate_item(OBJ* item) {
+template <class OBJ> void GPVec<OBJ>::deallocate_item(OBJ* &item) {
  if (item==NULL) return;
  if (FREEDATA) {
    (*fFreeProc)(item);
+   item=NULL;
    }
  else {
   delete item;
+  item=NULL;
   }
 }
 
@@ -555,8 +661,9 @@ template <class OBJ> void GPVec<OBJ>::Clear() {
      (*fFreeProc)(fList[i]);
      }
    }
- setCount(0);
- setCapacity(0); //so the array itself is deallocated too!
+ GFREE(fList);
+ fCount=0;
+ fCapacity=0;
 }
 
 template <class OBJ> void GPVec<OBJ>::Exchange(int idx1, int idx2) {
@@ -578,6 +685,7 @@ template <class OBJ> OBJ* GPVec<OBJ>::Get(int idx) {
 }
 
 template <class OBJ> void GPVec<OBJ>::Grow() {
+ /*
  int delta;
  if (fCapacity > 64 ) {
    delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
@@ -585,10 +693,13 @@ template <class OBJ> void GPVec<OBJ>::Grow() {
  else {
    delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
  }
-  setCapacity(fCapacity + delta);
+ */
+	int delta = (fCapacity>8) ? (fCapacity>>2) : 1;
+	setCapacity(fCapacity + delta);
 }
 
 template <class OBJ> void GPVec<OBJ>::Grow(int idx, OBJ* newitem) {
+ /*
  int delta;
  if (fCapacity > 64 ) {
    delta = (fCapacity > 0xFFF) ? 0x100 : (fCapacity>>4);
@@ -596,37 +707,37 @@ template <class OBJ> void GPVec<OBJ>::Grow(int idx, OBJ* newitem) {
  else {
    delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
  }
- // setCapacity(fCapacity + delta);
+ */
+ int delta = (fCapacity>8) ? (fCapacity>>2) : 1 ;
  int NewCapacity=fCapacity+delta;
-  if (NewCapacity <= fCount || NewCapacity > MAXLISTSIZE)
+ if (NewCapacity <= fCount || NewCapacity > MAXLISTSIZE)
     GError(GVEC_CAPACITY_ERR, NewCapacity);
     //error: capacity not within range
-  if (NewCapacity!=fCapacity) {
-    if (NewCapacity==0) {
+ //if (NewCapacity!=fCapacity) {
+ /*if (NewCapacity==0) {
       GFREE(fList);
-      }
-    else  {//add the new item
-      if (idx==fCount) {
-         GREALLOC(fList, NewCapacity*sizeof(OBJ*));
-         fList[idx]=newitem;
-         }
-       else {
-        OBJ** newList;
-        GMALLOC(newList, NewCapacity*sizeof(OBJ*));
-        //copy data before idx
-        memmove(&newList[0],&fList[0], idx*sizeof(OBJ*));
-        newList[idx]=newitem;
-        //copy data after idx
-        memmove(&newList[idx+1],&fList[idx], (fCount-idx)*sizeof(OBJ*));
-        memset(&newList[fCount+1], 0, (NewCapacity-fCount-1)*sizeof(OBJ*));
-        //data copied:
-        GFREE(fList);
-        fList=newList;
-        }
-      fCount++;
-      }
-   fCapacity=NewCapacity;
+ }
+ else  {//add the new item
+ */
+ if (idx==fCount) {
+    GREALLOC(fList, NewCapacity*sizeof(OBJ*));
+    fList[idx]=newitem;
+    }
+ else {
+   OBJ** newList;
+   GMALLOC(newList, NewCapacity*sizeof(OBJ*));
+   //copy data before idx
+   memcpy(&newList[0],&fList[0], idx*sizeof(OBJ*));
+   newList[idx]=newitem;
+   //copy data after idx
+   memmove(&newList[idx+1],&fList[idx], (fCount-idx)*sizeof(OBJ*));
+   memset(&newList[fCount+1], 0, (NewCapacity-fCount-1)*sizeof(OBJ*));
+   //data copied:
+   GFREE(fList);
+   fList=newList;
    }
+ fCount++; 
+ fCapacity=NewCapacity;
 }
 
 template <class OBJ> int GPVec<OBJ>::IndexOf(pointer item) {
@@ -660,7 +771,7 @@ template <class OBJ> void GPVec<OBJ>::Insert(int idx, OBJ* item) {
  fCount++;
 }
 
-template <class OBJ> void GPVec<OBJ>::Move(int curidx, int newidx) {
+template <class OBJ> void GPVec<OBJ>::Move(int curidx, int newidx) { //s
  //BE_UNSORTED; //cannot do that in a sorted list!
  if (curidx!=newidx || newidx>=fCount)
      GError(GVEC_INDEX_ERR, newidx);
@@ -736,7 +847,7 @@ for (int i=0;i<fCount;i++)
 return -1; //not found
 }
 
-template <class OBJ> void GPVec<OBJ>::Pack()  {//also frees items!
+template <class OBJ> void GPVec<OBJ>::Pack()  {
  for (int i=fCount-1; i>=0; i--)
     if (fList[i]==NULL) Delete(i); //shift rest of fList content accordingly
 }
@@ -745,8 +856,8 @@ template <class OBJ> void GPVec<OBJ>::setCount(int NewCount) {
   if (NewCount<0 || NewCount > MAXLISTSIZE)
      GError(GVEC_COUNT_ERR, NewCount);
   if (NewCount > fCapacity) setCapacity(NewCount);
-  if (NewCount > fCount)
-    memset(fList[fCount], 0, (NewCount - fCount) * sizeof(OBJ*));
+  if (NewCount > fCount) //pad with NULL pointers
+    memset(& fList[fCount], 0, (NewCount - fCount) * sizeof(OBJ*));
   fCount = NewCount;
 }
 
@@ -777,9 +888,20 @@ template <class OBJ> void GPVec<OBJ>::qSort(int L, int R, GCompareProc* cmpFunc)
 }
 
 template <class OBJ> void GPVec<OBJ>::Sort(GCompareProc* cmpFunc) {
- if (this->fList!=NULL && this->fCount>0 && cmpFunc!=NULL)
+ if (cmpFunc==NULL) {
+    GMessage("Warning: NULL compare function given, useless Sort() call.\n");
+    return;
+    }
+ if (this->fList!=NULL && this->fCount>0)
      qSort(0, this->fCount-1, cmpFunc);
 }
+
+
+template <class OBJ> void GPVec<OBJ>::Sort() {
+  GCompareProc* cmpFunc = DefLTCompareProc<OBJ>;
+  Sort(cmpFunc);
+}
+
 
 //---------------------------------------------------------------------------
 #endif

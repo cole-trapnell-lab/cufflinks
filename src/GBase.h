@@ -28,15 +28,18 @@
   #ifndef popen
    #define popen _popen
   #endif
-  #ifdef _fseeki64
-    #define fseeko(stream, offset, origin) _fseeki64(stream, offset, origin)
-  #else
-    /*
-    #define _DEFINE_WIN32_FSEEKO
-    int fseeko(FILE *stream, off_t offset, int whence);
-    */
-    #define fseeko fseek
+  #ifndef fseeko
+		#ifdef _fseeki64
+			#define fseeko(stream, offset, origin) _fseeki64(stream, offset, origin)
+		#else
+			/*
+			#define _DEFINE_WIN32_FSEEKO
+			int fseeko(FILE *stream, off_t offset, int whence);
+			*/
+			#define fseeko fseek
+		#endif
   #endif
+ #ifndef ftello
   #ifdef _ftelli64
     #define ftello(stream) _ftelli64(stream)
   #else
@@ -46,6 +49,7 @@
     */
     #define ftello ftell
   #endif
+ #endif
  #else
   #define CHPATHSEP '/'
   #include <unistd.h>

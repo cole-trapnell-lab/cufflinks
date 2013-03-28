@@ -11,16 +11,16 @@
 * indexed by a character string (essentially, maps strings to pointers)
 */
 
-typedef struct {
-     char*   key;              // Key string
-     bool    keyalloc;         //shared key flag (to not free the key chars)
-     int     hash;             // Hash value of key
-     pointer data;              // Data
-     bool    mark;             // Entry is marked
-     } GHashEntry;
 
-template <class OBJ> class  GHash {
+template <class OBJ> class GHash {
  protected:
+	struct GHashEntry {
+	     char*   key;              // Key string
+	     bool    keyalloc;         //shared key flag (to not free the key chars)
+	     int     hash;             // Hash value of key
+	     pointer data;              // Data
+	     bool    mark;             // Entry is marked
+	     };
   GHashEntry* hash;         // Hash
   int         fCapacity;     // table size
   int         fCount;        // number of valid entries
@@ -53,7 +53,6 @@ protected:
 public:
   static void DefaultFreeProc(pointer item) {
       delete (OBJ*)item;
-      item=NULL;
       }
 public:
   GHash(GFreeProc* freeProc); // constructs of an empty hash
@@ -87,8 +86,18 @@ public:
   OBJ* NextData(char*& nextkey); //returns next valid hash[].data
                                 //or NULL if no more
                                 //nextkey is SET to the corresponding key
-  GHashEntry* NextEntry(); //returns a pointer to a GHashEntry
-
+  GHashEntry* NextEntry() { //returns a pointer to a GHashEntry
+  	 register int pos=fCurrentEntry;
+  	 while (pos<fCapacity && hash[pos].hash<0) pos++;
+  	 if (pos==fCapacity) {
+  	                 fCurrentEntry=fCapacity;
+  	                 return NULL;
+  	                 }
+  	              else {
+  	                 fCurrentEntry=pos+1;
+  	                 return &hash[pos];
+  	                 }
+  }
   /// Clear all entries
   void Clear();
 
@@ -442,19 +451,6 @@ template <class OBJ> OBJ* GHash<OBJ>::NextData(char* &nextkey) {
                  return (OBJ*)hash[pos].data;
                  }
 
-}
-
-template <class OBJ> GHashEntry* GHash<OBJ>::NextEntry() {
- register int pos=fCurrentEntry;
- while (pos<fCapacity && hash[pos].hash<0) pos++;
- if (pos==fCapacity) {
-                 fCurrentEntry=fCapacity;
-                 return NULL;
-                 }
-              else {
-                 fCurrentEntry=pos+1;
-                 return &hash[pos];
-                 }
 }
 
 

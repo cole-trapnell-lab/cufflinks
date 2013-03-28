@@ -90,7 +90,7 @@ class GFaSeqGet {
   //caller is responsible for deallocating the return string
 
   void loadall(uint32 max_len=0) {
-    //TODO: must read the whole sequence differently here - line by line
+    //TODO: better read the whole sequence differently here - line by line
     //so when EOF or another '>' line is found, the reading stops!
     int clen=(seq_len>0) ? seq_len : ((max_len>0) ? max_len : MAX_FASUBSEQ);
     subseq(1, clen);

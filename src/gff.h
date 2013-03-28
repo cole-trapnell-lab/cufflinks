@@ -896,7 +896,7 @@ class GSeqStat {
  public:
    int gseqid; //gseq id in the global static pool of gseqs
    char* gseqname; //just a pointer to the name of gseq
-   //int fcount;//number of features on this gseq
+   int fcount;//number of features on this gseq
    uint mincoord;
    uint maxcoord;
    uint maxfeat_len; //maximum feature length on this genomic sequence
@@ -904,6 +904,7 @@ class GSeqStat {
    GSeqStat(int id=-1, char* name=NULL) {
      gseqid=id;
      gseqname=name;
+     fcount=0;
      mincoord=MAXUINT;
      maxcoord=0;
      maxfeat_len=0;
@@ -940,18 +941,8 @@ class GfList: public GList<GffObj> {
        }
      }
    void finalize(GffReader* gfr, bool mergeCloseExons, 
-                bool keepAttrs=false, bool noExonAttr=true) { //if set, enforce sort by locus
-     if (mustSort) { //force (re-)sorting
-        this->setSorted(false);
-        this->setSorted((GCompareProc*)gfo_cmpByLoc);
-        }
-     int delcount=0;
-     for (int i=0;i<Count();i++) {
-       //finish the parsing for each GffObj
-       fList[i]->finalize(gfr, mergeCloseExons, keepAttrs, noExonAttr);
-       }
-     if (delcount>0) this->Pack();
-     }
+                bool keepAttrs=false, bool noExonAttr=true);
+
    void freeAll() {
      for (int i=0;i<fCount;i++) {
        delete fList[i];
@@ -1029,6 +1020,7 @@ class GffReader {
   void subfPoolAdd(GHash<CNonExon>& pex, GfoHolder* newgfo);
   GfoHolder* promoteFeature(CNonExon* subp, char*& subp_name, GHash<CNonExon>& pex,
                                   bool keepAttr, bool noExonAttr);
+  GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
  public:
   GfList gflst; //accumulate GffObjs being read
   GfoHolder* newGffRec(GffLine* gffline, bool keepAttr, bool noExonAttr,
@@ -1038,9 +1030,9 @@ class GffReader {
                                          bool keepAttr);
   GfoHolder* updateParent(GfoHolder* newgfh, GffObj* parent);
   bool addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr);
-  GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
+  GPVec<GSeqStat> gseqStats; //only populated after finalize()
   GffReader(FILE* f=NULL, bool t_only=false, bool sortbyloc=false):discarded_ids(true),
-                       phash(true), gflst(sortbyloc), gseqstats(true,true,true) {
+                       phash(true), gseqstats(true,true,true), gflst(sortbyloc), gseqStats(1, false) {
       gff_warns=gff_show_warnings;
       names=NULL;
       gffline=NULL;
@@ -1060,7 +1052,7 @@ class GffReader {
       gflst.sortedByLoc(sortbyloc);
       }
   GffReader(char* fn, bool t_only=false, bool sort=false):discarded_ids(true), phash(true),
-                             gflst(sort),gseqstats(true,true,true) {
+            gseqstats(true,true,true), gflst(sort), gseqStats(1,false) {
       gff_warns=gff_show_warnings;
       names=NULL;
       fname=Gstrdup(fn);

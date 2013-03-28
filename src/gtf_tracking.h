@@ -361,6 +361,12 @@ class GSuperLocus;
 class GTrackLocus;
 class GXLocus;
 
+class GXSeg : public GSeg {
+public:
+	int flags;
+	GXSeg(uint s=0, uint e=0, int f=0):GSeg(s,e),flags(f) { }
+};
+
 //Data structure holding a query locus data (overlapping mRNAs on the same strand)
 // and also the accuracy data of all mRNAs of a query locus
 // (against all reference loci overlapping the same region)
@@ -372,7 +378,7 @@ public:
     GffObj* mrna_maxcov;  //transcript with maximum coverage (for main "ref" transcript)
     GffObj* mrna_maxscore; //transcript with maximum gscore (for major isoform)
     GList<GffObj> mrnas; //list of transcripts (isoforms) for this locus
-	GArray<GSeg> uexons; //list of unique exons (covered segments) in this region
+	GArray<GXSeg> uexons; //list of unique exons (covered segments) in this region
 	GArray<GSeg> mexons; //list of merged exons in this region
 	GIArray introns;
 	GList<GLocus> cmpovl; //temp list of overlapping qry/ref loci to compare to (while forming superloci)
@@ -411,7 +417,11 @@ public:
 			for (int i=0;i<mrna->exons.Count();i++) {
 				seg.start=mrna->exons[i]->start;
 				seg.end=mrna->exons[i]->end;
-				uexons.Add(seg);
+				int xterm=0;
+				if (i==0) xterm|=1;
+				if (i==mrna->exons.Count()-1) xterm|=2;
+				GXSeg xseg(seg.start, seg.end, xterm);
+				uexons.Add(xseg);
 				mexons.Add(seg);
 				if (i>0) {
 					seg.start=mrna->exons[i-1]->end+1;
@@ -570,7 +580,11 @@ public:
 				seg.start=mrna->exons[i]->start;
 				seg.end=mrna->exons[i]->end;
 				if (!ovlexons.Exists(i)) mexons.Add(seg);
-				uexons.Add(seg);
+				int xterm=0;
+				if (i==0) xterm|=1;
+				if (i==mrna->exons.Count()-1) xterm|=2;
+				GXSeg xseg(seg.start, seg.end, xterm);
+				uexons.Add(xseg);
 				GISeg iseg;
 				if (i>0) {
 					iseg.start=mrna->exons[i-1]->end+1;
@@ -610,12 +624,12 @@ public:
     GList<GLocus> rloci;
     GList<GffObj> qmrnas; //list of transcripts (isoforms) for this locus
     GArray<GSeg> qmexons; //list of merged exons in this region
-    GArray<GSeg> quexons; //list of unique exons (covered segments) in this region
+    GArray<GXSeg> quexons; //list of unique exons (covered segments) in this region
     GIArray qintrons; //list of unique exons (covered segments) in this region
     //same lists for reference:
     GList<GffObj> rmrnas; //list of transcripts (isoforms) for this locus
     GArray<GSeg> rmexons; //list of merged exons in this region
-    GArray<GSeg> ruexons; //list of unique exons (covered segments) in this region
+    GArray<GXSeg> ruexons; //list of unique exons (covered segments) in this region
     GArray<GISeg> rintrons; //list of unique exons (covered segments) in this region
     // store problematic introns for printing:
     GIArray i_missed; //missed reference introns (not overlapped by any qry intron)

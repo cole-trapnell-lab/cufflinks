@@ -37,10 +37,23 @@ template <class OBJ> class GArray:public GVec<OBJ> {
     //~GArray();
     //assignment operator
     void setSorted(GCompareProc* cmpFunc);
+    void setSorted(bool sorted) {
+     if (sorted) {
+         if (fCompareProc!=&DefaultCompareProc) {
+             fCompareProc=&DefaultCompareProc;
+             Sort();
+             }
+          }
+      else fCompareProc=NULL;
+      }
     //sort the array if cmpFunc not NULL or changes
     int Add(OBJ* item); // specific implementation if sorted
     int Add(OBJ& item) { return Add(&item); } //both will CREATE a new OBJ and COPY to it
                        // using OBJ new operator=
+    int cAdd(OBJ item) { return Add(&item); }
+    int cPush(OBJ item) { return Add(&item); }
+    int Push(OBJ& item) { return Add(&item); }
+
     void Add(GArray<OBJ>& list); //add copies of all items from another list
     //this will reject identical items in sorted lists only!
     void setUnique(bool beUnique) { fUnique = beUnique; };
@@ -57,7 +70,7 @@ template <class OBJ> class GArray:public GVec<OBJ> {
     //unsorted only, place item at position idx:
     void Move(int curidx, int newidx);
     void Insert(int idx, OBJ* item);
-    void Insert(int idx, OBJ& item) { Insert(idx,&item); }
+    void Insert(int idx, OBJ item) { Insert(idx,&item); }
 };
 
 //GList is a sortable collection of pointers to objects; requires operator< to be defined, or a custom compare function
@@ -65,6 +78,7 @@ template <class OBJ> class GList:public GPVec<OBJ> {
   protected:
     bool fUnique;
     GCompareProc* fCompareProc; //a pointer to a Compare function
+    
     static int DefaultCompareProc(const pointer item1, const pointer item2) {
       //operator< MUST be defined for OBJ class!
       if (*((OBJ*)item2) < *((OBJ*)item1)) return 1;
@@ -177,13 +191,13 @@ template <class OBJ> GArray<OBJ>::GArray(GCompareProc* cmpFunc):GVec<OBJ>(0) {
 
 template <class OBJ> GArray<OBJ>::GArray(bool sorted, bool unique):GVec<OBJ>(0) {
   fUnique=unique;
-  fCompareProc=sorted? &DefaultCompareProc : NULL;
+  fCompareProc = sorted ? DefaultCompareProc : NULL;
 }
 
 template <class OBJ> GArray<OBJ>::GArray(int init_capacity,
                         bool sorted, bool unique):GVec<OBJ>(init_capacity) {
   fUnique=unique;
-  fCompareProc=sorted? &DefaultCompareProc : NULL;
+  fCompareProc=sorted ? DefaultCompareProc : NULL;
 }
 
 template <class OBJ> void GArray<OBJ>::setSorted(GCompareProc* cmpFunc) {
@@ -213,7 +227,7 @@ template <class OBJ> int GArray<OBJ>::Add(OBJ* item) {
    if (Found(*item, result))
       if (fUnique) return -1; //cannot add a duplicate!
    //Found sets result to the position where the item should be!
-   this->idxInsert(result, *item);
+   GVec<OBJ>::Insert(result, *item);
    }
   else {
    if (fUnique && Found(*item,result)) return -1; //set behaviour
@@ -294,7 +308,7 @@ template <class OBJ> bool GArray<OBJ>::Found(OBJ& item, int& idx) {
 template <class OBJ> void GArray<OBJ>::Insert(int idx, OBJ* item) {
  //idx can be [0..fCount] so an item can be actually added
  BE_UNSORTED; //forbid this operation on sorted data
- idxInsert(idx, item);
+ GVec<OBJ>::Insert(idx, item);
 }
 
 
@@ -316,8 +330,9 @@ template <class OBJ> void GArray<OBJ>::Replace(int idx, OBJ& item) {
 }
 
 template <class OBJ> void GArray<OBJ>::Sort() {
- if (this->fArray!=NULL && this->fCount>0 && fCompareProc!=NULL)
-     qSort(0, this->fCount-1, fCompareProc);
+ if (fCompareProc==NULL) { fCompareProc=DefaultCompareProc; }
+ if (this->fArray!=NULL && this->fCount>0)
+     this->qSort(0, this->fCount-1, fCompareProc);
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -614,7 +629,8 @@ template <class OBJ> int GList<OBJ>::Remove(OBJ* item) {
 }
 
 template <class OBJ> void GList<OBJ>::Sort() {
- if (this->fList!=NULL && this->fCount>0 && fCompareProc!=NULL)
+ if (fCompareProc==NULL) fCompareProc = DefaultCompareProc;
+ if (this->fList!=NULL && this->fCount>0)
      this->qSort(0, this->fCount-1, fCompareProc);
 }
 

@@ -177,7 +177,7 @@ GffLine::GffLine(GffReader* reader, const char* l) {
  info=t[8];
  char* p=t[3];
  if (!parseUInt(p,fstart)) {
-   //FIXME: chromosome_band entries in Flybase
+   //chromosome_band entries in Flybase
    GMessage("Warning: invalid start coordinate at line:\n%s\n",l);
    return;
    }
@@ -645,15 +645,6 @@ int GffObj::addExon(uint segstart, uint segend, double sc, char fr, int qs, int 
      }
    if (end<exons.Last()->end) end=exons.Last()->end;
      
-   if (uptr!=NULL) { //collect stats about the underlying genomic sequence
-       GSeqStat* gsd=(GSeqStat*)uptr;
-       if (start<gsd->mincoord) gsd->mincoord=start;
-       if (end>gsd->maxcoord) gsd->maxcoord=end;
-       if (this->len()>gsd->maxfeat_len) {
-          gsd->maxfeat_len=this->len();
-          gsd->maxfeat=this;
-          }
-       }
    return eidx;
 }
 
@@ -853,12 +844,14 @@ GffObj::GffObj(GffReader *gfrd, GffLine* gffline, bool keepAttr, bool noExonAttr
   //GSeqStat* gsd=gfrd->gseqstats.AddIfNew(new GSeqStat(gseq_id,names->gseqs.lastNameUsed()),true);
   GSeqStat* gsd=gfrd->gseqstats.AddIfNew(new GSeqStat(gseq_id,gffline->gseqname), true);
   uptr=gsd;
+  /*
   if (start<gsd->mincoord) gsd->mincoord=start;
   if (end>gsd->maxcoord) gsd->maxcoord=end;
     if (this->len()>gsd->maxfeat_len) {
         gsd->maxfeat_len=this->len();
         gsd->maxfeat=this;
         }
+  */
 }
 
 GffLine* GffReader::nextGffLine() {
@@ -1040,7 +1033,6 @@ GfoHolder* GffReader::updateGffRec(GfoHolder* prevgfo, GffLine* gffline,
 bool GffReader::addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonExon>& pex, bool noExonAttr) {
   bool r=true;
   if (gffline->strand!=prevgfo->gffobj->strand) {
-     //TODO: add support for trans-splicing and even inter-chromosomal fusions
         if (prevgfo->gffobj->strand=='.') {
             prevgfo->gffobj->strand=gffline->strand;
         }
@@ -1049,7 +1041,7 @@ bool GffReader::addExonFeature(GfoHolder* prevgfo, GffLine* gffline, GHash<CNonE
        prevgfo->gffobj->gffID, prevgfo->gffobj->strand,
        gffline->fstart, gffline->fend, gffline->strand, prevgfo->gffobj->getGSeqName());
        //r=false;
-       return true; //FIXME: split trans-spliced mRNAs by strand
+       return true;
        }
    }
   int gdist=(gffline->fstart>prevgfo->gffobj->end) ? gffline->fstart-prevgfo->gffobj->end :
@@ -1204,11 +1196,11 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
                GfoHolder* ngfo=prevseen;
                if (ngfo==NULL) {
                    //if it's an exon type, create directly the parent with this exon
-            	   //but if it's recognized as a transcript, the object itself is created
-            	   ngfo=newGffRec(gffline, keepAttr, noExonAttr, NULL, NULL, newgflst);
+                   //but if it's recognized as a transcript, the object itself is created
+                   ngfo=newGffRec(gffline, keepAttr, noExonAttr, NULL, NULL, newgflst);
                    }
                if (!ngfo->gffobj->isTranscript() &&
-            	     gffline->ID!=NULL && gffline->exontype==0)
+                     gffline->ID!=NULL && gffline->exontype==0)
                      subfPoolAdd(pex, ngfo);
                //even those with errors will be added here!
                }
@@ -1219,7 +1211,13 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
       delete gffline;
       gffline=NULL;
       }//while gff lines
-  gflst.finalize(this, mergeCloseExons, keepAttr, noExonAttr); //force sorting by locus if so constructed
+  if (gflst.Count()>0) {
+    gflst.finalize(this, mergeCloseExons, keepAttr, noExonAttr); //force sorting by locus if so constructed
+    gseqStats.setCount(gseqstats.Last()->gseqid+1);
+    for (int gi=0;gi<gseqstats.Count();gi++) {
+        gseqStats.Put(gseqstats[gi]->gseqid, gseqstats[gi]); //copy the pointer only
+    }
+  }
  // all gff records are now loaded in GList gflst
  // so we can free the hash
   phash.Clear();
@@ -1227,6 +1225,24 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
   if (validation_errors) {
     exit(1);
     }
+}
+
+void GfList::finalize(GffReader* gfr, bool mergeCloseExons,
+             bool keepAttrs, bool noExonAttr) { //if set, enforce sort by locus
+  if (mustSort) { //force (re-)sorting
+     this->setSorted(false);
+     this->setSorted((GCompareProc*)gfo_cmpByLoc);
+     }
+  GList<GffObj> discarded(false,true,false);
+  for (int i=0;i<Count();i++) {
+    //finish the parsing for each GffObj
+    fList[i]->finalize(gfr, mergeCloseExons, keepAttrs, noExonAttr);
+    if (fList[i]->isDiscarded()) {
+       discarded.Add(fList[i]);
+       this->Forget(i);
+    }
+  }
+  if (discarded.Count()>0) this->Pack();
 }
 
 GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons, bool keepAttrs, bool noExonAttr) {
@@ -1274,6 +1290,18 @@ GffObj* GffObj::finalize(GffReader* gfr, bool mergeCloseExons, bool keepAttrs, b
    //shrink transcript to the exons' span
    this->start=exons.First()->start;
    this->end=exons.Last()->end;
+   //also update the stats for the reference sequence
+   if (uptr!=NULL) { //collect stats about the underlying genomic sequence
+       GSeqStat* gsd=(GSeqStat*)uptr;
+       if (start<gsd->mincoord) gsd->mincoord=start;
+       if (end>gsd->maxcoord) gsd->maxcoord=end;
+       if (this->len()>gsd->maxfeat_len) {
+          gsd->maxfeat_len=this->len();
+          gsd->maxfeat=this;
+          }
+       }
+   this->uptr=NULL;
+   this->udata=0;
  }
  //attribute reduction for GTF records
  if (keepAttrs && !noExonAttr && !hasGffID()

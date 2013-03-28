@@ -784,13 +784,13 @@ void clip_by_3_prime_dropoff(vector<Scaffold>& scaffolds)
             {
                 mult = 1;
                 offset = 0;
-                exon_3 = &scaff.augmented_ops().front();
+                exon_3 = &scaff.augmented_ops().front(); //last exon at 3' end
             }
             else if (scaff.strand() == CUFF_FWD)
             {
                 mult = -1;
                 offset = scaff_len - 1;
-                exon_3 = &scaff.augmented_ops().back();
+                exon_3 = &scaff.augmented_ops().back();//last exon at 3' end
             }
             else
             {
