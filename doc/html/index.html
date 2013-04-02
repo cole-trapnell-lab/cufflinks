@@ -269,6 +269,7 @@
 					</li>
 					<li>An optimized sampling procedure drastically improves running time for Cuffdiff.  Cufflinks also benefits from this change.  The improvements are particularly noticeable on deeply sequenced libraries.
 					<li>The range of p-values that users should expect from Cuffdiff has changed.  Because the test is now based on explicit sampling from the beta negative binomial, users will not see values less than 10^-5 by default. The <tt>test_stat</tt> field of Cuffdiff's output still contains the  delta method's test statistic, but this test statistic is not used to compute p-values.  It is preserved for backward compatibility with some functions in <a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a>.
+					<li>Some extraneous temporary output files have been removed after Cuffmerge runs.
 				</ul>	
 				</p>
 				<br/>
