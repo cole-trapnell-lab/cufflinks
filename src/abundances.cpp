@@ -1600,12 +1600,8 @@ bool generate_count_assignment_samples(int num_draws,
         return true;
     }
     
-    //size_t num_frag_count_draws = 1000;
-    //const int num_multinomial_samples = 1;
-    
     boost::mt19937 rng;
     
-    //vector<Eigen::VectorXd > generated_counts (num_frag_count_draws, Eigen::VectorXd::Zero(transcripts.size()));
     ublas::vector<double> mle_frag_counts = ublas::zero_vector<double>(count_mean.size());
     
     for (size_t j = 0; j < count_mean.size(); ++j)
@@ -2332,10 +2328,6 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     
     if (gamma_samples == NULL || gamma_samples->empty())
     {
-        //size_t num_frag_count_draws = 1000;
-        //const int num_multinomial_samples = 1;
-        
-        
         vector<Eigen::VectorXd > generated_counts (num_frag_count_draws, Eigen::VectorXd::Zero(transcripts.size()));
         ublas::vector<double> mle_frag_counts = ublas::zero_vector<double>(transcripts.size());
         
