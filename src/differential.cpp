@@ -1471,6 +1471,7 @@ void filter_group_for_js_testing(vector<vector<AbundanceGroup> >& source_groups)
 
 bool group_has_record_above_thresh(const AbundanceGroup& ab_group)
 {
+ /*
     for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
     {
         const Abundance& ab = *(ab_group.abundances()[ab_idx]);
@@ -1481,7 +1482,9 @@ bool group_has_record_above_thresh(const AbundanceGroup& ab_group)
                 return true;
         }
     }
-    return false;
+  */
+    return true;
+    //return false;
 }
 
 bool is_badly_fit(const Abundance& ab)
