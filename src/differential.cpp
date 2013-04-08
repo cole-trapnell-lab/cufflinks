@@ -1449,12 +1449,13 @@ void filter_group_for_js_testing(vector<vector<AbundanceGroup> >& source_groups)
             for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
             {
                 const Abundance& ab = *(ab_group.abundances()[ab_idx]);
-                if (ab.num_fragments() && ab.effective_length())
-                {
-                    double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
-                    if (frags_per_kb >= min_read_count)
-                        to_keep[ab_idx] = true;
-                }
+//                if (ab.num_fragments() && ab.effective_length())
+//                {
+//                    double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
+//                    if (frags_per_kb >= min_read_count)
+//                        to_keep[ab_idx] = true;
+//                }
+                to_keep[ab_idx] = true;
             }
         }
         
@@ -1855,11 +1856,7 @@ void test_differential(const string& locus_tag,
             const AbundanceGroup& prev_abundance = filtered_promoter_groups[j][k];
             const string& desc = curr_abundance.description();
             
-            bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                 group_has_record_above_thresh(prev_abundance) &&
-//                                 group_has_record_badly_fit(curr_abundance) == false &&
-//                                 group_has_record_badly_fit(prev_abundance) == false &&
-                                 curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
+            bool enough_reads = (curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
                                  prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
             SampleDifference test;
             test = get_ds_tests(prev_abundance,
@@ -1898,12 +1895,8 @@ void test_differential(const string& locus_tag,
             const AbundanceGroup& prev_abundance = filtered_cds_groups[j][k];
             const string& desc = curr_abundance.description();
             
-            bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                 group_has_record_above_thresh(prev_abundance) &&
-//                                 group_has_record_badly_fit(curr_abundance) == false &&
-//                                 group_has_record_badly_fit(prev_abundance) == false &&
-                                 curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
-                                 prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
+            bool enough_reads =  (curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
+                                  prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
             SampleDifference test;
             test = get_ds_tests(prev_abundance,
                                 curr_abundance,
@@ -1940,11 +1933,7 @@ void test_differential(const string& locus_tag,
             const AbundanceGroup& prev_abundance = filtered_primary_trans_groups[j][k];
             const string& desc = curr_abundance.description();
             
-            bool enough_reads = (group_has_record_above_thresh(curr_abundance) &&
-                                 group_has_record_above_thresh(prev_abundance) &&
-//                                 group_has_record_badly_fit(curr_abundance) == false &&
-//                                 group_has_record_badly_fit(prev_abundance) == false &&
-                                 curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
+            bool enough_reads = (curr_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test &&
                                  prev_abundance.FPKM_by_replicate().size() >= min_reps_for_js_test);
             
             SampleDifference test;
