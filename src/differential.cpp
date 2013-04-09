@@ -1449,13 +1449,13 @@ void filter_group_for_js_testing(vector<vector<AbundanceGroup> >& source_groups)
             for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
             {
                 const Abundance& ab = *(ab_group.abundances()[ab_idx]);
-//                if (ab.num_fragments() && ab.effective_length())
-//                {
-//                    double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
-//                    if (frags_per_kb >= min_read_count)
-//                        to_keep[ab_idx] = true;
-//                }
-                to_keep[ab_idx] = true;
+                if (ab.num_fragments() && ab.effective_length())
+                {
+                    double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
+                    if (frags_per_kb >= min_read_count)
+                        to_keep[ab_idx] = true;
+                }
+                
             }
         }
         
@@ -1468,62 +1468,6 @@ void filter_group_for_js_testing(vector<vector<AbundanceGroup> >& source_groups)
             ab_group = f;
         }
     }
-}
-
-bool group_has_record_above_thresh(const AbundanceGroup& ab_group)
-{
- /*
-    for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
-    {
-        const Abundance& ab = *(ab_group.abundances()[ab_idx]);
-        if (ab.num_fragments() && ab.effective_length())
-        {
-            double frags_per_kb = ab.num_fragments() / (ab.effective_length() / 1000.0);
-            if (frags_per_kb >= min_read_count)
-                return true;
-        }
-    }
-  */
-    return true;
-    //return false;
-}
-
-bool is_badly_fit(const Abundance& ab)
-{
-    double pooled_fpkm = ab.FPKM();
-    double pooled_fpkm_var = ab.FPKM_variance();
-    if (pooled_fpkm == 0 || pooled_fpkm_var <= 0)
-        return false;
-    normal norm(0, 1);
-    FPKMPerReplicateTable fpkm_by_rep = ab.FPKM_by_replicate();
-    for (FPKMPerReplicateTable::const_iterator f_itr = fpkm_by_rep.begin();
-         f_itr != fpkm_by_rep.end(); ++f_itr)
-    {
-        double rep_fpkm = f_itr->second;
-        //double p_value = cdf(norm, rep_fpkm);
-        double z_score = (rep_fpkm - pooled_fpkm) / sqrt(pooled_fpkm_var);
-        double tail_1 = cdf(norm, z_score);
-        double tail_2 = cdf(norm, -z_score);
-        double p_value = 1.0 - (tail_1 - tail_2);
-        
-        if (p_value < (min_outlier_p / fpkm_by_rep.size()))
-            return true;
-    }
-    return false;
-}
-
-bool group_has_record_badly_fit(const AbundanceGroup& ab_group)
-{
-    for (size_t ab_idx = 0; ab_idx < ab_group.abundances().size(); ++ab_idx)
-    {
-        const Abundance& ab = *(ab_group.abundances()[ab_idx]);
-        if (ab.num_fragments() && ab.effective_length())
-        {
-            if (is_badly_fit(ab))
-                return true;
-        }
-    }
-    return false;
 }
 
 // The two functions below just clear the FPKM samples and other data used to estimate
