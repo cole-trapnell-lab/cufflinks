@@ -147,10 +147,11 @@ void print_usage()
     fprintf(stderr, "  --no-diff                    Don't generate differential analysis files            [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-js-tests                Don't perform isoform switching tests                 [ default:  FALSE ]\n");
 	fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
-    fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  --dispersion-method          Method used to estimate dispersion models             [ default:  below ]\n");
     fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
+    
+    fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
