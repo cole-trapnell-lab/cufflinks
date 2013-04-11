@@ -65,7 +65,6 @@ string library_type = default_library_type;
 bool corr_bias = false;
 bool corr_multi = false;
 
-bool poisson_dispersion = false;
 BiasMode bias_mode = VLMM;
 int def_frag_len_mean = 200;
 int def_frag_len_std_dev = 80;
@@ -416,6 +415,7 @@ void init_lib_norm_method_table()
     lib_norm_method_table["geometric"] = GEOMETRIC;
     lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
     lib_norm_method_table["quartile"] = QUARTILE;
+    lib_norm_method_table["poisson"] = QUARTILE;
     //lib_norm_method_table["tmm"] = TMM;
     //lib_norm_method_table["absolute"] = ABSOLUTE;
 }
@@ -423,6 +423,7 @@ void init_lib_norm_method_table()
 void init_cufflinks_lib_norm_method_table()
 {
     lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
+    lib_norm_method_table["poisson"] = QUARTILE;
     //lib_norm_method_table["quartile"] = QUARTILE;
     //lib_norm_method_table["absolute"] = ABSOLUTE;
 }

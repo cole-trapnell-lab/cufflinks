@@ -158,7 +158,6 @@ void print_usage()
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion          [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
@@ -175,7 +174,7 @@ void print_usage()
     fprintf(stderr, "  -N/--upper-quartile-norm     Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
     fprintf(stderr, "  --geometric-norm             Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
     fprintf(stderr, "  --raw-mapped-norm            Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
-    
+    fprintf(stderr, "  --poisson-dispersion         Deprecated, use --dispersion-method                   [    DEPRECATED   ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
@@ -314,7 +313,7 @@ int parse_options(int argc, char** argv)
 			}
             case OPT_POISSON_DISPERSION:
 			{
-				poisson_dispersion = true;
+				fprintf (stderr, "Warning: --poisson-dispersion is deprecated, use --dispersion-method poisson instead.\n");
 				break;
 			}
             case OPT_NO_UPDATE_CHECK:

@@ -268,6 +268,8 @@
 		<li><a href="#count_tracking_format">Count Tracking Format</a></li>
 		<li><a href="#read_group_tracking_format">Read Group Tracking Format</a></li>
 		<li><a href="#library">Library Types</a></li>
+		<li><a href="#library_norm_meth">Library Normalization Methods</a></li>
+		<li><a href="#dispersion_meth">Cross-replicate dispersion estimation methods</a></li>
 
   	    </ul><br/>
   	  </div>
@@ -381,7 +383,13 @@
 	  </td><td VALIGN=top>
 	  See <a href="#library">Library Types</a>
 	  </td></tr>
+	  <tr>	
+		  
 	  <tr><td VALIGN=top nowrap>	
+	  <tt>--library-norm-method</tt>
+	  </td><td VALIGN=top>
+	  See <a href="#library_norm_meth">Library Normalization Methods</a>
+	  </td></tr>
 	  
 	  <tr><td VALIGN=top>
 	  <b>Advanced Abundance Estimation Options:</b>
@@ -423,24 +431,6 @@
 	  </td><td VALIGN=top>
 	  With this option, Cufflinks counts only those fragments compatible with some reference transcript towards the number of mapped hits used in the FPKM denominator.  This option can be combined with <tt>-N/--upper-quartile-norm</tt>.  It is inactive by default, and can only be used in combination with <tt>--GTF</tt>.  Use with either RABT or ab initio assembly is not supported
 	  </td></tr>
-  		
-  	  <tr><td VALIGN=top nowrap>
-	  <tt>--num-importance-samples &lt;int&gt;</tt>
-	  </td><td VALIGN=top>
-	  Deprecated
-	  </td></tr> 
-	
-	  <tr><td VALIGN=top nowrap>
-	  <tt>--bootstrap-fraction &lt;0.0-1.0&gt;</tt>
-	  </td><td VALIGN=top>
-	  Deprecated
-	  </td></tr>
-	
-	  <tr><td VALIGN=top nowrap>
-	  <tt>--num-bootstrap-samples &lt;int&gt;</tt>
-	  </td><td VALIGN=top>
-	  Deprecated
-	  </td></tr>
 	  
 	  <tr><td VALIGN=top nowrap>
 	  <tt>--max-mle-iterations &lt;int&gt;</tt>
@@ -457,7 +447,13 @@
 	  <tr><td VALIGN=top nowrap>
 	  <tt>--no-effective-length-correction</tt>
 	  </td><td VALIGN=top>
-	  Cuffdiff will not employ its "effective" length normalization to transcript FPKM. 
+	  Cufflinks will not employ its "effective" length normalization to transcript FPKM. 
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-length-correction</tt>
+	  </td><td VALIGN=top>
+	  Cufflinks will not normalize fragment counts by transcript length at all.  Use this option when fragment count is independent of the size of the features being quantified (e.g. for small RNA libraries, where no fragmentation takes place, or 3 prime end sequencing, where sampled RNA fragments are all essentially the same length).  Experimental option, use with caution. 
 	  </td></tr>
 	
 	  <tr><td VALIGN=top>
@@ -1358,13 +1354,6 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  testing for differences between all pairs of samples.  Samples should be provided in
 		  increasing time order at the command line (e.g first time point SAM, second timepoint SAM, etc.) 
 		  </td></tr>
-		  <tr><td VALIGN=top nowrap>
-		  <tt>-N/--upper-quartile-norm</tt>
-		  </td><td VALIGN=top>
-		  With this option, Cufflinks normalizes by the upper quartile of the number of fragments mapping
-		  to individual loci instead of the total number of sequenced fragments.  This can improve robustness 
-		  of differential expression calls for less abundant genes and transcripts.
-		  </td></tr>
 			
 		  <tr><td VALIGN=top nowrap>
 		  <tt>--total-hits-norm</tt>
@@ -1419,17 +1408,27 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  </td><td VALIGN=top>
 		  The allowed false discovery rate.  The default is 0.05. 
 		  </td></tr>
-		  
+		  <tr><td VALIGN=top nowrap>	
+		  <tt>--library-type</tt>
+		  </td><td VALIGN=top>
+		  See <a href="#library">Library Types</a>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>	
+		  <tt>--library-norm-method</tt>
+		  </td><td VALIGN=top>
+		  See <a href="#library_norm_meth">Library Normalization Methods</a>
+		  </td></tr>
+		  <tr><td VALIGN=top nowrap>	
+		  <tt>--dispersion-method</tt>
+		  </td><td VALIGN=top>
+		  See <a href="#dispersion_meth">Cross-replicate dispersion estimation methods</a>
+		  </td></tr>
 		  
 	  <tr><td VALIGN=top>
 	  <b>Advanced Options:</b>
 	  </td><td VALIGN=top>
 	  </td></tr>
-	  <tr><td VALIGN=top nowrap>	
-	  <tt>--library-type</tt>
-	  </td><td VALIGN=top>
-	  See <a href="#library">Library Types</a>
-	  </td></tr>
+	  
 	   <tr><td VALIGN=top nowrap>	
 	  <tt>-m/--frag-len-mean &lt;int&gt;</tt>
 	</td><td VALIGN=top>
@@ -1514,7 +1513,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	  Cuffdiff will make this many draws from each transcript's predicted negative binomial 
 	  random numbder generator.  Each draw is a number of fragments that will be 
 	  probabilistically assigned to the transcripts in the transcriptome.  Used to estimate
-	  the variance-covariance matrix on assigned fragment counts.  Default: 1000. 
+	  the variance-covariance matrix on assigned fragment counts.  Default: 100. 
 	  </td></tr>
 	
 	  <tr><td VALIGN=top nowrap>
@@ -1523,25 +1522,13 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	  For each fragment drawn from a transcript, Cuffdiff will assign it this 
 	  many times (probabilistically), thus estimating the assignment uncertainty 
 	  for each transcript. Used to estimate
-	  the variance-covariance matrix on assigned fragment counts.  Default: 1. 
-	  </td></tr>
-	
-	  <tr><td VALIGN=top nowrap>
-	  <tt>--max-frag-assign-draws &lt;int&gt;</tt>
-	  </td><td VALIGN=top>
-	  For each fragment drawn from a transcript, Cuffdiff will assign it this 
-	  many times (probabilistically), thus estimating the assignment uncertainty 
-	  for each transcript. Used to estimate
-	  the variance-covariance matrix on assigned fragment counts.  Default: 1. 
+	  the variance-covariance matrix on assigned fragment counts.  Default: 50. 
 	  </td></tr>
 	
    	  <tr><td VALIGN=top nowrap>
 	  <tt>-F/--min-outlier-p &lt;0.0-1.0&gt;</tt>
 	  </td><td VALIGN=top>
-	  Cuffdiff will refrain from testing a gene or transcript for differential 
-	  expression or regulation of one or more replicates produces a value for the 
-	  transcript outside of the confidence interval generated by when pooling the replicates 
-	  together. This parameter sets the size of the confidence interval.  Default: 0.01 (that is, a 99% confidence interval) 
+	  DEPRECATED
 	  </td></tr>
 	
 	  <tr><td VALIGN=top nowrap>
@@ -1554,6 +1541,12 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 	  <tt>--no-effective-length-correction</tt>
 	  </td><td VALIGN=top>
 	  Cuffdiff will not employ its "effective" length normalization to transcript FPKM. 
+	  </td></tr>
+	  
+	  <tr><td VALIGN=top nowrap>
+	  <tt>--no-length-correction</tt>
+	  </td><td VALIGN=top>
+	  Cuffdiff will not normalize fragment counts by transcript length at all.  Use this option when fragment count is independent of the size of the features being quantified (e.g. for small RNA libraries, where no fragmentation takes place, or 3 prime end sequencing, where sampled RNA fragments are all essentially the same length).  Experimental option, use with caution. 
 	  </td></tr>
 	  
 	  </table><br/>
@@ -2110,7 +2103,37 @@ boost_version   104700
   <p>
   Please contact <a href="mailto:tophat.cufflinks@gmail.com"><b>tophat.cufflinks@gmail.com</b></a> to request support for a new protocol.
   </p>
-  <br />
+  <br/>
+  <h2 id="library_norm_meth">Library Normalization Methods</h2><br/>
+  <p>
+  You can control how library sizes (i.e. sequencing depths) are normalized in Cufflinks and Cuffdiff.  Cuffdiff has several methods that require multiple libraries in order to work.  Library normalization methods supported by Cufflinks work on one library at a time.
+  </p>
+<table CELLSPACING=15>
+		  <tr><td VALIGN=top nowrap><strong>Normalization Method</strong></td><td VALIGN=top nowrap><strong>Supported by Cufflinks</strong></td><td VALIGN=top nowrap><strong>Supported by Cuffdiff</strong></td><td VALIGN=top><strong>Description</strong></td></tr>
+		  <tr><td VALIGN=top nowrap>classic-fpkm</td><td VALIGN=top>Yes</td><td VALIGN=top>Yes</td><td VALIGN=top>Library size factor is set to 1 - no scaling applied to FPKM values or fragment counts.  (default for Cufflinks)</td></tr>
+		  <tr><td VALIGN=top nowrap>geometric</td><td VALIGN=top nowrap>No</td><td VALIGN=top>Yes</td><td>FPKMs and fragment counts are scaled via the median of the geometric means of fragment counts across all libraries, as described in Anders and Huber (Genome Biology, 2010). This policy identical to the one used by DESeq.  (default for Cuffdiff)</td></tr>
+		  <tr><td VALIGN=top nowrap>quartile</td><td VALIGN=top>No</td><td VALIGN=top>Yes</td><td>FPKMs and fragment counts are scaled via the ratio of the 75 quartile fragment counts to the average 75 quartile value across all libraries.</td></tr>
+</table>
+  
+  <br/>
+  
+  <h2 id="dispersion_meth">Cross-replicate dispersion estimation methods</h2><br/>
+  <p>
+  Cuffdiff works by modeling the variance in fragment counts across replicates as a function of the mean fragment count across replicates.  Strictly speaking, models a quantitity called dispersion - the variance present in a group of samples beyond what is expected from a simple Poisson model of RNA_Seq. You can control how Cuffdiff constructs its model of dispersion in locus fragment counts.  Each condition that has replicates can receive its own model, or Cuffdiff can use a global model for all conditions.  All of these policies are identical to those used by DESeq (Anders and Huber, Genome Biology, 2010)
+  </p>
+<table CELLSPACING=15>
+		  <tr><td VALIGN=top nowrap><strong>Dispersion Method</strong></td><td VALIGN=top><strong>Description</strong></td></tr>
+		  <tr><td VALIGN=top nowrap>pooled</td><td VALIGN=top>Each replicated condition is used to build a model, then these models are averaged to provide a single global model for all conditions in the experiment. (Default)</td></tr>
+		  <tr><td VALIGN=top nowrap>per-condition</td><td>Each replicated condition receives its own model.  Only available when all conditions have replicates.</td></tr>
+		  <tr><td VALIGN=top nowrap>blind</td><td>All samples are treated as replicates of a single global "condition" and used to build one model.</td></tr>
+		  <tr><td VALIGN=top nowrap>poisson</td><td>The Poisson model is used, where the variance in fragment count is predicted to equal the mean across replicates.  Not recommended.</td></tr>
+</table>
+
+<p>
+Which method you choose largely depends on whether you expect variability in each group of samples to be similar. For example, if you are comparing two groups, A and B, where A has low cross-replicate variability and B has high variability, it may be best to choose <tt>per-condition</tt>. However, if the conditions have similar levels of variability, you might stick with the default, which sometimes provides a more robust model, especially in cases where each group has few replicates.  Finally, if you only have a single replicate in each condition, you must use <tt>blind</tt>, which treats all samples in the experiment as replicates of a single condition. This method works well when you expect the samples to have very few differentially expressed genes.  If there are many differentially expressed genes, Cuffdiff will construct an overly conservative model and you may not get any significant calls.  In this case, you will need more replicates in your experiment.
+</p>
+  <br/>
+  
   <div id="footer">
   	<table width="100%" cellspacing=15><tr><td>
     This research was supported in part by NIH grants R01-LM06845 and R01-GM083873, NSF grant CCF-0347992 and the Miller Institute for Basic

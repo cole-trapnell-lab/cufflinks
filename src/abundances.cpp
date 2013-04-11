@@ -1005,6 +1005,8 @@ void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignment
             
             // these are the *internally* scaled masses.
             double more_mass = alignments[i].collapse_mass();
+            double curr_mass = inserted.first->second;
+            assert (isnan(more_mass) == false);
             inserted.first->second += more_mass;
         }
     }
@@ -2712,7 +2714,7 @@ void AbundanceGroup::calculate_FPKM_covariance()
             long double length_j = _abundances[j]->effective_length();
             assert (!isinf(length_i) && !isnan(length_i));
             assert (!isinf(length_j) && !isnan(length_j));
-            if (length_i > 0 && length_j > 0)
+            if (length_i > 0 && length_j > 0 & M > 0)
             {
                 _fpkm_covariance(i,j) *=
                     ((1000000000.0 / (length_j *M)))*((1000000000.0 / (length_i *M)));

@@ -56,7 +56,6 @@ extern std::string library_type;
 extern bool corr_bias;
 extern bool corr_multi;
 
-extern bool poisson_dispersion;
 extern int def_frag_len_mean;
 extern int def_frag_len_std_dev;
 extern int max_mle_iterations;

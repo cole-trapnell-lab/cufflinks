@@ -367,7 +367,14 @@ void calc_classic_fpkm_scaling_factors(const vector<LocusCountList>& sample_comp
     }
     
     double all_library_counts = accumulate(total_counts.begin(), total_counts.end(), 0.0);
-    
+    if (all_library_counts == 0.0)
+    {
+        for (size_t i = 0; i < scale_factors.size(); ++i)
+        {
+            scale_factors[i] = 1.0;
+        }
+        return;
+    }
     for (size_t i = 0; i < scale_factors.size(); ++i)
     {
         scale_factors[i] = total_counts[i] / all_library_counts;
@@ -860,7 +867,7 @@ fit_dispersion_model_helper(const string& condition_name,
     
     shared_ptr<MassDispersionModel> disperser;
     disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(condition_name, compatible_count_means, raw_variances, fitted_values));
-    if (poisson_dispersion)
+    if (dispersion_method == POISSON)
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
     
 //    for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
@@ -945,26 +952,39 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     
     vector<double> scale_factors(all_read_groups.size(), 0.0);
     
+    vector<LocusCountList> norm_table;
+    
+    if (use_compat_mass)
+    {
+        norm_table = sample_compatible_count_table;
+    }
+    else // use_total_mass
+    {
+        assert(use_total_mass);
+        norm_table = sample_total_count_table;
+    }
     if (lib_norm_method == GEOMETRIC)
     {
-        calc_geometric_scaling_factors(sample_compatible_count_table, scale_factors);
+        calc_geometric_scaling_factors(norm_table, scale_factors);
     }
     else if (lib_norm_method == CLASSIC_FPKM)
     {
-        calc_classic_fpkm_scaling_factors(sample_compatible_count_table, scale_factors);
+        calc_classic_fpkm_scaling_factors(norm_table, scale_factors);
     }
     else if (lib_norm_method == QUARTILE)
     {
-        calc_quartile_scaling_factors(sample_compatible_count_table, scale_factors);
+        calc_quartile_scaling_factors(norm_table, scale_factors);
     }
     else if (lib_norm_method == TMM)
     {
-        calc_tmm_scaling_factors(sample_compatible_count_table, scale_factors);
+        calc_tmm_scaling_factors(norm_table, scale_factors);
     }
     else
     {
         assert (false);
     }
+    
+    
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
@@ -1027,9 +1047,20 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
     {
         double total_common = 0.0;
-        for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
+        if (use_compat_mass)
         {
-            total_common += sample_compatible_count_table[j].counts[fac_idx];
+            for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
+            {
+                total_common += sample_compatible_count_table[j].counts[fac_idx];
+            }
+        }
+        else
+        {
+            for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
+            {
+                total_common += sample_total_count_table[j].counts[fac_idx];
+            }
+
         }
         
         avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
