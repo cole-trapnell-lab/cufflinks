@@ -619,7 +619,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
         vector<double> draws;
         for (size_t i = 0; i < ngenes; ++i)
         {
-            LocusCountList locus_count("", nreps, 1); 
+            LocusCountList locus_count("", nreps, 1, vector<string>(), vector<string>());
             for (size_t rep_idx = 0; rep_idx < nreps; ++rep_idx)
             {
                 double gamma_draw = gamma(rng);
@@ -921,6 +921,60 @@ fit_dispersion_model(const string& condition_name,
     return model;
 }
 
+void build_norm_table(const vector<LocusCountList>& full_count_table,
+                      shared_ptr<const map<string, LibNormStandards> > normalizing_standards,
+                      vector<LocusCountList>& norm_table)
+{
+    // If we're using housekeeping genes or spike-in controls, select the rows we'll be using from the full count table.
+    if (normalizing_standards)
+    {
+        for (size_t i = 0; i < full_count_table.size(); ++i)
+        {
+            const vector<string>& gene_ids = full_count_table[i].gene_ids;
+            const vector<string>& gene_short_names = full_count_table[i].gene_short_names;
+            
+            // If the row has an ID that's in the table, take it.
+            map<string, LibNormStandards>::const_iterator g_id_itr = normalizing_standards->end();
+            map<string, LibNormStandards>::const_iterator g_name_itr = normalizing_standards->end();
+            
+            for (size_t j = 0; j < gene_ids.size(); ++j)
+            {
+                g_id_itr = normalizing_standards->find(gene_ids[j]);
+                if (g_id_itr != normalizing_standards->end())
+                {
+                    break;
+                }
+            }
+            
+            if (g_id_itr != normalizing_standards->end())
+            {
+                norm_table.push_back(full_count_table[i]);
+                continue;
+            }
+
+            for (size_t j = 0; j < gene_short_names.size(); ++j)
+            {
+                g_name_itr = normalizing_standards->find(gene_short_names[j]);
+                if (g_name_itr != normalizing_standards->end())
+                {
+                    break;
+                }
+            }
+            
+            if (g_name_itr != normalizing_standards->end())
+            {
+                norm_table.push_back(full_count_table[i]);
+                continue;
+            }
+
+        }
+    }
+    else // otherwise, just take all rows.
+    {
+        norm_table = full_count_table;
+    }
+}
+
 void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups)
 {
     vector<LocusCountList> sample_compatible_count_table;
@@ -938,8 +992,12 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
             {
                 const string& locus_id = raw_compatible_counts[j].locus_desc;
                 int num_transcripts = raw_compatible_counts[j].num_transcripts;
-                sample_compatible_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
-                sample_total_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
+                
+                const vector<string>& gene_ids = raw_compatible_counts[j].gene_ids;
+                const vector<string>& gene_short_names = raw_compatible_counts[j].gene_short_names;
+                
+                sample_compatible_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts, gene_ids, gene_short_names));
+                sample_total_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts, gene_ids, gene_short_names));
             }
             double scaled = raw_compatible_counts[j].count;
             //sample_compatible_count_table[j].counts[i] = scaled * unscaling_factor;
@@ -956,13 +1014,14 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     
     if (use_compat_mass)
     {
-        norm_table = sample_compatible_count_table;
+        build_norm_table(sample_compatible_count_table, lib_norm_standards, norm_table);
     }
     else // use_total_mass
     {
         assert(use_total_mass);
-        norm_table = sample_total_count_table;
+        build_norm_table(sample_total_count_table, lib_norm_standards, norm_table);
     }
+    
     if (lib_norm_method == GEOMETRIC)
     {
         calc_geometric_scaling_factors(norm_table, scale_factors);
@@ -1021,7 +1080,11 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
             string& locus_id = sample_compatible_count_table[j].locus_desc;
             double count = sample_compatible_count_table[j].counts[i];
             int num_transcripts = sample_compatible_count_table[j].num_transcripts;
-            LocusCount locus_count(locus_id, count, num_transcripts);
+            
+            const vector<string>& gids = sample_compatible_count_table[j].gene_ids;
+            const vector<string>& gnms = sample_compatible_count_table[j].gene_short_names;
+            
+            LocusCount locus_count(locus_id, count, num_transcripts, gids, gnms);
             scaled_compatible_counts.push_back(locus_count);
         }
         rg_props->common_scale_compatible_counts(scaled_compatible_counts);
@@ -1036,7 +1099,11 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
             string& locus_id = sample_total_count_table[j].locus_desc;
             double count = sample_total_count_table[j].counts[i];
             int num_transcripts = sample_total_count_table[j].num_transcripts;
-            LocusCount locus_count(locus_id, count, num_transcripts);
+            
+            const vector<string>& gids = sample_total_count_table[j].gene_ids;
+            const vector<string>& gnms = sample_total_count_table[j].gene_short_names;
+            
+            LocusCount locus_count(locus_id, count, num_transcripts, gids, gnms);
             scaled_total_counts.push_back(locus_count);
         }
         rg_props->common_scale_total_counts(scaled_total_counts);

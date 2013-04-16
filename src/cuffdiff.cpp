@@ -1061,11 +1061,6 @@ void fit_mle_error()
     
 }
 
-void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
-{
-    
-}
-
 void parse_contrast_file(FILE* contrast_file,
                          const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
                          vector<pair<size_t, size_t > >& contrasts)
@@ -1265,7 +1260,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                     
                     if (i >= sample_compatible_count_table.size())
                     {
-                        LocusCountList locus_count(c.locus_desc, num_samples, c.num_transcripts);
+                        LocusCountList locus_count(c.locus_desc, num_samples, c.num_transcripts, c.gene_ids, c.gene_short_names);
                         sample_compatible_count_table.push_back(locus_count);
                         sample_compatible_count_table.back().counts[0] = common_scale_compatible_count;
                         sample_total_count_table.push_back(locus_count);

@@ -156,6 +156,7 @@ string default_lib_norm_method = "geometric";
 string default_cufflinks_lib_norm_method = "classic-fpkm";
 LibNormalizationMethod lib_norm_method = LIB_NORM_NOT_SET;
 
+boost::shared_ptr<const std::map<std::string, LibNormStandards> > lib_norm_standards;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;

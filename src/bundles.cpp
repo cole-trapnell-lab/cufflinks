@@ -1668,8 +1668,18 @@ void inspect_map(BundleFactory& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            compatible_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.compatible_mass()), bundle.ref_scaffolds().size()));
-            total_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size()));
+            
+            vector<string> gene_ids;
+            vector<string> gene_short_names;
+            BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+            {
+                if (s->annotated_gene_id() != "")
+                    gene_ids.push_back(s->annotated_gene_id());
+                if (s->annotated_gene_name() != "")
+                    gene_short_names.push_back(s->annotated_gene_name());
+            }
+            compatible_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.compatible_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));
+            total_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));
 		}
         
         if (!valid_bundle)

@@ -328,11 +328,13 @@ class MleErrorModel;
 
 struct LocusCount
 {
-    LocusCount(std::string ld, double c, int nt) : 
-        locus_desc(ld), count(c), num_transcripts(nt) {}
+    LocusCount(std::string ld, double c, int nt, const std::vector<std::string>& gids, const std::vector<std::string>& gnms) :
+        locus_desc(ld), count(c), num_transcripts(nt), gene_ids(gids), gene_short_names(gnms) {}
     std::string locus_desc;
     double count;
     int num_transcripts;
+    std::vector<std::string> gene_ids;
+    std::vector<std::string> gene_short_names;
 };
 
 class ReadGroupProperties
@@ -481,6 +483,13 @@ void print_lib_norm_method_table();
 void init_lib_norm_method_table();
 void init_cufflinks_lib_norm_method_table();
 
+
+struct LibNormStandards
+{
+    
+};
+
+extern boost::shared_ptr<const std::map<std::string, LibNormStandards> > lib_norm_standards;
 
 template<typename T>
 std::string cat_strings(const T& container, const char* delimiter=",")

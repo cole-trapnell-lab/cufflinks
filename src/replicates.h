@@ -116,11 +116,13 @@ private:
 
 struct LocusCountList
 {
-    LocusCountList(std::string ld, int num_reps, int nt) : 
-    locus_desc(ld), counts(std::vector<double>(num_reps, 0)), num_transcripts(nt) {}
+    LocusCountList(std::string ld, int num_reps, int nt, const std::vector<std::string>& gids, const std::vector<std::string>& gnms) :
+    locus_desc(ld), counts(std::vector<double>(num_reps, 0)), num_transcripts(nt), gene_ids(gids), gene_short_names(gnms) {}
     std::string locus_desc;
     std::vector<double> counts;
     int num_transcripts;
+    vector<std::string> gene_ids;
+    vector<std::string> gene_short_names;
 };
 
 void transform_counts_to_common_scale(const vector<double>& scale_factors,
@@ -263,7 +265,7 @@ public:
                 
                 if (i >= sample_compatible_count_table.size())
                 {
-                    LocusCountList locus_count(c.locus_desc, _factories.size(), c.num_transcripts); 
+                    LocusCountList locus_count(c.locus_desc, _factories.size(), c.num_transcripts, c.gene_ids, c.gene_short_names);
                     sample_compatible_count_table.push_back(locus_count);
                     sample_compatible_count_table.back().counts[0] = raw_count;
                     sample_total_count_table.push_back(locus_count);
@@ -351,7 +353,7 @@ public:
                 
                 if (i >= sample_compatible_count_table.size())
                 {
-                    LocusCountList locus_count(c.locus_desc, _factories.size(), c.num_transcripts); 
+                    LocusCountList locus_count(c.locus_desc, _factories.size(), c.num_transcripts, c.gene_ids, c.gene_short_names);
                     sample_compatible_count_table.push_back(locus_count);
                     sample_compatible_count_table.back().counts[0] = common_scale_compatible_count;
                     sample_total_count_table.push_back(locus_count);
