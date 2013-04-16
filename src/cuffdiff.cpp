@@ -1618,7 +1618,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         init_default_contrasts(bundle_factories, samples_are_time_series, contrasts);
     }
     
-    if (contrast_file != NULL)
+    if (norm_standards_file != NULL)
     {
         parse_norm_standards_file(norm_standards_file);
     }
