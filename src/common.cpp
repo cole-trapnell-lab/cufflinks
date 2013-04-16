@@ -55,6 +55,7 @@ uint32_t max_gene_length = 3500000;
 std::string ref_gtf_filename = "";
 std::string mask_gtf_filename = "";
 std::string contrast_filename = "";
+std::string norm_standards_filename = "";
 std::string output_dir = "./";
 std::string fasta_dir;
 string default_library_type = "fr-unstranded";

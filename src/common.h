@@ -48,6 +48,7 @@ extern uint32_t max_gene_length;
 extern std::string ref_gtf_filename;
 extern std::string mask_gtf_filename;
 extern std::string contrast_filename;
+extern std::string norm_standards_filename;
 extern std::string output_dir;
 extern std::string fasta_dir;
 extern std::string library_type;
@@ -573,5 +574,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_DISPERSION_METHOD       315
 #define OPT_LIB_NORM_METHOD         316
 #define OPT_NO_SCV_CORRECTION       317
+#define OPT_NORM_STANDARDS_FILE     318
 
 #endif

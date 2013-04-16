@@ -76,6 +76,7 @@ static struct option long_options[] = {
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 {"mask-file",               required_argument,		 0,			 'M'},
 {"contrast-file",           required_argument,		 0,			 'C'},
+{"norm-standards-file",     required_argument,		 0,			 OPT_NORM_STANDARDS_FILE},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},
@@ -138,7 +139,8 @@ void print_usage()
     fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
-    //fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
+    fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
+    fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads                   [ default:  FALSE ]\n");
 #if ENABLE_THREADS
@@ -259,7 +261,12 @@ int parse_options(int argc, char** argv)
 				contrast_filename = optarg;
 				break;
 			}
-			case 'v':
+			case OPT_NORM_STANDARDS_FILE:
+			{
+				norm_standards_filename = optarg;
+				break;
+			}
+            case 'v':
 			{
 				if (cuff_quiet)
 				{
@@ -1167,6 +1174,41 @@ void init_default_contrasts(const vector<shared_ptr<ReplicatedBundleFactory> >& 
     }
 }
 
+void parse_norm_standards_file(FILE* norm_standards_file)
+{
+    char pBuf[10 * 1024];
+    size_t non_blank_lines_read = 0;
+    
+    shared_ptr<map<string, LibNormStandards> > norm_standards(new map<string, LibNormStandards>);
+    
+    while (fgets(pBuf, 10*1024, norm_standards_file))
+    {
+        if (strlen(pBuf) > 0)
+        {
+            char* nl = strchr(pBuf, '\n');
+            if (nl)
+                *nl = 0;
+            non_blank_lines_read++;
+            vector<string> columns;
+            tokenize(pBuf, "\t", columns);
+            
+            if (non_blank_lines_read == 1)
+                continue;
+            
+            if (columns.size() < 1) // 
+            {
+                continue;
+            }
+            
+            string gene_id = columns[0];
+            LibNormStandards L;
+            norm_standards->insert(make_pair(gene_id, L));
+        }
+    }
+    lib_norm_standards = norm_standards;
+}
+
+
 void print_variability_models(FILE* var_model_out, const vector<shared_ptr<ReplicatedBundleFactory> >& factories)
 {
 
@@ -1476,7 +1518,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
     }
 }
 
-void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
+void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 
 	ReadTable it;
@@ -1574,6 +1616,11 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, vector<string>& 
     else
     {
         init_default_contrasts(bundle_factories, samples_are_time_series, contrasts);
+    }
+    
+    if (contrast_file != NULL)
+    {
+        parse_norm_standards_file(norm_standards_file);
     }
     
     
@@ -2457,7 +2504,19 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 	}
-    
+
+    FILE* norm_standards_file = NULL;
+	if (norm_standards_filename != "")
+	{
+		norm_standards_file = fopen(norm_standards_filename.c_str(), "r");
+		if (!norm_standards_file)
+		{
+			fprintf(stderr, "Error: cannot open contrast file %s for reading\n",
+					norm_standards_filename.c_str());
+			exit(1);
+		}
+	}
+
 	
 	// Note: we don't want the assembly filters interfering with calculations 
 	// here
@@ -2741,7 +2800,7 @@ int main(int argc, char** argv)
 	outfiles.var_model_out = var_model_out;
 
     
-    driver(ref_gtf, mask_gtf, contrast_file, sam_hit_filenames, outfiles);
+    driver(ref_gtf, mask_gtf, contrast_file, norm_standards_file, sam_hit_filenames, outfiles);
 	
 #if 0
     if (emit_count_tables)
