@@ -480,7 +480,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     
     boost::random::mt19937 rng;
     
-    if ((curr.FPKM != 0 || prev.FPKM != 0))
+    if ((curr.FPKM != 0 || prev.FPKM != 0) && (prev.fpkm_samples.size() > 0 && curr.fpkm_samples.size() > 0))
     {
         boost::random::uniform_int_distribution<> prev_sampler(0, prev.fpkm_samples.size()-1);
         boost::random::uniform_int_distribution<> curr_sampler(0, curr.fpkm_samples.size()-1);
@@ -942,7 +942,9 @@ SampleDifference get_ds_tests(const AbundanceGroup& prev_abundance,
     
     if (prev_abundance.abundances().size() == 1 ||
         prev_abundance.num_fragments() == 0 ||
-        curr_abundance.num_fragments() == 0)
+        curr_abundance.num_fragments() == 0 ||
+        prev_abundance.member_fpkm_samples().size() == 0 ||
+        curr_abundance.member_fpkm_samples().size() == 0)
     {
         test.p_value = 1;
         test.value_1 = 0;
