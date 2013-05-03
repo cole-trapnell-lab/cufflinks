@@ -53,13 +53,18 @@ Options:\n\
 -p the name prefix to use for consensus transcripts in the \n\
    <outprefix>.combined.gtf file (default: 'TCONS')\n\
 -C include the \"contained\" transcripts in the .combined.gtf file\n\
--G generic GFF input file(s) (do not assume Cufflinks GTF)\n\
+-F do not discard intron-redundant transfrags if they share the 5' end\n\
+   (if they differ only at the 3' end))\n\
+-G generic GFF input file(s): do not assume Cufflinks GTF, do not\n\
+   discard any intron-redundant transfrags)\n\
 -T do not generate .tmap and .refmap files for each input file\n\
 -V verbose processing mode (showing all GFF parsing warnings)\n\
 "
 bool debug=false;
 bool perContigStats=false; // -S to enable stats for every single contig
-bool generic_GFF=false; //-G, don't assume Cufflinks GTF as input
+//bool generic_GFF=false;
+//true if -G: won't discard intron-redundant transfrags
+
 bool showContained=false; // -C
 bool reduceRefs=false; //-R
 bool reduceQrys=false; //-Q
@@ -179,7 +184,7 @@ int main(int argc, char * const argv[]) {
       HeapProfilerStart("./cuffcompare_dbg.hprof");
 #endif
 
-  GArgs args(argc, argv, "XDTMNVGSCKQRLhp:e:d:s:i:n:r:o:");
+  GArgs args(argc, argv, "XDTMNVFGSCKQRLhp:e:d:s:i:n:r:o:");
   int e;
   if ((e=args.isError())>0) {
     show_usage();
@@ -266,15 +271,25 @@ int main(int argc, char * const argv[]) {
     if (f_ref==NULL) GError("Error opening reference gff: %s\n",s.chars());
     haveRefs=true;
     if (gtf_tracking_verbose) GMessage("Loading reference transcripts..\n");
-    read_mRNAs(f_ref, ref_data, &ref_data, true, -1, s.chars(), (multiexonrefs_only || multiexon_only));
+    read_mRNAs(f_ref, ref_data, &ref_data, 1, -1, s.chars(), (multiexonrefs_only || multiexon_only));
     haveRefs=(ref_data.Count()>0);
     reduceRefs=(args.getOpt('R')!=NULL);
     reduceQrys=(args.getOpt('Q')!=NULL);
     if (gtf_tracking_verbose) GMessage("..reference annotation loaded\n");
     }
-  bool discard_redundant=true; //discard redundant input transfrags
-  generic_GFF=args.getOpt('G');
-  if (generic_GFF) discard_redundant=false; //generic GTF, don't try to discard "redundant" transcripts
+  int discard_redundant=1; //discard intron-redundant input transfrags
+  //generic_GFF=args.getOpt('G');
+  if (args.getOpt('G')) discard_redundant=0; //generic GTF, don't try to discard "redundant" transcripts
+  if (args.getOpt('F')) {
+  	if (discard_redundant==0) {
+  		show_usage();
+  		GMessage("Error: options -F and -G are mutually exclusive!\n");
+  		exit(1);
+  	}
+    else {
+  	discard_redundant=2; // don't discard "redundant" transcripts if they start with the same 5' intron
+    }
+  }
   //if a full pathname is given
   //the other common output files will still be created in the current directory:
   // .loci, .tracking, .stats
@@ -1273,17 +1288,18 @@ void processLoci(GSeqData& seqdata, GSeqData* refdata, int qfidx) {
 
 //adjust stats for a list of unoverlapped (completely missed) ref loci
 void collectRLocData(GSuperLocus& stats, GLocus& loc) {
-stats.total_rmrnas+=loc.mrnas.Count();
-stats.total_rexons+=loc.uexons.Count();
-stats.total_rintrons+=loc.introns.Count();
-stats.total_rmexons+=loc.mexons.Count();
-stats.total_richains+=loc.ichains;
-stats.m_exons+=loc.uexons.Count();
-stats.m_introns+=loc.introns.Count();
-stats.total_rloci++;
-for (int e=0;e<loc.mexons.Count();e++) {
-   stats.rbases_all+=loc.mexons[e].end-loc.mexons[e].start+1;
-   }
+	stats.total_rmrnas+=loc.mrnas.Count();
+	stats.total_rexons+=loc.uexons.Count();
+	stats.total_rintrons+=loc.introns.Count();
+	stats.total_rmexons+=loc.mexons.Count();
+	stats.total_richains+=loc.ichains;
+	stats.m_exons+=loc.uexons.Count();
+	stats.m_introns+=loc.introns.Count();
+	stats.total_rloci++;
+	stats.m_loci++; //missed ref loci
+	for (int e=0;e<loc.mexons.Count();e++) {
+		 stats.rbases_all+=loc.mexons[e].end-loc.mexons[e].start+1;
+	}
 }
 
 void collectRData(GSuperLocus& stats, GList<GLocus>& loci) {
@@ -1299,6 +1315,7 @@ void collectQLocData(GSuperLocus& stats, GLocus& loc) {
  stats.total_qintrons+=loc.introns.Count();
  stats.total_qichains+=loc.ichains;
  stats.total_qloci++;
+ stats.w_loci++; //add to the count of novel/wrong loci
  if (loc.ichains>0 && loc.mrnas.Count()>1)
     stats.total_qloci_alt++;
  stats.w_exons+=loc.uexons.Count();
@@ -1319,7 +1336,6 @@ void collectQData(GSuperLocus& stats, GList<GLocus>& loci, GList<GLocus>& nloci)
 void collectQNOvl(GSuperLocus& stats, GList<GLocus>& loci, GList<GLocus>& nloci) {
   for (int l=0;l<loci.Count();l++) {
     if (loci[l]->cmpovl.Count()==0) {//locus with no ref loci overlaps
-      stats.w_loci++; //novel/wrong loci
       nloci.Add(loci[l]);
       collectQLocData(stats,*loci[l]);
       }
@@ -1328,7 +1344,7 @@ void collectQNOvl(GSuperLocus& stats, GList<GLocus>& loci, GList<GLocus>& nloci)
 
 void collectQU(GSuperLocus& stats, GList<GLocus>& nloci) {
   for (int l=0;l<nloci.Count();l++) {
-    stats.w_loci++; //novel/wrong loci
+    //stats.w_loci++; //novel/wrong loci
     collectQLocData(stats, *nloci[l]);
     }
 }
@@ -1343,7 +1359,6 @@ void printLocus(FILE* f, GLocus& loc, const char* gseqname) {
 void collectRNOvl(GSuperLocus& stats, GList<GLocus>& loci) { //, const char* gseqname) {
   for (int l=0;l<loci.Count();l++) {
     if (loci[l]->cmpovl.Count()==0) {
-      stats.m_loci++; //missed ref loci
       //if (f_mloci!=NULL)
       //      printLocus(f_mloci,*loci[l], gseqname);
       collectRLocData(stats,*loci[l]);
@@ -1422,7 +1437,7 @@ void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
     fprintf(fout, "# Reference mRNAs : %7d in %7d loci  (%d multi-exon)\n",
             ps->total_rmrnas, ps->total_rloci, ps->total_richains);
     if (ps->baseTP+ps->baseFP==0 || ps->baseTP+ps->baseFN==0) return;
-    fprintf(fout, "# Corresponding super-loci:        %7d\n",ps->total_superloci);
+    fprintf(fout, "# Super-loci w/ reference transcripts:  %7d\n",ps->total_superloci);
 
     /*if (seqdata!=NULL) {
       fprintf(fout, "          ( %d/%d on forward/reverse strand)\n",

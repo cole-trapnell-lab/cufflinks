@@ -784,42 +784,47 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-h</tt>
 	  </td><td VALIGN=top>
-	  Prints the help message and exits   
+	  Prints the usage message and exits.
 	  </td></tr> 
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-o &lt;outprefix&gt;</tt>
 	  </td><td VALIGN=top>
-	  All output files created by Cuffcompare will have this prefix (e.g. &lt;outprefix&gt;.loci, &lt;outprefix&gt;.tracking, etc.).
-	  If this option is not provided the default output prefix being used is: "cuffcmp"
+	  All output files created by Cuffcompare will have this prefix (e.g. &lt;outprefix&gt;.stats, &lt;outprefix&gt;.loci, &lt;outprefix&gt;.tracking, etc.).
+	  If this option is not provided the default output prefix being used is <tt>cuffcmp</tt>
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-r</tt>
+	  <tt>-r &lt;annotation.gff&gt;</tt>
 	  </td><td VALIGN=top>
-	  An optional "reference" annotation <a href="gff.html">GFF file</a>. Each sample is matched against
-	  this file, and sample isoforms are tagged as overlapping, matching, or 
-	  novel where appropriate.  See the <a href="#refmap">refmap</a> and 
+	  A reference annotation in <a href="gff.html">GFF file</a> should be provided so Cuffcompare can match each 
+	  sample (&lt;cuff1.gtf&gt; ... &lt;cuffN.gtf&gt;) against these reference transcripts and tag isoforms 
+	  as overlapping, matching, or novel where appropriate. See the <a href="#refmap">refmap</a> and 
 	  <a href="#tmap">tmap</a> output file descriptions below.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-R</tt>
 	  </td><td VALIGN=top>
-	  If <tt>-r</tt> was specified, this option causes <tt>cuffcompare</tt> to 
-	  ignore reference transcripts that are not overlapped by any transcript in
+	  When reference annotation is provided (<tt>-r</tt>), this option causes <tt>cuffcompare</tt> to 
+	  ignore reference annotation transcripts that are not overlapped by any transcript in
 	  one of <tt>cuff1.gtf</tt>,...,<tt>cuffN.gtf</tt>.  Useful for ignoring
-	  annotated transcripts that are not present in your RNA-Seq samples and thus
-	  adjusting the "sensitivity" calculation in the accuracy report
-	  written in the &lt;outprefix&gt; file
+	  annotated transcripts that are not "expressed" in the RNA-Seq samples and thus
+	  adjusting the "Sensitivity" (Sn) values reported in the &lt;outprefix&gt;.stats file.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-s &lt;seq_dir&gt;</tt>
+	  <tt>-Q</tt>
 	  </td><td VALIGN=top>
-	  Causes <tt>cuffcompare</tt> to look into <seq_dir> for fasta files with the 
-	  underlying genomic sequences (one file per contig) against which your 
-	  reads were aligned for some optional classification functions.  For example,
-	  Cufflinks transcripts consisting mostly of lower-case bases are classified
-	  as repeats.  Note that &lt;seq_dir&gt; <strong>must</strong> contain one
-	  fasta file per reference chromosome, and each file must be named after
-	  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
+	  When reference annotation is provided (<tt>-r</tt>), this option causes <tt>cuffcompare</tt> to 
+	  ignore query transcripts (transfrags) that are not overlapped by any reference
+	  transcript. This effectively directs Cuffcompare to discard any "novel" loci in the RNA-Sample
+	  (i.e. loci with transfrags having no exon-overlapping reference transcripts in the given annotation) 
+	  and thus artificially increasing the "Specificity" (Sp) values reported in the &lt;outprefix&gt;.stats file.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-s &lt;genome.fa&gt;</tt>
+	  </td><td VALIGN=top>
+	  Some optional transcript classification functions can make use of the assembled transcript sequence,
+	  which Cuffcompare can extract from the genome if this option is provided. For example 
+	  transcripts consisting mostly of lower-case bases are classified as repeats (class code 'r').
+	  &lt;genome.fa&gt; should be a multi-fasta file with the target genome sequences.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-C</tt>
@@ -829,10 +834,27 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	   fully contained/covered (with the same compatible intron structure) by other transfrags in the same locus. 
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
+	  <tt>-G</tt>
+	  </td><td VALIGN=top>
+	   Prevent the filtering of redundant isoforms in the input data. By default Cuffcompare discards overlapping 
+	   transfrags which appear to come from the same isoform (same intronic structure), only keeping the 
+	   longest transcript from such a "redundant" group. However when the input transcripts are not transfrags 
+	   assembled by a single Cufflinks run, this option instructs Cuffcompare to preserve and analyse all the 
+	   input transcripts as given, without discarding the shorter redundant transcripts.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
+	  <tt>-F</tt>
+	  </td><td VALIGN=top>
+	   A "softer" version of the -G option above, this option will prevent the filtering of "intron-redundant" 
+	   input transfrags if they share the first intron (at the 5'end of the transcript). This will allow 
+	   for example the preservation of isoforms of different lengths but with the same starting (5') exon (intron), while 
+	   still filtering out shorter redundant isoforms that do not share the same 5' end.
+	  </td></tr>
+	  <tr><td VALIGN=top nowrap>
 	  <tt>-V</tt>
 	  </td><td VALIGN=top>
-	   Cuffcompare is a little more verbose about what it's doing, printing messages to stderr, and it will also show warning messages about any inconsistencies or potential issues 
-	   found while reading the given GFF file(s).
+	   Cuffcompare prints some progress messages to stderr, also showing warning messages if any inconsistencies
+       or potential issues are detected while parsing the input GFF/GTF file(s).
 	  </td></tr>
 	  </table><br/>
   <h2 id="cuffcomp_output">Cuffcompare Output</h2><br/>

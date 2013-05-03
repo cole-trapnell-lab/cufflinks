@@ -341,9 +341,15 @@ void preserveContainedCDS(GffObj* t, GffObj* tfrom) {
    }
 }
 
-void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant,
+bool exonOverlap2Gene(GffObj* t, GffObj& g) {
+	if (t->exons.Count()>0) {
+		return t->exonOverlap(g.start, g.end);
+	}
+	else return g.overlap(*t);
+}
+void GffLoader::placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedundant,
                                                bool matchAllIntrons, bool fuzzSpan) {
-  GTData* tdata=new GTData(t);
+  GTData* tdata=new GTData(t); //additional transcript data
   gdata->tdata.Add(tdata);
   //int tidx=-1;
   /*
@@ -353,12 +359,47 @@ void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster, bool collapseRedu
      }
     else debugState=false; 
    */
+  //dumb TRNA case for RefSeq: gene parent link missing
+  //try to restore it here; BUT this only works if gene feature comes first
+  if (t->parent==NULL && t->isTranscript()) {
+  	int gidx=gdata->gfs.Count()-1;
+  	while (gidx>=0 && gdata->gfs[gidx]->end>=t->start) {
+  		GffObj& g = *(gdata->gfs[gidx]);
+  		if (g.isGene() && t->strand==g.strand && exonOverlap2Gene(t, g)) {
+  			g.children.Add(t);
+  			t->parent=&g;
+  			//disable printing of gene if transcriptsOnly
+  			if (transcriptsOnly) {
+  				g.udata|=4; //tag it as non-printable
+  			}
+  			const char* geneName=g.getAttr("Name");
+  			if (t->getAttr("Name")==NULL && geneName) {
+  				t->addAttr("Name", geneName);
+  				t->addAttr("gene_name", geneName);
+  			}
+  			t->addAttr("geneID", g.getID());
+  			break;
+  		}
+  		gidx--;
+  	}
+  }
+
+  /*
+	if (t->exons.Count()==0  && t->children.Count()==0 && forceExons) {
+		//a non-mRNA feature with no subfeatures
+		//just so we get some sequence functions working, add a dummy "exon"-like subfeature here
+		//--this could be a single "pseudogene" entry or another genomic region without exons
+		//
+		t->addExon(t->start,t->end);
+	}
+  */
   if (t->exons.Count()>0) {
               //tidx=
               gdata->rnas.Add(t); //added it in sorted order
               }
             else {
-              gdata->gfs.Add(t);
+              if (t->isGene() || !this->transcriptsOnly)
+              	  gdata->gfs.Add(t);
               return; //nothing to do with these non-transcript objects
               }
   if (!doCluster) return;
@@ -533,6 +574,26 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
    gffr->showWarnings(this->showWarnings);
    //           keepAttrs   mergeCloseExons  noExonAttr
    gffr->readAll(this->fullAttributes,    this->mergeCloseExons,  this->noExonAttrs);
+   GVec<int> pseudoAttrIds;
+   GVec<int> pseudoFeatureIds;
+   if (this->noPseudo) {
+   	 GffNameList& fnames = gffr->names->feats;
+   	 for (int i=0;i<fnames.Count();i++) {
+   		char* n=fnames[i]->name;
+   		if (startsWith(n, "pseudo")) {
+   			pseudoFeatureIds.Add(fnames[i]->idx);
+   		}
+   	 }
+  	 GffNameList& attrnames = gffr->names->attrs;
+  	 for (int i=0;i<attrnames.Count();i++) {
+  		char* n=attrnames[i]->name;
+  		char* p=strifind(n, "pseudo");
+  		if (p==n || (p==n+2 && tolower(n[0])=='i' && tolower(n[1])=='s')) {
+  			pseudoAttrIds.Add(attrnames[i]->idx);
+  		}
+  	}
+   }
+
   //int redundant=0; //redundant annotation discarded
   if (verbose) GMessage("   .. loaded %d genomic features from %s\n", gffr->gflst.Count(), fname.chars());
   //int rna_deleted=0;
@@ -543,17 +604,40 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
           m->getAttr("transcripts")!=NULL) {
         continue; //discard locus meta-features
         }
-     
+     if (this->noPseudo) {
+    	 bool is_pseudo=false;
+    	 for (int i=0;i<pseudoFeatureIds.Count();++i) {
+    		 if (pseudoFeatureIds[i]==m->ftype_id) {
+    			 is_pseudo=true;
+    			 break;
+    		 }
+    	 }
+    	 if (is_pseudo) continue;
+    	 for (int i=0;i<pseudoAttrIds.Count();++i) {
+    		 char* attrv=NULL;
+    		 if (m->attrs!=NULL) attrv=m->attrs->getAttr(pseudoAttrIds[i]);
+    		 if (attrv!=NULL) {
+    			 char fc=tolower(attrv[0]);
+    			 if (fc=='t' || fc=='y' || fc=='1') {
+    				 is_pseudo=true;
+    				 break;
+    			 }
+    		 }
+    	 }
+    	 if (is_pseudo) continue;
+     }
      char* rloc=m->getAttr("locus");
      if (rloc!=NULL && startsWith(rloc, "RLOC_")) {
         m->removeAttr("locus", rloc);
         }
+    /*
      if (m->exons.Count()==0 && m->children.Count()==0) {
        //a non-mRNA feature with no subfeatures
        //add a dummy exon just to have the generic exon checking work
        m->addExon(m->start,m->end);
        }
-     if (forceExons && m->children.Count()==0) {
+     */
+     if (forceExons) {  // && m->children.Count()==0) {
        m->exon_ftype_id=gff_fid_exon;
        }
      GList<GffObj> gfadd(false,false);
@@ -564,7 +648,6 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
      int i=-1;
      GenomicSeqData f(m->gseq_id);
      GenomicSeqData* gdata=NULL;
-     
      if (seqdata.Found(&f,i)) gdata=seqdata[i];
          else { //entry not created yet for this genomic seq
            gdata=new GenomicSeqData(m->gseq_id);
