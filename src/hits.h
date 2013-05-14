@@ -1045,6 +1045,8 @@ bool has_no_collapse_mass(const MateHit& hit);
 void collapse_hits(const vector<MateHit>& hits,
 				   vector<MateHit>& non_redundant);
 
+void normalize_counts(std::vector<boost::shared_ptr<ReadGroupProperties> > & all_read_groups);
+
 
 
 #endif

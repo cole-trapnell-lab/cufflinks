@@ -141,8 +141,8 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 		
 	bl.normalizeParameters();
     
-    if (output_bias_params)
-        bl.output();
+//    if (output_bias_params)
+//        bl.output();
 }
 
 const int BiasLearner::pow4[] = {1,4,16,64};
@@ -574,48 +574,43 @@ void BiasLearner::normalizeParameters()
 	}
 }
 
-void BiasLearner::output()
+void BiasLearner::output(FILE* output_file, const string& condition_name, int replicate_num) const
 {
-	ofstream myfile1;
-	string filename = output_dir + "/biasParams.csv";
-	myfile1.open (filename.c_str());
-	
 	// StartSeq
 	for (int i = 0; i < _n; ++i)
 	{
 		for(int j = 0; j < _m; ++j)
-			myfile1 << _startSeqParams(j,i) <<",";
-		myfile1 << endl;
+        {
+			fprintf(output_file, "%s\t%d\tstart_seq\t%d\t%d\t%Lg\n",condition_name.c_str(), replicate_num, i, j,  _startSeqParams(j,i));
+        }
 	}
-	myfile1 << endl;
-	
-	// EndSeq
-	for (int i = 0; i < _n; ++i)
-	{
-		for(int j = 0; j < _m; ++j)
-			myfile1 << _endSeqParams(j,i) <<",";
-		myfile1 << endl;
-	}
-	myfile1 << endl;
-	
+
+    // EndSeq
+    for (int i = 0; i < _n; ++i)
+    {
+        for(int j = 0; j < _m; ++j)
+        {
+            fprintf(output_file, "%s\t%d\tend_seq\t%d\t%d\t%Lg\n",condition_name.c_str(), replicate_num, i, j,  _startSeqParams(j,i));
+        }
+    }
+
 	// Start Pos
 	for (size_t i = 0; i < _startPosParams.size2(); ++i)
 	{
 		for(size_t j = 0; j < _startPosParams.size1(); ++j)
-			myfile1 << _startPosParams(j,i) <<",";
-		myfile1 <<endl;
+        {
+			fprintf(output_file, "%s\t%d\tstart_pos\t%lu\t%lu\t%Lg\n",condition_name.c_str(), replicate_num, i, j,  _startPosParams(j,i));
+        }
 	}
-	myfile1 << endl;	
-	
+
 	// End Pos
 	for (size_t i = 0; i < _endPosParams.size2(); ++i)
 	{
 		for(size_t j = 0; j < _endPosParams.size1(); ++j)
-			myfile1 << _endPosParams(j,i) <<",";
-		myfile1 <<endl;
+        {
+			fprintf(output_file, "%s\t%d\tend_pos\t%lu\t%lu\t%Lg\n",condition_name.c_str(), replicate_num, i, j,  _endPosParams(j,i));
+        }
 	}
-	
-	myfile1.close();
 }
 
 
@@ -810,6 +805,9 @@ double BiasCorrectionHelper::get_effective_length()
 
     if (no_effective_length_correction)
         return _transcript->length();
+    
+    if (no_length_correction)
+        return 1;
 	
 	double tot_mass = accumulate( _rg_masses.begin(), _rg_masses.end(), 0.0 );
 	double eff_len = 0.0;

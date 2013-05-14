@@ -28,15 +28,18 @@
   #ifndef popen
    #define popen _popen
   #endif
-  #ifdef _fseeki64
-    #define fseeko(stream, offset, origin) _fseeki64(stream, offset, origin)
-  #else
-    /*
-    #define _DEFINE_WIN32_FSEEKO
-    int fseeko(FILE *stream, off_t offset, int whence);
-    */
-    #define fseeko fseek
+  #ifndef fseeko
+		#ifdef _fseeki64
+			#define fseeko(stream, offset, origin) _fseeki64(stream, offset, origin)
+		#else
+			/*
+			#define _DEFINE_WIN32_FSEEKO
+			int fseeko(FILE *stream, off_t offset, int whence);
+			*/
+			#define fseeko fseek
+		#endif
   #endif
+ #ifndef ftello
   #ifdef _ftelli64
     #define ftello(stream) _ftelli64(stream)
   #else
@@ -46,6 +49,7 @@
     */
     #define ftello ftell
   #endif
+ #endif
  #else
   #define CHPATHSEP '/'
   #include <unistd.h>
@@ -142,6 +146,9 @@ typedef void* pointer;
 typedef unsigned int uint;
 
 typedef int GCompareProc(const pointer item1, const pointer item2);
+typedef long GFStoreProc(const pointer item1, FILE* fstorage); //for serialization
+typedef pointer GFLoadProc(FILE* fstorage); //for deserialization
+
 typedef void GFreeProc(pointer item); //usually just delete,
       //but may also support structures with embedded dynamic members
 
@@ -194,7 +201,7 @@ bool GRealloc(pointer* ptr,unsigned long size); // Resize memory
 void GFree(pointer* ptr); // Free memory, resets ptr to NULL
 
 
-int saprintf(char **retp, const char *fmt, ...);
+//int saprintf(char **retp, const char *fmt, ...);
 
 void GError(const char* format,...); // Error routine (aborts program)
 void GMessage(const char* format,...);// Log message to stderr

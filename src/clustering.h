@@ -78,10 +78,10 @@ struct ConnectByStrand
 template<class cluster_policy>
 void cluster_transcripts(const AbundanceGroup& transfrags,
 						 vector<AbundanceGroup>& transfrags_by_cluster,
+						 ublas::matrix<double>* new_gamma = NULL,
                          ublas::matrix<double>* new_iterated_count = NULL,
                          ublas::matrix<double>* new_count = NULL,
-                         ublas::matrix<double>* new_fpkm = NULL,
-                         vector<Eigen::VectorXd>* new_assigned_counts = NULL)
+                         ublas::matrix<double>* new_fpkm = NULL)
 {
 	adjacency_list <vecS, vecS, undirectedS> G;
 	
@@ -111,6 +111,7 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
 			break;
 		}
 	}
+    
 	for (size_t i = 0; i < clusters.size(); ++i)
 	{
 		AbundanceGroup cluster;
@@ -119,18 +120,21 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
 			transfrags_by_cluster.push_back(cluster);
 	}
 	
-	if (new_fpkm != NULL)
+	if (new_gamma != NULL)
 	{
+		const ublas::matrix<double>& trans_gamma_cov = transfrags.gamma_cov();
         const ublas::matrix<double>& trans_iterated_count_cov = transfrags.iterated_count_cov();
         const ublas::matrix<double>& trans_count_cov = transfrags.count_cov();
         const ublas::matrix<double>& trans_fpkm_cov = transfrags.fpkm_cov();
         
+		ublas::matrix<double>& cov = *new_gamma;
         ublas::matrix<double>& iterated_count_cov = *new_iterated_count;
         ublas::matrix<double>& count_cov = *new_count;
         ublas::matrix<double>& fpkm_cov = *new_fpkm;
         
 		// number of primary transcripts for this gene
 		size_t num_pt = cluster_indices.size();
+		cov = ublas::zero_matrix<double>(num_pt, num_pt);
         
         count_cov = ublas::zero_matrix<double>(num_pt, num_pt);
         iterated_count_cov = ublas::zero_matrix<double>(num_pt, num_pt);
@@ -138,6 +142,7 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
         
 		//cerr << "combined " << combined << endl;
 		
+		//cerr << "locus isoform gamma cov" << gamma_cov << endl;
 		for (size_t L = 0; L < cluster_indices.size(); ++L)
 		{
 			const vector<size_t>& L_isos = cluster_indices[L];
@@ -148,6 +153,7 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
 				{
 					for (size_t k = 0; k < K_isos.size(); ++k)
 					{
+						cov(L,K) += trans_gamma_cov(L_isos[l],K_isos[k]);
                         count_cov(L,K) += trans_count_cov(L_isos[l],K_isos[k]);
                         iterated_count_cov(L,K) += trans_iterated_count_cov(L_isos[l],K_isos[k]);
                         fpkm_cov(L,K) += trans_fpkm_cov(L_isos[l],K_isos[k]);

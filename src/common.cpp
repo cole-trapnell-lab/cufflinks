@@ -54,6 +54,9 @@ int max_partner_dist = 50000;
 uint32_t max_gene_length = 3500000;
 std::string ref_gtf_filename = "";
 std::string mask_gtf_filename = "";
+std::string contrast_filename = "";
+bool use_sample_sheet = false;
+std::string norm_standards_filename = "";
 std::string output_dir = "./";
 std::string fasta_dir;
 string default_library_type = "fr-unstranded";
@@ -63,8 +66,7 @@ string library_type = default_library_type;
 // Abundance estimation options
 bool corr_bias = false;
 bool corr_multi = false;
-bool use_quartile_norm = false;
-bool poisson_dispersion = false;
+
 BiasMode bias_mode = VLMM;
 int def_frag_len_mean = 200;
 int def_frag_len_std_dev = 80;
@@ -76,7 +78,7 @@ int max_mle_iterations = 5000;
 int num_importance_samples = 10000;
 bool use_compat_mass = false;
 bool use_total_mass = false;
-
+bool model_mle_error = false;
 
 // Ref-guided assembly options
 int overhang_3 = 600;
@@ -101,7 +103,6 @@ double trim_3_dropoff_frac = .1;
 double trim_3_avgcov_thresh = 10.0;
 std::string user_label = "CUFF";
 
-bool use_em = true;
 bool cond_prob_collapse = true;
 
 bool emit_count_tables = false;
@@ -114,8 +115,8 @@ double bootstrap_delta_gap = 0.001;
 int max_frags_per_bundle = 1000000;
 //bool analytic_diff = false;
 bool no_differential = false;
-double num_frag_count_draws = 1000;
-double num_frag_assignments = 1;
+double num_frag_count_draws = 100;
+double num_frag_assignments = 50;
 double max_multiread_fraction = 0.75;
 double max_frag_multihits = 10000000;
 int min_reps_for_js_test = 3;
@@ -123,13 +124,18 @@ bool no_effective_length_correction = false;
 bool no_length_correction = false;
 bool no_js_tests = false;
 
+bool no_scv_correction = false;
+
+double min_outlier_p = 0.0001;
+
+
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
 
 float read_skip_fraction = 0.0;
 bool no_read_pairs = false;
 int trim_read_length = -1;
-double mle_accuracy = 1e-6;
+double mle_accuracy = 1e-5;
 
 
 
@@ -142,6 +148,17 @@ std::string cmd_str;
 
 map<string, ReadGroupProperties> library_type_table;
 const ReadGroupProperties* global_read_properties = NULL;
+
+map<string, DispersionMethod> dispersion_method_table;
+string default_dispersion_method = "pooled";
+DispersionMethod dispersion_method = DISP_NOT_SET;
+
+map<string, LibNormalizationMethod> lib_norm_method_table;
+string default_lib_norm_method = "geometric";
+string default_cufflinks_lib_norm_method = "classic-fpkm";
+LibNormalizationMethod lib_norm_method = LIB_NORM_NOT_SET;
+
+boost::shared_ptr<const std::map<std::string, LibNormStandards> > lib_norm_standards;
 
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
@@ -338,6 +355,20 @@ void init_library_table()
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
+//string get_dispersion_method_str(DispersionMethod disp_meth)
+//{
+//    switch (disp_meth)
+//    {
+//        case POOLED:
+//            return "pooled";
+//        case PER_CONDITION:
+//            return "per-condition";
+//        case BLIND:
+//            return "blind";
+//    }
+//    return "";
+//}
+
 void print_library_table()
 {
     fprintf (stderr, "\nSupported library types:\n");
@@ -349,12 +380,76 @@ void print_library_table()
         {
             fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
         }
+        else            
+        {
+            fprintf(stderr, "\t%s\n", itr->first.c_str());
+        }
+    }
+}
+
+void init_dispersion_method_table()
+{
+    dispersion_method_table["pooled"] = POOLED;
+    dispersion_method_table["blind"] = BLIND;
+    dispersion_method_table["per-condition"] = PER_CONDITION;
+}
+
+void print_dispersion_method_table()
+{
+    fprintf (stderr, "\nSupported dispersion methods:\n");
+    for (map<string, DispersionMethod>::const_iterator itr = dispersion_method_table.begin();
+         itr != dispersion_method_table.end();
+         ++itr)
+    {
+        if (itr->first == default_dispersion_method)
+        {
+            fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
+        }
         else
         {
             fprintf(stderr, "\t%s\n", itr->first.c_str());
         }
     }
 }
+
+
+void init_lib_norm_method_table()
+{
+    lib_norm_method_table["geometric"] = GEOMETRIC;
+    lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
+    lib_norm_method_table["quartile"] = QUARTILE;
+    lib_norm_method_table["poisson"] = QUARTILE;
+    //lib_norm_method_table["tmm"] = TMM;
+    //lib_norm_method_table["absolute"] = ABSOLUTE;
+}
+
+void init_cufflinks_lib_norm_method_table()
+{
+    lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
+    lib_norm_method_table["poisson"] = QUARTILE;
+    //lib_norm_method_table["quartile"] = QUARTILE;
+    //lib_norm_method_table["absolute"] = ABSOLUTE;
+}
+
+
+void print_lib_norm_method_table()
+{
+    fprintf (stderr, "\nSupported library normalization methods:\n");
+    for (map<string, LibNormalizationMethod>::const_iterator itr = lib_norm_method_table.begin();
+         itr != lib_norm_method_table.end();
+         ++itr)
+    {
+        if (itr->first == default_lib_norm_method)
+        {
+            fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
+        }
+        else
+        {
+            fprintf(stderr, "\t%s\n", itr->first.c_str());
+        }
+    }
+}
+
 
 
 // c_seq is complement, *NOT* REVERSE complement

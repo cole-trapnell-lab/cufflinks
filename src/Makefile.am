@@ -30,6 +30,7 @@ noinst_HEADERS = \
 	GFastaIndex.h \
 	gff.h \
 	GHash.hh \
+	GVec.hh \
 	GList.hh \
 	GStr.h \
 	assemble.h \
@@ -101,7 +102,8 @@ noinst_HEADERS = \
     replicates.h \
     multireads.h \
     rounding.h \
-	common.h 
+    negative_binomial_distribution.h \
+	common.h
 
 noinst_LIBRARIES = libcufflinks.a libgc.a
 

@@ -283,7 +283,9 @@ bool unmapped_hit(const MateHit& x)
 bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
                              const ReadHit* bh,
 							 bool expand_by_partner)
-{	
+{
+    assert (bh != NULL);
+    
 	_leftmost = min(_leftmost, bh->left());
 	_ref_id = bh->ref_id();
     
@@ -562,11 +564,24 @@ void HitBundle::finalize(bool is_combined)
         if (num_skipped > 0 && num_skipped < _hits.size())
         {
             random_shuffle(_hits.begin(), _hits.end());
+            for (int i = (int)_hits.size() - num_skipped; i >= 0 && i < (int)_hits.size(); ++i)
+            {
+                delete _hits[i].left_alignment();
+                _hits[i].left_alignment(NULL);
+                
+                delete _hits[i].right_alignment();
+                _hits[i].right_alignment(NULL);
+            }
             _hits.resize(_hits.size() - num_skipped);
             is_combined = false;
         }
         else if (num_skipped >= _hits.size())
         {
+            for (size_t i = 0; i < _hits.size(); ++i)
+            {
+                delete _hits[i].left_alignment();
+                delete _hits[i].right_alignment();
+            }
             _hits.clear();
         }
 
@@ -622,7 +637,7 @@ void HitBundle::finalize(bool is_combined)
 		}
         if (hit.is_mapped())
         {
-            _compatible_mass += hit.mass();
+            _compatible_mass += hit.internal_scale_mass();
         }
 	}
     
@@ -797,7 +812,7 @@ bool BundleFactory::next_bundle_hit_driven(HitBundle& bundle)
         }
 	}
 	
-	if (skip_read || !bundle.add_open_hit(read_group_properties(), bh))
+	if ((skip_read || !bundle.add_open_hit(read_group_properties(), bh)) && bh != NULL)
     {
         delete bh;
         bh = NULL;
@@ -898,18 +913,19 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 			if (bh_chr_order < bundle_chr_order) // the hit stream has not caught up, skip
 			{
 				delete bh;
+                bh = NULL;
 				continue; 
 			}
 			else // the hit stream has gone too far, rewind and break
 			{
-                double mass = rewind_hit(bh);
-                if (skip_read == false)
-                {
-                    bundle.rem_raw_mass(mass);
-                }
-				break;  
+                rewind_hit(bh);
+                bh = NULL;
+                break;
 			}
-		}	
+		}
+        
+        if (bh == NULL) // the hit stream has gone too far, break
+            break;
 		
         if (bh->left() >= bundle.left() && bh->right() <= bundle.right())
 		{
@@ -929,17 +945,30 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 		}
 		else if (bh->left() >= bundle.right())
 		{
-            if (!skip_read)
+            if (skip_read == false)
             {
                 bundle.rem_raw_mass(rewind_hit(bh));
+                bh = NULL;
+            }
+            else
+            {
+                delete bh;
+                bh = NULL;
             }
 			break;
 		}
-	    else 
+	    else
         {
             // It's not within the bundle bounds, but it's also not past the 
             // right end, so skip it.
             delete bh;
+            bh = NULL;
+        }
+        
+        if (skip_read == true && bh != NULL)
+        {
+            delete bh;
+            bh = NULL;
         }
 	}
 	
@@ -976,7 +1005,8 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 		int scaff_chr_order = _hit_fac->ref_table().observation_order((*next_ref_scaff)->ref_id());
 		
 		bundle.rem_raw_mass(rewind_hit(bh));
-		
+		bh = NULL;
+        
 		if (bh_chr_order < scaff_chr_order)
 		{
 			return next_bundle_hit_driven(bundle);
@@ -998,6 +1028,8 @@ bool BundleFactory::next_bundle_ref_guided(HitBundle& bundle)
 	else 
 	{
 		bundle.rem_raw_mass(rewind_hit(bh));
+        bh = NULL;
+        
 		bundle.add_ref_scaffold(*next_ref_scaff);
 		next_ref_scaff++;
 		_expand_by_refs(bundle);
@@ -1080,6 +1112,7 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 		else
 		{
 			bundle.rem_raw_mass(rewind_hit(bh));
+
 			break;
 		}
 	}
@@ -1561,7 +1594,8 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 
 void inspect_map(BundleFactory& bundle_factory,
                  BadIntronTable* bad_introns,
-                 vector<LocusCount>& count_table,
+                 vector<LocusCount>& compatible_count_table,
+                 vector<LocusCount>& total_count_table,
                  bool progress_bar,
                  bool show_stats)
 {
@@ -1604,10 +1638,10 @@ void inspect_map(BundleFactory& bundle_factory,
             // Take raw mass even if bundle is "empty", since we could be out of refs
             // with remaining hits
             map_mass += bundle.compatible_mass();
-            if (use_quartile_norm && bundle.compatible_mass() > 0) 
-            {
-                mass_dist.push_back(bundle.compatible_mass());
-            }
+//            if (lib_norm_method == QUARTILE && bundle.compatible_mass() > 0)
+//            {
+//                mass_dist.push_back(bundle.compatible_mass());
+//            }
         }
         else if (use_total_mass) //use all raw mass
         { 
@@ -1615,10 +1649,10 @@ void inspect_map(BundleFactory& bundle_factory,
             // Take raw mass even if bundle is "empty", since we could be out of refs
             // with remaining hits
             map_mass += bundle.raw_mass();
-            if (use_quartile_norm && bundle.raw_mass() > 0) 
-            {
-                mass_dist.push_back(bundle.raw_mass());
-            }
+//            if (lib_norm_method == QUARTILE && bundle.raw_mass() > 0)
+//            {
+//                mass_dist.push_back(bundle.raw_mass());
+//            }
         }
         else
         {
@@ -1634,7 +1668,18 @@ void inspect_map(BundleFactory& bundle_factory,
         {
             sprintf(bundle_label_buf, "%s:%d-%d", chrom, bundle.left(), bundle.right());
             verbose_msg("Inspecting bundle %s with %lu reads\n", bundle_label_buf, bundle.hits().size());
-            count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size()));
+            
+            vector<string> gene_ids;
+            vector<string> gene_short_names;
+            BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+            {
+                if (s->annotated_gene_id() != "")
+                    gene_ids.push_back(s->annotated_gene_id());
+                if (s->annotated_gene_name() != "")
+                    gene_short_names.push_back(s->annotated_gene_name());
+            }
+            compatible_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.compatible_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));
+            total_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));
 		}
         
         if (!valid_bundle)
@@ -1779,12 +1824,12 @@ void inspect_map(BundleFactory& bundle_factory,
 	
     norm_map_mass = map_mass;
     
-	if (use_quartile_norm && mass_dist.size() > 0)
-	{
-		sort(mass_dist.begin(),mass_dist.end());
-		int upper_quart_index = mass_dist.size() * 0.75;
-		norm_map_mass = mass_dist[upper_quart_index];
-	}
+//	if (lib_norm_method == QUARTILE && mass_dist.size() > 0)
+//	{
+//		sort(mass_dist.begin(),mass_dist.end());
+//		int upper_quart_index = mass_dist.size() * 0.75;
+//		norm_map_mass = mass_dist[upper_quart_index];
+//	}
 
     if (bad_introns != NULL)
     {
@@ -1921,8 +1966,8 @@ void inspect_map(BundleFactory& bundle_factory,
     if (show_stats)
     {
         fprintf(stderr, "> Map Properties:\n");
-        if (use_quartile_norm)
-            fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
+        //if (lib_norm_method == QUARTILE)
+        //    fprintf(stderr, ">\tUpper Quartile: %.2Lf\n", norm_map_mass);
         fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", norm_map_mass);
         fprintf(stderr, ">\tRaw Map Mass: %.2Lf\n", map_mass);
         if (corr_multi)

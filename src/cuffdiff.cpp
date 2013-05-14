@@ -39,8 +39,13 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "differential.h"
+
+extern "C" {
+#include "locfit/local.h"
+}
 
 // Need at least this many reads in a locus to do any testing on it
 
@@ -51,16 +56,11 @@ bool samples_are_time_series = false;
 using namespace std;
 using namespace boost;
 
-bool use_geometric_norm = false;
-bool use_raw_mapped_norm = false;
-bool use_isoform_count_dispersion = true;
-
-
 // We leave out the short codes for options that don't take an argument
 #if ENABLE_THREADS
-const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:";
+const char *short_options = "m:p:s:c:I:j:L:M:o:b:TNqvuF:C:";
 #else
-const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:";
+const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:C:";
 #endif
 
 
@@ -75,7 +75,10 @@ static struct option long_options[] = {
 {"min-alignment-count",     required_argument,		 0,			 'c'},
 {"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
-{"mask-file",                required_argument,		 0,			 'M'},
+{"mask-file",               required_argument,		 0,			 'M'},
+{"contrast-file",           required_argument,		 0,			 'C'},
+{"norm-standards-file",     required_argument,		 0,			 OPT_NORM_STANDARDS_FILE},
+{"use-sample-sheet",        no_argument,             0,			 OPT_USE_SAMPLE_SHEET},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},
@@ -107,12 +110,6 @@ static struct option long_options[] = {
 {"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
     
 // Some options for testing different stats policies
-{"fisher-covariance",       no_argument,	 		 0,	         OPT_USE_FISHER_COVARIANCE},
-{"empirical-covariance",    no_argument,	 		 0,	         OPT_USE_EMPIRICAL_COVARIANCE},
-{"split-mass",              no_argument,	 		 0,	         OPT_SPLIT_MASS},
-{"split-variance",          no_argument,	 		 0,	         OPT_SPLIT_VARIANCE},
-{"num-bootstrap-samples",   required_argument,	 	 0,          OPT_NUM_BOOTSTRAP_SAMPLES},
-{"bootstrap-fraction",      required_argument,	 	 0,          OPT_BOOTSTRAP_FRACTION},
 {"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {"read-skip-fraction",      required_argument,	     0,          OPT_READ_SKIP_FRACTION},
 {"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
@@ -125,6 +122,9 @@ static struct option long_options[] = {
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
 {"no-length-correction",    no_argument,             0,          OPT_NO_LENGTH_CORRECTION},
 {"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
+{"dispersion-method",       required_argument,       0,          OPT_DISPERSION_METHOD},
+{"library-norm-method",     required_argument,       0,          OPT_LIB_NORM_METHOD},
+{"no-scv-correction",       no_argument,             0,          OPT_NO_SCV_CORRECTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -138,50 +138,55 @@ void print_usage()
 	fprintf(stderr, "   Supply replicate SAMs as comma separated lists for each condition: sample1_rep1.sam,sample1_rep2.sam,...sample1_repM.sam\n");
     fprintf(stderr, "General Options:\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-    fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
-    fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
-	fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
+    fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
+    fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
+    fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
-    fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
-    fprintf(stderr, "  -N/--upper-quartile-norm     use upper-quartile normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  --geometric-norm             use geometric mean normalization                      [ default:  TRUE ]\n");
-    fprintf(stderr, "  --raw-mapped-norm            use raw mapped count normalized (classic FPKM)        [ default:  FALSE ]\n");
-    fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
+    fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads                   [ default:  FALSE ]\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
     fprintf(stderr, "  --no-diff                    Don't generate differential analysis files            [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-js-tests                Don't perform isoform switching tests                 [ default:  FALSE ]\n");
-	fprintf(stderr, "\nAdvanced Options:\n");
+	fprintf(stderr, "  -T/--time-series             treat samples as a time-series                        [ default:  FALSE ]\n");
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
+    fprintf(stderr, "  --dispersion-method          Method used to estimate dispersion models             [ default:  below ]\n");
+    fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
+    
+    fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [ DEPRECATED      ]\n");
-	fprintf(stderr, "  --num-bootstrap-samples      Number of bootstrap replications                      [ DEPRECATED      ]\n");
-    fprintf(stderr, "  --bootstrap-fraction         Fraction of fragments in each bootstrap sample        [ DEPRECATED      ]\n");
+    fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
-    fprintf(stderr, "  --poisson-dispersion         Don't fit fragment counts for overdispersion          [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
-    fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");    
-    fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [ default:  FALSE ]\n");
+    fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
+    fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");
+    fprintf(stderr, "  --emit-count-tables          print count tables used to fit overdispersion         [    DEPRECATED   ]\n");
     fprintf(stderr, "  --max-bundle-frags           maximum fragments allowed in a bundle before skipping [ default: 500000 ]\n");
-    fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
-    fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
+    fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:    100 ]\n");
+    fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:     50 ]\n");
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
-    fprintf(stderr, "  --min-outlier-p              Min replicate p value to admit for testing            [ default:   0.01 ]\n");
+    fprintf(stderr, "  --min-outlier-p              Min replicate p value to admit for testing            [    DEPRECATED   ]\n");
     fprintf(stderr, "  --min-reps-for-js-test       Replicates needed for relative isoform shift testing  [ default:      3 ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
-    fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-length-correction       No length correction                                  [ default:  FALSE ]\n");
+    fprintf(stderr, "  -N/--upper-quartile-norm     Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
+    fprintf(stderr, "  --geometric-norm             Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
+    fprintf(stderr, "  --raw-mapped-norm            Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
+    fprintf(stderr, "  --poisson-dispersion         Deprecated, use --dispersion-method                   [    DEPRECATED   ]\n");
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
+    fprintf(stderr, "  --no-scv-correction          Disable SCV correction                                [ default:  FALSE ]\n");
     print_library_table();
+    print_dispersion_method_table();
+    print_lib_norm_method_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -189,7 +194,8 @@ int parse_options(int argc, char** argv)
     int option_index = 0;
     int next_option;
     string sample_label_list;
-    
+    string dispersion_method_str;
+    string lib_norm_method_str;
     do {
         next_option = getopt_long_only(argc, argv, short_options, long_options, &option_index);
         if (next_option == -1)     /* Done with options. */
@@ -252,7 +258,22 @@ int parse_options(int argc, char** argv)
 				mask_gtf_filename = optarg;
 				break;
 			}
-			case 'v':
+            case 'C':
+			{
+				contrast_filename = optarg;
+				break;
+			}
+			case OPT_NORM_STANDARDS_FILE:
+			{
+				norm_standards_filename = optarg;
+				break;
+			}
+            case OPT_USE_SAMPLE_SHEET:
+			{
+                use_sample_sheet = true;
+				break;
+			}
+            case 'v':
 			{
 				if (cuff_quiet)
 				{
@@ -291,7 +312,7 @@ int parse_options(int argc, char** argv)
             }
             case 'N':
             {
-            	use_quartile_norm = true;
+            	lib_norm_method_str = "quartile";
             	break;
             }
             case 'u':
@@ -306,7 +327,7 @@ int parse_options(int argc, char** argv)
 			}
             case OPT_POISSON_DISPERSION:
 			{
-				poisson_dispersion = true;
+				fprintf (stderr, "Warning: --poisson-dispersion is deprecated, use --dispersion-method poisson instead.\n");
 				break;
 			}
             case OPT_NO_UPDATE_CHECK:
@@ -411,12 +432,12 @@ int parse_options(int argc, char** argv)
             }
             case OPT_GEOMETRIC_NORM:
             {
-                use_geometric_norm = true;
+                lib_norm_method_str = "geometric";
                 break;
             } 
             case OPT_RAW_MAPPED_NORM:
             {
-                use_raw_mapped_norm = true;
+                lib_norm_method_str = "classic-fpkm";
                 break;
             } 
             case OPT_NUM_FRAG_COUNT_DRAWS:
@@ -427,11 +448,6 @@ int parse_options(int argc, char** argv)
             case OPT_NUM_FRAG_ASSIGN_DRAWS:
             {
                 num_frag_assignments = parseInt(1, "--num-frag-assign-draws must be at least 1", print_usage);
-                break;
-            }
-            case OPT_LOCUS_COUNT_DISPERSION:
-            {
-                use_isoform_count_dispersion = false;
                 break;
             }
             case OPT_FRAG_MAX_MULTIHITS:
@@ -464,6 +480,21 @@ int parse_options(int argc, char** argv)
                 no_js_tests = true;
                 break;
             }
+            case OPT_DISPERSION_METHOD:
+			{
+				dispersion_method_str = optarg;
+				break;
+			}
+            case OPT_LIB_NORM_METHOD:
+			{
+				lib_norm_method_str = optarg;
+				break;
+			}
+            case OPT_NO_SCV_CORRECTION:
+            {
+                no_scv_correction = true;
+                break;
+            }
 			default:
 				print_usage();
 				return 1;
@@ -488,21 +519,53 @@ int parse_options(int argc, char** argv)
             global_read_properties = &lib_itr->second;
         }
     }
+    else
+    {
+        
+    }
+    
+    // Set the count dispersion method to use
+    if (dispersion_method_str == "")
+    {
+        dispersion_method_str = default_dispersion_method;
+    }
+    
+    map<string, DispersionMethod>::iterator disp_itr = 
+    dispersion_method_table.find(dispersion_method_str);
+    if (disp_itr == dispersion_method_table.end())
+    {
+        fprintf(stderr, "Error: Dispersion method %s not supported\n", dispersion_method_str.c_str());
+        exit(1);
+    }
+    else 
+    {
+        dispersion_method = disp_itr->second;
+    }
+
+    // Set the library size normalization method to use
+    if (lib_norm_method_str == "")
+    {
+        lib_norm_method_str = default_lib_norm_method;
+    }
+    
+    map<string, LibNormalizationMethod>::iterator lib_norm_itr =
+    lib_norm_method_table.find(lib_norm_method_str);
+    if (lib_norm_itr == lib_norm_method_table.end())
+    {
+        fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
+        exit(1);
+    }
+    else
+    {
+        lib_norm_method = lib_norm_itr->second;
+    }
+
+
     
     if (use_total_mass && use_compat_mass)
     {
         fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
         exit(1);
-    }
-    
-    if (use_raw_mapped_norm + use_geometric_norm + use_quartile_norm > 1)
-    {
-        fprintf(stderr, "Error: Choose one of upper-quartile-norm, geometric-norm, or raw-mapped-norm\n");
-        exit(1);
-    }
-    if (use_raw_mapped_norm + use_geometric_norm + use_quartile_norm == 0)
-    {
-        use_geometric_norm = true;
     }
     
     tokenize(sample_label_list, ",", sample_labels);
@@ -555,7 +618,7 @@ void print_tests(FILE* fout,
         else
             sig = "no";
         
-        const char* status;
+        const char* status = "OK";
         if (test.test_status == OK)
             status = "OK";
         else if (test.test_status == LOWDATA)
@@ -630,9 +693,9 @@ void print_FPKM_tracking(FILE* fout,
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
 			double fpkm = fpkms[i].FPKM;
-			double std_dev = sqrt(fpkms[i].FPKM_variance);
-			double fpkm_conf_hi = fpkm + 2.0 * std_dev;
-			double fpkm_conf_lo = max(0.0, fpkm - 2.0 * std_dev);
+			//double std_dev = sqrt(fpkms[i].FPKM_variance);
+			double fpkm_conf_hi = fpkms[i].FPKM_conf_hi;
+			double fpkm_conf_lo = fpkms[i].FPKM_conf_lo;
             const char* status_str = "OK";
             
             if (fpkms[i].status == NUMERIC_OK)
@@ -958,7 +1021,7 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 	shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
 	learn_bias(*fac, *bl, false);
-	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl));
+	rg_props->bias_learner(shared_ptr<BiasLearner>(bl));
 }
 
 
@@ -1007,221 +1070,535 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     return true;
 }
 
-void normalize_as_pool(vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
+void fit_mle_error()
 {
-    vector<LocusCountList> sample_count_table;
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        const vector<LocusCount>& raw_count_table = rg_props->raw_counts();
-        
-        for (size_t j = 0; j < raw_count_table.size(); ++j)
-        {
-            if (sample_count_table.size() == j)
-            {
-                const string& locus_id = raw_count_table[j].locus_desc;
-                int num_transcripts = raw_count_table[j].num_transcripts;
-                sample_count_table.push_back(LocusCountList(locus_id,all_read_groups.size(), num_transcripts));
-            }
-            double scaled = raw_count_table[j].count;
-            //sample_count_table[j].counts[i] = scaled * unscaling_factor;
-            sample_count_table[j].counts[i] = floor(scaled);
-            assert(sample_count_table[j].counts[i] >= 0 && !isinf(sample_count_table[j].counts[i]));
-        }
-    }
     
-    vector<double> scale_factors(all_read_groups.size(), 0.0);
-    
-    // TODO: needs to be refactored - similar code exists in replicates.cpp
-    calc_scaling_factors(sample_count_table, scale_factors);
-    
-    for (size_t j = 0; j < scale_factors.size(); ++j)
-    {
-        double total = 0.0;
-        double sf = scale_factors[j];
-        for (size_t i = 0; i < sample_count_table.size(); ++i)
-        {
-            total += sample_count_table[i].counts[j];
-        }
-        //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
-    }
-    
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        rg_props->internal_scale_factor(scale_factors[i]);
-        //rg_props->external_scale_factor(scale_factors[i]);
-    }
-    
-    // Transform raw counts to the common scale
-    for (size_t i = 0; i < sample_count_table.size(); ++i)
-    {
-        LocusCountList& p = sample_count_table[i];
-        for (size_t j = 0; j < p.counts.size(); ++j)
-        {
-            assert (scale_factors.size() > j);
-            p.counts[j] *= (1.0 / scale_factors[j]);
-        }
-    }
-    
-    for (size_t i = 0; i < all_read_groups.size(); ++i)
-    {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
-        vector<LocusCount> scaled_counts;
-        for (size_t j = 0; j < sample_count_table.size(); ++j)
-        {
-            string& locus_id = sample_count_table[j].locus_desc;
-            double count = sample_count_table[j].counts[i];
-            int num_transcripts = sample_count_table[j].num_transcripts;
-            LocusCount locus_count(locus_id, count, num_transcripts);
-            scaled_counts.push_back(locus_count);
-        }
-        rg_props->common_scale_counts(scaled_counts);
-        // revert each read group back to native scaling to avoid a systematic fold change toward the mean.
-        
-        // rg_props->internal_scale_factor(1.0);         
-    }
-    
-    if (poisson_dispersion == false)
-    {
-        shared_ptr<MassDispersionModel const> disperser;
-        disperser = fit_dispersion_model("pooled", scale_factors, sample_count_table, false);
-        
-        BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-        {
-            rg_props->mass_dispersion_model(disperser);
-        }
-    }
-    
-    double avg_total_common_scaled_count = 0.0;
-    
-    for (size_t fac_idx = 0; fac_idx < all_read_groups.size(); ++fac_idx)
-    {
-        //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
-        //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
-        double total_common = 0.0;
-        for (size_t j = 0; j < sample_count_table.size(); ++j)
-        {
-            total_common += sample_count_table[j].counts[fac_idx];
-        }
-        
-        avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
-    }
-    
-    BOOST_FOREACH(shared_ptr<ReadGroupProperties> rg, all_read_groups)
-    {
-        rg->normalized_map_mass(avg_total_common_scaled_count);
-        //bf->read_group_properties()->normalized_map_mass(scale_factors[fac_idx]);
-    }
-
 }
 
-void fit_isoform_level_count_dispersion(const FPKMTrackingTable& isoform_fpkm_tracking,
-                                        vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+void parse_contrast_file(FILE* contrast_file,
+                         const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
+                         vector<pair<size_t, size_t > >& contrasts)
 {
-    map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> > sample_count_table_for_disp_model;
     
-    for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+    char pBuf[10 * 1024];
+    size_t non_blank_lines_read = 0;
+    
+    map<string, pair<string, string> > contrast_table;
+    map<string, size_t > factor_name_to_factory_idx;
+    
+    for (size_t j = 0; j < factories.size(); ++j)
     {
-        shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
-        vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
-        //vector<double> count_table;
-        
-        vector<LocusCountList> sample_count_table;
-        
-        set<shared_ptr<ReadGroupProperties> > reps_for_condition;
-        
-        for (size_t i = 0; i < replicates.size(); ++i)
+        string factor_name = factories[j]->condition_name();
+        if (factor_name_to_factory_idx.find(factor_name) != factor_name_to_factory_idx.end())
         {
-            shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
-            reps_for_condition.insert(rg_props);
+            fprintf(stderr, "Error in contrast file: condition names must be unique! (%s is duplicated)", factor_name.c_str());
+            exit(1);
         }
+        factor_name_to_factory_idx[factor_name] = j;
     }
-
-    size_t iso_num = 0;
     
-    for (FPKMTrackingTable::const_iterator itr = isoform_fpkm_tracking.begin(); itr != isoform_fpkm_tracking.end(); ++itr)
+    while (fgets(pBuf, 10*1024, contrast_file))
     {
-        const string& description = itr->first;
-		const FPKMTracking& track = itr->second;
-        const vector<FPKMContext>& fpkms = track.fpkm_series;
-		
-        bool skip_iso = false;
-        for (size_t i = 0; i < fpkms.size(); ++i)
-		{
-            if (fpkms[i].count_per_rep.empty())
+        if (strlen(pBuf) > 0)
+        {
+            char* nl = strchr(pBuf, '\n');
+            if (nl)
+                *nl = 0;
+            
+            string pBufstr = pBuf;
+            string trimmed = boost::trim_copy(pBufstr);
+            
+            if (trimmed.length() > 0 && trimmed[0] != '#')
             {
-                skip_iso = true;
-                break;
-            }
-        }
-        if (skip_iso)
-            continue;
-        
-        for (size_t i = 0; i < fpkms.size(); ++i)
-		{
-            size_t fac_idx = 0;
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
-                 itr != fpkms[i].count_per_rep.end(); 
-                 ++itr)
-            {
-                shared_ptr<ReadGroupProperties const> rg_props = itr->first;
-                pair<map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator, bool >  p;
-                p = sample_count_table_for_disp_model.insert(make_pair(rg_props->mass_dispersion_model(),
-                                                                   vector<LocusCountList>()));
-                map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::iterator lc_itr = p.first;
-                vector<LocusCountList>& lc_list = lc_itr->second;
-                double count = itr->second;
+                non_blank_lines_read++;
+                vector<string> columns;
+                tokenize(trimmed, "\t", columns);
                 
-                if (iso_num >= lc_list.size())
+                if (non_blank_lines_read == 1)
+                    continue;
+                
+                if (columns.size() < 2)
                 {
-                    LocusCountList locus_count(description, fpkms[i].count_per_rep.size(), 1); 
-                    lc_list.push_back(locus_count);
-                    lc_list[lc_list.size() - 1].counts[0] = count;
+                    if (columns.size() > 0)
+                        fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                    else
+                        continue;
+                }
+                
+                string factor_1 = columns[0];
+                string factor_2 = columns[1];
+                
+                if (columns.size() >= 3)
+                {
+                    string contrast_name = columns[2];
+                    contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
                 }
                 else
                 {
-                    const string& ld = lc_list[iso_num].locus_desc;
-                    if (ld != description)
-                    {
-                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
-                        exit(1);
-                    }
-                    lc_list[iso_num].counts[fac_idx] = count;
+                    char contrast_name[1024];
+                    sprintf(contrast_name, "contrast_%lu", contrast_table.size());
+                    contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
                 }
-                fac_idx++;
             }
         }
-        iso_num++;
     }
     
-    for (map<shared_ptr<MassDispersionModel const>, vector<LocusCountList> >::const_iterator itr = sample_count_table_for_disp_model.begin(); 
-         itr != sample_count_table_for_disp_model.end(); 
-         ++itr)
+    for (map<string, pair<string, string> >::const_iterator itr = contrast_table.begin();
+         itr != contrast_table.end(); ++itr)
     {
-        if (itr->second.empty())
-            continue;
-        
-        vector<double> scale_factors(itr->second.front().counts.size(), 1);
-        shared_ptr<MassDispersionModel const> model = fit_dispersion_model(itr->first->name()+"iso", scale_factors, itr->second, true);
-        for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
+        string factor_1 = itr->second.first;
+        map<string, size_t >::iterator f1_itr = factor_name_to_factory_idx.find(factor_1);
+        if (f1_itr == factor_name_to_factory_idx.end())
         {
-            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
-            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
+            fprintf (stderr, "Error: condition %s not found among samples\n", factor_1.c_str());
+            exit(1);
+        }
+        size_t f1_idx = f1_itr->second;
+        
+        string factor_2 = itr->second.second;
+        map<string, size_t >::iterator f2_itr = factor_name_to_factory_idx.find(factor_2);
+        if (f2_itr == factor_name_to_factory_idx.end())
+        {
+            fprintf (stderr, "Error: condition %s not found among samples\n", factor_2.c_str());
+            exit(1);
+        }
+        size_t f2_idx = f2_itr->second;
+        contrasts.push_back(make_pair(f1_idx, f2_idx));
+    }
+ }
+
+void parse_sample_sheet_file(FILE* sample_sheet_file,
+                             vector<string>& sample_labels,
+                             vector<string>& sam_hit_filename_lists)
+{
+    
+    char pBuf[10 * 1024];
+    size_t non_blank_lines_read = 0;
+    
+    sample_labels.clear();
+    
+    map<string, vector<string> > sample_groups;
+    
+    while (fgets(pBuf, 10*1024, sample_sheet_file))
+    {
+        if (strlen(pBuf) > 0)
+        {
+            char* nl = strchr(pBuf, '\n');
+            if (nl)
+                *nl = 0;
             
-            for (size_t i = 0; i < replicates.size(); ++i)
+            string pBufstr = pBuf;
+            string trimmed = boost::trim_copy(pBufstr);
+            
+            if (trimmed.length() > 0 && trimmed[0] != '#')
             {
-                shared_ptr<ReadGroupProperties> rg_props = replicates[i]->read_group_properties();
-                if (rg_props->mass_dispersion_model() == itr->first)
+                non_blank_lines_read++;
+                vector<string> columns;
+                tokenize(trimmed, "\t", columns);
+                
+                if (non_blank_lines_read == 1)
+                    continue;
+                
+                if (columns.size() < 2)
                 {
-                    rg_props->mass_dispersion_model(model);
+                    if (columns.size() > 0)
+                        fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                    else
+                        continue;
                 }
+                
+                string sam_file = columns[0];
+                string sample_group = columns[1];
+                
+                pair<map<string, vector<string> >::iterator, bool> inserted = sample_groups.insert(make_pair(sample_group, vector<string>()));
+                inserted.first->second.push_back(sam_file);
             }
+        }
+    }
+    
+    for (map<string, vector<string> >::iterator itr = sample_groups.begin();
+         itr != sample_groups.end(); ++itr)
+    {
+        sample_labels.push_back(itr->first);
+        string sam_list = boost::join(itr->second, ",");
+        sam_hit_filename_lists.push_back(sam_list);
+    }
+}
+
+
+void init_default_contrasts(const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
+                            bool samples_are_time_series,
+                            vector<pair<size_t, size_t > >& contrasts)
+{
+    
+    for (size_t i = 1; i < factories.size(); ++i)
+    {
+        //bool multi_transcript_locus = samples[i]->transcripts.abundances().size() > 1;
+
+        int sample_to_start_test_against = 0;
+
+        if (samples_are_time_series)
+            sample_to_start_test_against = i - 1;
+
+        for (size_t j = sample_to_start_test_against; j < i; ++j)
+        {
+            contrasts.push_back(make_pair(i,j));
         }
     }
 }
 
-void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
+void parse_norm_standards_file(FILE* norm_standards_file)
+{
+    char pBuf[10 * 1024];
+    size_t non_blank_lines_read = 0;
+    
+    shared_ptr<map<string, LibNormStandards> > norm_standards(new map<string, LibNormStandards>);
+    
+    while (fgets(pBuf, 10*1024, norm_standards_file))
+    {
+        if (strlen(pBuf) > 0)
+        {
+            char* nl = strchr(pBuf, '\n');
+            if (nl)
+                *nl = 0;
+            
+            string pBufstr = pBuf;
+            string trimmed = boost::trim_copy(pBufstr);
+            
+            if (trimmed.length() > 0 && trimmed[0] != '#')
+            {
+                non_blank_lines_read++;
+                vector<string> columns;
+                tokenize(trimmed, "\t", columns);
+                
+                if (non_blank_lines_read == 1)
+                    continue;
+                
+                if (columns.size() < 1) // 
+                {
+                    continue;
+                }
+                
+                string gene_id = columns[0];
+                LibNormStandards L;
+                norm_standards->insert(make_pair(gene_id, L));
+            }
+        }
+    }
+    lib_norm_standards = norm_standards;
+}
+
+
+void print_variability_models(FILE* var_model_out, const vector<shared_ptr<ReplicatedBundleFactory> >& factories)
+{
+
+    fprintf(var_model_out, "condition\tlocus\tcompatible_count_mean\tcompatible_count_var\ttotal_count_mean\ttotal_count_var\tfitted_var\n");
+    
+    for (size_t i = 0; i < factories.size(); ++i)
+    {
+        string factor_name = factories[i]->condition_name();
+        shared_ptr<ReadGroupProperties> rg = factories[i]->factories()[0]->read_group_properties();
+        boost::shared_ptr<MassDispersionModel const> model = rg->mass_dispersion_model();
+//        const vector<double>& means = model->scaled_compatible_mass_means();
+//        const vector<double>& raw_vars  = model->scaled_compatible_variances();
+        
+        const vector<LocusCount>& common_scale_compatible_counts = rg->common_scale_compatible_counts();
+        for (size_t j = 0; j < common_scale_compatible_counts.size(); ++j)
+        {
+            string locus_desc = common_scale_compatible_counts[j].locus_desc;
+            pair<double, double> compat_mean_and_var = model->get_compatible_mean_and_var(locus_desc);
+            pair<double, double> total_mean_and_var = model->get_total_mean_and_var(locus_desc);
+//            double total_compat_count = 0;
+//            if (itr != locus_to_total_count_table.end())
+//                total_compat_count = itr->second.count;
+            
+            
+            fprintf(var_model_out, "%s\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\n",
+                    factor_name.c_str(),
+                    locus_desc.c_str(),
+                    compat_mean_and_var.first,
+                    compat_mean_and_var.second,
+                    total_mean_and_var.first,
+                    total_mean_and_var.second,
+                    model->scale_mass_variance(compat_mean_and_var.first));
+        }
+    }
+    fclose(var_model_out);
+
+}
+
+struct DispModelAverageContext
+{
+    double compatible_count_mean;
+    double total_count_mean;
+    double compatible_count_var;
+    double total_count_var;
+    
+    double fitted_var;
+    double weight;
+};
+
+void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+{
+    if (dispersion_method == PER_CONDITION)
+    {
+        for (size_t i = 0; i < bundle_factories.size(); ++i)
+        {
+            bundle_factories[i]->fit_dispersion_model();
+        }
+    }
+    else if (dispersion_method == BLIND)
+    {
+        size_t num_samples = 0;
+        for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
+        {
+            const vector<shared_ptr<BundleFactory> >& factories = bundle_factories[cond_idx]->factories();
+            for (size_t fac_idx = 0; fac_idx < factories.size(); ++fac_idx)
+            {
+                num_samples++;
+            }
+        }
+        vector<double> scale_factors;
+        
+        vector<LocusCountList> sample_compatible_count_table;
+        vector<LocusCountList> sample_total_count_table;
+        size_t curr_fac = 0;
+        for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
+        {
+            vector<shared_ptr<BundleFactory> > factories = bundle_factories[cond_idx]->factories();
+            for (size_t fac_idx = 0; fac_idx < factories.size(); ++fac_idx)
+            {
+                shared_ptr<BundleFactory> fac = factories[fac_idx];
+                
+                shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+                const vector<LocusCount>& compatible_count_table = rg_props->common_scale_compatible_counts();
+                const vector<LocusCount>& total_count_table = rg_props->common_scale_total_counts();
+                
+                for (size_t i = 0; i < compatible_count_table.size(); ++i)
+                {
+                    const LocusCount& c = compatible_count_table[i];
+                    double common_scale_compatible_count = c.count;
+                    double common_scale_total_count = total_count_table[i].count;
+                    
+                    if (i >= sample_compatible_count_table.size())
+                    {
+                        LocusCountList locus_count(c.locus_desc, num_samples, c.num_transcripts, c.gene_ids, c.gene_short_names);
+                        sample_compatible_count_table.push_back(locus_count);
+                        sample_compatible_count_table.back().counts[0] = common_scale_compatible_count;
+                        sample_total_count_table.push_back(locus_count);
+                        sample_total_count_table.back().counts[0] = common_scale_total_count;
+                    }
+                    else
+                    {
+                        if (sample_compatible_count_table[i].locus_desc != c.locus_desc)
+                        {
+                            fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
+                            exit(1);
+                        }
+                        sample_compatible_count_table[i].counts[curr_fac + fac_idx] = common_scale_compatible_count;
+                        sample_total_count_table[i].counts[curr_fac + fac_idx] = common_scale_total_count;
+                    }
+                }
+                scale_factors.push_back(rg_props->internal_scale_factor());
+                
+            }
+            
+            curr_fac += factories.size();
+        }
+
+        shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
+        
+        vector<pair<double, double> > compatible_means_and_vars;
+        calculate_count_means_and_vars(sample_compatible_count_table,
+                                       compatible_means_and_vars);
+        
+        for (size_t i = 0; i < sample_compatible_count_table.size(); ++i)
+        {
+            const LocusCountList& p = sample_compatible_count_table[i];
+            double mean = compatible_means_and_vars[i].first;
+            double var = compatible_means_and_vars[i].second;
+            disperser->set_compatible_mean_and_var(p.locus_desc, make_pair(mean, var));
+        }
+        
+        vector<pair<double, double> > total_means_and_vars;
+        calculate_count_means_and_vars(sample_total_count_table,
+                                       total_means_and_vars);
+        
+        for (size_t i = 0; i < sample_total_count_table.size(); ++i)
+        {
+            const LocusCountList& p = sample_compatible_count_table[i];
+            double mean = total_means_and_vars[i].first;
+            double var = total_means_and_vars[i].second;
+            disperser->set_total_mean_and_var(p.locus_desc, make_pair(mean, var));
+        }
+
+        for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
+        {
+            bundle_factories[cond_idx]->mass_dispersion_model(disperser);
+        }
+    }
+    else if (dispersion_method == POOLED)
+    {
+        for (size_t i = 0; i < bundle_factories.size(); ++i)
+        {
+            bundle_factories[i]->fit_dispersion_model();
+        }
+        // now need to replace them with the average
+        
+        shared_ptr<MassDispersionModel> pooled_model;
+        // Let's compute the pooled average of the dispersion models
+        if (dispersion_method != BLIND)
+        {
+            vector<shared_ptr<MassDispersionModel const> > disp_models;
+            double total_replicates = 0.0;
+            vector<double> disp_model_weight;
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                total_replicates += fac->num_replicates();
+            }
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                if (fac->num_replicates() > 1)
+                {
+                    disp_models.push_back(fac->mass_dispersion_model());
+                    disp_model_weight.push_back((double)fac->num_replicates() / total_replicates);
+                }
+            }
+            
+            double max_mass = 0.0;
+            
+            BOOST_FOREACH(shared_ptr<MassDispersionModel const> disp, disp_models)
+            {
+                if (disp->scaled_compatible_mass_means().empty() == false && max_mass < disp->scaled_compatible_mass_means().back())
+                {
+                    max_mass = disp->scaled_compatible_mass_means().back();
+                }
+            }
+            
+            map<std::string, vector<DispModelAverageContext> > disp_info_by_locus;
+            for (size_t disp_idx = 0; disp_idx < disp_models.size(); ++disp_idx)
+            {
+                shared_ptr<MassDispersionModel const> disp = disp_models[disp_idx];
+                
+                const std::map<std::string, std::pair<double, double> >& total_mv_by_locus = disp->total_mv_by_locus();
+                const std::map<std::string, std::pair<double, double> >& compatible_mv_by_locus = disp->compatible_mv_by_locus();
+                
+                for (map<std::string, std::pair<double, double> >::const_iterator itr = compatible_mv_by_locus.begin();
+                     itr != compatible_mv_by_locus.end(); ++itr)
+                {
+                                        
+                    std::map<std::string, std::pair<double, double> >::const_iterator total_itr = total_mv_by_locus.find(itr->first);
+                    if (total_itr == total_mv_by_locus.end())
+                        continue;
+                    
+                    pair<map<std::string, vector<DispModelAverageContext> >::iterator, bool> ins_pair =
+                    disp_info_by_locus.insert(make_pair(itr->first, vector<DispModelAverageContext>()));
+                    
+                    
+                    DispModelAverageContext ctx;
+                    ctx.compatible_count_mean = itr->second.first;
+                    ctx.compatible_count_var = itr->second.second;
+                    ctx.total_count_mean = total_itr->second.first;
+                    ctx.total_count_var = total_itr->second.second;
+                    if (use_compat_mass)
+                        ctx.fitted_var = disp->scale_mass_variance(ctx.compatible_count_mean);
+                    else
+                        ctx.fitted_var = disp->scale_mass_variance(ctx.total_count_mean);
+                    
+                    ctx.weight = disp_model_weight[disp_idx];
+                    
+                    ins_pair.first->second.push_back(ctx);
+                }
+            }
+            
+            map<string, DispModelAverageContext> pooled_info_by_locus;
+            
+            for (map<std::string, vector<DispModelAverageContext> >::const_iterator itr = disp_info_by_locus.begin();
+                 itr != disp_info_by_locus.end();
+                 ++itr)
+            {
+                DispModelAverageContext avg_ctx;
+                avg_ctx.compatible_count_mean = 0;
+                avg_ctx.compatible_count_var = 0;
+                avg_ctx.total_count_mean = 0;
+                avg_ctx.total_count_var = 0;
+                avg_ctx.fitted_var = 0;
+                
+                double total_weight = 0.0;
+                for (size_t i = 0; i < itr->second.size(); ++i)
+                {
+                    total_weight += itr->second[i].weight;
+                }
+                
+                for (size_t i = 0; i < itr->second.size(); ++i)
+                {
+                    avg_ctx.compatible_count_mean += (itr->second[i].weight / total_weight) * itr->second[i].compatible_count_mean;
+                    avg_ctx.compatible_count_var += (itr->second[i].weight / total_weight) * itr->second[i].compatible_count_var;
+                    avg_ctx.total_count_mean += (itr->second[i].weight / total_weight) * itr->second[i].total_count_mean;
+                    avg_ctx.total_count_var += (itr->second[i].weight / total_weight) * itr->second[i].total_count_var;
+                }
+                pooled_info_by_locus[itr->first] = avg_ctx;
+            }
+            
+            vector<double> compatible_mass;
+            vector<double> compatible_variances;
+            vector<double> est_fitted_var;
+            double epsilon = 0.2;
+            for (double frag_idx = 0.0; frag_idx < max_mass; frag_idx += epsilon)
+            {
+                compatible_mass.push_back(frag_idx);
+                double var_est = 0.0;
+                for(size_t i = 0; i < disp_models.size(); ++i)
+                {
+                    shared_ptr<MassDispersionModel const> disp = disp_models[i];
+                    double weight = disp_model_weight[i];
+                    var_est += disp->scale_mass_variance(frag_idx) * weight;
+                }
+                compatible_variances.push_back(var_est);
+                est_fitted_var.push_back(var_est);
+            }
+            
+            pooled_model = shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
+            
+            for (map<std::string, DispModelAverageContext>::iterator itr = pooled_info_by_locus.begin();
+                 itr != pooled_info_by_locus.end();
+                 ++itr)
+            {
+                const string& locus = itr->first;
+                pair<double, double> cmv = make_pair(itr->second.compatible_count_mean, itr->second.compatible_count_var);
+                pooled_model->set_compatible_mean_and_var(locus, cmv);
+
+                pair<double, double> tmv = make_pair(itr->second.total_count_mean, itr->second.total_count_var);
+                pooled_model->set_total_mean_and_var(locus, tmv);
+            }
+        }
+        
+        if (dispersion_method == POOLED)
+        {
+            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            {
+                fac->mass_dispersion_model(pooled_model);
+            }
+        }
+        
+        
+    }
+    else if (dispersion_method == POISSON)
+    {
+        shared_ptr<MassDispersionModel> disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(""));
+        for (size_t i = 0; i < bundle_factories.size(); ++i)
+        {
+            bundle_factories[i]->mass_dispersion_model(disperser);
+        }
+
+    }
+    else
+    {
+        fprintf (stderr, "Error: unknown dispersion method requested\n");
+    }
+}
+
+void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 
 	ReadTable it;
@@ -1291,7 +1668,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        
         bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
@@ -1312,9 +1688,60 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
             fac->set_mask_rnas(mask_rnas);
     }
     
+    vector<pair<size_t, size_t > > contrasts;
+    if (contrast_file != NULL)
+    {
+        parse_contrast_file(contrast_file, bundle_factories, contrasts);
+    }
+    else
+    {
+        init_default_contrasts(bundle_factories, samples_are_time_series, contrasts);
+    }
+    
+    if (norm_standards_file != NULL)
+    {
+        parse_norm_standards_file(norm_standards_file);
+    }
+    
+    
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
 #endif
+    
+    // Validate the dispersion method the user's chosen.
+    int most_reps = -1;
+    int most_reps_idx = 0;
+    
+    bool single_replicate_fac = false;
+    
+    for (size_t i = 0; i < bundle_factories.size(); ++i)
+    {
+        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
+        if (fac.num_replicates() > most_reps)
+        {
+            most_reps = fac.num_replicates();
+            most_reps_idx = i;
+        }
+        if (most_reps == 1)
+        {
+            single_replicate_fac = true;
+            if (dispersion_method == PER_CONDITION)
+            {
+                fprintf(stderr, "Error: Dispersion method 'per-condition' requires that all conditions have at least 2 replicates.  Please use either 'pooled' or 'blind'\n");
+                exit(1);
+            }
+        }
+    }
+    
+    if (most_reps == 1 && (dispersion_method != BLIND || dispersion_method != POISSON))
+    {
+        fprintf(stderr, "Warning: No conditions are replicated, switching to 'blind' dispersion method\n");
+        dispersion_method = BLIND;
+    }
+
+    
+    //bool pool_all_samples = ((most_reps <= 1 && dispersion_method == NOT_SET) || dispersion_method == BLIND);
+    
     
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
@@ -1366,224 +1793,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     }
 #endif
     
-    int most_reps = -1;
-    int most_reps_idx = 0;
-    
-    bool single_replicate_fac = false;
-    
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
-    {
-        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
-        if (fac.num_replicates() > most_reps)
-        {
-            most_reps = fac.num_replicates();
-            most_reps_idx = i;
-        }
-        if (most_reps == 1)
-        {
-            single_replicate_fac = true;
-        }
-    }
-    
-    if (most_reps == 1)
-    {
-        normalize_as_pool(all_read_groups);
-    }
-    
-    if (most_reps != 1 && (use_quartile_norm || use_geometric_norm))
-    {
-        vector<LocusCountList> sample_count_table;
-        
-        //vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
-        
-        for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-        {
-            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[fac_idx];
-            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
-            vector<double> count_table;
-            for (size_t j = 0; j < replicates.size(); ++j)
-            {
-                shared_ptr<ReadGroupProperties> rg = replicates[j]->read_group_properties();
-                const vector<LocusCount>& rep_count_table = rg->common_scale_counts();
-                if (count_table.empty())
-                    count_table = vector<double>(rep_count_table.size(), 0);
-                
-                for (size_t i = 0; i < rep_count_table.size(); ++i)
-                {
-                    const LocusCount& c = rep_count_table[i];
-                    double count = c.count;
-                    count_table[i] += (count / replicates.size());;
-                }
-                
-            }
-            
-            for (size_t i = 0; i < count_table.size(); ++i)
-            {
-                
-                const LocusCount& c = replicates.front()->read_group_properties()->common_scale_counts()[i];
-                double count = count_table[i];
-                
-                if (i >= sample_count_table.size())
-                {
-                    LocusCountList locus_count(c.locus_desc, bundle_factories.size(), c.num_transcripts); 
-                    sample_count_table.push_back(locus_count);
-                    sample_count_table.back().counts[0] = count;
-                }
-                else
-                {
-                    if (sample_count_table[i].locus_desc != c.locus_desc)
-                    {
-                        fprintf (stderr, "Error: bundle boundaries don't match across replicates!\n");
-                        exit(1);
-                    }
-                    sample_count_table[i].counts[fac_idx] = count;
-                }
-                
-            }
-        }
-        
-        vector<double> scale_factors(bundle_factories.size(), 0.0);
-        
-        calc_scaling_factors(sample_count_table, scale_factors);
-        
-        for (size_t j = 0; j < scale_factors.size(); ++j)
-        {
-            shared_ptr<ReplicatedBundleFactory> rep_fac = bundle_factories[j];
-            vector<shared_ptr<BundleFactory> > replicates = rep_fac->factories();
-            
-            for (size_t i = 0; i < replicates.size(); ++i)
-            {
-                shared_ptr<ReadGroupProperties> rg = replicates[i]->read_group_properties();
-                rg->external_scale_factor(scale_factors[j]);
-            }
-            
-            double total = 0.0;
-            double sf = scale_factors[j];
-            for (size_t i = 0; i < sample_count_table.size(); ++i)
-            {
-                total += sample_count_table[i].counts[j];
-            }
-            //fprintf(stderr, "SF: %lg, Total: %lg\n", sf, total);
-        }
-        
-        if (use_quartile_norm)
-        {
-            vector<double> upper_quartiles(bundle_factories.size(), 0);
-            vector<double> total_common_masses(bundle_factories.size(), 0);
-            
-            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-            {
-                //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
-                //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
-                vector<double> common_scaled_counts;
-                double total_common = 0.0;
-                
-                for (size_t j = 0; j < sample_count_table.size(); ++j)
-                {
-                    total_common += sample_count_table[j].counts[fac_idx];
-                    common_scaled_counts.push_back(sample_count_table[j].counts[fac_idx]);
-                }
-                
-                sort(common_scaled_counts.begin(), common_scaled_counts.end());
-                if (common_scaled_counts.empty())
-                    continue;
-                
-                int upper_quart_index = common_scaled_counts.size() * 0.75;
-                double upper_quart_count = common_scaled_counts[upper_quart_index];
-                upper_quartiles[fac_idx] = upper_quart_count;
-                total_common_masses[fac_idx] = total_common;
-            }
-            
-            long double total_mass = accumulate(total_common_masses.begin(), total_common_masses.end(), 0.0);
-            long double total_norm_mass = accumulate(upper_quartiles.begin(), upper_quartiles.end(), 0.0);
-            
-            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-            {
-                if (total_mass > 0)
-                {
-                    //double scaling_factor = total_mass / total_norm_mass;
-                    double external_scaling_factor = upper_quartiles[fac_idx] / (total_norm_mass / upper_quartiles.size());
-                    BOOST_FOREACH(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
-                    {
-                        //double scaled_mass = scaling_factor * upper_quartiles[fac_idx];
-                        bf->read_group_properties()->normalized_map_mass(total_mass / total_common_masses.size());
-                        //bf->read_group_properties()->external_scale_factor(1.0);
-                        bf->read_group_properties()->external_scale_factor(external_scaling_factor);
-                    }
-                }
-            }
-        }
-        else
-        {
-            transform_counts_to_common_scale(scale_factors, sample_count_table);
-            
-            double avg_total_common_scaled_count = 0.0;
-            
-            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-            {
-                //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
-                //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
-                double total_common = 0.0;
-                for (size_t j = 0; j < sample_count_table.size(); ++j)
-                {
-                    total_common += sample_count_table[j].counts[fac_idx];
-                }
-                
-                avg_total_common_scaled_count += (1.0/bundle_factories.size()) * total_common;
-                
-                //rg->normalized_map_mass(scale_factors[fac_idx])
-            }
-            
-            for (size_t fac_idx = 0; fac_idx < bundle_factories.size(); ++fac_idx)
-            {
-                BOOST_FOREACH(shared_ptr<BundleFactory> bf, bundle_factories[fac_idx]->factories())
-                {
-                    bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-                }
-            }
-        }  
-        
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
-        {
-            // for now, "borrow" the dispersion model for the condition with the most replicates
-            size_t borrowed_disp_model_idx = most_reps_idx;
-            if (fac->num_replicates() == 1)
-            {
-                fac->mass_dispersion_model(bundle_factories[borrowed_disp_model_idx]->mass_dispersion_model());
-                double borrowed_internal_size_factor = scale_factors[borrowed_disp_model_idx];
-                double borrowed_external_size_factor = scale_factors[borrowed_disp_model_idx];
-                double borrowed_norm_map_mass = bundle_factories[borrowed_disp_model_idx]->factories().front()->read_group_properties()->normalized_map_mass();
-                BOOST_FOREACH(shared_ptr<BundleFactory> bf, fac->factories())
-                {
-                    // we need to adjust the scaling factors so that the FPKMs aren't skewed
-                    // and the variance function from the dispersion model is correct.
-                    //bf->read_group_properties()->normalized_map_mass(avg_total_common_scaled_count);
-                    bf->read_group_properties()->internal_scale_factor(bf->read_group_properties()->external_scale_factor()/borrowed_internal_size_factor);
-                    bf->read_group_properties()->normalized_map_mass(borrowed_norm_map_mass);
-                    bf->read_group_properties()->external_scale_factor(borrowed_external_size_factor);
-                }
-            }
-        }
-    }
-    else if (use_raw_mapped_norm)
-    {
-        // no need to do anything beyond what's already being done during 
-        // per-condition map inspection.  Counts are common-scale-transformed 
-        // on a per condition basis.  External scale factors are set to 1.0 
-        // by default
-    }
-
-
-//    if (use_quartile_norm || use_raw_mapped_norm)
-//    {
-//        // scale the normalized masses so that both quantile total count normalization
-//        // are roughly on the same numerical scale
-//        BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-//        {
-//            long double new_norm = rg_props->normalized_map_mass() * (total_mass / total_norm_mass);
-//            rg_props->normalized_map_mass(new_norm);
-//        }
-//    }
+    normalize_counts(all_read_groups);
+    fit_dispersions(bundle_factories);
+ 
+    print_variability_models(outfiles.var_model_out, bundle_factories);
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
@@ -1639,15 +1852,12 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
     
     Tracking tracking;
     
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), NULL, &tracking, samples_are_time_series, &p_bar));
+    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
     
-	if (corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
+	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
-			//p_bar.update("",1);
-            //test_launcher = shared_ptr<TestLauncher>(new TestLauncher((int)bundle_factories.size(), NULL, &tracking, samples_are_time_series, &p_bar));
-                                                     
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
 			quantitate_next_locus(rt, bundle_factories, test_launcher);
 			bool more_loci_remain = false;
@@ -1744,10 +1954,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
         bias_run = false;
 	}
     
-//    if (use_isoform_count_dispersion)
-//    {
-//        fit_isoform_level_count_dispersion(tracking.isoform_fpkm_tracking, bundle_factories);
-//    }
+    fprintf(outfiles.bias_out, "condition_name\treplicate_num\tparam\tpos_i\tpos_j\tvalue\n");
+    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    {
+        if (rg_props->bias_learner())
+            rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
+    }
+    
     
     // Allow the multiread tables to do their thing...
     BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
@@ -1783,7 +1996,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
                                                      
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), &tests, &tracking, samples_are_time_series, &p_bar));
+    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, &tests, &tracking, &p_bar));
                                                                                               
 	while (true)
 	{
@@ -1829,165 +2042,154 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> isoform_exp_diffs;
     fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_iso_de_tests += tests.isoform_de_tests[i][j].size();
-                extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
-            }
+            total_iso_de_tests += tests.isoform_de_tests[i][j].size();
+            extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
         }
-        
-        int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
-        fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
-        
-        for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+    }
+    
+    int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
+    fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
+    
+    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
-            }
+            print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
         }
-	}
+    }
+
     
 	int total_group_de_tests = 0;
 	vector<SampleDifference*> tss_group_exp_diffs;
     fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-	//if (no_differential == false)
+    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                extract_sample_diffs(tests.tss_group_de_tests[i][j], tss_group_exp_diffs);
-                total_group_de_tests += tests.tss_group_de_tests[i][j].size();
-            }
-        }
-    
-        int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
-        fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
-        
-        for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
-        {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
-            }
+            extract_sample_diffs(tests.tss_group_de_tests[i][j], tss_group_exp_diffs);
+            total_group_de_tests += tests.tss_group_de_tests[i][j].size();
         }
     }
+
+    int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
+    fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
+    
+    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
+        {
+            print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
+        }
+    }
+
 	
 	int total_gene_de_tests = 0;
 	vector<SampleDifference*> gene_exp_diffs;
     fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_gene_de_tests += tests.gene_de_tests[i][j].size();
-                extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
-            }
+            total_gene_de_tests += tests.gene_de_tests[i][j].size();
+            extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
         }
-    
-        //fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
-        int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
-        fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
-        
-        for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
-        {        
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
-            }
-        }	
     }
+
+    //fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+    int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
+    fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
+    
+    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+    {        
+        for (size_t j = 0; j < i; ++j)
+        {
+            print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
+        }
+    }	
+
     
 	int total_cds_de_tests = 0;
 	vector<SampleDifference*> cds_exp_diffs;
     fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_cds_de_tests += tests.cds_de_tests[i][j].size();
-                extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
-            }
+            total_cds_de_tests += tests.cds_de_tests[i][j].size();
+            extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
         }
+    }
+
+
+    int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
+    fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
     
-    
-        int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
-        fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
-        
-        for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
-            }
+            print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
         }
-	}
+    }
+
     
 	int total_diff_splice_tests = 0;
 	vector<SampleDifference*> splicing_diffs;
     fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
-                extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
-            }
+            total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
+            extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
         }
+    }
+
+    int splicing_tests = fdr_significance(FDR, splicing_diffs);
+    fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
     
-        int splicing_tests = fdr_significance(FDR, splicing_diffs);
-        fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
-        
-        for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
-                print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
-            }
+            const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
+            print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
         }
-	}
+    }
+
     
 	int total_diff_promoter_tests = 0;
 	vector<SampleDifference*> promoter_diffs;
     fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    //if (no_differential == false)
+
+    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
-                extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
-            }
+            total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
+            extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
         }
+    }
+
+
+    int promoter_tests = fdr_significance(FDR, promoter_diffs);
+    fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
     
-    
-        int promoter_tests = fdr_significance(FDR, promoter_diffs);
-        fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
-        
-        for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
+    for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
-            }
+            print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
         }
     }
     
@@ -1995,29 +2197,27 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, vector<string>& sam_hit_filename_list
 	vector<SampleDifference*> cds_use_diffs;
     fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    //if (no_differential == false)
+    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
     {
-        for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+        for (size_t j = 0; j < i; ++j)
         {
-            for (size_t j = 0; j < i; ++j)
-            {
-                extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
-                total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
-            }
-        }
-	
-    
-        int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
-        fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
-        
-        for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
-        {
-            for (size_t j = 0; j < i; ++j)
-            {
-                print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
-            }
+            extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
+            total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
         }
     }
+
+
+    int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
+    fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
+    
+    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
+        {
+            print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
+        }
+    }
+
 	
     // FPKM tracking
     
@@ -2090,6 +2290,8 @@ int main(int argc, char** argv)
     }
     
     init_library_table();
+    init_dispersion_method_table();
+    init_lib_norm_method_table();
     
     min_isoform_fraction = 1e-5;
     
@@ -2111,15 +2313,51 @@ int main(int argc, char** argv)
     
     if (!no_update_check)
         check_version(PACKAGE_VERSION);
-        
     
     string ref_gtf_filename = argv[optind++];
-	
-	vector<string> sam_hit_filenames;
-    while(optind < argc)
+    vector<string> sam_hit_filenames;
+    
+    if (use_sample_sheet)
     {
-        string sam_hits_file_name = argv[optind++];
-		sam_hit_filenames.push_back(sam_hits_file_name);
+        if  (optind < argc)
+        {
+            
+            string sample_sheet_filename = argv[optind++];
+            FILE* sample_sheet_file = NULL;
+            if (sample_sheet_filename != "")
+            {
+                sample_sheet_file = fopen(sample_sheet_filename.c_str(), "r");
+                if (!sample_sheet_file)
+                {
+                    fprintf(stderr, "Error: cannot open sample sheet file %s for reading\n",
+                            sample_sheet_filename.c_str());
+                    exit(1);
+                }
+            }
+            parse_sample_sheet_file(sample_sheet_file, sample_labels, sam_hit_filenames);
+        }
+        else
+        {
+            fprintf(stderr, "Error: option --use-sample-sheet requires a single sample sheet filename instead of a list of SAM/BAM files\n");
+        }
+    }
+    else
+    {
+        while(optind < argc)
+        {
+            string sam_hits_file_name = argv[optind++];
+            sam_hit_filenames.push_back(sam_hits_file_name);
+        }
+        
+        if (sample_labels.size() == 0)
+        {
+            for (size_t i = 1; i < sam_hit_filenames.size() + 1; ++i)
+            {
+                char buf[256];
+                sprintf(buf, "q%lu", i);
+                sample_labels.push_back(buf);
+            }
+        }
     }
     	
 	while (sam_hit_filenames.size() < 2)
@@ -2128,15 +2366,6 @@ int main(int argc, char** argv)
         exit(1);
     }
 	
-    if (sample_labels.size() == 0)
-    {
-        for (size_t i = 1; i < sam_hit_filenames.size() + 1; ++i)
-        {
-            char buf[256];
-            sprintf(buf, "q%lu", i);
-            sample_labels.push_back(buf);
-        }   
-    }
     
     if (sam_hit_filenames.size() != sample_labels.size())
     {
@@ -2174,9 +2403,33 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 	}
+
 	
+    FILE* contrast_file = NULL;
+	if (contrast_filename != "")
+	{
+		contrast_file = fopen(contrast_filename.c_str(), "r");
+		if (!contrast_file)
+		{
+			fprintf(stderr, "Error: cannot open contrast file %s for reading\n",
+					contrast_filename.c_str());
+			exit(1);
+		}
+	}
+
+    FILE* norm_standards_file = NULL;
+	if (norm_standards_filename != "")
+	{
+		norm_standards_file = fopen(norm_standards_filename.c_str(), "r");
+		if (!norm_standards_file)
+		{
+			fprintf(stderr, "Error: cannot open contrast file %s for reading\n",
+					norm_standards_filename.c_str());
+			exit(1);
+		}
+	}
     
-	
+
 	// Note: we don't want the assembly filters interfering with calculations 
 	// here
 	
@@ -2435,8 +2688,38 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	outfiles.run_info_out = run_info_out;
+
+    char bias_name[filename_buf_size];
+	sprintf(bias_name, "%s/bias_params.info", output_dir.c_str());
+	FILE* bias_out = fopen(bias_name, "w");
+	if (!bias_out)
+	{
+		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
+				bias_name);
+		exit(1);
+	}
+	outfiles.bias_out = bias_out;
     
-    driver(ref_gtf, mask_gtf, sam_hit_filenames, outfiles);
+    char var_model_name[filename_buf_size];
+	sprintf(var_model_name, "%s/var_model.info", output_dir.c_str());
+	FILE* var_model_out = fopen(var_model_name, "w");
+	if (!var_model_out)
+	{
+		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
+				var_model_name);
+		exit(1);
+	}
+	outfiles.var_model_out = var_model_out;
+
+    
+    driver(ref_gtf, mask_gtf, contrast_file, norm_standards_file, sam_hit_filenames, outfiles);
+	
+#if 0
+    if (emit_count_tables)
+    {
+        dump_locus_variance_info(output_dir + string("/locus_var.txt"));
+    }
+#endif
     
 	return 0;
 }

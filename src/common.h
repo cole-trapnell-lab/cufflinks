@@ -47,6 +47,9 @@ extern int max_partner_dist;
 extern uint32_t max_gene_length;
 extern std::string ref_gtf_filename;
 extern std::string mask_gtf_filename;
+extern std::string contrast_filename;
+extern std::string norm_standards_filename;
+extern bool use_sample_sheet;
 extern std::string output_dir;
 extern std::string fasta_dir;
 extern std::string library_type;
@@ -54,17 +57,16 @@ extern std::string library_type;
 // Abundance estimation options
 extern bool corr_bias;
 extern bool corr_multi;
-extern bool use_quartile_norm;
-extern bool poisson_dispersion;
+
 extern int def_frag_len_mean;
 extern int def_frag_len_std_dev;
 extern int max_mle_iterations;
 extern int num_importance_samples;
 extern float min_isoform_fraction;
-extern bool use_em;
 extern bool cond_prob_collapse;
 extern bool use_compat_mass;
 extern bool use_total_mass;
+extern bool model_mle_error;
 
 // Ref-guided assembly options
 extern int overhang_3;
@@ -107,6 +109,15 @@ extern int min_reps_for_js_test;
 extern bool no_effective_length_correction;
 extern bool no_length_correction;
 extern bool no_js_tests;
+
+extern bool no_scv_correction;
+
+extern double min_outlier_p;
+
+
+extern std::string default_dispersion_method;
+extern std::string default_lib_norm_method;
+extern std::string default_cufflinks_lib_norm_method;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -224,6 +235,25 @@ enum FLDSource
     DEFAULT
 };
 
+enum DispersionMethod
+{
+    DISP_NOT_SET,
+    BLIND,
+    PER_CONDITION,
+    POOLED,
+    POISSON
+};
+
+enum LibNormalizationMethod
+{
+    LIB_NORM_NOT_SET,
+    GEOMETRIC,
+    CLASSIC_FPKM,
+    TMM,
+    QUARTILE,
+    ABSOLUTE // Requires spike-in controls, not yet implemented
+};
+
 class EmpDist
 {
 	//Vectors only valid between min and max!
@@ -296,14 +326,17 @@ class BiasLearner;
 class MultiReadTable;
 
 class MassDispersionModel;
+class MleErrorModel;
 
 struct LocusCount
 {
-    LocusCount(std::string ld, double c, int nt) : 
-        locus_desc(ld), count(c), num_transcripts(nt) {}
+    LocusCount(std::string ld, double c, int nt, const std::vector<std::string>& gids, const std::vector<std::string>& gnms) :
+        locus_desc(ld), count(c), num_transcripts(nt), gene_ids(gids), gene_short_names(gnms) {}
     std::string locus_desc;
     double count;
     int num_transcripts;
+    std::vector<std::string> gene_ids;
+    std::vector<std::string> gene_short_names;
 };
 
 class ReadGroupProperties
@@ -356,7 +389,7 @@ public:
         return unscaled_mass * (1.0 / _internal_scale_factor);
     }
     
-    boost::shared_ptr<const MassDispersionModel> mass_dispersion_model() const 
+    boost::shared_ptr<const MassDispersionModel> mass_dispersion_model() const
     { 
         return _mass_dispersion_model; 
     };
@@ -366,11 +399,27 @@ public:
         _mass_dispersion_model = nm; 
     }
     
-    const std::vector<LocusCount>& common_scale_counts() { return _common_scale_counts; }
-    void common_scale_counts(const std::vector<LocusCount>& counts) { _common_scale_counts = counts; }
+    boost::shared_ptr<const MleErrorModel> mle_error_model() const
+    {
+        return _mle_error_model;
+    };
     
-    const std::vector<LocusCount>& raw_counts() { return _raw_counts; }
-    void raw_counts(const std::vector<LocusCount>& counts) { _raw_counts = counts; }
+    void mle_error_model(boost::shared_ptr<const MleErrorModel> nm)
+    {
+        _mle_error_model = nm;
+    }
+    
+    const std::vector<LocusCount>& common_scale_compatible_counts() { return _common_scale_compatible_counts; }
+    void common_scale_compatible_counts(const std::vector<LocusCount>& counts) { _common_scale_compatible_counts = counts; }
+    
+    const std::vector<LocusCount>& common_scale_total_counts() { return _common_scale_total_counts; }
+    void common_scale_total_counts(const std::vector<LocusCount>& counts) { _common_scale_total_counts = counts; }
+    
+    const std::vector<LocusCount>& raw_compatible_counts() { return _raw_compatible_counts; }
+    void raw_compatible_counts(const std::vector<LocusCount>& counts) { _raw_compatible_counts = counts; }
+    
+    const std::vector<LocusCount>& raw_total_counts() { return _raw_total_counts; }
+    void raw_total_counts(const std::vector<LocusCount>& counts) { _raw_total_counts = counts; }
     
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
@@ -402,8 +451,12 @@ private:
     double _internal_scale_factor;
     double _external_scale_factor;
     boost::shared_ptr<const MassDispersionModel> _mass_dispersion_model;
-    std::vector<LocusCount> _common_scale_counts;
-    std::vector<LocusCount> _raw_counts;
+    std::vector<LocusCount> _common_scale_compatible_counts;
+    std::vector<LocusCount> _common_scale_total_counts;
+    std::vector<LocusCount> _raw_compatible_counts;
+    std::vector<LocusCount> _raw_total_counts;
+
+    boost::shared_ptr<const MleErrorModel> _mle_error_model;
     
     bool _complete_fragments;
     
@@ -416,9 +469,29 @@ extern std::map<std::string, ReadGroupProperties> library_type_table;
 
 extern const ReadGroupProperties* global_read_properties;
 
+extern std::map<std::string, DispersionMethod> dispersion_method_table;
+extern DispersionMethod dispersion_method;
+
+extern std::map<std::string, LibNormalizationMethod> lib_norm_method_table;
+extern LibNormalizationMethod lib_norm_method;
+
 void print_library_table();
 void init_library_table();
 
+void print_dispersion_method_table();
+void init_dispersion_method_table();
+
+void print_lib_norm_method_table();
+void init_lib_norm_method_table();
+void init_cufflinks_lib_norm_method_table();
+
+
+struct LibNormStandards
+{
+    
+};
+
+extern boost::shared_ptr<const std::map<std::string, LibNormStandards> > lib_norm_standards;
 
 template<typename T>
 std::string cat_strings(const T& container, const char* delimiter=",")
@@ -499,6 +572,10 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_LENGTH_CORRECTION    312
 #define OPT_NO_EFFECTIVE_LENGTH_CORRECTION    313
 #define OPT_NO_JS_TESTS             314
-
+#define OPT_DISPERSION_METHOD       315
+#define OPT_LIB_NORM_METHOD         316
+#define OPT_NO_SCV_CORRECTION       317
+#define OPT_NORM_STANDARDS_FILE     318
+#define OPT_USE_SAMPLE_SHEET        319
 
 #endif

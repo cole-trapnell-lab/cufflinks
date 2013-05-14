@@ -13,7 +13,11 @@ make distclean
 if [[ $(uname -m) = "x86_64" ]]; then
 echo "Linking statically on x86_64 (only for gcc 4.5+).."
 export LDFLAGS="-static-libgcc -static-libstdc++"
-fi 
+fi
+if [[ $(uname) = "Darwin" ]]; then
+export CFLAGS="-mmacosx-version-min=10.6"
+fi
+
 l2="$2"
 l3="$3"
 if [[ -z "$l3" ]]; then
@@ -30,7 +34,7 @@ fi
 
 
 #./configure --enable-intel64 --with-boost=$l2 --with-boost-thread=$l3 --with-bam=$l4 --with-eigen=$l5
-./configure --with-boost=$l2 --with-boost-thread=$l2/lib/libboost_thread.a --with-bam=$l3 --with-eigen=$l4
+./configure --with-boost=$l2 --with-boost-thread=$l2/lib/libboost_thread.a --with-boost-system=$l2/lib/libboost_system.a --with-bam=$l3 --with-eigen=$l4
 make
 cp src/cufflinks $1
 cp src/cuffcompare $1

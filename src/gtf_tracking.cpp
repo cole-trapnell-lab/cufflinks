@@ -58,7 +58,7 @@ GffObj* is_RefDup(GffObj* m, GList<GffObj>& mrnas, int& dupidx) {
 }
 
 
-bool intronRedundant(GffObj& ti, GffObj&  tj) {
+bool intronRedundant(GffObj& ti, GffObj&  tj, bool no5share=false) {
  //two transcripts are "intron redundant" iff one transcript's intron chain
   // is a sub-chain of the other's
  int imax=ti.exons.Count()-1;
@@ -88,6 +88,7 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
      }
  if (eistart!=ejstart || eiend!=ejend) return false; //not an exact intron match
  //we have the first matching intron on the left
+
  if (j>i) {
    //i==1, ti's start must not conflict with the previous intron of tj
    if (ti.start<tj.exons[j-1]->start) return false;
@@ -105,6 +106,8 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
       //comment out the line above for just "intronCompatible()" check
    }
  //now check if the rest of the introns overlap, in the same sequence
+ int i_start=i; //first (leftmost) matching intron of ti (1-based index)
+ int j_start=j; //first (leftmost) matching intron of tj
  i++;
  j++;
  while (i<=imax && j<=jmax) {
@@ -122,7 +125,16 @@ bool intronRedundant(GffObj& ti, GffObj&  tj) {
  else if (j==jmax && i<imax) {
    if (tj.end>ti.exons[i]->end) return false;
    }
- return true;
+ if (no5share && imax!=jmax) {
+	 //if they share the 5' intron, they are NOT to be considered redundant
+	 if (ti.strand=='+') {
+			 if (i_start==1 && j_start==1) return false;
+	 }
+	 else { //reverse strand
+		 if (i==imax && j==jmax) return false;
+	 }
+ }
+ return true; //they are intron-redundant
 }
 
 bool t_contains(GffObj& a, GffObj& b) {
@@ -143,7 +155,7 @@ bool t_contains(GffObj& a, GffObj& b) {
   else return false;
  }
 
-int is_Redundant(GffObj*m, GList<GffObj>* mrnas) {
+int is_Redundant(GffObj*m, GList<GffObj>* mrnas, bool no5share=false) {
  //first locate the list index of the mrna starting just ABOVE
  //the end of this mrna
  if (mrnas->Count()==0) return -1;
@@ -158,7 +170,7 @@ int is_Redundant(GffObj*m, GList<GffObj>* mrnas) {
           }
      if (omrna.start>m->end) continue; //this should never be the case if nidx was found correctly
      
-     if (intronRedundant(*m, omrna)) return i;
+     if (intronRedundant(*m, omrna, no5share)) return i;
      }
  return -1;
 }
@@ -186,7 +198,7 @@ bool betterDupRef(GffObj* a, GffObj* b) {
 int parse_mRNAs(GfList& mrnas,
 				 GList<GSeqData>& glstdata,
 				 bool is_ref_set,
-				 bool check_for_dups,
+				 int check_for_dups,
 				 int qfidx, bool only_multiexon) {
 	int refdiscarded=0; //ref duplicates discarded
 	int tredundant=0; //cufflinks redundant transcripts discarded
@@ -265,13 +277,13 @@ int parse_mRNAs(GfList& mrnas,
 		       }
 		     } //check for duplicate ref transcripts
 		   } //ref transcripts
-		else { //-- transfrags
+		else { //-- query transfrags
 		   if (m->strand=='+') { target_mrnas = &(gdata->mrnas_f); }
 		     else if (m->strand=='-') { target_mrnas=&(gdata->mrnas_r); }
 		        else { m->strand='.'; target_mrnas=&(gdata->umrnas); }
 		   if (check_for_dups) { //check for redundancy
 		     // check if there is a redundancy between this and another already loaded Cufflinks transcript
-		     int cidx =  is_Redundant(m, target_mrnas);
+		     int cidx =  is_Redundant(m, target_mrnas, (check_for_dups>1));
 		     if (cidx>=0) {
 		        //always discard the redundant transcript with the fewer exons OR shorter
 		        if (t_dominates(target_mrnas->Get(cidx),m)) {
@@ -547,7 +559,7 @@ void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs) {
 	gffr.readAll(keepAttrs,          true,        true);
 
 	//                               is_ref?    check_for_dups,
-	parse_mRNAs(gffr.gflst, seqdata, false,       false);
+	parse_mRNAs(gffr.gflst, seqdata, false,       0);
 }
 
 int cmpGSeqByName(const pointer p1, const pointer p2) {
@@ -559,7 +571,7 @@ void sort_GSeqs_byName(GList<GSeqData>& seqdata) {
 }
 
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
-	         bool check_for_dups, int qfidx, const char* fname, bool only_multiexon) {
+	         int check_for_dups, int qfidx, const char* fname, bool only_multiexon) {
 	//>>>>> read all transcripts/features from a GTF/GFF3 file
 	//int imrna_counter=0;
 #ifdef HEAPROFILE

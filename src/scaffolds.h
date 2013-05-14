@@ -325,7 +325,7 @@ public:
 	
 	// For manually constructing scaffolds, for example when a reference is 
 	// available
-	Scaffold(RefID ref_id, CuffStrand strand, const vector<AugmentedCuffOp>& ops, bool is_ref = false)
+	Scaffold(RefID ref_id, CuffStrand strand, const vector<AugmentedCuffOp>& ops, bool is_ref = false, bool is_pseudo_primary = false)
 	: _ref_id(ref_id), 
 	  _augmented_ops(ops), 
 	  _strand(strand),
@@ -333,6 +333,7 @@ public:
 	{
 		_has_intron = has_intron(*this);
 		_is_ref = is_ref;
+        _is_pseudo_primary = is_pseudo_primary;
 		
 		assert(!has_strand_support() || _strand != CUFF_STRAND_UNKNOWN);
 
@@ -368,8 +369,13 @@ public:
 	const string& nearest_ref_id() const { return _nearest_ref_id; }
 	void nearest_ref_id(const string& ann_name) { _nearest_ref_id = ann_name; }	
 	
+    // fpkm() and num_fragments() are just used to cache values in scaffolds across
+    // multiple estimation runs (e.g. for use with bias correction
 	double fpkm() const {return _fpkm; }
 	void fpkm(double fpkm) { _fpkm = fpkm; }
+    
+    double num_fragments() const {return _num_fragments; }
+	void num_fragments(double nf) { _num_fragments = nf; }
  
 	const string& seq() const { return _seq; } 
 	void seq(const string& s) {	_seq = s; } 
@@ -411,6 +417,9 @@ public:
     
 	bool is_ref() const { return _is_ref; }
 	void is_ref(bool ir) { _is_ref = ir; }
+    
+    bool is_pseudo_primary() const { return _is_pseudo_primary; }
+	void is_pseudo_primary(bool ip) { _is_pseudo_primary = ip; }
 	
 	CuffStrand strand() const 
     { 
@@ -659,6 +668,7 @@ private:
 	
 	bool _has_intron; 
 	bool _is_ref;
+    bool _is_pseudo_primary;
 	
 	vector<AugmentedCuffOp> _augmented_ops;
 	CuffStrand _strand;
@@ -673,7 +683,7 @@ private:
 	
 	string _seq;
 	double _fpkm;
-
+	double _num_fragments;
 };
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);

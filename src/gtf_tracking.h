@@ -361,6 +361,12 @@ class GSuperLocus;
 class GTrackLocus;
 class GXLocus;
 
+class GXSeg : public GSeg {
+public:
+	int flags;
+	GXSeg(uint s=0, uint e=0, int f=0):GSeg(s,e),flags(f) { }
+};
+
 //Data structure holding a query locus data (overlapping mRNAs on the same strand)
 // and also the accuracy data of all mRNAs of a query locus
 // (against all reference loci overlapping the same region)
@@ -372,7 +378,7 @@ public:
     GffObj* mrna_maxcov;  //transcript with maximum coverage (for main "ref" transcript)
     GffObj* mrna_maxscore; //transcript with maximum gscore (for major isoform)
     GList<GffObj> mrnas; //list of transcripts (isoforms) for this locus
-	GArray<GSeg> uexons; //list of unique exons (covered segments) in this region
+	GArray<GXSeg> uexons; //list of unique exons (covered segments) in this region
 	GArray<GSeg> mexons; //list of merged exons in this region
 	GIArray introns;
 	GList<GLocus> cmpovl; //temp list of overlapping qry/ref loci to compare to (while forming superloci)
@@ -386,7 +392,7 @@ public:
 	int spl_rare; // number of GC-AG, AT-AC and other rare splice site consensi
 	int spl_wrong; //number of "wrong" (unrecognized) splice site consensi
 	int ichains; //number of multi-exon mrnas
-	int ichainTP;
+	int ichainTP; //number of intron chains fully matching reference introns
 	int ichainATP;
 	int mrnaTP;
 	int mrnaATP;
@@ -411,7 +417,11 @@ public:
 			for (int i=0;i<mrna->exons.Count();i++) {
 				seg.start=mrna->exons[i]->start;
 				seg.end=mrna->exons[i]->end;
-				uexons.Add(seg);
+				int xterm=0;
+				if (i==0) xterm|=1;
+				if (i==mrna->exons.Count()-1) xterm|=2;
+				GXSeg xseg(seg.start, seg.end, xterm);
+				uexons.Add(xseg);
 				mexons.Add(seg);
 				if (i>0) {
 					seg.start=mrna->exons[i-1]->end+1;
@@ -570,7 +580,11 @@ public:
 				seg.start=mrna->exons[i]->start;
 				seg.end=mrna->exons[i]->end;
 				if (!ovlexons.Exists(i)) mexons.Add(seg);
-				uexons.Add(seg);
+				int xterm=0;
+				if (i==0) xterm|=1;
+				if (i==mrna->exons.Count()-1) xterm|=2;
+				GXSeg xseg(seg.start, seg.end, xterm);
+				uexons.Add(xseg);
 				GISeg iseg;
 				if (i>0) {
 					iseg.start=mrna->exons[i-1]->end+1;
@@ -610,12 +624,12 @@ public:
     GList<GLocus> rloci;
     GList<GffObj> qmrnas; //list of transcripts (isoforms) for this locus
     GArray<GSeg> qmexons; //list of merged exons in this region
-    GArray<GSeg> quexons; //list of unique exons (covered segments) in this region
+    GArray<GXSeg> quexons; //list of unique exons (covered segments) in this region
     GIArray qintrons; //list of unique exons (covered segments) in this region
     //same lists for reference:
     GList<GffObj> rmrnas; //list of transcripts (isoforms) for this locus
     GArray<GSeg> rmexons; //list of merged exons in this region
-    GArray<GSeg> ruexons; //list of unique exons (covered segments) in this region
+    GArray<GXSeg> ruexons; //list of unique exons (covered segments) in this region
     GArray<GISeg> rintrons; //list of unique exons (covered segments) in this region
     // store problematic introns for printing:
     GIArray i_missed; //missed reference introns (not overlapped by any qry intron)
@@ -650,7 +664,7 @@ public:
 	
     //--- accuracy data after compared to ref loci:
   int locusQTP;
-	int locusTP;
+  int locusTP; // +1 if ichainTP+mrnaTP > 0
   int locusAQTP;
 	int locusATP; // 1 if ichainATP + mrnaATP > 0
 	int locusFP;
@@ -665,13 +679,13 @@ public:
 	int mrnaAFN;
 	int mrnaAFP;
 	//---intron level accuracy (comparing the ordered set of splice sites):
-	int ichainTP; // number of qry intron chains covering a reference intron chain
-	// (covering meaning that the ordered set of reference splice sites
-	//  is the same with a ordered subset of the query splice sites)
-	int ichainFP; // number of qry intron chains not covering a reference intron chain
+	int ichainTP; // number of qry intron chains fully matching a reference intron chain
+	
+	int ichainFP; // number of qry intron chains not matching a reference intron chain
 	int ichainFN; // number of ref intron chains in this region not being covered by a reference intron chain
-	// same as above, but approximate -- allowing a 10bp distance error for splice sites
-	int ichainATP;
+	// same as above, but Approximate -- allowing a 5bp distance around splice site coordinates
+	int ichainATP; //as opposed to ichainTP, this also includes ref intron chains which are 
+                   //sub-chains of qry intron chains (rare cases)
 	int ichainAFP;
 	int ichainAFN;
 	//---projected features ---
@@ -819,9 +833,9 @@ public:
 		mrnaTP+=s.mrnaTP;
 		mrnaATP+=s.mrnaATP;
 		locusTP+=s.locusTP;
-    locusQTP+=s.locusQTP;
+		locusQTP+=s.locusQTP;
 		locusATP+=s.locusATP;
-    locusAQTP+=s.locusAQTP;
+		locusAQTP+=s.locusAQTP;
 		m_exons+=s.m_exons;
 		w_exons+=s.w_exons;
 		m_introns+=s.m_introns;
@@ -1304,12 +1318,12 @@ class GXLocus:public GSeg {
 int parse_mRNAs(GfList& mrnas,
 				 GList<GSeqData>& glstdata,
 				 bool is_ref_set=true,
-				 bool check_for_dups=false,
+				 int check_for_dups=0,
 				 int qfidx=-1, bool only_multiexon=false);
 
 //reading a mRNAs from a gff file and grouping them into loci
 void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NULL, 
-              bool check_for_dups=false, int qfidx=-1, const char* fname=NULL, 
+              int check_for_dups=0, int qfidx=-1, const char* fname=NULL,
               bool only_multiexon=false);
 
 void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs=true);

@@ -11,7 +11,6 @@
 #define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
 #endif
 
-static char msg[4069];
 /*
 #ifdef _DEFINE_WIN32_FSEEKO
  int fseeko(FILE *stream, off_t offset, int whence) {
@@ -26,7 +25,7 @@ static char msg[4069];
 #endif
 */
 
-
+/*
 int saprintf(char **retp, const char *fmt, ...) {
   va_list argp;
   int len;
@@ -49,10 +48,12 @@ int saprintf(char **retp, const char *fmt, ...) {
   *retp = buf;
   return len;
 }
+*/
 
 //************************* Debug helpers **************************
 // Assert failed routine
 void GAssert(const char* expression, const char* filename, unsigned int lineno){
+  char msg[4096];
   sprintf(msg,"%s(%d): ASSERT(%s) failed.\n",filename,lineno,expression);
   fprintf(stderr,"%s",msg);
   //abort();
@@ -60,6 +61,7 @@ void GAssert(const char* expression, const char* filename, unsigned int lineno){
 // Error routine (prints error message and exits!)
 void GError(const char* format,...){
   #ifdef __WIN32__
+    char msg[4096];
     va_list arguments;
     va_start(arguments,format);
     vsprintf(msg,format,arguments);
@@ -82,6 +84,7 @@ void GError(const char* format,...){
   
 // Warning routine (just print message without exiting)
 void GMessage(const char* format,...){
+  char msg[4096];
   va_list arguments;
   va_start(arguments,format);
   vsprintf(msg,format,arguments);
@@ -751,8 +754,8 @@ void writeFasta(FILE *fw, const char* seqid, const char* descr,
  }
 
 char* commaprint(uint64 n) {
-  static int comma = '\0';
-  static char retbuf[48];
+  int comma = '\0';
+  char retbuf[48];
   char *p = &retbuf[sizeof(retbuf)-1];
   int i = 0;
   if(comma == '\0') {

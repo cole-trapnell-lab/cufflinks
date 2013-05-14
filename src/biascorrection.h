@@ -68,8 +68,8 @@ public:
 	
 	void processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript);
 	void normalizeParameters();
-	void output();
-	
+	void output(FILE* output_file, const std::string& condition_name, int replicate_num) const;
+    
 	void getBias(const Scaffold& transcript, std::vector<double>& startBiases, std::vector<double>& endBiases) const;
 
 };

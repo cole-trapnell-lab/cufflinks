@@ -563,6 +563,9 @@ struct GffLoader {
   bool noExonAttrs;
   bool mergeCloseExons;
   bool showWarnings;
+  bool noPseudo;
+  void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster=true, bool collapseRedundant=true,
+                                    bool matchAllIntrons=true, bool fuzzSpan=false);
   void load(GList<GenomicSeqData>&seqdata, GFValidateFunc* gf_validate=NULL, 
                       bool doCluster=true, bool doCollapseRedundant=true, 
                       bool matchAllIntrons=true, bool fuzzSpan=false, bool forceExons=false);
@@ -573,6 +576,7 @@ struct GffLoader {
       noExonAttrs=false;
       mergeCloseExons=false;
       showWarnings=false;
+      noPseudo=false;
       if (fname=="-" || fname=="stdin") {
          f=stdin;
          fname="stdin";
@@ -599,8 +603,6 @@ int qsearch_gloci(uint x, GList<GffLocus>& loci);
 
 GffObj* redundantTranscripts(GffObj& ti, GffObj&  tj, bool matchAllIntrons=true, bool fuzzSpan=false);
 
-void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster=true, bool collapseRedundant=true, 
-                                  bool matchAllIntrons=true, bool fuzzSpan=false);
 //void loadGFF(FILE* f, GList<GenomicSeqData>& seqdata, const char* fname);
 
 void collectLocusData(GList<GenomicSeqData>& ref_data);

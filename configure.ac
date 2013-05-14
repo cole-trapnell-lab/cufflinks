@@ -1,11 +1,12 @@
 m4_include([ax_boost_base.m4])
 m4_include([ax_boost_thread.m4])
+m4_include([ax_boost_system.m4])
 m4_include([ax_bam.m4])
 m4_include([ax_check_zlib.m4])
 m4_include([ax_check_eigen.m4])
 
 define([svnversion], esyscmd([sh -c "svnversion|tr -d '\n'"]))dnl
-AC_INIT([cufflinks], [2.0.2], [cole@cs.umd.edu])
+AC_INIT([cufflinks], [2.1.1], [cole@cs.umd.edu])
 AC_DEFINE(SVN_REVISION, "svnversion", [SVN Revision])
 
 AC_CONFIG_SRCDIR([config.h.in])
@@ -30,10 +31,11 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_INSTALL
-AM_PROG_AR
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AM_PATH_PYTHON([2.4])
 AX_BOOST_BASE([1.47.0])
 AX_BAM
+AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_CHECK_ZLIB()
 AX_EIGEN
@@ -111,7 +113,7 @@ LDFLAGS="${ext_LDFLAGS} ${user_LDFLAGS}"
 AC_CHECK_MEMBERS([struct sysinfo.totalram], [], [], [#include <sys/sysinfo.h>])
 AC_CHECK_DECLS([sysctl, CTL_HW, HW_PHYSMEM], [], [], [#include <sys/sysctl.h>])
 
-AM_INIT_AUTOMAKE([-Wall -Werror tar-pax foreign])
+AM_INIT_AUTOMAKE([-Wall tar-pax foreign])
 
 AC_CONFIG_FILES([Makefile				 
 				 src/Makefile])

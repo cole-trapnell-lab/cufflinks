@@ -41,7 +41,7 @@ output_dir = "./merged_asm/"
 logging_dir = output_dir + "logs/"
 run_log = None
 run_cmd = None
-tmp_dir = output_dir + "/meta_asm_tmp/"
+tmp_dir = output_dir + "/tmp/"
 bin_dir = sys.path[0] + "/"
 run_meta_assembly = True
 fail_str = "\t[FAILED]\n"
@@ -567,6 +567,10 @@ def main(argv=None):
             for t in tmp_files:
                 os.remove(tmp_dir+t)
             os.rmdir(tmp_dir)
+            os.remove(output_dir + "/transcripts.gtf")
+            os.remove(output_dir + "/skipped.gtf")
+            os.remove(output_dir + "/genes.fpkm_tracking")
+            os.remove(output_dir + "/isoforms.fpkm_tracking")
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         return 2

@@ -31,6 +31,7 @@
 #include "assemble.h"
 #include "biascorrection.h"
 #include "multireads.h"
+#include "replicates.h"
 
 using namespace std;
 
@@ -85,7 +86,7 @@ static struct option long_options[] = {
 {"min-frags-per-transfrag",required_argument,		 0,			 OPT_MIN_FRAGS_PER_TRANSFRAG},
 {"min-intron-length",       required_argument,	     0,			 OPT_MIN_INTRON_LENGTH},
 {"max-bundle-length",       required_argument,		 0,			 OPT_MAX_BUNDLE_LENGTH},
-{"trim-3-dropoff-frac",     required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
+{"trim-3-dropoff-frac",     required_argument,		 0,			 OPT_3_PRIME_DROPOFF_FRAC},
 {"trim-3-avgcov-thresh",	required_argument,		 0,			 OPT_3_PRIME_AVGCOV_THRESH},
     
 {"3-overhang-tolerance",	required_argument,		 0,			 OPT_3_OVERHANG_TOLERANCE},
@@ -102,6 +103,7 @@ static struct option long_options[] = {
 {"overlap-radius",       	required_argument,		 0,			 OPT_OLAP_RADIUS},
 {"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
+{"library-norm-method",     required_argument,       0,          OPT_LIB_NORM_METHOD},
 {"no-length-correction",  no_argument,     0,          OPT_NO_LENGTH_CORRECTION},
 {0, 0, 0, 0} // terminator
 };
@@ -125,20 +127,21 @@ void print_usage()
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "  --library-type               library prep used for input reads                     [ default:  below ]\n");
+    fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
     
     fprintf(stderr, "\nAdvanced Abundance Estimation Options:\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
-    fprintf(stderr, "  --upper-quartile-norm        use upper-quartile normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --num-importance-samples     number of importance samples for MAP restimation      [    DEPRECATED   ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:  FALSE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  TRUE  ]\n");
-    fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:   1000 ]\n");
-    fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:      1 ]\n");
+    fprintf(stderr, "  --num-frag-count-draws       Number of fragment generation samples                 [ default:    100 ]\n");
+    fprintf(stderr, "  --num-frag-assign-draws      Number of fragment assignment samples per generation  [ default:     50 ]\n");
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
-    fprintf(stderr, "  --no-length-correction       No effective length correction                        [ default:  FALSE ]\n");
+    fprintf(stderr, "  --no-length-correction       No length correction                                  [ default:  FALSE ]\n");
+    fprintf(stderr, "  -N/--upper-quartile-norm     Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
+    fprintf(stderr, "  --raw-mapped-norm            Deprecated, use --library-norm-method                 [    DEPRECATED   ]\n");
     
     fprintf(stderr, "\nAdvanced Assembly Options:\n");
     fprintf(stderr, "  -L/--label                   assembled transcripts have this ID prefix             [ default:   CUFF ]\n");
@@ -169,6 +172,7 @@ void print_usage()
     fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");
     print_library_table();
+    print_lib_norm_method_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -176,7 +180,7 @@ int parse_options(int argc, char** argv)
     int option_index = 0;
     int next_option;
 	bool F_set = false;
-	
+	string lib_norm_method_str;
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, &option_index);
         switch (next_option) {
@@ -282,8 +286,8 @@ int parse_options(int argc, char** argv)
 			}
 			case 'N':
             {
-            	use_quartile_norm = true;
-            	break;
+            	//lib_norm_method_str = "quartile";
+                break;
             }
 
             case 'o':
@@ -302,7 +306,7 @@ int parse_options(int argc, char** argv)
 				corr_multi = true;
 				break;
 			}
-      case OPT_LIBRARY_TYPE:
+            case OPT_LIBRARY_TYPE:
 			{
 				library_type = optarg;
 				break;
@@ -345,11 +349,6 @@ int parse_options(int argc, char** argv)
             case OPT_OUTPUT_BIAS_PARAMS:
             {
                 output_bias_params = true;
-                break;
-            }
-            case OPT_USE_EM:
-            {
-                use_em = false;
                 break;
             }
             case OPT_COLLAPSE_COND_PROB:
@@ -479,6 +478,24 @@ int parse_options(int argc, char** argv)
 //            }
             global_read_properties = &lib_itr->second;
         }
+    }
+    
+    // Set the library size normalization method to use
+    if (lib_norm_method_str == "")
+    {
+        lib_norm_method_str = default_cufflinks_lib_norm_method;
+    }
+    
+    map<string, LibNormalizationMethod>::iterator lib_norm_itr =
+    lib_norm_method_table.find(lib_norm_method_str);
+    if (lib_norm_itr == lib_norm_method_table.end())
+    {
+        fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
+        exit(1);
+    }
+    else
+    {
+        lib_norm_method = lib_norm_itr->second;
     }
     
     if (use_total_mass && use_compat_mass)
@@ -928,10 +945,9 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	vector<double> gammas;
     
 	vector<MateHit> hits_in_cluster;
-	
+    
 	get_alignments_from_scaffolds(transfrag_cluster.abundances(),
 								  hits_in_cluster);
-	
 	
 	// need the avg read length for depth of coverage calculation 
 	double avg_read_length = 0;
@@ -1102,12 +1118,14 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 }
 
 void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
-									long double total_map_mass,
+									shared_ptr<ReadGroupProperties> rg_props,
 									vector<Gene>& genes,
                                     bool bundle_too_large)
 {	
 	//vector<shared_ptr<Scaffold> > partials;
 	//vector<shared_ptr<Scaffold> > completes;
+    
+    long double total_map_mass = rg_props->normalized_map_mass();
     
     vector<shared_ptr<Scaffold> > split_partials;
     // Cleave the partials at their unknowns to minimize FPKM dilation on  
@@ -1135,6 +1153,11 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 	
 	AbundanceGroup transfrags = AbundanceGroup(abundances);
 	
+    set<shared_ptr<ReadGroupProperties const> > read_groups;
+    read_groups.insert(rg_props);
+    
+    transfrags.init_rg_props(read_groups);
+    
 	vector<AbundanceGroup> transfrags_by_cluster;
 	
 	cluster_transcripts<ConnectByExonOverlap>(transfrags,
@@ -1149,13 +1172,15 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
-					 shared_ptr<BiasLearner> bl_ptr,
-					 long double map_mass,
+					 shared_ptr<ReadGroupProperties> rg_props,
+                     shared_ptr<BiasLearner> bl_ptr,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
 					 FILE* ftrans_abundances,
 					 FILE* fskipped)
 {
+    long double map_mass = rg_props->normalized_map_mass();
+    
 	HitBundle& bundle = *bundle_ptr;
     
     char bundle_label_buf[2048];
@@ -1246,8 +1271,8 @@ void assemble_bundle(const RefSequenceTable& rt,
     
     // FIXME: this routine does more than just quantitation, and should be 
     // renamed or refactored.
-    quantitate_transcript_clusters(scaffolds, 
-                                   map_mass,
+    quantitate_transcript_clusters(scaffolds,
+                                   rg_props,
                                    genes,
                                    bundle_too_large);
     
@@ -1500,9 +1525,9 @@ bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr
 		
 		thread asmbl(assemble_bundle,
 					 boost::cref(rt), 
-					 bundle_ptr, 
+					 bundle_ptr,
+                     bundle_factory.read_group_properties(),
 					 bl_ptr,
-					 bundle_factory.read_group_properties()->normalized_map_mass(),
 					 ftranscripts, 
 					 fgene_abundances,
 					 ftrans_abundances,
@@ -1510,8 +1535,8 @@ bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr
 #else
 		assemble_bundle(boost::cref(rt), 
 						bundle_ptr, 
-						bl_ptr,
-						bundle_factory.read_group_properties()->normalized_map_mass(),
+						bundle_factory.read_group_properties(),
+                        bl_ptr,
 						ftranscripts,
 						fgene_abundances,
 						ftrans_abundances,
@@ -1543,7 +1568,11 @@ bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr
 	{
 		bl_ptr->normalizeParameters();
         if (output_bias_params)
-            bl_ptr->output();
+        {
+            
+            FILE* output_file = fopen(string(output_dir + "/bias_params.info").c_str(), "w");
+            bl_ptr->output(output_file, user_label, 0);
+        }
 	}
 	
 	fclose(ftranscripts);
@@ -1601,12 +1630,22 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
-    vector<LocusCount> count_table;
-    if (bundle_mode != HIT_DRIVEN)
-        inspect_map(bundle_factory, NULL, count_table);
-    else 
-        inspect_map(bundle_factory, &bad_introns, count_table);
+    vector<LocusCount> compatible_count_table;
+    vector<LocusCount> total_count_table;
     
+    if (bundle_mode != HIT_DRIVEN)
+        inspect_map(bundle_factory, NULL, compatible_count_table, total_count_table);
+    else 
+        inspect_map(bundle_factory, &bad_introns, compatible_count_table, total_count_table);
+    
+    rg_props->raw_compatible_counts(compatible_count_table);
+    rg_props->raw_total_counts(total_count_table);
+    
+    vector<shared_ptr<ReadGroupProperties> > read_groups;
+    read_groups.push_back(rg_props);
+    
+    normalize_counts(read_groups);
+
     
     verbose_msg("%d ReadHits still live\n", num_deleted);
     verbose_msg("Found %lu reference contigs\n", rt.size());
@@ -1679,6 +1718,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 int main(int argc, char** argv)
 {	
     init_library_table();
+    init_cufflinks_lib_norm_method_table();
+    
   string cmdline;
   for (int i=0;i<argc;i++) {
     cmdline+=argv[i];

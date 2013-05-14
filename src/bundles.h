@@ -371,9 +371,10 @@ void identify_bad_splices(const HitBundle& bundle,
 						  BadIntronTable& bad_splice_ops);
 
 void inspect_map(BundleFactory& bundle_factory,
-					BadIntronTable* bad_introns,
-					vector<LocusCount>& count_table,
-					bool progress_bar = true,
-					bool show_stats = true);
+                 BadIntronTable* bad_introns,
+                 vector<LocusCount>& compatible_count_table,
+                 vector<LocusCount>& total_count_table,
+                 bool progress_bar = true,
+                 bool show_stats = true);
 
 #endif
