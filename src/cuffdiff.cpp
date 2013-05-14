@@ -39,6 +39,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "differential.h"
 
@@ -77,6 +78,7 @@ static struct option long_options[] = {
 {"mask-file",               required_argument,		 0,			 'M'},
 {"contrast-file",           required_argument,		 0,			 'C'},
 {"norm-standards-file",     required_argument,		 0,			 OPT_NORM_STANDARDS_FILE},
+{"use-sample-sheet",        no_argument,             0,			 OPT_USE_SAMPLE_SHEET},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},
@@ -264,6 +266,11 @@ int parse_options(int argc, char** argv)
 			case OPT_NORM_STANDARDS_FILE:
 			{
 				norm_standards_filename = optarg;
+				break;
+			}
+            case OPT_USE_SAMPLE_SHEET:
+			{
+                use_sample_sheet = true;
 				break;
 			}
             case 'v':
@@ -1097,34 +1104,41 @@ void parse_contrast_file(FILE* contrast_file,
             char* nl = strchr(pBuf, '\n');
             if (nl)
                 *nl = 0;
-            non_blank_lines_read++;
-            vector<string> columns;
-            tokenize(pBuf, "\t", columns);
             
-            if (non_blank_lines_read == 1)
-                continue;
+            string pBufstr = pBuf;
+            string trimmed = boost::trim_copy(pBufstr);
             
-            if (columns.size() < 2)
+            if (trimmed.length() > 0 && trimmed[0] != '#')
             {
-                if (columns.size() > 0)
-                    fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
-                else
+                non_blank_lines_read++;
+                vector<string> columns;
+                tokenize(trimmed, "\t", columns);
+                
+                if (non_blank_lines_read == 1)
                     continue;
-            }
-            
-            string factor_1 = columns[0];
-            string factor_2 = columns[1];
-            
-            if (columns.size() >= 3)
-            {
-                string contrast_name = columns[2];
-                contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
-            }
-            else
-            {
-                char contrast_name[1024];
-                sprintf(contrast_name, "contrast_%lu", contrast_table.size());
-                contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
+                
+                if (columns.size() < 2)
+                {
+                    if (columns.size() > 0)
+                        fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                    else
+                        continue;
+                }
+                
+                string factor_1 = columns[0];
+                string factor_2 = columns[1];
+                
+                if (columns.size() >= 3)
+                {
+                    string contrast_name = columns[2];
+                    contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
+                }
+                else
+                {
+                    char contrast_name[1024];
+                    sprintf(contrast_name, "contrast_%lu", contrast_table.size());
+                    contrast_table.insert(make_pair(contrast_name, make_pair(factor_1, factor_2)));
+                }
             }
         }
     }
@@ -1152,6 +1166,65 @@ void parse_contrast_file(FILE* contrast_file,
         contrasts.push_back(make_pair(f1_idx, f2_idx));
     }
  }
+
+void parse_sample_sheet_file(FILE* sample_sheet_file,
+                             vector<string>& sample_labels,
+                             vector<string>& sam_hit_filename_lists)
+{
+    
+    char pBuf[10 * 1024];
+    size_t non_blank_lines_read = 0;
+    
+    sample_labels.clear();
+    
+    map<string, vector<string> > sample_groups;
+    
+    while (fgets(pBuf, 10*1024, sample_sheet_file))
+    {
+        if (strlen(pBuf) > 0)
+        {
+            char* nl = strchr(pBuf, '\n');
+            if (nl)
+                *nl = 0;
+            
+            string pBufstr = pBuf;
+            string trimmed = boost::trim_copy(pBufstr);
+            
+            if (trimmed.length() > 0 && trimmed[0] != '#')
+            {
+                non_blank_lines_read++;
+                vector<string> columns;
+                tokenize(trimmed, "\t", columns);
+                
+                if (non_blank_lines_read == 1)
+                    continue;
+                
+                if (columns.size() < 2)
+                {
+                    if (columns.size() > 0)
+                        fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                    else
+                        continue;
+                }
+                
+                string sam_file = columns[0];
+                string sample_group = columns[1];
+                
+                pair<map<string, vector<string> >::iterator, bool> inserted = sample_groups.insert(make_pair(sample_group, vector<string>()));
+                inserted.first->second.push_back(sam_file);
+            }
+        }
+    }
+    
+    for (map<string, vector<string> >::iterator itr = sample_groups.begin();
+         itr != sample_groups.end(); ++itr)
+    {
+        sample_labels.push_back(itr->first);
+        string sam_list = boost::join(itr->second, ",");
+        sam_hit_filename_lists.push_back(sam_list);
+    }
+}
+
 
 void init_default_contrasts(const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
                             bool samples_are_time_series,
@@ -1188,21 +1261,28 @@ void parse_norm_standards_file(FILE* norm_standards_file)
             char* nl = strchr(pBuf, '\n');
             if (nl)
                 *nl = 0;
-            non_blank_lines_read++;
-            vector<string> columns;
-            tokenize(pBuf, "\t", columns);
             
-            if (non_blank_lines_read == 1)
-                continue;
+            string pBufstr = pBuf;
+            string trimmed = boost::trim_copy(pBufstr);
             
-            if (columns.size() < 1) // 
+            if (trimmed.length() > 0 && trimmed[0] != '#')
             {
-                continue;
+                non_blank_lines_read++;
+                vector<string> columns;
+                tokenize(trimmed, "\t", columns);
+                
+                if (non_blank_lines_read == 1)
+                    continue;
+                
+                if (columns.size() < 1) // 
+                {
+                    continue;
+                }
+                
+                string gene_id = columns[0];
+                LibNormStandards L;
+                norm_standards->insert(make_pair(gene_id, L));
             }
-            
-            string gene_id = columns[0];
-            LibNormStandards L;
-            norm_standards->insert(make_pair(gene_id, L));
         }
     }
     lib_norm_standards = norm_standards;
@@ -2428,15 +2508,51 @@ int main(int argc, char** argv)
     
     if (!no_update_check)
         check_version(PACKAGE_VERSION);
-        
     
     string ref_gtf_filename = argv[optind++];
-	
-	vector<string> sam_hit_filenames;
-    while(optind < argc)
+    vector<string> sam_hit_filenames;
+    
+    if (use_sample_sheet)
     {
-        string sam_hits_file_name = argv[optind++];
-		sam_hit_filenames.push_back(sam_hits_file_name);
+        if  (optind < argc)
+        {
+            
+            string sample_sheet_filename = argv[optind++];
+            FILE* sample_sheet_file = NULL;
+            if (sample_sheet_filename != "")
+            {
+                sample_sheet_file = fopen(sample_sheet_filename.c_str(), "r");
+                if (!sample_sheet_file)
+                {
+                    fprintf(stderr, "Error: cannot open sample sheet file %s for reading\n",
+                            sample_sheet_filename.c_str());
+                    exit(1);
+                }
+            }
+            parse_sample_sheet_file(sample_sheet_file, sample_labels, sam_hit_filenames);
+        }
+        else
+        {
+            fprintf(stderr, "Error: option --use-sample-sheet requires a single sample sheet filename instead of a list of SAM/BAM files\n");
+        }
+    }
+    else
+    {
+        while(optind < argc)
+        {
+            string sam_hits_file_name = argv[optind++];
+            sam_hit_filenames.push_back(sam_hits_file_name);
+        }
+        
+        if (sample_labels.size() == 0)
+        {
+            for (size_t i = 1; i < sam_hit_filenames.size() + 1; ++i)
+            {
+                char buf[256];
+                sprintf(buf, "q%lu", i);
+                sample_labels.push_back(buf);
+            }
+        }
     }
     	
 	while (sam_hit_filenames.size() < 2)
@@ -2445,15 +2561,6 @@ int main(int argc, char** argv)
         exit(1);
     }
 	
-    if (sample_labels.size() == 0)
-    {
-        for (size_t i = 1; i < sam_hit_filenames.size() + 1; ++i)
-        {
-            char buf[256];
-            sprintf(buf, "q%lu", i);
-            sample_labels.push_back(buf);
-        }   
-    }
     
     if (sam_hit_filenames.size() != sample_labels.size())
     {
@@ -2516,8 +2623,8 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 	}
+    
 
-	
 	// Note: we don't want the assembly filters interfering with calculations 
 	// here
 	
