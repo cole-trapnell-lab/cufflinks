@@ -555,6 +555,18 @@ private:
     //std::map<shared_ptr<ReadGroupProperties const >, ublas::vector<double> > _mles_for_read_groups;
 };
 
+struct SampleAbundances
+{
+    string locus_tag;
+	AbundanceGroup transcripts;
+	vector<AbundanceGroup> primary_transcripts;
+	vector<AbundanceGroup> gene_primary_transcripts;
+	vector<AbundanceGroup> cds;
+	vector<AbundanceGroup> gene_cds;
+	vector<AbundanceGroup> genes;
+	double cluster_mass;
+};
+
 void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments, 
                                               vector<shared_ptr<Abundance> >& transcripts,
                                               vector<shared_ptr<Abundance> >& mapped_transcripts);
@@ -645,4 +657,11 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                                ublas::matrix<double>& count_covariances,
                                vector<Eigen::VectorXd>& assigned_count_samples,
                                vector<ublas::vector<double> >* gamma_samples);
+
+void sample_abundance_worker(const string& locus_tag,
+                             const set<shared_ptr<ReadGroupProperties const> >& rg_props,
+                             SampleAbundances& sample,
+                             HitBundle* sample_bundle,
+                             bool perform_cds_analysis,
+                             bool perform_tss_analysis);
 #endif

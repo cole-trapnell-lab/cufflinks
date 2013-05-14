@@ -44,6 +44,7 @@
 #include "sampling.h"
 #include "jensen_shannon.h"
 #include "rounding.h"
+#include "clustering.h"
 
 
 #include "negative_binomial_distribution.h"
@@ -4033,7 +4034,7 @@ bool is_identifiable(M &m, PM &pm)
     for (size_type i = 0; i < size; ++ i) {
         matrix_column<M> mci (column (m, i));
         matrix_row<M> mri (row (m, i));
-        size_type i_norm_inf = i + index_norm_inf (project (mci, range (i, size1)));
+        size_type i_norm_inf = i + index_norm_inf (project (mci, boost::numeric::ublas::range (i, size1)));
         if (m (i_norm_inf, i) != value_type/*zero*/()) {
             if (i_norm_inf != i) {
                 pm (i) = i_norm_inf;
@@ -4041,12 +4042,12 @@ bool is_identifiable(M &m, PM &pm)
             } else {
                 //BOOST_UBLAS_CHECK (pm (i) == i_norm_inf, external_logic ());
             }
-            project (mci, range (i + 1, size1)) *= value_type (1) / m (i, i);
+            project (mci, boost::numeric::ublas::range (i + 1, size1)) *= value_type (1) / m (i, i);
         } else if (singular == 0) {
             singular = i + 1;
         }
-        project (m, range (i + 1, size1), range (i + 1, size2)).minus_assign (outer_prod (project (mci, range (i + 1, size1)),
-                                                                              project (mri, range (i + 1, size2))));
+        project (m, boost::numeric::ublas::range (i + 1, size1), boost::numeric::ublas::range (i + 1, size2)).minus_assign (outer_prod (project (mci, boost::numeric::ublas::range (i + 1, size1)),
+                                                                              project (mri, boost::numeric::ublas::range (i + 1, size2))));
     }
     return singular == 0;
 }
@@ -4514,5 +4515,242 @@ double get_scaffold_min_doc(int bundle_origin,
 	
 	return min_doc;
 }
+
+
+void sample_abundance_worker(const string& locus_tag,
+                             const set<shared_ptr<ReadGroupProperties const> >& rg_props,
+                             SampleAbundances& sample,
+                             HitBundle* sample_bundle,
+                             bool perform_cds_analysis,
+                             bool perform_tss_analysis)
+{
+    vector<shared_ptr<Abundance> > abundances;
+    
+    BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+    {
+        TranscriptAbundance* pT = new TranscriptAbundance;
+        pT->transfrag(s);
+        shared_ptr<Abundance> ab(pT);
+        ab->description(s->annotated_trans_id());
+        ab->locus_tag(locus_tag);
+        abundances.push_back(ab);
+    }
+    
+    sample.transcripts = AbundanceGroup(abundances);
+    
+    sample.transcripts.init_rg_props(rg_props);
+    
+    vector<MateHit> hits_in_cluster;
+    
+    if (sample_bundle->hits().size() < (size_t)max_frags_per_bundle)
+    {
+        get_alignments_from_scaffolds(sample.transcripts.abundances(),
+                                      hits_in_cluster);
+        
+        // Compute the individual transcript FPKMs via each sample's
+        // AbundanceGroup for this locus.
+        
+        sample.transcripts.calculate_abundance(hits_in_cluster);
+    }
+    else
+    {
+        BOOST_FOREACH(shared_ptr<Abundance>  ab, abundances)
+        {
+            ab->status(NUMERIC_HI_DATA);
+            
+            CountPerReplicateTable cpr;
+            FPKMPerReplicateTable fpr;
+            StatusPerReplicateTable spr;
+            for (set<shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg_props.begin();
+                 itr != rg_props.end();
+                 ++itr)
+            {
+                cpr[*itr] = 0;
+                fpr[*itr] = 0;
+                spr[*itr] = NUMERIC_HI_DATA;
+            }
+            ab->num_fragments_by_replicate(cpr);
+            ab->FPKM_by_replicate(fpr);
+            ab->status_by_replicate(spr);
+        }
+    }
+    
+    // Cluster transcripts by gene_id
+    vector<AbundanceGroup> transcripts_by_gene_id;
+    cluster_transcripts<ConnectByAnnotatedGeneId>(sample.transcripts,
+                                                  transcripts_by_gene_id);
+    
+	BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_gene_id)
+    {
+        ab_group.locus_tag(locus_tag);
+        set<string> gene_ids = ab_group.gene_id();
+        assert (gene_ids.size() == 1);
+        ab_group.description(*(gene_ids.begin()));
+    }
+	
+    sample.genes = transcripts_by_gene_id;
+    
+    if (perform_cds_analysis)
+    {
+        // Cluster transcripts by CDS
+        vector<AbundanceGroup> transcripts_by_cds;
+        ublas::matrix<double> cds_gamma_cov;
+        ublas::matrix<double> cds_count_cov;
+        ublas::matrix<double> cds_iterated_exp_count_cov;
+        ublas::matrix<double> cds_fpkm_cov;
+        
+        vector<bool> mask(sample.transcripts.abundances().size(), true);
+        for (size_t i = 0; i < sample.transcripts.abundances().size(); ++i)
+        {
+            if (*(sample.transcripts.abundances()[i]->protein_id().begin()) == "")
+            {
+                mask[i] = false;
+            }
+        }
+        
+        AbundanceGroup trans_with_p_id;
+        sample.transcripts.filter_group(mask, trans_with_p_id);
+        
+        cluster_transcripts<ConnectByAnnotatedProteinId>(trans_with_p_id,
+                                                         transcripts_by_cds,
+                                                         &cds_gamma_cov,
+                                                         &cds_iterated_exp_count_cov,
+                                                         &cds_count_cov,
+                                                         &cds_fpkm_cov);
+        
+        BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_cds)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> protein_ids = ab_group.protein_id();
+            assert (protein_ids.size() == 1);
+            string desc = *(protein_ids.begin());
+            //if (desc != "")
+            //{
+            assert (desc != "");
+            ab_group.description(*(protein_ids.begin()));
+            //}
+        }
+        
+        sample.cds = transcripts_by_cds;
+        
+        // Group the CDS clusters by gene
+        vector<shared_ptr<Abundance> > cds_abundances;
+        
+        set<shared_ptr<ReadGroupProperties const> > rg_props;
+        BOOST_FOREACH (AbundanceGroup& ab_group, sample.cds)
+        {
+            //if (ab_group.description() != "")
+            {
+                cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+                rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
+            }
+        }
+        AbundanceGroup cds(cds_abundances,
+                           cds_gamma_cov,
+                           cds_iterated_exp_count_cov,
+                           cds_count_cov,
+                           cds_fpkm_cov,
+                           rg_props);
+        
+        vector<AbundanceGroup> cds_by_gene;
+        
+        cluster_transcripts<ConnectByAnnotatedGeneId>(cds,
+                                                      cds_by_gene);
+        
+        BOOST_FOREACH(AbundanceGroup& ab_group, cds_by_gene)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> gene_ids = ab_group.gene_id();
+            assert (gene_ids.size() == 1);
+            ab_group.description(*(gene_ids.begin()));
+        }
+        
+        sample.gene_cds = cds_by_gene;
+    }
+    
+    if (perform_tss_analysis)
+    {
+        // Cluster transcripts by start site (TSS)
+        vector<AbundanceGroup> transcripts_by_tss;
+        
+        ublas::matrix<double> tss_gamma_cov;
+        ublas::matrix<double> tss_count_cov;
+        ublas::matrix<double> tss_iterated_exp_count_cov;
+        ublas::matrix<double> tss_fpkm_cov;
+        vector<Eigen::VectorXd> tss_assigned_counts;
+        
+        vector<bool> mask(sample.transcripts.abundances().size(), true);
+        for (size_t i = 0; i < sample.transcripts.abundances().size(); ++i)
+        {
+            if (*(sample.transcripts.abundances()[i]->tss_id().begin()) == "")
+            {
+                mask[i] = false;
+            }
+        }
+        
+        AbundanceGroup trans_with_tss;
+        sample.transcripts.filter_group(mask, trans_with_tss);
+        
+        cluster_transcripts<ConnectByAnnotatedTssId>(trans_with_tss,
+                                                     transcripts_by_tss,
+                                                     &tss_gamma_cov,
+                                                     &tss_iterated_exp_count_cov,
+                                                     &tss_count_cov,
+                                                     &tss_fpkm_cov);
+        
+        
+        BOOST_FOREACH(AbundanceGroup& ab_group, transcripts_by_tss)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> tss_ids = ab_group.tss_id();
+            assert (tss_ids.size() == 1);
+            string desc = *(tss_ids.begin());
+            assert (desc != "");
+            ab_group.description(*(tss_ids.begin()));
+        }
+        
+        sample.primary_transcripts = transcripts_by_tss;
+        
+        // Group TSS clusters by gene
+        vector<shared_ptr<Abundance> > primary_transcript_abundances;
+        set<shared_ptr<ReadGroupProperties const> > rg_props;
+        BOOST_FOREACH (AbundanceGroup& ab_group, sample.primary_transcripts)
+        {
+            primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+            rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
+        }
+        
+        AbundanceGroup primary_transcripts(primary_transcript_abundances,
+                                           tss_gamma_cov,
+                                           tss_iterated_exp_count_cov,
+                                           tss_count_cov,
+                                           tss_fpkm_cov,
+                                           rg_props);
+        
+        vector<AbundanceGroup> primary_transcripts_by_gene;
+        
+        cluster_transcripts<ConnectByAnnotatedGeneId>(primary_transcripts,
+                                                      primary_transcripts_by_gene);
+        
+        BOOST_FOREACH(AbundanceGroup& ab_group, primary_transcripts_by_gene)
+        {
+            ab_group.locus_tag(locus_tag);
+            set<string> gene_ids = ab_group.gene_id();
+            //            if (gene_ids.size() > 1)
+            //            {
+            //                BOOST_FOREACH (string st, gene_ids)
+            //                {
+            //                    fprintf(stderr, "%s\n", st.c_str());
+            //                }
+            //                ab_group.gene_id();
+            //            }
+            assert (gene_ids.size() == 1);
+            ab_group.description(*(gene_ids.begin()));
+        }
+        
+        sample.gene_primary_transcripts = primary_transcripts_by_gene;
+    }
+}
+
 
 

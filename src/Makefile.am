@@ -13,7 +13,8 @@ bin_PROGRAMS = \
 	cuffdiff \
     gtf_to_sam \
     compress_gtf \
-    gffread 
+    gffread \
+    cuffquant
 #    cuffcluster 
 #	gtf_reads
 
@@ -103,6 +104,7 @@ noinst_HEADERS = \
     multireads.h \
     rounding.h \
     negative_binomial_distribution.h \
+    tracking.h \
 	common.h
 
 noinst_LIBRARIES = libcufflinks.a libgc.a
@@ -177,7 +179,8 @@ libcufflinks_a_SOURCES = \
     locfit/weight.c \
     replicates.cpp \
     multireads.cpp \
-    jensen_shannon.cpp 
+    jensen_shannon.cpp \
+    tracking.cpp
 	
 libgc_a_SOURCES = \
 	codons.cpp \
@@ -214,6 +217,11 @@ gffread_LDADD = libgc.a
 cuffdiff_SOURCES = cuffdiff.cpp
 cuffdiff_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) $(BAM_LIB)
 cuffdiff_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+
+cuffquant_SOURCES = cuffquant.cpp
+cuffquant_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) $(BAM_LIB)
+cuffquant_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+
 
 gtf_to_sam_SOURCES = gtf_to_sam.cpp
 gtf_to_sam_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) $(BAM_LIB)
