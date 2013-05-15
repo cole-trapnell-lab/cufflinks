@@ -1610,8 +1610,8 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         }
 	}
 	
-	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
-	shared_ptr<ReadGroupProperties> rg_props =bundle_factory.read_group_properties();
+	shared_ptr<BundleFactory> bundle_factory = shared_ptr<BundleFactory>(new BundleFactory(hit_factory, bundle_mode));
+	shared_ptr<ReadGroupProperties> rg_props = bundle_factory->read_group_properties();
 	BadIntronTable bad_introns;
     
     rt.print_rec_ordering();
@@ -1619,15 +1619,15 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     vector<shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
-        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, corr_bias && bundle_mode == REF_DRIVEN, false);
-        bundle_factory.set_ref_rnas(ref_mRNAs);
+        ::load_ref_rnas(ref_gtf, bundle_factory->ref_table(), ref_mRNAs, corr_bias && bundle_mode == REF_DRIVEN, false);
+        bundle_factory->set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();
     vector<shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
-        bundle_factory.set_mask_rnas(mask_rnas);
+        ::load_ref_rnas(mask_gtf, bundle_factory->ref_table(), mask_rnas, false, false);
+        bundle_factory->set_mask_rnas(mask_rnas);
     }
     
     vector<LocusCount> compatible_count_table;
@@ -1658,10 +1658,10 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     //fprintf(stderr, "ReadHit delete count is %d\n", num_deleted);
     
 	shared_ptr<BiasLearner> bl_ptr(new BiasLearner(rg_props->frag_len_dist()));
-    bundle_factory.read_group_properties(rg_props);
+    bundle_factory->read_group_properties(rg_props);
 
 	//if (ref_gtf) -- why? bad introns are bad
-		bundle_factory.bad_intron_table(bad_introns);
+		bundle_factory->bad_intron_table(bad_introns);
 	
 	max_frag_len = rg_props->frag_len_dist()->max();
 	min_frag_len = rg_props->frag_len_dist()->min();
@@ -1669,18 +1669,17 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 
 	if (corr_bias || corr_multi) final_est_run = false;
 
-	assemble_hits(bundle_factory, bl_ptr);
+	assemble_hits(*bundle_factory, bl_ptr);
 
 	if (final_est_run) 
 	{
-	  delete &bundle_factory;
 	  //delete bl_ptr;
 	  ref_mRNAs.clear();
 	  return;
 	}
 
 	hit_factory->reset();
-	delete &bundle_factory;
+	
 	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
 	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
 	rg_props->multi_read_table()->valid_mass(true);

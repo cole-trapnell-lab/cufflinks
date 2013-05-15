@@ -416,6 +416,8 @@
 		EDFE39C9122BE65600F24CD3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		EDFE39FB122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */; };
 		EDFE39FC122BE7B700F24CD3 /* jensen_shannon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */; };
+		F4476FBB1742D37000438EF7 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4A9F3CC1742D337000087E1 /* libboost_serialization-mt.a */; };
+		F4476FBC1742D49D00438EF7 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4A9F3CC1742D337000087E1 /* libboost_serialization-mt.a */; };
 		F4A9F3711742865A000087E1 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
 		F4A9F3721742865A000087E1 /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
 		F4A9F3731742865A000087E1 /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
@@ -497,6 +499,7 @@
 		F4A9F3C617428670000087E1 /* cuffquant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F36D17428648000087E1 /* cuffquant.cpp */; };
 		F4A9F3C91742C26D000087E1 /* tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F3C81742C26D000087E1 /* tracking.cpp */; };
 		F4A9F3CA1742C26D000087E1 /* tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F3C81742C26D000087E1 /* tracking.cpp */; };
+		F4A9F3CD1742D337000087E1 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4A9F3CC1742D337000087E1 /* libboost_serialization-mt.a */; };
 		F4E4155C15D44E8B00654FD5 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4E4155B15D44E8B00654FD5 /* libboost_system-mt.a */; };
 		F4E4155E15D44EAA00654FD5 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4E4155B15D44E8B00654FD5 /* libboost_system-mt.a */; };
 /* End PBXBuildFile section */
@@ -737,6 +740,8 @@
 		F4A9F3C51742865A000087E1 /* cuffquant */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cuffquant; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4A9F3C71742B994000087E1 /* tracking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tracking.h; path = src/tracking.h; sourceTree = "<group>"; };
 		F4A9F3C81742C26D000087E1 /* tracking.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tracking.cpp; path = src/tracking.cpp; sourceTree = "<group>"; };
+		F4A9F3CB1742D011000087E1 /* ax_boost_serialization.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = ax_boost_serialization.m4; sourceTree = "<group>"; };
+		F4A9F3CC1742D337000087E1 /* libboost_serialization-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_serialization-mt.a"; path = "../../../../opt/local/lib/libboost_serialization-mt.a"; sourceTree = "<group>"; };
 		F4DD461F1625F564008994EC /* negative_binomial_distribution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = negative_binomial_distribution.h; path = src/negative_binomial_distribution.h; sourceTree = "<group>"; };
 		F4E2296816CD261C00D355C5 /* ax_boost_system.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = ax_boost_system.m4; sourceTree = "<group>"; };
 		F4E4155B15D44E8B00654FD5 /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "../../../../opt/local/lib/libboost_system-mt.a"; sourceTree = "<group>"; };
@@ -747,6 +752,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F4476FBC1742D49D00438EF7 /* libboost_serialization-mt.a in Frameworks */,
 				ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */,
 				9CE680F414968E0C00855EDB /* libbam.a in Frameworks */,
 				0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
@@ -774,6 +780,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F4476FBB1742D37000438EF7 /* libboost_serialization-mt.a in Frameworks */,
 				EDB3C814148686E10021E75B /* libbam.a in Frameworks */,
 				0A87350414118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
 				F4E4155E15D44EAA00654FD5 /* libboost_system-mt.a in Frameworks */,
@@ -808,6 +815,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F4A9F3CD1742D337000087E1 /* libboost_serialization-mt.a in Frameworks */,
 				F4A9F3BD1742865A000087E1 /* libbam.a in Frameworks */,
 				F4A9F3BE1742865A000087E1 /* libboost_thread-mt.a in Frameworks */,
 				F4A9F3BF1742865A000087E1 /* libboost_system-mt.a in Frameworks */,
@@ -821,6 +829,7 @@
 		08FB7794FE84155DC02AAC07 /* cufflinks_xcode */ = {
 			isa = PBXGroup;
 			children = (
+				F4A9F3CC1742D337000087E1 /* libboost_serialization-mt.a */,
 				F4E4155B15D44E8B00654FD5 /* libboost_system-mt.a */,
 				0A24FD6214118BE6008659F7 /* libboost_thread-mt.a */,
 				0A24FD6514118C26008659F7 /* libbam.a */,
@@ -1019,6 +1028,7 @@
 				ED1C0CAA11D7E52400CFD663 /* ax_check_zlib.m4 */,
 				ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */,
 				ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */,
+				F4A9F3CB1742D011000087E1 /* ax_boost_serialization.m4 */,
 				F4E2296816CD261C00D355C5 /* ax_boost_system.m4 */,
 				EDEBCDF8112DFD7600E2479E /* configure.ac */,
 				EDD6A7A0115562EE00D3F668 /* Makefile.am */,

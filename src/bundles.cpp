@@ -16,6 +16,8 @@
 #include "bundles.h"
 #include "scaffolds.h"
 
+#include "abundances.h"
+
 using namespace std;
 using boost::math::binomial;
 
@@ -1592,7 +1594,7 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 	return false;
 }
 
-void inspect_map(BundleFactory& bundle_factory,
+void inspect_map(shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,
@@ -1602,7 +1604,7 @@ void inspect_map(BundleFactory& bundle_factory,
 
 	ProgressBar p_bar;
 	if (progress_bar)
-		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
+		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory->ref_table().size());
 	RefID last_chrom = 0;
 
 	long double map_mass = 0.0;
@@ -1630,7 +1632,7 @@ void inspect_map(BundleFactory& bundle_factory,
 	{
 		HitBundle* bundle_ptr = new HitBundle();
 		
-		bool valid_bundle = bundle_factory.next_bundle(*bundle_ptr);
+		bool valid_bundle = bundle_factory->next_bundle(*bundle_ptr);
 		HitBundle& bundle = *bundle_ptr;
 
         if (use_compat_mass) //only count hits that are compatible with ref transcripts
@@ -1661,7 +1663,7 @@ void inspect_map(BundleFactory& bundle_factory,
             exit(1);
         }
 		
-		const RefSequenceTable& rt = bundle_factory.ref_table();
+		const RefSequenceTable& rt = bundle_factory->ref_table();
 		const char* chrom = rt.get_name(bundle.ref_id());
 		char bundle_label_buf[2048];
         if (chrom)
@@ -1945,7 +1947,7 @@ void inspect_map(BundleFactory& bundle_factory,
     
     std_dev = sqrt(std_dev);
 	
-	shared_ptr<ReadGroupProperties> rg_props = bundle_factory.read_group_properties();
+	shared_ptr<ReadGroupProperties> rg_props = bundle_factory->read_group_properties();
 
     FLDSource source = DEFAULT;
     if (empirical)
@@ -1997,7 +1999,44 @@ void inspect_map(BundleFactory& bundle_factory,
             fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
         }
     }
-	bundle_factory.num_bundles(num_bundles);
-	bundle_factory.reset(); 
+	bundle_factory->num_bundles(num_bundles);
+	bundle_factory->reset();
 	return;
 }
+
+//////////////////////
+
+
+bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
+{
+    bool got_bundle = BundleFactory::next_bundle(bundle);
+    if (got_bundle)
+    {
+        RefSequenceTable& rt = ref_table();
+        
+        char bundle_label_buf[2048];
+        sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
+        
+        shared_ptr<const AbundanceGroup> ab = _hit_fac->get_abundance_for_locus(bundle_label_buf);
+        if (ab)
+        {
+            double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);
+            double total_mass  = _hit_fac->get_total_mass(bundle_label_buf);
+            
+            bundle.finalize();
+            bundle.add_raw_mass(total_mass);
+            bundle.compatible_mass(compatible_mass);
+            
+            fprintf (stderr, "Reconstituting bundle %s with mass %lf\n", bundle_label_buf, compatible_mass);
+        }
+        else
+        {
+            fprintf (stderr, "Error: no abundance info for locus %s\n", bundle_label_buf);
+        }
+        
+    }
+    return got_bundle;
+}
+
+
+

@@ -252,7 +252,7 @@ public:
             
             vector<LocusCount> compatible_count_table;
             vector<LocusCount> total_count_table;
-            inspect_map(*fac, NULL, compatible_count_table, total_count_table, false, false);
+            inspect_map(fac, NULL, compatible_count_table, total_count_table, false, false);
             
             shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             

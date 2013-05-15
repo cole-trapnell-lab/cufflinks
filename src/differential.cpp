@@ -1034,29 +1034,51 @@ void sample_worker(const RefSequenceTable& rt,
             perform_cds_analysis = final_est_run;
         }
     }
-
-    set<shared_ptr<ReadGroupProperties const> > rg_props;
-    for (size_t i = 0; i < sample_factory.factories().size(); ++i)
+    
+    std::vector<boost::shared_ptr<BundleFactory> > factories = sample_factory.factories();
+    vector<shared_ptr<PrecomputedExpressionBundleFactory> > hit_factories;
+    for (size_t i = 0; i < factories.size(); ++i)
     {
-        shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
-        rg_props.insert(bf->read_group_properties());
+        shared_ptr<BundleFactory> pFac = factories[i];
+        shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = dynamic_pointer_cast<PrecomputedExpressionBundleFactory> (pFac);
+        if (pBundleFac)
+        {
+            // If we get here, this factory refers to a pre computed expression object.
+            
+            hit_factories.push_back(pBundleFac);
+        }
     }
     
-    sample_abundance_worker(boost::cref(locus_tag),
-                            boost::cref(rg_props),
-                            boost::ref(*abundance),
-                            &bundle,
-                            perform_cds_analysis,
-                            perform_tss_analysis);
+    if (hit_factories.size() == factories.size())
+    {
+        merge_precomputed_expression_worker(boost::cref(locus_tag),
+                                            hit_factories,
+                                            boost::ref(*abundance),
+                                            &bundle,
+                                            perform_cds_analysis,
+                                            perform_tss_analysis);
+    }
+    else if (hit_factories.empty())
+    {
+        set<shared_ptr<ReadGroupProperties const> > rg_props;
+        for (size_t i = 0; i < sample_factory.factories().size(); ++i)
+        {
+            shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
+            rg_props.insert(bf->read_group_properties());
+        }
     
-#if ENABLE_THREADS
-    variance_info_lock.lock();
-#endif
-    
-#if ENABLE_THREADS
-    variance_info_lock.unlock();
-#endif
-    
+        sample_abundance_worker(boost::cref(locus_tag),
+                                boost::cref(rg_props),
+                                boost::ref(*abundance),
+                                &bundle,
+                                perform_cds_analysis,
+                                perform_tss_analysis);
+    }
+    else
+    {
+        fprintf (stderr, "Error: mixing pre-computed input with SAM/BAM files not yet supported!\n");
+        exit(1);
+    }
     ///////////////////////////////////////////////
     
     

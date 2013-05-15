@@ -22,6 +22,8 @@
 #include "hits.h"
 #include "tokenize.h"
 
+#include "abundances.h"
+
 using namespace std;
 
 #if ENABLE_THREADS
@@ -1101,3 +1103,67 @@ bool SAMHitFactory::inspect_header()
     finalize_rg_props();
     return true;
 }
+
+//////////////////////////////////////////
+
+void PrecomputedExpressionHitFactory::load_serialized_expression_data(const string& expression_file_name)
+{
+    map<string, AbundanceGroup > ab_groups;
+    
+    
+    std::ifstream ifs(expression_file_name.c_str());
+    boost::archive::text_iarchive ia(ifs);
+    
+    map<string, AbundanceGroup> single_sample_tracking;
+    
+    ia >> single_sample_tracking;
+    
+    
+    for (map<string, AbundanceGroup>::const_iterator itr = single_sample_tracking.begin(); itr != single_sample_tracking.end(); ++itr)
+    {
+        
+        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(itr->second));
+        
+        // populate the cached count tables so we can make convincing fake bundles later on.
+        if (compat_mass.empty())
+        {
+            ReadGroupProperties rg_props = **(ab->rg_props().begin());
+
+            BOOST_FOREACH(const LocusCount& c, rg_props.raw_compatible_counts())
+            {
+                compat_mass[c.locus_desc] = c.count;
+            }
+            
+            BOOST_FOREACH(const LocusCount& c, rg_props.raw_total_counts())
+            {
+                total_mass[c.locus_desc] = c.count;
+            }
+        }         
+        
+        ab_group_table[itr->first] = ab;
+    }
+
+    
+}
+
+bool PrecomputedExpressionHitFactory::next_record(const char*& buf, size_t& buf_size)
+{
+	return false;
+}
+
+bool PrecomputedExpressionHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
+									 ReadHit& bh,
+									 bool strip_slash,
+									 char* name_out,
+									 char* name_tags)
+{
+	return false;
+}
+
+bool PrecomputedExpressionHitFactory::inspect_header()
+{
+    return true;
+}
+
+
+

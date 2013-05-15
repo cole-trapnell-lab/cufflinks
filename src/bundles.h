@@ -108,6 +108,8 @@ public:
         return _compatible_mass;
     }
     
+    void compatible_mass(double c) { _compatible_mass = c; }
+    
 	void clear_hits() 
     {
         _hits.clear(); 
@@ -211,11 +213,10 @@ public:
 	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0),  _zeroone(rng)
 	{
 		_rg_props = shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
-        
-        
-       
 	}
 
+    shared_ptr<const HitFactory> hit_factory() const { return _hit_fac; }
+    
     bool bundles_remain()  
     {
 #if ENABLE_THREADS
@@ -224,7 +225,7 @@ public:
         return _curr_bundle < num_bundles();
     }
     
-	bool next_bundle(HitBundle& bundle_out);
+	virtual bool next_bundle(HitBundle& bundle_out);
 	bool next_bundle_hit_driven(HitBundle& bundle_out);
 	bool next_bundle_ref_driven(HitBundle& bundle_out);
 	bool next_bundle_ref_guided(HitBundle& bundle_out);
@@ -367,10 +368,26 @@ private:
 #endif
 };
 
+class PrecomputedExpressionBundleFactory : public BundleFactory
+{
+public:
+    PrecomputedExpressionBundleFactory(shared_ptr<PrecomputedExpressionHitFactory> fac)
+	: BundleFactory(fac, REF_DRIVEN), _hit_fac(fac)
+	{
+		
+	}
+    
+    bool next_bundle(HitBundle& bundle_out);
+    
+private:
+    
+    shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;
+};
+
 void identify_bad_splices(const HitBundle& bundle, 
 						  BadIntronTable& bad_splice_ops);
 
-void inspect_map(BundleFactory& bundle_factory,
+void inspect_map(shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,

@@ -21,6 +21,7 @@
 #include <numeric>
 #include <cfloat>
 #include <iostream>
+#include <fstream>
 
 #include "common.h"
 #include "hits.h"
@@ -670,7 +671,9 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 	rg_props->bias_learner(shared_ptr<BiasLearner>(bl));
 }
 
-// Similiar to TestLauncher, except this routine records tracking data when abundance groups report in
+typedef map<string, vector<AbundanceGroup> > light_ab_group_tracking_table;
+
+// Similiar to TestLauncher, except this class records tracking data when abundance groups report in
 struct AbundanceRecorder
 {
 private:
@@ -694,13 +697,15 @@ public:
                          shared_ptr<SampleAbundances> ab,
                          size_t factory_id);
     void record_finished_loci();
-    void record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances);
+    void record_tracking_data(const string& locus_id, vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(const string& locus_id);
     
     void clear_tracking_data() { _tracking->clear(); }
     
     typedef list<pair<string, vector<shared_ptr<SampleAbundances> > > > recorder_sample_table;
+    
+    const light_ab_group_tracking_table& get_sample_table() const { return _ab_group_tracking_table; }
     
 private:
     
@@ -713,6 +718,7 @@ private:
     Tracking* _tracking;
     ProgressBar* _p_bar;
     
+    light_ab_group_tracking_table _ab_group_tracking_table;
 };
 
 
@@ -779,7 +785,7 @@ mutex test_storage_lock; // don't modify the above struct without locking here
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself.
-void AbundanceRecorder::record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances)
+void AbundanceRecorder::record_tracking_data(const string& locus_id, vector<shared_ptr<SampleAbundances> >& abundances)
 {
     assert (abundances.size() == _orig_workers);
     
@@ -805,6 +811,8 @@ void AbundanceRecorder::record_tracking_data(vector<shared_ptr<SampleAbundances>
 #if ENABLE_THREADS
 	test_storage_lock.lock();
 #endif
+    
+    vector<AbundanceGroup> lightweight_ab_groups;
     
     // Add all the transcripts, CDS groups, TSS groups, and genes to their
     // respective FPKM tracking table.  Whether this is a time series or an
@@ -834,7 +842,12 @@ void AbundanceRecorder::record_tracking_data(vector<shared_ptr<SampleAbundances>
 		{
 			add_to_tracking_table(i, ab, _tracking->gene_fpkm_tracking);
 		}
+        
+        abundances[i]->transcripts.clear_non_serialized_data();
+        lightweight_ab_groups.push_back(abundances[i]->transcripts);
 	}
+    
+    _ab_group_tracking_table[locus_id] = lightweight_ab_groups;
     
 #if ENABLE_THREADS
     test_storage_lock.unlock();
@@ -863,7 +876,7 @@ void AbundanceRecorder::record_finished_loci()
                     verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
-                record_tracking_data(itr->second);
+                record_tracking_data(itr->first, itr->second);
                 
             }
             
@@ -1432,6 +1445,24 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
 	
 	p_bar.complete();
 
+    
+    string expression_cxb_filename = output_dir + "/abundances.cxb";
+    std::ofstream ofs(expression_cxb_filename.c_str());
+    boost::archive::text_oarchive oa(ofs);
+    
+    map<string, AbundanceGroup> single_sample_tracking;
+    
+    const light_ab_group_tracking_table& sample_table = abundance_recorder->get_sample_table();
+    for (light_ab_group_tracking_table::const_iterator itr = sample_table.begin(); itr != sample_table.end(); ++itr)
+    {
+        
+        assert (itr->second.size() == 1);
+        
+        single_sample_tracking[itr->first] = itr->second[0];
+    }
+    
+    oa << single_sample_tracking;
+    
     // FPKM tracking
     
 	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
@@ -1476,6 +1507,11 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
 
 int main(int argc, char** argv)
 {
+//    boost::serialization::void_cast_register<TranscriptAbundance, Abundance>(
+//                                                                             static_cast<TranscriptAbundance *>(NULL),
+//                                                                             static_cast<Abundance *>(NULL)
+//                                                                             );
+    
     for (int i = 0; i < argc; ++i)
     {
         cmd_str += string(argv[i]) + " ";

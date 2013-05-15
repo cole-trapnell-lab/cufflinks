@@ -1608,7 +1608,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	
 	vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
     vector<shared_ptr<ReadGroupProperties> > all_read_groups;
-    vector<shared_ptr<HitFactory> > all_hit_factories;
     
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
@@ -1622,29 +1621,38 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
             shared_ptr<HitFactory> hs;
+            shared_ptr<BundleFactory> hf;
             try
             {
-                hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
+                hs = shared_ptr<HitFactory>(new PrecomputedExpressionHitFactory(sam_hit_filenames[j], it, rt));
+                hf = shared_ptr<BundleFactory>(new PrecomputedExpressionBundleFactory(static_pointer_cast<PrecomputedExpressionHitFactory>(hs)));
             }
-            catch (std::runtime_error& e) 
+            
+            catch(boost::archive::archive_exception & e)
             {
                 try
                 {
-                    fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-                            sam_hit_filenames[j].c_str());
-                    hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
+                    hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
                 }
-                catch (std::runtime_error& e)
+                catch (std::runtime_error& e) 
                 {
-                    fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
-                            sam_hit_filenames[j].c_str());
-                    exit(1);
+                    try
+                    {
+//                        fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
+//                                sam_hit_filenames[j].c_str());
+                        hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
+                    }
+                    catch (std::runtime_error& e)
+                    {
+                        fprintf(stderr, "Error: cannot open file %s for reading. Unrecognized file type\n",
+                                sam_hit_filenames[j].c_str());
+                        exit(1);
+                    }
                 }
+                hf = shared_ptr<BundleFactory>(new BundleFactory(hs, REF_DRIVEN));
             }
             
-            all_hit_factories.push_back(hs);
             
-            shared_ptr<BundleFactory> hf(new BundleFactory(hs, REF_DRIVEN));
             shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
             
             if (global_read_properties)

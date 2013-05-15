@@ -764,8 +764,10 @@ fit_dispersion_model_helper(const string& condition_name,
     SCVInterpolator true_to_est_scv_table;
     
     int num_samples = sample_compatible_count_table.front().counts.size();
-    
-    build_scv_correction_fit(num_samples, 10000, 100000, true_to_est_scv_table);
+    if (no_scv_correction == false)
+    {
+        build_scv_correction_fit(num_samples, 10000, 100000, true_to_est_scv_table);
+    }
     
     setuplf();  
     

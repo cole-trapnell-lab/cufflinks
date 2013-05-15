@@ -5,6 +5,7 @@
 #include <config.h>
 #endif
 
+#include <fstream>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -802,6 +803,119 @@ private:
     bool _eof_encountered;
 };
 
+class AbundanceGroup;
+    
+/******************************************************************************
+ BAMHitFactory turns SAM alignments into ReadHits
+ *******************************************************************************/
+class PrecomputedExpressionHitFactory : public HitFactory
+{
+public:
+    PrecomputedExpressionHitFactory(const string& expression_file_name,
+                                    ReadTable& insert_table,
+                                    RefSequenceTable& reference_table) :
+    HitFactory(insert_table, reference_table)
+    {
+        load_serialized_expression_data(expression_file_name);
+        
+        if (inspect_header() == false)
+        {
+            throw std::runtime_error("Error: could not parse CXB header");
+        }
+        
+        // Override header-inferred read group properities with whatever
+        // the user supplied.
+        if (global_read_properties != NULL)
+        {
+            _rg_props = *global_read_properties;
+        }
+    }
+    
+    ~PrecomputedExpressionHitFactory()
+    {
+        
+    }
+    
+    void mark_curr_pos()
+    {
+        
+    }
+    
+    void undo_hit()
+    {
+    }
+    
+    bool records_remain() const
+    {
+        return false;
+    }
+    
+    void reset()
+    {
+        
+    }
+    
+    
+    bool next_record(const char*& buf, size_t& buf_size);
+    
+    bool get_hit_from_buf(const char* bwt_buf, 
+                          ReadHit& bh,
+                          bool strip_slash,
+                          char* name_out = NULL,
+                          char* name_tags = NULL);
+    
+    bool inspect_header();
+    
+    shared_ptr<const AbundanceGroup> get_abundance_for_locus(const string& locus_id) const
+    {
+        map<string, shared_ptr<const AbundanceGroup> >::const_iterator i = ab_group_table.find(locus_id);
+        if (i != ab_group_table.end())
+        {
+            return i->second;
+        }
+        else
+        {
+            return shared_ptr<const AbundanceGroup>();
+        }
+    }
+    
+    double get_compat_mass(const string& locus_id)
+    {
+       map<string, double >::iterator i = compat_mass.find(locus_id);
+       if (i != compat_mass.end())
+       {
+           return i->second;
+       }
+       else
+       {
+           return 0;
+       }
+    }
+
+    double get_total_mass(const string& locus_id)
+    {
+        map<string, double >::iterator i = total_mass.find(locus_id);
+        if (i != total_mass.end())
+        {
+            return i->second;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    
+private:
+    
+    void load_serialized_expression_data(const string& expression_file_name);
+    
+    map<string, shared_ptr<const AbundanceGroup> > ab_group_table;
+    map<string, double> compat_mass;
+    map<string, double> total_mass;
+};
+    
+    
 // Forward declaration of BundleFactory, because MateHit will need a pointer
 // back to the Factory that created.  Ultimately, we should replace this
 // with a pointer back to the ReadGroupProperty object corresponding to each 

@@ -21,6 +21,21 @@
 #include <boost/math/distributions/normal.hpp> 
 using boost::math::normal;
 
+#include <boost/archive/tmpdir.hpp>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/export.hpp>
+
 #include <boost/foreach.hpp>
 
 #include <boost/thread.hpp>
@@ -266,6 +281,23 @@ class EmpDist
 	int _max;
 	FLDSource _source;
     
+    EmpDist() {}
+    
+    friend std::ostream & operator<<(std::ostream &os, const EmpDist &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & _pdf;
+        ar & _cdf;
+        ar & _mode;
+        ar & _mean;
+        ar & _std_dev;
+        ar & _min;
+        ar & _max;
+        ar & _source;
+    }
+    
 public:
 	EmpDist(std::vector<double>& pdf, std::vector<double>& cdf, int mode, double mean, double std_dev, int min, int max, FLDSource source)
 	: _pdf(pdf), _cdf(cdf), _mode(mode), _mean(mean), _std_dev(std_dev), _min(min), _max(max), _source(source) {}
@@ -337,6 +369,22 @@ struct LocusCount
     int num_transcripts;
     std::vector<std::string> gene_ids;
     std::vector<std::string> gene_short_names;
+    
+private:
+    
+    LocusCount() {} //needs an empty constructor for serialization
+
+    friend std::ostream & operator<<(std::ostream &os, const LocusCount &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & locus_desc;
+        ar & count;
+        ar & num_transcripts;
+        ar & gene_ids;
+        ar & gene_short_names;
+    }
 };
 
 class ReadGroupProperties
@@ -438,6 +486,35 @@ public:
     
 private:
     
+    friend std::ostream & operator<<(std::ostream &os, const ReadGroupProperties &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & _strandedness;
+        ar & _std_mate_orient;
+        ar & _mate_strand_mapping;
+        ar & _platform;
+        ar & _total_map_mass;
+        ar & _norm_map_mass;
+        ar & _frag_len_dist;
+        // TODO: probably should serialize the bias parameters somehow.
+        //ar & _bias_learner;
+        //ar & _multi_read_table; // we should never need this, I think.
+        ar & _internal_scale_factor;
+        ar & _external_scale_factor;
+        //ar & _mass_dispersion_model;
+        ar & _common_scale_compatible_counts;
+        ar & _common_scale_total_counts;
+        ar & _raw_compatible_counts;
+        ar & _raw_total_counts;
+        //ar & _mle_error_model;
+        ar & _complete_fragments;
+        ar & _condition_name;
+        ar & _file_path;
+        ar & _replicate_num;
+    }
+    
     Strandedness _strandedness;
     StandardMateOrientation _std_mate_orient;
 	MateStrandMapping _mate_strand_mapping;
@@ -464,6 +541,8 @@ private:
     std::string _file_path;
     int _replicate_num;
 };
+
+BOOST_SERIALIZATION_SHARED_PTR(ReadGroupProperties)
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;
 
