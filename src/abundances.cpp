@@ -4790,22 +4790,34 @@ void AbundanceGroup::apply_normalization_to_abundances(const map<shared_ptr<cons
     {
         shared_ptr<AbundanceGroup> norm_ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(*itr->second));
         shared_ptr<const ReadGroupProperties> rg_props = itr->first;
+        shared_ptr<const MassDispersionModel> disp_model = rg_props->mass_dispersion_model();
         
         shared_ptr<const ReadGroupProperties> old_rg_props = *(itr->second->rg_props().begin());
         
         double fpkm_correction_factor = old_rg_props->normalized_map_mass() / rg_props->normalized_map_mass();
         double internal_scale_factor = rg_props->internal_scale_factor();
         
-        
+        double total_mass = 0.0;
         
         for (size_t i = 0; i < norm_ab->_abundances.size(); ++i)
         {
             norm_ab->_abundances[i]->num_fragments(itr->second->_abundances[i]->num_fragments() / internal_scale_factor);
+            
+            total_mass += norm_ab->_abundances[i]->num_fragments();
+            
             norm_ab->_abundances[i]->FPKM(fpkm_correction_factor * itr->second->_abundances[i]->FPKM() / internal_scale_factor);
             norm_ab->_iterated_exp_count_covariance = norm_ab->iterated_count_cov() / (internal_scale_factor*internal_scale_factor);
             norm_ab->_fpkm_covariance = norm_ab->_fpkm_covariance * (fpkm_correction_factor * fpkm_correction_factor)/ (internal_scale_factor*internal_scale_factor);
             norm_ab->_count_covariance = norm_ab->_count_covariance/ (internal_scale_factor*internal_scale_factor);
         }
+        
+        double locus_mass_variance = disp_model->scale_mass_variance(total_mass);
+        
+        for (size_t i = 0; i < norm_ab->_abundances.size(); ++i)
+        {
+            norm_ab->_abundances[i]->mass_variance(locus_mass_variance * norm_ab->_abundances[i]->gamma());
+        }
+        
         normalized_ab_group_per_replicate[itr->first] = norm_ab;
     }
 }

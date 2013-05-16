@@ -543,7 +543,6 @@ public:
     
     static void apply_normalization_to_abundances(const map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> >& unnormalized_ab_group_per_replicate,
                                                   map<shared_ptr<const ReadGroupProperties>, shared_ptr<AbundanceGroup> >& normalized_ab_group_per_replicate);
-
     
 private:
     
