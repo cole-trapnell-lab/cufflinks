@@ -785,7 +785,7 @@ fit_dispersion_model_helper(const string& condition_name,
         }
     }
     
-    if (compatible_count_means.size() < min_loci_for_fitting)
+    if (compatible_count_means.size() < min_loci_for_fitting || dispersion_method == POISSON)
     {
         shared_ptr<MassDispersionModel> disperser;
         disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
