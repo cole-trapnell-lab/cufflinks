@@ -1733,7 +1733,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         }
     }
     
-    if (most_reps == 1 && (dispersion_method != BLIND || dispersion_method != POISSON))
+    if (most_reps == 1 && (dispersion_method != POISSON))
     {
         fprintf(stderr, "Warning: No conditions are replicated, switching to 'blind' dispersion method\n");
         dispersion_method = BLIND;
