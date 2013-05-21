@@ -747,8 +747,11 @@ double AbundanceGroup::gamma() const
 void AbundanceGroup::clear_non_serialized_data()
 {
     _fpkm_samples.clear();
+    std::vector<double>().swap(_fpkm_samples);
     _member_fpkm_samples.clear();
+    std::vector<Eigen::VectorXd>().swap(_member_fpkm_samples);
     _assigned_count_samples.clear();
+    std::vector<Eigen::VectorXd>().swap(_assigned_count_samples);
 }
 
 void AbundanceGroup::filter_group(const vector<bool>& to_keep, 

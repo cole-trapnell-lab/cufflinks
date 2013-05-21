@@ -392,6 +392,7 @@ void init_dispersion_method_table()
     dispersion_method_table["pooled"] = POOLED;
     dispersion_method_table["blind"] = BLIND;
     dispersion_method_table["per-condition"] = PER_CONDITION;
+    dispersion_method_table["poisson"] = POISSON;
 }
 
 void print_dispersion_method_table()
@@ -418,7 +419,6 @@ void init_lib_norm_method_table()
     lib_norm_method_table["geometric"] = GEOMETRIC;
     lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
     lib_norm_method_table["quartile"] = QUARTILE;
-    lib_norm_method_table["poisson"] = QUARTILE;
     //lib_norm_method_table["tmm"] = TMM;
     //lib_norm_method_table["absolute"] = ABSOLUTE;
 }
@@ -426,7 +426,6 @@ void init_lib_norm_method_table()
 void init_cufflinks_lib_norm_method_table()
 {
     lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
-    lib_norm_method_table["poisson"] = QUARTILE;
     //lib_norm_method_table["quartile"] = QUARTILE;
     //lib_norm_method_table["absolute"] = ABSOLUTE;
 }
