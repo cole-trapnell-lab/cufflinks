@@ -751,6 +751,8 @@ void TranscriptAbundance::clear_non_serialized_data()
     
     _cond_probs->clear();
     std::vector<double>().swap(*_cond_probs);
+    
+    _transfrag->clear_hits();
 }
 
 void AbundanceGroup::clear_non_serialized_data()
