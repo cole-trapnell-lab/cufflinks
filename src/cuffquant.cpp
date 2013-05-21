@@ -876,9 +876,8 @@ void AbundanceRecorder::record_finished_loci()
                     verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
-                record_tracking_data(itr->first, itr->second);
-                
             }
+            record_tracking_data(itr->first, itr->second);
             
             // Removes the samples that have already been tested and transferred to the tracking tables,
             itr = _samples.erase(itr);

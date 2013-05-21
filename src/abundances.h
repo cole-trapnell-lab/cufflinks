@@ -145,6 +145,8 @@ public:
     {
         
     }
+    
+    virtual void clear_non_serialized_data() = 0;
 };
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Abundance);
@@ -314,7 +316,7 @@ public:
 	virtual const string&	reference_tag() const { return _ref_tag; }
 	virtual void			reference_tag(const string& r) { _ref_tag = r; } 
     
-	
+	void clear_non_serialized_data();
 private:
 	
     friend std::ostream & operator<<(std::ostream &os, const TranscriptAbundance &gp);

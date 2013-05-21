@@ -744,8 +744,23 @@ double AbundanceGroup::gamma() const
 	return gamma;
 }
 
+void TranscriptAbundance::clear_non_serialized_data()
+{
+    _fpkm_samples.clear();
+    std::vector<double>().swap(_fpkm_samples);
+    
+    _cond_probs->clear();
+    std::vector<double>().swap(*_cond_probs);
+}
+
 void AbundanceGroup::clear_non_serialized_data()
 {
+    
+    for (size_t i = 0; i < _abundances.size(); ++i)
+    {
+        _abundances[i]->clear_non_serialized_data();
+    }
+    
     _fpkm_samples.clear();
     std::vector<double>().swap(_fpkm_samples);
     _member_fpkm_samples.clear();
