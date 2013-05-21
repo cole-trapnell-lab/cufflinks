@@ -753,6 +753,7 @@ void TranscriptAbundance::clear_non_serialized_data()
     std::vector<double>().swap(*_cond_probs);
     
     _transfrag->clear_hits();
+    _transfrag = shared_ptr<Scaffold>();
 }
 
 void AbundanceGroup::clear_non_serialized_data()

@@ -821,6 +821,7 @@ void AbundanceRecorder::record_tracking_data(const string& locus_id, vector<shar
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		const AbundanceGroup& ab_group = abundances[i]->transcripts;
+        /*
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
 		BOOST_FOREACH (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
@@ -842,6 +843,7 @@ void AbundanceRecorder::record_tracking_data(const string& locus_id, vector<shar
 		{
 			add_to_tracking_table(i, ab, _tracking->gene_fpkm_tracking);
 		}
+        */
         
         abundances[i]->transcripts.clear_non_serialized_data();
         lightweight_ab_groups.push_back(abundances[i]->transcripts);
