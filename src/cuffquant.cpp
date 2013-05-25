@@ -821,7 +821,7 @@ void AbundanceRecorder::record_tracking_data(const string& locus_id, vector<shar
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		const AbundanceGroup& ab_group = abundances[i]->transcripts;
-        /*
+        
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
 		BOOST_FOREACH (shared_ptr<Abundance> ab, ab_group.abundances())
 		{
@@ -843,7 +843,7 @@ void AbundanceRecorder::record_tracking_data(const string& locus_id, vector<shar
 		{
 			add_to_tracking_table(i, ab, _tracking->gene_fpkm_tracking);
 		}
-        */
+        
         
         abundances[i]->transcripts.clear_non_serialized_data();
         lightweight_ab_groups.push_back(abundances[i]->transcripts);
@@ -1403,6 +1403,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
         rg_props->multi_read_table()->valid_mass(true);
     }
     
+    
+    abundance_recorder->clear_tracking_data();
+    
     abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
     
 	final_est_run = true;
@@ -1449,7 +1452,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     
     string expression_cxb_filename = output_dir + "/abundances.cxb";
     std::ofstream ofs(expression_cxb_filename.c_str());
-    boost::archive::text_oarchive oa(ofs);
+    boost::archive::binary_oarchive oa(ofs);
     
     map<string, AbundanceGroup> single_sample_tracking;
     

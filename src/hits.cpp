@@ -1112,7 +1112,7 @@ void PrecomputedExpressionHitFactory::load_serialized_expression_data(const stri
     
     
     std::ifstream ifs(expression_file_name.c_str());
-    boost::archive::text_iarchive ia(ifs);
+    boost::archive::binary_iarchive ia(ifs);
     
     map<string, AbundanceGroup> single_sample_tracking;
     

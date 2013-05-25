@@ -23,8 +23,8 @@ using boost::math::normal;
 
 #include <boost/archive/tmpdir.hpp>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/utility.hpp>
