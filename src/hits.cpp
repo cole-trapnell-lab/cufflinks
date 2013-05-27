@@ -1106,44 +1106,38 @@ bool SAMHitFactory::inspect_header()
 
 //////////////////////////////////////////
 
-void PrecomputedExpressionHitFactory::load_serialized_expression_data(const string& expression_file_name)
+void PrecomputedExpressionHitFactory::load_count_tables(const string& expression_file_name)
 {
-    map<string, AbundanceGroup > ab_groups;
+    //map<int, AbundanceGroup > ab_groups;
     
     
     std::ifstream ifs(expression_file_name.c_str());
     boost::archive::binary_iarchive ia(ifs);
     
-    map<string, AbundanceGroup> single_sample_tracking;
+    //map<string, AbundanceGroup> single_sample_tracking;
     
-    ia >> single_sample_tracking;
+    size_t num_loci = 0;
+    ia >> num_loci;
     
-    
-    for (map<string, AbundanceGroup>::const_iterator itr = single_sample_tracking.begin(); itr != single_sample_tracking.end(); ++itr)
+    if (num_loci > 0)
     {
-        
-        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(itr->second));
+        pair<int, AbundanceGroup> first_locus;
+        ia >> first_locus;
+        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
         
         // populate the cached count tables so we can make convincing fake bundles later on.
-        if (compat_mass.empty())
+        ReadGroupProperties rg_props = **(ab->rg_props().begin());
+
+        BOOST_FOREACH(const LocusCount& c, rg_props.raw_compatible_counts())
         {
-            ReadGroupProperties rg_props = **(ab->rg_props().begin());
+            compat_mass[c.locus_desc] = c.count;
+        }
 
-            BOOST_FOREACH(const LocusCount& c, rg_props.raw_compatible_counts())
-            {
-                compat_mass[c.locus_desc] = c.count;
-            }
-            
-            BOOST_FOREACH(const LocusCount& c, rg_props.raw_total_counts())
-            {
-                total_mass[c.locus_desc] = c.count;
-            }
-        }         
-        
-        ab_group_table[itr->first] = ab;
+        BOOST_FOREACH(const LocusCount& c, rg_props.raw_total_counts())
+        {
+            total_mass[c.locus_desc] = c.count;
+        }
     }
-
-    
 }
 
 bool PrecomputedExpressionHitFactory::next_record(const char*& buf, size_t& buf_size)
@@ -1163,6 +1157,34 @@ bool PrecomputedExpressionHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 bool PrecomputedExpressionHitFactory::inspect_header()
 {
     return true;
+}
+
+shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::get_abundance_for_locus(int locus_id) const
+{
+    return _curr_ab_group;
+}
+
+shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
+{
+    if (_last_locus_id >= locus_id)
+        return shared_ptr<const AbundanceGroup>(); // we already processed this one
+        
+    shared_ptr<const AbundanceGroup> sought_group;
+    for (;_curr_locus_idx < _num_loci; ++_curr_locus_idx)
+    {
+        pair<int, AbundanceGroup> p;
+        *_ia >> p;
+        _last_locus_id = p.first;
+        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(p.second));
+        if (_last_locus_id == locus_id)
+        {
+            sought_group = ab;
+            break;
+        }
+    }
+    _curr_ab_group = sought_group;
+    
+    return sought_group;
 }
 
 

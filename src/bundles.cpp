@@ -1127,22 +1127,26 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
+    bool got_bundle = false;
 	switch(_bundle_mode)
 	{
 		case HIT_DRIVEN:
             _curr_bundle++;
-			return next_bundle_hit_driven(bundle);
+			got_bundle = next_bundle_hit_driven(bundle);
+            bundle.id(_curr_bundle);
 			break;
 		case REF_DRIVEN:
             _curr_bundle++;
-			return next_bundle_ref_driven(bundle);
+			got_bundle = next_bundle_ref_driven(bundle);
+            bundle.id(_curr_bundle);
 			break;
 		case REF_GUIDED:
             _curr_bundle++;
-			return next_bundle_ref_guided(bundle);
+			got_bundle = next_bundle_ref_guided(bundle);
+            bundle.id(_curr_bundle);
 			break;
 	}
-	return false;
+	return got_bundle;
 }
 
 
@@ -2017,7 +2021,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
         char bundle_label_buf[2048];
         sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
         
-        shared_ptr<const AbundanceGroup> ab = _hit_fac->get_abundance_for_locus(bundle_label_buf);
+        shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
         if (ab)
         {
             double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);

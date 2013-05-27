@@ -218,6 +218,9 @@ public:
         // Merge the replicates into a combined bundle of hits.
         HitBundle::combine(bundles, bundle_out);
         
+        // TODO: should probably check that all the inputs have the same id() (i.e. locus order)
+        bundle_out.id(bundles[0]->id());
+        
         BOOST_FOREACH (HitBundle* in_bundle, bundles)
         {
             in_bundle->ref_scaffolds().clear();

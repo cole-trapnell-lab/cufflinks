@@ -134,6 +134,7 @@ public:
 	RefID ref_id()  const {return _ref_id; }
 	
 	int id() const { return _id; }
+    void id(int i) { _id = i; }
 	
 	void add_ref_scaffold(shared_ptr<Scaffold> scaff)
 	{

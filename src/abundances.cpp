@@ -4864,7 +4864,7 @@ void merge_precomputed_expression_worker(const string& locus_tag,
         shared_ptr<const ReadGroupProperties> rg_prop = pBundleFac->read_group_properties();
         rg_props.insert(rg_prop);
         
-        shared_ptr<const AbundanceGroup> ab = pHitFac->get_abundance_for_locus(locus_tag);
+        shared_ptr<const AbundanceGroup> ab = pHitFac->get_abundance_for_locus(sample_bundle->id());
         
         unnormalized_ab_group_per_replicate[rg_prop] = ab;
     }

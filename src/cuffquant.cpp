@@ -671,7 +671,7 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 	rg_props->bias_learner(shared_ptr<BiasLearner>(bl));
 }
 
-typedef map<string, vector<AbundanceGroup> > light_ab_group_tracking_table;
+typedef map<int, vector<AbundanceGroup> > light_ab_group_tracking_table;
 
 // Similiar to TestLauncher, except this class records tracking data when abundance groups report in
 struct AbundanceRecorder
@@ -692,24 +692,24 @@ public:
     
     void operator()();
     
-    void register_locus(const string& locus_id);
-    void abundance_avail(const string& locus_id,
+    void register_locus(int locus_id);
+    void abundance_avail(int locus_id,
                          shared_ptr<SampleAbundances> ab,
                          size_t factory_id);
     void record_finished_loci();
-    void record_tracking_data(const string& locus_id, vector<shared_ptr<SampleAbundances> >& abundances);
+    void record_tracking_data(int locus_id, vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
-    bool all_samples_reported_in(const string& locus_id);
+    bool all_samples_reported_in(int locus_id);
     
     void clear_tracking_data() { _tracking->clear(); }
     
-    typedef list<pair<string, vector<shared_ptr<SampleAbundances> > > > recorder_sample_table;
+    typedef list<pair<int, vector<shared_ptr<SampleAbundances> > > > recorder_sample_table;
     
     const light_ab_group_tracking_table& get_sample_table() const { return _ab_group_tracking_table; }
     
 private:
     
-    recorder_sample_table::iterator find_locus(const string& locus_id);
+    recorder_sample_table::iterator find_locus(int locus_id);
     
     int _orig_workers;
     
@@ -722,7 +722,7 @@ private:
 };
 
 
-AbundanceRecorder::recorder_sample_table::iterator AbundanceRecorder::find_locus(const string& locus_id)
+AbundanceRecorder::recorder_sample_table::iterator AbundanceRecorder::find_locus(int locus_id)
 {
     recorder_sample_table::iterator itr = _samples.begin();
     for(; itr != _samples.end(); ++itr)
@@ -733,7 +733,7 @@ AbundanceRecorder::recorder_sample_table::iterator AbundanceRecorder::find_locus
     return _samples.end();
 }
 
-void AbundanceRecorder::register_locus(const string& locus_id)
+void AbundanceRecorder::register_locus(int locus_id)
 {
 #if ENABLE_THREADS
 	boost::mutex::scoped_lock lock(_recorder_lock);
@@ -748,9 +748,9 @@ void AbundanceRecorder::register_locus(const string& locus_id)
     }
 }
 
-void AbundanceRecorder::abundance_avail(const string& locus_id,
-                                   shared_ptr<SampleAbundances> ab,
-                                   size_t factory_id)
+void AbundanceRecorder::abundance_avail(int locus_id,
+                                        shared_ptr<SampleAbundances> ab,
+                                        size_t factory_id)
 {
 #if ENABLE_THREADS
 	boost::mutex::scoped_lock lock(_recorder_lock);
@@ -785,7 +785,7 @@ mutex test_storage_lock; // don't modify the above struct without locking here
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself.
-void AbundanceRecorder::record_tracking_data(const string& locus_id, vector<shared_ptr<SampleAbundances> >& abundances)
+void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<SampleAbundances> >& abundances)
 {
     assert (abundances.size() == _orig_workers);
     
@@ -931,7 +931,7 @@ void sample_worker(const RefSequenceTable& rt,
     
     abundance->cluster_mass = bundle.mass();
     
-    recorder->register_locus(locus_tag);
+    recorder->register_locus(bundle.id());
     
     abundance->locus_tag = locus_tag;
     
@@ -972,7 +972,7 @@ void sample_worker(const RefSequenceTable& rt,
         ref_scaff->clear_hits();
     }
     
-    recorder->abundance_avail(locus_tag, abundance, factory_id);
+    recorder->abundance_avail(bundle.id(), abundance, factory_id);
     recorder->record_finished_loci();
 }
 
@@ -1454,18 +1454,27 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     std::ofstream ofs(expression_cxb_filename.c_str());
     boost::archive::binary_oarchive oa(ofs);
     
-    map<string, AbundanceGroup> single_sample_tracking;
+    vector< pair<int, AbundanceGroup> > single_sample_tracking;
     
     const light_ab_group_tracking_table& sample_table = abundance_recorder->get_sample_table();
     for (light_ab_group_tracking_table::const_iterator itr = sample_table.begin(); itr != sample_table.end(); ++itr)
     {
         
         assert (itr->second.size() == 1);
-        
-        single_sample_tracking[itr->first] = itr->second[0];
+        single_sample_tracking.push_back(make_pair(itr->first, itr->second[0]));
     }
     
-    oa << single_sample_tracking;
+    std::sort(single_sample_tracking.begin(), single_sample_tracking.end(),
+              boost::bind(&std::pair<int, AbundanceGroup>::first, _1) <
+              boost::bind(&std::pair<int, AbundanceGroup>::first, _2));
+    
+    size_t num_loci = single_sample_tracking.size();
+    oa << num_loci;
+    
+    for (int i = 0; i < single_sample_tracking.size(); ++i)
+    {
+        oa << single_sample_tracking[i];
+    }
     
     // FPKM tracking
     

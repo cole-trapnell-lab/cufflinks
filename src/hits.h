@@ -5,6 +5,7 @@
 #include <config.h>
 #endif
 
+#include <iostream>
 #include <fstream>
 #include <stdint.h>
 #include <stdio.h>
@@ -814,9 +815,10 @@ public:
     PrecomputedExpressionHitFactory(const string& expression_file_name,
                                     ReadTable& insert_table,
                                     RefSequenceTable& reference_table) :
-    HitFactory(insert_table, reference_table)
+    HitFactory(insert_table, reference_table), _ifs(expression_file_name.c_str()),
+    _ia(shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(_ifs)))
     {
-        load_serialized_expression_data(expression_file_name);
+        load_count_tables(expression_file_name);
         
         if (inspect_header() == false)
         {
@@ -829,6 +831,14 @@ public:
         {
             _rg_props = *global_read_properties;
         }
+        
+        //map<string, AbundanceGroup> single_sample_tracking;
+        
+        _num_loci = 0;
+        *_ia >> _num_loci;
+        
+        _curr_locus_idx = 0;
+        _last_locus_id = -1;
     }
     
     ~PrecomputedExpressionHitFactory()
@@ -852,9 +862,15 @@ public:
     
     void reset()
     {
-        
+        _ifs.clear() ;
+        _ifs.seekg(0, ios::beg);
+        _ia = shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(_ifs));
+        size_t num_loci = 0;
+        *_ia >> num_loci;
+        _last_locus_id = -1;
+        _curr_locus_idx = 0;
+        _curr_ab_group = shared_ptr<const AbundanceGroup>();
     }
-    
     
     bool next_record(const char*& buf, size_t& buf_size);
     
@@ -866,18 +882,9 @@ public:
     
     bool inspect_header();
     
-    shared_ptr<const AbundanceGroup> get_abundance_for_locus(const string& locus_id) const
-    {
-        map<string, shared_ptr<const AbundanceGroup> >::const_iterator i = ab_group_table.find(locus_id);
-        if (i != ab_group_table.end())
-        {
-            return i->second;
-        }
-        else
-        {
-            return shared_ptr<const AbundanceGroup>();
-        }
-    }
+    shared_ptr<const AbundanceGroup> next_locus(int locus_id);
+    
+    shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id) const;
     
     double get_compat_mass(const string& locus_id)
     {
@@ -908,11 +915,17 @@ public:
     
 private:
     
-    void load_serialized_expression_data(const string& expression_file_name);
+    void load_count_tables(const string& expression_file_name);
     
-    map<string, shared_ptr<const AbundanceGroup> > ab_group_table;
+    //map<int, shared_ptr<const AbundanceGroup> > ab_group_table;
+    size_t _num_loci;
+    size_t _curr_locus_idx;
+    int _last_locus_id;
+    std::ifstream _ifs;
+    shared_ptr<boost::archive::binary_iarchive> _ia;
     map<string, double> compat_mass;
     map<string, double> total_mass;
+    shared_ptr<const AbundanceGroup> _curr_ab_group;
 };
     
     
