@@ -980,31 +980,31 @@ vector<LocusVarianceInfo> locus_variance_info_table;
 // transcript, so we can re-fit the variance model.
 FPKMTrackingTable transcript_count_tracking; 
 
-void sample_worker(const RefSequenceTable& rt,
-                   ReplicatedBundleFactory& sample_factory,
-                   shared_ptr<SampleAbundances> abundance,
-                   size_t factory_id,
-                   shared_ptr<TestLauncher> launcher)
+
+void sample_worker(bool non_empty,
+                        shared_ptr<HitBundle> bundle,
+                        const RefSequenceTable& rt,
+                        ReplicatedBundleFactory& sample_factory,
+                        shared_ptr<SampleAbundances> abundance,
+                        size_t factory_id,
+                        shared_ptr<TestLauncher> launcher)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
     
-    HitBundle bundle;
-    bool non_empty = sample_factory.next_bundle(bundle);
-    
     char bundle_label_buf[2048];
     sprintf(bundle_label_buf,
             "%s:%d-%d",
-            rt.get_name(bundle.ref_id()),
-            bundle.left(),
-            bundle.right());
+            rt.get_name(bundle->ref_id()),
+            bundle->left(),
+            bundle->right());
     string locus_tag = bundle_label_buf;
     
-    if (!non_empty || (bias_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
+    if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS
-        // If Cuffdiff was built without threads, we need to manually invoke 
+        // If Cuffdiff was built without threads, we need to manually invoke
         // the testing functor, which will check to see if all the workers
         // are done, and if so, perform the cross sample testing.
         launcher->abundance_avail(locus_tag, abundance, factory_id);
@@ -1014,7 +1014,7 @@ void sample_worker(const RefSequenceTable& rt,
     	return;
     }
     
-    abundance->cluster_mass = bundle.mass();
+    abundance->cluster_mass = bundle->mass();
     
     launcher->register_locus(locus_tag);
     
@@ -1022,8 +1022,8 @@ void sample_worker(const RefSequenceTable& rt,
     
     bool perform_cds_analysis = false;
     bool perform_tss_analysis = false;
-
-    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+    
+    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle->ref_scaffolds())
     {
         if (s->annotated_tss_id() != "")
         {
@@ -1054,7 +1054,7 @@ void sample_worker(const RefSequenceTable& rt,
         merge_precomputed_expression_worker(boost::cref(locus_tag),
                                             hit_factories,
                                             boost::ref(*abundance),
-                                            &bundle,
+                                            bundle,
                                             perform_cds_analysis,
                                             perform_tss_analysis);
     }
@@ -1066,11 +1066,11 @@ void sample_worker(const RefSequenceTable& rt,
             shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
             rg_props.insert(bf->read_group_properties());
         }
-    
+        
         sample_abundance_worker(boost::cref(locus_tag),
                                 boost::cref(rg_props),
                                 boost::ref(*abundance),
-                                &bundle,
+                                bundle,
                                 perform_cds_analysis,
                                 perform_tss_analysis);
     }
@@ -1082,7 +1082,7 @@ void sample_worker(const RefSequenceTable& rt,
     ///////////////////////////////////////////////
     
     
-    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle.ref_scaffolds())
+    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
     {
         ref_scaff->clear_hits();
     }
@@ -1091,11 +1091,12 @@ void sample_worker(const RefSequenceTable& rt,
     launcher->test_finished_loci();
     
 #if !ENABLE_THREADS
-    // If Cuffdiff was built without threads, we need to manually invoke 
+    // If Cuffdiff was built without threads, we need to manually invoke
     // the testing functor, which will check to see if all the workers
     // are done, and if so, perform the cross sample testing.
     //launcher->test_finished_loci();
 #endif
+
 }
 
 void dump_locus_variance_info(const string& filename)

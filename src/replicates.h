@@ -215,8 +215,20 @@ public:
             }
         }
         
+        double total_compatible_mass = 0.0;
+        double total_raw_mass = 0.0;
+        
+        for (size_t i = 0; i < bundles.size(); ++i)
+        {
+            total_compatible_mass += bundles[i]->compatible_mass();
+            total_raw_mass += bundles[i]->raw_mass();
+        }
+        
         // Merge the replicates into a combined bundle of hits.
         HitBundle::combine(bundles, bundle_out);
+        
+        bundle_out.compatible_mass(total_compatible_mass);
+        bundle_out.add_raw_mass(total_raw_mass);
         
         // TODO: should probably check that all the inputs have the same id() (i.e. locus order)
         bundle_out.id(bundles[0]->id());

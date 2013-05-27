@@ -4721,7 +4721,7 @@ void cds_analyis(const string& locus_tag, SampleAbundances& sample)
 void sample_abundance_worker(const string& locus_tag,
                              const set<shared_ptr<ReadGroupProperties const> >& rg_props,
                              SampleAbundances& sample,
-                             HitBundle* sample_bundle,
+                             shared_ptr<HitBundle> sample_bundle,
                              bool perform_cds_analysis,
                              bool perform_tss_analysis)
 {
@@ -4846,7 +4846,7 @@ void AbundanceGroup::apply_normalization_to_abundances(const map<shared_ptr<cons
 void merge_precomputed_expression_worker(const string& locus_tag,
                                          const vector<shared_ptr<PrecomputedExpressionBundleFactory> >& expression_factories,
                                          SampleAbundances& sample,
-                                         HitBundle* sample_bundle,
+                                         shared_ptr<HitBundle> sample_bundle,
                                          bool perform_cds_analysis,
                                          bool perform_tss_analysis)
 {

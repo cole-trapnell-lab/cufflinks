@@ -1053,14 +1053,39 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread quantitate(sample_worker,
+        shared_ptr<HitBundle> pBundle = shared_ptr<HitBundle>(new HitBundle());
+        bool non_empty = bundle_factories[i]->next_bundle(*pBundle);
+        
+        if (pBundle->compatible_mass() > 0)
+        {
+            thread quantitate(sample_worker,
+                              non_empty,
+                              pBundle,
+                              boost::ref(rt),
+                              boost::ref(*(bundle_factories[i])),
+                              s_ab,
+                              i,
+                              launcher);
+        }
+        else
+        {
+            sample_worker(non_empty,
+                          pBundle,
                           boost::ref(rt),
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
                           i,
-                          launcher);  
+                          launcher);
+            locus_curr_threads--;
+            locus_thread_pool_lock.unlock();
+        }
 #else
-        sample_worker(boost::ref(rt),
+        HitBundle bundle;
+        bool non_empty = sample_factory.next_bundle(bundle);
+        
+        sample_worker(non_emtpy,
+                      pBundle,
+                      boost::ref(rt),
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
                       i,

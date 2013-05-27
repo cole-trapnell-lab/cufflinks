@@ -183,7 +183,9 @@ private:
 
 extern double min_read_count;
 
-void sample_worker(const RefSequenceTable& rt,
+void sample_worker(bool non_empty,
+                   shared_ptr<HitBundle> bundle,
+                   const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,

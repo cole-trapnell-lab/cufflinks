@@ -905,18 +905,18 @@ void sample_worker(const RefSequenceTable& rt,
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
     
-    HitBundle bundle;
-    bool non_empty = sample_factory.next_bundle(bundle);
+    shared_ptr<HitBundle> bundle(new HitBundle);
+    bool non_empty = sample_factory.next_bundle(*bundle);
     
     char bundle_label_buf[2048];
     sprintf(bundle_label_buf,
             "%s:%d-%d",
-            rt.get_name(bundle.ref_id()),
-            bundle.left(),
-            bundle.right());
+            rt.get_name(bundle->ref_id()),
+            bundle->left(),
+            bundle->right());
     string locus_tag = bundle_label_buf;
     
-    if (!non_empty || (bias_run && bundle.ref_scaffolds().size() != 1)) // Only learn on single isoforms
+    if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS
         // If Cuffdiff was built without threads, we need to manually invoke
@@ -929,16 +929,16 @@ void sample_worker(const RefSequenceTable& rt,
     	return;
     }
     
-    abundance->cluster_mass = bundle.mass();
+    abundance->cluster_mass = bundle->mass();
     
-    recorder->register_locus(bundle.id());
+    recorder->register_locus(bundle->id());
     
     abundance->locus_tag = locus_tag;
     
     bool perform_cds_analysis = false;
     bool perform_tss_analysis = false;
     
-    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle->ref_scaffolds())
     {
         if (s->annotated_tss_id() != "")
         {
@@ -960,19 +960,19 @@ void sample_worker(const RefSequenceTable& rt,
     sample_abundance_worker(boost::cref(locus_tag),
                             boost::cref(rg_props),
                             boost::ref(*abundance),
-                            &bundle,
+                            bundle,
                             perform_cds_analysis,
                             perform_tss_analysis);
     
     ///////////////////////////////////////////////
     
     
-    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle.ref_scaffolds())
+    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
     {
         ref_scaff->clear_hits();
     }
     
-    recorder->abundance_avail(bundle.id(), abundance, factory_id);
+    recorder->abundance_avail(bundle->id(), abundance, factory_id);
     recorder->record_finished_loci();
 }
 
