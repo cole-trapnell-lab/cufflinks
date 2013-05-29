@@ -2061,6 +2061,7 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
              itr != ab_group_per_replicate.end();
              ++itr)
         {
+            const vector<shared_ptr<Abundance> >& sc_ab = itr->second->abundances();
             assert(itr->second->abundances().size() == _abundances.size());
             cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
             //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
@@ -4865,7 +4866,14 @@ void merge_precomputed_expression_worker(const string& locus_tag,
         rg_props.insert(rg_prop);
         
         shared_ptr<const AbundanceGroup> ab = pHitFac->get_abundance_for_locus(sample_bundle->id());
-        
+        if (!ab)
+        {
+            fprintf(stderr, "Error: no bundle with id %d in precomputed expression file\n", sample_bundle->id());
+        }
+        else if(ab->abundances().size() != sample_bundle->ref_scaffolds().size())
+        {
+            fprintf(stderr, "Error: bad bundle merge %s != %s\n", ab->description().c_str(), locus_tag.c_str());
+        }
         unnormalized_ab_group_per_replicate[rg_prop] = ab;
     }
     
