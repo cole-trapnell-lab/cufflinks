@@ -380,6 +380,9 @@ public:
     
     bool next_bundle(HitBundle& bundle_out);
     
+    shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
+    void clear_abundance_for_locus(int locus_id);
+    
 private:
     
     shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;

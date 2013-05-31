@@ -4865,8 +4865,8 @@ void merge_precomputed_expression_worker(const string& locus_tag,
         shared_ptr<const ReadGroupProperties> rg_prop = pBundleFac->read_group_properties();
         rg_props.insert(rg_prop);
         
-        shared_ptr<const AbundanceGroup> ab = pHitFac->get_abundance_for_locus(sample_bundle->id());
-        pHitFac->clear_abundance_for_locus(sample_bundle->id());
+        shared_ptr<const AbundanceGroup> ab = pBundleFac->get_abundance_for_locus(sample_bundle->id());
+        pBundleFac->clear_abundance_for_locus(sample_bundle->id());
         if (!ab)
         {
             fprintf(stderr, "Error: no bundle with id %d in precomputed expression file\n", sample_bundle->id());

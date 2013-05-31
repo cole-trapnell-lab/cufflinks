@@ -2042,5 +2042,14 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
     return got_bundle;
 }
 
+shared_ptr<const AbundanceGroup> PrecomputedExpressionBundleFactory::get_abundance_for_locus(int locus_id)
+{
+    return _hit_fac->get_abundance_for_locus(locus_id);
+}
+
+void PrecomputedExpressionBundleFactory::clear_abundance_for_locus(int locus_id)
+{
+    _hit_fac->clear_abundance_for_locus(locus_id);
+}
 
 

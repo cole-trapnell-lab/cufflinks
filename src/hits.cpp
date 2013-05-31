@@ -1180,7 +1180,7 @@ void PrecomputedExpressionHitFactory::clear_abundance_for_locus(int locus_id)
     map<int, shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
     
     if (itr != _curr_ab_groups.end())
-        return _curr_ab_groups.erase(itr);
+        _curr_ab_groups.erase(itr);
 }
 
 shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
