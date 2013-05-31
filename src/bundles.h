@@ -383,6 +383,10 @@ public:
 private:
     
     shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;
+    
+#if ENABLE_THREADS    
+    boost::mutex _factory_lock;
+#endif
 };
 
 void identify_bad_splices(const HitBundle& bundle, 
