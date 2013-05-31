@@ -1159,13 +1159,35 @@ bool PrecomputedExpressionHitFactory::inspect_header()
     return true;
 }
 
-shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::get_abundance_for_locus(int locus_id) const
+shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::get_abundance_for_locus(int locus_id)
 {
-    return _curr_ab_group;
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    map<int, shared_ptr<const AbundanceGroup> >::const_iterator itr = _curr_ab_groups.find(locus_id);
+    if (itr != _curr_ab_groups.end())
+        return itr->second;
+    else
+        return shared_ptr<const AbundanceGroup>();
+}
+
+void PrecomputedExpressionHitFactory::clear_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+
+    map<int, shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
+    
+    if (itr != _curr_ab_groups.end())
+        return _curr_ab_groups.erase(itr);
 }
 
 shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
 {
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
     if (_last_locus_id >= locus_id)
         return shared_ptr<const AbundanceGroup>(); // we already processed this one
         
@@ -1182,7 +1204,7 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int
             break;
         }
     }
-    _curr_ab_group = sought_group;
+    _curr_ab_groups[locus_id] = sought_group;
     
     return sought_group;
 }

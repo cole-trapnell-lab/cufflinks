@@ -869,7 +869,7 @@ public:
         *_ia >> num_loci;
         _last_locus_id = -1;
         _curr_locus_idx = 0;
-        _curr_ab_group = shared_ptr<const AbundanceGroup>();
+        _curr_ab_groups.clear();
     }
     
     bool next_record(const char*& buf, size_t& buf_size);
@@ -884,7 +884,8 @@ public:
     
     shared_ptr<const AbundanceGroup> next_locus(int locus_id);
     
-    shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id) const;
+    shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
+    void clear_abundance_for_locus(int locus_id);
     
     double get_compat_mass(const string& locus_id)
     {
@@ -925,7 +926,12 @@ private:
     shared_ptr<boost::archive::binary_iarchive> _ia;
     map<string, double> compat_mass;
     map<string, double> total_mass;
-    shared_ptr<const AbundanceGroup> _curr_ab_group;
+    map<int, shared_ptr<const AbundanceGroup> > _curr_ab_groups;
+    
+    
+#if ENABLE_THREADS    
+    boost::mutex _factory_lock;
+#endif
 };
     
     

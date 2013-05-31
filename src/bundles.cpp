@@ -2013,9 +2013,6 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
 
 bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
 {
-#if ENABLE_THREADS
-    boost::mutex::scoped_lock lock(_factory_lock);
-#endif
     bool got_bundle = BundleFactory::next_bundle(bundle);
     if (got_bundle)
     {
