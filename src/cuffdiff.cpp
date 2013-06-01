@@ -1076,6 +1076,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           s_ab,
                           i,
                           launcher);
+            locus_thread_pool_lock.lock();
             locus_curr_threads--;
             locus_thread_pool_lock.unlock();
         }
