@@ -749,11 +749,17 @@ void TranscriptAbundance::clear_non_serialized_data()
     _fpkm_samples.clear();
     std::vector<double>().swap(_fpkm_samples);
     
-    _cond_probs->clear();
-    std::vector<double>().swap(*_cond_probs);
+    if (_cond_probs)
+    {
+        _cond_probs->clear();
+        std::vector<double>().swap(*_cond_probs);
+    }
     
-    _transfrag->clear_hits();
-    _transfrag = shared_ptr<Scaffold>();
+    if (_transfrag)
+    {
+        _transfrag->clear_hits();
+        _transfrag = shared_ptr<Scaffold>();
+    }
 }
 
 void AbundanceGroup::clear_non_serialized_data()
