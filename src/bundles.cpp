@@ -2013,6 +2013,9 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
 
 bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
 {
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
     bool got_bundle = BundleFactory::next_bundle(bundle);
     if (got_bundle)
     {
@@ -2044,11 +2047,17 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
 
 shared_ptr<const AbundanceGroup> PrecomputedExpressionBundleFactory::get_abundance_for_locus(int locus_id)
 {
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
     return _hit_fac->get_abundance_for_locus(locus_id);
 }
 
 void PrecomputedExpressionBundleFactory::clear_abundance_for_locus(int locus_id)
 {
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
     _hit_fac->clear_abundance_for_locus(locus_id);
 }
 
