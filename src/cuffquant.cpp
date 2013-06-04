@@ -916,6 +916,12 @@ void sample_worker(const RefSequenceTable& rt,
             bundle->right());
     string locus_tag = bundle_label_buf;
     
+    abundance->cluster_mass = bundle->mass();
+    
+    recorder->register_locus(bundle->id());
+    
+    abundance->locus_tag = locus_tag;
+    
     if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS
@@ -928,12 +934,6 @@ void sample_worker(const RefSequenceTable& rt,
 #endif
     	return;
     }
-    
-    abundance->cluster_mass = bundle->mass();
-    
-    recorder->register_locus(bundle->id());
-    
-    abundance->locus_tag = locus_tag;
     
     bool perform_cds_analysis = false;
     bool perform_tss_analysis = false;
