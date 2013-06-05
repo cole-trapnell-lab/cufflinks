@@ -849,6 +849,10 @@ void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<Sam
         lightweight_ab_groups.push_back(abundances[i]->transcripts);
 	}
     
+    if (_ab_group_tracking_table.find(locus_id) != _ab_group_tracking_table.end())
+    {
+        fprintf (stderr, "Error: locus %d is already recorded!\n", locus_id);
+    }
     _ab_group_tracking_table[locus_id] = lightweight_ab_groups;
     
 #if ENABLE_THREADS

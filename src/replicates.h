@@ -193,8 +193,22 @@ public:
             }
         }
         
+        int locus_id = -1;
+        for (size_t i = 0; i < bundles.size(); ++i)
+        {
+            if (locus_id == -1)
+                locus_id = bundles[i]->id();
+            if (locus_id != bundles[i]->id())
+            {
+                fprintf(stderr, "Error: locus id mismatch!\n");
+                exit(1);
+            }
+        }
+        
+        
         if (non_empty_bundle == false)
         {
+            bundle_out.id(locus_id);
             BOOST_FOREACH (HitBundle* in_bundle, bundles)
             {
                 in_bundle->ref_scaffolds().clear();
@@ -230,8 +244,7 @@ public:
         bundle_out.compatible_mass(total_compatible_mass);
         bundle_out.add_raw_mass(total_raw_mass);
         
-        // TODO: should probably check that all the inputs have the same id() (i.e. locus order)
-        bundle_out.id(bundles[0]->id());
+        bundle_out.id(locus_id);
         
         BOOST_FOREACH (HitBundle* in_bundle, bundles)
         {
