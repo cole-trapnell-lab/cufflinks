@@ -931,14 +931,14 @@ void sample_worker(const RefSequenceTable& rt,
     }
     if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
-#if !ENABLE_THREADS
+//#if !ENABLE_THREADS
         // If Cuffdiff was built without threads, we need to manually invoke
         // the testing functor, which will check to see if all the workers
         // are done, and if so, perform the cross sample testing.
-        recorder->abundance_avail(locus_tag, abundance, factory_id);
+        recorder->abundance_avail(bundle->id(), abundance, factory_id);
         recorder->record_finished_loci();
         //launcher();
-#endif
+//#endif
     	return;
     }
     
