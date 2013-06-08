@@ -925,7 +925,10 @@ void sample_worker(const RefSequenceTable& rt,
     recorder->register_locus(bundle->id());
     
     abundance->locus_tag = locus_tag;
-    
+    if (rt.get_name(bundle->ref_id()) == "chr13_random")
+    {
+        int a = 5;
+    }
     if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 #if !ENABLE_THREADS

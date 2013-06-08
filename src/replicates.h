@@ -206,17 +206,17 @@ public:
         }
         
         
-        if (non_empty_bundle == false)
-        {
-            bundle_out.id(locus_id);
-            BOOST_FOREACH (HitBundle* in_bundle, bundles)
-            {
-                in_bundle->ref_scaffolds().clear();
-                in_bundle->clear_hits();
-                delete in_bundle;
-            }
-            return false;
-        }
+//        if (non_empty_bundle == false)
+//        {
+//            bundle_out.id(locus_id);
+//            BOOST_FOREACH (HitBundle* in_bundle, bundles)
+//            {
+//                in_bundle->ref_scaffolds().clear();
+//                in_bundle->clear_hits();
+//                delete in_bundle;
+//            }
+//            return false;
+//        }
         
         for (size_t i = 1; i < bundles.size(); ++i)
         {
@@ -252,7 +252,7 @@ public:
             in_bundle->clear_hits();
             delete in_bundle;
         }
-        return true;
+        return non_empty_bundle;
     }
 	
 	void reset() 

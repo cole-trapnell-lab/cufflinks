@@ -861,6 +861,12 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 	}
 	
 	bundle.add_ref_scaffold(*next_ref_scaff);
+    
+//    if (*next_ref_scaff && (*next_ref_scaff)->annotated_gene_id() == "XLOC_009372")
+//    {
+//        int a = 5;
+//    }
+    
 	++next_ref_scaff;
     
 	_expand_by_refs(bundle);
@@ -1057,10 +1063,15 @@ bool BundleFactory::_expand_by_refs(HitBundle& bundle)
 	while(next_ref_scaff < ref_mRNAs.end())
 	{		
 		assert(bundle.ref_id() != (*next_ref_scaff)->ref_id() || (*next_ref_scaff)->left() >= bundle.left());
+//        if (*next_ref_scaff && (*next_ref_scaff)->annotated_gene_id() == "XLOC_009372")
+//        {
+//            int a = 5;
+//        }
 		if (bundle.ref_id() == (*next_ref_scaff)->ref_id()
 			&& overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),bundle.left(), bundle.right()))
 		{
-			bundle.add_ref_scaffold(*next_ref_scaff++);
+			bundle.add_ref_scaffold(*next_ref_scaff);
+            next_ref_scaff++;
 		}
 		else 
 		{
