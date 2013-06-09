@@ -938,7 +938,7 @@ const string& AbundanceGroup::locus_tag() const
 	{
 		return *pLast;
 	}
-	assert (false);
+	//assert (false);
 	return default_locus_tag;
 }
 
@@ -962,7 +962,7 @@ const string& AbundanceGroup::reference_tag() const
 	{
 		return *pLast;
 	}
-	assert (false);
+	//assert (false);
 	return default_reference_tag;
 }
 

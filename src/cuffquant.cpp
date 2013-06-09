@@ -880,6 +880,11 @@ void AbundanceRecorder::record_finished_loci()
                 if (_p_bar)
                 {
                     verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
+                    if (itr->second.front()->locus_tag == "chr13_random:31679-57600")
+                    {
+                        //int a = 5;
+                        fprintf(stderr, "XXXX\n");
+                    }
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
             }
@@ -925,10 +930,10 @@ void sample_worker(const RefSequenceTable& rt,
     recorder->register_locus(bundle->id());
     
     abundance->locus_tag = locus_tag;
-    if (rt.get_name(bundle->ref_id()) == "chr13_random")
-    {
-        int a = 5;
-    }
+//    if (rt.get_name(bundle->ref_id()) == "chr13_random")
+//    {
+//        int a = 5;
+//    }
     if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
     {
 //#if !ENABLE_THREADS

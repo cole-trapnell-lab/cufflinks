@@ -2045,7 +2045,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
             bundle.add_raw_mass(total_mass);
             bundle.compatible_mass(compatible_mass);
             
-            //fprintf (stderr, "Reconstituting bundle %s with mass %lf\n", bundle_label_buf, compatible_mass);
+            fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
         }
         else
         {

@@ -815,7 +815,7 @@ public:
     PrecomputedExpressionHitFactory(const string& expression_file_name,
                                     ReadTable& insert_table,
                                     RefSequenceTable& reference_table) :
-    HitFactory(insert_table, reference_table), _ifs(expression_file_name.c_str()),
+    HitFactory(insert_table, reference_table), _expression_file_name(expression_file_name), _ifs(expression_file_name.c_str()),
     _ia(shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(_ifs)))
     {
         load_count_tables(expression_file_name);
@@ -923,6 +923,7 @@ private:
     size_t _curr_locus_idx;
     int _last_locus_id;
     std::ifstream _ifs;
+    string _expression_file_name;
     shared_ptr<boost::archive::binary_iarchive> _ia;
     map<string, double> compat_mass;
     map<string, double> total_mass;

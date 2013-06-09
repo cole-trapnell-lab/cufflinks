@@ -1124,7 +1124,7 @@ void PrecomputedExpressionHitFactory::load_count_tables(const string& expression
         pair<int, AbundanceGroup> first_locus;
         ia >> first_locus;
         shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
-        
+                
         // populate the cached count tables so we can make convincing fake bundles later on.
         ReadGroupProperties rg_props = **(ab->rg_props().begin());
 
@@ -1156,6 +1156,32 @@ bool PrecomputedExpressionHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 
 bool PrecomputedExpressionHitFactory::inspect_header()
 {
+    
+    std::ifstream ifs(_expression_file_name.c_str());
+    boost::archive::binary_iarchive ia(ifs);
+
+    RefSequenceTable& rt = ref_table();
+    
+    size_t num_loci = 0;
+    ia >> num_loci;
+    
+    for (size_t i = 0; i < num_loci; ++i)
+    {
+        pair<int, AbundanceGroup> locus;
+
+        ia >> locus;
+        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(locus.second));
+        
+        const string locus_tag = ab->locus_tag();
+        
+        string::size_type idx = locus_tag.find(':');
+        if (idx != string::npos)
+        {
+            string chrom_name = locus_tag.substr(0, idx);
+            rt.get_id(chrom_name.c_str(), NULL); // make sure the chromosome names are added to the RefSequenceTable in the order that they occur in the expression files.
+        }
+    }
+    
     return true;
 }
 
@@ -1188,10 +1214,21 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
+    if (locus_id == 7130)
+    {
+        fprintf(stderr, "Trying to get a chr13_random\n");
+    }
+    
     if (_last_locus_id >= locus_id)
         return shared_ptr<const AbundanceGroup>(); // we already processed this one
-        
+    
     shared_ptr<const AbundanceGroup> sought_group;
+    
+    map<int, shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
+    
+    if (itr != _curr_ab_groups.end())
+        return itr->second;
+    
     for (;_curr_locus_idx < _num_loci; ++_curr_locus_idx)
     {
         pair<int, AbundanceGroup> p;
@@ -1202,6 +1239,10 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int
         {
             sought_group = ab;
             break;
+        }
+        else // we don't want to lose this one...
+        {
+            _curr_ab_groups[_last_locus_id] = ab;
         }
     }
     _curr_ab_groups[locus_id] = sought_group;
