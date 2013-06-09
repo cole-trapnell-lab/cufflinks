@@ -880,11 +880,11 @@ void AbundanceRecorder::record_finished_loci()
                 if (_p_bar)
                 {
                     verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
-                    if (itr->second.front()->locus_tag == "chr13_random:31679-57600")
-                    {
-                        //int a = 5;
-                        fprintf(stderr, "XXXX\n");
-                    }
+//                    if (itr->second.front()->locus_tag == "chr13_random:31679-57600")
+//                    {
+//                        //int a = 5;
+//                        fprintf(stderr, "XXXX\n");
+//                    }
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
             }

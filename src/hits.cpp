@@ -1214,10 +1214,10 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
-    if (locus_id == 7130)
-    {
-        fprintf(stderr, "Trying to get a chr13_random\n");
-    }
+//    if (locus_id == 7130)
+//    {
+//        fprintf(stderr, "Trying to get a chr13_random\n");
+//    }
     
     if (_last_locus_id >= locus_id)
         return shared_ptr<const AbundanceGroup>(); // we already processed this one
