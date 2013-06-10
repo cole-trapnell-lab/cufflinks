@@ -1546,7 +1546,7 @@ int main(int argc, char** argv)
     init_dispersion_method_table();
     init_lib_norm_method_table();
     
-    min_isoform_fraction = 1e-5;
+    min_isoform_fraction = 0;
     
 	int parse_ret = parse_options(argc,argv);
     if (parse_ret)
