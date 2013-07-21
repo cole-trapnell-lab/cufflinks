@@ -798,7 +798,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
     
 	vector<shared_ptr<Abundance> > new_ab;
     
-	vector<vector<double> > new_fpkm_samples(_fpkm_samples.size(), vector<double>(num_kept, 0));
+	//vector<vector<double> > new_fpkm_samples(_fpkm_samples.size(), vector<double>(num_kept, 0));
 	
     // rebuild covariance matrix and abundance vector after filtration
 	
@@ -2490,6 +2490,13 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                             continue;
                         }
                         
+                        double after_decimal = r - (long)r;
+                        //fprintf( stderr, "after decimal = %lg\n", after_decimal);
+                        if (uniform_gen() < after_decimal)
+                            r = floor(r);
+                        else
+                            r = ceil(r);
+                        
                         //double p = _abundances[j]->num_fragments() / fit_var;
                         double p = r / (r + frags);
                         
@@ -2649,7 +2656,7 @@ void AbundanceGroup::generate_fpkm_samples()
         
         for (size_t j = 0; j < sample.size(); ++j)
         {
-            double fpkm_sample = sample[j] / M;
+            double fpkm_sample =  sample[j] / M;
             
             if (_abundances[j]->effective_length() > 0)
             {
@@ -2825,12 +2832,156 @@ void AbundanceGroup::calculate_FPKM_covariance()
 
 void AbundanceGroup::calculate_conf_intervals()
 {
+    // We only really ever call this function for primary abundance groups
+    // (i.e. the transcript groups and read bundles with which we calculate
+    // transcript MLE expression levels.  Genes, TSS groups, etc get broken
+    // off of primary bundles, so we should not call this function on those
+    // secondary groups.  The group splitting code needs to manage the task
+    // of splitting up all the variout covariance matrices we're calculating
+    // here.
+	if (status() == NUMERIC_OK)
+	{
+		// This will compute the transcript level FPKM confidence intervals
+		for (size_t j = 0; j < _abundances.size(); ++j)
+		{
+            long double fpkm_var = _abundances[j]->FPKM_variance();
+            double FPKM_hi = 0.0;
+            double FPKM_lo = 0.0;
+            if (_abundances[j]->status() != NUMERIC_FAIL)
+            {
+                FPKM_hi = _abundances[j]->FPKM() + 2 * sqrt(fpkm_var);
+                FPKM_lo = max(0.0, (double)(_abundances[j]->FPKM() - 2 * sqrt(fpkm_var)));
+                if (!(FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi))
+                {
+                    //fprintf(stderr, "Error: confidence intervals are illegal! var = %Lg, fpkm = %lg, lo = %lg, hi %lg, status = %d\n", fpkm_var, _abundances[j]->FPKM(), FPKM_lo, FPKM_hi, _abundances[j]->status());
+                }
+                assert (FPKM_lo <= _abundances[j]->FPKM() && _abundances[j]->FPKM() <= FPKM_hi);
+                ConfidenceInterval conf(FPKM_lo, FPKM_hi);
+                _abundances[j]->FPKM_conf(conf);
+                //_abundances[j]->FPKM_variance(fpkm_var);
+            }
+            else
+            {
+                // we shouldn't be able to get here
+                assert(false);
+                // TODO: nothing to do here?
+            }
+		}
+		
+        // Now build a confidence interval for the whole abundance group
+		double group_fpkm = FPKM();
+		if (group_fpkm > 0.0)
+		{
+			double FPKM_hi = FPKM() + 2 * sqrt(FPKM_variance());
+			double FPKM_lo = max(0.0, FPKM() - 2 * sqrt(FPKM_variance()));
+			ConfidenceInterval conf(FPKM_lo, FPKM_hi);
+			FPKM_conf(conf);
+		}
+		else
+		{
+			_FPKM_variance = 0.0;
+			ConfidenceInterval conf(0.0, 0.0);
+			FPKM_conf(conf);
+		}
+	}
+	else
+	{
+		double sum_transfrag_FPKM_hi = 0;
+        double max_fpkm = 0.0;
+        //double min_fpkm = 1e100;
+        
+        double avg_X_g = 0.0;
+        double avg_mass_fraction = 0.0;
+        
+        int N = _abundances.size();
+        
+        vector<double> avg_mass_variances(_abundances.size(), 0.0);
+        
+        for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+             itr != _count_per_replicate.end();
+             ++itr)
+        {
+            shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+            double scaled_mass = itr->second;
+            double scaled_total_mass = rg_props->normalized_map_mass();
+            avg_X_g += scaled_mass;
+            shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
+            for (size_t j = 0; j < N; ++j)
+            {
+                double scaled_variance;
+                //scaled_variance = disperser->scale_mass_variance(scaled_mass * _abundances[j]->gamma());
+                scaled_variance = _abundances[j]->gamma() * disperser->scale_mass_variance(scaled_mass);
+                avg_mass_variances[j] += scaled_variance;
+            }
+            assert (disperser->scale_mass_variance(scaled_mass) != 0 || scaled_mass == 0);
+            
+            //assert (scaled_total_mass != 0.0);
+            avg_mass_fraction += (scaled_mass / scaled_total_mass);
+        }
+        
+        double num_replicates = _count_per_replicate.size();
+        
+        if (num_replicates)
+        {
+            avg_X_g /= num_replicates;
+            avg_mass_fraction /= num_replicates;
+            for (size_t j = 0; j < N; ++j)
+            {
+                avg_mass_variances[j] /= num_replicates;
+            }
+        }
+                
+		BOOST_FOREACH(shared_ptr<Abundance> pA, _abundances)
+		{
+			double FPKM_hi;
+			double FPKM_lo;
+			if (pA->effective_length() > 0 && avg_mass_fraction > 0)
+			{
+                double norm_frag_density = 1000000000;
+                norm_frag_density /= pA->effective_length();
+                
+                norm_frag_density *= avg_mass_fraction;
+                double fpkm_high = norm_frag_density;
+                
+                double total_mass = (num_fragments() / avg_mass_fraction);
+                double fpkm_constant = 1000000000 / pA->effective_length() / total_mass;
+                double var_fpkm = mass_variance() * (fpkm_constant * fpkm_constant);
+                
+				FPKM_hi = fpkm_high + 2 * sqrt(var_fpkm);
+				FPKM_lo = 0.0;
+				ConfidenceInterval conf(FPKM_lo, FPKM_hi);
+				assert (FPKM_lo <= pA->FPKM() && pA->FPKM() <= FPKM_hi);
+				pA->FPKM_conf(conf);
+                //pA->FPKM_variance(var_fpkm);
+				max_fpkm = max(sum_transfrag_FPKM_hi, FPKM_hi);
+			}
+			else
+			{
+				FPKM_hi = 0.0;
+				FPKM_lo = 0.0;
+				ConfidenceInterval conf(0.0, 0.0);
+				pA->FPKM_conf(conf);
+                //pA->FPKM_variance(0.0);
+			}
+            
+		}
+		// In the case of a numeric failure, the groups error bars need to be
+		// set such that
+		FPKM_conf(ConfidenceInterval(0.0, max_fpkm + 2 * sqrt(FPKM_variance())));
+	}
+}
+
+
+/*
+void AbundanceGroup::calculate_conf_intervals()
+{
     for (size_t j = 0; j < _abundances.size(); ++j)
     {
         double FPKM_hi = 0.0;
         double FPKM_lo = numeric_limits<double>::max();
         const vector<double> ab_j_samples = _abundances[j]->fpkm_samples();
         vector<pair<double, double> > fpkm_samples;
+        double target_fpkm = _abundances[j]->FPKM();
         for (size_t i = 0; i < ab_j_samples.size(); ++i)
             fpkm_samples.push_back(make_pair(abs(ab_j_samples[i] - _abundances[j]->FPKM()), ab_j_samples[i]));
         
@@ -2844,7 +2995,15 @@ void AbundanceGroup::calculate_conf_intervals()
                 FPKM_hi = fpkm_samples[i].second;
         }
         
+        if (fpkm_samples.size() > 0 && FPKM_lo > target_fpkm)
+        {
+            fprintf(stderr, "Warning: transcript confidence interval lower bound is > FPKM\n");
+        }
         
+        if (fpkm_samples.size() > 0 && FPKM_hi < target_fpkm)
+        {
+            fprintf(stderr, "Warning: transcript confidence interval upper bound is < FPKM\n");
+        }
         
         ConfidenceInterval conf(FPKM_lo, FPKM_hi);
         _abundances[j]->FPKM_conf(conf);
@@ -2852,7 +3011,7 @@ void AbundanceGroup::calculate_conf_intervals()
     
     double FPKM_hi = 0.0;
     double FPKM_lo = numeric_limits<double>::max();
-    const vector<double> ab_j_samples = _fpkm_samples;
+    const vector<double>& ab_j_samples = _fpkm_samples;
     vector<pair<double, double> > fpkm_samples;
     for (size_t i = 0; i < ab_j_samples.size(); ++i)
         fpkm_samples.push_back(make_pair(abs(ab_j_samples[i] - FPKM()), ab_j_samples[i]));
@@ -2867,12 +3026,25 @@ void AbundanceGroup::calculate_conf_intervals()
             FPKM_hi = fpkm_samples[i].second;
     }
     
+    double target_fpkm = FPKM();
+    
+    if (fpkm_samples.size() > 0 && FPKM_lo > target_fpkm)
+    {
+        fprintf(stderr, "Warning: group confidence interval lower bound is > FPKM\n");
+    }
+    
+    if (fpkm_samples.size() > 0 && FPKM_hi < target_fpkm)
+    {
+        fprintf(stderr, "Warning: group confidence interval upper bound is < FPKM\n");
+    }
+    
     ConfidenceInterval conf(FPKM_lo, FPKM_hi);
     FPKM_conf(conf);
     
     return;
 }
 
+*/
 void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 															  vector<shared_ptr<Abundance> >& transcripts,
 															  vector<shared_ptr<Abundance> >& mapped_transcripts)

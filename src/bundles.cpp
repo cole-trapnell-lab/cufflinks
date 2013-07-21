@@ -520,6 +520,7 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
         }
     }
     
+    /*
     // Merge ref scaffolds
     indices = vector<size_t>(in_bundles.size(), 0);
     while(true)
@@ -549,7 +550,23 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
             out_bundle.add_ref_scaffold(next_scaff);
         indices[next_bundle]++;
     }
-	
+	*/
+    
+    for (size_t i = 0; i < in_bundles.size(); ++i)
+    {
+        for (size_t j = 0; j < in_bundles[i]->ref_scaffolds().size(); ++j)
+        {
+            out_bundle.add_ref_scaffold(in_bundles[i]->ref_scaffolds()[j]);
+        }
+    }
+    
+    sort(out_bundle._ref_scaffs.begin(), out_bundle._ref_scaffs.end(), scaff_lt_rt_oplt_sp);
+    vector<shared_ptr<Scaffold> >::iterator new_end = unique(out_bundle._ref_scaffs.begin(),
+                                                             out_bundle._ref_scaffs.end(),
+                                                             StructurallyEqualScaffolds());
+    out_bundle._ref_scaffs.erase(new_end, out_bundle._ref_scaffs.end());
+    vector<shared_ptr<Scaffold> >(out_bundle._ref_scaffs).swap(out_bundle._ref_scaffs);
+    
     out_bundle.finalize(true); // true means everything is already sorted, etc.
     out_bundle._num_replicates = (int)in_bundles.size();
 }
@@ -862,15 +879,10 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 	
 	bundle.add_ref_scaffold(*next_ref_scaff);
     
-//    if (*next_ref_scaff && (*next_ref_scaff)->annotated_gene_id() == "XLOC_009372")
-//    {
-//        int a = 5;
-//    }
-    
 	++next_ref_scaff;
     
 	_expand_by_refs(bundle);
-	
+    
 	// The most recent RefID and position we've seen in the hit stream
 	RefID last_hit_ref_id_seen = 0;
 	int last_hit_pos_seen = 0;
@@ -2045,7 +2057,12 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
             bundle.add_raw_mass(total_mass);
             bundle.compatible_mass(compatible_mass);
             
-            fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
+            //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
+            if (bundle.ref_scaffolds().size() != ab->abundances().size())
+            {
+                fprintf (stderr, "Error: reconstituted expression bundle does not match GTF\n");
+                exit(1);
+            }
         }
         else
         {

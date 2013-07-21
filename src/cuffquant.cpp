@@ -778,10 +778,6 @@ bool AbundanceRecorder::all_samples_reported_in(vector<shared_ptr<SampleAbundanc
     return true;
 }
 
-#if ENABLE_THREADS
-mutex test_storage_lock; // don't modify the above struct without locking here
-#endif
-
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself.
@@ -807,10 +803,6 @@ void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<Sam
             assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
         }
     }
-    
-#if ENABLE_THREADS
-	test_storage_lock.lock();
-#endif
     
     vector<AbundanceGroup> lightweight_ab_groups;
     
@@ -854,11 +846,6 @@ void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<Sam
         fprintf (stderr, "Error: locus %d is already recorded!\n", locus_id);
     }
     _ab_group_tracking_table[locus_id] = lightweight_ab_groups;
-    
-#if ENABLE_THREADS
-    test_storage_lock.unlock();
-#endif
-    
 }
 
 void AbundanceRecorder::record_finished_loci()
@@ -880,11 +867,6 @@ void AbundanceRecorder::record_finished_loci()
                 if (_p_bar)
                 {
                     verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
-//                    if (itr->second.front()->locus_tag == "chr13_random:31679-57600")
-//                    {
-//                        //int a = 5;
-//                        fprintf(stderr, "XXXX\n");
-//                    }
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
             }
@@ -930,6 +912,7 @@ void sample_worker(const RefSequenceTable& rt,
     recorder->register_locus(bundle->id());
     
     abundance->locus_tag = locus_tag;
+
 //    if (rt.get_name(bundle->ref_id()) == "chr13_random")
 //    {
 //        int a = 5;
