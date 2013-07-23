@@ -2484,18 +2484,18 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
                         double over_disp_scale = fit_var - frags;
                         r /= over_disp_scale;
                         
-                        if (r == 0)
-                        {
-                            generated_and_assigned_counts(j) = 0;
-                            continue;
-                        }
-                        
                         double after_decimal = r - (long)r;
                         //fprintf( stderr, "after decimal = %lg\n", after_decimal);
                         if (uniform_gen() < after_decimal)
                             r = floor(r);
                         else
                             r = ceil(r);
+                        
+                        if (r == 0)
+                        {
+                            generated_and_assigned_counts(j) = 0;
+                            continue;
+                        }
                         
                         //double p = _abundances[j]->num_fragments() / fit_var;
                         double p = r / (r + frags);
