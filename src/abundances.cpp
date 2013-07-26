@@ -1972,22 +1972,22 @@ void AbundanceGroup::calculate_abundance_group_variance(const vector<shared_ptr<
         
     }
     
-    //cerr << _count_covariance << endl;
-    for (size_t i = 0; i < _abundances.size(); ++i)
-    {
-        for (size_t j = 0; j < _abundances.size(); ++j)
-        {
-            if (i != j)
-            {
-                assert(!isinf(_fpkm_covariance(i,j)) && !isnan(_fpkm_covariance(i,j)));
-                if (_abundances[i]->transfrag()->contains(*_abundances[j]->transfrag()) &&
-                    Scaffold::compatible(*_abundances[i]->transfrag(),*_abundances[j]->transfrag()))
-                {
-                    _abundances[j]->status(NUMERIC_LOW_DATA);
-                }
-            }
-        }
-    }
+//    //cerr << _count_covariance << endl;
+//    for (size_t i = 0; i < _abundances.size(); ++i)
+//    {
+//        for (size_t j = 0; j < _abundances.size(); ++j)
+//        {
+//            if (i != j)
+//            {
+//                assert(!isinf(_fpkm_covariance(i,j)) && !isnan(_fpkm_covariance(i,j)));
+//                if (_abundances[i]->transfrag()->contains(*_abundances[j]->transfrag()) &&
+//                    Scaffold::compatible(*_abundances[i]->transfrag(),*_abundances[j]->transfrag()))
+//                {
+//                    _abundances[j]->status(NUMERIC_LOW_DATA);
+//                }
+//            }
+//        }
+//    }
     
     //assert (FPKM() == 0 || _assigned_count_samples.size() > 0);
     
@@ -2074,6 +2074,7 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
             fpr[itr->first] = itr->second->abundances()[i]->FPKM();
             spr[itr->first] = itr->second->abundances()[i]->status();
             
+            /*
             if (itr->second->abundances()[i]->status() == NUMERIC_OK)
             {
                 avg_fpkm += itr->second->abundances()[i]->FPKM() / (double)status_table[NUMERIC_OK];
@@ -2082,6 +2083,13 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
                 avg_mass_variance += itr->second->abundances()[i]->mass_variance() / (double)status_table[NUMERIC_OK];
                 avg_effective_length += itr->second->abundances()[i]->effective_length() / (double)status_table[NUMERIC_OK];
             }
+            */
+            avg_fpkm += itr->second->abundances()[i]->FPKM() / (double)ab_group_per_replicate.size();
+            avg_num_frags += itr->second->abundances()[i]->num_fragments() / (double)ab_group_per_replicate.size();
+            avg_gamma += itr->second->abundances()[i]->gamma() / (double)ab_group_per_replicate.size();
+            avg_mass_variance += itr->second->abundances()[i]->mass_variance() / (double)ab_group_per_replicate.size();
+            avg_effective_length += itr->second->abundances()[i]->effective_length() / (double)ab_group_per_replicate.size();
+            
         }
         
         _abundances[i]->FPKM(avg_fpkm);
@@ -2103,14 +2111,14 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
             {
                 _abundances[i]->status(NUMERIC_LOW_DATA);
             }
-            if (status_table[NUMERIC_HI_DATA] >= status_table[NUMERIC_FAIL])
+            else if (status_table[NUMERIC_HI_DATA] >= status_table[NUMERIC_FAIL])
             {
                 _abundances[i]->status(NUMERIC_HI_DATA);
             }
-            if (status_table[NUMERIC_HI_DATA] >= status_table[NUMERIC_LOW_DATA]) // not sure this ever happens in practice
-            {
-                _abundances[i]->status(NUMERIC_FAIL);
-            }
+//            else if (status_table[NUMERIC_HI_DATA] >= status_table[NUMERIC_LOW_DATA]) // not sure this ever happens in practice
+//            {
+//                _abundances[i]->status(NUMERIC_FAIL);
+//            }
             else
             {
                 _abundances[i]->status(NUMERIC_FAIL);
@@ -5032,6 +5040,11 @@ void merge_precomputed_expression_worker(const string& locus_tag,
     map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> > unnormalized_ab_group_per_replicate;
     map<shared_ptr<const ReadGroupProperties>, shared_ptr<AbundanceGroup> > normalized_ab_group_per_replicate;
     map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> > const_ab_group_per_replicate;
+    
+    if (locus_tag == "chr6:31126318-31148508")
+    {
+        int a = 4;
+    }
     
     set<shared_ptr<const ReadGroupProperties> > rg_props;
     for (size_t i = 0; i < expression_factories.size(); ++i)
