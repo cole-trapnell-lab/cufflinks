@@ -4811,14 +4811,14 @@ void tss_analysis(const string& locus_tag, SampleAbundances& sample)
     {
         ab_group.locus_tag(locus_tag);
         set<string> gene_ids = ab_group.gene_id();
-        //            if (gene_ids.size() > 1)
-        //            {
-        //                BOOST_FOREACH (string st, gene_ids)
-        //                {
-        //                    fprintf(stderr, "%s\n", st.c_str());
-        //                }
-        //                ab_group.gene_id();
-        //            }
+        if (gene_ids.size() > 1)
+        {
+            BOOST_FOREACH (string st, gene_ids)
+            {
+                fprintf(stderr, "%s\n", st.c_str());
+            }
+            ab_group.gene_id();
+        }
         assert (gene_ids.size() == 1);
         ab_group.description(*(gene_ids.begin()));
     }
