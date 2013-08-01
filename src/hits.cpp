@@ -542,7 +542,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		}
 		else
 		{
-			fprintf(stderr, "Trans-spliced mates are not currently supported, skipping\n");
+			//fprintf(stderr, "Trans-spliced mates are not currently supported, skipping\n");
 			return false;
 		}
 	}
