@@ -4086,8 +4086,6 @@ AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared
             log_conv_factors = vector<double>(nr_alignments.size(), 0);
         }
         
-        //rep_hit_counts.push_back(count_per_replicate.find(*itr)->second);
-        
         ab_group->calculate_abundance_for_replicate(non_equiv_alignments, false);
         
         //fprintf (stderr, "FPKM = %lg\n", ab_group->FPKM());
