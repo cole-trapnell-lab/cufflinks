@@ -746,6 +746,13 @@ void Scaffold::merge(const Scaffold& lhs,
         double avg_fpkm = lhs.fpkm() + rhs.fpkm();
         avg_fpkm /= 2;
         merged.fpkm(avg_fpkm);
+		//allele
+		double avg_paternal_fpkm = lhs.paternal_fpkm() + rhs.paternal_fpkm();
+		double avg_maternal_fpkm = lhs.maternal_fpkm() + rhs.maternal_fpkm();
+        avg_paternal_fpkm /= 2;
+		avg_maternal_fpkm /= 2;
+        merged.paternal_fpkm(avg_paternal_fpkm);
+		merged.maternal_fpkm(avg_maternal_fpkm);
     }
 }
 
@@ -819,12 +826,23 @@ void Scaffold::merge(const vector<Scaffold>& s,
     if (library_type == "transfrags")
     {
         double avg_fpkm = 0.0;
+		//allele
+		double avg_paternal_fpkm = 0.0;
+		double avg_maternal_fpkm = 0.0;	
         BOOST_FOREACH (const Scaffold& sc, s)
         {
             avg_fpkm += sc.fpkm();
+			//allele
+			avg_paternal_fpkm += sc.paternal_fpkm();
+			avg_maternal_fpkm += sc.maternal_fpkm();
         }
         avg_fpkm /= s.size();
         merged.fpkm(avg_fpkm);
+		//allele
+		avg_paternal_fpkm /= s.size();
+		avg_maternal_fpkm /= s.size();
+        merged.paternal_fpkm(avg_paternal_fpkm);
+		merged.maternal_fpkm(avg_maternal_fpkm);
     }
 }
 
@@ -1782,6 +1800,24 @@ bool Scaffold::hits_support_introns(set<AugmentedCuffOp>& hit_introns) const
     }
     
     return includes(hit_introns.begin(),hit_introns.end(), scaffold_introns.begin(), scaffold_introns.end());
+}
+
+//allele
+bool Scaffold::is_allele_informative()
+{
+	bool result = false;
+	for (vector<const MateHit*>::iterator mitr = _mates_in_scaff.begin();
+		 mitr != _mates_in_scaff.end();
+		 ++mitr)
+	{
+		const MateHit& m = **mitr;
+		if(m.allele() != ALLELE_UNKNOWN)
+		{
+			result = true;
+			break;
+		}
+	}
+	return result;
 }
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs)

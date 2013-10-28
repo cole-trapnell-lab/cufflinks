@@ -104,6 +104,8 @@ static struct option long_options[] = {
 {"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
 {"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
 {"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
+//allele
+{"allele-specific-differential",  no_argument,     0,            OPT_ALLELE_SPECIFIC_DIFFERENTIAL},	
 //{"analytic-diff",           no_argument,	 		 0,	         OPT_ANALYTIC_DIFF},
 {"no-diff",                 no_argument,	 		 0,	         OPT_NO_DIFF},
 {"num-frag-count-draws",	required_argument,		 0,			 OPT_NUM_FRAG_COUNT_DRAWS},
@@ -162,6 +164,8 @@ void print_usage()
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
     fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
+	//allele
+	fprintf(stderr, "  --allele-specific-differential   Test allele specific isoform differential expression [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
@@ -358,6 +362,12 @@ int parse_options(int argc, char** argv)
             case OPT_USE_TOTAL_MASS:
             {
                 use_total_mass = true;
+                break;
+            }
+			//allele
+			case OPT_ALLELE_SPECIFIC_DIFFERENTIAL:
+            {
+                allele_specific_differential = true;
                 break;
             }
             case OPT_USE_FISHER_COVARIANCE:
@@ -627,11 +637,163 @@ void print_tests(FILE* fout,
             status = "HIDATA";
         else if (test.test_status == NOTEST)
             status = "NOTEST";
-        else
+        else if (test.test_status == FAIL)
             status = "FAIL";
+		else
+			status = "NOALLELETEST";
         
         fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s", status, r1, r2, d, t, p, q, sig);
         fprintf(fout, "\n");
+	}
+}
+
+//allele
+void print_tests(FILE* fout,
+                 const char* sample_1_label,
+                 const char* sample_2_label,
+				 const SampleDiffs& paternal_paternal_de_tests,
+				 const SampleDiffs& paternal_maternal_de_tests,
+				 const SampleDiffs& maternal_paternal_de_tests,
+				 const SampleDiffs& maternal_maternal_de_tests)
+{
+	SampleDiffs::const_iterator pp_itr,pm_itr,mp_itr,mm_itr;
+	for (pp_itr = paternal_paternal_de_tests.begin(), pm_itr = paternal_maternal_de_tests.begin(), mp_itr = maternal_paternal_de_tests.begin(), mm_itr = maternal_maternal_de_tests.begin();
+		 (pp_itr != paternal_paternal_de_tests.end() && pm_itr != paternal_maternal_de_tests.end() && mp_itr != maternal_paternal_de_tests.end() && mm_itr != maternal_maternal_de_tests.end());
+		 ++pp_itr,++pm_itr,++mp_itr,++mm_itr)
+	{
+		assert(pp_itr->first.c_str() == pm_itr->first.c_str());
+		assert(pp_itr->first.c_str() == mp_itr->first.c_str());
+		assert(pp_itr->first.c_str() == mm_itr->first.c_str());
+		
+		const SampleDifference& paternal_paternal_test = pp_itr->second;
+		const SampleDifference& paternal_maternal_test = pm_itr->second;
+		const SampleDifference& maternal_paternal_test = mp_itr->second;
+		const SampleDifference& maternal_maternal_test = mm_itr->second;
+        
+		assert(paternal_paternal_test.meta_data->locus_desc.c_str() == paternal_maternal_test.meta_data->locus_desc.c_str());
+		assert(paternal_paternal_test.meta_data->locus_desc.c_str() == maternal_paternal_test.meta_data->locus_desc.c_str());
+		assert(paternal_paternal_test.meta_data->locus_desc.c_str() == maternal_maternal_test.meta_data->locus_desc.c_str());
+		
+        string all_gene_ids = cat_strings(paternal_paternal_test.meta_data->gene_ids);
+		if (all_gene_ids == "")
+			all_gene_ids = "-";
+        
+		string all_gene_names = cat_strings(paternal_paternal_test.meta_data->gene_names);
+		if (all_gene_names == "")
+			all_gene_names = "-";
+		
+		string all_protein_ids = cat_strings(paternal_paternal_test.meta_data->protein_ids);	
+		if (all_protein_ids == "")
+			all_protein_ids = "-";
+		
+		fprintf(fout, "%s\t%s\t%s\t%s\t%s\t%s", 
+                pp_itr->first.c_str(), 
+                all_gene_ids.c_str(),
+                all_gene_names.c_str(), 
+                paternal_paternal_test.meta_data->locus_desc.c_str(),
+                sample_1_label,
+                sample_2_label);
+		
+        double paternal_paternal_t = paternal_paternal_test.test_stat;
+		double paternal_maternal_t = paternal_maternal_test.test_stat;
+		double maternal_paternal_t = maternal_paternal_test.test_stat;
+		double maternal_maternal_t = maternal_maternal_test.test_stat;
+        double paternal_paternal_r1 = paternal_paternal_test.value_1;
+		double paternal_maternal_r1 = paternal_maternal_test.value_1;
+		double maternal_paternal_r1 = maternal_paternal_test.value_1;
+		double maternal_maternal_r1 = maternal_maternal_test.value_1;
+        double paternal_paternal_r2 = paternal_paternal_test.value_2;
+		double paternal_maternal_r2 = paternal_maternal_test.value_2;
+		double maternal_paternal_r2 = maternal_paternal_test.value_2;
+		double maternal_maternal_r2 = maternal_maternal_test.value_2;
+        double paternal_paternal_d = paternal_paternal_test.differential;
+		double paternal_maternal_d = paternal_maternal_test.differential;
+		double maternal_paternal_d = maternal_paternal_test.differential;
+		double maternal_maternal_d = maternal_maternal_test.differential;
+        double paternal_paternal_p = paternal_paternal_test.p_value;
+		double paternal_maternal_p = paternal_maternal_test.p_value;
+		double maternal_paternal_p = maternal_paternal_test.p_value;
+		double maternal_maternal_p = maternal_maternal_test.p_value;
+        double paternal_paternal_q = paternal_paternal_test.corrected_p;
+		double paternal_maternal_q = paternal_maternal_test.corrected_p;
+		double maternal_paternal_q = maternal_paternal_test.corrected_p;
+		double maternal_maternal_q = maternal_maternal_test.corrected_p;
+        const char* paternal_paternal_sig;
+		const char* paternal_maternal_sig;
+		const char* maternal_paternal_sig;
+		const char* maternal_maternal_sig;
+        if (paternal_paternal_test.significant && paternal_paternal_test.test_status == OK)
+            paternal_paternal_sig = "yes";
+        else
+            paternal_paternal_sig = "no";
+		if (paternal_maternal_test.significant && paternal_maternal_test.test_status == OK)
+            paternal_maternal_sig = "yes";
+        else
+            paternal_maternal_sig = "no";
+        if (maternal_paternal_test.significant && maternal_paternal_test.test_status == OK)
+            maternal_paternal_sig = "yes";
+        else
+            maternal_paternal_sig = "no";
+		if (maternal_maternal_test.significant && maternal_maternal_test.test_status == OK)
+            maternal_maternal_sig = "yes";
+        else
+            maternal_maternal_sig = "no";
+        const char* paternal_paternal_status = "OK";
+		const char* paternal_maternal_status = "OK";
+		const char* maternal_paternal_status = "OK";
+		const char* maternal_maternal_status = "OK";
+        if (paternal_paternal_test.test_status == OK)
+            paternal_paternal_status = "OK";
+        else if (paternal_paternal_test.test_status == LOWDATA)
+            paternal_paternal_status = "LOWDATA";
+        else if (paternal_paternal_test.test_status == HIDATA)
+            paternal_paternal_status = "HIDATA";
+        else if (paternal_paternal_test.test_status == NOTEST)
+            paternal_paternal_status = "NOTEST";
+        else if (paternal_paternal_test.test_status == FAIL)
+            paternal_paternal_status = "FAIL";
+		else
+			paternal_paternal_status = "NOALLELETEST";
+		if (paternal_maternal_test.test_status == OK)
+            paternal_maternal_status = "OK";
+        else if (paternal_maternal_test.test_status == LOWDATA)
+            paternal_maternal_status = "LOWDATA";
+        else if (paternal_maternal_test.test_status == HIDATA)
+            paternal_maternal_status = "HIDATA";
+        else if (paternal_maternal_test.test_status == NOTEST)
+            paternal_maternal_status = "NOTEST";
+        else if (paternal_maternal_test.test_status == FAIL)
+            paternal_maternal_status = "FAIL";
+		else
+			paternal_maternal_status = "NOALLELETEST";
+        if (maternal_paternal_test.test_status == OK)
+            maternal_paternal_status = "OK";
+        else if (maternal_paternal_test.test_status == LOWDATA)
+            maternal_paternal_status = "LOWDATA";
+        else if (maternal_paternal_test.test_status == HIDATA)
+            maternal_paternal_status = "HIDATA";
+        else if (maternal_paternal_test.test_status == NOTEST)
+            maternal_paternal_status = "NOTEST";
+        else if (maternal_paternal_test.test_status == FAIL)
+            maternal_paternal_status = "FAIL";
+		else
+			maternal_paternal_status = "NOALLELETEST";
+		if (maternal_maternal_test.test_status == OK)
+            maternal_maternal_status = "OK";
+        else if (maternal_maternal_test.test_status == LOWDATA)
+            maternal_maternal_status = "LOWDATA";
+        else if (maternal_maternal_test.test_status == HIDATA)
+            maternal_maternal_status = "HIDATA";
+        else if (maternal_maternal_test.test_status == NOTEST)
+            maternal_maternal_status = "NOTEST";
+        else if (maternal_maternal_test.test_status == FAIL)
+            maternal_maternal_status = "FAIL";
+		else
+			maternal_maternal_status = "NOALLELETEST";
+        fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s\t", paternal_paternal_status, paternal_paternal_r1, paternal_paternal_r2, paternal_paternal_d, paternal_paternal_t, paternal_paternal_p, paternal_paternal_q, paternal_paternal_sig);
+		fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s\t", paternal_maternal_status, paternal_maternal_r1, paternal_maternal_r2, paternal_maternal_d, paternal_maternal_t, paternal_maternal_p, paternal_maternal_q, paternal_maternal_sig);
+		fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s\t", maternal_paternal_status, maternal_paternal_r1, maternal_paternal_r2, maternal_paternal_d, maternal_paternal_t, maternal_paternal_p, maternal_paternal_q, maternal_paternal_sig);
+		fprintf(fout, "\t%s\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%s\n", maternal_maternal_status, maternal_maternal_r1, maternal_maternal_r2, maternal_maternal_d, maternal_maternal_t, maternal_maternal_p, maternal_maternal_q, maternal_maternal_sig);
 	}
 }
 
@@ -726,6 +888,139 @@ void print_FPKM_tracking(FILE* fout,
 	}
 }
 
+//allele
+void print_allele_FPKM_tracking(FILE* fout, 
+						 const FPKMTrackingTable& tracking)
+{
+	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tpaternal_coverage\tmaternal_coverage");
+	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
+	if (first_itr != tracking.end())
+	{
+		const FPKMTracking& track = first_itr->second;
+		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
+		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
+		assert(paternal_fpkms.size() == maternal_fpkms.size());
+		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
+		{
+			fprintf(fout, "\t%s_paternal_FPKM\t%s_paternal_conf_lo\t%s_paternal_conf_hi\t%s_paternal_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+			fprintf(fout, "\t%s_maternal_FPKM\t%s_maternal_conf_lo\t%s_maternal_conf_hi\t%s_maternal_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+		}
+	}
+	fprintf(fout, "\n");
+	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+	{
+		const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
+		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
+		
+        AbundanceStatus paternal_status = NUMERIC_OK;
+		AbundanceStatus maternal_status = NUMERIC_OK;
+		BOOST_FOREACH (const FPKMContext& paternal_c, paternal_fpkms)
+		{
+            if (paternal_c.status == NUMERIC_FAIL)
+                paternal_status = NUMERIC_FAIL;
+        }
+		BOOST_FOREACH (const FPKMContext& maternal_c, maternal_fpkms)
+        {
+            if (maternal_c.status == NUMERIC_FAIL)
+                maternal_status = NUMERIC_FAIL;
+        }
+        
+        string all_gene_ids = cat_strings(track.gene_ids);
+		if (all_gene_ids == "")
+			all_gene_ids = "-";
+        
+		string all_gene_names = cat_strings(track.gene_names);
+		if (all_gene_names == "")
+			all_gene_names = "-";
+		
+		string all_tss_ids = cat_strings(track.tss_ids);
+		if (all_tss_ids == "")
+			all_tss_ids = "-";
+		
+        char length_buff[33] = "-";
+        if (track.length)
+            sprintf(length_buff, "%d", track.length);
+        
+        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
+                description.c_str(),
+                track.classcode ? track.classcode : '-',
+                track.ref_match.c_str(),
+                all_gene_ids.c_str(),
+                all_gene_names.c_str(), 
+                all_tss_ids.c_str(),
+                track.locus_tag.c_str(),
+                length_buff,
+                "-",
+				"-");
+       		
+		assert(paternal_fpkms.size() == maternal_fpkms.size());
+		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
+		{
+			double paternal_fpkm = paternal_fpkms[i].FPKM;
+			//double paternal_std_dev = sqrt(paternal_fpkms[i].FPKM_variance);
+			double paternal_fpkm_conf_hi = paternal_fpkms[i].FPKM_conf_hi;
+			double paternal_fpkm_conf_lo = paternal_fpkms[i].FPKM_conf_lo;
+            const char* paternal_status_str = "OK";
+            
+            if (paternal_fpkms[i].status == NUMERIC_OK)
+            {
+                paternal_status_str = "OK";
+            }
+            else if (paternal_fpkms[i].status == NUMERIC_FAIL)
+            {
+                paternal_status_str = "FAIL";
+            }
+            else if (paternal_fpkms[i].status == NUMERIC_LOW_DATA)
+            {
+                paternal_status_str = "LOWDATA";
+            }
+            else if (paternal_fpkms[i].status == NUMERIC_HI_DATA)
+            {
+                paternal_status_str = "HIDATA";
+            }
+            else
+            {
+                assert(false);
+            }
+            
+			fprintf(fout, "\t%lg\t%lg\t%lg\t%s", paternal_fpkm, paternal_fpkm_conf_lo, paternal_fpkm_conf_hi, paternal_status_str);
+			
+			double maternal_fpkm = maternal_fpkms[i].FPKM;
+			//double maternal_std_dev = sqrt(maternal_fpkms[i].FPKM_variance);
+			double maternal_fpkm_conf_hi = maternal_fpkms[i].FPKM_conf_hi;
+			double maternal_fpkm_conf_lo = maternal_fpkms[i].FPKM_conf_lo;
+            const char* maternal_status_str = "OK";
+            
+            if (maternal_fpkms[i].status == NUMERIC_OK)
+            {
+                maternal_status_str = "OK";
+            }
+            else if (maternal_fpkms[i].status == NUMERIC_FAIL)
+            {
+                maternal_status_str = "FAIL";
+            }
+            else if (maternal_fpkms[i].status == NUMERIC_LOW_DATA)
+            {
+                maternal_status_str = "LOWDATA";
+            }
+            else if (maternal_fpkms[i].status == NUMERIC_HI_DATA)
+            {
+                maternal_status_str = "HIDATA";
+            }
+            else
+            {
+                assert(false);
+            }
+            
+			fprintf(fout, "\t%lg\t%lg\t%lg\t%s", maternal_fpkm, maternal_fpkm_conf_lo, maternal_fpkm_conf_hi, maternal_status_str);
+		}
+		
+		fprintf(fout, "\n");
+	}
+}
+
 void print_count_tracking(FILE* fout, 
 						  const FPKMTrackingTable& tracking)
 {
@@ -793,6 +1088,114 @@ void print_count_tracking(FILE* fout,
 	}
 }
 
+//allele
+void print_allele_count_tracking(FILE* fout, 
+						  const FPKMTrackingTable& tracking)
+{
+	fprintf(fout,"tracking_id");
+	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
+	if (first_itr != tracking.end())
+	{
+		const FPKMTracking& track = first_itr->second;
+		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
+		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
+		assert(paternal_fpkms.size() == maternal_fpkms.size());
+		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
+		{
+			fprintf(fout, "\t%s_paternal_count\t%s_paternal_count_variance\t%s_paternal_count_uncertainty_var\t%s_paternal_count_dispersion_var\t%s_paternal_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+			fprintf(fout, "\t%s_maternal_count\t%s_maternal_count_variance\t%s_maternal_count_uncertainty_var\t%s_maternal_count_dispersion_var\t%s_maternal_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
+		}
+	}
+	fprintf(fout, "\n");
+	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+	{
+		const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
+		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
+		
+        AbundanceStatus paternal_status = NUMERIC_OK;
+		BOOST_FOREACH (const FPKMContext& paternal_c, paternal_fpkms)
+        {
+            if (paternal_c.status == NUMERIC_FAIL)
+                paternal_status = NUMERIC_FAIL;
+        }
+		AbundanceStatus maternal_status = NUMERIC_OK;
+		BOOST_FOREACH (const FPKMContext& maternal_c, maternal_fpkms)
+        {
+            if (maternal_c.status == NUMERIC_FAIL)
+                maternal_status = NUMERIC_FAIL;
+        }
+        
+        fprintf(fout, "%s", 
+                description.c_str());
+        
+		assert(paternal_fpkms.size() == maternal_fpkms.size());
+		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
+		{
+            const char* paternal_status_str = "OK";
+            
+            if (paternal_fpkms[i].status == NUMERIC_OK)
+            {
+                paternal_status_str = "OK";
+            }
+            else if (paternal_fpkms[i].status == NUMERIC_FAIL)
+            {
+                paternal_status_str = "FAIL";
+            }
+            else if (paternal_fpkms[i].status == NUMERIC_LOW_DATA)
+            {
+                paternal_status_str = "LOWDATA";
+            }
+            else if (paternal_fpkms[i].status == NUMERIC_HI_DATA)
+            {
+                paternal_status_str = "HIDATA";
+            }
+            else
+            {
+                assert(false);
+            }
+            
+            double paternal_external_counts = paternal_fpkms[i].count_mean;
+            double paternal_external_count_var = paternal_fpkms[i].count_var;
+            double paternal_uncertainty_var = paternal_fpkms[i].count_uncertainty_var;
+            double paternal_dispersion_var = paternal_fpkms[i].count_dispersion_var;
+			fprintf(fout, "\t%lg\t%lg\t%lg\t%lg\t%s", paternal_external_counts, paternal_external_count_var, paternal_uncertainty_var, paternal_dispersion_var, paternal_status_str);
+			
+			const char* maternal_status_str = "OK";
+            
+            if (maternal_fpkms[i].status == NUMERIC_OK)
+            {
+                maternal_status_str = "OK";
+            }
+            else if (maternal_fpkms[i].status == NUMERIC_FAIL)
+            {
+                maternal_status_str = "FAIL";
+            }
+            else if (maternal_fpkms[i].status == NUMERIC_LOW_DATA)
+            {
+                maternal_status_str = "LOWDATA";
+            }
+            else if (maternal_fpkms[i].status == NUMERIC_HI_DATA)
+            {
+                maternal_status_str = "HIDATA";
+            }
+            else
+            {
+                assert(false);
+            }
+            
+            double maternal_external_counts = maternal_fpkms[i].count_mean;
+            double maternal_external_count_var = maternal_fpkms[i].count_var;
+            double maternal_uncertainty_var = maternal_fpkms[i].count_uncertainty_var;
+            double maternal_dispersion_var = maternal_fpkms[i].count_dispersion_var;
+			fprintf(fout, "\t%lg\t%lg\t%lg\t%lg\t%s", maternal_external_counts, maternal_external_count_var, maternal_uncertainty_var, maternal_dispersion_var, maternal_status_str);
+		}
+		
+		fprintf(fout, "\n");
+	}
+}
+
 void print_read_group_tracking(FILE* fout, 
                                const FPKMTrackingTable& tracking)
 {
@@ -852,6 +1255,113 @@ void print_read_group_tracking(FILE* fout,
                         FPKM,
                         "-",
                         status_str);
+            }
+		}
+	}
+}
+
+//allele
+void print_allele_read_group_tracking(FILE* fout, 
+                               const FPKMTrackingTable& tracking)
+{
+	fprintf(fout,"tracking_id\tcondition\treplicate\tpaternal_raw_frags\tpaternal_internal_scaled_frags\tpaternal_external_scaled_frags\tpaternal_FPKM\tpaternal_effective_length\tpaternal_status\tmaternal_raw_frags\tmaternal_internal_scaled_frags\tmaternal_external_scaled_frags\tmaternal_FPKM\tmaternal_effective_length\tmaternal_status");
+	
+	fprintf(fout, "\n");
+	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+	{
+		const string& description = itr->first;
+		const FPKMTracking& track = itr->second;
+		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
+		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
+		assert(paternal_fpkms.size() == maternal_fpkms.size());
+		
+		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
+		{
+			assert(paternal_fpkms[j].tracking_info_per_rep.size() == maternal_fpkms[j].tracking_info_per_rep.size());
+			for (size_t j = 0; j != paternal_fpkms[i].tracking_info_per_rep.size();++j)
+            { 
+				double paternal_FPKM = paternal_fpkms[i].tracking_info_per_rep[j].fpkm;
+				double maternal_FPKM = maternal_fpkms[i].tracking_info_per_rep[j].fpkm;
+                double paternal_internal_count = paternal_fpkms[i].tracking_info_per_rep[j].count;
+				double maternal_internal_count = maternal_fpkms[i].tracking_info_per_rep[j].count;
+                double paternal_external_count = paternal_internal_count / paternal_fpkms[i].tracking_info_per_rep[j].rg_props->external_scale_factor();
+				double maternal_external_count = maternal_internal_count / maternal_fpkms[i].tracking_info_per_rep[j].rg_props->external_scale_factor();
+                double paternal_raw_count = paternal_internal_count * paternal_fpkms[i].tracking_info_per_rep[j].rg_props->internal_scale_factor();
+				double maternal_raw_count = maternal_internal_count * maternal_fpkms[i].tracking_info_per_rep[j].rg_props->internal_scale_factor();
+                const  string& paternal_condition_name = paternal_fpkms[i].tracking_info_per_rep[j].rg_props->condition_name();
+				const  string& maternal_condition_name = maternal_fpkms[i].tracking_info_per_rep[j].rg_props->condition_name();
+				assert(paternal_condition_name == maternal_condition_name);
+				AbundanceStatus paternal_status = paternal_fpkms[i].tracking_info_per_rep[j].status;
+				AbundanceStatus maternal_status = maternal_fpkms[i].tracking_info_per_rep[j].status;
+                
+                int paternal_rep_num = paternal_fpkms[i].tracking_info_per_rep[j].rg_props->replicate_num();
+				int maternal_rep_num = maternal_fpkms[i].tracking_info_per_rep[j].rg_props->replicate_num();
+                assert(paternal_rep_num == maternal_rep_num);
+				const char* paternal_status_str = "OK";
+				const char* maternal_status_str = "OK";
+                
+                if (paternal_status == NUMERIC_OK)
+                {
+                    paternal_status_str = "OK";
+                }
+                else if (paternal_status == NUMERIC_FAIL)
+                {
+                    paternal_status_str = "FAIL";
+                }
+                else if (paternal_status == NUMERIC_LOW_DATA)
+                {
+                    paternal_status_str = "LOWDATA";
+                }
+                else if (paternal_status == NUMERIC_HI_DATA)
+                {
+                    paternal_status_str = "HIDATA";
+                }
+                else
+                {
+                    assert(false);
+                }
+				
+				if (maternal_status == NUMERIC_OK)
+                {
+                    maternal_status_str = "OK";
+                }
+                else if (maternal_status == NUMERIC_FAIL)
+                {
+                    maternal_status_str = "FAIL";
+                }
+                else if (maternal_status == NUMERIC_LOW_DATA)
+                {
+                    maternal_status_str = "LOWDATA";
+                }
+                else if (maternal_status == NUMERIC_HI_DATA)
+                {
+                    maternal_status_str = "HIDATA";
+                }
+                else
+                {
+                    assert(false);
+                }
+                
+                fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\t",
+                        description.c_str(),
+                        paternal_condition_name.c_str(),
+                        paternal_rep_num,
+                        paternal_raw_count,
+                        paternal_internal_count,
+                        paternal_external_count,
+                        paternal_FPKM,
+                        "-",
+                        paternal_status_str);
+				fprintf(fout, "%s\t%s\t%d\t%lg\t%lg\t%lg\t%lg\t%s\t%s\n",
+                        description.c_str(),
+                        maternal_condition_name.c_str(),
+                        maternal_rep_num,
+                        maternal_raw_count,
+                        maternal_internal_count,
+                        maternal_external_count,
+                        maternal_FPKM,
+                        "-",
+                        maternal_status_str);
             }
 		}
 	}
@@ -1016,14 +1526,89 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 
 
 shared_ptr<TestLauncher> test_launcher;
+//allele
+shared_ptr<AlleleTestLauncher> allele_test_launcher;
 
 bool quantitate_next_locus(const RefSequenceTable& rt,
                            vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
                            shared_ptr<TestLauncher> launcher)
 {
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
+		
+	for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
-        shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
+		shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
+		
+		
+#if ENABLE_THREADS					
+        while(1)
+        {
+            locus_thread_pool_lock.lock();
+            if (locus_curr_threads < locus_num_threads)
+            {
+                break;
+            }
+            
+            locus_thread_pool_lock.unlock();
+            
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            
+        }
+		
+        locus_curr_threads++;
+        locus_thread_pool_lock.unlock();
+        
+        shared_ptr<HitBundle> pBundle = shared_ptr<HitBundle>(new HitBundle());
+        bool non_empty = bundle_factories[i]->next_bundle(*pBundle);
+		if (pBundle->compatible_mass() > 0)
+        {
+			thread quantitate(sample_worker,
+                              non_empty,
+                              pBundle,
+                              boost::ref(rt),
+                              boost::ref(*(bundle_factories[i])),
+                              s_ab,
+                              i,
+                              launcher);
+        }
+        else
+        {
+			sample_worker(non_empty,
+                          pBundle,
+                          boost::ref(rt),
+                          boost::ref(*(bundle_factories[i])),
+                          s_ab,
+                          i,
+                          launcher);
+            locus_thread_pool_lock.lock();
+            locus_curr_threads--;
+            locus_thread_pool_lock.unlock();
+        }
+#else
+
+        HitBundle bundle;
+        bool non_empty = sample_factory.next_bundle(bundle);
+
+        sample_worker(non_emtpy,
+                      pBundle,
+                      boost::ref(rt),
+                      boost::ref(*(bundle_factories[i])),
+                      s_ab,
+                      i,
+                      launcher);
+#endif
+
+    }
+    return true;
+}
+
+//allele
+bool quantitate_next_locus(const RefSequenceTable& rt,
+                           vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
+                           shared_ptr<AlleleTestLauncher> launcher)
+{
+	for (size_t i = 0; i < bundle_factories.size(); ++i)
+    {
+        shared_ptr<SampleAlleleAbundances> s_ab = shared_ptr<SampleAlleleAbundances>(new SampleAlleleAbundances);
         
 #if ENABLE_THREADS					
         while(1)
@@ -1042,45 +1627,44 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
-        
-        shared_ptr<HitBundle> pBundle = shared_ptr<HitBundle>(new HitBundle());
+
+		shared_ptr<HitBundle> pBundle = shared_ptr<HitBundle>(new HitBundle());
         bool non_empty = bundle_factories[i]->next_bundle(*pBundle);
-        
-        if (pBundle->compatible_mass() > 0)
+	
+		if (pBundle->compatible_mass() > 0)
         {
-            thread quantitate(sample_worker,
-                              non_empty,
-                              pBundle,
-                              boost::ref(rt),
-                              boost::ref(*(bundle_factories[i])),
-                              s_ab,
-                              i,
-                              launcher);
-        }
-        else
-        {
-            sample_worker(non_empty,
-                          pBundle,
-                          boost::ref(rt),
-                          boost::ref(*(bundle_factories[i])),
-                          s_ab,
-                          i,
-                          launcher);
-            locus_thread_pool_lock.lock();
+			thread quantitate(allele_sample_worker,
+							  non_empty,
+							  pBundle,
+							  boost::ref(rt),
+							  boost::ref(*(bundle_factories[i])),
+							  s_ab,
+							  i,
+							  launcher);  
+		}
+		else{
+			allele_sample_worker(non_empty,
+								 pBundle,
+								 boost::ref(rt),
+								 boost::ref(*(bundle_factories[i])),
+								 s_ab,
+								 i,
+								 launcher);
+			locus_thread_pool_lock.lock();
             locus_curr_threads--;
             locus_thread_pool_lock.unlock();
         }
 #else
-        HitBundle bundle;
+		HitBundle bundle;
         bool non_empty = sample_factory.next_bundle(bundle);
-        
-        sample_worker(non_emtpy,
-                      pBundle,
-                      boost::ref(rt),
-                      boost::ref(*(bundle_factories[i])),
-                      s_ab,
-                      i,
-                      launcher);
+
+        allele_sample_worker(non_emtpy,
+							 pBundle,
+							 boost::ref(rt),
+							 boost::ref(*(bundle_factories[i])),
+							 s_ab,
+							 i,
+							 launcher);
 #endif
     }
     return true;
@@ -1181,7 +1765,7 @@ void parse_contrast_file(FILE* contrast_file,
         size_t f2_idx = f2_itr->second;
         contrasts.push_back(make_pair(f1_idx, f2_idx));
     }
- }
+}
 
 void parse_sample_sheet_file(FILE* sample_sheet_file,
                              vector<string>& sample_labels,
@@ -1224,9 +1808,8 @@ void parse_sample_sheet_file(FILE* sample_sheet_file,
                 }
                 
                 string sam_file = columns[0];
-                string sample_group = columns[1];
-                
-                pair<map<string, vector<string> >::iterator, bool> inserted = sample_groups.insert(make_pair(sample_group, vector<string>()));
+				string sample_group = columns[1];
+				pair<map<string, vector<string> >::iterator, bool> inserted = sample_groups.insert(make_pair(sample_group, vector<string>()));
                 inserted.first->second.push_back(sam_file);
             }
         }
@@ -1237,7 +1820,7 @@ void parse_sample_sheet_file(FILE* sample_sheet_file,
     {
         sample_labels.push_back(itr->first);
         string sam_list = boost::join(itr->second, ",");
-        sam_hit_filename_lists.push_back(sam_list);
+		sam_hit_filename_lists.push_back(sam_list);
     }
 }
 
@@ -1624,10 +2207,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	
 	vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
     vector<shared_ptr<ReadGroupProperties> > all_read_groups;
-    
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
-        vector<string> sam_hit_filenames;
+		vector<string> sam_hit_filenames;
         tokenize(sam_hit_filename_lists[i], ",", sam_hit_filenames);
         
         vector<shared_ptr<BundleFactory> > replicate_factories;
@@ -1636,13 +2218,22 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
-            shared_ptr<HitFactory> hs;
+			shared_ptr<HitFactory> hs;
             shared_ptr<BundleFactory> hf;
             try
             {
-                hs = shared_ptr<HitFactory>(new PrecomputedExpressionHitFactory(sam_hit_filenames[j], it, rt));
-                hf = shared_ptr<BundleFactory>(new PrecomputedExpressionBundleFactory(static_pointer_cast<PrecomputedExpressionHitFactory>(hs)));
-            }
+				//allele
+				if(!allele_specific_differential)
+				{
+					hs = shared_ptr<HitFactory>(new PrecomputedExpressionHitFactory(sam_hit_filenames[j], it, rt));
+					hf = shared_ptr<BundleFactory>(new PrecomputedExpressionBundleFactory(static_pointer_cast<PrecomputedExpressionHitFactory>(hs)));
+				}
+				else
+				{
+					hs = shared_ptr<HitFactory>(new PrecomputedAlleleExpressionHitFactory(sam_hit_filenames[j], it, rt));
+					hf = shared_ptr<BundleFactory>(new PrecomputedAlleleExpressionBundleFactory(static_pointer_cast<PrecomputedAlleleExpressionHitFactory>(hs)));
+				}
+			}
             
             catch(boost::archive::archive_exception & e)
             {
@@ -1668,7 +2259,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
                 hf = shared_ptr<BundleFactory>(new BundleFactory(hs, REF_DRIVEN));
             }
             
-            
             shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
             
             if (global_read_properties)
@@ -1691,21 +2281,18 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
             replicate_factories.push_back(hf);
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
-        
-        bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
+		bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
-    
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
+	
+	::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
     if (ref_mRNAs.empty())
         return;
-    
-    vector<shared_ptr<Scaffold> > mask_rnas;
+	vector<shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
         ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
     }
-    
-    BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+	BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
         fac->set_ref_rnas(ref_mRNAs);
         if (mask_gtf) 
@@ -1719,7 +2306,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     }
     else
     {
-        init_default_contrasts(bundle_factories, samples_are_time_series, contrasts);
+		init_default_contrasts(bundle_factories, samples_are_time_series, contrasts);
     }
     
     if (norm_standards_file != NULL)
@@ -1798,9 +2385,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         inspect_map_worker(boost::ref(*fac),
                            boost::ref(tmp_min_frag_len),
                            boost::ref(tmp_max_frag_len));
+		
 #endif
     }
-    
+
     // wait for the workers to finish up before reporting everthing.
 #if ENABLE_THREADS	
     while(1)
@@ -1816,10 +2404,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
 #endif
-    
-    normalize_counts(all_read_groups);
+	
+	normalize_counts(all_read_groups);
     fit_dispersions(bundle_factories);
- 
+	
     print_variability_models(outfiles.var_model_out, bundle_factories);
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
@@ -1848,7 +2436,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
             fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
         }
     }
-    
+
     long double total_norm_mass = 0.0;
     long double total_mass = 0.0;
     BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
@@ -1875,15 +2463,29 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     p_bar = ProgressBar("Calculating preliminary abundance estimates", num_bundles);
     
     Tracking tracking;
-    
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
-    
+	if(!allele_specific_differential)
+	{  
+		test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
+	}
+	else{
+		allele_test_launcher = shared_ptr<AlleleTestLauncher>(new AlleleTestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
+	}
+        
 	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
-			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-			quantitate_next_locus(rt, bundle_factories, test_launcher);
+			//allele
+			if(!allele_specific_differential)
+			{
+				shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+				quantitate_next_locus(rt, bundle_factories, test_launcher);
+			}
+			else{
+				shared_ptr<vector<shared_ptr<SampleAlleleAbundances> > > alleleAbundances(new vector<shared_ptr<SampleAlleleAbundances> >());
+				quantitate_next_locus(rt, bundle_factories, allele_test_launcher);
+			}
+			
 			bool more_loci_remain = false;
             BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
             {
@@ -1977,7 +2579,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         }
         bias_run = false;
 	}
-    
+
     fprintf(outfiles.bias_out, "condition_name\treplicate_num\tparam\tpos_i\tpos_j\tvalue\n");
     BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
@@ -1991,41 +2593,149 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     {
         rg_props->multi_read_table()->valid_mass(true);
     }
-    
-    test_launcher->clear_tracking_data();
+	//allele
+    if(!allele_specific_differential)
+	{    
+		test_launcher->clear_tracking_data();
+	}
+	else
+	{
+		allele_test_launcher->clear_tracking_data();
+		AlleleTests tests;
+	}
 	
 	Tests tests;
-    
+	//allele
+    AlleleTests alleleTests;
     int N = (int)sam_hit_filename_lists.size();
-    
-    tests.isoform_de_tests = vector<vector<SampleDiffs> >(N);
-    tests.tss_group_de_tests = vector<vector<SampleDiffs> >(N);
-    tests.gene_de_tests = vector<vector<SampleDiffs> >(N);
-    tests.cds_de_tests = vector<vector<SampleDiffs> >(N);
-    tests.diff_splicing_tests = vector<vector<SampleDiffs> >(N);
-    tests.diff_promoter_tests = vector<vector<SampleDiffs> >(N);
-    tests.diff_cds_tests = vector<vector<SampleDiffs> >(N);
-    
-	for (int i = 1; i < N; ++i)
-    {
-        tests.isoform_de_tests[i] = vector<SampleDiffs>(i);
-        tests.tss_group_de_tests[i] = vector<SampleDiffs>(i);
-        tests.gene_de_tests[i] = vector<SampleDiffs>(i);
-        tests.cds_de_tests[i] = vector<SampleDiffs>(i);
-        tests.diff_splicing_tests[i] = vector<SampleDiffs>(i);
-        tests.diff_promoter_tests[i] = vector<SampleDiffs>(i);
-        tests.diff_cds_tests[i] = vector<SampleDiffs>(i);
-    }
-	
+    //allele
+    if(!allele_specific_differential)
+	{
+		tests.isoform_de_tests = vector<vector<SampleDiffs> >(N);
+		tests.tss_group_de_tests = vector<vector<SampleDiffs> >(N);
+		tests.gene_de_tests = vector<vector<SampleDiffs> >(N);
+		tests.cds_de_tests = vector<vector<SampleDiffs> >(N);
+		tests.diff_splicing_tests = vector<vector<SampleDiffs> >(N);
+		tests.diff_promoter_tests = vector<vector<SampleDiffs> >(N);
+		tests.diff_cds_tests = vector<vector<SampleDiffs> >(N);
+		
+		for (int i = 1; i < N; ++i)
+		{
+			tests.isoform_de_tests[i] = vector<SampleDiffs>(i);
+			tests.tss_group_de_tests[i] = vector<SampleDiffs>(i);
+			tests.gene_de_tests[i] = vector<SampleDiffs>(i);
+			tests.cds_de_tests[i] = vector<SampleDiffs>(i);
+			tests.diff_splicing_tests[i] = vector<SampleDiffs>(i);
+			tests.diff_promoter_tests[i] = vector<SampleDiffs>(i);
+			tests.diff_cds_tests[i] = vector<SampleDiffs>(i);
+		}
+	}
+	else
+	{
+		if(bundle_factories.size() > 1)//4-way allelic tests: paternal-paternal,paternal-maternal,maternal-paternal,maternal-maternal
+		{ 
+			alleleTests.paternal_paternal_isoform_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_maternal_isoform_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_isoform_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_isoform_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_paternal_tss_group_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_maternal_tss_group_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_tss_group_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_tss_group_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_paternal_gene_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_maternal_gene_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_gene_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_gene_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_paternal_cds_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_maternal_cds_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_cds_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_cds_de_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_paternal_diff_splicing_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_maternal_diff_splicing_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_diff_splicing_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_diff_splicing_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_paternal_diff_promoter_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_maternal_diff_promoter_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_diff_promoter_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_diff_promoter_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.paternal_paternal_diff_cds_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_paternal_diff_cds_tests = vector<vector<SampleDiffs> >(N);
+			alleleTests.maternal_maternal_diff_cds_tests = vector<vector<SampleDiffs> >(N);
+			for (int i = 1; i < N; ++i)
+			{
+				alleleTests.paternal_paternal_isoform_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_isoform_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_isoform_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_isoform_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_paternal_tss_group_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_tss_group_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_tss_group_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_tss_group_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_paternal_gene_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_gene_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_gene_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_gene_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_paternal_cds_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_cds_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_cds_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_cds_de_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_paternal_diff_splicing_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_diff_splicing_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_diff_splicing_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_diff_splicing_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_paternal_diff_promoter_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_diff_promoter_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_diff_promoter_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_diff_promoter_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_paternal_diff_cds_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.paternal_maternal_diff_cds_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_paternal_diff_cds_tests[i] = vector<SampleDiffs>(i);
+				alleleTests.maternal_maternal_diff_cds_tests[i] = vector<SampleDiffs>(i);
+			}
+		}
+		else
+		{
+			alleleTests.parental_isoform_de_tests = vector<vector<SampleDiffs> >(1);
+			alleleTests.parental_tss_group_de_tests = vector<vector<SampleDiffs> >(1);
+			alleleTests.parental_gene_de_tests = vector<vector<SampleDiffs> >(1);
+			alleleTests.parental_cds_de_tests = vector<vector<SampleDiffs> >(1);
+			alleleTests.parental_diff_splicing_tests = vector<vector<SampleDiffs> >(1);
+			alleleTests.parental_diff_promoter_tests = vector<vector<SampleDiffs> >(1);
+			alleleTests.parental_diff_cds_tests = vector<vector<SampleDiffs> >(1);
+			
+			alleleTests.parental_isoform_de_tests[0] = vector<SampleDiffs>(1);
+			alleleTests.parental_tss_group_de_tests[0] = vector<SampleDiffs>(1);
+			alleleTests.parental_gene_de_tests[0] = vector<SampleDiffs>(1);
+			alleleTests.parental_cds_de_tests[0] = vector<SampleDiffs>(1);
+			alleleTests.parental_diff_splicing_tests[0] = vector<SampleDiffs>(1);
+			alleleTests.parental_diff_promoter_tests[0] = vector<SampleDiffs>(1);
+			alleleTests.parental_diff_cds_tests[0] = vector<SampleDiffs>(1);
+		}
+	}
+		
 	final_est_run = true;
-	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
-                                                     
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, &tests, &tracking, &p_bar));
-                                                                                              
+	
+	//allele
+	if(!allele_specific_differential)
+		p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
+	else
+		p_bar = ProgressBar("Testing for allele differential expression and regulation in locus.", num_bundles);
+	
+	//allele
+	if(!allele_specific_differential)
+		test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, &tests, &tracking, &p_bar));
+	else
+		allele_test_launcher = shared_ptr<AlleleTestLauncher>(new AlleleTestLauncher(bundle_factories.size(), contrasts, &alleleTests, &tracking, &p_bar));
+	
 	while (true)
 	{
         //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-        quantitate_next_locus(rt, bundle_factories, test_launcher);
+		//allele
+		if(!allele_specific_differential)
+			quantitate_next_locus(rt, bundle_factories, test_launcher);
+		else
+			quantitate_next_locus(rt, bundle_factories, allele_test_launcher);
+		
         bool more_loci_remain = false;
         BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
         {
@@ -2060,247 +2770,857 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	
 	p_bar.complete();
 
-	//double FDR = 0.05;
-	int total_iso_de_tests = 0;
+	if(!allele_specific_differential)
+	{
+		//double FDR = 0.05;
+		int total_iso_de_tests = 0;
 	
-	vector<SampleDifference*> isoform_exp_diffs;
-    fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		vector<SampleDifference*> isoform_exp_diffs;
+		fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
 
-    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            total_iso_de_tests += tests.isoform_de_tests[i][j].size();
-            extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
-        }
-    }
+		for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				total_iso_de_tests += tests.isoform_de_tests[i][j].size();
+				extract_sample_diffs(tests.isoform_de_tests[i][j], isoform_exp_diffs);
+			}
+		}
     
-    int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
-    fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
-    
-    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
-        }
-    }
+		int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
+		fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
+		
+		for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.isoform_de_tests[i][j]);
+			}
+		}
+		
+		
+		int total_group_de_tests = 0;
+		vector<SampleDifference*> tss_group_exp_diffs;
+		fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		
+		for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				extract_sample_diffs(tests.tss_group_de_tests[i][j], tss_group_exp_diffs);
+				total_group_de_tests += tests.tss_group_de_tests[i][j].size();
+			}
+		}
+		
+		int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
+		fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
+		
+		for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
+			}
+		}
+		
+		
+		int total_gene_de_tests = 0;
+		vector<SampleDifference*> gene_exp_diffs;
+		fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		
+		for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				total_gene_de_tests += tests.gene_de_tests[i][j].size();
+				extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
+			}
+		}
+		
+		//fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+		int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
+		fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
+		
+		for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+		{        
+			for (size_t j = 0; j < i; ++j)
+			{
+				print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
+			}
+		}	
+		
+		
+		int total_cds_de_tests = 0;
+		vector<SampleDifference*> cds_exp_diffs;
+		fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		
+		
+		for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				total_cds_de_tests += tests.cds_de_tests[i][j].size();
+				extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
+			}
+		}
+		
+		
+		int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
+		fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
+		
+		for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
+			}
+		}
+		
+		
+		int total_diff_splice_tests = 0;
+		vector<SampleDifference*> splicing_diffs;
+		fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		
+		for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
+				extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
+			}
+		}
+		
+		int splicing_tests = fdr_significance(FDR, splicing_diffs);
+		fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
+		
+		for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
+				print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
+			}
+		}
+		
+		
+		int total_diff_promoter_tests = 0;
+		vector<SampleDifference*> promoter_diffs;
+		fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		
+		for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
+				extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
+			}
+		}
+		
+		
+		int promoter_tests = fdr_significance(FDR, promoter_diffs);
+		fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
+		
+		for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
+			}
+		}
+		
+		int total_diff_cds_tests = 0;
+		vector<SampleDifference*> cds_use_diffs;
+		fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
+		
+		for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
+				total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
+			}
+		}
+		
+		
+		int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
+		fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
+		
+		for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
+		{
+			for (size_t j = 0; j < i; ++j)
+			{
+				print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
+			}
+		}
+	}
+	else
+	{
+		if(bundle_factories.size() > 1) //4-way allelic tests: paternal-paternal,paternal-maternal,maternal-paternal,maternal-maternal
+		{
+			//double FDR = 0.05;
+			int total_paternal_paternal_iso_de_tests = 0;
+			int total_paternal_maternal_iso_de_tests = 0;
+			int total_maternal_paternal_iso_de_tests = 0;
+			int total_maternal_maternal_iso_de_tests = 0;
+			
+			vector<SampleDifference*> paternal_paternal_isoform_exp_diffs,paternal_maternal_isoform_exp_diffs,maternal_paternal_isoform_exp_diffs,maternal_maternal_isoform_exp_diffs;
+			fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_log2(fold_change)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_log2(fold_change)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_log2(fold_change)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_maternal_log2(fold_change)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
 
-    
-	int total_group_de_tests = 0;
-	vector<SampleDifference*> tss_group_exp_diffs;
-    fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            extract_sample_diffs(tests.tss_group_de_tests[i][j], tss_group_exp_diffs);
-            total_group_de_tests += tests.tss_group_de_tests[i][j].size();
-        }
-    }
+			for (size_t i = 1; i < alleleTests.paternal_paternal_isoform_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_paternal_iso_de_tests += alleleTests.paternal_paternal_isoform_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_paternal_isoform_de_tests[i][j], paternal_paternal_isoform_exp_diffs);
+				}
+			}
+			int paternal_paternal_iso_exp_tests = fdr_significance(FDR, paternal_paternal_isoform_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-paternal isoform-level transcription difference tests\n", paternal_paternal_iso_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_isoform_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_maternal_iso_de_tests += alleleTests.paternal_maternal_isoform_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_maternal_isoform_de_tests[i][j], paternal_maternal_isoform_exp_diffs);
+				}
+			}
+			int paternal_maternal_iso_exp_tests = fdr_significance(FDR, paternal_maternal_isoform_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal isoform-level transcription difference tests\n", paternal_maternal_iso_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_paternal_isoform_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_paternal_iso_de_tests += alleleTests.maternal_paternal_isoform_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_paternal_isoform_de_tests[i][j], maternal_paternal_isoform_exp_diffs);
+				}
+			}
+			int maternal_paternal_iso_exp_tests = fdr_significance(FDR, maternal_paternal_isoform_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-paternal isoform-level transcription difference tests\n", maternal_paternal_iso_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_isoform_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_maternal_iso_de_tests += alleleTests.maternal_maternal_isoform_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_maternal_isoform_de_tests[i][j], maternal_maternal_isoform_exp_diffs);
+				}
+			}
+			int maternal_maternal_iso_exp_tests = fdr_significance(FDR, maternal_maternal_isoform_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-maternal isoform-level transcription difference tests\n", maternal_maternal_iso_exp_tests);
+				
+			
+			for (size_t i = 1; i < N; ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					print_tests(outfiles.isoform_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), alleleTests.paternal_paternal_isoform_de_tests[i][j], alleleTests.paternal_maternal_isoform_de_tests[i][j], alleleTests.maternal_paternal_isoform_de_tests[i][j], alleleTests.maternal_maternal_isoform_de_tests[i][j]);
+				}
+			}
+					
+			int total_paternal_paternal_group_de_tests = 0;
+			int total_paternal_maternal_group_de_tests = 0;
+			int total_maternal_paternal_group_de_tests = 0;
+			int total_maternal_maternal_group_de_tests = 0;
+			vector<SampleDifference*> paternal_paternal_tss_group_exp_diffs,paternal_maternal_tss_group_exp_diffs,maternal_paternal_tss_group_exp_diffs,maternal_maternal_tss_group_exp_diffs;
+			fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_log2(fold_change)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_log2(fold_change)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_log2(fold_change)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_paternal_log2(fold_change)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
+			
+			for (size_t i = 1; i < alleleTests.paternal_paternal_tss_group_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.paternal_paternal_tss_group_de_tests[i][j], paternal_paternal_tss_group_exp_diffs);
+					total_paternal_paternal_group_de_tests += alleleTests.paternal_paternal_tss_group_de_tests[i][j].size();
+				}
+			}
+			int paternal_paternal_tss_group_exp_tests = fdr_significance(FDR, paternal_paternal_tss_group_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-paternal tss-level transcription difference tests\n", paternal_paternal_tss_group_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_tss_group_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.paternal_maternal_tss_group_de_tests[i][j], paternal_maternal_tss_group_exp_diffs);
+					total_paternal_maternal_group_de_tests += alleleTests.paternal_maternal_tss_group_de_tests[i][j].size();
+				}
+			}
+			int paternal_maternal_tss_group_exp_tests = fdr_significance(FDR, paternal_maternal_tss_group_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal tss-level transcription difference tests\n", paternal_maternal_tss_group_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_paternal_tss_group_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.maternal_paternal_tss_group_de_tests[i][j], maternal_paternal_tss_group_exp_diffs);
+					total_maternal_paternal_group_de_tests += alleleTests.maternal_paternal_tss_group_de_tests[i][j].size();
+				}
+			}
+			int maternal_paternal_tss_group_exp_tests = fdr_significance(FDR, maternal_paternal_tss_group_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-paternal tss-level transcription difference tests\n", maternal_paternal_tss_group_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_tss_group_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.maternal_maternal_tss_group_de_tests[i][j], maternal_maternal_tss_group_exp_diffs);
+					total_maternal_maternal_group_de_tests += alleleTests.maternal_maternal_tss_group_de_tests[i][j].size();
+				}
+			}
+			int maternal_maternal_tss_group_exp_tests = fdr_significance(FDR, maternal_maternal_tss_group_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-maternal tss-level transcription difference tests\n", maternal_maternal_tss_group_exp_tests);
+			
+			
+			for (size_t i = 1; i < N; ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), alleleTests.paternal_paternal_tss_group_de_tests[i][j], alleleTests.paternal_maternal_tss_group_de_tests[i][j], alleleTests.maternal_paternal_tss_group_de_tests[i][j], alleleTests.maternal_maternal_tss_group_de_tests[i][j]);
+				}
+			}
+			
+			int total_paternal_paternal_gene_de_tests = 0;
+			int total_paternal_maternal_gene_de_tests = 0;
+			int total_maternal_paternal_gene_de_tests = 0;
+			int total_maternal_maternal_gene_de_tests = 0;
+			vector<SampleDifference*> paternal_paternal_gene_exp_diffs,paternal_maternal_gene_exp_diffs,maternal_paternal_gene_exp_diffs,maternal_maternal_gene_exp_diffs;
+			fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_log2(fold_change)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_log2(fold_change)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_log2(fold_change)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_maternal_log2(fold_change)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
+			
+			
+			for (size_t i = 1; i < alleleTests.paternal_paternal_gene_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_paternal_gene_de_tests += alleleTests.paternal_paternal_gene_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_paternal_gene_de_tests[i][j], paternal_paternal_gene_exp_diffs);
+				}
+			}
+			//fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+			int paternal_paternal_gene_exp_tests = fdr_significance(FDR, paternal_paternal_gene_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-paternal gene-level transcription difference tests\n", paternal_paternal_gene_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_gene_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_maternal_gene_de_tests += alleleTests.paternal_maternal_gene_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_maternal_gene_de_tests[i][j], paternal_maternal_gene_exp_diffs);
+				}
+			}
+			//fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+			int paternal_maternal_gene_exp_tests = fdr_significance(FDR, paternal_maternal_gene_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal gene-level transcription difference tests\n", paternal_maternal_gene_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_paternal_gene_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_paternal_gene_de_tests += alleleTests.maternal_paternal_gene_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_paternal_gene_de_tests[i][j], maternal_paternal_gene_exp_diffs);
+				}
+			}
+			//fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+			int maternal_paternal_gene_exp_tests = fdr_significance(FDR, maternal_paternal_gene_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-paternal gene-level transcription difference tests\n", maternal_paternal_gene_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_gene_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_maternal_gene_de_tests += alleleTests.maternal_maternal_gene_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_maternal_gene_de_tests[i][j], maternal_maternal_gene_exp_diffs);
+				}
+			}
+			//fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+			int maternal_maternal_gene_exp_tests = fdr_significance(FDR, maternal_maternal_gene_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-maternal gene-level transcription difference tests\n", maternal_maternal_gene_exp_tests);
+			
+			for (size_t i = 1; i < N; ++i)
+			{        
+				for (size_t j = 0; j < i; ++j)
+				{
+					print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), alleleTests.paternal_paternal_gene_de_tests[i][j], alleleTests.paternal_maternal_gene_de_tests[i][j], alleleTests.maternal_paternal_gene_de_tests[i][j], alleleTests.maternal_maternal_gene_de_tests[i][j]);
+				}
+			}	
+		
+			
+			int total_paternal_paternal_cds_de_tests = 0;
+			int total_paternal_maternal_cds_de_tests = 0;
+			int total_maternal_paternal_cds_de_tests = 0;
+			int total_maternal_maternal_cds_de_tests = 0;
+			vector<SampleDifference*> paternal_paternal_cds_exp_diffs,paternal_maternal_cds_exp_diffs,maternal_paternal_cds_exp_diffs,maternal_maternal_cds_exp_diffs;
+			fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_log2(fold_change)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_log2(fold_change)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_log2(fold_change)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_maternal_log2(fold_change)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
+			
+			for (size_t i = 1; i < alleleTests.paternal_paternal_cds_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_paternal_cds_de_tests += alleleTests.paternal_paternal_cds_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_paternal_cds_de_tests[i][j], paternal_paternal_cds_exp_diffs);
+				}
+			}
+			int paternal_paternal_cds_exp_tests = fdr_significance(FDR, paternal_paternal_cds_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-paternal CDS-level transcription difference tests\n", paternal_paternal_cds_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_cds_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_maternal_cds_de_tests += alleleTests.paternal_maternal_cds_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_maternal_cds_de_tests[i][j], paternal_maternal_cds_exp_diffs);
+				}
+			}
+			int paternal_maternal_cds_exp_tests = fdr_significance(FDR, paternal_maternal_cds_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal CDS-level transcription difference tests\n", paternal_maternal_cds_exp_tests);
+			for (size_t i = 1; i < alleleTests.maternal_paternal_cds_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_paternal_cds_de_tests += alleleTests.maternal_paternal_cds_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_paternal_cds_de_tests[i][j], maternal_paternal_cds_exp_diffs);
+				}
+			}
+			int maternal_paternal_cds_exp_tests = fdr_significance(FDR, maternal_paternal_cds_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-paternal CDS-level transcription difference tests\n", maternal_paternal_cds_exp_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_cds_de_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_maternal_cds_de_tests += alleleTests.maternal_maternal_cds_de_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_maternal_cds_de_tests[i][j], maternal_maternal_cds_exp_diffs);
+				}
+			}
+			int maternal_maternal_cds_exp_tests = fdr_significance(FDR, maternal_maternal_cds_exp_diffs);
+			fprintf(stderr, "Performed %d maternal-maternal CDS-level transcription difference tests\n", maternal_maternal_cds_exp_tests);
+			
+			for (size_t i = 1; i < N; ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), alleleTests.paternal_paternal_cds_de_tests[i][j], alleleTests.paternal_maternal_cds_de_tests[i][j], alleleTests.maternal_paternal_cds_de_tests[i][j], alleleTests.maternal_maternal_cds_de_tests[i][j]);
+				}
+			}
+			
+			int total_paternal_paternal_diff_splice_tests = 0;
+			int total_paternal_maternal_diff_splice_tests = 0;
+			int total_maternal_paternal_diff_splice_tests = 0;
+			int total_maternal_maternal_diff_splice_tests = 0;
+			vector<SampleDifference*> paternal_paternal_splicing_diffs,paternal_maternal_splicing_diffs,maternal_paternal_splicing_diffs,maternal_maternal_splicing_diffs;
+			fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_sqrt(JS)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_sqrt(JS)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_sqrt(JS)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_maternal_sqrt(JS)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
+			
+			
+			for (size_t i = 1; i < alleleTests.paternal_paternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_paternal_diff_splice_tests += alleleTests.paternal_paternal_diff_splicing_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_paternal_diff_splicing_tests[i][j], paternal_paternal_splicing_diffs);
+				}
+			}
+			int paternal_paternal_splicing_tests = fdr_significance(FDR, paternal_paternal_splicing_diffs);
+			fprintf(stderr, "Performed %d paternal-paternal splicing tests\n", paternal_paternal_splicing_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_maternal_diff_splice_tests += alleleTests.paternal_maternal_diff_splicing_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_maternal_diff_splicing_tests[i][j], paternal_maternal_splicing_diffs);
+				}
+			}
+			int paternal_maternal_splicing_tests = fdr_significance(FDR, paternal_maternal_splicing_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal splicing tests\n", paternal_maternal_splicing_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_paternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_paternal_diff_splice_tests += alleleTests.maternal_paternal_diff_splicing_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_paternal_diff_splicing_tests[i][j], maternal_paternal_splicing_diffs);
+				}
+			}
+			int maternal_paternal_splicing_tests = fdr_significance(FDR, maternal_paternal_splicing_diffs);
+			fprintf(stderr, "Performed %d maternal-paternal splicing tests\n", maternal_paternal_splicing_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_maternal_diff_splice_tests += alleleTests.maternal_maternal_diff_splicing_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_maternal_diff_splicing_tests[i][j], maternal_maternal_splicing_diffs);
+				}
+			}
+			int maternal_maternal_splicing_tests = fdr_significance(FDR, maternal_maternal_splicing_diffs);
+			fprintf(stderr, "Performed %d maternal-maternal splicing tests\n", maternal_maternal_splicing_tests);
+			
+			
+			for (size_t i = 1; i < N; ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					const SampleDiffs& paternal_paternal_diffs = alleleTests.paternal_paternal_diff_splicing_tests[i][j];
+					const SampleDiffs& paternal_maternal_diffs = alleleTests.paternal_maternal_diff_splicing_tests[i][j];
+					const SampleDiffs& maternal_paternal_diffs = alleleTests.maternal_paternal_diff_splicing_tests[i][j];
+					const SampleDiffs& maternal_maternal_diffs = alleleTests.maternal_maternal_diff_splicing_tests[i][j];
+					print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), paternal_paternal_diffs, paternal_maternal_diffs, maternal_paternal_diffs, maternal_maternal_diffs);
+				}
+			}
+			
+			int total_paternal_paternal_diff_promoter_tests = 0;
+			int total_paternal_maternal_diff_promoter_tests = 0;
+			int total_maternal_paternal_diff_promoter_tests = 0;
+			int total_maternal_maternal_diff_promoter_tests = 0;
+			vector<SampleDifference*> paternal_paternal_promoter_diffs,paternal_maternal_promoter_diffs,maternal_paternal_promoter_diffs,maternal_maternal_promoter_diffs;
+			fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_sqrt(JS)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_sqrt(JS)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_sqrt(JS)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_maternal_sqrt(JS)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
+			
+			for (size_t i = 1; i < alleleTests.paternal_paternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_paternal_diff_promoter_tests += alleleTests.paternal_paternal_diff_promoter_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_paternal_diff_promoter_tests[i][j], paternal_paternal_promoter_diffs);
+				}
+			}
+			int paternal_paternal_promoter_tests = fdr_significance(FDR, paternal_paternal_promoter_diffs);
+			fprintf(stderr, "Performed %d paternal-paternal promoter preference tests\n", paternal_paternal_promoter_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_paternal_maternal_diff_promoter_tests += alleleTests.paternal_maternal_diff_promoter_tests[i][j].size();
+					extract_sample_diffs(alleleTests.paternal_maternal_diff_promoter_tests[i][j], paternal_maternal_promoter_diffs);
+				}
+			}
+			int paternal_maternal_promoter_tests = fdr_significance(FDR, paternal_maternal_promoter_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal promoter preference tests\n", paternal_maternal_promoter_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_paternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_paternal_diff_promoter_tests += alleleTests.maternal_paternal_diff_promoter_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_paternal_diff_promoter_tests[i][j], maternal_paternal_promoter_diffs);
+				}
+			}
+			int maternal_paternal_promoter_tests = fdr_significance(FDR, maternal_paternal_promoter_diffs);
+			fprintf(stderr, "Performed %d maternal-paternal promoter preference tests\n", maternal_paternal_promoter_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_diff_splicing_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					total_maternal_maternal_diff_promoter_tests += alleleTests.maternal_maternal_diff_promoter_tests[i][j].size();
+					extract_sample_diffs(alleleTests.maternal_maternal_diff_promoter_tests[i][j], maternal_maternal_promoter_diffs);
+				}
+			}
+			int maternal_maternal_promoter_tests = fdr_significance(FDR, maternal_maternal_promoter_diffs);
+			fprintf(stderr, "Performed %d maternal-maternal promoter preference tests\n", maternal_maternal_promoter_tests);
+			
+			for (size_t i = 1; i < N; ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), alleleTests.paternal_paternal_diff_promoter_tests[i][j], alleleTests.paternal_maternal_diff_promoter_tests[i][j], alleleTests.maternal_paternal_diff_promoter_tests[i][j], alleleTests.maternal_maternal_diff_promoter_tests[i][j]);
+				}
+			}
+			
+			int total_paternal_paternal_diff_cds_tests = 0;
+			int total_paternal_maternal_diff_cds_tests = 0;
+			int total_maternal_paternal_diff_cds_tests = 0;
+			int total_maternal_maternal_diff_cds_tests = 0;
+			vector<SampleDifference*> paternal_paternal_cds_use_diffs,paternal_maternal_cds_use_diffs,maternal_paternal_cds_use_diffs,maternal_maternal_cds_use_diffs;
+			fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\t"
+					"sample_1_paternal\tsample_2_paternal\tpaternal_paternal_status\tpaternal_value_1\tpaternal_value_2\tpaternal_paternal_sqrt(JS)\tpaternal_paternal_test_stat\tpaternal_paternal_p_value\tpaternal_paternal_q_value\tpaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_paternal\tpaternal_maternal_status\tmaternal_value_1\tpaternal_value_2\tpaternal_maternal_sqrt(JS)\tpaternal_maternal_test_stat\tpaternal_maternal_p_value\tpaternal_maternal_q_value\tpaternal_maternal_significant\t"
+					"sample_1_paternal\tsample_2_maternal\tmaternal_paternal_status\tpaternal_value_1\tmaternal_value_2\tmaternal_paternal_sqrt(JS)\tmaternal_paternal_test_stat\tmaternal_paternal_p_value\tmaternal_paternal_q_value\tmaternal_paternal_significant\t"
+					"sample_1_maternal\tsample_2_maternal\tmaternal_maternal_status\tmaternal_value_1\tmaternal_value_2\tmaternal_maternal_sqrt(JS)\tmaternal_maternal_test_stat\tmaternal_maternal_p_value\tmaternal_maternal_q_value\tmaternal_maternal_significant\n");
+			
+			for (size_t i = 1; i < alleleTests.paternal_paternal_diff_cds_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.paternal_paternal_diff_cds_tests[i][j], paternal_paternal_cds_use_diffs);
+					total_paternal_paternal_diff_cds_tests += alleleTests.paternal_paternal_diff_cds_tests[i][j].size();
+				}
+			}
+			int paternal_paternal_cds_use_tests = fdr_significance(FDR, paternal_paternal_cds_use_diffs);
+			fprintf(stderr, "Performing %d paternal-paternal relative CDS output tests\n", paternal_paternal_cds_use_tests);
+			
+			for (size_t i = 1; i < alleleTests.paternal_maternal_diff_cds_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.paternal_maternal_diff_cds_tests[i][j], paternal_maternal_cds_use_diffs);
+					total_paternal_maternal_diff_cds_tests += alleleTests.paternal_maternal_diff_cds_tests[i][j].size();
+				}
+			}
+			int paternal_maternal_cds_use_tests = fdr_significance(FDR, paternal_maternal_cds_use_diffs);
+			fprintf(stderr, "Performing %d paternal-maternal relative CDS output tests\n", paternal_maternal_cds_use_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_paternal_diff_cds_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.maternal_paternal_diff_cds_tests[i][j], maternal_paternal_cds_use_diffs);
+					total_maternal_paternal_diff_cds_tests += alleleTests.maternal_paternal_diff_cds_tests[i][j].size();
+				}
+			}
+			int maternal_paternal_cds_use_tests = fdr_significance(FDR, maternal_paternal_cds_use_diffs);
+			fprintf(stderr, "Performing %d maternal-paternal relative CDS output tests\n", maternal_paternal_cds_use_tests);
+			
+			for (size_t i = 1; i < alleleTests.maternal_maternal_diff_cds_tests.size(); ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					extract_sample_diffs(alleleTests.maternal_maternal_diff_cds_tests[i][j], maternal_maternal_cds_use_diffs);
+					total_maternal_maternal_diff_cds_tests += alleleTests.maternal_maternal_diff_cds_tests[i][j].size();
+				}
+			}
+			int maternal_maternal_cds_use_tests = fdr_significance(FDR, maternal_maternal_cds_use_diffs);
+			fprintf(stderr, "Performing %d maternal-maternal relative CDS output tests\n", maternal_maternal_cds_use_tests);
+			
+			for (size_t i = 1; i < N; ++i)
+			{
+				for (size_t j = 0; j < i; ++j)
+				{
+					print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), alleleTests.paternal_paternal_diff_cds_tests[i][j], alleleTests.paternal_maternal_diff_cds_tests[i][j], alleleTests.maternal_paternal_diff_cds_tests[i][j], alleleTests.maternal_maternal_diff_cds_tests[i][j]);
+				}
+			}
+		}
+		else
+		{//imprinting tests
+			int total_parental_iso_de_tests = 0;
+			
+			vector<SampleDifference*> parental_isoform_exp_diffs;
+			fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			total_parental_iso_de_tests += alleleTests.parental_isoform_de_tests[0][0].size();
+			extract_sample_diffs(alleleTests.parental_isoform_de_tests[0][0], parental_isoform_exp_diffs);
+			
+			int parental_iso_exp_tests = fdr_significance(FDR, parental_isoform_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal isoform-level transcription difference tests\n", parental_iso_exp_tests);
+			
+			print_tests(outfiles.isoform_de_outfile, "paternal", "maternal", alleleTests.parental_isoform_de_tests[0][0]);
+			
+			int total_parental_group_de_tests = 0;
+			vector<SampleDifference*> parental_tss_group_exp_diffs;
+			fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			extract_sample_diffs(alleleTests.parental_tss_group_de_tests[0][0], parental_tss_group_exp_diffs);
+			total_parental_group_de_tests += alleleTests.parental_tss_group_de_tests[0][0].size();
+			
+			int parental_tss_group_exp_tests = fdr_significance(FDR, parental_tss_group_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal tss-level transcription difference tests\n", parental_tss_group_exp_tests);
+			
+			print_tests(outfiles.group_de_outfile, "paternal", "maternal", alleleTests.parental_tss_group_de_tests[0][0]);
+			
+			int total_parental_gene_de_tests = 0;
+			vector<SampleDifference*> parental_gene_exp_diffs;
+			fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			total_parental_gene_de_tests += alleleTests.parental_gene_de_tests[0][0].size();
+			extract_sample_diffs(alleleTests.parental_gene_de_tests[0][0], parental_gene_exp_diffs);
+			
+			//fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
+			int parental_gene_exp_tests = fdr_significance(FDR, parental_gene_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal gene-level transcription difference tests\n", parental_gene_exp_tests);
+			
+			print_tests(outfiles.gene_de_outfile, "paternal", "maternal", alleleTests.parental_gene_de_tests[0][0]);
+						
+			int total_parental_cds_de_tests = 0;
+			vector<SampleDifference*> parental_cds_exp_diffs;
+			fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			total_parental_cds_de_tests += alleleTests.parental_cds_de_tests[0][0].size();
+			extract_sample_diffs(alleleTests.parental_cds_de_tests[0][0], parental_cds_exp_diffs);
+			
+			int parental_cds_exp_tests = fdr_significance(FDR, parental_cds_exp_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal CDS-level transcription difference tests\n", parental_cds_exp_tests);
+			
+			print_tests(outfiles.cds_de_outfile, "paternal", "maternal", alleleTests.parental_cds_de_tests[0][0]);
+			
+			int total_parental_diff_splice_tests = 0;
+			vector<SampleDifference*> parental_splicing_diffs;
+			fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			total_parental_diff_splice_tests += alleleTests.parental_diff_splicing_tests[0][0].size();
+			extract_sample_diffs(alleleTests.parental_diff_splicing_tests[0][0], parental_splicing_diffs);
+			
+			int parental_splicing_tests = fdr_significance(FDR, parental_splicing_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal splicing tests\n", parental_splicing_tests);
+			
+			const SampleDiffs& parental_diffs = alleleTests.parental_diff_splicing_tests[0][0];
+			print_tests(outfiles.diff_splicing_outfile, "paternal", "maternal", parental_diffs);
+			
+			int total_parental_diff_promoter_tests = 0;
+			vector<SampleDifference*> parental_promoter_diffs;
+			fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			total_parental_diff_promoter_tests += alleleTests.parental_diff_promoter_tests[0][0].size();
+			extract_sample_diffs(alleleTests.parental_diff_promoter_tests[0][0], parental_promoter_diffs);
+			
+			int parental_promoter_tests = fdr_significance(FDR, parental_promoter_diffs);
+			fprintf(stderr, "Performed %d paternal-maternal promoter preference tests\n", parental_promoter_tests);
+			
+			print_tests(outfiles.diff_promoter_outfile, "paternal", "maternal", alleleTests.parental_diff_promoter_tests[0][0]);
+			
+			int total_parental_diff_cds_tests = 0;
+			vector<SampleDifference*> parental_cds_use_diffs;
+			fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\tallele_1\tallele_2\tstatus\tallele_1_value\tallele_2_value\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
+			
+			extract_sample_diffs(alleleTests.parental_diff_cds_tests[0][0], parental_cds_use_diffs);
+			total_parental_diff_cds_tests += alleleTests.parental_diff_cds_tests[0][0].size();
+			
+			int parental_cds_use_tests = fdr_significance(FDR, parental_cds_use_diffs);
+			fprintf(stderr, "Performing %d paternal-maternal relative CDS output tests\n", parental_cds_use_tests);
+			
+			print_tests(outfiles.diff_cds_outfile, "paternal", "maternal", alleleTests.parental_diff_cds_tests[0][0]);
+		}
+	}
 
-    int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
-    fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
-    
-    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            print_tests(outfiles.group_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.tss_group_de_tests[i][j]);
-        }
-    }
-
+	if(!allele_specific_differential)
+	{	
+		// FPKM tracking
+		
+		FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
+		fprintf(stderr, "Writing isoform-level FPKM tracking\n");
+		print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
 	
-	int total_gene_de_tests = 0;
-	vector<SampleDifference*> gene_exp_diffs;
-    fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
-
-    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            total_gene_de_tests += tests.gene_de_tests[i][j].size();
-            extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
-        }
+		FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
+		fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
+		print_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
+		
+		FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
+		fprintf(stderr, "Writing gene-level FPKM tracking\n");
+		print_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
+		
+		FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
+		fprintf(stderr, "Writing CDS-level FPKM tracking\n");
+		print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
+		
+		// Count tracking
+		
+		FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
+		fprintf(stderr, "Writing isoform-level count tracking\n");
+		print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
+		
+		FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
+		fprintf(stderr, "Writing TSS group-level count tracking\n");
+		print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
+		
+		FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
+		fprintf(stderr, "Writing gene-level count tracking\n");
+		print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
+		
+		FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
+		fprintf(stderr, "Writing CDS-level count tracking\n");
+		print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
+		
+		// Read group tracking
+		
+		FILE* fiso_rep_tracking =  outfiles.isoform_rep_tracking_out;
+		fprintf(stderr, "Writing isoform-level read group tracking\n");
+		print_read_group_tracking(fiso_rep_tracking,tracking.isoform_fpkm_tracking); 
+		
+		FILE* ftss_rep_tracking =  outfiles.tss_group_rep_tracking_out;
+		fprintf(stderr, "Writing TSS group-level read group tracking\n");
+		print_read_group_tracking(ftss_rep_tracking,tracking.tss_group_fpkm_tracking);
+		
+		FILE* fgene_rep_tracking =  outfiles.gene_rep_tracking_out;
+		fprintf(stderr, "Writing gene-level read group tracking\n");
+		print_read_group_tracking(fgene_rep_tracking,tracking.gene_fpkm_tracking);
+		
+		FILE* fcds_rep_tracking =  outfiles.cds_rep_tracking_out;
+		fprintf(stderr, "Writing CDS-level read group tracking\n");
+		print_read_group_tracking(fcds_rep_tracking,tracking.cds_fpkm_tracking);		
+	}
+	else
+	{
+		// FPKM tracking
+		
+		FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
+		fprintf(stderr, "Writing isoform-level FPKM tracking\n");
+		print_allele_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
+		
+		FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
+		fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
+		print_allele_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
+		
+		FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
+		fprintf(stderr, "Writing gene-level FPKM tracking\n");
+		print_allele_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
+		
+		FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
+		fprintf(stderr, "Writing CDS-level FPKM tracking\n");
+		print_allele_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
+		
+		// Count tracking
+		
+		FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
+		fprintf(stderr, "Writing isoform-level count tracking\n");
+		print_allele_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
+		
+		FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
+		fprintf(stderr, "Writing TSS group-level count tracking\n");
+		print_allele_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
+		
+		FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
+		fprintf(stderr, "Writing gene-level count tracking\n");
+		print_allele_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
+		
+		FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
+		fprintf(stderr, "Writing CDS-level count tracking\n");
+		print_allele_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
+		
+		// Read group tracking
+		
+		FILE* fiso_rep_tracking =  outfiles.isoform_rep_tracking_out;
+		fprintf(stderr, "Writing isoform-level read group tracking\n");
+		print_allele_read_group_tracking(fiso_rep_tracking,tracking.isoform_fpkm_tracking); 
+		
+		FILE* ftss_rep_tracking =  outfiles.tss_group_rep_tracking_out;
+		fprintf(stderr, "Writing TSS group-level read group tracking\n");
+		print_allele_read_group_tracking(ftss_rep_tracking,tracking.tss_group_fpkm_tracking);
+		
+		FILE* fgene_rep_tracking =  outfiles.gene_rep_tracking_out;
+		fprintf(stderr, "Writing gene-level read group tracking\n");
+		print_allele_read_group_tracking(fgene_rep_tracking,tracking.gene_fpkm_tracking);
+		
+		FILE* fcds_rep_tracking =  outfiles.cds_rep_tracking_out;
+		fprintf(stderr, "Writing CDS-level read group tracking\n");
+		print_allele_read_group_tracking(fcds_rep_tracking,tracking.cds_fpkm_tracking);
     }
-
-    //fprintf(stderr, "***There are %lu difference records in gene_exp_diffs\n", gene_exp_diffs.size());
-    int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
-    fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
-    
-    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
-    {        
-        for (size_t j = 0; j < i; ++j)
-        {
-            print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
-        }
-    }	
-
-    
-	int total_cds_de_tests = 0;
-	vector<SampleDifference*> cds_exp_diffs;
-    fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-
-    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            total_cds_de_tests += tests.cds_de_tests[i][j].size();
-            extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
-        }
-    }
-
-
-    int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
-    fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
-    
-    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
-        }
-    }
-
-    
-	int total_diff_splice_tests = 0;
-	vector<SampleDifference*> splicing_diffs;
-    fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-
-    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
-            extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
-        }
-    }
-
-    int splicing_tests = fdr_significance(FDR, splicing_diffs);
-    fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
-    
-    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
-            print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
-        }
-    }
-
-    
-	int total_diff_promoter_tests = 0;
-	vector<SampleDifference*> promoter_diffs;
-    fprintf(outfiles.diff_promoter_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-
-    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
-            extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
-        }
-    }
-
-
-    int promoter_tests = fdr_significance(FDR, promoter_diffs);
-    fprintf(stderr, "Performed %d promoter preference tests\n", promoter_tests);
-    
-    for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
-        }
-    }
-    
-	int total_diff_cds_tests = 0;
-	vector<SampleDifference*> cds_use_diffs;
-    fprintf(outfiles.diff_cds_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
-    
-    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
-            total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
-        }
-    }
-
-
-    int cds_use_tests = fdr_significance(FDR, cds_use_diffs);
-    fprintf(stderr, "Performing %d relative CDS output tests\n", cds_use_tests);
-    
-    for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
-        }
-    }
-
-	
-    // FPKM tracking
-    
-	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
-	fprintf(stderr, "Writing isoform-level FPKM tracking\n");
-	print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
-	
-	FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
-	fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
-	print_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
-	
-	FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
-	fprintf(stderr, "Writing gene-level FPKM tracking\n");
-	print_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
-	
-	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
-	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
-	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
-
-    // Count tracking
-    
-    FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
-	fprintf(stderr, "Writing isoform-level count tracking\n");
-	print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
-	
-	FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
-	fprintf(stderr, "Writing TSS group-level count tracking\n");
-	print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
-	
-	FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
-	fprintf(stderr, "Writing gene-level count tracking\n");
-	print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
-	
-	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
-	fprintf(stderr, "Writing CDS-level count tracking\n");
-	print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
-    
-    // Read group tracking
-    
-    FILE* fiso_rep_tracking =  outfiles.isoform_rep_tracking_out;
-	fprintf(stderr, "Writing isoform-level read group tracking\n");
-	print_read_group_tracking(fiso_rep_tracking,tracking.isoform_fpkm_tracking); 
-	
-	FILE* ftss_rep_tracking =  outfiles.tss_group_rep_tracking_out;
-	fprintf(stderr, "Writing TSS group-level read group tracking\n");
-	print_read_group_tracking(ftss_rep_tracking,tracking.tss_group_fpkm_tracking);
-	
-	FILE* fgene_rep_tracking =  outfiles.gene_rep_tracking_out;
-	fprintf(stderr, "Writing gene-level read group tracking\n");
-	print_read_group_tracking(fgene_rep_tracking,tracking.gene_fpkm_tracking);
-	
-	FILE* fcds_rep_tracking =  outfiles.cds_rep_tracking_out;
-	fprintf(stderr, "Writing CDS-level read group tracking\n");
-	print_read_group_tracking(fcds_rep_tracking,tracking.cds_fpkm_tracking);
-    
-    FILE* fread_group_info =  outfiles.read_group_info_out;
+	FILE* fread_group_info =  outfiles.read_group_info_out;
 	fprintf(stderr, "Writing read group info\n");
 	print_read_group_info(fread_group_info,all_read_groups);
-
+	
     FILE* frun_info =  outfiles.run_info_out;
 	fprintf(stderr, "Writing run info\n");
 	print_run_info(frun_info);
@@ -2343,7 +3663,7 @@ int main(int argc, char** argv)
     
     if (use_sample_sheet)
     {
-        if  (optind < argc)
+		if  (optind < argc)
         {
             
             string sample_sheet_filename = argv[optind++];
@@ -2359,7 +3679,7 @@ int main(int argc, char** argv)
                 }
             }
             parse_sample_sheet_file(sample_sheet_file, sample_labels, sam_hit_filenames);
-        }
+		}
         else
         {
             fprintf(stderr, "Error: option --use-sample-sheet requires a single sample sheet filename instead of a list of SAM/BAM files\n");
@@ -2367,11 +3687,11 @@ int main(int argc, char** argv)
     }
     else
     {
-        while(optind < argc)
-        {
-            string sam_hits_file_name = argv[optind++];
-            sam_hit_filenames.push_back(sam_hits_file_name);
-        }
+		while(optind < argc)
+		{
+			string sam_hits_file_name = argv[optind++];
+			sam_hit_filenames.push_back(sam_hits_file_name);
+		}
         
         if (sample_labels.size() == 0)
         {
@@ -2383,12 +3703,15 @@ int main(int argc, char** argv)
             }
         }
     }
-    	
-	while (sam_hit_filenames.size() < 2)
-    {
-        fprintf(stderr, "Error: cuffdiff requires at least 2 SAM files\n");
-        exit(1);
-    }
+	
+	if(!allele_specific_differential)
+	{
+		while (sam_hit_filenames.size() < 2)
+		{
+			fprintf(stderr, "Error: cuffdiff requires at least 2 SAM files\n");
+			exit(1);
+		}
+	}
 	
     
     if (sam_hit_filenames.size() != sample_labels.size())
@@ -2403,7 +3726,7 @@ int main(int argc, char** argv)
 	// seed the random number generator - we'll need it for the importance
 	// sampling during MAP estimation of the gammas
 	srand48(random_seed);
-	
+		
 	FILE* ref_gtf = NULL;
 	if (ref_gtf_filename != "")
 	{
@@ -2735,8 +4058,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.var_model_out = var_model_out;
 
-    
-    driver(ref_gtf, mask_gtf, contrast_file, norm_standards_file, sam_hit_filenames, outfiles);
+	driver(ref_gtf, mask_gtf, contrast_file, norm_standards_file, sam_hit_filenames, outfiles);
 	
 #if 0
     if (emit_count_tables)

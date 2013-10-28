@@ -163,7 +163,7 @@ public:
 	
 	void remove_hitless_scaffolds();
 
-	void collapse_hits();
+	void collapse_hits(bool allele=false);
 	
     int num_replicates() const { return _num_replicates; }
     
@@ -375,17 +375,52 @@ public:
     PrecomputedExpressionBundleFactory(shared_ptr<PrecomputedExpressionHitFactory> fac)
 	: BundleFactory(fac, REF_DRIVEN), _hit_fac(fac)
 	{
-		
+
 	}
     
     bool next_bundle(HitBundle& bundle_out);
     
     shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
+	
     void clear_abundance_for_locus(int locus_id);
+	int get_ab_size() 
+		{
+			return (_hit_fac->get_curr_ab_groups_size());
+		}
+	
     
 private:
     
     shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;
+#if ENABLE_THREADS
+    boost::mutex _factory_lock;
+#endif
+};
+
+//allele
+class PrecomputedAlleleExpressionBundleFactory : public BundleFactory
+{
+public:
+    PrecomputedAlleleExpressionBundleFactory(shared_ptr<PrecomputedAlleleExpressionHitFactory> fac)
+	: BundleFactory(fac, REF_DRIVEN), _hit_fac(fac)
+	{
+
+	}
+    
+    bool next_bundle(HitBundle& bundle_out);
+    
+	shared_ptr<const AlleleAbundanceGroup> get_abundance_for_locus(int locus_id);
+	
+    void clear_abundance_for_locus(int locus_id);
+	int get_ab_size() 
+		{
+			return (_hit_fac->get_curr_ab_groups_size());
+		}
+	
+    
+private:
+    
+    shared_ptr<PrecomputedAlleleExpressionHitFactory> _hit_fac;
 #if ENABLE_THREADS
     boost::mutex _factory_lock;
 #endif

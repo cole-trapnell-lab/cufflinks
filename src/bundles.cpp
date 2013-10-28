@@ -409,10 +409,10 @@ bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
 	}
     return true;
 }
-
-void HitBundle::collapse_hits()
+//allele
+void HitBundle::collapse_hits(bool allele)
 {
-	::collapse_hits(_hits, _non_redundant);
+	::collapse_hits(_hits, _non_redundant, allele);
     //_non_redundant = _hits;
 }
 
@@ -445,7 +445,7 @@ void HitBundle::remove_hitless_scaffolds()
 void HitBundle::combine(const vector<HitBundle*>& in_bundles,
                         HitBundle& out_bundle)
 {
-    out_bundle._hits.clear();
+	out_bundle._hits.clear();
     out_bundle._non_redundant.clear();
     out_bundle._ref_scaffs.clear();
     
@@ -1628,7 +1628,6 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
                  bool progress_bar,
                  bool show_stats)
 {
-
 	ProgressBar p_bar;
 	if (progress_bar)
 		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory->ref_table().size());
@@ -1890,7 +1889,6 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
 	{
 		fprintf(stderr, "Warning: Overriding empirical fragment length distribution with user-specified parameters is not recommended.\n");
 	}
-	
 	if (!has_pairs || tot_count < 10000)
 	{
 		if (has_pairs && !user_provided_fld)
@@ -2039,16 +2037,24 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
-    bool got_bundle = BundleFactory::next_bundle(bundle);
+	bool got_bundle = BundleFactory::next_bundle(bundle);
     if (got_bundle)
     {
         RefSequenceTable& rt = ref_table();
         
         char bundle_label_buf[2048];
         sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
-        
-        shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
-        if (ab)
+        bool ab_flag;
+		size_t ab_size = 0;
+
+		shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
+		if(ab)
+			ab_flag = true;
+		else
+			ab_flag = false;
+		if(ab_flag) ab_size = ab->abundances().size();
+		
+        if (ab_flag)
         {
             double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);
             double total_mass  = _hit_fac->get_total_mass(bundle_label_buf);
@@ -2058,7 +2064,56 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
             bundle.compatible_mass(compatible_mass);
             
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
-            if (bundle.ref_scaffolds().size() != ab->abundances().size())
+            if (bundle.ref_scaffolds().size() != ab_size)
+            {
+                fprintf (stderr, "Error: reconstituted expression bundle does not match GTF\n");
+                exit(1);
+            }
+        }
+        else
+        {
+            fprintf (stderr, "Error: no abundance info for locus %s\n", bundle_label_buf);
+        }
+        
+    }
+    return got_bundle;
+}
+
+//allele
+bool PrecomputedAlleleExpressionBundleFactory::next_bundle(HitBundle& bundle)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+	bool got_bundle = BundleFactory::next_bundle(bundle);
+    if (got_bundle)
+    {
+        RefSequenceTable& rt = ref_table();
+        
+        char bundle_label_buf[2048];
+        sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
+        bool ab_flag;
+		size_t ab_size = 0;
+
+		shared_ptr<const AlleleAbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
+		if(ab)
+			ab_flag = true;
+		else
+			ab_flag = false;
+		if(ab_flag) ab_size = ab->abundances().size();
+		
+		
+        if (ab_flag)
+        {
+            double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);
+            double total_mass  = _hit_fac->get_total_mass(bundle_label_buf);
+            
+            bundle.finalize();
+            bundle.add_raw_mass(total_mass);
+            bundle.compatible_mass(compatible_mass);
+            
+            //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
+            if (bundle.ref_scaffolds().size() != ab_size)
             {
                 fprintf (stderr, "Error: reconstituted expression bundle does not match GTF\n");
                 exit(1);
@@ -2081,7 +2136,25 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionBundleFactory::get_abundan
     return _hit_fac->get_abundance_for_locus(locus_id);
 }
 
+//allele
+shared_ptr<const AlleleAbundanceGroup> PrecomputedAlleleExpressionBundleFactory::get_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    return _hit_fac->get_abundance_for_locus(locus_id);
+}
+
 void PrecomputedExpressionBundleFactory::clear_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    _hit_fac->clear_abundance_for_locus(locus_id);
+}
+
+//allele
+void PrecomputedAlleleExpressionBundleFactory::clear_abundance_for_locus(int locus_id)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);

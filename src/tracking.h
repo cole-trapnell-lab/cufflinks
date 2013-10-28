@@ -89,10 +89,16 @@ struct FPKMTracking
 	string description; // isoforms or tss groups (e.g.) involved in this test
 	string ref_match;
     int length;
-	
+	//allele
+	int paternal_length;
+	int maternal_length;
+
     vector<vector<shared_ptr<const ReadGroupProperties> > > rg_props;
     
 	vector<FPKMContext> fpkm_series;
+	//allele
+	vector<FPKMContext> paternal_fpkm_series;
+	vector<FPKMContext> maternal_fpkm_series;
 };
 
 typedef map<string,  FPKMTracking> FPKMTrackingTable;
@@ -114,5 +120,10 @@ struct Tracking
 };
 
 void add_to_tracking_table(size_t sample_index,
+                           Abundance& ab,
+						   FPKMTrackingTable& track);
+
+//allele
+void add_to_allele_tracking_table(size_t sample_index,
                            Abundance& ab,
 						   FPKMTrackingTable& track);
