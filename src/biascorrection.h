@@ -64,10 +64,9 @@ class BiasLearner{
 public:
 	
 	BiasLearner(boost::shared_ptr<EmpDist const> frag_len_dist);
-	//allele: the allele boolean argument means that transcript.fpkm calls are combined for each parent
-	void preProcessTranscript(const Scaffold& transcript, const bool allele = false);
-	//allele
-	void processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript, const bool allele = false);
+	void preProcessTranscript(const Scaffold& transcript);
+	
+	void processTranscript(const std::vector<double>& startHist, const std::vector<double>& endHist, const Scaffold& transcript);
 	void normalizeParameters();
 	void output(FILE* output_file, const std::string& condition_name, int replicate_num) const;
     

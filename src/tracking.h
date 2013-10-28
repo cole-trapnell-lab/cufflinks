@@ -1,5 +1,13 @@
 #include "abundances.h"
 
+struct TrackingInfoPerRep
+{
+    shared_ptr<const ReadGroupProperties> rg_props;
+    double fpkm;
+    double count;
+    AbundanceStatus status;
+};
+
 struct FPKMContext
 {
 	FPKMContext(double cm,
@@ -20,24 +28,47 @@ struct FPKMContext
     count_var(cv),
     count_uncertainty_var(cuv),
     count_dispersion_var(cdv),
-    count_per_rep(cpr),
-    fpkm_per_rep(fpr),
+    
     FPKM(r),
     FPKM_variance(v),
     FPKM_conf_lo(fcl),
     FPKM_conf_hi(fch),
     status(s),
-    status_per_rep(spr),
+    
     fpkm_samples(fs),
-    gamma(g) {}
+    gamma(g)
+    {
+        assert (fpr.size() == cpr.size());
+        assert (fpr.size() == spr.size());
+        assert (cpr.size() == spr.size());
+        
+        // TODO: should check for proper alignment of these tables...
+        for (CountPerReplicateTable::const_iterator itr = cpr.begin(); itr != cpr.end(); ++itr)
+        {
+            TrackingInfoPerRep info;
+            
+            info.rg_props = itr->first;
+            info.count = itr->second;
+            
+            FPKMPerReplicateTable::const_iterator f_itr = fpr.find(itr->first);
+            if (f_itr != fpr.end())
+                info.fpkm = f_itr->second;
+            
+            StatusPerReplicateTable::const_iterator s_itr = spr.find(itr->first);
+            if (s_itr != spr.end())
+                info.status = s_itr->second;
+            
+            tracking_info_per_rep.push_back(info);
+        }
+        
+        vector<TrackingInfoPerRep>(tracking_info_per_rep).swap(tracking_info_per_rep);
+    }
     
 	double count_mean;
     double count_var;
     double count_uncertainty_var;
     double count_dispersion_var;
-    CountPerReplicateTable count_per_rep;
-    FPKMPerReplicateTable fpkm_per_rep;
-    StatusPerReplicateTable status_per_rep;
+    vector<TrackingInfoPerRep> tracking_info_per_rep;
 	double FPKM;
 	double FPKM_variance;
     double FPKM_conf_lo;
@@ -58,14 +89,10 @@ struct FPKMTracking
 	string description; // isoforms or tss groups (e.g.) involved in this test
 	string ref_match;
     int length;
-	//allele
-	int paternal_length;
-	int maternal_length;
-
+	
+    vector<vector<shared_ptr<const ReadGroupProperties> > > rg_props;
+    
 	vector<FPKMContext> fpkm_series;
-	//allele
-	vector<FPKMContext> paternal_fpkm_series;
-	vector<FPKMContext> maternal_fpkm_series;
 };
 
 typedef map<string,  FPKMTracking> FPKMTrackingTable;
@@ -87,10 +114,5 @@ struct Tracking
 };
 
 void add_to_tracking_table(size_t sample_index,
-                           Abundance& ab,
-						   FPKMTrackingTable& track);
-
-//allele
-void add_to_allele_tracking_table(size_t sample_index,
                            Abundance& ab,
 						   FPKMTrackingTable& track);

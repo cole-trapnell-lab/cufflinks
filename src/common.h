@@ -82,9 +82,6 @@ extern bool cond_prob_collapse;
 extern bool use_compat_mass;
 extern bool use_total_mass;
 extern bool model_mle_error;
-//allele
-extern bool allele_specific_abundance_estimation;
-extern int min_allele_reads;
 
 // Ref-guided assembly options
 extern int overhang_3;
@@ -118,8 +115,6 @@ extern double bootstrap_fraction;
 extern double bootstrap_delta_gap;
 extern int max_frags_per_bundle;
 //extern bool analytic_diff;
-//allele
-extern bool allele_specific_differential;
 extern bool no_differential;
 extern double num_frag_count_draws;
 extern double num_frag_assignments;
@@ -274,13 +269,6 @@ enum LibNormalizationMethod
     ABSOLUTE // Requires spike-in controls, not yet implemented
 };
 
-//allele
-enum Phase
-{
-	PHASED,
-    UNPHASED
-};
-
 class EmpDist
 {
 	//Vectors only valid between min and max!
@@ -417,10 +405,6 @@ public:
     Platform platform() const { return _platform; }
     void platform(Platform p)  { _platform = p; }   
     
-	//allele
-	Phase phase() const { return _phase; }
-	void phase(Phase p) { _phase = p ; }
-
     long double total_map_mass() const { return _total_map_mass; }
     void total_map_mass(long double p)  { _total_map_mass = p; }  
     
@@ -535,8 +519,6 @@ private:
     StandardMateOrientation _std_mate_orient;
 	MateStrandMapping _mate_strand_mapping;
     Platform _platform;
-	//allele
-	Phase _phase;
     long double _total_map_mass;
     long double _norm_map_mass;
     boost::shared_ptr<EmpDist const> _frag_len_dist;
@@ -674,8 +656,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_SCV_CORRECTION       317
 #define OPT_NORM_STANDARDS_FILE     318
 #define OPT_USE_SAMPLE_SHEET        319
-//allele
-#define OPT_ALLELE_SPECIFIC_ABUNDANCE_ESTIMATION 320
-#define OPT_ALLELE_SPECIFIC_DIFFERENTIAL 321
 
 #endif

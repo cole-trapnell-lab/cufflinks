@@ -36,8 +36,7 @@ enum TestStatus {
     LOWDATA, // unsuccessful calculation due to low data, test not performed
     HIDATA,  // skipped calculation due to too many reads data, test not performed
 	OK,      // successful numerical calc, test performed
-	FAIL,     // numerical exception, test not performed
-	NOALLELETEST //no ploymorphisms are covered, not worth doing allele test
+	FAIL     // numerical exception, test not performed
 }; 
 
 struct SampleDifferenceMetaData
@@ -129,19 +128,6 @@ struct Tests
 	vector<vector<SampleDiffs> > diff_cds_tests; // to be performed on the cds groups of a single gene
 };
 
-//allele
-struct AlleleTests
-{
-	vector<vector<SampleDiffs> > paternal_paternal_isoform_de_tests,paternal_maternal_isoform_de_tests,maternal_paternal_isoform_de_tests,maternal_maternal_isoform_de_tests,parental_isoform_de_tests;
-	vector<vector<SampleDiffs> > paternal_paternal_tss_group_de_tests,paternal_maternal_tss_group_de_tests,maternal_paternal_tss_group_de_tests,maternal_maternal_tss_group_de_tests,parental_tss_group_de_tests;
-	vector<vector<SampleDiffs> > paternal_paternal_gene_de_tests,paternal_maternal_gene_de_tests,maternal_paternal_gene_de_tests,maternal_maternal_gene_de_tests,parental_gene_de_tests;
-	vector<vector<SampleDiffs> > paternal_paternal_cds_de_tests,paternal_maternal_cds_de_tests,maternal_paternal_cds_de_tests,maternal_maternal_cds_de_tests,parental_cds_de_tests;
-	
-	vector<vector<SampleDiffs> > paternal_paternal_diff_splicing_tests,paternal_maternal_diff_splicing_tests,maternal_paternal_diff_splicing_tests,maternal_maternal_diff_splicing_tests,parental_diff_splicing_tests; // to be performed on the isoforms of a single tss group
-	vector<vector<SampleDiffs> > paternal_paternal_diff_promoter_tests,paternal_maternal_diff_promoter_tests,maternal_paternal_diff_promoter_tests,maternal_maternal_diff_promoter_tests,parental_diff_promoter_tests; // to be performed on the tss groups of a single gene
-	vector<vector<SampleDiffs> > paternal_paternal_diff_cds_tests,paternal_maternal_diff_cds_tests,maternal_paternal_diff_cds_tests,maternal_maternal_diff_cds_tests,parental_diff_cds_tests; // to be performed on the cds groups of a single gene
-};
-
 #if ENABLE_THREADS
     extern boost::mutex _launcher_lock;
 #endif
@@ -195,56 +181,6 @@ private:
     
 };
 
-//allele
-struct AlleleTestLauncher
-{
-private:
-    AlleleTestLauncher(AlleleTestLauncher& rhs) {}
-    
-public:
-    AlleleTestLauncher(int num_samples,
-                 const vector<pair<size_t, size_t> >& contrasts,
-                 AlleleTests* tests,
-                 Tracking* tracking,
-                 ProgressBar* p_bar) 
-    :
-    _orig_workers(num_samples),
-    _contrasts(contrasts),
-    _tests(tests),
-    _tracking(tracking),
-    _p_bar(p_bar)
-    {
-    }
-    
-    void operator()();
-    
-    void register_locus(const string& locus_id);
-    void abundance_avail(const string& locus_id, 
-                         shared_ptr<SampleAlleleAbundances> ab, 
-                         size_t factory_id);
-    void test_finished_loci();
-    void perform_testing(vector<shared_ptr<SampleAlleleAbundances> >& abundances);
-    void record_tracking_data(vector<shared_ptr<SampleAlleleAbundances> >& abundances);
-    bool all_samples_reported_in(vector<shared_ptr<SampleAlleleAbundances> >& abundances);
-    bool all_samples_reported_in(const string& locus_id);
-    
-    void clear_tracking_data() { _tracking->clear(); }
-    
-    typedef list<pair<string, vector<shared_ptr<SampleAlleleAbundances> > > > launcher_sample_table;
-    
-private:
-    
-    launcher_sample_table::iterator find_locus(const string& locus_id);
-    
-    int _orig_workers;
-    vector<pair<size_t, size_t> > _contrasts;
-    launcher_sample_table _samples;
-    AlleleTests* _tests;
-    Tracking* _tracking;
-    ProgressBar* _p_bar;
-    
-};
-
 extern double min_read_count;
 
 void sample_worker(bool non_empty,
@@ -259,21 +195,6 @@ void test_differential(const string& locus_tag,
 					   const vector<shared_ptr<SampleAbundances> >& samples,
                        const vector<pair<size_t, size_t> >& constrasts,
 					   Tests& tests,
-					   Tracking& tracking);
-
-//allele
-void allele_sample_worker(bool non_empty,
-						  shared_ptr<HitBundle> bundle,
-						  const RefSequenceTable& rt,
-						  ReplicatedBundleFactory& sample_factory,
-						  shared_ptr<SampleAlleleAbundances> abundance,
-						  size_t factory_id,
-						  shared_ptr<AlleleTestLauncher> launcher);
-
-void test_differential(const string& locus_tag,
-					   const vector<shared_ptr<SampleAlleleAbundances> >& samples,
-                       const vector<pair<size_t, size_t> >& constrasts,
-					   AlleleTests& tests,
 					   Tracking& tracking);
 
 void dump_locus_variance_info(const string& filename);

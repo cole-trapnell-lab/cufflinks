@@ -207,10 +207,7 @@ public:
 		_is_ref(false),
 		_strand(CUFF_STRAND_UNKNOWN), 
 		_classcode(0),
-        _fpkm(0.0), 
-		//allele
-		_paternal_fpkm(0.0),
-		_maternal_fpkm(0.0)	 {}
+        _fpkm(0.0) {}
 	
 	Scaffold(const MateHit& mate) :
 		_ref_id(mate.ref_id()),
@@ -298,11 +295,6 @@ public:
         {
             double avg_fpkm = mate.mass();
             fpkm(avg_fpkm);
-			//allele
-			double avg_paternal_mass,avg_maternal_mass;
-			mate.parental_masses(avg_paternal_mass,avg_maternal_mass);
-			paternal_fpkm(avg_paternal_mass);
-			maternal_fpkm(avg_maternal_mass);
         }
 	}
 	
@@ -322,23 +314,12 @@ public:
         if (library_type == "transfrags")
         {
             double avg_fpkm = 0.0;
-			//allele
-			double avg_paternal_fpkm = 0.0;
-			double avg_maternal_fpkm = 0.0;
             BOOST_FOREACH (const Scaffold& sc, hits)
             {
                 avg_fpkm += sc.fpkm();
-				//allele
-				avg_paternal_fpkm += sc.paternal_fpkm();
-				avg_maternal_fpkm += sc.maternal_fpkm();
             }
             avg_fpkm /= hits.size();
             fpkm(avg_fpkm);
-			//allele
-			avg_paternal_fpkm /= hits.size();
-			avg_maternal_fpkm /= hits.size();
-			paternal_fpkm(avg_paternal_fpkm);
-			maternal_fpkm(avg_maternal_fpkm);
         }
 	}
 	
@@ -392,18 +373,10 @@ public:
     // multiple estimation runs (e.g. for use with bias correction
 	double fpkm() const {return _fpkm; }
 	void fpkm(double fpkm) { _fpkm = fpkm; }
-	//allele
-	double paternal_fpkm() const {return _paternal_fpkm; }
-	double maternal_fpkm() const {return _maternal_fpkm; }
-	void paternal_fpkm(double fpkm) { _paternal_fpkm = fpkm; }
-	void maternal_fpkm(double fpkm) { _maternal_fpkm = fpkm; }   
+    
     double num_fragments() const {return _num_fragments; }
 	void num_fragments(double nf) { _num_fragments = nf; }
-	//allele
-	double num_paternal_fragments() const {return _num_paternal_fragments; }
-	void num_paternal_fragments(double nf) { _num_paternal_fragments = nf; }
-	double num_maternal_fragments() const {return _num_maternal_fragments; }
-	void num_maternal_fragments(double nf) { _num_maternal_fragments = nf; } 
+ 
 	const string& seq() const { return _seq; } 
 	void seq(const string& s) {	_seq = s; } 
 	
@@ -633,9 +606,6 @@ public:
 	bool add_hit(const MateHit*);
 	
 	void get_complete_subscaffolds(vector<Scaffold>& complete);
-	
-	//allele
-	bool is_allele_informative();
 private: 
 	
 	void initialize_exon_lists();
@@ -714,11 +684,6 @@ private:
 	string _seq;
 	double _fpkm;
 	double _num_fragments;
-	//allele
-	double _paternal_fpkm;
-	double _maternal_fpkm;
-	double _num_paternal_fragments;
-	double _num_maternal_fragments;
 };
 
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);

@@ -368,12 +368,10 @@ void holdout_transitivity_hazards(vector<Scaffold>& hits,
 	hits = filtered_hits;
 }
 
-//allele
 bool make_scaffolds(int bundle_left,
 					int bundle_length,
 					vector<Scaffold>& hits,
-					vector<Scaffold>& scaffolds,
-					const bool allele)
+					vector<Scaffold>& scaffolds)
 {
 	if (hits.empty())
 		return true;
@@ -422,23 +420,12 @@ bool make_scaffolds(int bundle_left,
        
 		vector<float> depth_of_coverage(bundle_length,0);
 		map<pair<int,int>, float> intron_depth_of_coverage;
-				//allele
-		if(allele)
-		{
-			compute_doc_allele(bundle_left, 
-						hits, 
-						depth_of_coverage, 
-						intron_depth_of_coverage,
-						false);
-		}
-		else{
-			compute_doc(bundle_left, 
-						hits, 
-						depth_of_coverage, 
-						intron_depth_of_coverage,
-						false);
-		}
-		
+		compute_doc(bundle_left, 
+					hits, 
+					depth_of_coverage, 
+					intron_depth_of_coverage,
+					false);
+
 		normal norm(0, 0.1);
 		
 		vector<const MateHit*> prev_chaff;

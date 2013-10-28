@@ -22,28 +22,20 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
                           const vector<shared_ptr<Abundance> >& mapped_transcripts,
                           double locus_mass);
 
-//allele
-void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
-						  vector<double>& paternal_abundances,
-						  vector<double>& maternal_abundances,
-                          const vector<shared_ptr<Abundance> >& mapped_transcripts,
-                          double locus_mass);
-//allele
+
 void filter_introns(int bundle_length,
 					int bundle_left,
 					vector<Scaffold>& hits, 
 					double fraction,
 					bool filter_on_intron_overlap,
-					bool filter_with_intron_doc,
-					const bool allele = false);
+					bool filter_with_intron_doc);
 
 // Designed to strip out remaining pre-mrna genes, assembled repeats, and 
 // fragments from isoforms too short to be reliably quantitated.
 void filter_junk_genes(vector<Gene>& genes);
-//allele
-void filter_junk_genes_allele(vector<Gene>& genes);
-//allele
-void filter_hits(int bundle_length, int bundle_left, vector<Scaffold>& hits, const bool allele = false);
+
+
+void filter_hits(int bundle_length, int bundle_left, vector<Scaffold>& hits);
 
 void clip_by_3_prime_dropoff(vector<Scaffold>& scaff);
 

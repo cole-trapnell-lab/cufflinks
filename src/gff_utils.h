@@ -272,8 +272,6 @@ public:
         if (end==d.end) return strand<d.strand;
                      else return end<d.end;
         } else return (start<d.start);
-		//allele
-		return false;
      }
     */
     const char* getGeneName() {

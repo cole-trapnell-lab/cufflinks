@@ -100,8 +100,6 @@ static struct option long_options[] = {
 {"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
 {"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
 {"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
-//allele
-{"allele-specific-abundance-estimation",  no_argument,     0,    OPT_ALLELE_SPECIFIC_ABUNDANCE_ESTIMATION},	
 //{"analytic-diff",           no_argument,	 		 0,	         OPT_ANALYTIC_DIFF},
 {"no-diff",                 no_argument,	 		 0,	         OPT_NO_DIFF},
 {"num-frag-count-draws",	required_argument,		 0,			 OPT_NUM_FRAG_COUNT_DRAWS},
@@ -163,9 +161,7 @@ void print_usage()
     fprintf(stderr, "  --max-frag-multihits         Maximum number of alignments allowed per fragment     [ default: unlim  ]\n");
     fprintf(stderr, "  --no-effective-length-correction   No effective length correction                  [ default:  FALSE ]\n");
     fprintf(stderr, "  --no-length-correction       No length correction                                  [ default:  FALSE ]\n");
-	//allele
-	fprintf(stderr, "  --allele-specific-abundance-estimation   Estimation of allele specific isoform aundances [ default:  FALSE ]\n");
-
+    
     fprintf(stderr, "\nDebugging use only:\n");
     fprintf(stderr, "  --read-skip-fraction         Skip a random subset of reads this size               [ default:    0.0 ]\n");
     fprintf(stderr, "  --no-read-pairs              Break all read pairs                                  [ default:  FALSE ]\n");
@@ -306,12 +302,6 @@ int parse_options(int argc, char** argv)
             case OPT_USE_TOTAL_MASS:
             {
                 use_total_mass = true;
-                break;
-            }
-			//allele
-		    case OPT_ALLELE_SPECIFIC_ABUNDANCE_ESTIMATION:
-            {
-                allele_specific_abundance_estimation = true;
                 break;
             }
             case OPT_MAX_FRAGS_PER_BUNDLE:
@@ -551,134 +541,6 @@ void print_FPKM_tracking(FILE* fout,
 	}
 }
 
-//allele
-void print_allele_FPKM_tracking(FILE* fout, 
-						 const FPKMTrackingTable& tracking)
-{
-	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tpaternal_length\tmaternal_length\tpaternal_coverage\tmaternal_coverage");
-	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
-	if (first_itr != tracking.end())
-	{
-		const FPKMTracking& track = first_itr->second;
-		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
-		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
-		assert(paternal_fpkms.size() == maternal_fpkms.size());
-		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
-		{
-			fprintf(fout, "\t%s_paternal_FPKM\t%s_paternal_conf_lo\t%s_paternal_conf_hi\t%s_paternal_status\t%s_maternal_FPKM\t%s_maternal_conf_lo\t%s_maternal_conf_hi\t%s_maternal_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
-		}
-	}
-	fprintf(fout, "\n");
-	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
-	{
-		const string& description = itr->first;
-		const FPKMTracking& track = itr->second;
-		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
-		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
-		
-        AbundanceStatus paternal_status = NUMERIC_OK;
-		AbundanceStatus maternal_status = NUMERIC_OK;
-        BOOST_FOREACH (const FPKMContext& c, paternal_fpkms)
-        {
-            if (c.status == NUMERIC_FAIL)
-                paternal_status = NUMERIC_FAIL;
-        }
-		BOOST_FOREACH (const FPKMContext& c, maternal_fpkms)
-        {
-            if (c.status == NUMERIC_FAIL)
-                maternal_status = NUMERIC_FAIL;
-        }
-        
-        string all_gene_ids = cat_strings(track.gene_ids);
-		if (all_gene_ids == "")
-			all_gene_ids = "-";
-        
-		string all_gene_names = cat_strings(track.gene_names);
-		if (all_gene_names == "")
-			all_gene_names = "-";
-		
-		string all_tss_ids = cat_strings(track.tss_ids);
-		if (all_tss_ids == "")
-			all_tss_ids = "-";
-		
-        char length_buff[33] = "-";
-        if (track.length)
-            sprintf(length_buff, "%d", track.length);
-        
-        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", 
-                description.c_str(),
-                track.classcode ? track.classcode : '-',
-                track.ref_match.c_str(),
-                all_gene_ids.c_str(),
-                all_gene_names.c_str(), 
-                all_tss_ids.c_str(),
-                track.locus_tag.c_str(),
-                length_buff,
-				length_buff,
-                "-");
-       		
-		assert(paternal_fpkms.size() == maternal_fpkms.size());
-		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
-		{
-			double paternal_fpkm = paternal_fpkms[i].FPKM;
-			double maternal_fpkm = maternal_fpkms[i].FPKM;
-			//double paternal_std_dev = sqrt(paternal_fpkms[i].FPKM_variance);
-			//double maternal_std_dev = sqrt(maternal_fpkms[i].FPKM_variance);
-			double paternal_fpkm_conf_hi = paternal_fpkms[i].FPKM_conf_hi;
-			double paternal_fpkm_conf_lo = paternal_fpkms[i].FPKM_conf_lo;
-			double maternal_fpkm_conf_hi = maternal_fpkms[i].FPKM_conf_hi;
-			double maternal_fpkm_conf_lo = maternal_fpkms[i].FPKM_conf_lo;
-            const char* paternal_status_str = "OK";
-			const char* maternal_status_str = "OK";
-            
-            if (paternal_fpkms[i].status == NUMERIC_OK)
-            {
-                paternal_status_str = "OK";
-            }
-            else if (paternal_fpkms[i].status == NUMERIC_FAIL)
-            {
-                paternal_status_str = "FAIL";
-            }
-            else if (paternal_fpkms[i].status == NUMERIC_LOW_DATA)
-            {
-                paternal_status_str = "LOWDATA";
-            }
-            else if (paternal_fpkms[i].status == NUMERIC_HI_DATA)
-            {
-                paternal_status_str = "HIDATA";
-            }
-            else
-            {
-                assert(false);
-            }
-			if (maternal_fpkms[i].status == NUMERIC_OK)
-            {
-                maternal_status_str = "OK";
-            }
-            else if (maternal_fpkms[i].status == NUMERIC_FAIL)
-            {
-                maternal_status_str = "FAIL";
-            }
-            else if (maternal_fpkms[i].status == NUMERIC_LOW_DATA)
-            {
-                maternal_status_str = "LOWDATA";
-            }
-            else if (maternal_fpkms[i].status == NUMERIC_HI_DATA)
-            {
-                maternal_status_str = "HIDATA";
-            }
-            else
-            {
-                assert(false);
-            }
-            
-			fprintf(fout, "\t%lg\t%lg\t%lg\t%s\t%lg\t%lg\t%lg\t%s", paternal_fpkm, paternal_fpkm_conf_lo, paternal_fpkm_conf_hi, paternal_status_str, maternal_fpkm, maternal_fpkm_conf_lo, maternal_fpkm_conf_hi, maternal_status_str);
-		}
-		
-		fprintf(fout, "\n");
-	}
-}
-
 void print_count_tracking(FILE* fout, 
 						  const FPKMTrackingTable& tracking)
 {
@@ -740,107 +602,6 @@ void print_count_tracking(FILE* fout,
             double uncertainty_var = fpkms[i].count_uncertainty_var;
             double dispersion_var = fpkms[i].count_dispersion_var;
 			fprintf(fout, "\t%lg\t%lg\t%lg\t%lg\t%s", external_counts, external_count_var, uncertainty_var, dispersion_var, status_str);
-		}
-		
-		fprintf(fout, "\n");
-	}
-}
-
-//allele
-void print_allele_count_tracking(FILE* fout, 
-						  const FPKMTrackingTable& tracking)
-{
-	fprintf(fout,"tracking_id");
-	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
-	if (first_itr != tracking.end())
-	{
-		const FPKMTracking& track = first_itr->second;
-		const vector<FPKMContext>& fpkms = track.fpkm_series;
-		for (size_t i = 0; i < fpkms.size(); ++i)
-		{
-			fprintf(fout, "\t%s_paternal_count\t%s_paternal_count_variance\t%s_paternal_count_uncertainty_var\t%s_paternal_count_dispersion_var\t%s_maternal_status\t%s_maternal_count\t%s_maternal_count_variance\t%s_maternal_count_uncertainty_var\t%s_maternal_count_dispersion_var\t%s_maternal_status", sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str(), sample_labels[i].c_str());
-		}
-	}
-	fprintf(fout, "\n");
-	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
-	{
-		const string& description = itr->first;
-		const FPKMTracking& track = itr->second;
-		const vector<FPKMContext>& paternal_fpkms = track.paternal_fpkm_series;
-		const vector<FPKMContext>& maternal_fpkms = track.maternal_fpkm_series;
-		
-        AbundanceStatus paternal_status = NUMERIC_OK;
-		AbundanceStatus maternal_status = NUMERIC_OK;
-		BOOST_FOREACH (const FPKMContext& c, paternal_fpkms)
-        {
-            if (c.status == NUMERIC_FAIL)
-                paternal_status = NUMERIC_FAIL;
-        }
-		BOOST_FOREACH (const FPKMContext& c, maternal_fpkms)
-        {
-            if (c.status == NUMERIC_FAIL)
-                maternal_status = NUMERIC_FAIL;
-        }
-        
-        fprintf(fout, "%s", 
-                description.c_str());
-        
-		assert(paternal_fpkms.size() == maternal_fpkms.size());
-		for (size_t i = 0; i < paternal_fpkms.size(); ++i)
-		{
-            const char* paternal_status_str = "OK";
-			const char* maternal_status_str = "OK";
-            
-            if (paternal_fpkms[i].status == NUMERIC_OK)
-            {
-                paternal_status_str = "OK";
-            }
-            else if (paternal_fpkms[i].status == NUMERIC_FAIL)
-            {
-                paternal_status_str = "FAIL";
-            }
-            else if (paternal_fpkms[i].status == NUMERIC_LOW_DATA)
-            {
-                paternal_status_str = "LOWDATA";
-            }
-            else if (paternal_fpkms[i].status == NUMERIC_HI_DATA)
-            {
-                paternal_status_str = "HIDATA";
-            }
-            else
-            {
-                assert(false);
-            }
-			if (maternal_fpkms[i].status == NUMERIC_OK)
-            {
-                maternal_status_str = "OK";
-            }
-            else if (maternal_fpkms[i].status == NUMERIC_FAIL)
-            {
-                maternal_status_str = "FAIL";
-            }
-            else if (maternal_fpkms[i].status == NUMERIC_LOW_DATA)
-            {
-                maternal_status_str = "LOWDATA";
-            }
-            else if (maternal_fpkms[i].status == NUMERIC_HI_DATA)
-            {
-                maternal_status_str = "HIDATA";
-            }
-            else
-            {
-                assert(false);
-            }
-            
-            double paternal_external_counts = paternal_fpkms[i].count_mean;
-            double paternal_external_count_var = paternal_fpkms[i].count_var;
-            double paternal_uncertainty_var = paternal_fpkms[i].count_uncertainty_var;
-            double paternal_dispersion_var = paternal_fpkms[i].count_dispersion_var;
-			double maternal_external_counts = maternal_fpkms[i].count_mean;
-            double maternal_external_count_var = maternal_fpkms[i].count_var;
-            double maternal_uncertainty_var = maternal_fpkms[i].count_uncertainty_var;
-            double maternal_dispersion_var = maternal_fpkms[i].count_dispersion_var;
-			fprintf(fout, "\t%lg\t%lg\t%lg\t%lg\t%s\t%lg\t%lg\t%lg\t%lg\t%s", paternal_external_counts, paternal_external_count_var, paternal_uncertainty_var, paternal_dispersion_var, paternal_status_str, maternal_external_counts, maternal_external_count_var, maternal_uncertainty_var, maternal_dispersion_var, maternal_status_str);
 		}
 		
 		fprintf(fout, "\n");
@@ -911,8 +672,6 @@ void learn_bias_worker(shared_ptr<BundleFactory> fac)
 }
 
 typedef map<int, vector<AbundanceGroup> > light_ab_group_tracking_table;
-//allele
-typedef map<int, vector<AlleleAbundanceGroup> > light_allele_ab_group_tracking_table;
 
 // Similiar to TestLauncher, except this class records tracking data when abundance groups report in
 struct AbundanceRecorder
@@ -962,68 +721,8 @@ private:
     light_ab_group_tracking_table _ab_group_tracking_table;
 };
 
-//allele
-struct AlleleAbundanceRecorder
-{
-private:
-    AlleleAbundanceRecorder(AlleleAbundanceRecorder& rhs) {}
-    
-public:
-    AlleleAbundanceRecorder(int num_samples,
-                      Tracking* tracking,
-                      ProgressBar* p_bar)
-        :
-        _orig_workers(num_samples),
-        _tracking(tracking),
-        _p_bar(p_bar)
-        {
-        }
-    
-    void operator()();
-    
-    void register_locus(int locus_id);
-    void abundance_avail(int locus_id,
-                         shared_ptr<SampleAlleleAbundances> ab,
-                         size_t factory_id);
-    void record_finished_loci();
-    void record_tracking_data(int locus_id, vector<shared_ptr<SampleAlleleAbundances> >& abundances);
-    bool all_samples_reported_in(vector<shared_ptr<SampleAlleleAbundances> >& abundances);
-    bool all_samples_reported_in(int locus_id);
-    
-    void clear_tracking_data() { _tracking->clear(); }
-    
-    typedef list<pair<int, vector<shared_ptr<SampleAlleleAbundances> > > > recorder_sample_table;
-    
-    const light_allele_ab_group_tracking_table& get_sample_table() const { return _ab_group_tracking_table; }
-    
-private:
-    
-    recorder_sample_table::iterator find_locus(int locus_id);
-    
-    int _orig_workers;
-    
-    recorder_sample_table _samples;
-    
-    Tracking* _tracking;
-    ProgressBar* _p_bar;
-    
-    light_allele_ab_group_tracking_table _ab_group_tracking_table;
-};
-
 
 AbundanceRecorder::recorder_sample_table::iterator AbundanceRecorder::find_locus(int locus_id)
-{
-    recorder_sample_table::iterator itr = _samples.begin();
-    for(; itr != _samples.end(); ++itr)
-    {
-        if (itr->first == locus_id)
-            return itr;
-    }
-    return _samples.end();
-}
-
-//allele
-AlleleAbundanceRecorder::recorder_sample_table::iterator AlleleAbundanceRecorder::find_locus(int locus_id)
 {
     recorder_sample_table::iterator itr = _samples.begin();
     for(; itr != _samples.end(); ++itr)
@@ -1049,41 +748,8 @@ void AbundanceRecorder::register_locus(int locus_id)
     }
 }
 
-//allele
-void AlleleAbundanceRecorder::register_locus(int locus_id)
-{
-#if ENABLE_THREADS
-	boost::mutex::scoped_lock lock(_recorder_lock);
-#endif
-    
-    recorder_sample_table::iterator itr = find_locus(locus_id);
-    if (itr == _samples.end())
-    {
-        pair<recorder_sample_table::iterator, bool> p;
-        vector<shared_ptr<SampleAlleleAbundances> >abs(_orig_workers);
-        _samples.push_back(make_pair(locus_id, abs));
-    }
-}
-
 void AbundanceRecorder::abundance_avail(int locus_id,
                                         shared_ptr<SampleAbundances> ab,
-                                        size_t factory_id)
-{
-#if ENABLE_THREADS
-	boost::mutex::scoped_lock lock(_recorder_lock);
-#endif
-    recorder_sample_table::iterator itr = find_locus(locus_id);
-    if (itr == _samples.end())
-    {
-        assert(false);
-    }
-    itr->second[factory_id] = ab;
-    //itr->second(factory_id] = ab;
-}
-
-//allele
-void AlleleAbundanceRecorder::abundance_avail(int locus_id,
-                                        shared_ptr<SampleAlleleAbundances> ab,
                                         size_t factory_id)
 {
 #if ENABLE_THREADS
@@ -1103,21 +769,6 @@ void AlleleAbundanceRecorder::abundance_avail(int locus_id,
 bool AbundanceRecorder::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances)
 {
     BOOST_FOREACH (shared_ptr<SampleAbundances> ab, abundances)
-    {
-        if (!ab)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-//allele
-// Note: this routine should be called under lock - it doesn't
-// acquire the lock itself.
-bool AlleleAbundanceRecorder::all_samples_reported_in(vector<shared_ptr<SampleAlleleAbundances> >& abundances)
-{
-    BOOST_FOREACH (shared_ptr<SampleAlleleAbundances> ab, abundances)
     {
         if (!ab)
         {
@@ -1194,76 +845,6 @@ void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<Sam
     {
         fprintf (stderr, "Error: locus %d is already recorded!\n", locus_id);
     }
-	_ab_group_tracking_table[locus_id] = lightweight_ab_groups;
-}
-
-//allele
-// Note: this routine should be called under lock - it doesn't
-// acquire the lock itself.
-void AlleleAbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<SampleAlleleAbundances> >& abundances)
-{
-    assert (abundances.size() == _orig_workers);
-    
-    // Just verify that all the loci from each factory match up.
-    for (size_t i = 1; i < abundances.size(); ++i)
-    {
-        const SampleAlleleAbundances& curr = *(abundances[i]);
-        const SampleAlleleAbundances& prev = *(abundances[i-1]);
-        
-        assert (curr.locus_tag == prev.locus_tag);
-        
-        const AlleleAbundanceGroup& s1 = curr.transcripts;
-        const AlleleAbundanceGroup& s2 =  prev.transcripts;
-        
-        assert (s1.abundances().size() == s2.abundances().size());
-        
-        for (size_t j = 0; j < s1.abundances().size(); ++j)
-        {
-            assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
-        }
-    }
-    
-    vector<AlleleAbundanceGroup> lightweight_ab_groups;
-    
-    // Add all the transcripts, CDS groups, TSS groups, and genes to their
-    // respective FPKM tracking table.  Whether this is a time series or an
-    // all pairs comparison, we should be calculating and reporting FPKMs for
-    // all objects in all samples
-	for (size_t i = 0; i < abundances.size(); ++i)
-	{
-		const AlleleAbundanceGroup& ab_group = abundances[i]->transcripts;
-        /*
-        //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
-		BOOST_FOREACH (shared_ptr<Abundance> ab, ab_group.abundances())
-		{
-			add_to_tracking_table(i, *ab, _tracking->isoform_fpkm_tracking);
-            //assert (_tracking->isoform_fpkm_tracking.num_fragments_by_replicate().empty() == false);
-		}
-		
-		BOOST_FOREACH (AlleleAbundanceGroup& ab, abundances[i]->cds)
-		{
-			add_to_tracking_table(i, ab, _tracking->cds_fpkm_tracking);
-		}
-		
-		BOOST_FOREACH (AlleleAbundanceGroup& ab, abundances[i]->primary_transcripts)
-		{
-			add_to_tracking_table(i, ab, _tracking->tss_group_fpkm_tracking);
-		}
-		
-		BOOST_FOREACH (AlleleAbundanceGroup& ab, abundances[i]->genes)
-		{
-			add_to_tracking_table(i, ab, _tracking->gene_fpkm_tracking);
-		}
-        */
-        
-        abundances[i]->transcripts.clear_non_serialized_data();
-        lightweight_ab_groups.push_back(abundances[i]->transcripts);
-	}
-    
-    if (_ab_group_tracking_table.find(locus_id) != _ab_group_tracking_table.end())
-    {
-        fprintf (stderr, "Error: locus %d is already recorded!\n", locus_id);
-    }
     _ab_group_tracking_table[locus_id] = lightweight_ab_groups;
 }
 
@@ -1301,138 +882,15 @@ void AbundanceRecorder::record_finished_loci()
         }
     }
 }
-//allele
-void AlleleAbundanceRecorder::record_finished_loci()
-{
-#if ENABLE_THREADS
-	boost::mutex::scoped_lock lock(_recorder_lock);
-#endif
-    
-    recorder_sample_table::iterator itr = _samples.begin();
-    while(itr != _samples.end())
-    {
-        if (all_samples_reported_in(itr->second))
-        {
-            // In some abundance runs, we don't actually want to perform testing
-            // (eg initial quantification before bias correction).
-            // _tests and _tracking will be NULL in these cases.
-            if (_tracking != NULL)
-            {
-                if (_p_bar)
-                {
-                    verbose_msg("Testing for allele differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
-                    _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
-                }
-            }
-            record_tracking_data(itr->first, itr->second);
-            
-            // Removes the samples that have already been tested and transferred to the tracking tables,
-            itr = _samples.erase(itr);
-        }
-        else
-        {
-            
-            ++itr;
-        }
-    }
-}
 
 
 shared_ptr<AbundanceRecorder> abundance_recorder;
-//allele
-shared_ptr<AlleleAbundanceRecorder> allele_abundance_recorder;
 
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
                    shared_ptr<AbundanceRecorder> recorder)
-{
-#if ENABLE_THREADS
-	boost::this_thread::at_thread_exit(decr_pool_count);
-#endif
-    
-    shared_ptr<HitBundle> bundle(new HitBundle);
-    bool non_empty = sample_factory.next_bundle(*bundle);
-    
-    char bundle_label_buf[2048];
-    sprintf(bundle_label_buf,
-            "%s:%d-%d",
-            rt.get_name(bundle->ref_id()),
-            bundle->left(),
-            bundle->right());
-    string locus_tag = bundle_label_buf;
-    
-    abundance->cluster_mass = bundle->mass();
-    
-    recorder->register_locus(bundle->id());
-    
-    abundance->locus_tag = locus_tag;
-
-//    if (rt.get_name(bundle->ref_id()) == "chr13_random")
-//    {
-//        int a = 5;
-//    }
-    if (!non_empty || (bias_run && bundle->ref_scaffolds().size() != 1)) // Only learn on single isoforms
-    {
-//#if !ENABLE_THREADS
-        // If Cuffdiff was built without threads, we need to manually invoke
-        // the testing functor, which will check to see if all the workers
-        // are done, and if so, perform the cross sample testing.
-        recorder->abundance_avail(bundle->id(), abundance, factory_id);
-        recorder->record_finished_loci();
-        //launcher();
-//#endif
-    	return;
-    }
-    
-    bool perform_cds_analysis = false;
-    bool perform_tss_analysis = false;
-    
-    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle->ref_scaffolds())
-    {
-        if (s->annotated_tss_id() != "")
-        {
-            perform_tss_analysis = final_est_run;
-        }
-        if (s->annotated_protein_id() != "")
-        {
-            perform_cds_analysis = final_est_run;
-        }
-    }
-    
-    set<shared_ptr<ReadGroupProperties const> > rg_props;
-    for (size_t i = 0; i < sample_factory.factories().size(); ++i)
-    {
-        shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
-        rg_props.insert(bf->read_group_properties());
-    }
-    
-    sample_abundance_worker(boost::cref(locus_tag),
-                            boost::cref(rg_props),
-                            boost::ref(*abundance),
-                            bundle,
-                            perform_cds_analysis,
-                            perform_tss_analysis);
-    
-    ///////////////////////////////////////////////
-    
-    
-    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
-    {
-        ref_scaff->clear_hits();
-    }
-    
-    recorder->abundance_avail(bundle->id(), abundance, factory_id);
-    recorder->record_finished_loci();
-}
-
-//allele
-void sample_worker_allele(const RefSequenceTable& rt,
-                   ReplicatedBundleFactory& sample_factory,
-                   shared_ptr<SampleAlleleAbundances> abundance,
-                   size_t factory_id,
-                   shared_ptr<AlleleAbundanceRecorder> recorder)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -1556,50 +1014,6 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
     return true;
 }
 
-//allele
-bool quantitate_next_locus(const RefSequenceTable& rt,
-                           vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
-                           shared_ptr<AlleleAbundanceRecorder> recorder)
-{
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
-    {
-        shared_ptr<SampleAlleleAbundances> s_ab = shared_ptr<SampleAlleleAbundances>(new SampleAlleleAbundances);
-        
-#if ENABLE_THREADS					
-        while(1)
-        {
-            locus_thread_pool_lock.lock();
-            if (locus_curr_threads < locus_num_threads)
-            {
-                break;
-            }
-            
-            locus_thread_pool_lock.unlock();
-            
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            
-        }
-        
-        locus_curr_threads++;
-        locus_thread_pool_lock.unlock();
-        
-        thread quantitate(sample_worker_allele,
-                          boost::ref(rt),
-                          boost::ref(*(bundle_factories[i])),
-                          s_ab,
-                          i,
-                          recorder);
-#else
-        sample_worker_allele(boost::ref(rt),
-                      boost::ref(*(bundle_factories[i])),
-                      s_ab,
-                      i,
-                      recorder);
-#endif
-    }
-    return true;
-}
-
 void parse_norm_standards_file(FILE* norm_standards_file)
 {
     char pBuf[10 * 1024];
@@ -1642,8 +1056,6 @@ void parse_norm_standards_file(FILE* norm_standards_file)
 }
 
 shared_ptr<AbundanceRecorder> abx_recorder;
-//allele
-shared_ptr<AlleleAbundanceRecorder> allele_abx_recorder;
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
@@ -1869,33 +1281,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     p_bar = ProgressBar("Calculating preliminary abundance estimates", num_bundles);
     
     Tracking tracking;
-	
-	//allele
-	if(!allele_specific_abundance_estimation)
-	{
-		abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
-	}
-	else
-	{
-		allele_abundance_recorder = shared_ptr<AlleleAbundanceRecorder>(new AlleleAbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
-	}
-	    
+    
+    abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
+    
 	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
 			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-			//allele - although this vector doesn't seem to be used
-			shared_ptr<vector<shared_ptr<SampleAlleleAbundances> > > allele_abundances(new vector<shared_ptr<SampleAlleleAbundances> >());
-			//allele
-			if(!allele_specific_abundance_estimation)
-			{
-				quantitate_next_locus(rt, bundle_factories, abundance_recorder);
-			}
-			else
-			{
-				quantitate_next_locus(rt, bundle_factories, allele_abundance_recorder);
-			}	
+			quantitate_next_locus(rt, bundle_factories, abundance_recorder);
 			bool more_loci_remain = false;
             BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
             {
@@ -2004,35 +1398,18 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
         rg_props->multi_read_table()->valid_mass(true);
     }
     
-	//allele
-    if(!allele_specific_abundance_estimation)
-	{
-		abundance_recorder->clear_tracking_data();
-		abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
-	}
-	else{
-		allele_abundance_recorder->clear_tracking_data();
-		allele_abundance_recorder = shared_ptr<AlleleAbundanceRecorder>(new AlleleAbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
-	}	
+    
+    abundance_recorder->clear_tracking_data();
+    
+    abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
     
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
-	
+                                                     
 	while (true)
 	{
         //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
-		//allele
-		//shared_ptr<vector<shared_ptr<SampleAlleleAbundances> > > abundances(new vector<shared_ptr<SampleAlleleAbundances> >());
-		//allele
-		if(!allele_specific_abundance_estimation)
-		{
-			quantitate_next_locus(rt, bundle_factories, abundance_recorder);
-		}
-		else
-		{
-			quantitate_next_locus(rt, bundle_factories, allele_abundance_recorder);
-		}
-		
+        quantitate_next_locus(rt, bundle_factories, abundance_recorder);
         bool more_loci_remain = false;
         BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
         {
@@ -2071,138 +1448,69 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     string expression_cxb_filename = output_dir + "/abundances.cxb";
     std::ofstream ofs(expression_cxb_filename.c_str());
     boost::archive::binary_oarchive oa(ofs);
+    
+    vector< pair<int, AbundanceGroup> > single_sample_tracking;
+    
+    const light_ab_group_tracking_table& sample_table = abundance_recorder->get_sample_table();
+    for (light_ab_group_tracking_table::const_iterator itr = sample_table.begin(); itr != sample_table.end(); ++itr)
+    {
+        
+        assert (itr->second.size() == 1);
+        single_sample_tracking.push_back(make_pair(itr->first, itr->second[0]));
+    }
+    
+    std::sort(single_sample_tracking.begin(), single_sample_tracking.end(),
+              boost::bind(&std::pair<int, AbundanceGroup>::first, _1) <
+              boost::bind(&std::pair<int, AbundanceGroup>::first, _2));
+    
+    size_t num_loci = single_sample_tracking.size();
+    oa << num_loci;
+    
+    for (int i = 0; i < single_sample_tracking.size(); ++i)
+    {
+        oa << single_sample_tracking[i];
+    }
+    
+    // FPKM tracking
+    
+	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
+	fprintf(stderr, "Writing isoform-level FPKM tracking\n");
+	print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
 	
-	//allele
-	if(!allele_specific_abundance_estimation)
-	{
-		vector< pair<int, AbundanceGroup> > single_sample_tracking;
-		
-		const light_ab_group_tracking_table& sample_table = abundance_recorder->get_sample_table();
-		for (light_ab_group_tracking_table::const_iterator itr = sample_table.begin(); itr != sample_table.end(); ++itr)
-		{
-			assert (itr->second.size() == 1);
-			single_sample_tracking.push_back(make_pair(itr->first, itr->second[0]));
-		}
-		
-		std::sort(single_sample_tracking.begin(), single_sample_tracking.end(),
-				  boost::bind(&std::pair<int, AbundanceGroup>::first, _1) <
-				  boost::bind(&std::pair<int, AbundanceGroup>::first, _2));
-		
-		size_t num_loci = single_sample_tracking.size();
-		oa << num_loci;
-		
-		for (int i = 0; i < single_sample_tracking.size(); ++i)
-		{
-			oa << single_sample_tracking[i];
-		}
-		
-		// FPKM tracking
-		
-		FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
-		fprintf(stderr, "Writing isoform-level FPKM tracking\n");
-		print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
-		
-		FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
-		fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
-		print_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
-		
-		FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
-		fprintf(stderr, "Writing gene-level FPKM tracking\n");
-		print_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
-		
-		FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
-		fprintf(stderr, "Writing CDS-level FPKM tracking\n");
-		print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
-		
-		// Count tracking
-		
-		FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
-		fprintf(stderr, "Writing isoform-level count tracking\n");
-		print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
-		
-		FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
-		fprintf(stderr, "Writing TSS group-level count tracking\n");
-		print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
-		
-		FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
-		fprintf(stderr, "Writing gene-level count tracking\n");
-		print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
-		
-		FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
-		fprintf(stderr, "Writing CDS-level count tracking\n");
-		print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
-		
-		// Run info
-		FILE* frun_info =  outfiles.run_info_out;
-		fprintf(stderr, "Writing run info\n");
-		print_run_info(frun_info);
-	}
-	//
-	else
-	{
-		vector< pair<int, AlleleAbundanceGroup> > single_sample_tracking;
-		
-		const light_allele_ab_group_tracking_table& sample_table = allele_abundance_recorder->get_sample_table();
-		for (light_allele_ab_group_tracking_table::const_iterator itr = sample_table.begin(); itr != sample_table.end(); ++itr)
-		{
-			
-			assert (itr->second.size() == 1);
-			single_sample_tracking.push_back(make_pair(itr->first, itr->second[0]));
-		}
-		
-		std::sort(single_sample_tracking.begin(), single_sample_tracking.end(),
-				  boost::bind(&std::pair<int, AlleleAbundanceGroup>::first, _1) <
-				  boost::bind(&std::pair<int, AlleleAbundanceGroup>::first, _2));
-		
-		size_t num_loci = single_sample_tracking.size();
-		oa << num_loci;
-		
-		for (int i = 0; i < single_sample_tracking.size(); ++i)
-		{
-			oa << single_sample_tracking[i];
-		}
-		
-		// FPKM tracking
-		
-		FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
-		fprintf(stderr, "Writing isoform-level FPKM tracking\n");
-		print_allele_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
-		
-		FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
-		fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
-		print_allele_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
-		
-		FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
-		fprintf(stderr, "Writing gene-level FPKM tracking\n");
-		print_allele_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
-		
-		FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
-		fprintf(stderr, "Writing CDS-level FPKM tracking\n");
-		print_allele_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
-		
-		// Count tracking
-		
-		FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
-		fprintf(stderr, "Writing isoform-level count tracking\n");
-		print_allele_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
-		
-		FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
-		fprintf(stderr, "Writing TSS group-level count tracking\n");
-		print_allele_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
-		
-		FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
-		fprintf(stderr, "Writing gene-level count tracking\n");
-		print_allele_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
-		
-		FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
-		fprintf(stderr, "Writing CDS-level count tracking\n");
-		print_allele_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
-		
-		// Run info
-		FILE* frun_info =  outfiles.run_info_out;
-		fprintf(stderr, "Writing run info\n");
-		print_run_info(frun_info);
-	}
+	FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
+	fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
+	print_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
+	
+	FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
+	fprintf(stderr, "Writing gene-level FPKM tracking\n");
+	print_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
+	
+	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
+	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
+	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
+
+    // Count tracking
+    
+    FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
+	fprintf(stderr, "Writing isoform-level count tracking\n");
+	print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
+	
+	FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
+	fprintf(stderr, "Writing TSS group-level count tracking\n");
+	print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
+	
+	FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
+	fprintf(stderr, "Writing gene-level count tracking\n");
+	print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
+	
+	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
+	fprintf(stderr, "Writing CDS-level count tracking\n");
+	print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
+    
+    // Run info
+    FILE* frun_info =  outfiles.run_info_out;
+	fprintf(stderr, "Writing run info\n");
+	print_run_info(frun_info);
 }
 
 int main(int argc, char** argv)

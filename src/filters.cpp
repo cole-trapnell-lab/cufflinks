@@ -18,38 +18,25 @@
 
 using namespace std;
 using namespace boost;
-//allele
+
 void filter_introns(int bundle_length,
 					int bundle_left,
 					vector<Scaffold>& hits, 
 					double fraction,
 					bool filter_on_intron_overlap,
-					bool filter_with_intron_doc,
-					const bool allele)
+					bool filter_with_intron_doc)
 {
 	vector<float> depth_of_coverage(bundle_length,0);
 	vector<double> scaff_doc;
 	map<pair<int,int>, float> intron_doc;
 	vector<Scaffold> filtered_hits;
 	vector<bool> toss(hits.size(), false);
-//allele	
-	double bundle_avg_doc;
-	if(!allele)
-	{
-		bundle_avg_doc = compute_doc(bundle_left, 
+	
+	double bundle_avg_doc = compute_doc(bundle_left, 
 										hits, 
 										depth_of_coverage, 
 										intron_doc,
 										false);
-	}
-	else
-	{
-		bundle_avg_doc = compute_doc_allele(bundle_left, 
-											hits, 
-											depth_of_coverage, 
-											intron_doc,
-											false);
-	}
 	
 	double bundle_avg_thresh = bundle_avg_doc * fraction;
 	
@@ -165,11 +152,10 @@ double background_rate(const vector<float> depth_of_coverage,
     double median_doc = tmp[median];
     return median_doc;
 }
-//allele
+
 void pre_mrna_filter(int bundle_length,
 					 int bundle_left,
-					 vector<Scaffold>& hits,
-					 const bool allele)
+					 vector<Scaffold>& hits)
 {
 	vector<float> depth_of_coverage(bundle_length,0);
 	vector<double> scaff_doc;
@@ -179,30 +165,15 @@ void pre_mrna_filter(int bundle_length,
 	vector<float> through_introns; //for each location, how many introns pass through
     
 	vector<int> scaff_intron_status;
-	//allele
-	double bundle_avg_doc;
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
-	if(!allele)
-	{
-		bundle_avg_doc = compute_doc(bundle_left,
-									 hits, 
-									 depth_of_coverage, 
-									 intron_doc,
-									 true,
-									 &through_introns,
-									 &scaff_intron_status);
-	}
-	else
-	{
-		bundle_avg_doc = compute_doc_allele(bundle_left,
-											hits, 
-											depth_of_coverage, 
-											intron_doc,
-											true,
-											&through_introns,
-											&scaff_intron_status);
-	}
-		verbose_msg("Pre-mRNA flt: bundle average doc = %lf\n", bundle_avg_doc);
+    double bundle_avg_doc = compute_doc(bundle_left,
+										hits, 
+										depth_of_coverage, 
+										intron_doc,
+										true,
+										&through_introns,
+										&scaff_intron_status);
+    verbose_msg("Pre-mRNA flt: bundle average doc = %lf\n", bundle_avg_doc);
     /*
      //2nd call not needed, the vectors won't change, only the return value
      compute_doc(bundle_left, 
@@ -353,39 +324,26 @@ void pre_mrna_filter(int bundle_length,
 	
 	hits = filtered_hits;
 }
-//allele
+
 void filter_hits(int bundle_length,
 				 int bundle_left,
-				 vector<Scaffold>& hits,
-				 const bool allele)
+				 vector<Scaffold>& hits)
 {
-//allele		
-	pre_mrna_filter(bundle_length, bundle_left, hits, allele);
+	
+	pre_mrna_filter(bundle_length, bundle_left, hits);
 	
 	vector<float> depth_of_coverage(bundle_length+1,0);
 	vector<double> scaff_doc;
 	map<pair<int,int>, float> intron_doc;
 	vector<Scaffold> filtered_hits;
 	vector<bool> toss(hits.size(), false);
-	//allele
-	double bundle_avg_doc;	
+	
 	// Make sure the avg only uses stuff we're sure isn't pre-mrna fragments
-	if(!allele)
-	{
-		bundle_avg_doc = compute_doc(bundle_left, 
-									 hits, 
-									 depth_of_coverage, 
-									 intron_doc,
-									 true);
-	}
-	else
-	{
-		bundle_avg_doc = compute_doc_allele(bundle_left, 
-											hits, 
-											depth_of_coverage, 
-											intron_doc,
-											true);
-	}
+	double bundle_avg_doc = compute_doc(bundle_left, 
+										hits, 
+										depth_of_coverage, 
+										intron_doc,
+										true);
 	
 	// recompute the real DoCs
 	/* not needed, vectors are not changed
@@ -540,21 +498,11 @@ void filter_hits(int bundle_length,
 	toss = vector<bool>(hits.size(), false);
 	
 	map<pair<int, int>, float> dummy;
-	if(!allele){
-		bundle_avg_doc = compute_doc(bundle_left, 
-									 hits, 
-									 depth_of_coverage, 
-									 dummy,
-									 false);
-	}
-	else
-	{
-		bundle_avg_doc = compute_doc_allele(bundle_left, 
-											hits, 
-											depth_of_coverage, 
-											dummy,
-											false);
-	}
+	bundle_avg_doc = compute_doc(bundle_left, 
+								 hits, 
+								 depth_of_coverage, 
+								 dummy,
+								 false);
 	
 //#if verbose_msg
 //	fprintf(stderr, "\tUpdated avg bundle doc = %lf\n", bundle_avg_doc);
@@ -572,7 +520,7 @@ void filter_hits(int bundle_length,
 //    double bundle_thresh = pre_mrna_fraction * bundle_avg_doc;
 //	fprintf(stderr, "\tthreshold is = %lf\n", bundle_thresh);
 //#endif
-	//allele	
+	
 	if (!intron_doc.empty())
 	{
 //		filter_introns(bundle_length, 
@@ -588,8 +536,7 @@ void filter_hits(int bundle_length,
 						   hits, 
 						   min_isoform_fraction, 
 						   true,
-						   false,
-						   allele);
+						   false);
 		}
 	}
 	
@@ -733,123 +680,6 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	abundances = non_junk_abundances;
 }
 
-//allele
-void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
-						  vector<double>& paternal_abundances,
-						  vector<double>& maternal_abundances,
-                          const vector<shared_ptr<Abundance> >& mapped_transcripts,
-                          double locus_mass)
-{
-	//	vector<double>::iterator max_ab = std::max_element(abundances.begin(),
-	//													   abundances.end());
-	double max_fwd_ab = -1.0;
-	double max_rev_ab = -1.0;
-	for (size_t t = 0; t < transcripts.size(); ++t)
-	{
-		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
-		if (scaff->strand() == CUFF_FWD || scaff->strand() == CUFF_STRAND_UNKNOWN)
-		{
-			if (paternal_abundances[t]+maternal_abundances[t] > max_fwd_ab)
-				max_fwd_ab = paternal_abundances[t]+maternal_abundances[t];
-		}
-		if (scaff->strand() == CUFF_REV || scaff->strand() == CUFF_STRAND_UNKNOWN)
-		{			
-			if (paternal_abundances[t]+maternal_abundances[t] > max_rev_ab)
-				max_rev_ab = paternal_abundances[t]+maternal_abundances[t];
-		}
-	}
-	
-	// Try to categorize the crap transcripts for suppression
-	vector<bool> pre_mrna_junk(transcripts.size(), false); //intra-intron, much lower abundance than container
-	vector<bool> chaff(transcripts.size(), false); // only a single MateHit, impossible to reliably quantitate
-	vector<bool> repeats(transcripts.size(), false); // too many low-quality hits
-	vector<bool> too_rare(transcripts.size(), false); // too rare to be reliably quantitated, could be error
-		
-	//cerr << "Chucked : ";
-	for (size_t t = 0; t < transcripts.size(); ++t)
-	{
-		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
-        
-		if (!(scaff->is_ref()) && allow_junk_filtering)
-		{
-			const vector<const MateHit*> hits = scaff->mate_hits();
-			
-			const vector<AugmentedCuffOp>& ops = scaff->augmented_ops();
-			
-			if (ops.size() == 1 && ops[0].opcode == CUFF_MATCH)
-			{
-				for (size_t j = 0; j < transcripts.size(); ++j)
-				{
-					const vector<AugmentedCuffOp>& j_ops = scaff->augmented_ops();
-					for (size_t L = 0; L < j_ops.size(); L++)
-					{
-						if (AugmentedCuffOp::overlap_in_genome(ops[0], j_ops[L]) &&
-							j_ops[L].opcode == CUFF_INTRON)
-						{
-							pre_mrna_junk[t] = true;
-						}
-					}
-				}
-			}
-			
-            if (library_type != "transfrags")
-            {
-                double multi_hits = 0.0;
-                //static const double low_qual_err_prob = high_phred_err_prob; // hits with error_prob() above this are low quality;
-                //static const double low_qual_thresh = 0.75; // hits with more than this fraction of low qual hits are repeats
-                for (vector<const MateHit*>::const_iterator itr = hits.begin();
-                     itr != hits.end();
-                     ++itr)
-                {
-                    if ((*itr)->is_multi())
-                        multi_hits += 1.0;
-                }
-            
-                double low_qual_frac = multi_hits / (double)hits.size();
-                if (low_qual_frac > max_multiread_fraction)
-                    repeats[t] = true;
-            }
-            if (scaff->strand() == CUFF_FWD &&
-                ((paternal_abundances[t]+maternal_abundances[t]) / max_fwd_ab) < min_isoform_fraction)
-                too_rare[t] = true;
-            if ((scaff->strand() == CUFF_REV ||  scaff->strand() == CUFF_STRAND_UNKNOWN) &&
-                ((paternal_abundances[t]+maternal_abundances[t]) / max_rev_ab) < min_isoform_fraction)
-                too_rare[t] = true;
-
-            const vector<double>* paternal_cond_probs = (mapped_transcripts[t]->paternal_cond_probs());
-			const vector<double>* maternal_cond_probs = (mapped_transcripts[t]->maternal_cond_probs());
-            if (paternal_cond_probs || maternal_cond_probs)
-            {
-                assert (library_type != "transfrags");
-                double supporting_hits = (paternal_abundances[t]+maternal_abundances[t]) * locus_mass;
-                if (supporting_hits < min_frags_per_transfrag)
-                    chaff[t] = true;
-            }
-		}
-	}
-	vector<shared_ptr<Abundance> > non_junk_transcripts;
-	vector<double> non_junk_paternal_abundances,non_junk_maternal_abundances;
-
-//
-	for (size_t t = 0; t < transcripts.size(); ++t)
-	{
-		if (!repeats[t] && !pre_mrna_junk[t] && !too_rare[t] && !chaff[t])
-		{
-			non_junk_transcripts.push_back(transcripts[t]);
-			non_junk_paternal_abundances.push_back(paternal_abundances[t]);
-			non_junk_maternal_abundances.push_back(maternal_abundances[t]);
-		}
-        else
-        {
-            verbose_msg( "Filtering isoform %d-%d\n", transcripts[t]->transfrag()->left(), transcripts[t]->transfrag()->right());
-        }
-	}
-	
-	transcripts = non_junk_transcripts;
-	paternal_abundances = non_junk_paternal_abundances;
-	maternal_abundances = non_junk_maternal_abundances;
-}
-
 // Designed to strip out remaining pre-mrna genes, assembled repeats, and 
 // fragments from isoforms too short to be reliably quantitated.
 void filter_junk_genes(vector<Gene>& genes)
@@ -891,64 +721,6 @@ void filter_junk_genes(vector<Gene>& genes)
         if (allow_junk_filtering)
         {
             if (g.FPKM() == 0)
-            {
-                good_gene = false;
-            }
-        }
-		if (good_gene)
-        {
-			good_genes.push_back(g);
-        }
-        else
-        {
-            verbose_msg("Filtering transfrags from gene %d-%d\n", g.left(), g.right());
-        }
-	}
-	
-	genes = good_genes;
-	
-}
-
-//allele
-void filter_junk_genes_allele(vector<Gene>& genes)
-{
-	vector<Gene> good_genes;
-	vector<Isoform> all_isoforms;
-	for (size_t i = 0; i < genes.size(); ++i)
-	{
-		all_isoforms.insert(all_isoforms.end(), 
-							genes[i].isoforms().begin(), 
-							genes[i].isoforms().end());
-	}
-	
-	for (size_t i = 0; i < genes.size(); ++i)
-	{
-		const Gene& g = genes[i];
-		
-		if(g.has_ref_trans())
-		{
-			good_genes.push_back(g);
-			continue;
-		}
-		
-		bool good_gene = true;
-		for (size_t j = 0; j < all_isoforms.size(); ++j)
-		{
-			vector<pair<int, int> > introns = all_isoforms[j].scaffold().gaps();
-            
-            //assert (!allow_junk_filtering || all_isoforms[j].scaffold().mate_hits().size() >= min_frags_per_transfrag);
-			for (size_t k = 0; k < introns.size(); ++k)
-			{
-				if (g.left() > introns[k].first && g.right() < introns[k].second &&
-					(g.paternal_FPKM()+g.maternal_FPKM()) / (all_isoforms[j].paternal_FPKM()+all_isoforms[j].maternal_FPKM()) < pre_mrna_fraction)
-				{
-					good_gene = false;
-				}
-			}
-		}
-        if (allow_junk_filtering)
-        {
-            if ((g.paternal_FPKM()+g.maternal_FPKM()) == 0)
             {
                 good_gene = false;
             }
