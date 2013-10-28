@@ -590,20 +590,23 @@ SampleDifference test_diffexp(const FPKMContext& curr,
         vector<double> curr_rep_samples;
         
         
-        for (size_t i = 0; i != curr.tracking_info_per_rep.size(); ++i)
+        for (FPKMPerReplicateTable::const_iterator itr = curr.fpkm_per_rep.begin();
+             itr != curr.fpkm_per_rep.end(); ++itr)
         {
-            if (curr.tracking_info_per_rep[i].status == NUMERIC_LOW_DATA)
+            StatusPerReplicateTable::const_iterator si = curr.status_per_rep.find(itr->first);
+            if (si == curr.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
                 continue;
-            curr_rep_samples.push_back(curr.tracking_info_per_rep[i].fpkm);
+            curr_rep_samples.push_back(itr->second);
         }
         
-        for (size_t i = 0; i != prev.tracking_info_per_rep.size(); ++i)
+        for (FPKMPerReplicateTable::const_iterator itr = prev.fpkm_per_rep.begin();
+             itr != prev.fpkm_per_rep.end(); ++itr)
         {
-            if (prev.tracking_info_per_rep[i].status == NUMERIC_LOW_DATA)
+            StatusPerReplicateTable::const_iterator si = prev.status_per_rep.find(itr->first);
+            if (si == prev.status_per_rep.end() || si->second == NUMERIC_LOW_DATA)
                 continue;
-            prev_rep_samples.push_back(prev.tracking_info_per_rep[i].fpkm);
+            prev_rep_samples.push_back(itr->second);
         }
-
         
         double curr_fpkm = accumulate(curr_rep_samples.begin(), curr_rep_samples.end(), 0.0);
         if (curr_rep_samples.size() > 0)
@@ -2123,9 +2126,8 @@ void clear_samples_from_fpkm_tracking_table(const string& locus_desc, FPKMTracki
     
     for (size_t i = 0; i < itr->second.fpkm_series.size(); ++i)
     {
-        vector<double>& fpkm_samples = itr->second.fpkm_series[i].fpkm_samples;
-        fpkm_samples.clear();
-        std::vector<double>().swap(fpkm_samples);
+        itr->second.fpkm_series[i].fpkm_samples.clear();
+        std::vector<double>().swap(itr->second.fpkm_series[i].fpkm_samples);
         //itr->second.fpkm_series[i].fpkm_samples.swap(vector<double>(itr->second.fpkm_series[i].fpkm_samples));
     }
 }

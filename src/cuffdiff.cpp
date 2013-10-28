@@ -1210,17 +1210,27 @@ void print_read_group_tracking(FILE* fout,
                 
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
-            for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
-                 ++j)
+            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
+                 itr != fpkms[i].count_per_rep.end(); 
+                 ++itr)
             { 
-                double FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
-                double internal_count = fpkms[i].tracking_info_per_rep[j].count;
-                double external_count = internal_count / fpkms[i].tracking_info_per_rep[j].rg_props->external_scale_factor();
-                double raw_count = internal_count * fpkms[i].tracking_info_per_rep[j].rg_props->internal_scale_factor();
-                const  string& condition_name = fpkms[i].tracking_info_per_rep[j].rg_props->condition_name();
-                AbundanceStatus status = fpkms[i].tracking_info_per_rep[j].status;
+                FPKMPerReplicateTable::const_iterator f_itr = fpkms[i].fpkm_per_rep.find(itr->first);
+                StatusPerReplicateTable::const_iterator s_itr = fpkms[i].status_per_rep.find(itr->first);
                 
-                int rep_num = fpkms[i].tracking_info_per_rep[j].rg_props->replicate_num();
+                
+                if (f_itr == fpkms[i].fpkm_per_rep.end())
+                {
+                    fprintf(stderr, "Error: missing per-replicate FPKM data\n");
+                }
+                
+                double FPKM = f_itr->second;
+                double internal_count = itr->second;
+                double external_count = internal_count / itr->first->external_scale_factor();
+                double raw_count = internal_count * itr->first->internal_scale_factor();
+                const  string& condition_name = itr->first->condition_name();
+                AbundanceStatus status = s_itr->second;
+                
+                int rep_num = itr->first->replicate_num();
                 
                 const char* status_str = "OK";
                 
