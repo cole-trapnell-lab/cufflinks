@@ -115,7 +115,7 @@ mutex test_storage_lock; // don't modify the above struct without locking here
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself. 
-void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> >& abundances)
+void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> > abundances)
 {
     assert (abundances.size() == _orig_workers);
     
@@ -209,9 +209,11 @@ void TestLauncher::record_tracking_data(vector<shared_ptr<SampleAbundances> >& a
 void TestLauncher::test_finished_loci()
 {
 #if ENABLE_THREADS
-	boost::mutex::scoped_lock lock(_launcher_lock);
+	_launcher_lock.lock();
 #endif  
 
+    vector<vector<shared_ptr<SampleAbundances> > > samples_for_testing;
+    
     launcher_sample_table::iterator itr = _samples.begin(); 
     while(itr != _samples.end())
     {
@@ -228,8 +230,7 @@ void TestLauncher::test_finished_loci()
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
                 record_tracking_data(itr->second);
-                perform_testing(itr->second);
-                
+                samples_for_testing.push_back(itr->second);
             }
             else
             {
@@ -249,6 +250,16 @@ void TestLauncher::test_finished_loci()
             
             ++itr;
         }
+    }
+    
+#if ENABLE_THREADS
+	_launcher_lock.unlock();
+#endif
+    
+    for (size_t i = 0; i < samples_for_testing.size(); ++i)
+    {
+        vector<shared_ptr<SampleAbundances> > samples_i = samples_for_testing[i];
+        perform_testing(samples_i);
     }
 }
 
@@ -1209,7 +1220,7 @@ void clear_samples_from_tracking_table(shared_ptr<SampleAbundances> sample, Trac
 
 int total_tests = 0;
 void test_differential(const string& locus_tag,
-					   const vector<shared_ptr<SampleAbundances> >& samples,
+                       const vector<shared_ptr<SampleAbundances> >& samples,
                        const vector<pair<size_t, size_t> >& contrasts,
 					   Tests& tests,
 					   Tracking& tracking)

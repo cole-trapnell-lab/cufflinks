@@ -159,7 +159,7 @@ public:
                          shared_ptr<SampleAbundances> ab, 
                          size_t factory_id);
     void test_finished_loci();
-    void perform_testing(vector<shared_ptr<SampleAbundances> >& abundances);
+    void perform_testing(vector<shared_ptr<SampleAbundances> > abundances);
     void record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(const string& locus_id);

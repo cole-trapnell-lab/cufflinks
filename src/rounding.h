@@ -165,29 +165,6 @@ namespace rounding
     }
     
     //--------------------------------------------------------------------------
-    // round alternate
-    // Bias: none for sequential calls
-    bool _is_up = false;
-    template <typename FloatType>
-    FloatType roundalternate( const FloatType& value, int& is_up = _is_up )
-    {
-        if ((is_up != is_up))
-            return roundhalfup( value );
-        return roundhalfdown( value );
-    }
-    
-    //--------------------------------------------------------------------------
-    // symmetric round alternate
-    // Bias: none for sequential calls
-    template <typename FloatType>
-    FloatType roundalternate0( const FloatType& value, int& is_up = _is_up )
-    {
-        if ((is_up != is_up))
-            return roundhalfup0( value );
-        return roundhalfdown0( value );
-    }
-    
-    //--------------------------------------------------------------------------
     // round random
     // Bias: generator's bias
     template <typename FloatType, typename RandValue, typename RandomGenerator>
