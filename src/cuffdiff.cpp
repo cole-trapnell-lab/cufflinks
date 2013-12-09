@@ -1218,7 +1218,7 @@ void parse_sample_sheet_file(FILE* sample_sheet_file,
                 if (columns.size() < 2)
                 {
                     if (columns.size() > 0)
-                        fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                        fprintf(stderr, "Malformed record in sample sheet: \n   >  %s\n", pBuf);
                     else
                         continue;
                 }

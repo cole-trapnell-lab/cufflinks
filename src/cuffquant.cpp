@@ -1466,6 +1466,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     size_t num_loci = single_sample_tracking.size();
     oa << num_loci;
     
+    
+    
     for (int i = 0; i < single_sample_tracking.size(); ++i)
     {
         oa << single_sample_tracking[i];
