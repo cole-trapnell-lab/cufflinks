@@ -5099,7 +5099,7 @@ void merge_precomputed_expression_worker(const string& locus_tag,
         sample.transcripts.aggregate_replicate_abundances(const_ab_group_per_replicate);
         sample.transcripts.calculate_abundance_group_variance(abundances, const_ab_group_per_replicate);
     }
-    else
+    else // FIXME: THIS needs to do the right thing with sample.transcripts...
     {
         BOOST_FOREACH(shared_ptr<Abundance>  ab, abundances)
         {
