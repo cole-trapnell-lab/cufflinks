@@ -61,7 +61,6 @@
 		0A694186132AEDAC00558D76 /* ar_funs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B8B13204FE90031949A /* ar_funs.c */; };
 		0A694189132AEDAC00558D76 /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 9CC50B5913204F180031949A /* cmd.c */; };
 		0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A87350214118DD700E28429 /* libboost_thread-mt.a */; };
-		0A87350414118DD700E28429 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A87350214118DD700E28429 /* libboost_thread-mt.a */; };
 		0A9291D5132AD37100E7B024 /* replicates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED677C0D132A3D83000CFDC8 /* replicates.cpp */; };
 		9C31043215250D8600F56669 /* jensen_shannon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDFE39FA122BE7B700F24CD3 /* jensen_shannon.cpp */; };
 		9CBCD9B41333EB5B0059FE74 /* multireads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6183711324308800EFF9AF /* multireads.cpp */; };
@@ -782,7 +781,6 @@
 			files = (
 				F4476FBB1742D37000438EF7 /* libboost_serialization-mt.a in Frameworks */,
 				EDB3C814148686E10021E75B /* libbam.a in Frameworks */,
-				0A87350414118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
 				F4E4155E15D44EAA00654FD5 /* libboost_system-mt.a in Frameworks */,
 				EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */,
 			);

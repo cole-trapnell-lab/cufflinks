@@ -163,7 +163,7 @@ namespace rounding
         // (Either symmetric half-up or half-down will do0
         return roundhalfup0( value );
     }
-    
+        
     //--------------------------------------------------------------------------
     // round random
     // Bias: generator's bias

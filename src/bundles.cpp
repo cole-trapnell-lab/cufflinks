@@ -2061,7 +2061,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
             if (bundle.ref_scaffolds().size() != ab->abundances().size())
             {
-                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%d transcripts)  does not match GTF (%s transcripts)\n", read_group_properties()->file_path().c_str(),  ab->abundances().size(), bundle_label_buf, bundle.ref_scaffolds().size());
+                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%d transcripts)  does not match GTF (%s transcripts)\n", read_group_properties()->file_path().c_str(),  bundle_label_buf, ab->abundances().size(), bundle.ref_scaffolds().size());
                 exit(1);
             }
         }
