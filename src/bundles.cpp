@@ -25,7 +25,7 @@ using boost::math::binomial;
 //struct ScaffoldSorter
 //{
 //	ScaffoldSorter(RefSequenceTable& _rt) : rt(_rt) {} 
-//	bool operator()(shared_ptr<Scaffold const> lhs, shared_ptr<Scaffold const> rhs)
+//	bool operator()(boost::shared_ptr<Scaffold const> lhs, boost::shared_ptr<Scaffold const> rhs)
 //	{
 //        assert (lhs);
 //        assert (rhs);
@@ -49,7 +49,7 @@ using boost::math::binomial;
 struct ScaffoldSorter
 {
 	ScaffoldSorter(RefSequenceTable& _rt) : rt(_rt) {} 
-	bool operator()(shared_ptr<Scaffold const> lhs, shared_ptr<Scaffold const> rhs)
+	bool operator()(boost::shared_ptr<Scaffold const> lhs, boost::shared_ptr<Scaffold const> rhs)
 	{
         //assert (lhs);
         //assert (rhs);
@@ -77,7 +77,7 @@ struct ScaffoldSorter
 //FIXME: needs refactoring
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
-				   vector<shared_ptr<Scaffold> >& ref_mRNAs,
+				   vector<boost::shared_ptr<Scaffold> >& ref_mRNAs,
 				   bool loadSeqs,
 				   bool loadFPKM) 
 {
@@ -224,14 +224,14 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					GFREE(rna_seq);
 				}
                 
-				shared_ptr<Scaffold> scaff(new Scaffold());
+				boost::shared_ptr<Scaffold> scaff(new Scaffold());
                 *scaff = ref_scaff;
                 assert (scaff);
 				ref_mRNAs.push_back(scaff); 
 			}
 		}
         
-        BOOST_FOREACH (shared_ptr<Scaffold> s, ref_mRNAs)
+        BOOST_FOREACH (boost::shared_ptr<Scaffold> s, ref_mRNAs)
         {
             assert (s);
         }
@@ -271,7 +271,7 @@ bool HitBundle::add_hit(const MateHit& hit)
 
 struct HitlessScaffold
 {
-	bool operator()(shared_ptr<Scaffold> x)
+	bool operator()(boost::shared_ptr<Scaffold> x)
 	{
 		return x->mate_hits().empty();
 	}
@@ -283,7 +283,7 @@ bool unmapped_hit(const MateHit& x)
 }
 
 
-bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
+bool HitBundle::add_open_hit(boost::shared_ptr<ReadGroupProperties const> rg_props,
                              const ReadHit* bh,
 							 bool expand_by_partner)
 {
@@ -435,7 +435,7 @@ void HitBundle::finalize_open_mates()
 
 void HitBundle::remove_hitless_scaffolds()
 {
-	vector<shared_ptr<Scaffold> >::iterator new_end = remove_if(_ref_scaffs.begin(),
+	vector<boost::shared_ptr<Scaffold> >::iterator new_end = remove_if(_ref_scaffs.begin(),
 												   _ref_scaffs.end(),
 												   HitlessScaffold());
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
@@ -527,15 +527,15 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
     while(true)
     {
         int next_bundle = -1;
-        shared_ptr<Scaffold> next_scaff; 
+        boost::shared_ptr<Scaffold> next_scaff; 
         for(size_t i = 0; i < in_bundles.size(); ++i)
         {
-            const vector<shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]->_ref_scaffs;
+            const vector<boost::shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]->_ref_scaffs;
             
             if (indices[i] == curr_scaffs.size())
                 continue;
             
-            shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
+            boost::shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
             
             if (next_bundle == -1 || scaff_lt_rt_oplt(*curr_scaff, *next_scaff))
             {
@@ -562,11 +562,11 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
     }
     
     sort(out_bundle._ref_scaffs.begin(), out_bundle._ref_scaffs.end(), scaff_lt_rt_oplt_sp);
-    vector<shared_ptr<Scaffold> >::iterator new_end = unique(out_bundle._ref_scaffs.begin(),
+    vector<boost::shared_ptr<Scaffold> >::iterator new_end = unique(out_bundle._ref_scaffs.begin(),
                                                              out_bundle._ref_scaffs.end(),
                                                              StructurallyEqualScaffolds());
     out_bundle._ref_scaffs.erase(new_end, out_bundle._ref_scaffs.end());
-    vector<shared_ptr<Scaffold> >(out_bundle._ref_scaffs).swap(out_bundle._ref_scaffs);
+    vector<boost::shared_ptr<Scaffold> >(out_bundle._ref_scaffs).swap(out_bundle._ref_scaffs);
     
     out_bundle.finalize(true); // true means everything is already sorted, etc.
     out_bundle._num_replicates = (int)in_bundles.size();
@@ -620,11 +620,11 @@ void HitBundle::finalize(bool is_combined)
             
         }
 		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt_sp);
-		vector<shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
+		vector<boost::shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
 												_ref_scaffs.end(),
 												StructurallyEqualScaffolds());
 		_ref_scaffs.erase(new_end, _ref_scaffs.end());
-        vector<shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
+        vector<boost::shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
 	}
 	
     for (size_t j = 0; j < _ref_scaffs.size(); ++j)
@@ -738,7 +738,7 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
             (*next_mask_scaff)->ref_id() != tmp.ref_id())
         {
             bool found_scaff = false;
-            vector<shared_ptr<Scaffold> >::iterator curr_mask_scaff = mask_gtf_recs.begin();
+            vector<boost::shared_ptr<Scaffold> >::iterator curr_mask_scaff = mask_gtf_recs.begin();
             for (size_t i = 0; i < _mask_scaff_offsets.size(); ++i)
             {
                 if (_mask_scaff_offsets[i].first == tmp.ref_id())
@@ -1622,7 +1622,7 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 	return false;
 }
 
-void inspect_map(shared_ptr<BundleFactory> bundle_factory,
+void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,
@@ -1654,7 +1654,7 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
 	int max_1 = 0;
 	int max_2 = 0;
 	
-	shared_ptr<MultiReadTable> mrt(new MultiReadTable());
+	boost::shared_ptr<MultiReadTable> mrt(new MultiReadTable());
 	
 	while(true)
 	{
@@ -1701,7 +1701,7 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
             
             vector<string> gene_ids;
             vector<string> gene_short_names;
-            BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+            BOOST_FOREACH(boost::shared_ptr<Scaffold> s, bundle.ref_scaffolds())
             {
                 if (s->annotated_gene_id() != "")
                     gene_ids.push_back(s->annotated_gene_id());
@@ -1790,7 +1790,7 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
 			// Annotation provided and single isoform gene
 			{
 				int start, end, mate_length;
-				shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
+				boost::shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
 				if (scaff->map_frag(hits[i], start, end, mate_length))
 				{
 					if (mate_length >= min_len && mate_length <= max_len)
@@ -1975,7 +1975,7 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
     
     std_dev = sqrt(std_dev);
 	
-	shared_ptr<ReadGroupProperties> rg_props = bundle_factory->read_group_properties();
+	boost::shared_ptr<ReadGroupProperties> rg_props = bundle_factory->read_group_properties();
 
     FLDSource source = DEFAULT;
     if (empirical)
@@ -1987,7 +1987,7 @@ void inspect_map(shared_ptr<BundleFactory> bundle_factory,
         source = USER;
     }
 
-	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len, source));
+	boost::shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len, source));
 	rg_props->multi_read_table(mrt);
 	rg_props->frag_len_dist(fld);
 	rg_props->normalized_map_mass(norm_map_mass);
@@ -2048,7 +2048,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
         char bundle_label_buf[2048];
         sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
         
-        shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
+        boost::shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
         if (ab)
         {
             double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);
@@ -2084,7 +2084,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
     return got_bundle;
 }
 
-shared_ptr<const AbundanceGroup> PrecomputedExpressionBundleFactory::get_abundance_for_locus(int locus_id)
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionBundleFactory::get_abundance_for_locus(int locus_id)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);

@@ -2,7 +2,7 @@
 
 struct TrackingInfoPerRep
 {
-    shared_ptr<const ReadGroupProperties> rg_props;
+    boost::shared_ptr<const ReadGroupProperties> rg_props;
     double fpkm;
     double count;
     AbundanceStatus status;
@@ -90,7 +90,7 @@ struct FPKMTracking
 	string ref_match;
     int length;
 	
-    vector<vector<shared_ptr<const ReadGroupProperties> > > rg_props;
+    vector<vector<boost::shared_ptr<const ReadGroupProperties> > > rg_props;
     
 	vector<FPKMContext> fpkm_series;
 };

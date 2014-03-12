@@ -412,7 +412,7 @@ public:
     void normalized_map_mass(long double p)  { _norm_map_mass = p; }  
     
     boost::shared_ptr<EmpDist const> frag_len_dist() const { return _frag_len_dist; }
-    void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }  
+    void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }
     
 	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
     void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 

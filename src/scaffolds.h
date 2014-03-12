@@ -406,7 +406,7 @@ public:
     
     // returns true if the scaffold strand is supported with reads or exon overlap with
     // a reference scaffold of known strand (since the scaffold may have been created with faux reads)
-    bool has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs = NULL) const;
+    bool has_strand_support(vector<boost::shared_ptr<Scaffold> >* ref_scaffs = NULL) const;
     
     // returns true if all introns are supported with splice reads, false ow
     bool hits_support_introns() const; 
@@ -689,16 +689,16 @@ private:
 bool scaff_lt(const Scaffold& lhs, const Scaffold& rhs);
 bool scaff_lt_rt(const Scaffold& lhs, const Scaffold& rhs);
 bool scaff_lt_rt_oplt(const Scaffold& lhs, const Scaffold& rhs);
-bool scaff_lt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs);
-bool scaff_lt_rt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs);
-bool scaff_lt_rt_oplt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs);
+bool scaff_lt_sp(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs);
+bool scaff_lt_rt_sp(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs);
+bool scaff_lt_rt_oplt_sp(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs);
 
 
 bool overlap_in_genome(int ll, int lr, int rl, int rr);
 
 struct StructurallyEqualScaffolds
 {
-	bool operator()(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+	bool operator()(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs)
 	{
 		return lhs->ref_id() == rhs->ref_id() && 
 		lhs->augmented_ops() == rhs->augmented_ops();

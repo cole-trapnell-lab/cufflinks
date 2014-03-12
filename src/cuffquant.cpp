@@ -621,8 +621,8 @@ void print_run_info(FILE* fout)
 #if ENABLE_THREADS
 boost::mutex inspect_lock;
 
-mutex _recorder_lock;
-mutex locus_thread_pool_lock;
+boost::mutex _recorder_lock;
+boost::mutex locus_thread_pool_lock;
 int locus_curr_threads = 0;
 int locus_num_threads = 0;
 
@@ -660,15 +660,15 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
 #endif
 }
 
-void learn_bias_worker(shared_ptr<BundleFactory> fac)
+void learn_bias_worker(boost::shared_ptr<BundleFactory> fac)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
-	shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+	boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
 	learn_bias(*fac, *bl, false);
-	rg_props->bias_learner(shared_ptr<BiasLearner>(bl));
+	rg_props->bias_learner(boost::shared_ptr<BiasLearner>(bl));
 }
 
 typedef map<int, vector<AbundanceGroup> > light_ab_group_tracking_table;
@@ -694,16 +694,16 @@ public:
     
     void register_locus(int locus_id);
     void abundance_avail(int locus_id,
-                         shared_ptr<SampleAbundances> ab,
+                         boost::shared_ptr<SampleAbundances> ab,
                          size_t factory_id);
     void record_finished_loci();
-    void record_tracking_data(int locus_id, vector<shared_ptr<SampleAbundances> >& abundances);
-    bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
+    void record_tracking_data(int locus_id, vector<boost::shared_ptr<SampleAbundances> >& abundances);
+    bool all_samples_reported_in(vector<boost::shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(int locus_id);
     
     void clear_tracking_data() { _tracking->clear(); }
     
-    typedef list<pair<int, vector<shared_ptr<SampleAbundances> > > > recorder_sample_table;
+    typedef list<pair<int, vector<boost::shared_ptr<SampleAbundances> > > > recorder_sample_table;
     
     const light_ab_group_tracking_table& get_sample_table() const { return _ab_group_tracking_table; }
     
@@ -743,13 +743,13 @@ void AbundanceRecorder::register_locus(int locus_id)
     if (itr == _samples.end())
     {
         pair<recorder_sample_table::iterator, bool> p;
-        vector<shared_ptr<SampleAbundances> >abs(_orig_workers);
+        vector<boost::shared_ptr<SampleAbundances> >abs(_orig_workers);
         _samples.push_back(make_pair(locus_id, abs));
     }
 }
 
 void AbundanceRecorder::abundance_avail(int locus_id,
-                                        shared_ptr<SampleAbundances> ab,
+                                        boost::shared_ptr<SampleAbundances> ab,
                                         size_t factory_id)
 {
 #if ENABLE_THREADS
@@ -766,9 +766,9 @@ void AbundanceRecorder::abundance_avail(int locus_id,
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself.
-bool AbundanceRecorder::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances)
+bool AbundanceRecorder::all_samples_reported_in(vector<boost::shared_ptr<SampleAbundances> >& abundances)
 {
-    BOOST_FOREACH (shared_ptr<SampleAbundances> ab, abundances)
+    BOOST_FOREACH (boost::shared_ptr<SampleAbundances> ab, abundances)
     {
         if (!ab)
         {
@@ -781,7 +781,7 @@ bool AbundanceRecorder::all_samples_reported_in(vector<shared_ptr<SampleAbundanc
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself.
-void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<SampleAbundances> >& abundances)
+void AbundanceRecorder::record_tracking_data(int locus_id, vector<boost::shared_ptr<SampleAbundances> >& abundances)
 {
     assert (abundances.size() == _orig_workers);
     
@@ -815,7 +815,7 @@ void AbundanceRecorder::record_tracking_data(int locus_id, vector<shared_ptr<Sam
 		const AbundanceGroup& ab_group = abundances[i]->transcripts;
         /*
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
-		BOOST_FOREACH (shared_ptr<Abundance> ab, ab_group.abundances())
+		BOOST_FOREACH (boost::shared_ptr<Abundance> ab, ab_group.abundances())
 		{
 			add_to_tracking_table(i, *ab, _tracking->isoform_fpkm_tracking);
             //assert (_tracking->isoform_fpkm_tracking.num_fragments_by_replicate().empty() == false);
@@ -884,19 +884,19 @@ void AbundanceRecorder::record_finished_loci()
 }
 
 
-shared_ptr<AbundanceRecorder> abundance_recorder;
+boost::shared_ptr<AbundanceRecorder> abundance_recorder;
 
 void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
-                   shared_ptr<SampleAbundances> abundance,
+                   boost::shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   shared_ptr<AbundanceRecorder> recorder)
+                   boost::shared_ptr<AbundanceRecorder> recorder)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
     
-    shared_ptr<HitBundle> bundle(new HitBundle);
+    boost::shared_ptr<HitBundle> bundle(new HitBundle);
     bool non_empty = sample_factory.next_bundle(*bundle);
     
     char bundle_label_buf[2048];
@@ -933,7 +933,7 @@ void sample_worker(const RefSequenceTable& rt,
     bool perform_cds_analysis = false;
     bool perform_tss_analysis = false;
     
-    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle->ref_scaffolds())
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> s, bundle->ref_scaffolds())
     {
         if (s->annotated_tss_id() != "")
         {
@@ -945,10 +945,10 @@ void sample_worker(const RefSequenceTable& rt,
         }
     }
     
-    set<shared_ptr<ReadGroupProperties const> > rg_props;
+    set<boost::shared_ptr<ReadGroupProperties const> > rg_props;
     for (size_t i = 0; i < sample_factory.factories().size(); ++i)
     {
-        shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
+        boost::shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
         rg_props.insert(bf->read_group_properties());
     }
     
@@ -962,7 +962,7 @@ void sample_worker(const RefSequenceTable& rt,
     ///////////////////////////////////////////////
     
     
-    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
     {
         ref_scaff->clear_hits();
     }
@@ -972,12 +972,12 @@ void sample_worker(const RefSequenceTable& rt,
 }
 
 bool quantitate_next_locus(const RefSequenceTable& rt,
-                           vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
-                           shared_ptr<AbundanceRecorder> recorder)
+                           vector<boost::shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
+                           boost::shared_ptr<AbundanceRecorder> recorder)
 {
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
-        shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
+        boost::shared_ptr<SampleAbundances> s_ab = boost::shared_ptr<SampleAbundances>(new SampleAbundances);
         
 #if ENABLE_THREADS					
         while(1)
@@ -1019,7 +1019,7 @@ void parse_norm_standards_file(FILE* norm_standards_file)
     char pBuf[10 * 1024];
     size_t non_blank_lines_read = 0;
     
-    shared_ptr<map<string, LibNormStandards> > norm_standards(new map<string, LibNormStandards>);
+    boost::shared_ptr<map<string, LibNormStandards> > norm_standards(new map<string, LibNormStandards>);
     
     while (fgets(pBuf, 10*1024, norm_standards_file))
     {
@@ -1055,7 +1055,7 @@ void parse_norm_standards_file(FILE* norm_standards_file)
     lib_norm_standards = norm_standards;
 }
 
-shared_ptr<AbundanceRecorder> abx_recorder;
+boost::shared_ptr<AbundanceRecorder> abx_recorder;
 
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
@@ -1063,27 +1063,27 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
 	ReadTable it;
 	RefSequenceTable rt(true, false);
     
-	vector<shared_ptr<Scaffold> > ref_mRNAs;
+	vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
 	
-	vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
-    vector<shared_ptr<ReadGroupProperties> > all_read_groups;
-    vector<shared_ptr<HitFactory> > all_hit_factories;
+	vector<boost::shared_ptr<ReplicatedBundleFactory> > bundle_factories;
+    vector<boost::shared_ptr<ReadGroupProperties> > all_read_groups;
+    vector<boost::shared_ptr<HitFactory> > all_hit_factories;
     
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
         vector<string> sam_hit_filenames;
         tokenize(sam_hit_filename_lists[i], ",", sam_hit_filenames);
         
-        vector<shared_ptr<BundleFactory> > replicate_factories;
+        vector<boost::shared_ptr<BundleFactory> > replicate_factories;
         
         string condition_name = sample_labels[i];
         
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
-            shared_ptr<HitFactory> hs;
+            boost::shared_ptr<HitFactory> hs;
             try
             {
-                hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
+                hs = boost::shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
             }
             catch (std::runtime_error& e) 
             {
@@ -1091,7 +1091,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
                 {
                     fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
                             sam_hit_filenames[j].c_str());
-                    hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
+                    hs = boost::shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
                 }
                 catch (std::runtime_error& e)
                 {
@@ -1103,8 +1103,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
             
             all_hit_factories.push_back(hs);
             
-            shared_ptr<BundleFactory> hf(new BundleFactory(hs, REF_DRIVEN));
-            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+            boost::shared_ptr<BundleFactory> hf(new BundleFactory(hs, REF_DRIVEN));
+            boost::shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
             
             if (global_read_properties)
             {
@@ -1127,20 +1127,20 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
+        bundle_factories.push_back(boost::shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
     ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
     if (ref_mRNAs.empty())
         return;
     
-    vector<shared_ptr<Scaffold> > mask_rnas;
+    vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
         ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
     }
     
-    BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+    BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
         fac->set_ref_rnas(ref_mRNAs);
         if (mask_gtf) 
@@ -1188,7 +1188,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
 	int tmp_max_frag_len = 0;
 	
 	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
-	BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+	BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
 #if ENABLE_THREADS	
         while(1)
@@ -1238,7 +1238,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties> rg = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties> rg = all_read_groups[i];
         fprintf(stderr, "> Map Properties:\n");
         
         fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", rg->normalized_map_mass());
@@ -1265,7 +1265,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     
     long double total_norm_mass = 0.0;
     long double total_mass = 0.0;
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         total_norm_mass += rg_props->normalized_map_mass();
         total_mass += rg_props->total_map_mass();
@@ -1282,16 +1282,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     
     Tracking tracking;
     
-    abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
+    abundance_recorder = boost::shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
     
 	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
-			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+			boost::shared_ptr<vector<boost::shared_ptr<SampleAbundances> > > abundances(new vector<boost::shared_ptr<SampleAbundances> >());
 			quantitate_next_locus(rt, bundle_factories, abundance_recorder);
 			bool more_loci_remain = false;
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+            BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
             {
                 if (rep_fac->bundles_remain())
                 {
@@ -1323,7 +1323,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
             }
 		}
         
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+        BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
 			rep_fac->reset();
         }
@@ -1334,9 +1334,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     {
         bias_run = true;
         p_bar = ProgressBar("Learning bias parameters.", 0);
-		BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+		BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
-			BOOST_FOREACH (shared_ptr<BundleFactory> fac, rep_fac->factories())
+			BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, rep_fac->factories())
 			{
 #if ENABLE_THREADS	
 				while(1)
@@ -1377,7 +1377,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
 			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 		}
 #endif
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+        BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
 			rep_fac->reset();
         }
@@ -1385,7 +1385,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
 	}
     
     fprintf(outfiles.bias_out, "condition_name\treplicate_num\tparam\tpos_i\tpos_j\tvalue\n");
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         if (rg_props->bias_learner())
             rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
@@ -1393,7 +1393,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     
     
     // Allow the multiread tables to do their thing...
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         rg_props->multi_read_table()->valid_mass(true);
     }
@@ -1401,17 +1401,17 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     
     abundance_recorder->clear_tracking_data();
     
-    abundance_recorder = shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
+    abundance_recorder = boost::shared_ptr<AbundanceRecorder>(new AbundanceRecorder(bundle_factories.size(), &tracking, &p_bar));
     
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
                                                      
 	while (true)
 	{
-        //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+        //boost::shared_ptr<vector<boost::shared_ptr<SampleAbundances> > > abundances(new vector<boost::shared_ptr<SampleAbundances> >());
         quantitate_next_locus(rt, bundle_factories, abundance_recorder);
         bool more_loci_remain = false;
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+        BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
         {
             if (rep_fac->bundles_remain())
             {

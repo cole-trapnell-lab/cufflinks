@@ -67,11 +67,11 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
 	
 	SAMHitFactory hs(it, rt);
     
-	shared_ptr<HitFactory> hit_factory;
+	boost::shared_ptr<HitFactory> hit_factory;
     
     try
 	{
-		hit_factory = shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
+		hit_factory = boost::shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
 	}
 	catch (std::runtime_error& e)
 	{
@@ -80,7 +80,7 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
         
         try
         {
-            hit_factory = shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
+            hit_factory = boost::shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
         }
         catch (std::runtime_error& e)
         {
@@ -91,14 +91,14 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
 	}
 	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
     
-    vector<shared_ptr<Scaffold> > ref_mRNAs;
+    vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
         ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();
-    vector<shared_ptr<Scaffold> > mask_rnas;
+    vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
         ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);

@@ -417,7 +417,7 @@ bool fit_negbin_dist(const vector<double> samples, double& r, double& p)
 
 //#define USE_LOG_CACHE
 
-void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
+void compute_compatibilities(const vector<boost::shared_ptr<Abundance> >& transcripts,
                              const vector<MateHit>& alignments,
 							 vector<vector<char> >& compatibilities)
 {
@@ -434,7 +434,7 @@ void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 	
     for (int j = 0; j < N; ++j) 
     {
-		shared_ptr<Scaffold> transfrag_j = transcripts[j]->transfrag();
+		boost::shared_ptr<Scaffold> transfrag_j = transcripts[j]->transfrag();
 		for (int i = 0; i < M; ++i) 
         {
 			if (transfrag_j->contains(alignment_scaffs[i])
@@ -446,12 +446,12 @@ void compute_compatibilities(const vector<shared_ptr<Abundance> >& transcripts,
 	}
 }
 
-AbundanceGroup::AbundanceGroup(const vector<shared_ptr<Abundance> >& abundances,
+AbundanceGroup::AbundanceGroup(const vector<boost::shared_ptr<Abundance> >& abundances,
                                const ublas::matrix<double>& gamma_covariance,
                                const ublas::matrix<double>& iterated_exp_count_covariance,
                                const ublas::matrix<double>& count_covariance,
                                const ublas::matrix<double>& fpkm_covariance,
-                               const set<shared_ptr<ReadGroupProperties const> >& rg_props) :
+                               const set<boost::shared_ptr<ReadGroupProperties const> >& rg_props) :
     _abundances(abundances), 
     _iterated_exp_count_covariance(iterated_exp_count_covariance),
     _count_covariance(count_covariance),
@@ -525,7 +525,7 @@ AbundanceStatus AbundanceGroup::status() const
 {
     bool has_lowdata_member = false;
     bool has_ok_member = false;
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		if (ab->status() == NUMERIC_FAIL)
 		{
@@ -561,7 +561,7 @@ void TranscriptAbundance::FPKM_variance(double v)
 
 bool AbundanceGroup::has_member_with_status(AbundanceStatus member_status) const
 {
-    BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+    BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		if (ab->status() == member_status)
 		{
@@ -575,7 +575,7 @@ double AbundanceGroup::num_fragments() const
 {
 	double num_f = 0;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		num_f += ab->num_fragments();
 	}
@@ -587,7 +587,7 @@ CountPerReplicateTable AbundanceGroup::num_fragments_by_replicate() const
 {
 	CountPerReplicateTable cpr;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		if (cpr.empty())
         {
@@ -615,7 +615,7 @@ FPKMPerReplicateTable AbundanceGroup::FPKM_by_replicate() const
 {
 	FPKMPerReplicateTable fpr;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
         FPKMPerReplicateTable ab_fpr = ab->FPKM_by_replicate();
         
@@ -639,7 +639,7 @@ StatusPerReplicateTable AbundanceGroup::status_by_replicate() const
 {
 	StatusPerReplicateTable fpr;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		if (fpr.empty())
         {
@@ -685,7 +685,7 @@ double AbundanceGroup::mass_variance() const
 {
     double mass_var = 0;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		mass_var += ab->mass_variance();
 	}
@@ -724,7 +724,7 @@ double AbundanceGroup::FPKM() const
 {
 	double fpkm = 0;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		fpkm += ab->FPKM();
 	}
@@ -736,7 +736,7 @@ double AbundanceGroup::gamma() const
 {
 	double gamma = 0;
 	
-	BOOST_FOREACH(shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		gamma += ab->gamma();
 	}
@@ -758,7 +758,7 @@ void TranscriptAbundance::clear_non_serialized_data()
     if (_transfrag)
     {
         _transfrag->clear_hits();
-        _transfrag = shared_ptr<Scaffold>();
+        _transfrag = boost::shared_ptr<Scaffold>();
     }
 }
 
@@ -796,7 +796,7 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
     ublas::matrix<double> new_count_cov = ublas::zero_matrix<double>(num_kept,num_kept);
     ublas::matrix<double> new_fpkm_cov = ublas::zero_matrix<double>(num_kept,num_kept);
     
-	vector<shared_ptr<Abundance> > new_ab;
+	vector<boost::shared_ptr<Abundance> > new_ab;
     
 	//vector<vector<double> > new_fpkm_samples(_fpkm_samples.size(), vector<double>(num_kept, 0));
 	
@@ -852,12 +852,12 @@ void AbundanceGroup::filter_group(const vector<bool>& to_keep,
     filtered_group.description(_description);
 }
 
-void AbundanceGroup::get_transfrags(vector<shared_ptr<Abundance> >& transfrags) const
+void AbundanceGroup::get_transfrags(vector<boost::shared_ptr<Abundance> >& transfrags) const
 {
 	transfrags.clear();
-	BOOST_FOREACH(shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> pA, _abundances)
 	{
-		shared_ptr<Scaffold> pS = pA->transfrag();
+		boost::shared_ptr<Scaffold> pS = pA->transfrag();
 		if (pS)
 		{
 			transfrags.push_back(pA);
@@ -869,7 +869,7 @@ set<string> AbundanceGroup::gene_id() const
 {
 	set<string> s;
 	
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->gene_id();
 		s.insert(sub.begin(), sub.end());
@@ -882,7 +882,7 @@ set<string> AbundanceGroup::gene_name() const
 {
 	set<string> s;
 	
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->gene_name();
 		s.insert(sub.begin(), sub.end());
@@ -896,7 +896,7 @@ set<string> AbundanceGroup::tss_id() const
 {
 	set<string> s;
 
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->tss_id();
 		s.insert(sub.begin(), sub.end());
@@ -909,7 +909,7 @@ set<string> AbundanceGroup::protein_id() const
 {
 	set<string> s;
 	
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		set<string> sub = pA->protein_id();
 		s.insert(sub.begin(), sub.end());
@@ -922,7 +922,7 @@ const string& AbundanceGroup::locus_tag() const
 {
 	static string default_locus_tag = "-";
 	const string* pLast = NULL;
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pLast)
 		{
@@ -946,7 +946,7 @@ const string& AbundanceGroup::reference_tag() const
 {
 	static string default_reference_tag = "-";
 	const string* pLast = NULL;
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pLast)
 		{
@@ -972,7 +972,7 @@ double AbundanceGroup::effective_length() const
 	double group_fpkm = FPKM();
 	if (group_fpkm == 0)
 		return 0;
-	BOOST_FOREACH (shared_ptr<Abundance> ab, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> ab, _abundances)
 	{
 		eff_len += (ab->effective_length() * (ab->FPKM() / group_fpkm));
 	}
@@ -987,21 +987,21 @@ double AbundanceGroup::effective_length() const
 //	{	
 //		if (!alignments[i].left_alignment())
 //			continue;
-//        shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
+//        boost::shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
 //           
 //        _read_group_props.insert(rg_props;
 //    }
 //}
 
 void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignments,
-                                                vector<shared_ptr<Abundance> >& transcripts)
+                                                vector<boost::shared_ptr<Abundance> >& transcripts)
 {
     size_t M = alignments.size();
 	size_t N = transcripts.size();
 	
     //_count_per_replicate.clear();
     
-    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin(); 
+    for (map<boost::shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin(); 
          itr != _count_per_replicate.end();
          ++itr)
     {
@@ -1011,9 +1011,9 @@ void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignment
 	if (transcripts.empty())
 		return;
     
-    //map<shared_ptr<ReadGroupProperties const>, double> count_per_replicate;
+    //map<boost::shared_ptr<ReadGroupProperties const>, double> count_per_replicate;
 
-    vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
+    vector<boost::shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
 	compute_cond_probs_and_effective_lengths(alignments, transcripts, mapped_transcripts);
     
 	for (size_t i = 0; i < M; ++i)
@@ -1032,9 +1032,9 @@ void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignment
 		}
 		if (mapped)
         {
-            shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
+            boost::shared_ptr<ReadGroupProperties const> rg_props = alignments[i].read_group_props();
             //assert (parent != NULL);
-            pair<map<shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
+            pair<map<boost::shared_ptr<ReadGroupProperties const>, double>::iterator, bool> inserted;
             inserted = _count_per_replicate.insert(make_pair(rg_props, 0.0));
             _read_group_props.insert(rg_props);
             
@@ -1047,7 +1047,7 @@ void AbundanceGroup::collect_per_replicate_mass(const vector<MateHit>& alignment
     }
 }
 
-void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<shared_ptr<Abundance> >& transcripts)
+void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<boost::shared_ptr<Abundance> >& transcripts)
 {
 	size_t N = transcripts.size();
 	
@@ -1064,11 +1064,11 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<share
     vector<double> avg_mass_variances(N, 0.0);
     
     double external_scale_factor = -1.0;
-    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+    for (map<boost::shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
          itr != _count_per_replicate.end();
          ++itr)
     {
-        shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+        boost::shared_ptr<ReadGroupProperties const> rg_props = itr->first;
         
         if (external_scale_factor < 0)
         {
@@ -1086,7 +1086,7 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<share
         double scaled_mass = itr->second;
         double scaled_total_mass = rg_props->normalized_map_mass();
         avg_X_g += scaled_mass;
-        shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
+        boost::shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
         for (size_t j = 0; j < N; ++j)
         {
             double scaled_variance;
@@ -1138,7 +1138,7 @@ void AbundanceGroup::calculate_locus_scaled_mass_and_variance(const vector<share
 
 int total_cond_prob_calls = 0;
 void collapse_equivalent_hits(const vector<MateHit>& alignments,
-                              vector<shared_ptr<Abundance> >& transcripts,
+                              vector<boost::shared_ptr<Abundance> >& transcripts,
                               vector<MateHit>& nr_alignments,
                               vector<double>& log_conv_factors, 
                               bool require_overlap = true)
@@ -1176,7 +1176,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
         {
             for (int j = 0; j < N; ++j)
             {
-                shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+                boost::shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
                 
                 if (compatibilities[j][i]==1)
                 {
@@ -1231,7 +1231,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
                 cond_probs_k = &cached_cond_probs[k];
                 for (int j = 0; j < N; ++j)
                 {
-                    shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+                    boost::shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
                     
                     if (compatibilities[j][k]==1)
                     {
@@ -1318,7 +1318,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
         
 	for (int j = 0; j < N; ++j) 
     {
-		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+		boost::shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
 		vector<double>& cond_probs = *(new vector<double>(nr_alignments.size(),0));
 		
 		BiasCorrectionHelper& bch = bchs[j];
@@ -1358,7 +1358,7 @@ void collapse_equivalent_hits(const vector<MateHit>& alignments,
 }
 
 void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
-                                     vector<shared_ptr<Abundance> >& transcripts,
+                                     vector<boost::shared_ptr<Abundance> >& transcripts,
                                      vector<MateHit>& nr_alignments,
                                      vector<double>& log_conv_factors)
 {
@@ -1423,7 +1423,7 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
 }
 
 
-AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus bootstrap_gamma_mle(const vector<boost::shared_ptr<Abundance> >& transcripts,
                                     const vector<MateHit>& nr_alignments,
                                     const vector<double>& log_conv_factors,
                                     ublas::vector<double>& gamma_map_estimate,
@@ -1588,7 +1588,7 @@ AbundanceStatus bootstrap_gamma_mle(const vector<shared_ptr<Abundance> >& transc
 
 
 
-AbundanceStatus bootstrap_gammas(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus bootstrap_gammas(const vector<boost::shared_ptr<Abundance> >& transcripts,
                                  const vector<MateHit>& alignments,
                                  const vector<double>& log_conv_factors,
                                  ublas::vector<double>& gamma_estimate,
@@ -1713,7 +1713,7 @@ bool generate_count_assignment_samples(int num_draws,
     return true;
 }
  
-void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+void calculate_gamma_mle_covariance(const std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
                                     ublas::vector<double>& estimated_gamma_mean,
                                     ublas::matrix<double>& estimated_gamma_covariance)
 {
@@ -1732,7 +1732,7 @@ void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupPropertie
         return;
     }
     
-    for(std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+    for(std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
         itr != ab_group_per_replicate.end();
         ++itr)
     {
@@ -1792,7 +1792,7 @@ void calculate_gamma_mle_covariance(const std::map<shared_ptr<ReadGroupPropertie
     }
 }
 
-void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> >& ab_group_per_replicate,
+void calculate_fragment_assignment_distribution(const std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> >& ab_group_per_replicate,
                                                 ublas::vector<double>& estimated_gamma_mean,
                                                 ublas::matrix<double>& estimated_gamma_covariance,
                                                 vector<ublas::vector<double> >& all_assigned_count_samples)
@@ -1813,7 +1813,7 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         return;
     }
     
-    for(std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+    for(std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
         itr != ab_group_per_replicate.end();
         ++itr)
     {
@@ -1825,7 +1825,7 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
         
         ublas::matrix<double> count_covariance = itr->second->iterated_count_cov();
         ublas::matrix<double> mle_error = ublas::zero_matrix<double>(count_mean.size(), count_mean.size());
-        shared_ptr<const MleErrorModel> mle_model = itr->first->mle_error_model();
+        boost::shared_ptr<const MleErrorModel> mle_model = itr->first->mle_error_model();
         if (mle_model != NULL)
         {
             for (size_t i = 0; i < count_mean.size(); ++i)
@@ -1920,8 +1920,8 @@ void calculate_fragment_assignment_distribution(const std::map<shared_ptr<ReadGr
 //}
 
 
-void AbundanceGroup::calculate_abundance_group_variance(const vector<shared_ptr<Abundance> >& transcripts,
-                                                        const std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> >& ab_group_per_replicate)
+void AbundanceGroup::calculate_abundance_group_variance(const vector<boost::shared_ptr<Abundance> >& transcripts,
+                                                        const std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> >& ab_group_per_replicate)
 {
 	if (final_est_run) // Only on last estimation run
 	{
@@ -1997,10 +1997,10 @@ void AbundanceGroup::calculate_abundance_group_variance(const vector<shared_ptr<
 
 void AbundanceGroup::calculate_abundance_for_replicate(const vector<MateHit>& alignments, bool perform_collapse)
 {
-    vector<shared_ptr<Abundance> > transcripts;
+    vector<boost::shared_ptr<Abundance> > transcripts;
     
 	get_transfrags(transcripts);
-	vector<shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
+	vector<boost::shared_ptr<Abundance> > mapped_transcripts; // This collects the transcripts that have alignments mapping to them
     
 	vector<MateHit> nr_alignments;
     vector<double> joint_mle_gammas;
@@ -2036,7 +2036,7 @@ void AbundanceGroup::calculate_abundance_for_replicate(const vector<MateHit>& al
     calculate_locus_scaled_mass_and_variance(transcripts);
 }
 
-void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> >& ab_group_per_replicate)
+void AbundanceGroup::aggregate_replicate_abundances(const map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> >& ab_group_per_replicate)
 {
     for (size_t i = 0; i < _abundances.size(); ++i)
     {
@@ -2056,18 +2056,18 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
         status_table[NUMERIC_FAIL] = 0;
         status_table[NUMERIC_HI_DATA] = 0;
         
-        for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+        for (std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
              itr != ab_group_per_replicate.end();
              ++itr)
         {
             status_table[itr->second->abundances()[i]->status()] += 1;
         }
         
-        for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
+        for (std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> >::const_iterator itr = ab_group_per_replicate.begin();
              itr != ab_group_per_replicate.end();
              ++itr)
         {
-            const vector<shared_ptr<Abundance> >& sc_ab = itr->second->abundances();
+            const vector<boost::shared_ptr<Abundance> >& sc_ab = itr->second->abundances();
             assert(itr->second->abundances().size() == _abundances.size());
             cpr[itr->first] = itr->second->abundances()[i]->num_fragments();
             //fprintf(stderr, "FPKM = %lg\n", itr->second->abundances()[i]->FPKM());
@@ -2133,13 +2133,13 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<shared_ptr<ReadGro
 
 void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool perform_collapse)
 {
-	vector<shared_ptr<Abundance> > transcripts;
+	vector<boost::shared_ptr<Abundance> > transcripts;
     
 	get_transfrags(transcripts);
     
-    map<shared_ptr<ReadGroupProperties const >, vector<MateHit> > alignments_per_read_group;
+    map<boost::shared_ptr<ReadGroupProperties const >, vector<MateHit> > alignments_per_read_group;
     
-    for(std::set<shared_ptr<ReadGroupProperties const > >::iterator itr = _read_group_props.begin();
+    for(std::set<boost::shared_ptr<ReadGroupProperties const > >::iterator itr = _read_group_props.begin();
         itr != _read_group_props.end();
         ++itr)
     {
@@ -2158,15 +2158,15 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
     
     collect_per_replicate_mass(alignments, transcripts);
     
-    std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> > ab_group_per_replicate;
+    std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<AbundanceGroup> > ab_group_per_replicate;
     
     calculate_per_replicate_abundances(transcripts,
                                        alignments_per_read_group,
                                        ab_group_per_replicate);
     
-    std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<const AbundanceGroup> > const_ab_group_per_replicate;
+    std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<const AbundanceGroup> > const_ab_group_per_replicate;
     
-    for (std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >::iterator itr = ab_group_per_replicate.begin();
+    for (std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<AbundanceGroup> >::iterator itr = ab_group_per_replicate.begin();
          itr != ab_group_per_replicate.end(); ++itr)
     {
         const_ab_group_per_replicate[itr->first] = itr->second;
@@ -2177,7 +2177,7 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
     calculate_abundance_group_variance(transcripts, const_ab_group_per_replicate);
 }
 
-void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vector<shared_ptr<Abundance> > transcripts)
+void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vector<boost::shared_ptr<Abundance> > transcripts)
 {
 	size_t M = alignments.size();
 	size_t N = transcripts.size();
@@ -2352,7 +2352,7 @@ bool estimate_count_variance(long double& variance,
 bool simulate_count_covariance(const vector<double>& num_fragments,
                                const vector<double>& frag_variances,
                                const ublas::matrix<double>& iterated_exp_count_covariance,
-                               const vector<shared_ptr<Abundance> >& transcripts,
+                               const vector<boost::shared_ptr<Abundance> >& transcripts,
                                ublas::matrix<double>& count_covariance,
                                vector<Eigen::VectorXd>& assigned_count_samples,
                                vector<ublas::vector<double> >* gamma_samples = NULL)
@@ -2632,11 +2632,11 @@ void AbundanceGroup::generate_fpkm_samples()
     
     double M = 0;
     
-    for (set<shared_ptr<ReadGroupProperties const> >::iterator itr = _read_group_props.begin();
+    for (set<boost::shared_ptr<ReadGroupProperties const> >::iterator itr = _read_group_props.begin();
          itr != _read_group_props.end();
          ++itr)
     {
-        shared_ptr<ReadGroupProperties const> rg_props = *itr;
+        boost::shared_ptr<ReadGroupProperties const> rg_props = *itr;
         M += rg_props->normalized_map_mass();
         
         if (external_scale_factor < 0)
@@ -2740,11 +2740,11 @@ void AbundanceGroup::calculate_FPKM_covariance()
     
     double M = 0;
     
-    for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+    for (map<boost::shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
          itr != _count_per_replicate.end();
          ++itr)
     {
-        shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+        boost::shared_ptr<ReadGroupProperties const> rg_props = itr->first;
         M += rg_props->normalized_map_mass();
         
         if (external_scale_factor < 0)
@@ -2905,15 +2905,15 @@ void AbundanceGroup::calculate_conf_intervals()
         
         vector<double> avg_mass_variances(_abundances.size(), 0.0);
         
-        for (map<shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
+        for (map<boost::shared_ptr<ReadGroupProperties const>, double>::iterator itr = _count_per_replicate.begin();
              itr != _count_per_replicate.end();
              ++itr)
         {
-            shared_ptr<ReadGroupProperties const> rg_props = itr->first;
+            boost::shared_ptr<ReadGroupProperties const> rg_props = itr->first;
             double scaled_mass = itr->second;
             double scaled_total_mass = rg_props->normalized_map_mass();
             avg_X_g += scaled_mass;
-            shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
+            boost::shared_ptr<MassDispersionModel const> disperser = rg_props->mass_dispersion_model();
             for (size_t j = 0; j < N; ++j)
             {
                 double scaled_variance;
@@ -2939,7 +2939,7 @@ void AbundanceGroup::calculate_conf_intervals()
             }
         }
                 
-		BOOST_FOREACH(shared_ptr<Abundance> pA, _abundances)
+		BOOST_FOREACH(boost::shared_ptr<Abundance> pA, _abundances)
 		{
 			double FPKM_hi;
 			double FPKM_lo;
@@ -3054,8 +3054,8 @@ void AbundanceGroup::calculate_conf_intervals()
 
 */
 void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
-															  vector<shared_ptr<Abundance> >& transcripts,
-															  vector<shared_ptr<Abundance> >& mapped_transcripts)
+															  vector<boost::shared_ptr<Abundance> >& transcripts,
+															  vector<boost::shared_ptr<Abundance> >& mapped_transcripts)
 {		
 	int N = transcripts.size();
 	int M = alignments.size();
@@ -3065,7 +3065,7 @@ void compute_cond_probs_and_effective_lengths(const vector<MateHit>& alignments,
 
 	for (int j = 0; j < N; ++j) 
     {
-		shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
+		boost::shared_ptr<Scaffold> transfrag = transcripts[j]->transfrag();
 		vector<double>& cond_probs = *(new vector<double>(M,0));
 		
 		BiasCorrectionHelper bch(transfrag);
@@ -3105,13 +3105,13 @@ double trace(const ublas::matrix<double>& m)
 // the cluster.  Needs refactoring
 bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments, 
                                       const vector<double>& log_conv_factors,
-									  const vector<shared_ptr<Abundance> >& transcripts, 
-									  const vector<shared_ptr<Abundance> >& mapped_transcripts)
+									  const vector<boost::shared_ptr<Abundance> >& transcripts, 
+									  const vector<boost::shared_ptr<Abundance> >& mapped_transcripts)
 {
 	if (mapped_transcripts.empty())
     {
 		//gammas = vector<double>(transfrags.size(), 0.0);
-		BOOST_FOREACH (shared_ptr<Abundance> ab, _abundances)
+		BOOST_FOREACH (boost::shared_ptr<Abundance> ab, _abundances)
 		{
 			ab->gamma(0);
 		}
@@ -3154,14 +3154,14 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
         locus_mass += alignment.collapse_mass();
     }
     
-	vector<shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
+	vector<boost::shared_ptr<Abundance> > filtered_transcripts = mapped_transcripts;
 	vector<double> filtered_gammas = gammas;
 	filter_junk_isoforms(filtered_transcripts, filtered_gammas, mapped_transcripts, locus_mass);
 	
 	if (filtered_transcripts.empty())
 	{
 		//gammas = vector<double>(transfrags.size(), 0.0);
-		BOOST_FOREACH (shared_ptr<Abundance> ab, _abundances)
+		BOOST_FOREACH (boost::shared_ptr<Abundance> ab, _abundances)
 		{
 			ab->gamma(0);
 		}
@@ -3199,7 +3199,7 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
 	
 	size_t N = transcripts.size();
 	
-    set<shared_ptr<ReadGroupProperties const> > rg_props;
+    set<boost::shared_ptr<ReadGroupProperties const> > rg_props;
 	for (size_t i = 0; i < nr_alignments.size(); ++i)
 	{
         rg_props.insert(nr_alignments[i].read_group_props());
@@ -3237,13 +3237,13 @@ bool AbundanceGroup::calculate_gammas(const vector<MateHit>& nr_alignments,
     updated_fpkm_cov = ublas::zero_matrix<double>(N, N);
 	
 	size_t cfs = 0;
-	shared_ptr<Scaffold> curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
+	boost::shared_ptr<Scaffold> curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
 	StructurallyEqualScaffolds se;
 	vector<size_t> scaff_present(N, N);
 	
 	for (size_t i = 0; i < N; ++i)
 	{
-		shared_ptr<Scaffold> scaff_i = transcripts[i]->transfrag();
+		boost::shared_ptr<Scaffold> scaff_i = transcripts[i]->transfrag();
 		if (cfs < filtered_transcripts.size())
 		{
 			curr_filtered_scaff = filtered_transcripts[cfs]->transfrag();
@@ -3419,7 +3419,7 @@ void calculate_average_assignment_probs(const Eigen::VectorXd& alignment_multipl
 
 void calculate_iterated_exp_count_covariance(const vector<double>& gammas,
                                              const vector<MateHit>& nr_alignments,
-                                             const vector<shared_ptr<Abundance> >& transcripts,
+                                             const vector<boost::shared_ptr<Abundance> >& transcripts,
                                              ublas::matrix<double>& count_covariance)
 {
     // Now calculate the _iterated_exp_count_covariance matrix via iterated expectation
@@ -3562,7 +3562,7 @@ void AbundanceGroup::calculate_kappas()
 	//tss_group.sub_quants = vector<QuantGroup>(isos_in_tss);
 	
 	double S_FPKM = 0.0;
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		if (pA->effective_length() > 0)
 		{
@@ -3571,7 +3571,7 @@ void AbundanceGroup::calculate_kappas()
 	}
 	
     //fprintf (stderr, "*********\n");
-	BOOST_FOREACH (shared_ptr<Abundance> pA, _abundances)
+	BOOST_FOREACH (boost::shared_ptr<Abundance> pA, _abundances)
 	{
 		if (S_FPKM > 0)
 		{
@@ -3665,14 +3665,14 @@ void AbundanceGroup::calculate_kappas()
     }
 }
 
-void get_alignments_from_scaffolds(const vector<shared_ptr<Abundance> >& abundances,
+void get_alignments_from_scaffolds(const vector<boost::shared_ptr<Abundance> >& abundances,
 								   vector<MateHit>& alignments)
 {
 	set<const MateHit*> hits_in_gene_set;
 
-	BOOST_FOREACH(shared_ptr<Abundance> pA, abundances)
+	BOOST_FOREACH(boost::shared_ptr<Abundance> pA, abundances)
 	{			
-		shared_ptr<Scaffold> pS = pA->transfrag();
+		boost::shared_ptr<Scaffold> pS = pA->transfrag();
 		assert (pS);
 		hits_in_gene_set.insert(pS->mate_hits().begin(),
 								pS->mate_hits().end());
@@ -3910,7 +3910,7 @@ double EM(int N, int M,
 	return newEll;
 }
 
-void compute_fisher(const vector<shared_ptr<Abundance> >& transcripts,
+void compute_fisher(const vector<boost::shared_ptr<Abundance> >& transcripts,
 					const ublas::vector<double>& abundances,
 					const vector<MateHit>& alignments,
 					const vector<double>& u,
@@ -4034,33 +4034,33 @@ AbundanceStatus compute_posterior_expectation(const vector<ublas::vector<double>
     return NUMERIC_OK;
 }
 
-AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared_ptr<Abundance> >& transcripts,
-                                                                   const map<shared_ptr<ReadGroupProperties const >, vector<MateHit> >& alignments_per_read_group,
-                                                                   std::map<shared_ptr<ReadGroupProperties const >, shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
+AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<boost::shared_ptr<Abundance> >& transcripts,
+                                                                   const map<boost::shared_ptr<ReadGroupProperties const >, vector<MateHit> >& alignments_per_read_group,
+                                                                   std::map<boost::shared_ptr<ReadGroupProperties const >, boost::shared_ptr<AbundanceGroup> >& ab_group_per_replicate,
                                                                    bool perform_collapse)
 {
-    for(std::set<shared_ptr<ReadGroupProperties const > >::iterator itr = _read_group_props.begin();
+    for(std::set<boost::shared_ptr<ReadGroupProperties const > >::iterator itr = _read_group_props.begin();
         itr != _read_group_props.end(); 
         ++itr)
     {
-        vector<shared_ptr<Abundance> > new_transcripts;
-        BOOST_FOREACH(shared_ptr<Abundance> ab, transcripts)
+        vector<boost::shared_ptr<Abundance> > new_transcripts;
+        BOOST_FOREACH(boost::shared_ptr<Abundance> ab, transcripts)
         {
             boost::shared_ptr<TranscriptAbundance> d = boost::static_pointer_cast<TranscriptAbundance>(ab);
-            //new_transcripts.push_back(shared_ptr<Abundance>(new TranscriptAbundance(*boost::static_pointer_cast<TranscriptAbundance>(ab))));
+            //new_transcripts.push_back(boost::shared_ptr<Abundance>(new TranscriptAbundance(*boost::static_pointer_cast<TranscriptAbundance>(ab))));
             TranscriptAbundance* pT = new TranscriptAbundance;
             pT->transfrag(d->transfrag());
-            shared_ptr<Abundance> ab_new(pT);
+            boost::shared_ptr<Abundance> ab_new(pT);
             ab_new->description(ab_new->description());
             ab_new->locus_tag("");
             new_transcripts.push_back(ab_new);
         }
-        shared_ptr<AbundanceGroup> ab_group(new AbundanceGroup(new_transcripts));
-        std::set<shared_ptr<ReadGroupProperties const > > rg_props;
+        boost::shared_ptr<AbundanceGroup> ab_group(new AbundanceGroup(new_transcripts));
+        std::set<boost::shared_ptr<ReadGroupProperties const > > rg_props;
         rg_props.insert(*itr);
         ab_group->init_rg_props(rg_props);
         
-        map<shared_ptr<ReadGroupProperties const >, vector<MateHit> >::const_iterator al_itr =
+        map<boost::shared_ptr<ReadGroupProperties const >, vector<MateHit> >::const_iterator al_itr =
             alignments_per_read_group.find(*itr);
         
         assert(al_itr != alignments_per_read_group.end());
@@ -4069,7 +4069,7 @@ AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared
         vector<MateHit> nr_alignments;
         vector<MateHit> non_equiv_alignments;
         vector<double> log_conv_factors;
-        vector<shared_ptr<Abundance> > mapped_transcripts;
+        vector<boost::shared_ptr<Abundance> > mapped_transcripts;
         
         if (perform_collapse)
         {
@@ -4095,7 +4095,7 @@ AbundanceStatus AbundanceGroup::calculate_per_replicate_abundances(vector<shared
     return NUMERIC_OK;
 }
 
-AbundanceStatus calculate_inverse_fisher(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus calculate_inverse_fisher(const vector<boost::shared_ptr<Abundance> >& transcripts,
                                          const vector<MateHit>& alignments,
                                          const ublas::vector<double>& gamma_mean,
                                          ublas::matrix<double>& inverse_fisher)
@@ -4277,7 +4277,7 @@ bool is_identifiable(M &m, PM &pm)
     return singular == 0;
 }
 
-AbundanceStatus gamma_mle(const vector<shared_ptr<Abundance> >& transcripts,
+AbundanceStatus gamma_mle(const vector<boost::shared_ptr<Abundance> >& transcripts,
                           const vector<MateHit>& nr_alignments,
                           const vector<double>& log_conv_factors,
                           vector<double>& gammas,
@@ -4785,11 +4785,11 @@ void tss_analysis(const string& locus_tag, SampleAbundances& sample)
     sample.primary_transcripts = transcripts_by_tss;
     
     // Group TSS clusters by gene
-    vector<shared_ptr<Abundance> > primary_transcript_abundances;
-    set<shared_ptr<ReadGroupProperties const> > rg_props;
+    vector<boost::shared_ptr<Abundance> > primary_transcript_abundances;
+    set<boost::shared_ptr<ReadGroupProperties const> > rg_props;
     BOOST_FOREACH (AbundanceGroup& ab_group, sample.primary_transcripts)
     {
-        primary_transcript_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+        primary_transcript_abundances.push_back(boost::shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
         rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
     }
     
@@ -4868,14 +4868,14 @@ void cds_analyis(const string& locus_tag, SampleAbundances& sample)
     sample.cds = transcripts_by_cds;
     
     // Group the CDS clusters by gene
-    vector<shared_ptr<Abundance> > cds_abundances;
+    vector<boost::shared_ptr<Abundance> > cds_abundances;
     
-    set<shared_ptr<ReadGroupProperties const> > rg_props;
+    set<boost::shared_ptr<ReadGroupProperties const> > rg_props;
     BOOST_FOREACH (AbundanceGroup& ab_group, sample.cds)
     {
         //if (ab_group.description() != "")
         {
-            cds_abundances.push_back(shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
+            cds_abundances.push_back(boost::shared_ptr<Abundance>(new AbundanceGroup(ab_group)));
             rg_props.insert(ab_group.rg_props().begin(), ab_group.rg_props().end());
         }
     }
@@ -4904,19 +4904,19 @@ void cds_analyis(const string& locus_tag, SampleAbundances& sample)
 }
 
 void sample_abundance_worker(const string& locus_tag,
-                             const set<shared_ptr<ReadGroupProperties const> >& rg_props,
+                             const set<boost::shared_ptr<ReadGroupProperties const> >& rg_props,
                              SampleAbundances& sample,
-                             shared_ptr<HitBundle> sample_bundle,
+                             boost::shared_ptr<HitBundle> sample_bundle,
                              bool perform_cds_analysis,
                              bool perform_tss_analysis)
 {
-    vector<shared_ptr<Abundance> > abundances;
+    vector<boost::shared_ptr<Abundance> > abundances;
     
-    BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
     {
         TranscriptAbundance* pT = new TranscriptAbundance;
         pT->transfrag(s);
-        shared_ptr<Abundance> ab(pT);
+        boost::shared_ptr<Abundance> ab(pT);
         ab->description(s->annotated_trans_id());
         ab->locus_tag(locus_tag);
         abundances.push_back(ab);
@@ -4940,14 +4940,14 @@ void sample_abundance_worker(const string& locus_tag,
     }
     else
     {
-        BOOST_FOREACH(shared_ptr<Abundance>  ab, abundances)
+        BOOST_FOREACH(boost::shared_ptr<Abundance>  ab, abundances)
         {
             ab->status(NUMERIC_HI_DATA);
             
             CountPerReplicateTable cpr;
             FPKMPerReplicateTable fpr;
             StatusPerReplicateTable spr;
-            for (set<shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg_props.begin();
+            for (set<boost::shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg_props.begin();
                  itr != rg_props.end();
                  ++itr)
             {
@@ -4988,17 +4988,17 @@ void sample_abundance_worker(const string& locus_tag,
 }
 
 // This function applies library size factors to pre-computed expression entries
-void AbundanceGroup::apply_normalization_to_abundances(const map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> >& unnormalized_ab_group_per_replicate,
-                                                       map<shared_ptr<const ReadGroupProperties>, shared_ptr<AbundanceGroup> >& normalized_ab_group_per_replicate)
+void AbundanceGroup::apply_normalization_to_abundances(const map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<const AbundanceGroup> >& unnormalized_ab_group_per_replicate,
+                                                       map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<AbundanceGroup> >& normalized_ab_group_per_replicate)
 {
-    for (map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> >::const_iterator itr = unnormalized_ab_group_per_replicate.begin();
+    for (map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<const AbundanceGroup> >::const_iterator itr = unnormalized_ab_group_per_replicate.begin();
          itr != unnormalized_ab_group_per_replicate.end(); ++itr)
     {
-        shared_ptr<AbundanceGroup> norm_ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(*itr->second));
-        shared_ptr<const ReadGroupProperties> rg_props = itr->first;
-        shared_ptr<const MassDispersionModel> disp_model = rg_props->mass_dispersion_model();
+        boost::shared_ptr<AbundanceGroup> norm_ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(*itr->second));
+        boost::shared_ptr<const ReadGroupProperties> rg_props = itr->first;
+        boost::shared_ptr<const MassDispersionModel> disp_model = rg_props->mass_dispersion_model();
         
-        shared_ptr<const ReadGroupProperties> old_rg_props = *(itr->second->rg_props().begin());
+        boost::shared_ptr<const ReadGroupProperties> old_rg_props = *(itr->second->rg_props().begin());
         
         double fpkm_correction_factor = old_rg_props->normalized_map_mass() / rg_props->normalized_map_mass();
         double internal_scale_factor = rg_props->internal_scale_factor();
@@ -5029,32 +5029,27 @@ void AbundanceGroup::apply_normalization_to_abundances(const map<shared_ptr<cons
 }
 
 void merge_precomputed_expression_worker(const string& locus_tag,
-                                         const vector<shared_ptr<PrecomputedExpressionBundleFactory> >& expression_factories,
+                                         const vector<boost::shared_ptr<PrecomputedExpressionBundleFactory> >& expression_factories,
                                          SampleAbundances& sample,
-                                         shared_ptr<HitBundle> sample_bundle,
+                                         boost::shared_ptr<HitBundle> sample_bundle,
                                          bool perform_cds_analysis,
                                          bool perform_tss_analysis)
 {
-    map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> > unnormalized_ab_group_per_replicate;
-    map<shared_ptr<const ReadGroupProperties>, shared_ptr<AbundanceGroup> > normalized_ab_group_per_replicate;
-    map<shared_ptr<const ReadGroupProperties>, shared_ptr<const AbundanceGroup> > const_ab_group_per_replicate;
+    map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<const AbundanceGroup> > unnormalized_ab_group_per_replicate;
+    map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<AbundanceGroup> > normalized_ab_group_per_replicate;
+    map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<const AbundanceGroup> > const_ab_group_per_replicate;
     
-    if (locus_tag == "chr6:31126318-31148508")
-    {
-        int a = 4;
-    }
-    
-    set<shared_ptr<const ReadGroupProperties> > rg_props;
+    set<boost::shared_ptr<const ReadGroupProperties> > rg_props;
     for (size_t i = 0; i < expression_factories.size(); ++i)
     {
-        shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = expression_factories[i];
-        shared_ptr<const PrecomputedExpressionHitFactory> pHitFac = dynamic_pointer_cast<const PrecomputedExpressionHitFactory> (pBundleFac->hit_factory());
+        boost::shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = expression_factories[i];
+        boost::shared_ptr<const PrecomputedExpressionHitFactory> pHitFac = dynamic_pointer_cast<const PrecomputedExpressionHitFactory> (pBundleFac->hit_factory());
         assert (pHitFac);
         
-        shared_ptr<const ReadGroupProperties> rg_prop = pBundleFac->read_group_properties();
+        boost::shared_ptr<const ReadGroupProperties> rg_prop = pBundleFac->read_group_properties();
         rg_props.insert(rg_prop);
         
-        shared_ptr<const AbundanceGroup> ab = pBundleFac->get_abundance_for_locus(sample_bundle->id());
+        boost::shared_ptr<const AbundanceGroup> ab = pBundleFac->get_abundance_for_locus(sample_bundle->id());
         pBundleFac->clear_abundance_for_locus(sample_bundle->id());
         if (!ab)
         {
@@ -5069,19 +5064,19 @@ void merge_precomputed_expression_worker(const string& locus_tag,
     
     AbundanceGroup::apply_normalization_to_abundances(unnormalized_ab_group_per_replicate, normalized_ab_group_per_replicate);
     
-    for (map<shared_ptr<const ReadGroupProperties>, shared_ptr<AbundanceGroup> >::const_iterator itr = normalized_ab_group_per_replicate.begin();
+    for (map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<AbundanceGroup> >::const_iterator itr = normalized_ab_group_per_replicate.begin();
          itr != normalized_ab_group_per_replicate.end(); ++itr)
     {
         const_ab_group_per_replicate[itr->first] = itr->second;
     }
     
-    vector<shared_ptr<Abundance> > abundances;
+    vector<boost::shared_ptr<Abundance> > abundances;
     
-    BOOST_FOREACH(shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> s, sample_bundle->ref_scaffolds())
     {
         TranscriptAbundance* pT = new TranscriptAbundance;
         pT->transfrag(s);
-        shared_ptr<Abundance> ab(pT);
+        boost::shared_ptr<Abundance> ab(pT);
         ab->description(s->annotated_trans_id());
         ab->locus_tag(locus_tag);
         abundances.push_back(ab);
@@ -5101,14 +5096,14 @@ void merge_precomputed_expression_worker(const string& locus_tag,
     }
     else // FIXME: THIS needs to do the right thing with sample.transcripts...
     {
-        BOOST_FOREACH(shared_ptr<Abundance>  ab, abundances)
+        BOOST_FOREACH(boost::shared_ptr<Abundance>  ab, abundances)
         {
             ab->status(NUMERIC_HI_DATA);
             
             CountPerReplicateTable cpr;
             FPKMPerReplicateTable fpr;
             StatusPerReplicateTable spr;
-            for (set<shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg_props.begin();
+            for (set<boost::shared_ptr<ReadGroupProperties const> >::const_iterator itr = rg_props.begin();
                  itr != rg_props.end();
                  ++itr)
             {

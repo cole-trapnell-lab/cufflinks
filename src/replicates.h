@@ -153,7 +153,7 @@ void calculate_count_means_and_vars(const vector<LocusCountList>& sample_compati
 class ReplicatedBundleFactory
 {
 public:
-	ReplicatedBundleFactory(const std::vector<shared_ptr<BundleFactory> >& factories, 
+	ReplicatedBundleFactory(const std::vector<boost::shared_ptr<BundleFactory> >& factories, 
                             const string& condition_name)
     : _factories(factories), _condition_name(condition_name) {}
 	
@@ -220,8 +220,8 @@ public:
         
         for (size_t i = 1; i < bundles.size(); ++i)
         {
-            const vector<shared_ptr<Scaffold> >& s1 = bundles[i]->ref_scaffolds();
-            const vector<shared_ptr<Scaffold> >& s2 =  bundles[i-1]->ref_scaffolds();
+            const vector<boost::shared_ptr<Scaffold> >& s1 = bundles[i]->ref_scaffolds();
+            const vector<boost::shared_ptr<Scaffold> >& s2 =  bundles[i-1]->ref_scaffolds();
             assert (s1.size() == s2.size());
             for (size_t j = 0; j < s1.size(); ++j)
             {
@@ -260,7 +260,7 @@ public:
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        BOOST_FOREACH (shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, _factories)
         {
             fac->reset();
         }
@@ -275,14 +275,14 @@ public:
         
         for (size_t fac_idx = 0; fac_idx < _factories.size(); ++fac_idx)
         {
-            shared_ptr<BundleFactory> fac = _factories[fac_idx];        
+            boost::shared_ptr<BundleFactory> fac = _factories[fac_idx];        
             BadIntronTable bad_introns;
             
             vector<LocusCount> compatible_count_table;
             vector<LocusCount> total_count_table;
             inspect_map(fac, NULL, compatible_count_table, total_count_table, false, false);
             
-            shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+            boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             
             assert (compatible_count_table.size() == total_count_table.size());
             
@@ -326,7 +326,7 @@ public:
         
         for (size_t i = 0; i < scale_factors.size(); ++i)
         {
-            shared_ptr<ReadGroupProperties> rg_props = _factories[i]->read_group_properties();
+            boost::shared_ptr<ReadGroupProperties> rg_props = _factories[i]->read_group_properties();
             assert (scale_factors[i] != 0);
             rg_props->internal_scale_factor(scale_factors[i]);
         }
@@ -336,7 +336,7 @@ public:
         
         for (size_t fac_idx = 0; fac_idx < _factories.size(); ++fac_idx)
         {
-            shared_ptr<ReadGroupProperties> rg_props = _factories[fac_idx]->read_group_properties();
+            boost::shared_ptr<ReadGroupProperties> rg_props = _factories[fac_idx]->read_group_properties();
             assert (scale_factors[fac_idx] != 0);
             vector<LocusCount> common_scaled_compatible_counts;
             vector<LocusCount> common_scaled_total_counts;
@@ -365,9 +365,9 @@ public:
         
         for (size_t fac_idx = 0; fac_idx < _factories.size(); ++fac_idx)
         {
-            shared_ptr<BundleFactory> fac = _factories[fac_idx];        
+            boost::shared_ptr<BundleFactory> fac = _factories[fac_idx];        
             
-            shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+            boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             const vector<LocusCount>& compatible_count_table = rg_props->common_scale_compatible_counts();
             const vector<LocusCount>& total_count_table = rg_props->common_scale_total_counts();
             
@@ -401,7 +401,7 @@ public:
             scale_factors.push_back(rg_props->internal_scale_factor());
         }
         
-        shared_ptr<MassDispersionModel> disperser;
+        boost::shared_ptr<MassDispersionModel> disperser;
         disperser = ::fit_dispersion_model(_condition_name, scale_factors, sample_compatible_count_table);
         
         vector<pair<double, double> > compatible_means_and_vars;
@@ -431,9 +431,9 @@ public:
         }
 
         
-        BOOST_FOREACH (shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, _factories)
         {
-            shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+            boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             rg_props->mass_dispersion_model(disperser);
         }
     }
@@ -441,23 +441,23 @@ public:
     
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
     // samples will clobber each other
-    void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
+    void set_ref_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        BOOST_FOREACH(shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH(boost::shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_ref_rnas(mRNAs);
         }
     }
     
-    void set_mask_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
+    void set_mask_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        BOOST_FOREACH(shared_ptr<BundleFactory> fac, _factories)
+        BOOST_FOREACH(boost::shared_ptr<BundleFactory> fac, _factories)
         {
             fac->set_mask_rnas(mRNAs);
         }
@@ -465,40 +465,40 @@ public:
     
     int num_replicates() const { return _factories.size(); }
     
-    void mass_dispersion_model(shared_ptr<MassDispersionModel const> disperser)
+    void mass_dispersion_model(boost::shared_ptr<MassDispersionModel const> disperser)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        BOOST_FOREACH(shared_ptr<BundleFactory>& fac, _factories)
+        BOOST_FOREACH(boost::shared_ptr<BundleFactory>& fac, _factories)
         {
             fac->read_group_properties()->mass_dispersion_model(disperser);
         }
     }
     
-    shared_ptr<MassDispersionModel const> mass_dispersion_model() const
+    boost::shared_ptr<MassDispersionModel const> mass_dispersion_model() const
     {
         return _factories.front()->read_group_properties()->mass_dispersion_model();
     }
     
-    void mle_error_model(shared_ptr<MleErrorModel const> mle_model)
+    void mle_error_model(boost::shared_ptr<MleErrorModel const> mle_model)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
-        BOOST_FOREACH(shared_ptr<BundleFactory>& fac, _factories)
+        BOOST_FOREACH(boost::shared_ptr<BundleFactory>& fac, _factories)
         {
             fac->read_group_properties()->mle_error_model(mle_model);
         }
     }
     
-    shared_ptr<MleErrorModel const> mle_error_model() const
+    boost::shared_ptr<MleErrorModel const> mle_error_model() const
     {
         return _factories.front()->read_group_properties()->mle_error_model();
     }
     
 private:
-	vector<shared_ptr<BundleFactory> > _factories;
+	vector<boost::shared_ptr<BundleFactory> > _factories;
 #if ENABLE_THREADS
     boost::mutex _rep_factory_lock;
 #endif

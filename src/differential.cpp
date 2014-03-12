@@ -28,8 +28,8 @@ using namespace std;
 double min_read_count = 10;
 
 #if ENABLE_THREADS
-mutex _launcher_lock;
-mutex locus_thread_pool_lock;
+boost::mutex _launcher_lock;
+boost::mutex locus_thread_pool_lock;
 int locus_curr_threads = 0;
 int locus_num_threads = 0;
 
@@ -74,13 +74,13 @@ void TestLauncher::register_locus(const string& locus_id)
     if (itr == _samples.end())
     {
         pair<launcher_sample_table::iterator, bool> p;
-        vector<shared_ptr<SampleAbundances> >abs(_orig_workers);
+        vector<boost::shared_ptr<SampleAbundances> >abs(_orig_workers);
         _samples.push_back(make_pair(locus_id, abs));
     }
 }
 
 void TestLauncher::abundance_avail(const string& locus_id, 
-                                   shared_ptr<SampleAbundances> ab, 
+                                   boost::shared_ptr<SampleAbundances> ab, 
                                    size_t factory_id)
 {
 #if ENABLE_THREADS
@@ -97,9 +97,9 @@ void TestLauncher::abundance_avail(const string& locus_id,
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself. 
-bool TestLauncher::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances)
+bool TestLauncher::all_samples_reported_in(vector<boost::shared_ptr<SampleAbundances> >& abundances)
 {    
-    BOOST_FOREACH (shared_ptr<SampleAbundances> ab, abundances)
+    BOOST_FOREACH (boost::shared_ptr<SampleAbundances> ab, abundances)
     {
         if (!ab)
         {
@@ -110,12 +110,12 @@ bool TestLauncher::all_samples_reported_in(vector<shared_ptr<SampleAbundances> >
 }
 
 #if ENABLE_THREADS
-mutex test_storage_lock; // don't modify the above struct without locking here
+boost::mutex test_storage_lock; // don't modify the above struct without locking here
 #endif
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself. 
-void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> > abundances)
+void TestLauncher::perform_testing(vector<boost::shared_ptr<SampleAbundances> > abundances)
 {
     assert (abundances.size() == _orig_workers);
     
@@ -143,7 +143,7 @@ void TestLauncher::perform_testing(vector<shared_ptr<SampleAbundances> > abundan
 
 // Note: this routine should be called under lock - it doesn't
 // acquire the lock itself. 
-void TestLauncher::record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances)
+void TestLauncher::record_tracking_data(vector<boost::shared_ptr<SampleAbundances> >& abundances)
 {
     assert (abundances.size() == _orig_workers);
     
@@ -178,7 +178,7 @@ void TestLauncher::record_tracking_data(vector<shared_ptr<SampleAbundances> >& a
 	{
 		const AbundanceGroup& ab_group = abundances[i]->transcripts;
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
-		BOOST_FOREACH (shared_ptr<Abundance> ab, ab_group.abundances())
+		BOOST_FOREACH (boost::shared_ptr<Abundance> ab, ab_group.abundances())
 		{
 			add_to_tracking_table(i, *ab, _tracking->isoform_fpkm_tracking);
             //assert (_tracking->isoform_fpkm_tracking.num_fragments_by_replicate().empty() == false);
@@ -212,7 +212,7 @@ void TestLauncher::test_finished_loci()
 	_launcher_lock.lock();
 #endif  
 
-    vector<vector<shared_ptr<SampleAbundances> > > samples_for_testing;
+    vector<vector<boost::shared_ptr<SampleAbundances> > > samples_for_testing;
     
     launcher_sample_table::iterator itr = _samples.begin(); 
     while(itr != _samples.end())
@@ -258,7 +258,7 @@ void TestLauncher::test_finished_loci()
     
     for (size_t i = 0; i < samples_for_testing.size(); ++i)
     {
-        vector<shared_ptr<SampleAbundances> > samples_i = samples_for_testing[i];
+        vector<boost::shared_ptr<SampleAbundances> > samples_i = samples_for_testing[i];
         perform_testing(samples_i);
     }
 }
@@ -569,7 +569,7 @@ SampleDiffMetaDataTable meta_data_table;
 boost::mutex meta_data_lock;
 #endif
 
-shared_ptr<SampleDifferenceMetaData> get_metadata(const string description)
+boost::shared_ptr<SampleDifferenceMetaData> get_metadata(const string description)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(meta_data_lock);
@@ -979,7 +979,7 @@ struct LocusVarianceInfo
 };
 
 #if ENABLE_THREADS
-mutex variance_info_lock; // don't modify the above struct without locking here
+boost::mutex variance_info_lock; // don't modify the above struct without locking here
 #endif
 
 vector<LocusVarianceInfo> locus_variance_info_table;
@@ -990,12 +990,12 @@ FPKMTrackingTable transcript_count_tracking;
 
 
 void sample_worker(bool non_empty,
-                        shared_ptr<HitBundle> bundle,
+                        boost::shared_ptr<HitBundle> bundle,
                         const RefSequenceTable& rt,
                         ReplicatedBundleFactory& sample_factory,
-                        shared_ptr<SampleAbundances> abundance,
+                        boost::shared_ptr<SampleAbundances> abundance,
                         size_t factory_id,
-                        shared_ptr<TestLauncher> launcher)
+                        boost::shared_ptr<TestLauncher> launcher)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -1031,7 +1031,7 @@ void sample_worker(bool non_empty,
     bool perform_cds_analysis = false;
     bool perform_tss_analysis = false;
     
-    BOOST_FOREACH(shared_ptr<Scaffold> s, bundle->ref_scaffolds())
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> s, bundle->ref_scaffolds())
     {
         if (s->annotated_tss_id() != "")
         {
@@ -1044,11 +1044,11 @@ void sample_worker(bool non_empty,
     }
     
     std::vector<boost::shared_ptr<BundleFactory> > factories = sample_factory.factories();
-    vector<shared_ptr<PrecomputedExpressionBundleFactory> > hit_factories;
+    vector<boost::shared_ptr<PrecomputedExpressionBundleFactory> > hit_factories;
     for (size_t i = 0; i < factories.size(); ++i)
     {
-        shared_ptr<BundleFactory> pFac = factories[i];
-        shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = dynamic_pointer_cast<PrecomputedExpressionBundleFactory> (pFac);
+        boost::shared_ptr<BundleFactory> pFac = factories[i];
+        boost::shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = dynamic_pointer_cast<PrecomputedExpressionBundleFactory> (pFac);
         if (pBundleFac)
         {
             // If we get here, this factory refers to a pre computed expression object.
@@ -1068,10 +1068,10 @@ void sample_worker(bool non_empty,
     }
     else if (hit_factories.empty())
     {
-        set<shared_ptr<ReadGroupProperties const> > rg_props;
+        set<boost::shared_ptr<ReadGroupProperties const> > rg_props;
         for (size_t i = 0; i < sample_factory.factories().size(); ++i)
         {
-            shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
+            boost::shared_ptr<BundleFactory> bf = sample_factory.factories()[i];
             rg_props.insert(bf->read_group_properties());
         }
         
@@ -1090,7 +1090,7 @@ void sample_worker(bool non_empty,
     ///////////////////////////////////////////////
     
     
-    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> ref_scaff,  bundle->ref_scaffolds())
     {
         ref_scaff->clear_hits();
     }
@@ -1187,7 +1187,7 @@ void clear_samples_from_fpkm_tracking_table(const string& locus_desc, FPKMTracki
     }
 }
 
-void clear_samples_from_tracking_table(shared_ptr<SampleAbundances> sample, Tracking& tracking)
+void clear_samples_from_tracking_table(boost::shared_ptr<SampleAbundances> sample, Tracking& tracking)
 {
     for (size_t k = 0; k < sample->transcripts.abundances().size(); ++k)
     {
@@ -1220,7 +1220,7 @@ void clear_samples_from_tracking_table(shared_ptr<SampleAbundances> sample, Trac
 
 int total_tests = 0;
 void test_differential(const string& locus_tag,
-                       const vector<shared_ptr<SampleAbundances> >& samples,
+                       const vector<boost::shared_ptr<SampleAbundances> >& samples,
                        const vector<pair<size_t, size_t> >& contrasts,
 					   Tests& tests,
 					   Tracking& tracking)
@@ -1309,7 +1309,7 @@ void test_differential(const string& locus_tag,
             inserted = tests.isoform_de_tests[i][j].insert(make_pair(desc,
                                                                      test));
             
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = curr_abundance.gene_id();
             meta_data->gene_names = curr_abundance.gene_name();
@@ -1366,7 +1366,7 @@ void test_differential(const string& locus_tag,
             inserted = tests.cds_de_tests[i][j].insert(make_pair(desc,
                                                                  test));
             
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = curr_abundance.gene_id();
             meta_data->gene_names = curr_abundance.gene_name();
@@ -1423,7 +1423,7 @@ void test_differential(const string& locus_tag,
                                                                        test));
             
             
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = curr_abundance.gene_id();
             meta_data->gene_names = curr_abundance.gene_name();
@@ -1471,7 +1471,7 @@ void test_differential(const string& locus_tag,
             inserted = tests.gene_de_tests[i][j].insert(make_pair(desc,
                                                                   test));
             
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = curr_abundance.gene_id();
             meta_data->gene_names = curr_abundance.gene_name();
@@ -1509,7 +1509,7 @@ void test_differential(const string& locus_tag,
             
             // The filtered group might be empty, so let's grab metadata from
             // the unfiltered group
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = samples[i]->gene_primary_transcripts[k].gene_id();
             meta_data->gene_names = samples[i]->gene_primary_transcripts[k].gene_name();
@@ -1548,7 +1548,7 @@ void test_differential(const string& locus_tag,
             
             // The filtered group might be empty, so let's grab metadata from
             // the unfiltered group
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = samples[i]->gene_cds[k].gene_id();
             meta_data->gene_names = samples[i]->gene_cds[k].gene_name();
@@ -1587,7 +1587,7 @@ void test_differential(const string& locus_tag,
             
             // The filtered group might be empty, so let's grab metadata from
             // the unfiltered group
-            shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
+            boost::shared_ptr<SampleDifferenceMetaData> meta_data = get_metadata(desc);
             
             meta_data->gene_ids = samples[i]->primary_transcripts[k].gene_id();
             meta_data->gene_names = samples[i]->primary_transcripts[k].gene_name();

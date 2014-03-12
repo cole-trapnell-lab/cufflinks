@@ -14,7 +14,8 @@ bin_PROGRAMS = \
     gtf_to_sam \
     compress_gtf \
     gffread \
-    cuffquant
+    cuffquant \
+    cuffnorm
 #    cuffcluster 
 #	gtf_reads
 
@@ -221,6 +222,10 @@ cuffdiff_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS)
 cuffquant_SOURCES = cuffquant.cpp
 cuffquant_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_SERIALIZATION_LIB) $(BAM_LIB)
 cuffquant_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS) 
+
+cuffnorm_SOURCES = cuffnorm.cpp
+cuffnorm_LDADD = libcufflinks.a libgc.a $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_SERIALIZATION_LIB) $(BAM_LIB)
+cuffnorm_LDFLAGS =  $(LDFLAGS) $(BOOST_LDFLAGS) $(BAM_LDFLAGS)
 
 
 gtf_to_sam_SOURCES = gtf_to_sam.cpp

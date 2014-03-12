@@ -17,9 +17,9 @@
 #include "scaffolds.h"
 #include "genes.h"
 
-void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
+void filter_junk_isoforms(vector<boost::shared_ptr<Abundance> >& transcripts,
 						  vector<double>& abundances,
-                          const vector<shared_ptr<Abundance> >& mapped_transcripts,
+                          const vector<boost::shared_ptr<Abundance> >& mapped_transcripts,
                           double locus_mass);
 
 

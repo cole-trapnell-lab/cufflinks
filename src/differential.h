@@ -65,7 +65,7 @@ public:
 	double p_value;
 	double corrected_p;
 	
-    shared_ptr<SampleDifferenceMetaData> meta_data;
+    boost::shared_ptr<SampleDifferenceMetaData> meta_data;
 
 	TestStatus test_status;
 	bool significant;
@@ -82,7 +82,7 @@ public:
 };
 
 typedef map<string, SampleDifference > SampleDiffs;
-typedef map<string, shared_ptr<SampleDifferenceMetaData> > SampleDiffMetaDataTable;
+typedef map<string, boost::shared_ptr<SampleDifferenceMetaData> > SampleDiffMetaDataTable;
 
 struct Outfiles
 {
@@ -156,17 +156,17 @@ public:
     
     void register_locus(const string& locus_id);
     void abundance_avail(const string& locus_id, 
-                         shared_ptr<SampleAbundances> ab, 
+                         boost::shared_ptr<SampleAbundances> ab, 
                          size_t factory_id);
     void test_finished_loci();
-    void perform_testing(vector<shared_ptr<SampleAbundances> > abundances);
-    void record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances);
-    bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
+    void perform_testing(vector<boost::shared_ptr<SampleAbundances> > abundances);
+    void record_tracking_data(vector<boost::shared_ptr<SampleAbundances> >& abundances);
+    bool all_samples_reported_in(vector<boost::shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(const string& locus_id);
     
     void clear_tracking_data() { _tracking->clear(); }
     
-    typedef list<pair<string, vector<shared_ptr<SampleAbundances> > > > launcher_sample_table;
+    typedef list<pair<string, vector<boost::shared_ptr<SampleAbundances> > > > launcher_sample_table;
     
 private:
     
@@ -184,15 +184,15 @@ private:
 extern double min_read_count;
 
 void sample_worker(bool non_empty,
-                   shared_ptr<HitBundle> bundle,
+                   boost::shared_ptr<HitBundle> bundle,
                    const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
-                   shared_ptr<SampleAbundances> abundance,
+                   boost::shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   shared_ptr<TestLauncher> launcher);
+                   boost::shared_ptr<TestLauncher> launcher);
 
 void test_differential(const string& locus_tag,
-					   const vector<shared_ptr<SampleAbundances> >& samples,
+					   const vector<boost::shared_ptr<SampleAbundances> >& samples,
                        const vector<pair<size_t, size_t> >& constrasts,
 					   Tests& tests,
 					   Tracking& tracking);

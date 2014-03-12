@@ -26,7 +26,7 @@ void add_to_tracking_table(size_t sample_index,
 	{
 		fpkm_track.locus_tag = ab.locus_tag();
 		fpkm_track.description = ab.description();
-		shared_ptr<Scaffold> transfrag = ab.transfrag();
+		boost::shared_ptr<Scaffold> transfrag = ab.transfrag();
 		if (transfrag && transfrag->nearest_ref_id() != "")
 		{
 			fpkm_track.classcode = transfrag->nearest_ref_classcode();

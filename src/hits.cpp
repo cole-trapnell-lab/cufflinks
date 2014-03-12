@@ -1123,7 +1123,7 @@ void PrecomputedExpressionHitFactory::load_count_tables(const string& expression
     {
         pair<int, AbundanceGroup> first_locus;
         ia >> first_locus;
-        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
                 
         // populate the cached count tables so we can make convincing fake bundles later on.
         ReadGroupProperties rg_props = **(ab->rg_props().begin());
@@ -1170,7 +1170,7 @@ bool PrecomputedExpressionHitFactory::inspect_header()
         pair<int, AbundanceGroup> locus;
 
         ia >> locus;
-        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(locus.second));
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(locus.second));
         
         const string locus_tag = ab->locus_tag();
         
@@ -1185,16 +1185,16 @@ bool PrecomputedExpressionHitFactory::inspect_header()
     return true;
 }
 
-shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::get_abundance_for_locus(int locus_id)
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::get_abundance_for_locus(int locus_id)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
-    map<int, shared_ptr<const AbundanceGroup> >::const_iterator itr = _curr_ab_groups.find(locus_id);
+    map<int, boost::shared_ptr<const AbundanceGroup> >::const_iterator itr = _curr_ab_groups.find(locus_id);
     if (itr != _curr_ab_groups.end())
         return itr->second;
     else
-        return shared_ptr<const AbundanceGroup>();
+        return boost::shared_ptr<const AbundanceGroup>();
 }
 
 void PrecomputedExpressionHitFactory::clear_abundance_for_locus(int locus_id)
@@ -1203,13 +1203,13 @@ void PrecomputedExpressionHitFactory::clear_abundance_for_locus(int locus_id)
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
 
-    map<int, shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
+    map<int, boost::shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
     
     if (itr != _curr_ab_groups.end())
         _curr_ab_groups.erase(itr);
 }
 
-shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
@@ -1220,11 +1220,11 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int
 //    }
     
     if (_last_locus_id >= locus_id)
-        return shared_ptr<const AbundanceGroup>(); // we already processed this one
+        return boost::shared_ptr<const AbundanceGroup>(); // we already processed this one
     
-    shared_ptr<const AbundanceGroup> sought_group;
+    boost::shared_ptr<const AbundanceGroup> sought_group;
     
-    map<int, shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
+    map<int, boost::shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
     
     if (itr != _curr_ab_groups.end())
         return itr->second;
@@ -1234,7 +1234,7 @@ shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int
         pair<int, AbundanceGroup> p;
         *_ia >> p;
         _last_locus_id = p.first;
-        shared_ptr<AbundanceGroup> ab = shared_ptr<AbundanceGroup>(new AbundanceGroup(p.second));
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(p.second));
         if (_last_locus_id == locus_id)
         {
             sought_group = ab;

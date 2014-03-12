@@ -56,8 +56,8 @@ public:
 	
     ~HitBundle()
     {
-        vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
-        BOOST_FOREACH(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
+        vector<boost::shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
+        BOOST_FOREACH(boost::shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
         {
             // This bundle and the factory that actually owns the ref_mRNAs
             // are the only objects that should have access to these scaffolds
@@ -114,8 +114,8 @@ public:
     {
         _hits.clear(); 
         _non_redundant.clear();
-        vector<shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
-        BOOST_FOREACH(shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
+        vector<boost::shared_ptr<Scaffold> >& bundle_ref_scaffs = ref_scaffolds();
+        BOOST_FOREACH(boost::shared_ptr<Scaffold>& ref_scaff, bundle_ref_scaffs)
         {
             if (ref_scaff.use_count() <= 3)
             {
@@ -136,7 +136,7 @@ public:
 	int id() const { return _id; }
     void id(int i) { _id = i; }
 	
-	void add_ref_scaffold(shared_ptr<Scaffold> scaff)
+	void add_ref_scaffold(boost::shared_ptr<Scaffold> scaff)
 	{
 		if (scaff->left() < _leftmost)
 			_leftmost = scaff->left();
@@ -146,11 +146,11 @@ public:
         _ref_id = scaff->ref_id();
 	}
 	
-	vector<shared_ptr<Scaffold> >& ref_scaffolds() { return _ref_scaffs; }
+	vector<boost::shared_ptr<Scaffold> >& ref_scaffolds() { return _ref_scaffs; }
 	
 	// Adds a Bowtie hit to the open hits buffer.  The Bundle will handle turning
 	// the Bowtie hit into a properly mated Cufflinks hit record
-	bool add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
+	bool add_open_hit(boost::shared_ptr<ReadGroupProperties const> rg_props,
                       const ReadHit* bh,
 					  bool expand_by = true);
 	
@@ -185,7 +185,7 @@ private:
 	int _rightmost;
 	std::vector<MateHit> _hits;
 	std::vector<MateHit> _non_redundant;
-	std::vector<shared_ptr<Scaffold> > _ref_scaffs; // user-supplied reference annotations overlapping the bundle
+	std::vector<boost::shared_ptr<Scaffold> > _ref_scaffs; // user-supplied reference annotations overlapping the bundle
 	bool _final;
 	int _id;
     RefID _ref_id;
@@ -202,7 +202,7 @@ private:
 
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
-				   vector<shared_ptr<Scaffold> >& ref_mRNAs,
+				   vector<boost::shared_ptr<Scaffold> >& ref_mRNAs,
 				   bool loadSeqs=false,
 				   bool loadFPKM=false);
 
@@ -210,13 +210,13 @@ class BundleFactory
 {
 public:
     
-	BundleFactory(shared_ptr<HitFactory> fac, BundleMode bm)
+	BundleFactory(boost::shared_ptr<HitFactory> fac, BundleMode bm)
 	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0),  _zeroone(rng)
 	{
-		_rg_props = shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
+		_rg_props = boost::shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
 	}
 
-    shared_ptr<const HitFactory> hit_factory() const { return _hit_fac; }
+    boost::shared_ptr<const HitFactory> hit_factory() const { return _hit_fac; }
     
     bool bundles_remain()  
     {
@@ -249,7 +249,7 @@ public:
 		next_ref_scaff = ref_mRNAs.begin(); 
         next_mask_scaff = mask_gtf_recs.begin();
         
-        BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
+        BOOST_FOREACH(boost::shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
         {
             ref_scaff->clear_hits();
         }
@@ -260,19 +260,19 @@ public:
 	
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
     // samples will clobber each other
-    void set_ref_rnas(const vector<shared_ptr<Scaffold> >& mRNAs)
+    void set_ref_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_factory_lock);
 #endif
         ref_mRNAs.clear();
-        for (vector<shared_ptr<Scaffold> >::const_iterator i = mRNAs.begin(); i < mRNAs.end(); ++i)
+        for (vector<boost::shared_ptr<Scaffold> >::const_iterator i = mRNAs.begin(); i < mRNAs.end(); ++i)
         {
-            ref_mRNAs.push_back(shared_ptr<Scaffold>(new Scaffold(**i)));
+            ref_mRNAs.push_back(boost::shared_ptr<Scaffold>(new Scaffold(**i)));
         }
         
         RefID last_id = 0;
-        for (vector<shared_ptr<Scaffold> >::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
+        for (vector<boost::shared_ptr<Scaffold> >::iterator i = ref_mRNAs.begin(); i < ref_mRNAs.end(); ++i)
         {
             if ((*i)->ref_id() != last_id)
             {
@@ -284,14 +284,14 @@ public:
         next_ref_scaff = ref_mRNAs.begin();
     }
     
-    void set_mask_rnas(const vector<shared_ptr<Scaffold> >& masks)
+    void set_mask_rnas(const vector<boost::shared_ptr<Scaffold> >& masks)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_factory_lock);
 #endif
         mask_gtf_recs = masks;
         RefID last_id = 0;
-        for (vector<shared_ptr<Scaffold> >::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
+        for (vector<boost::shared_ptr<Scaffold> >::iterator i = mask_gtf_recs.begin(); i < mask_gtf_recs.end(); ++i)
         {
             if ((*i)->ref_id() != last_id)
             {
@@ -311,7 +311,7 @@ public:
 		_bad_introns = bad_introns;
 	}
     
-    void read_group_properties(shared_ptr<ReadGroupProperties> rg)
+    void read_group_properties(boost::shared_ptr<ReadGroupProperties> rg)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_factory_lock);
@@ -319,7 +319,7 @@ public:
         _rg_props = rg;
     }
     
-    shared_ptr<ReadGroupProperties> read_group_properties()
+    boost::shared_ptr<ReadGroupProperties> read_group_properties()
     {
         return _rg_props;
     }
@@ -331,21 +331,21 @@ private:
 	bool _expand_by_hits(HitBundle& bundle);
 	bool _expand_by_refs(HitBundle& bundle);
 	
-	shared_ptr<HitFactory> _hit_fac;
+	boost::shared_ptr<HitFactory> _hit_fac;
     
-	vector<shared_ptr<Scaffold> > ref_mRNAs;
+	vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
 	//FILE* ref_mRNA_file;
-	vector<pair<RefID, vector<shared_ptr<Scaffold> >::iterator> > _ref_scaff_offsets;
-	vector<shared_ptr<Scaffold> >::iterator next_ref_scaff;
+	vector<pair<RefID, vector<boost::shared_ptr<Scaffold> >::iterator> > _ref_scaff_offsets;
+	vector<boost::shared_ptr<Scaffold> >::iterator next_ref_scaff;
     
-    vector<shared_ptr<Scaffold> > mask_gtf_recs;
+    vector<boost::shared_ptr<Scaffold> > mask_gtf_recs;
 	//FILE* mask_file;
-	vector<pair<RefID, vector<shared_ptr<Scaffold> >::iterator> > _mask_scaff_offsets;
-	vector<shared_ptr<Scaffold> >::iterator next_mask_scaff;
+	vector<pair<RefID, vector<boost::shared_ptr<Scaffold> >::iterator> > _mask_scaff_offsets;
+	vector<boost::shared_ptr<Scaffold> >::iterator next_mask_scaff;
 	
 	BadIntronTable _bad_introns;
     
-    shared_ptr<ReadGroupProperties> _rg_props;
+    boost::shared_ptr<ReadGroupProperties> _rg_props;
     
 	// Sets nva to point to the next valid alignment
 	// Returns the mass of any alignments that are seen, valid or not
@@ -372,7 +372,7 @@ private:
 class PrecomputedExpressionBundleFactory : public BundleFactory
 {
 public:
-    PrecomputedExpressionBundleFactory(shared_ptr<PrecomputedExpressionHitFactory> fac)
+    PrecomputedExpressionBundleFactory(boost::shared_ptr<PrecomputedExpressionHitFactory> fac)
 	: BundleFactory(fac, REF_DRIVEN), _hit_fac(fac)
 	{
 		
@@ -380,12 +380,12 @@ public:
     
     bool next_bundle(HitBundle& bundle_out);
     
-    shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
+    boost::shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
     void clear_abundance_for_locus(int locus_id);
     
 private:
     
-    shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;
+    boost::shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;
 #if ENABLE_THREADS
     boost::mutex _factory_lock;
 #endif
@@ -394,7 +394,7 @@ private:
 void identify_bad_splices(const HitBundle& bundle, 
 						  BadIntronTable& bad_splice_ops);
 
-void inspect_map(shared_ptr<BundleFactory> bundle_factory,
+void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,

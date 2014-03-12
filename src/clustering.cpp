@@ -12,7 +12,7 @@
 void ConnectByExonOverlap::operator()(const AbundanceGroup& cluster,
 									  AbundanceGraph& G)
 {
-	const vector<shared_ptr<Abundance> >& abundances = cluster.abundances();
+	const vector<boost::shared_ptr<Abundance> >& abundances = cluster.abundances();
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		add_vertex(G);
@@ -20,12 +20,12 @@ void ConnectByExonOverlap::operator()(const AbundanceGroup& cluster,
 	
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
-		shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
+		boost::shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
 		assert (scaff_i);
 		
 		for (size_t j = i + 1; j < abundances.size(); ++j)
 		{
-			shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
+			boost::shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
 			assert (scaff_j);
 			
 			if (Scaffold::exons_overlap(*scaff_i, *scaff_j))
@@ -37,7 +37,7 @@ void ConnectByExonOverlap::operator()(const AbundanceGroup& cluster,
 void ConnectByAnnotatedGeneId::operator()(const AbundanceGroup& cluster,
 										  AbundanceGraph& G)
 {
-	const vector<shared_ptr<Abundance> >& abundances = cluster.abundances();
+	const vector<boost::shared_ptr<Abundance> >& abundances = cluster.abundances();
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		add_vertex(G);
@@ -60,7 +60,7 @@ void ConnectByAnnotatedGeneId::operator()(const AbundanceGroup& cluster,
 void ConnectByAnnotatedTssId::operator()(const AbundanceGroup& cluster,
 										  AbundanceGraph& G)
 {
-	const vector<shared_ptr<Abundance> >& abundances = cluster.abundances();
+	const vector<boost::shared_ptr<Abundance> >& abundances = cluster.abundances();
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		add_vertex(G);
@@ -83,7 +83,7 @@ void ConnectByAnnotatedTssId::operator()(const AbundanceGroup& cluster,
 void ConnectByAnnotatedProteinId::operator()(const AbundanceGroup& cluster,
 											 AbundanceGraph& G)
 {
-	const vector<shared_ptr<Abundance> >& abundances = cluster.abundances();
+	const vector<boost::shared_ptr<Abundance> >& abundances = cluster.abundances();
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		add_vertex(G);
@@ -106,7 +106,7 @@ void ConnectByAnnotatedProteinId::operator()(const AbundanceGroup& cluster,
 void ConnectByStrand::operator()(const AbundanceGroup& cluster,
 								 AbundanceGraph& G)
 {
-	const vector<shared_ptr<Abundance> >& abundances = cluster.abundances();
+	const vector<boost::shared_ptr<Abundance> >& abundances = cluster.abundances();
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
 		add_vertex(G);
@@ -114,12 +114,12 @@ void ConnectByStrand::operator()(const AbundanceGroup& cluster,
 	
 	for (size_t i = 0; i < abundances.size(); ++i)
 	{
-		shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
+		boost::shared_ptr<Scaffold> scaff_i = abundances[i]->transfrag();
 		assert (scaff_i);
 		
 		for (size_t j = i + 1; j < abundances.size(); ++j)
 		{
-			shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
+			boost::shared_ptr<Scaffold> scaff_j = abundances[j]->transfrag();
 			assert (scaff_j);
 			if (scaff_i->strand() == scaff_j->strand())
 			{
