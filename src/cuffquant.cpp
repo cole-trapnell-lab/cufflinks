@@ -890,7 +890,8 @@ void sample_worker(const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
                    boost::shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   boost::shared_ptr<AbundanceRecorder> recorder)
+                   boost::shared_ptr<AbundanceRecorder> recorder,
+                   bool calculate_variance)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -957,7 +958,8 @@ void sample_worker(const RefSequenceTable& rt,
                             boost::ref(*abundance),
                             bundle,
                             perform_cds_analysis,
-                            perform_tss_analysis);
+                            perform_tss_analysis,
+                            calculate_variance);
     
     ///////////////////////////////////////////////
     
@@ -1002,13 +1004,15 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
                           i,
-                          recorder);
+                          recorder,
+                          false);
 #else
         sample_worker(boost::ref(rt),
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
                       i,
-                      recorder);
+                      recorder,
+                      false);
 #endif
     }
     return true;

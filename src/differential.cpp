@@ -995,7 +995,8 @@ void sample_worker(bool non_empty,
                         ReplicatedBundleFactory& sample_factory,
                         boost::shared_ptr<SampleAbundances> abundance,
                         size_t factory_id,
-                        boost::shared_ptr<TestLauncher> launcher)
+                        boost::shared_ptr<TestLauncher> launcher,
+                        bool calculate_variance)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -1064,7 +1065,8 @@ void sample_worker(bool non_empty,
                                             boost::ref(*abundance),
                                             bundle,
                                             perform_cds_analysis,
-                                            perform_tss_analysis);
+                                            perform_tss_analysis,
+                                            calculate_variance);
     }
     else if (hit_factories.empty())
     {
@@ -1080,7 +1082,8 @@ void sample_worker(bool non_empty,
                                 boost::ref(*abundance),
                                 bundle,
                                 perform_cds_analysis,
-                                perform_tss_analysis);
+                                perform_tss_analysis,
+                                calculate_variance);
     }
     else
     {

@@ -496,7 +496,7 @@ AbundanceGroup::AbundanceGroup(const vector<boost::shared_ptr<Abundance> >& abun
            //cerr << _fpkm_covariance << endl;
        }
         
-        assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
+       // assert (FPKM() == 0 || fpkm_var > 0 || status() != NUMERIC_OK);
     }
     
     for (size_t i = 0; i < _abundances.size(); ++i)
@@ -2131,7 +2131,7 @@ void AbundanceGroup::aggregate_replicate_abundances(const map<boost::shared_ptr<
     }
 }
 
-void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool perform_collapse)
+void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool perform_collapse, bool calculate_variance)
 {
 	vector<boost::shared_ptr<Abundance> > transcripts;
     
@@ -2173,8 +2173,11 @@ void AbundanceGroup::calculate_abundance(const vector<MateHit>& alignments, bool
     }
     
     aggregate_replicate_abundances(const_ab_group_per_replicate);
-
-    calculate_abundance_group_variance(transcripts, const_ab_group_per_replicate);
+    
+    if (calculate_variance)
+    {
+        calculate_abundance_group_variance(transcripts, const_ab_group_per_replicate);
+    }
 }
 
 void AbundanceGroup::update_multi_reads(const vector<MateHit>& alignments, vector<boost::shared_ptr<Abundance> > transcripts)
@@ -4908,7 +4911,8 @@ void sample_abundance_worker(const string& locus_tag,
                              SampleAbundances& sample,
                              boost::shared_ptr<HitBundle> sample_bundle,
                              bool perform_cds_analysis,
-                             bool perform_tss_analysis)
+                             bool perform_tss_analysis,
+                             bool calculate_variance)
 {
     vector<boost::shared_ptr<Abundance> > abundances;
     
@@ -4936,7 +4940,7 @@ void sample_abundance_worker(const string& locus_tag,
         // Compute the individual transcript FPKMs via each sample's
         // AbundanceGroup for this locus.
         
-        sample.transcripts.calculate_abundance(hits_in_cluster);
+        sample.transcripts.calculate_abundance(hits_in_cluster, true, calculate_variance);
     }
     else
     {
@@ -5033,7 +5037,8 @@ void merge_precomputed_expression_worker(const string& locus_tag,
                                          SampleAbundances& sample,
                                          boost::shared_ptr<HitBundle> sample_bundle,
                                          bool perform_cds_analysis,
-                                         bool perform_tss_analysis)
+                                         bool perform_tss_analysis,
+                                         bool calculate_variance)
 {
     map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<const AbundanceGroup> > unnormalized_ab_group_per_replicate;
     map<boost::shared_ptr<const ReadGroupProperties>, boost::shared_ptr<AbundanceGroup> > normalized_ab_group_per_replicate;
@@ -5092,7 +5097,10 @@ void merge_precomputed_expression_worker(const string& locus_tag,
     {
         sample.transcripts.collect_per_replicate_mass(const_ab_group_per_replicate);
         sample.transcripts.aggregate_replicate_abundances(const_ab_group_per_replicate);
-        sample.transcripts.calculate_abundance_group_variance(abundances, const_ab_group_per_replicate);
+        if (calculate_variance)
+        {
+            sample.transcripts.calculate_abundance_group_variance(abundances, const_ab_group_per_replicate);
+        }
     }
     else // FIXME: THIS needs to do the right thing with sample.transcripts...
     {

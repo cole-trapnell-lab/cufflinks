@@ -189,7 +189,8 @@ void sample_worker(bool non_empty,
                    ReplicatedBundleFactory& sample_factory,
                    boost::shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   boost::shared_ptr<TestLauncher> launcher);
+                   boost::shared_ptr<TestLauncher> launcher,
+                   bool calculate_variance);
 
 void test_differential(const string& locus_tag,
 					   const vector<boost::shared_ptr<SampleAbundances> >& samples,

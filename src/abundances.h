@@ -502,7 +502,8 @@ public:
     void  member_fpkm_samples(const vector<Eigen::VectorXd>& s) { _member_fpkm_samples = s; }
     
 	void calculate_abundance(const vector<MateHit>& alignments,
-                             bool perform_collapse = true);
+                             bool perform_collapse = true,
+                             bool calculate_variance = true);
 	
     double salient_frags() const { return _salient_frags; }
     void salient_frags(double nf) { _salient_frags = nf; }
@@ -792,12 +793,14 @@ void sample_abundance_worker(const string& locus_tag,
                              SampleAbundances& sample,
                              boost::shared_ptr<HitBundle> sample_bundle,
                              bool perform_cds_analysis,
-                             bool perform_tss_analysis);
+                             bool perform_tss_analysis,
+                             bool calculate_variance);
 
 void merge_precomputed_expression_worker(const string& locus_tag,
                                          const vector<boost::shared_ptr<PrecomputedExpressionBundleFactory> >& expression_factories,
                                          SampleAbundances& sample,
                                          boost::shared_ptr<HitBundle> sample_bundle,
                                          bool perform_cds_analysis,
-                                         bool perform_tss_analysis);
+                                         bool perform_tss_analysis,
+                                         bool calculate_variance);
 #endif

@@ -609,7 +609,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                               boost::ref(*(bundle_factories[i])),
                               s_ab,
                               i,
-                              launcher);
+                              launcher,
+                              false);
         }
         else
         {
@@ -619,7 +620,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
                           i,
-                          launcher);
+                          launcher,
+                          false);
             locus_thread_pool_lock.lock();
             locus_curr_threads--;
             locus_thread_pool_lock.unlock();
@@ -634,7 +636,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
                       i,
-                      launcher);
+                      launcher,
+                      false);
 #endif
     }
     return true;
@@ -1308,84 +1311,7 @@ int main(int argc, char** argv)
     
     char out_file_prefix[filename_buf_size];
     sprintf(out_file_prefix, "%s/", output_dir.c_str());
-    char iso_out_file_name[filename_buf_size];
-    sprintf(iso_out_file_name, "%sisoform_exp.diff", out_file_prefix);
-    FILE* iso_out = fopen(iso_out_file_name, "w");
-    if (!iso_out)
-    {
-        fprintf(stderr, "Error: cannot open differential isoform transcription file %s for writing\n",
-                iso_out_file_name);
-        exit(1);
-    }
-    
-    char group_out_file_name[filename_buf_size];
-    sprintf(group_out_file_name, "%stss_group_exp.diff", out_file_prefix);
-    FILE* group_out = fopen(group_out_file_name, "w");
-    if (!group_out)
-    {
-        fprintf(stderr, "Error: cannot open differential TSS group transcription file %s for writing\n",
-                group_out_file_name);
-        exit(1);
-    }
-    
-    char gene_out_file_name[filename_buf_size];
-    sprintf(gene_out_file_name, "%sgene_exp.diff", out_file_prefix);
-    FILE* gene_out = fopen(gene_out_file_name, "w");
-    if (!group_out)
-    {
-        fprintf(stderr, "Error: cannot open gene expression file %s for writing\n",
-                gene_out_file_name);
-        exit(1);
-    }
-    
-    char cds_out_file_name[filename_buf_size];
-    sprintf(cds_out_file_name, "%scds_exp.diff", out_file_prefix);
-    FILE* cds_out = fopen(cds_out_file_name, "w");
-    if (!cds_out)
-    {
-        fprintf(stderr, "Error: cannot open cds expression file %s for writing\n",
-                cds_out_file_name);
-        exit(1);
-    }
-    
-    char diff_splicing_out_file_name[filename_buf_size];
-    sprintf(diff_splicing_out_file_name, "%ssplicing.diff", out_file_prefix);
-    FILE* diff_splicing_out = fopen(diff_splicing_out_file_name, "w");
-    if (!diff_splicing_out)
-    {
-        fprintf(stderr, "Error: cannot open differential splicing file %s for writing\n",
-                diff_splicing_out_file_name);
-        exit(1);
-    }
-    
-    char diff_promoter_out_file_name[filename_buf_size];
-    sprintf(diff_promoter_out_file_name, "%spromoters.diff", out_file_prefix);
-    FILE* diff_promoter_out = fopen(diff_promoter_out_file_name, "w");
-    if (!diff_promoter_out)
-    {
-        fprintf(stderr, "Error: cannot open differential transcription start file %s for writing\n",
-                diff_promoter_out_file_name);
-        exit(1);
-    }
-    
-    char diff_cds_out_file_name[filename_buf_size];
-    sprintf(diff_cds_out_file_name, "%scds.diff", out_file_prefix);
-    FILE* diff_cds_out = fopen(diff_cds_out_file_name, "w");
-    if (!diff_cds_out)
-    {
-        fprintf(stderr, "Error: cannot open differential relative CDS file %s for writing\n",
-                diff_cds_out_file_name);
-        exit(1);
-    }
-    
-    outfiles.isoform_de_outfile = iso_out;
-    outfiles.group_de_outfile = group_out;
-    outfiles.gene_de_outfile = gene_out;
-    outfiles.cds_de_outfile = cds_out;
-    outfiles.diff_splicing_outfile = diff_splicing_out;
-    outfiles.diff_promoter_outfile = diff_promoter_out;
-    outfiles.diff_cds_outfile = diff_cds_out;
-	
+
 	char isoform_fpkm_tracking_name[filename_buf_size];
 	sprintf(isoform_fpkm_tracking_name, "%s/isoforms.fpkm_tracking", output_dir.c_str());
 	FILE* isoform_fpkm_out = fopen(isoform_fpkm_tracking_name, "w");
@@ -1540,28 +1466,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.run_info_out = run_info_out;
 
-    char bias_name[filename_buf_size];
-	sprintf(bias_name, "%s/bias_params.info", output_dir.c_str());
-	FILE* bias_out = fopen(bias_name, "w");
-	if (!bias_out)
-	{
-		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
-				bias_name);
-		exit(1);
-	}
-	outfiles.bias_out = bias_out;
     
-    char var_model_name[filename_buf_size];
-	sprintf(var_model_name, "%s/var_model.info", output_dir.c_str());
-	FILE* var_model_out = fopen(var_model_name, "w");
-	if (!var_model_out)
-	{
-		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
-				var_model_name);
-		exit(1);
-	}
-	outfiles.var_model_out = var_model_out;
-
     
     driver(ref_gtf, mask_gtf, contrast_file, norm_standards_file, sam_hit_filenames, outfiles);
 	

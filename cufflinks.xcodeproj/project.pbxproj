@@ -523,7 +523,6 @@
 		F4D2AB2C18D108ED00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
 		F4D2AB2D18D108ED00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
 		F4D2AB2E18D108ED00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
-		F4D2AB3018D1112800BB1CF0 /* gtf_reads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152E10C72963000A4F41 /* gtf_reads.cpp */; };
 		F4D2AB3418D1124600BB1CF0 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
 		F4D2AB3518D1124600BB1CF0 /* bundles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152010C72963000A4F41 /* bundles.cpp */; };
 		F4D2AB3618D1124600BB1CF0 /* codons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5152110C72963000A4F41 /* codons.cpp */; };
@@ -1872,7 +1871,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F4D2AB3018D1112800BB1CF0 /* gtf_reads.cpp in Sources */,
 				F4A9F3C617428670000087E1 /* cuffquant.cpp in Sources */,
 				F4A9F3711742865A000087E1 /* abundances.cpp in Sources */,
 				F4A9F3721742865A000087E1 /* bundles.cpp in Sources */,

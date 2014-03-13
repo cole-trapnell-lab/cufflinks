@@ -1024,7 +1024,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                               boost::ref(*(bundle_factories[i])),
                               s_ab,
                               i,
-                              launcher);
+                              launcher,
+                              true);
         }
         else
         {
@@ -1034,7 +1035,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
                           i,
-                          launcher);
+                          launcher,
+                          true);
             locus_thread_pool_lock.lock();
             locus_curr_threads--;
             locus_thread_pool_lock.unlock();
@@ -1049,7 +1051,8 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
                       i,
-                      launcher);
+                      launcher,
+                      true);
 #endif
     }
     return true;
