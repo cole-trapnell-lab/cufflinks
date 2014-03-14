@@ -866,7 +866,7 @@ void AbundanceRecorder::record_finished_loci()
             {
                 if (_p_bar)
                 {
-                    verbose_msg("Testing for differential expression and regulation in locus [%s]\n", itr->second.front()->locus_tag.c_str());
+                    verbose_msg("Estimating expression in locus [%s]\n", itr->second.front()->locus_tag.c_str());
                     _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
                 }
             }

@@ -515,7 +515,6 @@
 		F4D2AB2318D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1318D108EC00BB1CF0 /* libboost_system-mt.a */; };
 		F4D2AB2418D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1318D108EC00BB1CF0 /* libboost_system-mt.a */; };
 		F4D2AB2518D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1318D108EC00BB1CF0 /* libboost_system-mt.a */; };
-		F4D2AB2718D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
 		F4D2AB2818D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
 		F4D2AB2918D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
 		F4D2AB2A18D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
@@ -872,7 +871,6 @@
 				0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
 				F4B3191218D0BDA5005E2176 /* libbam.a in Frameworks */,
 				F4D2AB1518D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4D2AB2718D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB1E18D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2132,6 +2130,7 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -2151,6 +2150,7 @@
 				);
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "/usr/include /opt/local/include /usr/local/include";
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -2163,6 +2163,7 @@
 				GCC_ENABLE_SSE41_EXTENSIONS = YES;
 				GCC_ENABLE_SSE42_EXTENSIONS = YES;
 				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -2181,6 +2182,7 @@
 				);
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "/usr/include /opt/local/include /usr/local/include";
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};
@@ -2202,6 +2204,7 @@
 					DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -2247,6 +2250,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					./src,
 					"/usr/local/include/boost-1_41",
@@ -2282,6 +2286,7 @@
 					DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -2327,6 +2332,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					./src,
 					"/usr/local/include/boost-1_41",
@@ -2439,6 +2445,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -2484,6 +2491,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					./src,
 					"/usr/local/include/boost-1_41",
@@ -2519,6 +2527,7 @@
 					DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = NO;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -2564,6 +2573,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					./src,
 					"/usr/local/include/boost-1_41",
@@ -2595,6 +2605,7 @@
 					DEBUG,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					./src,
@@ -2625,6 +2636,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_VECLIB;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_UNROLL_LOOPS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					./src,
 					"/usr/local/include/boost-1_41",
