@@ -133,6 +133,7 @@ extern double min_outlier_p;
 extern std::string default_dispersion_method;
 extern std::string default_lib_norm_method;
 extern std::string default_cufflinks_lib_norm_method;
+extern std::string default_output_format;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -268,6 +269,14 @@ enum LibNormalizationMethod
     QUARTILE,
     ABSOLUTE // Requires spike-in controls, not yet implemented
 };
+
+enum OutputFormat
+{
+    OUTPUT_FMT_NOT_SET,
+    CUFFDIFF_OUTPUT_FMT,
+    SIMPLE_TABLE_OUTPUT_FMT
+};
+
 
 class EmpDist
 {
@@ -554,6 +563,10 @@ extern DispersionMethod dispersion_method;
 extern std::map<std::string, LibNormalizationMethod> lib_norm_method_table;
 extern LibNormalizationMethod lib_norm_method;
 
+extern std::map<std::string, OutputFormat> output_format_table;
+extern OutputFormat output_format;
+
+
 void print_library_table();
 void init_library_table();
 
@@ -563,6 +576,9 @@ void init_dispersion_method_table();
 void print_lib_norm_method_table();
 void init_lib_norm_method_table();
 void init_cufflinks_lib_norm_method_table();
+
+void print_output_format_table();
+void init_output_format_table();
 
 
 struct LibNormStandards
@@ -656,5 +672,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_SCV_CORRECTION       317
 #define OPT_NORM_STANDARDS_FILE     318
 #define OPT_USE_SAMPLE_SHEET        319
-
+#define OPT_OUTPUT_FORMAT           320
 #endif

@@ -82,6 +82,7 @@ static struct option long_options[] = {
 // Some options for testing different stats policies
 {"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
 {"library-norm-method",     required_argument,       0,          OPT_LIB_NORM_METHOD},
+{"output-format",           required_argument,       0,          OPT_OUTPUT_FORMAT},
 {0, 0, 0, 0} // terminator
 };
 
@@ -102,6 +103,7 @@ void print_usage()
 #endif
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
     fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
+    fprintf(stderr, "  --output-format              Format for output tables                              [ default:  below ]\n");
     
     fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
@@ -112,6 +114,7 @@ void print_usage()
     fprintf(stderr, "  --no-update-check            do not contact server to check for update availability[ default:  FALSE ]\n");
     print_library_table();
     print_lib_norm_method_table();
+    print_output_format_table();
 }
 
 int parse_options(int argc, char** argv)
@@ -121,6 +124,8 @@ int parse_options(int argc, char** argv)
     string sample_label_list;
     string dispersion_method_str;
     string lib_norm_method_str;
+    string output_format_str;
+
     do {
         next_option = getopt_long_only(argc, argv, short_options, long_options, &option_index);
         if (next_option == -1)     /* Done with options. */
@@ -211,7 +216,11 @@ int parse_options(int argc, char** argv)
 				lib_norm_method_str = optarg;
 				break;
 			}
-
+            case OPT_OUTPUT_FORMAT:
+			{
+				output_format_str = optarg;
+				break;
+			}
 			default:
 				print_usage();
 				return 1;
@@ -277,8 +286,24 @@ int parse_options(int argc, char** argv)
         lib_norm_method = lib_norm_itr->second;
     }
 
-
+    // Set the count dispersion method to use
+    if (output_format_str == "")
+    {
+        output_format_str = default_output_format;
+    }
     
+    map<string, OutputFormat>::iterator output_itr =
+    output_format_table.find(output_format_str);
+    if (output_itr == output_format_table.end())
+    {
+        fprintf(stderr, "Error: Output format %s not supported\n", output_format_str.c_str());
+        exit(1);
+    }
+    else
+    {
+        output_format = output_itr->second;
+    }
+
     if (use_total_mass && use_compat_mass)
     {
         fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
@@ -1136,6 +1161,344 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	print_run_info(frun_info);
 }
 
+void open_outfiles_for_writing_cuffdiff_format(Outfiles& outfiles)
+{
+    
+    static const int filename_buf_size = 2048;
+    
+	char isoform_fpkm_tracking_name[filename_buf_size];
+	sprintf(isoform_fpkm_tracking_name, "%s/isoforms.fpkm_tracking", output_dir.c_str());
+	FILE* isoform_fpkm_out = fopen(isoform_fpkm_tracking_name, "w");
+	if (!isoform_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level FPKM tracking file %s for writing\n",
+				isoform_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_fpkm_tracking_out = isoform_fpkm_out;
+    
+	char tss_group_fpkm_tracking_name[filename_buf_size];
+	sprintf(tss_group_fpkm_tracking_name, "%s/tss_groups.fpkm_tracking", output_dir.c_str());
+	FILE* tss_group_fpkm_out = fopen(tss_group_fpkm_tracking_name, "w");
+	if (!tss_group_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level FPKM tracking file %s for writing\n",
+				tss_group_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_fpkm_tracking_out = tss_group_fpkm_out;
+    
+	char cds_fpkm_tracking_name[filename_buf_size];
+	sprintf(cds_fpkm_tracking_name, "%s/cds.fpkm_tracking", output_dir.c_str());
+	FILE* cds_fpkm_out = fopen(cds_fpkm_tracking_name, "w");
+	if (!cds_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level FPKM tracking file %s for writing\n",
+				cds_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_fpkm_tracking_out = cds_fpkm_out;
+	
+	char gene_fpkm_tracking_name[filename_buf_size];
+	sprintf(gene_fpkm_tracking_name, "%s/genes.fpkm_tracking", output_dir.c_str());
+	FILE* gene_fpkm_out = fopen(gene_fpkm_tracking_name, "w");
+	if (!gene_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level FPKM tracking file %s for writing\n",
+				gene_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_fpkm_tracking_out = gene_fpkm_out;
+    
+    char isoform_count_tracking_name[filename_buf_size];
+	sprintf(isoform_count_tracking_name, "%s/isoforms.count_tracking", output_dir.c_str());
+	FILE* isoform_count_out = fopen(isoform_count_tracking_name, "w");
+	if (!isoform_count_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level count tracking file %s for writing\n",
+				isoform_count_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_count_tracking_out = isoform_count_out;
+    
+	char tss_group_count_tracking_name[filename_buf_size];
+	sprintf(tss_group_count_tracking_name, "%s/tss_groups.count_tracking", output_dir.c_str());
+	FILE* tss_group_count_out = fopen(tss_group_count_tracking_name, "w");
+	if (!tss_group_count_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level count tracking file %s for writing\n",
+				tss_group_count_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_count_tracking_out = tss_group_count_out;
+    
+	char cds_count_tracking_name[filename_buf_size];
+	sprintf(cds_count_tracking_name, "%s/cds.count_tracking", output_dir.c_str());
+	FILE* cds_count_out = fopen(cds_count_tracking_name, "w");
+	if (!cds_count_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level count tracking file %s for writing\n",
+				cds_count_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_count_tracking_out = cds_count_out;
+	
+	char gene_count_tracking_name[filename_buf_size];
+	sprintf(gene_count_tracking_name, "%s/genes.count_tracking", output_dir.c_str());
+	FILE* gene_count_out = fopen(gene_count_tracking_name, "w");
+	if (!gene_count_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level count tracking file %s for writing\n",
+				gene_count_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_count_tracking_out = gene_count_out;
+    
+    char isoform_rep_tracking_name[filename_buf_size];
+	sprintf(isoform_rep_tracking_name, "%s/isoforms.read_group_tracking", output_dir.c_str());
+	FILE* isoform_rep_out = fopen(isoform_rep_tracking_name, "w");
+	if (!isoform_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level read group tracking file %s for writing\n",
+				isoform_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_rep_tracking_out = isoform_rep_out;
+    
+	char tss_group_rep_tracking_name[filename_buf_size];
+	sprintf(tss_group_rep_tracking_name, "%s/tss_groups.read_group_tracking", output_dir.c_str());
+	FILE* tss_group_rep_out = fopen(tss_group_rep_tracking_name, "w");
+	if (!tss_group_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level read group tracking file %s for writing\n",
+				tss_group_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_rep_tracking_out = tss_group_rep_out;
+    
+	char cds_rep_tracking_name[filename_buf_size];
+	sprintf(cds_rep_tracking_name, "%s/cds.read_group_tracking", output_dir.c_str());
+	FILE* cds_rep_out = fopen(cds_rep_tracking_name, "w");
+	if (!cds_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level read group tracking file %s for writing\n",
+				cds_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_rep_tracking_out = cds_rep_out;
+	
+	char gene_rep_tracking_name[filename_buf_size];
+	sprintf(gene_rep_tracking_name, "%s/genes.read_group_tracking", output_dir.c_str());
+	FILE* gene_rep_out = fopen(gene_rep_tracking_name, "w");
+	if (!gene_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level read group tracking file %s for writing\n",
+				gene_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_rep_tracking_out = gene_rep_out;
+    
+    char read_group_info_name[filename_buf_size];
+	sprintf(read_group_info_name, "%s/read_groups.info", output_dir.c_str());
+	FILE* read_group_out = fopen(read_group_info_name, "w");
+	if (!read_group_out)
+	{
+		fprintf(stderr, "Error: cannot open read group info file %s for writing\n",
+				read_group_info_name);
+		exit(1);
+	}
+	outfiles.read_group_info_out = read_group_out;
+    
+    char run_info_name[filename_buf_size];
+	sprintf(run_info_name, "%s/run.info", output_dir.c_str());
+	FILE* run_info_out = fopen(run_info_name, "w");
+	if (!run_info_out)
+	{
+		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
+				run_info_name);
+		exit(1);
+	}
+	outfiles.run_info_out = run_info_out;
+
+}
+
+void open_outfiles_for_writing_simple_table_format(Outfiles& outfiles)
+{
+    static const int filename_buf_size = 2048;
+    
+	char isoform_fpkm_tracking_name[filename_buf_size];
+	sprintf(isoform_fpkm_tracking_name, "%s/isoforms.fpkm_tracking", output_dir.c_str());
+	FILE* isoform_fpkm_out = fopen(isoform_fpkm_tracking_name, "w");
+	if (!isoform_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level FPKM tracking file %s for writing\n",
+				isoform_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_fpkm_tracking_out = isoform_fpkm_out;
+    
+	char tss_group_fpkm_tracking_name[filename_buf_size];
+	sprintf(tss_group_fpkm_tracking_name, "%s/tss_groups.fpkm_tracking", output_dir.c_str());
+	FILE* tss_group_fpkm_out = fopen(tss_group_fpkm_tracking_name, "w");
+	if (!tss_group_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level FPKM tracking file %s for writing\n",
+				tss_group_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_fpkm_tracking_out = tss_group_fpkm_out;
+    
+	char cds_fpkm_tracking_name[filename_buf_size];
+	sprintf(cds_fpkm_tracking_name, "%s/cds.fpkm_tracking", output_dir.c_str());
+	FILE* cds_fpkm_out = fopen(cds_fpkm_tracking_name, "w");
+	if (!cds_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level FPKM tracking file %s for writing\n",
+				cds_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_fpkm_tracking_out = cds_fpkm_out;
+	
+	char gene_fpkm_tracking_name[filename_buf_size];
+	sprintf(gene_fpkm_tracking_name, "%s/genes.fpkm_tracking", output_dir.c_str());
+	FILE* gene_fpkm_out = fopen(gene_fpkm_tracking_name, "w");
+	if (!gene_fpkm_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level FPKM tracking file %s for writing\n",
+				gene_fpkm_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_fpkm_tracking_out = gene_fpkm_out;
+    
+    char isoform_count_tracking_name[filename_buf_size];
+	sprintf(isoform_count_tracking_name, "%s/isoforms.count_tracking", output_dir.c_str());
+	FILE* isoform_count_out = fopen(isoform_count_tracking_name, "w");
+	if (!isoform_count_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level count tracking file %s for writing\n",
+				isoform_count_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_count_tracking_out = isoform_count_out;
+    
+	char tss_group_count_tracking_name[filename_buf_size];
+	sprintf(tss_group_count_tracking_name, "%s/tss_groups.count_tracking", output_dir.c_str());
+	FILE* tss_group_count_out = fopen(tss_group_count_tracking_name, "w");
+	if (!tss_group_count_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level count tracking file %s for writing\n",
+				tss_group_count_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_count_tracking_out = tss_group_count_out;
+    
+	char cds_count_tracking_name[filename_buf_size];
+	sprintf(cds_count_tracking_name, "%s/cds.count_tracking", output_dir.c_str());
+	FILE* cds_count_out = fopen(cds_count_tracking_name, "w");
+	if (!cds_count_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level count tracking file %s for writing\n",
+				cds_count_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_count_tracking_out = cds_count_out;
+	
+	char gene_count_tracking_name[filename_buf_size];
+	sprintf(gene_count_tracking_name, "%s/genes.count_tracking", output_dir.c_str());
+	FILE* gene_count_out = fopen(gene_count_tracking_name, "w");
+	if (!gene_count_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level count tracking file %s for writing\n",
+				gene_count_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_count_tracking_out = gene_count_out;
+    
+    char isoform_rep_tracking_name[filename_buf_size];
+	sprintf(isoform_rep_tracking_name, "%s/isoforms.read_group_tracking", output_dir.c_str());
+	FILE* isoform_rep_out = fopen(isoform_rep_tracking_name, "w");
+	if (!isoform_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level read group tracking file %s for writing\n",
+				isoform_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.isoform_rep_tracking_out = isoform_rep_out;
+    
+	char tss_group_rep_tracking_name[filename_buf_size];
+	sprintf(tss_group_rep_tracking_name, "%s/tss_groups.read_group_tracking", output_dir.c_str());
+	FILE* tss_group_rep_out = fopen(tss_group_rep_tracking_name, "w");
+	if (!tss_group_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level read group tracking file %s for writing\n",
+				tss_group_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.tss_group_rep_tracking_out = tss_group_rep_out;
+    
+	char cds_rep_tracking_name[filename_buf_size];
+	sprintf(cds_rep_tracking_name, "%s/cds.read_group_tracking", output_dir.c_str());
+	FILE* cds_rep_out = fopen(cds_rep_tracking_name, "w");
+	if (!cds_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level read group tracking file %s for writing\n",
+				cds_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.cds_rep_tracking_out = cds_rep_out;
+	
+	char gene_rep_tracking_name[filename_buf_size];
+	sprintf(gene_rep_tracking_name, "%s/genes.read_group_tracking", output_dir.c_str());
+	FILE* gene_rep_out = fopen(gene_rep_tracking_name, "w");
+	if (!gene_rep_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level read group tracking file %s for writing\n",
+				gene_rep_tracking_name);
+		exit(1);
+	}
+	outfiles.gene_rep_tracking_out = gene_rep_out;
+    
+    char read_group_info_name[filename_buf_size];
+	sprintf(read_group_info_name, "%s/read_groups.info", output_dir.c_str());
+	FILE* read_group_out = fopen(read_group_info_name, "w");
+	if (!read_group_out)
+	{
+		fprintf(stderr, "Error: cannot open read group info file %s for writing\n",
+				read_group_info_name);
+		exit(1);
+	}
+	outfiles.read_group_info_out = read_group_out;
+    
+    char run_info_name[filename_buf_size];
+	sprintf(run_info_name, "%s/run.info", output_dir.c_str());
+	FILE* run_info_out = fopen(run_info_name, "w");
+	if (!run_info_out)
+	{
+		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
+				run_info_name);
+		exit(1);
+	}
+	outfiles.run_info_out = run_info_out;
+    
+}
+
+void open_outfiles_for_writing(Outfiles& outfiles)
+{
+    if (output_format == CUFFDIFF_OUTPUT_FMT)
+    {
+        open_outfiles_for_writing_cuffdiff_format(outfiles);
+    }
+    if (output_format == SIMPLE_TABLE_OUTPUT_FMT)
+    {
+        open_outfiles_for_writing_simple_table_format(outfiles);
+    }
+    else{
+        fprintf(stderr, "Error: unrecognized output format!\n");
+        exit(1);
+    }
+
+}
+
 int main(int argc, char** argv)
 {
     for (int i = 0; i < argc; ++i)
@@ -1306,167 +1669,8 @@ int main(int argc, char** argv)
             }
         }
     }
-    
-    static const int filename_buf_size = 2048;
-    
-    char out_file_prefix[filename_buf_size];
-    sprintf(out_file_prefix, "%s/", output_dir.c_str());
 
-	char isoform_fpkm_tracking_name[filename_buf_size];
-	sprintf(isoform_fpkm_tracking_name, "%s/isoforms.fpkm_tracking", output_dir.c_str());
-	FILE* isoform_fpkm_out = fopen(isoform_fpkm_tracking_name, "w");
-	if (!isoform_fpkm_out)
-	{
-		fprintf(stderr, "Error: cannot open isoform-level FPKM tracking file %s for writing\n",
-				isoform_fpkm_tracking_name);
-		exit(1);
-	}
-	outfiles.isoform_fpkm_tracking_out = isoform_fpkm_out;
-
-	char tss_group_fpkm_tracking_name[filename_buf_size];
-	sprintf(tss_group_fpkm_tracking_name, "%s/tss_groups.fpkm_tracking", output_dir.c_str());
-	FILE* tss_group_fpkm_out = fopen(tss_group_fpkm_tracking_name, "w");
-	if (!tss_group_fpkm_out)
-	{
-		fprintf(stderr, "Error: cannot open TSS group-level FPKM tracking file %s for writing\n",
-				tss_group_fpkm_tracking_name);
-		exit(1);
-	}
-	outfiles.tss_group_fpkm_tracking_out = tss_group_fpkm_out;
-
-	char cds_fpkm_tracking_name[filename_buf_size];
-	sprintf(cds_fpkm_tracking_name, "%s/cds.fpkm_tracking", output_dir.c_str());
-	FILE* cds_fpkm_out = fopen(cds_fpkm_tracking_name, "w");
-	if (!cds_fpkm_out)
-	{
-		fprintf(stderr, "Error: cannot open CDS level FPKM tracking file %s for writing\n",
-				cds_fpkm_tracking_name);
-		exit(1);
-	}
-	outfiles.cds_fpkm_tracking_out = cds_fpkm_out;
-	
-	char gene_fpkm_tracking_name[filename_buf_size];
-	sprintf(gene_fpkm_tracking_name, "%s/genes.fpkm_tracking", output_dir.c_str());
-	FILE* gene_fpkm_out = fopen(gene_fpkm_tracking_name, "w");
-	if (!gene_fpkm_out)
-	{
-		fprintf(stderr, "Error: cannot open gene-level FPKM tracking file %s for writing\n",
-				gene_fpkm_tracking_name);
-		exit(1);
-	}
-	outfiles.gene_fpkm_tracking_out = gene_fpkm_out;
-
-    char isoform_count_tracking_name[filename_buf_size];
-	sprintf(isoform_count_tracking_name, "%s/isoforms.count_tracking", output_dir.c_str());
-	FILE* isoform_count_out = fopen(isoform_count_tracking_name, "w");
-	if (!isoform_count_out)
-	{
-		fprintf(stderr, "Error: cannot open isoform-level count tracking file %s for writing\n",
-				isoform_count_tracking_name);
-		exit(1);
-	}
-	outfiles.isoform_count_tracking_out = isoform_count_out;
-    
-	char tss_group_count_tracking_name[filename_buf_size];
-	sprintf(tss_group_count_tracking_name, "%s/tss_groups.count_tracking", output_dir.c_str());
-	FILE* tss_group_count_out = fopen(tss_group_count_tracking_name, "w");
-	if (!tss_group_count_out)
-	{
-		fprintf(stderr, "Error: cannot open TSS group-level count tracking file %s for writing\n",
-				tss_group_count_tracking_name);
-		exit(1);
-	}
-	outfiles.tss_group_count_tracking_out = tss_group_count_out;
-    
-	char cds_count_tracking_name[filename_buf_size];
-	sprintf(cds_count_tracking_name, "%s/cds.count_tracking", output_dir.c_str());
-	FILE* cds_count_out = fopen(cds_count_tracking_name, "w");
-	if (!cds_count_out)
-	{
-		fprintf(stderr, "Error: cannot open CDS level count tracking file %s for writing\n",
-				cds_count_tracking_name);
-		exit(1);
-	}
-	outfiles.cds_count_tracking_out = cds_count_out;
-	
-	char gene_count_tracking_name[filename_buf_size];
-	sprintf(gene_count_tracking_name, "%s/genes.count_tracking", output_dir.c_str());
-	FILE* gene_count_out = fopen(gene_count_tracking_name, "w");
-	if (!gene_count_out)
-	{
-		fprintf(stderr, "Error: cannot open gene-level count tracking file %s for writing\n",
-				gene_count_tracking_name);
-		exit(1);
-	}
-	outfiles.gene_count_tracking_out = gene_count_out;
-    
-    char isoform_rep_tracking_name[filename_buf_size];
-	sprintf(isoform_rep_tracking_name, "%s/isoforms.read_group_tracking", output_dir.c_str());
-	FILE* isoform_rep_out = fopen(isoform_rep_tracking_name, "w");
-	if (!isoform_rep_out)
-	{
-		fprintf(stderr, "Error: cannot open isoform-level read group tracking file %s for writing\n",
-				isoform_rep_tracking_name);
-		exit(1);
-	}
-	outfiles.isoform_rep_tracking_out = isoform_rep_out;
-    
-	char tss_group_rep_tracking_name[filename_buf_size];
-	sprintf(tss_group_rep_tracking_name, "%s/tss_groups.read_group_tracking", output_dir.c_str());
-	FILE* tss_group_rep_out = fopen(tss_group_rep_tracking_name, "w");
-	if (!tss_group_rep_out)
-	{
-		fprintf(stderr, "Error: cannot open TSS group-level read group tracking file %s for writing\n",
-				tss_group_rep_tracking_name);
-		exit(1);
-	}
-	outfiles.tss_group_rep_tracking_out = tss_group_rep_out;
-    
-	char cds_rep_tracking_name[filename_buf_size];
-	sprintf(cds_rep_tracking_name, "%s/cds.read_group_tracking", output_dir.c_str());
-	FILE* cds_rep_out = fopen(cds_rep_tracking_name, "w");
-	if (!cds_rep_out)
-	{
-		fprintf(stderr, "Error: cannot open CDS level read group tracking file %s for writing\n",
-				cds_rep_tracking_name);
-		exit(1);
-	}
-	outfiles.cds_rep_tracking_out = cds_rep_out;
-	
-	char gene_rep_tracking_name[filename_buf_size];
-	sprintf(gene_rep_tracking_name, "%s/genes.read_group_tracking", output_dir.c_str());
-	FILE* gene_rep_out = fopen(gene_rep_tracking_name, "w");
-	if (!gene_rep_out)
-	{
-		fprintf(stderr, "Error: cannot open gene-level read group tracking file %s for writing\n",
-				gene_rep_tracking_name);
-		exit(1);
-	}
-	outfiles.gene_rep_tracking_out = gene_rep_out;
-    
-    char read_group_info_name[filename_buf_size];
-	sprintf(read_group_info_name, "%s/read_groups.info", output_dir.c_str());
-	FILE* read_group_out = fopen(read_group_info_name, "w");
-	if (!read_group_out)
-	{
-		fprintf(stderr, "Error: cannot open read group info file %s for writing\n",
-				read_group_info_name);
-		exit(1);
-	}
-	outfiles.read_group_info_out = read_group_out;
-    
-    char run_info_name[filename_buf_size];
-	sprintf(run_info_name, "%s/run.info", output_dir.c_str());
-	FILE* run_info_out = fopen(run_info_name, "w");
-	if (!run_info_out)
-	{
-		fprintf(stderr, "Error: cannot open run info file %s for writing\n",
-				run_info_name);
-		exit(1);
-	}
-	outfiles.run_info_out = run_info_out;
-
-    
+    open_outfiles_for_writing(outfiles);
     
     driver(ref_gtf, mask_gtf, contrast_file, norm_standards_file, sam_hit_filenames, outfiles);
 	
