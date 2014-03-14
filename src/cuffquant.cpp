@@ -64,63 +64,29 @@ const char *short_options = "m:s:c:I:j:L:M:o:b:TNqvuF:C:";
 static struct option long_options[] = {
 {"frag-len-mean",			required_argument,       0,          'm'},
 {"frag-len-std-dev",        required_argument,       0,          's'},
-{"transcript-score-thresh", required_argument,       0,          't'},
-{"pre-mrna-fraction",		required_argument,		 0,			 'j'},
-{"max-intron-length",		required_argument,		 0,			 'I'},
-{"labels",					required_argument,		 0,			 'L'},
-{"min-alignment-count",     required_argument,		 0,			 'c'},
-{"FDR",					    required_argument,		 0,			 OPT_FDR},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 {"mask-file",               required_argument,		 0,			 'M'},
-{"contrast-file",           required_argument,		 0,			 'C'},
-{"norm-standards-file",     required_argument,		 0,			 OPT_NORM_STANDARDS_FILE},
-{"use-sample-sheet",        no_argument,             0,			 OPT_USE_SAMPLE_SHEET},
 {"output-dir",			    required_argument,		 0,			 'o'},
 {"verbose",			    	no_argument,			 0,			 'v'},
 {"quiet",			    	no_argument,			 0,			 'q'},
 {"frag-bias-correct",       required_argument,		 0,			 'b'},
 {"multi-read-correct",      no_argument,			 0,			 'u'},
-{"time-series",             no_argument,             0,			 'T'},
-{"upper-quartile-norm",     no_argument,	 		 0,	         'N'},
-{"geometric-norm",          no_argument,	 		 0,	         OPT_GEOMETRIC_NORM},
-{"raw-mapped-norm",         no_argument,	 		 0,	         OPT_RAW_MAPPED_NORM},
-{"min-isoform-fraction",    required_argument,       0,          'F'},
 #if ENABLE_THREADS
 {"num-threads",				required_argument,       0,          'p'},
 #endif
 {"library-type",		    required_argument,		 0,			 OPT_LIBRARY_TYPE},
 {"seed",                    required_argument,		 0,			 OPT_RANDOM_SEED},
 {"no-collapse-cond-prob",   no_argument,             0,			 OPT_COLLAPSE_COND_PROB},
-{"num-importance-samples",  required_argument,		 0,			 OPT_NUM_IMP_SAMPLES},
 {"max-mle-iterations",		required_argument,		 0,			 OPT_MLE_MAX_ITER},
 {"min-mle-accuracy",		required_argument,		 0,			 OPT_MLE_MIN_ACC},
-{"poisson-dispersion",		no_argument,             0,		     OPT_POISSON_DISPERSION},
 {"bias-mode",               required_argument,		 0,			 OPT_BIAS_MODE},
 {"no-update-check",         no_argument,             0,          OPT_NO_UPDATE_CHECK},
-{"emit-count-tables",       no_argument,             0,          OPT_EMIT_COUNT_TABLES},
-{"compatible-hits-norm",    no_argument,	 		 0,	         OPT_USE_COMPAT_MASS},
-{"total-hits-norm",         no_argument,	 		 0,	         OPT_USE_TOTAL_MASS},
-//{"analytic-diff",           no_argument,	 		 0,	         OPT_ANALYTIC_DIFF},
-{"no-diff",                 no_argument,	 		 0,	         OPT_NO_DIFF},
-{"num-frag-count-draws",	required_argument,		 0,			 OPT_NUM_FRAG_COUNT_DRAWS},
-{"num-frag-assign-draws",	required_argument,		 0,			 OPT_NUM_FRAG_ASSIGN_DRAWS},
     
 // Some options for testing different stats policies
 {"max-bundle-frags",        required_argument,       0,          OPT_MAX_FRAGS_PER_BUNDLE}, 
-{"read-skip-fraction",      required_argument,	     0,          OPT_READ_SKIP_FRACTION},
-{"no-read-pairs",           no_argument,	 		 0,          OPT_NO_READ_PAIRS},
-{"trim-read-length",        required_argument,	     0,          OPT_TRIM_READ_LENGTH},
-{"cov-delta",               required_argument,	     0,          OPT_MAX_DELTA_GAP},
-{"locus-count-dispersion",  no_argument,             0,          OPT_LOCUS_COUNT_DISPERSION},
 {"max-frag-multihits",      required_argument,       0,          OPT_FRAG_MAX_MULTIHITS},
-{"min-outlier-p",           required_argument,       0,          OPT_MIN_OUTLIER_P},
-{"min-reps-for-js-test",      required_argument,     0,          OPT_MIN_REPS_FOR_JS_TEST},
 {"no-effective-length-correction",  no_argument,     0,          OPT_NO_EFFECTIVE_LENGTH_CORRECTION},
 {"no-length-correction",    no_argument,             0,          OPT_NO_LENGTH_CORRECTION},
-{"no-js-tests",             no_argument,             0,          OPT_NO_JS_TESTS},
-{"dispersion-method",       required_argument,       0,          OPT_DISPERSION_METHOD},
-{"library-norm-method",     required_argument,       0,          OPT_LIB_NORM_METHOD},
-{"no-scv-correction",       no_argument,             0,          OPT_NO_SCV_CORRECTION},
 {0, 0, 0, 0} // terminator
 };
 
@@ -1156,35 +1122,14 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
         parse_norm_standards_file(norm_standards_file);
     }
     
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        all_read_groups[i]->collect_checked_parameters();
+    }
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
 #endif
-    
-    // Validate the dispersion method the user's chosen.
-    int most_reps = -1;
-    int most_reps_idx = 0;
-    
-    bool single_replicate_fac = false;
-    
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
-    {
-        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
-        if (fac.num_replicates() > most_reps)
-        {
-            most_reps = fac.num_replicates();
-            most_reps_idx = i;
-        }
-        if (most_reps == 1)
-        {
-            single_replicate_fac = true;
-            if (dispersion_method == PER_CONDITION)
-            {
-                fprintf(stderr, "Error: Dispersion method 'per-condition' requires that all conditions have at least 2 replicates.  Please use either 'pooled' or 'blind'\n");
-                exit(1);
-            }
-        }
-    }
     
     dispersion_method = POISSON;
     

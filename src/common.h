@@ -396,6 +396,52 @@ private:
     }
 };
 
+// This class stores user-supplied options that affect quantification
+// We'll serialize these into abundance files (i.e. CXB files)
+// so we can ensure that they're consistent across all samples
+// provided to cuffnorm and cuffdiff.
+struct CheckedParameters
+{
+    CheckedParameters() {} //needs an empty constructor for serialization
+    
+    double frag_len_mean;
+    double frag_len_std_dev;
+    
+    // TODO: add CRCs for reference GTF, mask file
+    bool corr_bias;
+    
+    BiasMode frag_bias_mode;
+    bool corr_multireads;
+    
+    double max_mle_iterations;
+    double min_mle_accuracy;
+    
+    double max_bundle_frags;
+    double max_frags_multihits;
+    
+    bool no_effective_length_correction;
+    bool no_length_correction;
+    
+    friend std::ostream & operator<<(std::ostream &os, const CheckedParameters &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & frag_len_mean;
+        ar & frag_len_std_dev;
+        ar & corr_bias;
+        ar & frag_bias_mode;
+        ar & corr_multireads;
+        ar & max_mle_iterations;
+        ar & min_mle_accuracy;
+        ar & max_bundle_frags;
+        ar & max_frags_multihits;
+        ar & no_effective_length_correction;
+        ar & no_length_correction;
+    }
+
+};
+
 class ReadGroupProperties
 {
 public:
@@ -493,6 +539,29 @@ public:
     int replicate_num() const { return _replicate_num; }
     void replicate_num(int rn) { _replicate_num = rn; }
     
+    const CheckedParameters& checked_parameters() const { return _checked_params; }
+    void collect_checked_parameters() {
+        
+        _checked_params.frag_len_mean = def_frag_len_mean;
+        _checked_params.frag_len_std_dev = def_frag_len_std_dev;
+        
+        // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+        _checked_params.corr_bias = corr_bias;
+        
+        _checked_params.frag_bias_mode = bias_mode;
+        _checked_params.corr_multireads = corr_multi;
+        
+        _checked_params.max_mle_iterations = max_mle_iterations;
+        _checked_params.min_mle_accuracy = mle_accuracy;
+        
+        _checked_params.max_bundle_frags = max_frags_per_bundle;
+        _checked_params.max_frags_multihits = max_frag_multihits;
+        
+        _checked_params.no_effective_length_correction = no_effective_length_correction;
+        _checked_params.no_length_correction = no_length_correction;
+    }
+    
+    
 private:
     
     friend std::ostream & operator<<(std::ostream &os, const ReadGroupProperties &gp);
@@ -522,6 +591,7 @@ private:
         ar & _condition_name;
         ar & _file_path;
         ar & _replicate_num;
+        ar & _checked_params;
     }
     
     Strandedness _strandedness;
@@ -549,6 +619,8 @@ private:
     std::string _condition_name;
     std::string _file_path;
     int _replicate_num;
+    
+    CheckedParameters _checked_params;
 };
 
 BOOST_SERIALIZATION_SHARED_PTR(ReadGroupProperties)
