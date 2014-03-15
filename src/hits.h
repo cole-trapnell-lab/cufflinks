@@ -831,6 +831,8 @@ public:
             _rg_props = *global_read_properties;
         }
         
+        load_checked_parameters(expression_file_name);
+        
         //map<string, AbundanceGroup> single_sample_tracking;
         
         _num_loci = 0;
@@ -916,6 +918,7 @@ public:
 private:
     
     void load_count_tables(const string& expression_file_name);
+    void load_checked_parameters(const string& expression_file_name);
     
     //map<int, boost::shared_ptr<const AbundanceGroup> > ab_group_table;
     size_t _num_loci;

@@ -1140,6 +1140,28 @@ void PrecomputedExpressionHitFactory::load_count_tables(const string& expression
     }
 }
 
+void PrecomputedExpressionHitFactory::load_checked_parameters(const string& expression_file_name)
+{
+    std::ifstream ifs(expression_file_name.c_str());
+    boost::archive::binary_iarchive ia(ifs);
+    
+    //map<string, AbundanceGroup> single_sample_tracking;
+    
+    size_t num_loci = 0;
+    ia >> num_loci;
+    
+    if (num_loci > 0)
+    {
+        pair<int, AbundanceGroup> first_locus;
+        ia >> first_locus;
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
+        
+        // populate the cached count tables so we can make convincing fake bundles later on.
+        ReadGroupProperties rg_props = **(ab->rg_props().begin());
+        _rg_props.checked_parameters(rg_props.checked_parameters());
+    }
+}
+
 bool PrecomputedExpressionHitFactory::next_record(const char*& buf, size_t& buf_size)
 {
 	return false;

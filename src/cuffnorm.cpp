@@ -1116,6 +1116,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
                 *rg_props = hs->read_group_properties();
             }
             
+            rg_props->checked_parameters(hs->read_group_properties().checked_parameters());
             rg_props->condition_name(condition_name);
             rg_props->replicate_num(j);
             rg_props->file_path(sam_hit_filenames[j]);
@@ -1152,48 +1153,52 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     {
         parse_norm_standards_file(norm_standards_file);
     }
-    
-    if (norm_standards_file != NULL)
-    {
-        parse_norm_standards_file(norm_standards_file);
-    }
 
+    for (size_t i = 1; i < all_read_groups.size(); ++i)
+    {
+        const CheckedParameters& cp_i = all_read_groups[i - 1]->checked_parameters();
+        const CheckedParameters& cp_j = all_read_groups[i]->checked_parameters();
+        
+        if (cp_i != cp_j)
+        {
+            fprintf(stderr, "Warning: quantification parameters differ between CXB files!\n");
+            fprintf(stderr, "CXB files:\n");
+            fprintf(stderr, "%s:\n", all_read_groups[i - 1]->file_path().c_str());
+            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_i.frag_len_mean);
+            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_i.frag_len_std_dev);
+            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+            fprintf(stderr, "\tbias correction:\t%s\n", cp_i.corr_bias ? "yes" : "no");
+            fprintf(stderr, "\tbias mode:\t%d\n", cp_i.frag_bias_mode);
+            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_i.corr_multireads ? "yes" : "no");
+            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_i.max_mle_iterations);
+            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_i.min_mle_accuracy);
+            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_i.max_bundle_frags);
+            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_i.max_frags_multihits);
+            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_i.no_effective_length_correction ? "yes" : "no");
+            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_i.no_length_correction? "yes" : "no");
+            
+            fprintf(stderr, "%s\n", all_read_groups[i]->file_path().c_str());
+            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_j.frag_len_mean);
+            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_j.frag_len_std_dev);
+            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+            fprintf(stderr, "\tbias correction:\t%s\n", cp_j.corr_bias ? "yes" : "no");
+            fprintf(stderr, "\tbias mode:\t%d\n", cp_j.frag_bias_mode);
+            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_j.corr_multireads ? "yes" : "no");
+            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_j.max_mle_iterations);
+            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_j.min_mle_accuracy);
+            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_j.max_bundle_frags);
+            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_j.max_frags_multihits);
+            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_j.no_effective_length_correction ? "yes" : "no");
+            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_j.no_length_correction? "yes" : "no");
+
+        }
+    }
+    
     vector<pair<size_t, size_t > > contrasts;
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
 #endif
-    
-    // Validate the dispersion method the user's chosen.
-    int most_reps = -1;
-    int most_reps_idx = 0;
-    
-    bool single_replicate_fac = false;
-    
-    for (size_t i = 0; i < bundle_factories.size(); ++i)
-    {
-        ReplicatedBundleFactory& fac = *(bundle_factories[i]);
-        if (fac.num_replicates() > most_reps)
-        {
-            most_reps = fac.num_replicates();
-            most_reps_idx = i;
-        }
-        if (most_reps == 1)
-        {
-            single_replicate_fac = true;
-            if (dispersion_method == PER_CONDITION)
-            {
-                fprintf(stderr, "Error: Dispersion method 'per-condition' requires that all conditions have at least 2 replicates.  Please use either 'pooled' or 'blind'\n");
-                exit(1);
-            }
-        }
-    }
-    
-    if (most_reps == 1 && (dispersion_method != BLIND || dispersion_method != POISSON))
-    {
-        fprintf(stderr, "Warning: No conditions are replicated, switching to 'blind' dispersion method\n");
-        dispersion_method = BLIND;
-    }
 
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;

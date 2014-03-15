@@ -1422,46 +1422,46 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
         oa << single_sample_tracking[i];
     }
     
-    // FPKM tracking
-    
-	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
-	fprintf(stderr, "Writing isoform-level FPKM tracking\n");
-	print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
-	
-	FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
-	fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
-	print_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
-	
-	FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
-	fprintf(stderr, "Writing gene-level FPKM tracking\n");
-	print_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
-	
-	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
-	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
-	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
-
-    // Count tracking
-    
-    FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
-	fprintf(stderr, "Writing isoform-level count tracking\n");
-	print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
-	
-	FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
-	fprintf(stderr, "Writing TSS group-level count tracking\n");
-	print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
-	
-	FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
-	fprintf(stderr, "Writing gene-level count tracking\n");
-	print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
-	
-	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
-	fprintf(stderr, "Writing CDS-level count tracking\n");
-	print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
-    
-    // Run info
-    FILE* frun_info =  outfiles.run_info_out;
-	fprintf(stderr, "Writing run info\n");
-	print_run_info(frun_info);
+//    // FPKM tracking
+//    
+//	FILE* fiso_fpkm_tracking =  outfiles.isoform_fpkm_tracking_out;
+//	fprintf(stderr, "Writing isoform-level FPKM tracking\n");
+//	print_FPKM_tracking(fiso_fpkm_tracking,tracking.isoform_fpkm_tracking); 
+//	
+//	FILE* ftss_fpkm_tracking =  outfiles.tss_group_fpkm_tracking_out;
+//	fprintf(stderr, "Writing TSS group-level FPKM tracking\n");
+//	print_FPKM_tracking(ftss_fpkm_tracking,tracking.tss_group_fpkm_tracking);
+//	
+//	FILE* fgene_fpkm_tracking =  outfiles.gene_fpkm_tracking_out;
+//	fprintf(stderr, "Writing gene-level FPKM tracking\n");
+//	print_FPKM_tracking(fgene_fpkm_tracking,tracking.gene_fpkm_tracking);
+//	
+//	FILE* fcds_fpkm_tracking =  outfiles.cds_fpkm_tracking_out;
+//	fprintf(stderr, "Writing CDS-level FPKM tracking\n");
+//	print_FPKM_tracking(fcds_fpkm_tracking,tracking.cds_fpkm_tracking);
+//
+//    // Count tracking
+//    
+//    FILE* fiso_count_tracking =  outfiles.isoform_count_tracking_out;
+//	fprintf(stderr, "Writing isoform-level count tracking\n");
+//	print_count_tracking(fiso_count_tracking,tracking.isoform_fpkm_tracking); 
+//	
+//	FILE* ftss_count_tracking =  outfiles.tss_group_count_tracking_out;
+//	fprintf(stderr, "Writing TSS group-level count tracking\n");
+//	print_count_tracking(ftss_count_tracking,tracking.tss_group_fpkm_tracking);
+//	
+//	FILE* fgene_count_tracking =  outfiles.gene_count_tracking_out;
+//	fprintf(stderr, "Writing gene-level count tracking\n");
+//	print_count_tracking(fgene_count_tracking,tracking.gene_fpkm_tracking);
+//	
+//	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
+//	fprintf(stderr, "Writing CDS-level count tracking\n");
+//	print_count_tracking(fcds_count_tracking,tracking.cds_fpkm_tracking);
+//    
+//    // Run info
+//    FILE* frun_info =  outfiles.run_info_out;
+//	fprintf(stderr, "Writing run info\n");
+//	print_run_info(frun_info);
 }
 
 int main(int argc, char** argv)

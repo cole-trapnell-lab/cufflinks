@@ -439,6 +439,25 @@ struct CheckedParameters
         ar & no_effective_length_correction;
         ar & no_length_correction;
     }
+    
+    bool operator!=(const CheckedParameters& rhs) const {
+        return !(*this == rhs);
+    }
+    
+    bool operator==(const CheckedParameters& rhs) const
+    {
+        return (frag_len_mean == rhs.frag_len_mean &&
+                frag_len_std_dev == rhs.frag_len_std_dev &&
+                corr_bias == rhs.corr_bias &&
+                frag_bias_mode  == rhs.frag_bias_mode &&
+                corr_multireads == rhs.corr_multireads &&
+                max_mle_iterations  == rhs.max_mle_iterations &&
+                min_mle_accuracy == rhs.min_mle_accuracy &&
+                max_bundle_frags == rhs.max_bundle_frags &&
+                max_frags_multihits == rhs.max_frags_multihits &&
+                no_effective_length_correction == rhs.no_effective_length_correction &&
+                no_length_correction == rhs.no_length_correction);
+    }
 
 };
 
@@ -540,6 +559,8 @@ public:
     void replicate_num(int rn) { _replicate_num = rn; }
     
     const CheckedParameters& checked_parameters() const { return _checked_params; }
+    void checked_parameters(const CheckedParameters& rhs) { _checked_params = rhs; }
+    
     void collect_checked_parameters() {
         
         _checked_params.frag_len_mean = def_frag_len_mean;
