@@ -1152,7 +1152,7 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
     {
         all_read_groups[i]->collect_checked_parameters();
         all_read_groups[i]->ref_gtf(ref_gtf_filename, ref_gtf_crc_result);
-        all_read_groups[i]->ref_gtf(mask_gtf_filename, mask_gtf_crc_result);
+        all_read_groups[i]->mask_gtf(mask_gtf_filename, mask_gtf_crc_result);
     }
     
 #if ENABLE_THREADS

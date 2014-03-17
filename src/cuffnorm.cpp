@@ -1164,8 +1164,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         if (cp_i.ref_gtf_crc != cp_j.ref_gtf_crc)
         {
             fprintf(stderr, "Error reference gene annotation differs between samples!\n");
-            fprintf(stderr, "\t%s\t%s:\t%d!\n", all_read_groups[i - 1]->file_path().c_str(), cp_i.ref_gtf_file_path.c_str(), cp_i.ref_gtf_crc);
-            fprintf(stderr, "\t%s\t%s:\t%d!\n", all_read_groups[i - 1]->file_path().c_str(), cp_j.ref_gtf_file_path.c_str(), cp_j.ref_gtf_crc);
+            fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i - 1]->file_path().c_str(), cp_i.ref_gtf_file_path.c_str(), cp_i.ref_gtf_crc);
+            fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i - 1]->file_path().c_str(), cp_j.ref_gtf_file_path.c_str(), cp_j.ref_gtf_crc);
             exit(1);
         }
         
