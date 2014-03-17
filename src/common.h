@@ -41,6 +41,8 @@ using boost::math::normal;
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <boost/crc.hpp>
+
 // Non-option globals
 extern bool final_est_run;
 extern bool allow_junk_filtering;
@@ -422,6 +424,12 @@ struct CheckedParameters
     bool no_effective_length_correction;
     bool no_length_correction;
     
+    std::string ref_gtf_file_path;
+    boost::crc_32_type::value_type ref_gtf_crc;
+    
+    std::string mask_gtf_file_path;
+    boost::crc_32_type::value_type mask_gtf_crc;
+    
     friend std::ostream & operator<<(std::ostream &os, const CheckedParameters &gp);
     friend class boost::serialization::access;
     
@@ -438,6 +446,10 @@ struct CheckedParameters
         ar & max_frags_multihits;
         ar & no_effective_length_correction;
         ar & no_length_correction;
+        ar & ref_gtf_file_path;
+        ar & ref_gtf_crc;
+        ar & mask_gtf_file_path;
+        ar & mask_gtf_crc;
     }
     
     bool operator!=(const CheckedParameters& rhs) const {
@@ -456,7 +468,12 @@ struct CheckedParameters
                 max_bundle_frags == rhs.max_bundle_frags &&
                 max_frags_multihits == rhs.max_frags_multihits &&
                 no_effective_length_correction == rhs.no_effective_length_correction &&
-                no_length_correction == rhs.no_length_correction);
+                no_length_correction == rhs.no_length_correction &&
+                ref_gtf_file_path == rhs.ref_gtf_file_path &&
+                ref_gtf_crc == rhs.ref_gtf_crc &&
+                mask_gtf_file_path == rhs.mask_gtf_file_path &&
+                mask_gtf_crc == rhs.mask_gtf_crc);
+                
     }
 
 };
@@ -558,9 +575,23 @@ public:
     int replicate_num() const { return _replicate_num; }
     void replicate_num(int rn) { _replicate_num = rn; }
     
+    void ref_gtf(const std::string& file_path, const boost::crc_32_type& gtf_crc )
+    {
+        _checked_params.ref_gtf_file_path = file_path;
+        _checked_params.ref_gtf_crc = gtf_crc();
+    }
+
+    void mask_gtf(const std::string& file_path, const boost::crc_32_type& gtf_crc )
+    {
+        _checked_params.mask_gtf_file_path = file_path;
+        _checked_params.mask_gtf_crc = gtf_crc();
+    }
+
+    
     const CheckedParameters& checked_parameters() const { return _checked_params; }
     void checked_parameters(const CheckedParameters& rhs) { _checked_params = rhs; }
     
+    // NOTE: this only picks up user-supplied options, not GTF files!
     void collect_checked_parameters() {
         
         _checked_params.frag_len_mean = def_frag_len_mean;

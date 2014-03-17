@@ -1619,14 +1619,16 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
-        ::load_ref_rnas(ref_gtf, bundle_factory->ref_table(), ref_mRNAs, corr_bias && bundle_mode == REF_DRIVEN, false);
+        boost::crc_32_type ref_gtf_crc_result;
+        ::load_ref_rnas(ref_gtf, bundle_factory->ref_table(), ref_mRNAs, ref_gtf_crc_result, corr_bias && bundle_mode == REF_DRIVEN, false);
         bundle_factory->set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();
     vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, bundle_factory->ref_table(), mask_rnas, false, false);
+        boost::crc_32_type mask_gtf_crc_result;
+        ::load_ref_rnas(mask_gtf, bundle_factory->ref_table(), mask_rnas, mask_gtf_crc_result, false, false);
         bundle_factory->set_mask_rnas(mask_rnas);
     }
     
@@ -1689,13 +1691,15 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
 		ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
         ref_mRNAs.clear();
-        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, corr_bias, true);
+        boost::crc_32_type ref_gtf_crc_result;
+        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, ref_gtf_crc_result, corr_bias, true);
     }    
 	bundle_factory2.set_ref_rnas(ref_mRNAs);
     if (mask_gtf)
     {
         mask_rnas.clear();
-        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
+        boost::crc_32_type mask_gtf_crc_result;
+        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, mask_gtf_crc_result, false, false);
         bundle_factory2.set_mask_rnas(mask_rnas);
     }    
 	bundle_factory2.reset();

@@ -550,13 +550,15 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 	return r;
 }
 
-void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs) {
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata, boost::crc_32_type& crc_result, bool keepAttrs) {
 	rewind(f);
 	GffReader gffr(f, true); //loading only recognizable transcript features
 	gffr.showWarnings(gtf_tracking_verbose);
 
 	//          keepAttrs    mergeCloseExons   noExonAttrs
 	gffr.readAll(keepAttrs,          true,        true);
+    
+    crc_result = gffr.current_crc_result();
 
 	//                               is_ref?    check_for_dups,
 	parse_mRNAs(gffr.gflst, seqdata, false,       0);

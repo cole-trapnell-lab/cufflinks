@@ -78,6 +78,7 @@ struct ScaffoldSorter
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
 				   vector<boost::shared_ptr<Scaffold> >& ref_mRNAs,
+                   boost::crc_32_type& gtf_crc_result,
 				   bool loadSeqs,
 				   bool loadFPKM) 
 {
@@ -100,7 +101,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 	if (ref_mRNA_file)
 	{
 		gtf_tracking_verbose=cuff_verbose;
-		read_transcripts(ref_mRNA_file, ref_rnas, true);
+		read_transcripts(ref_mRNA_file, ref_rnas, gtf_crc_result, true);
 	}
 	
 	int last_gseq_id = -1;

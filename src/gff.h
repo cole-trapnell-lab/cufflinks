@@ -8,6 +8,8 @@
 #include "GList.hh"
 #include "GHash.hh"
 
+#include <boost/crc.hpp>  // for boost::crc_32_type
+
 /*
 const byte exMskMajSpliceL = 0x01;
 const byte exMskMajSpliceR = 0x02;
@@ -1010,6 +1012,9 @@ class GffReader {
   GffObj* promoteFeature(CNonExon* subp, char*& subp_name, GHash<CNonExon>& pex,
                                   bool keepAttr, bool noExonAttr);
   GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
+    
+     boost::crc_32_type  _crc_result;
+    
  public:
   GffNames* names; //just a pointer to the global static Gff names repository in GffObj
   GfList gflst; //accumulate GffObjs being read
@@ -1077,6 +1082,7 @@ class GffReader {
   // load all subfeatures, re-group them:
   void readAll(bool keepAttr=false, bool mergeCloseExons=false, bool noExonAttr=true);
 
+    boost::crc_32_type current_crc_result() const { return _crc_result; }
 }; // end of GffReader
 
 #endif

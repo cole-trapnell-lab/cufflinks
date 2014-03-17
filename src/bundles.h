@@ -203,6 +203,7 @@ private:
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
 				   vector<boost::shared_ptr<Scaffold> >& ref_mRNAs,
+                   boost::crc_32_type& gtf_crc_result,
 				   bool loadSeqs=false,
 				   bool loadFPKM=false);
 

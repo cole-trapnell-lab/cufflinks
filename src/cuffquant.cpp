@@ -1027,9 +1027,33 @@ void parse_norm_standards_file(FILE* norm_standards_file)
 
 boost::shared_ptr<AbundanceRecorder> abx_recorder;
 
-void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
+void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_filename, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 
+    FILE* ref_gtf = NULL;
+	if (ref_gtf_filename != "")
+	{
+		ref_gtf = fopen(ref_gtf_filename.c_str(), "r");
+		if (!ref_gtf) // we actually already did this check, leave this code here in case we remove the upstream one
+		{
+			fprintf(stderr, "Error: cannot open reference GTF file %s for reading\n",
+					ref_gtf_filename.c_str());
+			exit(1);
+		}
+	}
+	
+	FILE* mask_gtf = NULL;
+	if (mask_gtf_filename != "")
+	{
+		mask_gtf = fopen(mask_gtf_filename.c_str(), "r");
+		if (!mask_gtf) // we actually already did this check, leave this code here in case we remove the upstream one
+		{
+			fprintf(stderr, "Error: cannot open mask GTF file %s for reading\n",
+					mask_gtf_filename.c_str());
+			exit(1);
+		}
+	}
+    
 	ReadTable it;
 	RefSequenceTable rt(true, false);
     
@@ -1100,14 +1124,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
         bundle_factories.push_back(boost::shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
+    boost::crc_32_type ref_gtf_crc_result;
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, ref_gtf_crc_result, corr_bias, false);
     if (ref_mRNAs.empty())
         return;
     
+    boost::crc_32_type mask_gtf_crc_result;
     vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
+        ::load_ref_rnas(mask_gtf, rt, mask_rnas, mask_gtf_crc_result, false, false);
     }
     
     BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
@@ -1125,6 +1151,8 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* norm_standards_file, vector<str
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
         all_read_groups[i]->collect_checked_parameters();
+        all_read_groups[i]->ref_gtf(ref_gtf_filename, ref_gtf_crc_result);
+        all_read_groups[i]->ref_gtf(mask_gtf_filename, mask_gtf_crc_result);
     }
     
 #if ENABLE_THREADS
@@ -1724,7 +1752,7 @@ int main(int argc, char** argv)
 	}
 	outfiles.bias_out = bias_out;
     
-    driver(ref_gtf, mask_gtf, norm_standards_file, sam_hit_filenames, outfiles);
+    driver(ref_gtf_filename, mask_gtf_filename, norm_standards_file, sam_hit_filenames, outfiles);
     
 	return 0;
 }

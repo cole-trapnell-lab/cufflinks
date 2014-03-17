@@ -1662,14 +1662,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         bundle_factories.push_back(boost::shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
+    boost::crc_32_type ref_gtf_crc_result;
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, ref_gtf_crc_result, corr_bias, false);
     if (ref_mRNAs.empty())
         return;
     
     vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
+        boost::crc_32_type mask_gtf_crc_result;
+        ::load_ref_rnas(mask_gtf, rt, mask_rnas, mask_gtf_crc_result, false, false);
     }
     
     BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)

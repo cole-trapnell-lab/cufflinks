@@ -266,7 +266,8 @@ void driver(vector<FILE*> ref_gtf_files, FILE* sam_out)
     BOOST_FOREACH (FILE* ref_gtf, ref_gtf_files)
     {
         vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
-        ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, false, true);
+        boost::crc_32_type ref_gtf_crc_result;
+        ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, ref_gtf_crc_result, false, true);
         ref_mRNA_table.push_back(ref_mRNAs);
     }
     

@@ -91,17 +91,19 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
 	}
 	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
     
+    boost::crc_32_type ref_gtf_crc_result;
     vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
-        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, false, false);
+        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, ref_gtf_crc_result, false, false);
         bundle_factory.set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();
     vector<boost::shared_ptr<Scaffold> > mask_rnas;
+    boost::crc_32_type mask_gtf_crc_result;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
+        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, mask_gtf_crc_result, false, false);
         bundle_factory.set_mask_rnas(mask_rnas);
     }
     
