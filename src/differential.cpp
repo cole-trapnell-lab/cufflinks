@@ -1620,8 +1620,36 @@ void test_differential(const string& locus_tag,
     }
 }
 
+void print_checked_params_table(const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups)
+{
+    string param_check_error_out_filename = output_dir + "/checked_params.txt";
+    FILE* param_check_error_out_file = fopen(param_check_error_out_filename.c_str(), "w");
+    
+    fprintf(param_check_error_out_file, "file\tdefault frag length mean\tdefault frag length std dev\tbias correction\tbias mode\tmultiread correction\tmax-mle-iterations\tmin-mle-accuracy\tmax-bundle-frags\tmax-frag-multihits\tno-effective-length-correction\tno-length-correction\n");
+    for (size_t i = 0; i < all_read_groups.size(); ++i)
+    {
+        const CheckedParameters& cp_i = all_read_groups[i]->checked_parameters();
+        fprintf(param_check_error_out_file, "%s\t", all_read_groups[i]->file_path().c_str());
+        fprintf(param_check_error_out_file, "%lg\t", cp_i.frag_len_mean);
+        fprintf(param_check_error_out_file, "%lg\t", cp_i.frag_len_std_dev);
+        fprintf(param_check_error_out_file, "%s\t", cp_i.corr_bias ? "yes" : "no");
+        fprintf(param_check_error_out_file, "%d\t", cp_i.frag_bias_mode);
+        fprintf(param_check_error_out_file, "%s\t", cp_i.corr_multireads ? "yes" : "no");
+        fprintf(param_check_error_out_file, "%lg\t", cp_i.max_mle_iterations);
+        fprintf(param_check_error_out_file, "%lg\t", cp_i.min_mle_accuracy);
+        fprintf(param_check_error_out_file, "%lg\t", cp_i.max_bundle_frags);
+        fprintf(param_check_error_out_file, "%lg\t", cp_i.max_frags_multihits);
+        fprintf(param_check_error_out_file, "%s\t", cp_i.no_effective_length_correction ? "yes" : "no");
+        fprintf(param_check_error_out_file, "%s\t", cp_i.no_length_correction? "yes" : "no");
+        fprintf(param_check_error_out_file, "\n");
+    }
+    fclose(param_check_error_out_file);
+
+}
+
 void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups)
 {
+    bool dump_params = false;
     for (size_t i = 1; i < all_read_groups.size(); ++i)
     {
         const CheckedParameters& cp_i = all_read_groups[i - 1]->checked_parameters();
@@ -1637,37 +1665,41 @@ void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupPr
         
         if (cp_i != cp_j)
         {
-            fprintf(stderr, "Warning: quantification parameters differ between CXB files!\n");
-            fprintf(stderr, "CXB files:\n");
-            fprintf(stderr, "%s:\n", all_read_groups[i - 1]->file_path().c_str());
-            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_i.frag_len_mean);
-            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_i.frag_len_std_dev);
-            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
-            fprintf(stderr, "\tbias correction:\t%s\n", cp_i.corr_bias ? "yes" : "no");
-            fprintf(stderr, "\tbias mode:\t%d\n", cp_i.frag_bias_mode);
-            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_i.corr_multireads ? "yes" : "no");
-            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_i.max_mle_iterations);
-            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_i.min_mle_accuracy);
-            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_i.max_bundle_frags);
-            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_i.max_frags_multihits);
-            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_i.no_effective_length_correction ? "yes" : "no");
-            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_i.no_length_correction? "yes" : "no");
-            
-            fprintf(stderr, "%s\n", all_read_groups[i]->file_path().c_str());
-            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_j.frag_len_mean);
-            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_j.frag_len_std_dev);
-            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
-            fprintf(stderr, "\tbias correction:\t%s\n", cp_j.corr_bias ? "yes" : "no");
-            fprintf(stderr, "\tbias mode:\t%d\n", cp_j.frag_bias_mode);
-            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_j.corr_multireads ? "yes" : "no");
-            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_j.max_mle_iterations);
-            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_j.min_mle_accuracy);
-            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_j.max_bundle_frags);
-            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_j.max_frags_multihits);
-            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_j.no_effective_length_correction ? "yes" : "no");
-            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_j.no_length_correction? "yes" : "no");
+            dump_params = true;
+            fprintf(stderr, "Warning: quantification parameters differ between CXB files!\n\tSee %s/checked_params.txt for more info\n", output_dir.c_str());
+            break;
+//            fprintf(stderr, "CXB files:\n");
+//            fprintf(stderr, "%s:\n", all_read_groups[i - 1]->file_path().c_str());
+//            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_i.frag_len_mean);
+//            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_i.frag_len_std_dev);
+//            fprintf(stderr, "\tbias correction:\t%s\n", cp_i.corr_bias ? "yes" : "no");
+//            fprintf(stderr, "\tbias mode:\t%d\n", cp_i.frag_bias_mode);
+//            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_i.corr_multireads ? "yes" : "no");
+//            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_i.max_mle_iterations);
+//            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_i.min_mle_accuracy);
+//            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_i.max_bundle_frags);
+//            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_i.max_frags_multihits);
+//            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_i.no_effective_length_correction ? "yes" : "no");
+//            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_i.no_length_correction? "yes" : "no");
+//            
+//            fprintf(stderr, "%s\n", all_read_groups[i]->file_path().c_str());
+//            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_j.frag_len_mean);
+//            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_j.frag_len_std_dev);
+//            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+//            fprintf(stderr, "\tbias correction:\t%s\n", cp_j.corr_bias ? "yes" : "no");
+//            fprintf(stderr, "\tbias mode:\t%d\n", cp_j.frag_bias_mode);
+//            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_j.corr_multireads ? "yes" : "no");
+//            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_j.max_mle_iterations);
+//            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_j.min_mle_accuracy);
+//            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_j.max_bundle_frags);
+//            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_j.max_frags_multihits);
+//            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_j.no_effective_length_correction ? "yes" : "no");
+//            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_j.no_length_correction? "yes" : "no");
             
         }
+        
     }
+    if (dump_params)
+        print_checked_params_table(all_read_groups);
 }
 
