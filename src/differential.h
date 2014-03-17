@@ -208,3 +208,5 @@ extern int locus_num_threads;
 #endif
 
 #endif
+
+void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups);

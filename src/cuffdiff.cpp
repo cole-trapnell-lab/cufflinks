@@ -1647,6 +1647,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
                 *rg_props = hs->read_group_properties();
             }
             
+            rg_props->checked_parameters(hs->read_group_properties().checked_parameters());
             rg_props->condition_name(condition_name);
             rg_props->replicate_num(j);
             rg_props->file_path(sam_hit_filenames[j]);
@@ -1696,6 +1697,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         parse_norm_standards_file(norm_standards_file);
     }
     
+    validate_cross_sample_parameters(all_read_groups);
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;

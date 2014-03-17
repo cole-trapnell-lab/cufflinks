@@ -1619,3 +1619,55 @@ void test_differential(const string& locus_tag,
         clear_samples_from_tracking_table(samples[i], tracking);
     }
 }
+
+void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups)
+{
+    for (size_t i = 1; i < all_read_groups.size(); ++i)
+    {
+        const CheckedParameters& cp_i = all_read_groups[i - 1]->checked_parameters();
+        const CheckedParameters& cp_j = all_read_groups[i]->checked_parameters();
+        
+        if (cp_i.ref_gtf_crc != cp_j.ref_gtf_crc)
+        {
+            fprintf(stderr, "Error reference gene annotation differs between samples!\n");
+            fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i - 1]->file_path().c_str(), cp_i.ref_gtf_file_path.c_str(), cp_i.ref_gtf_crc);
+            fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i - 1]->file_path().c_str(), cp_j.ref_gtf_file_path.c_str(), cp_j.ref_gtf_crc);
+            exit(1);
+        }
+        
+        if (cp_i != cp_j)
+        {
+            fprintf(stderr, "Warning: quantification parameters differ between CXB files!\n");
+            fprintf(stderr, "CXB files:\n");
+            fprintf(stderr, "%s:\n", all_read_groups[i - 1]->file_path().c_str());
+            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_i.frag_len_mean);
+            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_i.frag_len_std_dev);
+            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+            fprintf(stderr, "\tbias correction:\t%s\n", cp_i.corr_bias ? "yes" : "no");
+            fprintf(stderr, "\tbias mode:\t%d\n", cp_i.frag_bias_mode);
+            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_i.corr_multireads ? "yes" : "no");
+            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_i.max_mle_iterations);
+            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_i.min_mle_accuracy);
+            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_i.max_bundle_frags);
+            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_i.max_frags_multihits);
+            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_i.no_effective_length_correction ? "yes" : "no");
+            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_i.no_length_correction? "yes" : "no");
+            
+            fprintf(stderr, "%s\n", all_read_groups[i]->file_path().c_str());
+            fprintf(stderr, "\tdefault-frag-length-mean:\t%lg\n", cp_j.frag_len_mean);
+            fprintf(stderr, "\tdefault-frag-length-std-dev:\t%lg\n", cp_j.frag_len_std_dev);
+            // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+            fprintf(stderr, "\tbias correction:\t%s\n", cp_j.corr_bias ? "yes" : "no");
+            fprintf(stderr, "\tbias mode:\t%d\n", cp_j.frag_bias_mode);
+            fprintf(stderr, "\tmultiread correction:\t%s\n", cp_j.corr_multireads ? "yes" : "no");
+            fprintf(stderr, "\tmax-mle-iterations:\t%lg\n", cp_j.max_mle_iterations);
+            fprintf(stderr, "\tmin-mle-accuracy:\t%lg\n", cp_j.min_mle_accuracy);
+            fprintf(stderr, "\tmax-bundle-frags:\t%lg\n", cp_j.max_bundle_frags);
+            fprintf(stderr, "\tmax-frag-multihits:\t%lg\n", cp_j.max_frags_multihits);
+            fprintf(stderr, "\tno-effective-length-correction:\t%s\n", cp_j.no_effective_length_correction ? "yes" : "no");
+            fprintf(stderr, "\tno-length-correction:\t%s\n", cp_j.no_length_correction? "yes" : "no");
+            
+        }
+    }
+}
+
