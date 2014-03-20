@@ -142,7 +142,7 @@ void print_usage()
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
     fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
-    fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
+    //fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads                   [ default:  FALSE ]\n");
 #if ENABLE_THREADS

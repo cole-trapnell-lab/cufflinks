@@ -100,25 +100,20 @@ void print_usage()
 	fprintf(stderr, "   Supply replicate SAMs as comma separated lists for each condition: sample1_rep1.sam,sample1_rep2.sam,...sample1_repM.sam\n");
     fprintf(stderr, "General Options:\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
-    fprintf(stderr, "  -L/--labels                  comma-separated list of condition labels\n");
-	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
-    fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
+    //fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads                   [ default:  FALSE ]\n");
 #if ENABLE_THREADS
 	fprintf(stderr, "  -p/--num-threads             number of threads used during quantification          [ default:      1 ]\n");
 #endif
     fprintf(stderr, "  --library-type               Library prep used for input reads                     [ default:  below ]\n");
-    fprintf(stderr, "  --library-norm-method        Method used to normalize library sizes                [ default:  below ]\n");
     
     fprintf(stderr, "\nAdvanced Options:\n");
     fprintf(stderr, "  -m/--frag-len-mean           average fragment length (unpaired reads only)         [ default:    200 ]\n");
     fprintf(stderr, "  -s/--frag-len-std-dev        fragment length std deviation (unpaired reads only)   [ default:     80 ]\n");
     fprintf(stderr, "  -c/--min-alignment-count     minimum number of alignments in a locus for testing   [ default:   10 ]\n");
     fprintf(stderr, "  --max-mle-iterations         maximum iterations allowed for MLE calculation        [ default:   5000 ]\n");
-    fprintf(stderr, "  --compatible-hits-norm       count hits compatible with reference RNAs only        [ default:   TRUE ]\n");
-    fprintf(stderr, "  --total-hits-norm            count all hits for normalization                      [ default:  FALSE ]\n");
     fprintf(stderr, "  -v/--verbose                 log-friendly verbose processing (no progress bar)     [ default:  FALSE ]\n");
 	fprintf(stderr, "  -q/--quiet                   log-friendly quiet processing (no progress bar)       [ default:  FALSE ]\n");
     fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
@@ -134,8 +129,6 @@ void print_usage()
     fprintf(stderr, "  --trim-read-length           Trim reads to be this long (keep 5' end)              [ default:   none ]\n");
     fprintf(stderr, "  --no-scv-correction          Disable SCV correction                                [ default:  FALSE ]\n");
     print_library_table();
-    print_dispersion_method_table();
-    print_lib_norm_method_table();
 }
 
 int parse_options(int argc, char** argv)

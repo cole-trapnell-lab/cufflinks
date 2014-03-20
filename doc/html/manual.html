@@ -97,25 +97,25 @@
               <table width="100%">
                 <tbody>
                   <tr>
-                    <td>version 2.1.1</td>
-                    <td align="right">4/11/2013</td>
+                    <td>version 2.2.0</td>
+                    <td align="right">5/23/2014</td>
                   </tr>
                   <tr>
-                    <td><a href="./downloads/cufflinks-2.1.1.tar.gz"
+                    <td><a href="./downloads/cufflinks-2.2.0.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks_source');
                         ">&nbsp;&nbsp;&nbsp;Source code</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-2.1.1.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.2.0.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-2.1.1.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.2.0.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -123,8 +123,7 @@
                 </tbody>
               </table>
             </ul>
-          </div>
-          
+          </div>          
 		
 		  <h2>Related Tools</h2>
           <div class="box">
@@ -265,7 +264,14 @@
 				<li><a href="#run_info">Run info</a></li>
 			</ul>
  	    </ul>
-		<li><a href="#cuffnorm">Running Cuffnorm</a></li>
+		<li><a href="#cuffnorm">Running Cuffnorm</a></li>  
+		  <ul>
+			  <li><a href="#cuffnorm_input">Input Files</a></li>
+  	  	  	  <li><a href="#cuffnorm_output">Output Files</a></li>
+		  </ul>
+		
+		<li><a href="#sample_sheets">Sample sheets for Cuffdiff and Cuffnorm</a></li>
+		<li><a href="#contrast_files">Contrast files for Cuffdiff</a></li>
 		<li><a href="#output_formats">Output formats</a>
 			<ul>
 		 	    <li><a href="#fpkm_tracking_format">FPKM Tracking format</a></li>
@@ -1240,13 +1246,178 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<br/>
 			</ol>
 		<h2 id="cuffquant">Running Cuffquant</h2><br/>
+				Run <tt>cuffquant</tt> from the command line as follows:
+			  <blockquote>
+		 	   Usage: cuffquant [options]* &lt;annotation.(gtf/gff)&gt; &lt;aligned_reads.(sam/bam)&gt;
+			  </blockquote>
+			  <p>
+			  The following is a detailed description of the options used to control
+			  Cuffquant:
+			  </p><br/>
+
+			  <table CELLSPACING=15>
+			  <tr><td VALIGN=top>
+			  <b>Arguments:</b>
+			  </td><td VALIGN=top>
+			  </td></tr>
+			  <tr><td VALIGN=top nowrap>
+			  <tt>&lt;annotation.(gtf/gff)&gt;</tt>
+			  </td><td VALIGN=top>
+			  Tells Cuffquant to use the supplied reference annotation (<a href="gff.html">a GFF file</a>)
+			  to estimate isoform expression. The program
+			  will ignore alignments not structurally compatible with any reference transcript.
+			  </td></tr>
+			  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>&lt;aligned_reads.(sam/bam)&gt;</tt>
+			  </td><td VALIGN=top>
+			  A file of RNA-Seq read alignments in the <a href="http://samtools.sourceforge.net">
+			  SAM format</a>.  SAM is a standard short read alignment, that allows aligners to 
+			  attach custom tags to individual alignments, and Cuffquant requires that
+			  the alignments you supply have some of these tags.  Please see <a href="#input">
+			  Input formats</a> for more details.
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top>
+			  <b>General Options:</b>
+			  </td><td VALIGN=top>
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-h/--help</tt>
+			  </td><td VALIGN=top>
+			  Prints the help message and exits   
+			  </td></tr> 
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-o/--output-dir &lt;string&gt;</tt>
+			  </td><td VALIGN=top>
+			  Sets the name of the directory in which Cuffquant will write all of its 
+			  output.  The default is "./".
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-p/--num-threads &lt;int&gt;</tt>
+			  </td><td VALIGN=top>
+			  Use this many threads to align reads. The default is 1.
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-M/--mask-file &lt;mask.(gtf/gff)&gt;</tt>
+			  </td><td VALIGN=top>
+			  Tells Cuffquant to ignore all reads that could have come from transcripts in this GTF 
+			  file. We recommend including any annotated rRNA, mitochondrial transcripts other abundant
+			  transcripts you wish to ignore in your analysis in this file.  Due to variable efficiency
+			  of mRNA enrichment methods and rRNA depletion kits, masking these transcripts often 
+			  improves the overall robustness of transcript abundance estimates. 
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-b/--frag-bias-correct &lt;genome.fa&gt;</tt>
+			  </td><td VALIGN=top>
+			  Providing Cuffquant with a multifasta file via this option instructs it to run  
+			  bias detection and correction algorithm which can significantly improve accuracy of 
+			  transcript abundance estimates.  See <a href=howitworks.html#hsbi>How Cufflinks Works</a> for more details.
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-u/--multi-read-correct</tt>
+			  </td><td VALIGN=top>
+			  Tells Cuffquant to do an initial estimation procedure to more accurately weight reads
+			  mapping to multiple locations in the genome.  See <a href=howitworks.html#hmul>How Cufflinks Works</a> for more details.
+			  </td></tr>
+			  <tr><td VALIGN=top>
+	  
+			  <tt>--library-type</tt>
+			  </td><td VALIGN=top>
+			  See <a href="#library">Library Types</a>
+			  </td></tr>
+			  <tr>	
+	  
+			  <tr><td VALIGN=top>
+			  <b>Advanced Abundance Estimation Options:</b>
+			  </td><td VALIGN=top>
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>	
+			  <tt>-m/--frag-len-mean &lt;int&gt;</tt>
+			  </td><td VALIGN=top>
+			  This is the expected (mean) fragment length. The default is 200bp. <br/><b>Note: 
+			  Cuffquant learns the fragment length mean for each SAM file, so using this option is
+			  no longer recommended with paired-end reads.</b>
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-s/--frag-len-std-dev &lt;int&gt;</tt>
+			  </td><td VALIGN=top>
+			  The standard deviation for the distribution on fragment lengths.  The default is 80bp. <br/><b>Note: 
+			  Cuffquant learns the fragment length standard deviation for each SAM file, so using this option is
+			  no longer recommended with paired-end reads.</b>
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--max-mle-iterations &lt;int&gt;</tt>
+			  </td><td VALIGN=top>
+			  Sets the number of iterations allowed during maximum likelihood estimation of abundances. Default: 5000  
+			  </td></tr>
+	
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--max-bundle-frags &lt;int&gt;</tt>
+			  </td><td VALIGN=top>
+			  Sets the maximum number of fragments a locus may have before being skipped. Default: 1000000  
+			  </td></tr>
+	
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--no-effective-length-correction</tt>
+			  </td><td VALIGN=top>
+			  Cuffquant will not employ its "effective" length normalization to transcript FPKM. 
+			  </td></tr>
+	  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--no-length-correction</tt>
+			  </td><td VALIGN=top>
+			  Cuffquant will not normalize fragment counts by transcript length at all.  Use this option when fragment count is independent of the size of the features being quantified (e.g. for small RNA libraries, where no fragmentation takes place, or 3 prime end sequencing, where sampled RNA fragments are all essentially the same length).  Experimental option, use with caution. 
+			  </td></tr>
+	
+			  <tr><td VALIGN=top>
+			  <b>Advanced Program Behavior Options:</b>
+			  </td><td VALIGN=top>
+			  </td></tr>
+	
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-v/--verbose</tt>
+			  </td><td VALIGN=top>
+			  Print lots of status updates and other diagnostic information.
+			  </td></tr>
+	  
+			   <tr><td VALIGN=top nowrap>
+			  <tt>-q/--quiet</tt>
+			  </td><td VALIGN=top>
+			  Suppress messages other than serious warnings and errors.
+			  </td></tr>
+
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--no-update-check</tt>
+			  </td><td VALIGN=top>
+			  Turns off the automatic routine that contacts the Cufflinks server to check for a more 
+			  recent version.
+			  </td></tr>
+	  
+			  </table><br/>
+	
+		  <h2 id="cufflinks_output">Cuffquant Output</h2><br/>
+			<p>
+		      Cuffquant produces writes a single output file, <tt>abundances.cxb</tt>, into the output directory. CXB files are binary files, and can be passed to Cuffnorm or Cuffdiff for further processing.
+			</p>
+			<br/>		
+		
 		<h2 id="cuffdiff">Running Cuffdiff</h2><br/>
 		<p>
 		Cufflinks includes a program, "Cuffdiff", that you can use to find significant changes 
 		in transcript expression, splicing, and promoter use.  From the command line, run <tt>cuffdiff</tt> as follows:
 		<p>
 		<blockquote>
-		cuffdiff [options]* &lt;transcripts.gtf&gt; &lt;sample1_replicate1.sam[,...,sample1_replicateM]&gt; &lt;sample2_replicate1.sam[,...,sample2_replicateM.sam]&gt;... [sampleN.sam_replicate1.sam[,...,sample2_replicateM.sam]]
+		cuffdiff [options]* &lt;transcripts.gtf&gt; &lt;sample1_replicate1.sam[,...,sample1_replicateM.sam]&gt; &lt;sample2_replicate1.sam[,...,sample2_replicateM.sam]&gt;... [sampleN.sam_replicate1.sam[,...,sample2_replicateM.sam]]
 		</blockquote>
 		
 		<br/>
@@ -1260,11 +1431,13 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		transcripts of each gene.  Tracking the former allows one to see changes in 
 		splicing, and the latter lets one see changes in relative promoter use 
 		within a gene.
-		
+		<p>
 		If you have more than one <b>replicate</b> for a sample, supply the SAM files for 
 		the sample as a single <b>comma-separated</b> list.  It is not necessary to 
 		have the same number of replicates for each sample.
-		
+		<p>
+		Note that Cuffdiff can also accepted BAM files (which are binary, compressed SAM files).  It can also accept CXB files produced by Cuffquant.  Note that mixing SAM and BAM files is supported, but you cannot currently mix CXB and SAM/BAM.  If one of the samples is supplied as a CXB file, all of the samples must be supplied as CXB files.
+		<p>
 		Cuffdiff requires that transcripts in the input GTF be annotated with 
 		certain attributes in order to look for changes in primary transcript
 		expression, splicing, coding output, and promoter use.  These attributes 
@@ -1323,7 +1496,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 		  A transcript annotation file produced by cufflinks, cuffcompare, or other source.
 		  </td></tr>
 		  <tr><td VALIGN=top nowrap>
-		  <tt>&lt;sample1.sam&gt;</tt>
+		  <tt>&lt;sample1.(sam/bam/cxb)&gt;</tt>
 		  </td><td VALIGN=top>
 		  A SAM file of aligned RNA-Seq reads. If more than two are provided,
 		  Cuffdiff tests for differential expression and regulation between all pairs of 
@@ -1919,7 +2092,215 @@ boost_version   104700
   </div>
   </ol>
     <h2 id="cuffnorm">Running Cuffnorm</h2><br/>
-    <h2 id="output_formats">Output formats</h2><br/>
+			Cufflinks includes a program, "Cuffnorm", that you can use to generate tables of expression values that are properly normalized for library size.  From the command line, run <tt>cuffnorm</tt> as follows:
+			<p>
+			<blockquote>
+			cuffnorm [options]* &lt;transcripts.gtf&gt; &lt;sample1_replicate1.sam[,...,sample1_replicateM.sam]&gt; &lt;sample2_replicate1.sam[,...,sample2_replicateM.sam]&gt;... [sampleN.sam_replicate1.sam[,...,sample2_replicateM.sam]]
+			</blockquote>
+		
+			<br/>
+			<h2 id="cuffnorm_input">Cuffnorm Input</h2><br/>
+			Running Cuffnorm is very similar to <a href="#cuffdiff_input">running Cuffdiff</a>. Cuffnorm takes a GTF2/GFF3 file of transcripts as input, along with two or more 
+			SAM, BAM, or CXB files for two or more samples. 
+			It produces a number of output files that contain expression levels and normalized fragment counts at the level of transcripts, primary transcripts, 
+			and genes. It also tracks changes in the relative abundance of transcripts sharing a common
+			transcription start site, and in the relative abundances of the primary 
+			transcripts of each gene.  Tracking the former allows one to see changes in 
+			splicing, and the latter lets one see changes in relative promoter use 
+			within a gene.
+			<p>
+			If you have more than one <b>replicate</b> for a sample, supply the SAM files for 
+			the sample as a single <b>comma-separated</b> list.  It is not necessary to 
+			have the same number of replicates for each sample.
+			<p>
+			Note that Cuffnorm can also accepted BAM files (which are binary, compressed SAM files).  It can also accept CXB files produced by Cuffquant.  Note that mixing SAM and BAM files is supported, but you cannot currently mix CXB and SAM/BAM.  If one of the samples is supplied as a CXB file, all of the samples must be supplied as CXB files.
+			<p>
+			Cuffnorm also requires a GFF/GTF file, conforming to the same specifications as needed for Cuffdiff.
+		
+	        <p>
+			
+			  <table CELLSPACING=15>
+			  <tr><td VALIGN=top>
+			  <b>Arguments:</b>
+			  </td><td VALIGN=top>
+			  </td></tr>
+			  <tr><td VALIGN=top nowrap>
+			  <tt>&lt;transcripts.(gtf/gff)&gt;</tt>
+			  </td><td VALIGN=top>
+			  A transcript annotation file produced by cufflinks, cuffcompare, or other source.
+			  </td></tr>
+			  <tr><td VALIGN=top nowrap>
+			  <tt>&lt;sample1.(sam/bam/cxb)&gt;</tt>
+			  </td><td VALIGN=top>
+			  A SAM file of aligned RNA-Seq reads. If more than two are provided,
+			  Cuffdiff tests for differential expression and regulation between all pairs of 
+			  samples. 
+			  </td></tr>
+			  
+			  <tr><td VALIGN=top>
+			  <b>Options:</b>
+			  </td><td VALIGN=top>
+			  </td></tr>
+			  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-h/--help</tt>
+			  </td><td VALIGN=top>
+			  Prints the help message and exits   
+			  </td></tr> 
+
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-o/--output-dir &lt;string&gt;</tt>
+			  </td><td VALIGN=top>
+			  Sets the name of the directory in which Cuffdiff will write all of its 
+			  output.  The default is "./".
+			  </td></tr>
+			  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-L/--labels &lt;label1,label2,...,labelN&gt;</tt>
+			  </td><td VALIGN=top>
+			  Specify a label for each sample, which will be included in various output files 
+			  produced by Cuffdiff.
+			  </td></tr>
+			  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>-p/--num-threads &lt;int&gt;</tt>
+			  </td><td VALIGN=top>
+			  Use this many threads to align reads. The default is 1.
+			  </td></tr>
+			
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--total-hits-norm</tt>
+			  </td><td VALIGN=top>
+			  With this option, Cuffquant counts all fragments, including those not compatible with any reference transcript, towards the number of mapped fragments used in the FPKM denominator.  It is inactive by default.
+			  </td></tr>
+
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--compatible-hits-norm</tt>
+			  </td><td VALIGN=top>
+			  With this option, Cuffnorm counts only those fragments compatible with some reference transcript towards the number of mapped fragments used in the FPKM denominator.  It is active by default.  
+			  </td></tr>
+		    
+			  <tr><td VALIGN=top nowrap>	
+			  <tt>--library-type</tt>
+			  </td><td VALIGN=top>
+			  See <a href="#library">Library Types</a>
+			  </td></tr>
+			  <tr><td VALIGN=top nowrap>	
+			  <tt>--library-norm-method</tt>
+			  </td><td VALIGN=top>
+			  See <a href="#library_norm_meth">Library Normalization Methods</a>
+			  </td></tr>
+			  
+			  <tr><td VALIGN=top nowrap>
+			  <tt>--output-format</tt>
+			  </td><td VALIGN=top>
+			  See <a href="#output_options">Output format options</a>
+			  </td></tr>
+		  
+		  <tr><td VALIGN=top>
+		  <b>Advanced Options:</b>
+		  </td><td VALIGN=top>
+		  </td></tr>
+		  
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-v/--verbose</tt>
+		  </td><td VALIGN=top>
+		  Print lots of status updates and other diagnostic information.
+		  </td></tr>
+	  
+		  <tr><td VALIGN=top nowrap>
+		  <tt>-q/--quiet</tt>
+		  </td><td VALIGN=top>
+		  Suppress messages other than serious warnings and errors.
+		  </td></tr>
+
+		  <tr><td VALIGN=top nowrap>
+		  <tt>--no-update-check</tt>
+		  </td><td VALIGN=top>
+		  Turns off the automatic routine that contacts the Cufflinks server to check for a more 
+		  recent version.
+		  </td></tr>
+	
+		  </table><br/>
+		  <h2 id="cuffnorm_output">Cuffnorm Output</h2><br/>
+		  <p>Cuffnorm outputs a set of files containing normalized expression levels for each gene, transcript, TSS group, and CDS group in the experiment.  It does not perform differential expression analysis.  To assess the significance of changes in expression for genes and transcripts between conditions, use Cuffdiff. Cuffnorm's output files are useful when you have many samples and you simply want to cluster them or plot expression levels of genes important in your study.
+		  <p>By default, Cuffnorm reports expression levels in the "simple-table" tab-delimted text files.  The program also reports information about your samples and about the genes, transcripts, TSS groups, and CDS groups as tab delimited text files. Note that these files have a different format than the files used by Cuffdiff.  However, you can direct Cuffnorm to report its output in the same format as used by Cuffdiff if you wish.  Simply supply the option <tt>--output-format cuffdiff</tt> at the command line.
+		  <p>Cuffnorm will report both FPKM values and <strong>normalized</strong>, estimates for the number of fragments that originate from each gene, transcript, TSS group, and CDS group.  Note that because these counts are already normalized to account for differences in library size, they should not be used with downstream differential expression tools that require <strong>raw</strong> counts as input.  
+		  <p>To see the details of the simple table format used by Cuffnorm, refer to the simple table expression format, simple table sample attribute format, and simple table feature (e.g. gene) attribute format sections below.
+		</div>
+	  </div>
+	  </ol>
+    <h2 id="sample_sheets">Sample sheets for Cuffdiff and Cuffnorm</h2><br/>
+	<p>Both Cuffdiff and Cuffnorm can be run by specifying a list of SAM, BAM, or CXB files at the command line.  For analysis with many such files, specifying them in this way can be cumbersome and error-prone.  Both programs also allow you to specify these inputs in a simple, tab-delimited table.  Create a file called <tt>sample_sheet.txt</tt> or another name of your choice, and specify samples as follows, one per line:
+		 
+ 		<table CELLSPACING=15>
+ 		  <tr>
+ 			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+ 		  </tr>
+ 		  <tr>
+ 			<td VALIGN=top>1</td><td VALIGN=top>sample_id</td><td VALIGN=top><tt>C1_R1.sam</tt></td><td VALIGN=top>the path to the SAM/BAM/CXB file for this sample</td>
+ 		  </tr>
+ 		  <tr>
+ 			<td VALIGN=top>2</td><td VALIGN=top>group_label</td><td VALIGN=top><tt>C1</tt></td><td VALIGN=top>The condition label for this sample.  Replicates of a condition should share the same label</td>
+ 		  </tr>
+ 		  </table>
+ 		 <br/> 
+		 
+		 <p>To run Cuffdiff or Cuffnorm with a sample sheet, create one and then at the command line, provide the <tt>--use-sample-sheet</tt> option and replace the list of SAM/BAM/CXB files with the name of your sample sheet file, as follows:
+			 </p>
+			 <br/>
+	 		<blockquote>
+	 		cuffdiff --use-sample-sheet &lt;transcripts.gtf&gt; &lt;sample_sheet.txt&gt;
+	 		</blockquote>
+			 <br/>
+			  
+		 
+		 An example sample sheet might look like this:
+		 
+		 <pre>
+sample_id	group_label
+C1_R1.sam	C1
+C1_R2.sam	C1
+C2_R1.sam	C2
+C2_R2.sam	C2	
+		 </pre>
+		<br/> 
+		 
+	<h2 id="contrast_files">Contrast files for Cuffdiff</h2><br/>
+	<p>Cuffdiff, by default, compares each pair of conditions in your experiment.  If you have many conditions, this can create a lot of additional work for the program.  These extra conditions can cause Cuffdiff's output files to be very large, which can slow down <a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a> and other downstream analysis software. Often, you are not interested in all pairwise contrasts. Rather, you'd like to compare all conditions to a common control, or only look at matched pairs of samples.  You can specify the contrasts Cuffdiff should perform using a contrast file.  
+	
+	<p>Contrast files are simple, tab delimited text files.  They should have a single header line as the first line in the file, followed by one line for each contrast you'd like to perform.  The files should have two columns, as specified below:
+	 		<table CELLSPACING=15>
+	 		  <tr>
+	 			<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+	 		  </tr>
+	 		  <tr>
+	 			<td VALIGN=top>1</td><td VALIGN=top>condition_A</td><td VALIGN=top><tt>Ctrl</tt></td><td VALIGN=top>A condition label.  Must match one of the labels specified through -L or in the sample sheet.</td>
+	 		  </tr>
+	 		  <tr>
+	 			<td VALIGN=top>1</td><td VALIGN=top>condition_B</td><td VALIGN=top><tt>Ctrl</tt></td><td VALIGN=top>A condition label.  Must match one of the labels specified through -L or in the sample sheet.</td>
+	 		  </tr>
+	 		  </table>
+	 		 <br/> 
+			 <p>
+		 	 To run Cuffdiff with a contrast file, simply provide the <tt>-C  &lt;contrasts.txt&gt;</tt> option at the command line.
+			<br/>
+			 An example table might look like this:
+		 
+		 <pre>
+condition_A	condition_B
+Ctrl	Mutant_X
+Ctrl	Mutant_Y
+Ctrl	Mutant_Z		
+		 </pre>
+		<br/> 
+	
+	
+	<h2 id="output_formats">Output formats</h2><br/>
+	<p>Cufflinks, Cuffdiff, and Cuffnorm all output numerous types of files.  They fall into one of the formats described below:
+		</p>
+		<br/>
+		<br/>
     <h2 id="fpkm_tracking_format">FPKM Tracking Files</h2><br/>
 
   FPKM tracking files use a generic format to output estimated expression values.  Each FPKM tracking file has the following format:
@@ -2097,9 +2478,77 @@ boost_version   104700
 				  </table>
 				 <br/>
   <h2 id="simple_table_expression_format">Simple-table expression format</h2><br/>
+  Cuffnorm reports two different types of files with this format: *.fpkm_table files and *.count_table files for each group of features: genes, transcripts, TSS groups, and CDS groups.  The files start with a column indicating the feature ID for each row. There is one subsequent column for each sample in the analysis:
+  <table CELLSPACING=15>
+  <tr>
+	<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+  </tr>
+  <tr>
+	<td VALIGN=top>1</td><td VALIGN=top>tracking_id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript)</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>2</td><td VALIGN=top>conditionX_N</td><td VALIGN=top><tt>=</tt></td><td VALIGN=top>The FPKM value (for *.fpkm_table files) or normalized fragment count (for *.count_table files) for this feature in replicate N of conditionX</td>
+  </tr>
+   </table>
+  <br/>
+  
   <h2 id="simple_table_gene_attr_format">Simple-table gene attributes format</h2><br/>
+  Cuffdiff reports metadata for each gene, transcript, TSS group, and CDS group in the following tab delimited format:
+  <table CELLSPACING=15>
+  <tr>
+	<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+  </tr>
+  <tr>
+	<td VALIGN=top>1</td><td VALIGN=top>tracking_id</td><td VALIGN=top><tt>TCONS_00000001</tt></td><td VALIGN=top>A unique identifier describing the object (gene, transcript, CDS, primary transcript)</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>2</td><td VALIGN=top>class_code</td><td VALIGN=top><tt>=</tt></td><td VALIGN=top>The <tt>class_code</tt> attribute for the object, or "-" if not a transcript, or if <tt>class_code</tt> isn't present</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>3</td><td VALIGN=top>nearest_ref_id</td><td VALIGN=top><tt>NM_008866.1</tt></td><td VALIGN=top>The reference transcript to which the class code refers, if any</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>4</td><td VALIGN=top>gene_id</td><td VALIGN=top><tt>NM_008866</tt></td><td VALIGN=top>The <tt>gene_id</tt>(s) associated with the object</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>5</td><td VALIGN=top>gene_short_name</td><td VALIGN=top><tt>Lypla1</tt></td><td VALIGN=top>The <tt>gene_short_name</tt>(s) associated with the object</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>6</td><td VALIGN=top>tss_id</td><td VALIGN=top><tt>TSS1</tt></td><td VALIGN=top>The <tt>tss_id</tt> associated with the object, or "-" if not a transcript/primary transcript, or if <tt>tss_id</tt> isn't present</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>7</td><td VALIGN=top>locus</td><td VALIGN=top><tt>chr1:4797771-4835363</tt></td><td VALIGN=top>Genomic coordinates for easy browsing to the object</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>8</td><td VALIGN=top>length</td><td VALIGN=top><tt>2447</tt></td><td VALIGN=top>The number of base pairs in the transcript, or '-' if not a transcript/primary transcript</td>
+  </tr>
+  </table>
+ <br/> 
+  
   <h2 id="simple_table_sample_attr_format">Simple-table sample attributes format</h2><br/>
-
+  Cuffnorm reports some information about each sample (i.e. each SAM, BAM, or CXB file) in the analysis in the following format:
+  <table CELLSPACING=15>
+  <tr>
+	<td VALIGN=top><strong>Column number</strong></td><td VALIGN=top><strong>Column name</strong></td><td VALIGN=top><strong>Example</strong></td><td VALIGN=top><strong>Description</strong></td>
+  </tr>
+  <tr>
+	<td VALIGN=top>1</td><td VALIGN=top>sample_id</td><td VALIGN=top><tt>q1_0</tt></td><td VALIGN=top>A unique identifier describing the sample. Has the format conditionX_N, meaning replicate N of conditionX.</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>2</td><td VALIGN=top>file</td><td VALIGN=top><tt>C1_R1.sam</tt></td><td VALIGN=top>The path to the file (SAM/BAM/CXB) attribute for the sample</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>3</td><td VALIGN=top>total_mass</td><td VALIGN=top><tt>94610</tt></td><td VALIGN=top>The total (un-normalized) number of fragment alignments for this sample</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>4</td><td VALIGN=top>internal_scale</td><td VALIGN=top><tt>1.0571</tt></td><td VALIGN=top>The scaling factor used to normalize this sample library size.</td>
+  </tr>
+  <tr>
+	<td VALIGN=top>5</td><td VALIGN=top>external_scale</td><td VALIGN=top><tt>1</tt></td><td VALIGN=top>Reserved</td>
+  </tr>
+  </table>
+ <br/> 
+  
   <h2 id="library">Library Types</h2><br/>
   <p>
   In cases where Cufflinks cannot determine the platform and protocol used to generate 
