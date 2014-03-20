@@ -1352,14 +1352,6 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
         bias_run = false;
 	}
     
-    fprintf(outfiles.bias_out, "condition_name\treplicate_num\tparam\tpos_i\tpos_j\tvalue\n");
-    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
-    {
-        if (rg_props->bias_learner())
-            rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
-    }
-    
-    
     // Allow the multiread tables to do their thing...
     BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
