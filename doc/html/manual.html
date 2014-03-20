@@ -108,14 +108,14 @@
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-2.1.0.Linux_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.1.1.Linux_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Linux x86_64 binary</a></td>
                   </tr>
                   <tr>
                     <td><a
-                        href="./downloads/cufflinks-2.1.0.OSX_x86_64.tar.gz"
+                        href="./downloads/cufflinks-2.1.1.OSX_x86_64.tar.gz"
                         onclick="javascript:
                         pageTracker._trackPageview('/downloads/cufflinks');
                         ">&nbsp;&nbsp;&nbsp;Mac OS X x86_64 binary</a></td>
@@ -248,6 +248,7 @@
   	      <li><a href="#merger_input">Input Files</a></li>
   	  	  <li><a href="#merger_output">Output Files</a></li>
  	    </ul>
+		<li><a href="#cuffquant">Running Cuffquant</a></li>
   	    <li><a href="#cuffdiff">Running Cuffdiff</a></li>
 		<ul>
   	      <li><a href="#cuffdiff_input">Input Files</a></li>
@@ -264,9 +265,16 @@
 				<li><a href="#run_info">Run info</a></li>
 			</ul>
  	    </ul>
- 	    <li><a href="#fpkm_tracking_format">FPKM Tracking Format</a></li>
-		<li><a href="#count_tracking_format">Count Tracking Format</a></li>
-		<li><a href="#read_group_tracking_format">Read Group Tracking Format</a></li>
+		<li><a href="#cuffnorm">Running Cuffnorm</a></li>
+		<li><a href="#output_formats">Output formats</a>
+			<ul>
+		 	    <li><a href="#fpkm_tracking_format">FPKM Tracking format</a></li>
+				<li><a href="#count_tracking_format">Count Tracking format</a></li>
+				<li><a href="#read_group_tracking_format">Read Group Tracking format</a></li>
+				<li><a href="#simple_table_expression_format">Simple-table expression format</a></li>
+				<li><a href="#simple_table_gene_attr_format">Simple-table gene attributes format</a></li>
+				<li><a href="#simple_table_sample_attr_format">Simple-table sample attributes format</a></li>
+			</ul>
 		<li><a href="#library">Library Types</a></li>
 		<li><a href="#library_norm_meth">Library Normalization Methods</a></li>
 		<li><a href="#dispersion_meth">Cross-replicate dispersion estimation methods</a></li>
@@ -784,47 +792,42 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-h</tt>
 	  </td><td VALIGN=top>
-	  Prints the usage message and exits.
+	  Prints the help message and exits   
 	  </td></tr> 
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-o &lt;outprefix&gt;</tt>
 	  </td><td VALIGN=top>
-	  All output files created by Cuffcompare will have this prefix (e.g. &lt;outprefix&gt;.stats, &lt;outprefix&gt;.loci, &lt;outprefix&gt;.tracking, etc.).
-	  If this option is not provided the default output prefix being used is <tt>cuffcmp</tt>
+	  All output files created by Cuffcompare will have this prefix (e.g. &lt;outprefix&gt;.loci, &lt;outprefix&gt;.tracking, etc.).
+	  If this option is not provided the default output prefix being used is: "cuffcmp"
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-r &lt;annotation.gff&gt;</tt>
+	  <tt>-r</tt>
 	  </td><td VALIGN=top>
-	  A reference annotation in <a href="gff.html">GFF file</a> should be provided so Cuffcompare can match each 
-	  sample (&lt;cuff1.gtf&gt; ... &lt;cuffN.gtf&gt;) against these reference transcripts and tag isoforms 
-	  as overlapping, matching, or novel where appropriate. See the <a href="#refmap">refmap</a> and 
+	  An optional "reference" annotation <a href="gff.html">GFF file</a>. Each sample is matched against
+	  this file, and sample isoforms are tagged as overlapping, matching, or 
+	  novel where appropriate.  See the <a href="#refmap">refmap</a> and 
 	  <a href="#tmap">tmap</a> output file descriptions below.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-R</tt>
 	  </td><td VALIGN=top>
-	  When reference annotation is provided (<tt>-r</tt>), this option causes <tt>cuffcompare</tt> to 
-	  ignore reference annotation transcripts that are not overlapped by any transcript in
+	  If <tt>-r</tt> was specified, this option causes <tt>cuffcompare</tt> to 
+	  ignore reference transcripts that are not overlapped by any transcript in
 	  one of <tt>cuff1.gtf</tt>,...,<tt>cuffN.gtf</tt>.  Useful for ignoring
-	  annotated transcripts that are not "expressed" in the RNA-Seq samples and thus
-	  adjusting the "Sensitivity" (Sn) values reported in the &lt;outprefix&gt;.stats file.
+	  annotated transcripts that are not present in your RNA-Seq samples and thus
+	  adjusting the "sensitivity" calculation in the accuracy report
+	  written in the &lt;outprefix&gt; file
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-Q</tt>
+	  <tt>-s &lt;seq_dir&gt;</tt>
 	  </td><td VALIGN=top>
-	  When reference annotation is provided (<tt>-r</tt>), this option causes <tt>cuffcompare</tt> to 
-	  ignore query transcripts (transfrags) that are not overlapped by any reference
-	  transcript. This effectively directs Cuffcompare to discard any "novel" loci in the RNA-Sample
-	  (i.e. loci with transfrags having no exon-overlapping reference transcripts in the given annotation) 
-	  and thus artificially increasing the "Specificity" (Sp) values reported in the &lt;outprefix&gt;.stats file.
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-s &lt;genome.fa&gt;</tt>
-	  </td><td VALIGN=top>
-	  Some optional transcript classification functions can make use of the assembled transcript sequence,
-	  which Cuffcompare can extract from the genome if this option is provided. For example 
-	  transcripts consisting mostly of lower-case bases are classified as repeats (class code 'r').
-	  &lt;genome.fa&gt; should be a multi-fasta file with the target genome sequences.
+	  Causes <tt>cuffcompare</tt> to look into <seq_dir> for fasta files with the 
+	  underlying genomic sequences (one file per contig) against which your 
+	  reads were aligned for some optional classification functions.  For example,
+	  Cufflinks transcripts consisting mostly of lower-case bases are classified
+	  as repeats.  Note that &lt;seq_dir&gt; <strong>must</strong> contain one
+	  fasta file per reference chromosome, and each file must be named after
+	  the chromosome, and have a <tt>.fa</tt> or <tt>.fasta</tt> extension.
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
 	  <tt>-C</tt>
@@ -834,27 +837,10 @@ s6.25mer.txt-913508	16	chr1 4482736 255 14M431N11M * 0 0 \
 	   fully contained/covered (with the same compatible intron structure) by other transfrags in the same locus. 
 	  </td></tr>
 	  <tr><td VALIGN=top nowrap>
-	  <tt>-G</tt>
-	  </td><td VALIGN=top>
-	   Prevent the filtering of redundant isoforms in the input data. By default Cuffcompare discards overlapping 
-	   transfrags which appear to come from the same isoform (same intronic structure), only keeping the 
-	   longest transcript from such a "redundant" group. However when the input transcripts are not transfrags 
-	   assembled by a single Cufflinks run, this option instructs Cuffcompare to preserve and analyse all the 
-	   input transcripts as given, without discarding the shorter redundant transcripts.
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
-	  <tt>-F</tt>
-	  </td><td VALIGN=top>
-	   A "softer" version of the -G option above, this option will prevent the filtering of "intron-redundant" 
-	   input transfrags if they share the first intron (at the 5'end of the transcript). This will allow 
-	   for example the preservation of isoforms of different lengths but with the same starting (5') exon (intron), while 
-	   still filtering out shorter redundant isoforms that do not share the same 5' end.
-	  </td></tr>
-	  <tr><td VALIGN=top nowrap>
 	  <tt>-V</tt>
 	  </td><td VALIGN=top>
-	   Cuffcompare prints some progress messages to stderr, also showing warning messages if any inconsistencies
-       or potential issues are detected while parsing the input GFF/GTF file(s).
+	   Cuffcompare is a little more verbose about what it's doing, printing messages to stderr, and it will also show warning messages about any inconsistencies or potential issues 
+	   found while reading the given GFF file(s).
 	  </td></tr>
 	  </table><br/>
   <h2 id="cuffcomp_output">Cuffcompare Output</h2><br/>
@@ -1253,6 +1239,7 @@ TCONS_00000045 XLOC_000023 Tcea|uc007afj.1	j	\
 			<br/>
 			<br/>
 			</ol>
+		<h2 id="cuffquant">Running Cuffquant</h2><br/>
 		<h2 id="cuffdiff">Running Cuffdiff</h2><br/>
 		<p>
 		Cufflinks includes a program, "Cuffdiff", that you can use to find significant changes 
@@ -1931,6 +1918,8 @@ boost_version   104700
 	</div>
   </div>
   </ol>
+    <h2 id="cuffnorm">Running Cuffnorm</h2><br/>
+    <h2 id="output_formats">Output formats</h2><br/>
     <h2 id="fpkm_tracking_format">FPKM Tracking Files</h2><br/>
 
   FPKM tracking files use a generic format to output estimated expression values.  Each FPKM tracking file has the following format:
@@ -2107,6 +2096,10 @@ boost_version   104700
 				  </tr>
 				  </table>
 				 <br/>
+  <h2 id="simple_table_expression_format">Simple-table expression format</h2><br/>
+  <h2 id="simple_table_gene_attr_format">Simple-table gene attributes format</h2><br/>
+  <h2 id="simple_table_sample_attr_format">Simple-table sample attributes format</h2><br/>
+
   <h2 id="library">Library Types</h2><br/>
   <p>
   In cases where Cufflinks cannot determine the platform and protocol used to generate 

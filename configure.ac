@@ -7,7 +7,7 @@ m4_include([ax_check_zlib.m4])
 m4_include([ax_check_eigen.m4])
 
 define([svnversion], esyscmd([sh -c "svnversion|tr -d '\n'"]))dnl
-AC_INIT([cufflinks], [2.1.1], [cole@cs.umd.edu])
+AC_INIT([cufflinks], [2.2.0], [cole@cs.umd.edu])
 AC_DEFINE(SVN_REVISION, "svnversion", [SVN Revision])
 
 AC_CONFIG_SRCDIR([config.h.in])

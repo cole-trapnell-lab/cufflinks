@@ -109,6 +109,11 @@ struct Outfiles
 	FILE* tss_group_rep_tracking_out;
 	FILE* gene_rep_tracking_out;
 	FILE* cds_rep_tracking_out;
+
+    FILE* isoform_attr_out;
+	FILE* tss_group_attr_out;
+	FILE* gene_attr_out;
+	FILE* cds_attr_out;
     
     FILE* run_info_out;
     FILE* read_group_info_out;

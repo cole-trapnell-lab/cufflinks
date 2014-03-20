@@ -493,7 +493,6 @@ void print_FPKM_simple_table(FILE* fout,
             }
         }
 	}
-	fprintf(fout, "\n");
     for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
 	{
         const string& description = itr->first;
@@ -535,7 +534,6 @@ void print_count_simple_table(FILE* fout,
             }
         }
 	}
-	fprintf(fout, "\n");
     for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
 	{
         const string& description = itr->first;
@@ -664,6 +662,45 @@ void print_read_group_simple_table_info(FILE* fout,
     }
 }
 
+void print_feature_attr_simple_table(FILE* fout,
+                                     const FPKMTrackingTable& tracking)
+{
+ 	fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength");
+	
+	fprintf(fout, "\n");
+	for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+	{
+        const string& description = itr->first;
+        const string& locus_tag = itr->second.locus_tag;
+        const string& ref_match = itr->second.ref_match;
+        int length = itr->second.length;
+        char length_buff[33] = "-";
+        if (length)
+            sprintf(length_buff, "%d", length);
+        const set<string>& gene_names = itr->second.gene_names;
+        const set<string>& gene_ids = itr->second.gene_ids;
+        const set<string>& tss_ids = itr->second.tss_ids;
+        char class_code = itr->second.classcode ? itr->second.classcode : '-';
+        string all_gene_names = cat_strings(gene_names);
+		if (all_gene_names == "")
+			all_gene_names = "-";
+        string all_gene_ids = cat_strings(gene_ids);
+		if (all_gene_ids == "")
+			all_gene_ids = "-";
+        string all_tss_ids = cat_strings(tss_ids);
+		if (all_tss_ids == "")
+			all_tss_ids = "-";
+        fprintf(fout, "%s\t%c\t%s\t%s\t%s\t%s\t%s\t%s\n",
+                description.c_str(),
+                class_code,
+                ref_match.c_str(),
+                all_gene_ids.c_str(),
+                all_gene_names.c_str(),
+                all_tss_ids.c_str(),
+                locus_tag.c_str(),
+                length_buff);
+    }
+}
 
 void print_run_info(FILE* fout)
 {
@@ -1020,6 +1057,22 @@ void write_output_simple_table_format(const vector<boost::shared_ptr<ReadGroupPr
 	FILE* fcds_count_tracking =  outfiles.cds_count_tracking_out;
 	fprintf(stderr, "Writing CDS-level count tracking\n");
 	print_count_simple_table(fcds_count_tracking,tracking.cds_fpkm_tracking);
+
+    FILE* fiso_attr =  outfiles.isoform_attr_out;
+	fprintf(stderr, "Writing isoform-level attributes\n");
+	print_feature_attr_simple_table(fiso_attr,tracking.isoform_fpkm_tracking);
+	
+	FILE* ftss_attr =  outfiles.tss_group_attr_out;
+	fprintf(stderr, "Writing TSS group-level attributes\n");
+	print_feature_attr_simple_table(ftss_attr,tracking.tss_group_fpkm_tracking);
+	
+	FILE* fgene_attr =  outfiles.gene_attr_out;
+	fprintf(stderr, "Writing gene-level attributes\n");
+	print_feature_attr_simple_table(fgene_attr,tracking.gene_fpkm_tracking);
+	
+	FILE* fcds_attr =  outfiles.cds_attr_out;
+	fprintf(stderr, "Writing CDS-level attributes\n");
+	print_feature_attr_simple_table(fcds_attr,tracking.cds_fpkm_tracking);
     
     FILE* fread_group_info =  outfiles.read_group_info_out;
 	fprintf(stderr, "Writing read group info\n");
@@ -1566,6 +1619,50 @@ void open_outfiles_for_writing_simple_table_format(Outfiles& outfiles)
 		exit(1);
 	}
 	outfiles.gene_count_tracking_out = gene_count_out;
+ 
+    char isoform_attr_name[filename_buf_size];
+	sprintf(isoform_attr_name, "%s/isoforms.attr_table", output_dir.c_str());
+	FILE* isoform_attr_out = fopen(isoform_attr_name, "w");
+	if (!isoform_attr_out)
+	{
+		fprintf(stderr, "Error: cannot open isoform-level attribute table %s for writing\n",
+				isoform_attr_name);
+		exit(1);
+	}
+	outfiles.isoform_attr_out = isoform_attr_out;
+    
+	char tss_group_attr_name[filename_buf_size];
+	sprintf(tss_group_attr_name, "%s/tss_groups.attr_table", output_dir.c_str());
+	FILE* tss_group_attr_out = fopen(tss_group_attr_name, "w");
+	if (!tss_group_attr_out)
+	{
+		fprintf(stderr, "Error: cannot open TSS group-level attribute table %s for writing\n",
+				tss_group_attr_name);
+		exit(1);
+	}
+	outfiles.tss_group_attr_out = tss_group_attr_out;
+    
+	char cds_attr_name[filename_buf_size];
+	sprintf(cds_attr_name, "%s/cds.attr_table", output_dir.c_str());
+	FILE* cds_attr_out = fopen(cds_attr_name, "w");
+	if (!cds_attr_out)
+	{
+		fprintf(stderr, "Error: cannot open CDS level attribute table %s for writing\n",
+				cds_attr_name);
+		exit(1);
+	}
+	outfiles.cds_attr_out = cds_attr_out;
+	
+	char gene_attr_name[filename_buf_size];
+	sprintf(gene_attr_name, "%s/genes.attr_table", output_dir.c_str());
+	FILE* gene_attr_out = fopen(gene_attr_name, "w");
+	if (!gene_attr_out)
+	{
+		fprintf(stderr, "Error: cannot open gene-level attribute table %s for writing\n",
+				gene_attr_name);
+		exit(1);
+	}
+	outfiles.gene_attr_out = gene_attr_out;
     
     char read_group_info_name[filename_buf_size];
 	sprintf(read_group_info_name, "%s/samples.table", output_dir.c_str());
