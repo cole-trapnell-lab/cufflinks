@@ -404,7 +404,23 @@ private:
 // provided to cuffnorm and cuffdiff.
 struct CheckedParameters
 {
-    CheckedParameters() {} //needs an empty constructor for serialization
+    CheckedParameters() :
+        frag_len_mean(0.0),
+        frag_len_std_dev(0.0),
+        corr_bias(0.0),
+        frag_bias_mode(VLMM),
+        corr_multireads(false),
+        max_mle_iterations(false),
+        min_mle_accuracy(0.0),
+        max_bundle_frags(0.0),
+        max_frags_multihits(0.0),
+        no_effective_length_correction(false),
+        no_length_correction(false),
+        ref_gtf_file_path(""),
+        ref_gtf_crc(0),
+        mask_gtf_file_path(""),
+        mask_gtf_crc(0)
+    {} //needs an empty constructor for serialization
     
     double frag_len_mean;
     double frag_len_std_dev;

@@ -1659,7 +1659,7 @@ void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupPr
         {
             fprintf(stderr, "Error reference gene annotation differs between samples!\n");
             fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i - 1]->file_path().c_str(), cp_i.ref_gtf_file_path.c_str(), cp_i.ref_gtf_crc);
-            fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i - 1]->file_path().c_str(), cp_j.ref_gtf_file_path.c_str(), cp_j.ref_gtf_crc);
+            fprintf(stderr, "\t%s\t%s:\t%u!\n", all_read_groups[i]->file_path().c_str(), cp_j.ref_gtf_file_path.c_str(), cp_j.ref_gtf_crc);
             exit(1);
         }
         
