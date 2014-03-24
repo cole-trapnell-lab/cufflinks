@@ -10,13 +10,18 @@ echo "packing up $1.tar.gz, using boost in $2, linking against $3 and using BAM 
 mkdir $1
 #make clean
 make distclean
-if [[ $(uname -m) = "x86_64" ]]; then
-echo "Linking statically on x86_64 (only for gcc 4.5+).."
-export LDFLAGS="-static-libgcc -static-libstdc++"
+if [[ $(uname) = "Darwin" ]]
+then
+    export CFLAGS="-mmacosx-version-min=10.6"
+    export LDFLAGS="-static-libstdc++"
+elif [ $(uname -m) = "x86_64"]
+then
+    echo "Linking statically on x86_64 (only for gcc 4.5+).."
+    export LDFLAGS="-static-libgcc -static-libstdc++"
+else
+    echo "Unrecognized architecture"
 fi
-if [[ $(uname) = "Darwin" ]]; then
-export CFLAGS="-mmacosx-version-min=10.6"
-fi
+
 
 l2="$2"
 l3="$3"
