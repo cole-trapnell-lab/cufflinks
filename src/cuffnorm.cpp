@@ -478,7 +478,7 @@ void print_count_tracking(FILE* fout,
 void print_FPKM_simple_table(FILE* fout,
                              const FPKMTrackingTable& tracking)
 {
-	fprintf(fout,"tracking_id\t");
+	fprintf(fout,"tracking_id");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
 	if (first_itr != tracking.end())
 	{
@@ -519,7 +519,7 @@ void print_FPKM_simple_table(FILE* fout,
 void print_count_simple_table(FILE* fout,
                              const FPKMTrackingTable& tracking)
 {
-	fprintf(fout,"tracking_id\t");
+	fprintf(fout,"tracking_id");
 	FPKMTrackingTable::const_iterator first_itr = tracking.begin();
 	if (first_itr != tracking.end())
 	{
