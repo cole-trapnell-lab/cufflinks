@@ -12,7 +12,7 @@
 using namespace boost;
 
 #if ENABLE_THREADS
-mutex gene_id_lock;
+boost::mutex gene_id_lock;
 #endif
 
 int next_isoform_id = 1;

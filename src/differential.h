@@ -27,6 +27,7 @@
 #include "abundances.h"
 #include "jensen_shannon.h"
 #include "replicates.h"
+#include "tracking.h"
 
 using namespace std;
 
@@ -64,7 +65,7 @@ public:
 	double p_value;
 	double corrected_p;
 	
-    shared_ptr<SampleDifferenceMetaData> meta_data;
+    boost::shared_ptr<SampleDifferenceMetaData> meta_data;
 
 	TestStatus test_status;
 	bool significant;
@@ -81,7 +82,7 @@ public:
 };
 
 typedef map<string, SampleDifference > SampleDiffs;
-typedef map<string, shared_ptr<SampleDifferenceMetaData> > SampleDiffMetaDataTable;
+typedef map<string, boost::shared_ptr<SampleDifferenceMetaData> > SampleDiffMetaDataTable;
 
 struct Outfiles
 {
@@ -108,6 +109,11 @@ struct Outfiles
 	FILE* tss_group_rep_tracking_out;
 	FILE* gene_rep_tracking_out;
 	FILE* cds_rep_tracking_out;
+
+    FILE* isoform_attr_out;
+	FILE* tss_group_attr_out;
+	FILE* gene_attr_out;
+	FILE* cds_attr_out;
     
     FILE* run_info_out;
     FILE* read_group_info_out;
@@ -125,100 +131,6 @@ struct Tests
 	vector<vector<SampleDiffs> > diff_splicing_tests; // to be performed on the isoforms of a single tss group
 	vector<vector<SampleDiffs> > diff_promoter_tests; // to be performed on the tss groups of a single gene
 	vector<vector<SampleDiffs> > diff_cds_tests; // to be performed on the cds groups of a single gene
-};
-
-struct FPKMContext
-{
-	FPKMContext(double cm,
-                double cv,
-                double cuv,
-                double cdv,
-                const CountPerReplicateTable& cpr,
-                double r,
-                const FPKMPerReplicateTable& fpr,
-                double v,
-                double fcl,
-                double fch,
-                AbundanceStatus s,
-                const StatusPerReplicateTable& spr,
-                const vector<double>& fs,
-                double g)
-		: count_mean(cm),
-          count_var(cv),
-          count_uncertainty_var(cuv),
-          count_dispersion_var(cdv),
-          count_per_rep(cpr),
-          fpkm_per_rep(fpr),
-          FPKM(r),
-          FPKM_variance(v),
-          FPKM_conf_lo(fcl),
-          FPKM_conf_hi(fch),
-          status(s),
-          status_per_rep(spr),
-          fpkm_samples(fs),
-          gamma(g) {}
-    
-	double count_mean;
-    double count_var;
-    double count_uncertainty_var;
-    double count_dispersion_var;
-    CountPerReplicateTable count_per_rep;
-    FPKMPerReplicateTable fpkm_per_rep;
-    StatusPerReplicateTable status_per_rep;
-	double FPKM;
-	double FPKM_variance;
-    double FPKM_conf_lo;
-    double FPKM_conf_hi;
-    AbundanceStatus status;
-    vector<double> fpkm_samples;
-    double gamma;
-};
-
-struct FPKMTracking
-{
-	string locus_tag;
-	char classcode;
-	set<string> tss_ids; // for individual isoforms only
-    set<string> gene_ids;
-	set<string> gene_names;
-	set<string> protein_ids;
-	string description; // isoforms or tss groups (e.g.) involved in this test
-	string ref_match;
-    int length;
-	
-	TestStatus test_status;
-	
-	vector<FPKMContext> fpkm_series;
-};
-
-typedef map<string,  FPKMTracking> FPKMTrackingTable;
-
-struct Tracking
-{
-	FPKMTrackingTable isoform_fpkm_tracking;
-	FPKMTrackingTable tss_group_fpkm_tracking;
-	FPKMTrackingTable gene_fpkm_tracking;
-	FPKMTrackingTable cds_fpkm_tracking;
-    
-    void clear() 
-    {
-        isoform_fpkm_tracking.clear();
-        tss_group_fpkm_tracking.clear();
-        gene_fpkm_tracking.clear();
-        cds_fpkm_tracking.clear();
-    }
-};
-
-struct SampleAbundances
-{
-    string locus_tag;
-	AbundanceGroup transcripts;
-	vector<AbundanceGroup> primary_transcripts;
-	vector<AbundanceGroup> gene_primary_transcripts;
-	vector<AbundanceGroup> cds;
-	vector<AbundanceGroup> gene_cds;
-	vector<AbundanceGroup> genes;
-	double cluster_mass;
 };
 
 #if ENABLE_THREADS
@@ -249,17 +161,17 @@ public:
     
     void register_locus(const string& locus_id);
     void abundance_avail(const string& locus_id, 
-                         shared_ptr<SampleAbundances> ab, 
+                         boost::shared_ptr<SampleAbundances> ab, 
                          size_t factory_id);
     void test_finished_loci();
-    void perform_testing(vector<shared_ptr<SampleAbundances> >& abundances);
-    void record_tracking_data(vector<shared_ptr<SampleAbundances> >& abundances);
-    bool all_samples_reported_in(vector<shared_ptr<SampleAbundances> >& abundances);
+    void perform_testing(vector<boost::shared_ptr<SampleAbundances> > abundances);
+    void record_tracking_data(vector<boost::shared_ptr<SampleAbundances> >& abundances);
+    bool all_samples_reported_in(vector<boost::shared_ptr<SampleAbundances> >& abundances);
     bool all_samples_reported_in(const string& locus_id);
     
     void clear_tracking_data() { _tracking->clear(); }
     
-    typedef list<pair<string, vector<shared_ptr<SampleAbundances> > > > launcher_sample_table;
+    typedef list<pair<string, vector<boost::shared_ptr<SampleAbundances> > > > launcher_sample_table;
     
 private:
     
@@ -276,14 +188,17 @@ private:
 
 extern double min_read_count;
 
-void sample_worker(const RefSequenceTable& rt,
+void sample_worker(bool non_empty,
+                   boost::shared_ptr<HitBundle> bundle,
+                   const RefSequenceTable& rt,
                    ReplicatedBundleFactory& sample_factory,
-                   shared_ptr<SampleAbundances> abundance,
+                   boost::shared_ptr<SampleAbundances> abundance,
                    size_t factory_id,
-                   shared_ptr<TestLauncher> launcher);
+                   boost::shared_ptr<TestLauncher> launcher,
+                   bool calculate_variance);
 
 void test_differential(const string& locus_tag,
-					   const vector<shared_ptr<SampleAbundances> >& samples,
+					   const vector<boost::shared_ptr<SampleAbundances> >& samples,
                        const vector<pair<size_t, size_t> >& constrasts,
 					   Tests& tests,
 					   Tracking& tracking);
@@ -298,3 +213,5 @@ extern int locus_num_threads;
 #endif
 
 #endif
+
+void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups);

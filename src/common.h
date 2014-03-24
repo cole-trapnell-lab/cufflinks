@@ -21,10 +21,27 @@
 #include <boost/math/distributions/normal.hpp> 
 using boost::math::normal;
 
+#include <boost/archive/tmpdir.hpp>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/export.hpp>
+
 #include <boost/foreach.hpp>
 
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <boost/crc.hpp>
 
 // Non-option globals
 extern bool final_est_run;
@@ -118,6 +135,7 @@ extern double min_outlier_p;
 extern std::string default_dispersion_method;
 extern std::string default_lib_norm_method;
 extern std::string default_cufflinks_lib_norm_method;
+extern std::string default_output_format;
 
 // SECRET OPTIONS: 
 // These options are just for instrumentation and benchmarking code
@@ -254,6 +272,14 @@ enum LibNormalizationMethod
     ABSOLUTE // Requires spike-in controls, not yet implemented
 };
 
+enum OutputFormat
+{
+    OUTPUT_FMT_NOT_SET,
+    CUFFDIFF_OUTPUT_FMT,
+    SIMPLE_TABLE_OUTPUT_FMT
+};
+
+
 class EmpDist
 {
 	//Vectors only valid between min and max!
@@ -265,6 +291,23 @@ class EmpDist
 	int _min;
 	int _max;
 	FLDSource _source;
+    
+    EmpDist() {}
+    
+    friend std::ostream & operator<<(std::ostream &os, const EmpDist &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & _pdf;
+        ar & _cdf;
+        ar & _mode;
+        ar & _mean;
+        ar & _std_dev;
+        ar & _min;
+        ar & _max;
+        ar & _source;
+    }
     
 public:
 	EmpDist(std::vector<double>& pdf, std::vector<double>& cdf, int mode, double mean, double std_dev, int min, int max, FLDSource source)
@@ -337,6 +380,118 @@ struct LocusCount
     int num_transcripts;
     std::vector<std::string> gene_ids;
     std::vector<std::string> gene_short_names;
+    
+private:
+    
+    LocusCount() {} //needs an empty constructor for serialization
+
+    friend std::ostream & operator<<(std::ostream &os, const LocusCount &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & locus_desc;
+        ar & count;
+        ar & num_transcripts;
+        ar & gene_ids;
+        ar & gene_short_names;
+    }
+};
+
+// This class stores user-supplied options that affect quantification
+// We'll serialize these into abundance files (i.e. CXB files)
+// so we can ensure that they're consistent across all samples
+// provided to cuffnorm and cuffdiff.
+struct CheckedParameters
+{
+    CheckedParameters() :
+        frag_len_mean(0.0),
+        frag_len_std_dev(0.0),
+        corr_bias(0.0),
+        frag_bias_mode(VLMM),
+        corr_multireads(false),
+        max_mle_iterations(false),
+        min_mle_accuracy(0.0),
+        max_bundle_frags(0.0),
+        max_frags_multihits(0.0),
+        no_effective_length_correction(false),
+        no_length_correction(false),
+        ref_gtf_file_path(""),
+        ref_gtf_crc(0),
+        mask_gtf_file_path(""),
+        mask_gtf_crc(0)
+    {} //needs an empty constructor for serialization
+    
+    double frag_len_mean;
+    double frag_len_std_dev;
+    
+    // TODO: add CRCs for reference GTF, mask file
+    bool corr_bias;
+    
+    BiasMode frag_bias_mode;
+    bool corr_multireads;
+    
+    double max_mle_iterations;
+    double min_mle_accuracy;
+    
+    double max_bundle_frags;
+    double max_frags_multihits;
+    
+    bool no_effective_length_correction;
+    bool no_length_correction;
+    
+    std::string ref_gtf_file_path;
+    boost::crc_32_type::value_type ref_gtf_crc;
+    
+    std::string mask_gtf_file_path;
+    boost::crc_32_type::value_type mask_gtf_crc;
+    
+    friend std::ostream & operator<<(std::ostream &os, const CheckedParameters &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & frag_len_mean;
+        ar & frag_len_std_dev;
+        ar & corr_bias;
+        ar & frag_bias_mode;
+        ar & corr_multireads;
+        ar & max_mle_iterations;
+        ar & min_mle_accuracy;
+        ar & max_bundle_frags;
+        ar & max_frags_multihits;
+        ar & no_effective_length_correction;
+        ar & no_length_correction;
+        ar & ref_gtf_file_path;
+        ar & ref_gtf_crc;
+        ar & mask_gtf_file_path;
+        ar & mask_gtf_crc;
+    }
+    
+    bool operator!=(const CheckedParameters& rhs) const {
+        return !(*this == rhs);
+    }
+    
+    bool operator==(const CheckedParameters& rhs) const
+    {
+        return (frag_len_mean == rhs.frag_len_mean &&
+                frag_len_std_dev == rhs.frag_len_std_dev &&
+                corr_bias == rhs.corr_bias &&
+                frag_bias_mode  == rhs.frag_bias_mode &&
+                corr_multireads == rhs.corr_multireads &&
+                max_mle_iterations  == rhs.max_mle_iterations &&
+                min_mle_accuracy == rhs.min_mle_accuracy &&
+                max_bundle_frags == rhs.max_bundle_frags &&
+                max_frags_multihits == rhs.max_frags_multihits &&
+                no_effective_length_correction == rhs.no_effective_length_correction &&
+                no_length_correction == rhs.no_length_correction &&
+                ref_gtf_file_path == rhs.ref_gtf_file_path &&
+                ref_gtf_crc == rhs.ref_gtf_crc &&
+                mask_gtf_file_path == rhs.mask_gtf_file_path &&
+                mask_gtf_crc == rhs.mask_gtf_crc);
+                
+    }
+
 };
 
 class ReadGroupProperties
@@ -364,7 +519,7 @@ public:
     void normalized_map_mass(long double p)  { _norm_map_mass = p; }  
     
     boost::shared_ptr<EmpDist const> frag_len_dist() const { return _frag_len_dist; }
-    void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }  
+    void frag_len_dist(boost::shared_ptr<EmpDist const> p)  { _frag_len_dist = p; }
     
 	boost::shared_ptr<BiasLearner const> bias_learner() const { return _bias_learner; }
     void bias_learner(boost::shared_ptr<BiasLearner const> bl)  { _bias_learner = bl; } 
@@ -436,7 +591,76 @@ public:
     int replicate_num() const { return _replicate_num; }
     void replicate_num(int rn) { _replicate_num = rn; }
     
+    void ref_gtf(const std::string& file_path, const boost::crc_32_type& gtf_crc )
+    {
+        _checked_params.ref_gtf_file_path = file_path;
+        _checked_params.ref_gtf_crc = gtf_crc();
+    }
+
+    void mask_gtf(const std::string& file_path, const boost::crc_32_type& gtf_crc )
+    {
+        _checked_params.mask_gtf_file_path = file_path;
+        _checked_params.mask_gtf_crc = gtf_crc();
+    }
+
+    
+    const CheckedParameters& checked_parameters() const { return _checked_params; }
+    void checked_parameters(const CheckedParameters& rhs) { _checked_params = rhs; }
+    
+    // NOTE: this only picks up user-supplied options, not GTF files!
+    void collect_checked_parameters() {
+        
+        _checked_params.frag_len_mean = def_frag_len_mean;
+        _checked_params.frag_len_std_dev = def_frag_len_std_dev;
+        
+        // TODO: add CRCs for reference GTF, mask file, norm standards file if using.
+        _checked_params.corr_bias = corr_bias;
+        
+        _checked_params.frag_bias_mode = bias_mode;
+        _checked_params.corr_multireads = corr_multi;
+        
+        _checked_params.max_mle_iterations = max_mle_iterations;
+        _checked_params.min_mle_accuracy = mle_accuracy;
+        
+        _checked_params.max_bundle_frags = max_frags_per_bundle;
+        _checked_params.max_frags_multihits = max_frag_multihits;
+        
+        _checked_params.no_effective_length_correction = no_effective_length_correction;
+        _checked_params.no_length_correction = no_length_correction;
+    }
+    
+    
 private:
+    
+    friend std::ostream & operator<<(std::ostream &os, const ReadGroupProperties &gp);
+    friend class boost::serialization::access;
+    
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int /* file_version */){
+        ar & _strandedness;
+        ar & _std_mate_orient;
+        ar & _mate_strand_mapping;
+        ar & _platform;
+        ar & _total_map_mass;
+        ar & _norm_map_mass;
+        ar & _frag_len_dist;
+        // TODO: probably should serialize the bias parameters somehow.
+        //ar & _bias_learner;
+        //ar & _multi_read_table; // we should never need this, I think.
+        ar & _internal_scale_factor;
+        ar & _external_scale_factor;
+        //ar & _mass_dispersion_model;
+        ar & _common_scale_compatible_counts;
+        ar & _common_scale_total_counts;
+        ar & _raw_compatible_counts;
+        ar & _raw_total_counts;
+        //ar & _mle_error_model;
+        ar & _complete_fragments;
+        ar & _condition_name;
+        ar & _file_path;
+        ar & _replicate_num;
+        ar & _checked_params;
+    }
     
     Strandedness _strandedness;
     StandardMateOrientation _std_mate_orient;
@@ -463,7 +687,11 @@ private:
     std::string _condition_name;
     std::string _file_path;
     int _replicate_num;
+    
+    CheckedParameters _checked_params;
 };
+
+BOOST_SERIALIZATION_SHARED_PTR(ReadGroupProperties)
 
 extern std::map<std::string, ReadGroupProperties> library_type_table;
 
@@ -475,6 +703,10 @@ extern DispersionMethod dispersion_method;
 extern std::map<std::string, LibNormalizationMethod> lib_norm_method_table;
 extern LibNormalizationMethod lib_norm_method;
 
+extern std::map<std::string, OutputFormat> output_format_table;
+extern OutputFormat output_format;
+
+
 void print_library_table();
 void init_library_table();
 
@@ -484,6 +716,9 @@ void init_dispersion_method_table();
 void print_lib_norm_method_table();
 void init_lib_norm_method_table();
 void init_cufflinks_lib_norm_method_table();
+
+void print_output_format_table();
+void init_output_format_table();
 
 
 struct LibNormStandards
@@ -577,5 +812,5 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_NO_SCV_CORRECTION       317
 #define OPT_NORM_STANDARDS_FILE     318
 #define OPT_USE_SAMPLE_SHEET        319
-
+#define OPT_OUTPUT_FORMAT           320
 #endif

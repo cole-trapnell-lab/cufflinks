@@ -160,6 +160,12 @@ LibNormalizationMethod lib_norm_method = LIB_NORM_NOT_SET;
 
 boost::shared_ptr<const std::map<std::string, LibNormStandards> > lib_norm_standards;
 
+// Output format table for Cuffnorm:
+map<string, OutputFormat> output_format_table;
+string default_output_format = "simple-table"; // note: the default is only for cuffnorm, Cuffdiff always uess the cuffdiff format
+OutputFormat output_format = OUTPUT_FMT_NOT_SET;
+
+
 #if ENABLE_THREADS
 boost::thread_specific_ptr<std::string> bundle_label;
 #else
@@ -355,20 +361,6 @@ void init_library_table()
     //global_read_properties = &(library_type_table.find(default_library_type)->second);
 }
 
-//string get_dispersion_method_str(DispersionMethod disp_meth)
-//{
-//    switch (disp_meth)
-//    {
-//        case POOLED:
-//            return "pooled";
-//        case PER_CONDITION:
-//            return "per-condition";
-//        case BLIND:
-//            return "blind";
-//    }
-//    return "";
-//}
-
 void print_library_table()
 {
     fprintf (stderr, "\nSupported library types:\n");
@@ -439,6 +431,30 @@ void print_lib_norm_method_table()
          ++itr)
     {
         if (itr->first == default_lib_norm_method)
+        {
+            fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
+        }
+        else
+        {
+            fprintf(stderr, "\t%s\n", itr->first.c_str());
+        }
+    }
+}
+
+void init_output_format_table()
+{
+    output_format_table["cuffdiff"] = CUFFDIFF_OUTPUT_FMT;
+    output_format_table["simple-table"] = SIMPLE_TABLE_OUTPUT_FMT;
+}
+
+void print_output_format_table()
+{
+    fprintf (stderr, "\nSupported output formats:\n");
+    for (map<string, OutputFormat>::const_iterator itr = output_format_table.begin();
+         itr != output_format_table.end();
+         ++itr)
+    {
+        if (itr->first == default_output_format)
         {
             fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
         }

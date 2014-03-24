@@ -11,10 +11,13 @@
 #include <map>
 #include <numeric>
 #include <boost/math/distributions/binomial.hpp>
+#include <boost/crc.hpp>
 
 #include "common.h"
 #include "bundles.h"
 #include "scaffolds.h"
+
+#include "abundances.h"
 
 using namespace std;
 using boost::math::binomial;
@@ -22,7 +25,7 @@ using boost::math::binomial;
 //struct ScaffoldSorter
 //{
 //	ScaffoldSorter(RefSequenceTable& _rt) : rt(_rt) {} 
-//	bool operator()(shared_ptr<Scaffold const> lhs, shared_ptr<Scaffold const> rhs)
+//	bool operator()(boost::shared_ptr<Scaffold const> lhs, boost::shared_ptr<Scaffold const> rhs)
 //	{
 //        assert (lhs);
 //        assert (rhs);
@@ -46,7 +49,7 @@ using boost::math::binomial;
 struct ScaffoldSorter
 {
 	ScaffoldSorter(RefSequenceTable& _rt) : rt(_rt) {} 
-	bool operator()(shared_ptr<Scaffold const> lhs, shared_ptr<Scaffold const> rhs)
+	bool operator()(boost::shared_ptr<Scaffold const> lhs, boost::shared_ptr<Scaffold const> rhs)
 	{
         //assert (lhs);
         //assert (rhs);
@@ -74,7 +77,8 @@ struct ScaffoldSorter
 //FIXME: needs refactoring
 void load_ref_rnas(FILE* ref_mRNA_file, 
 				   RefSequenceTable& rt,
-				   vector<shared_ptr<Scaffold> >& ref_mRNAs,
+				   vector<boost::shared_ptr<Scaffold> >& ref_mRNAs,
+                   boost::crc_32_type& gtf_crc_result,
 				   bool loadSeqs,
 				   bool loadFPKM) 
 {
@@ -97,7 +101,7 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 	if (ref_mRNA_file)
 	{
 		gtf_tracking_verbose=cuff_verbose;
-		read_transcripts(ref_mRNA_file, ref_rnas, true);
+		read_transcripts(ref_mRNA_file, ref_rnas, gtf_crc_result, true);
 	}
 	
 	int last_gseq_id = -1;
@@ -221,14 +225,14 @@ void load_ref_rnas(FILE* ref_mRNA_file,
 					GFREE(rna_seq);
 				}
                 
-				shared_ptr<Scaffold> scaff(new Scaffold());
+				boost::shared_ptr<Scaffold> scaff(new Scaffold());
                 *scaff = ref_scaff;
                 assert (scaff);
 				ref_mRNAs.push_back(scaff); 
 			}
 		}
         
-        BOOST_FOREACH (shared_ptr<Scaffold> s, ref_mRNAs)
+        BOOST_FOREACH (boost::shared_ptr<Scaffold> s, ref_mRNAs)
         {
             assert (s);
         }
@@ -268,7 +272,7 @@ bool HitBundle::add_hit(const MateHit& hit)
 
 struct HitlessScaffold
 {
-	bool operator()(shared_ptr<Scaffold> x)
+	bool operator()(boost::shared_ptr<Scaffold> x)
 	{
 		return x->mate_hits().empty();
 	}
@@ -280,7 +284,7 @@ bool unmapped_hit(const MateHit& x)
 }
 
 
-bool HitBundle::add_open_hit(shared_ptr<ReadGroupProperties const> rg_props,
+bool HitBundle::add_open_hit(boost::shared_ptr<ReadGroupProperties const> rg_props,
                              const ReadHit* bh,
 							 bool expand_by_partner)
 {
@@ -432,7 +436,7 @@ void HitBundle::finalize_open_mates()
 
 void HitBundle::remove_hitless_scaffolds()
 {
-	vector<shared_ptr<Scaffold> >::iterator new_end = remove_if(_ref_scaffs.begin(),
+	vector<boost::shared_ptr<Scaffold> >::iterator new_end = remove_if(_ref_scaffs.begin(),
 												   _ref_scaffs.end(),
 												   HitlessScaffold());
 	_ref_scaffs.erase(new_end, _ref_scaffs.end());	
@@ -518,20 +522,21 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
         }
     }
     
+    /*
     // Merge ref scaffolds
     indices = vector<size_t>(in_bundles.size(), 0);
     while(true)
     {
         int next_bundle = -1;
-        shared_ptr<Scaffold> next_scaff; 
+        boost::shared_ptr<Scaffold> next_scaff; 
         for(size_t i = 0; i < in_bundles.size(); ++i)
         {
-            const vector<shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]->_ref_scaffs;
+            const vector<boost::shared_ptr<Scaffold> >& curr_scaffs = in_bundles[i]->_ref_scaffs;
             
             if (indices[i] == curr_scaffs.size())
                 continue;
             
-            shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
+            boost::shared_ptr<Scaffold> curr_scaff = curr_scaffs[indices[i]];
             
             if (next_bundle == -1 || scaff_lt_rt_oplt(*curr_scaff, *next_scaff))
             {
@@ -547,7 +552,23 @@ void HitBundle::combine(const vector<HitBundle*>& in_bundles,
             out_bundle.add_ref_scaffold(next_scaff);
         indices[next_bundle]++;
     }
-	
+	*/
+    
+    for (size_t i = 0; i < in_bundles.size(); ++i)
+    {
+        for (size_t j = 0; j < in_bundles[i]->ref_scaffolds().size(); ++j)
+        {
+            out_bundle.add_ref_scaffold(in_bundles[i]->ref_scaffolds()[j]);
+        }
+    }
+    
+    sort(out_bundle._ref_scaffs.begin(), out_bundle._ref_scaffs.end(), scaff_lt_rt_oplt_sp);
+    vector<boost::shared_ptr<Scaffold> >::iterator new_end = unique(out_bundle._ref_scaffs.begin(),
+                                                             out_bundle._ref_scaffs.end(),
+                                                             StructurallyEqualScaffolds());
+    out_bundle._ref_scaffs.erase(new_end, out_bundle._ref_scaffs.end());
+    vector<boost::shared_ptr<Scaffold> >(out_bundle._ref_scaffs).swap(out_bundle._ref_scaffs);
+    
     out_bundle.finalize(true); // true means everything is already sorted, etc.
     out_bundle._num_replicates = (int)in_bundles.size();
 }
@@ -600,11 +621,11 @@ void HitBundle::finalize(bool is_combined)
             
         }
 		sort(_ref_scaffs.begin(), _ref_scaffs.end(), scaff_lt_rt_oplt_sp);
-		vector<shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
+		vector<boost::shared_ptr<Scaffold> >::iterator new_end = unique(_ref_scaffs.begin(), 
 												_ref_scaffs.end(),
 												StructurallyEqualScaffolds());
 		_ref_scaffs.erase(new_end, _ref_scaffs.end());
-        vector<shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
+        vector<boost::shared_ptr<Scaffold> >(_ref_scaffs).swap(_ref_scaffs);
 	}
 	
     for (size_t j = 0; j < _ref_scaffs.size(); ++j)
@@ -718,7 +739,7 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
             (*next_mask_scaff)->ref_id() != tmp.ref_id())
         {
             bool found_scaff = false;
-            vector<shared_ptr<Scaffold> >::iterator curr_mask_scaff = mask_gtf_recs.begin();
+            vector<boost::shared_ptr<Scaffold> >::iterator curr_mask_scaff = mask_gtf_recs.begin();
             for (size_t i = 0; i < _mask_scaff_offsets.size(); ++i)
             {
                 if (_mask_scaff_offsets[i].first == tmp.ref_id())
@@ -859,10 +880,11 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 	}
 	
 	bundle.add_ref_scaffold(*next_ref_scaff);
+    
 	++next_ref_scaff;
     
 	_expand_by_refs(bundle);
-	
+    
 	// The most recent RefID and position we've seen in the hit stream
 	RefID last_hit_ref_id_seen = 0;
 	int last_hit_pos_seen = 0;
@@ -1055,10 +1077,15 @@ bool BundleFactory::_expand_by_refs(HitBundle& bundle)
 	while(next_ref_scaff < ref_mRNAs.end())
 	{		
 		assert(bundle.ref_id() != (*next_ref_scaff)->ref_id() || (*next_ref_scaff)->left() >= bundle.left());
+//        if (*next_ref_scaff && (*next_ref_scaff)->annotated_gene_id() == "XLOC_009372")
+//        {
+//            int a = 5;
+//        }
 		if (bundle.ref_id() == (*next_ref_scaff)->ref_id()
 			&& overlap_in_genome((*next_ref_scaff)->left(),(*next_ref_scaff)->right(),bundle.left(), bundle.right()))
 		{
-			bundle.add_ref_scaffold(*next_ref_scaff++);
+			bundle.add_ref_scaffold(*next_ref_scaff);
+            next_ref_scaff++;
 		}
 		else 
 		{
@@ -1125,22 +1152,26 @@ bool BundleFactory::next_bundle(HitBundle& bundle)
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
+    bool got_bundle = false;
 	switch(_bundle_mode)
 	{
 		case HIT_DRIVEN:
             _curr_bundle++;
-			return next_bundle_hit_driven(bundle);
+			got_bundle = next_bundle_hit_driven(bundle);
+            bundle.id(_curr_bundle);
 			break;
 		case REF_DRIVEN:
             _curr_bundle++;
-			return next_bundle_ref_driven(bundle);
+			got_bundle = next_bundle_ref_driven(bundle);
+            bundle.id(_curr_bundle);
 			break;
 		case REF_GUIDED:
             _curr_bundle++;
-			return next_bundle_ref_guided(bundle);
+			got_bundle = next_bundle_ref_guided(bundle);
+            bundle.id(_curr_bundle);
 			break;
 	}
-	return false;
+	return got_bundle;
 }
 
 
@@ -1592,7 +1623,7 @@ bool BundleFactory::spans_bad_intron(const ReadHit& read)
 	return false;
 }
 
-void inspect_map(BundleFactory& bundle_factory,
+void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,
@@ -1602,7 +1633,7 @@ void inspect_map(BundleFactory& bundle_factory,
 
 	ProgressBar p_bar;
 	if (progress_bar)
-		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory.ref_table().size());
+		p_bar = ProgressBar("Inspecting reads and determining fragment length distribution.",bundle_factory->ref_table().size());
 	RefID last_chrom = 0;
 
 	long double map_mass = 0.0;
@@ -1624,13 +1655,13 @@ void inspect_map(BundleFactory& bundle_factory,
 	int max_1 = 0;
 	int max_2 = 0;
 	
-	shared_ptr<MultiReadTable> mrt(new MultiReadTable());
+	boost::shared_ptr<MultiReadTable> mrt(new MultiReadTable());
 	
 	while(true)
 	{
 		HitBundle* bundle_ptr = new HitBundle();
 		
-		bool valid_bundle = bundle_factory.next_bundle(*bundle_ptr);
+		bool valid_bundle = bundle_factory->next_bundle(*bundle_ptr);
 		HitBundle& bundle = *bundle_ptr;
 
         if (use_compat_mass) //only count hits that are compatible with ref transcripts
@@ -1661,7 +1692,7 @@ void inspect_map(BundleFactory& bundle_factory,
             exit(1);
         }
 		
-		const RefSequenceTable& rt = bundle_factory.ref_table();
+		const RefSequenceTable& rt = bundle_factory->ref_table();
 		const char* chrom = rt.get_name(bundle.ref_id());
 		char bundle_label_buf[2048];
         if (chrom)
@@ -1671,7 +1702,7 @@ void inspect_map(BundleFactory& bundle_factory,
             
             vector<string> gene_ids;
             vector<string> gene_short_names;
-            BOOST_FOREACH(shared_ptr<Scaffold> s, bundle.ref_scaffolds())
+            BOOST_FOREACH(boost::shared_ptr<Scaffold> s, bundle.ref_scaffolds())
             {
                 if (s->annotated_gene_id() != "")
                     gene_ids.push_back(s->annotated_gene_id());
@@ -1760,7 +1791,7 @@ void inspect_map(BundleFactory& bundle_factory,
 			// Annotation provided and single isoform gene
 			{
 				int start, end, mate_length;
-				shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
+				boost::shared_ptr<Scaffold> scaff = bundle.ref_scaffolds()[0];
 				if (scaff->map_frag(hits[i], start, end, mate_length))
 				{
 					if (mate_length >= min_len && mate_length <= max_len)
@@ -1945,7 +1976,7 @@ void inspect_map(BundleFactory& bundle_factory,
     
     std_dev = sqrt(std_dev);
 	
-	shared_ptr<ReadGroupProperties> rg_props = bundle_factory.read_group_properties();
+	boost::shared_ptr<ReadGroupProperties> rg_props = bundle_factory->read_group_properties();
 
     FLDSource source = DEFAULT;
     if (empirical)
@@ -1957,7 +1988,7 @@ void inspect_map(BundleFactory& bundle_factory,
         source = USER;
     }
 
-	shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len, source));
+	boost::shared_ptr<EmpDist const> fld(new EmpDist(frag_len_pdf, frag_len_cdf, frag_len_mode, mean, std_dev, min_len, max_len, source));
 	rg_props->multi_read_table(mrt);
 	rg_props->frag_len_dist(fld);
 	rg_props->normalized_map_mass(norm_map_mass);
@@ -1997,7 +2028,77 @@ void inspect_map(BundleFactory& bundle_factory,
             fprintf(stderr, ">\t           Default Std Dev: %d\n", def_frag_len_std_dev);
         }
     }
-	bundle_factory.num_bundles(num_bundles);
-	bundle_factory.reset(); 
+	bundle_factory->num_bundles(num_bundles);
+	bundle_factory->reset();
 	return;
 }
+
+//////////////////////
+
+
+bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    bool got_bundle = BundleFactory::next_bundle(bundle);
+    if (got_bundle)
+    {
+        RefSequenceTable& rt = ref_table();
+        
+        char bundle_label_buf[2048];
+        sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
+        
+        boost::shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
+        if (ab)
+        {
+            double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);
+            double total_mass  = _hit_fac->get_total_mass(bundle_label_buf);
+            
+            bundle.finalize();
+            bundle.add_raw_mass(total_mass);
+            bundle.compatible_mass(compatible_mass);
+            
+            //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
+            if (bundle.ref_scaffolds().size() != ab->abundances().size())
+            {
+                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%d transcripts)  does not match GTF (%d transcripts):\n", read_group_properties()->file_path().c_str(),  bundle_label_buf, ab->abundances().size(), bundle.ref_scaffolds().size());
+                fprintf(stderr, "Reconstituted:\n");
+                for (size_t i = 0; i < ab->abundances().size(); ++i)
+                {
+                    fprintf(stderr, "%s\n", ab->abundances()[i]->description().c_str());
+                }
+                fprintf(stderr, "GTF:\n");
+                for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
+                {
+                    fprintf(stderr, "%s\n", bundle.ref_scaffolds()[i]->annotated_trans_id().c_str());
+                }
+                exit(1);
+            }
+        }
+        else
+        {
+            fprintf (stderr, "Error: no abundance info for locus %s\n", bundle_label_buf);
+        }
+        
+    }
+    return got_bundle;
+}
+
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionBundleFactory::get_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    return _hit_fac->get_abundance_for_locus(locus_id);
+}
+
+void PrecomputedExpressionBundleFactory::clear_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    _hit_fac->clear_abundance_for_locus(locus_id);
+}
+
+

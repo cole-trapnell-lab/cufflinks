@@ -22,6 +22,8 @@
 #include "hits.h"
 #include "tokenize.h"
 
+#include "abundances.h"
+
 using namespace std;
 
 #if ENABLE_THREADS
@@ -1101,3 +1103,174 @@ bool SAMHitFactory::inspect_header()
     finalize_rg_props();
     return true;
 }
+
+//////////////////////////////////////////
+
+void PrecomputedExpressionHitFactory::load_count_tables(const string& expression_file_name)
+{
+    //map<int, AbundanceGroup > ab_groups;
+    
+    
+    std::ifstream ifs(expression_file_name.c_str());
+    boost::archive::binary_iarchive ia(ifs);
+    
+    //map<string, AbundanceGroup> single_sample_tracking;
+    
+    size_t num_loci = 0;
+    ia >> num_loci;
+    
+    if (num_loci > 0)
+    {
+        pair<int, AbundanceGroup> first_locus;
+        ia >> first_locus;
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
+                
+        // populate the cached count tables so we can make convincing fake bundles later on.
+        ReadGroupProperties rg_props = **(ab->rg_props().begin());
+
+        BOOST_FOREACH(const LocusCount& c, rg_props.raw_compatible_counts())
+        {
+            compat_mass[c.locus_desc] = c.count;
+        }
+
+        BOOST_FOREACH(const LocusCount& c, rg_props.raw_total_counts())
+        {
+            total_mass[c.locus_desc] = c.count;
+        }
+    }
+}
+
+void PrecomputedExpressionHitFactory::load_checked_parameters(const string& expression_file_name)
+{
+    std::ifstream ifs(expression_file_name.c_str());
+    boost::archive::binary_iarchive ia(ifs);
+    
+    //map<string, AbundanceGroup> single_sample_tracking;
+    
+    size_t num_loci = 0;
+    ia >> num_loci;
+    
+    if (num_loci > 0)
+    {
+        pair<int, AbundanceGroup> first_locus;
+        ia >> first_locus;
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
+        
+        // populate the cached count tables so we can make convincing fake bundles later on.
+        ReadGroupProperties rg_props = **(ab->rg_props().begin());
+        _rg_props.checked_parameters(rg_props.checked_parameters());
+    }
+}
+
+bool PrecomputedExpressionHitFactory::next_record(const char*& buf, size_t& buf_size)
+{
+	return false;
+}
+
+bool PrecomputedExpressionHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
+									 ReadHit& bh,
+									 bool strip_slash,
+									 char* name_out,
+									 char* name_tags)
+{
+	return false;
+}
+
+bool PrecomputedExpressionHitFactory::inspect_header()
+{
+    
+    std::ifstream ifs(_expression_file_name.c_str());
+    boost::archive::binary_iarchive ia(ifs);
+
+    RefSequenceTable& rt = ref_table();
+    
+    size_t num_loci = 0;
+    ia >> num_loci;
+    
+    for (size_t i = 0; i < num_loci; ++i)
+    {
+        pair<int, AbundanceGroup> locus;
+
+        ia >> locus;
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(locus.second));
+        
+        const string locus_tag = ab->locus_tag();
+        
+        string::size_type idx = locus_tag.find(':');
+        if (idx != string::npos)
+        {
+            string chrom_name = locus_tag.substr(0, idx);
+            rt.get_id(chrom_name.c_str(), NULL); // make sure the chromosome names are added to the RefSequenceTable in the order that they occur in the expression files.
+        }
+    }
+    
+    return true;
+}
+
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::get_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+    map<int, boost::shared_ptr<const AbundanceGroup> >::const_iterator itr = _curr_ab_groups.find(locus_id);
+    if (itr != _curr_ab_groups.end())
+        return itr->second;
+    else
+        return boost::shared_ptr<const AbundanceGroup>();
+}
+
+void PrecomputedExpressionHitFactory::clear_abundance_for_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+
+    map<int, boost::shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
+    
+    if (itr != _curr_ab_groups.end())
+        _curr_ab_groups.erase(itr);
+}
+
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
+{
+#if ENABLE_THREADS
+    boost::mutex::scoped_lock lock(_factory_lock);
+#endif
+//    if (locus_id == 7130)
+//    {
+//        fprintf(stderr, "Trying to get a chr13_random\n");
+//    }
+    
+    if (_last_locus_id >= locus_id)
+        return boost::shared_ptr<const AbundanceGroup>(); // we already processed this one
+    
+    boost::shared_ptr<const AbundanceGroup> sought_group;
+    
+    map<int, boost::shared_ptr<const AbundanceGroup> >::iterator itr = _curr_ab_groups.find(locus_id);
+    
+    if (itr != _curr_ab_groups.end())
+        return itr->second;
+    
+    for (;_curr_locus_idx < _num_loci; ++_curr_locus_idx)
+    {
+        pair<int, AbundanceGroup> p;
+        *_ia >> p;
+        _last_locus_id = p.first;
+        boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(p.second));
+        if (_last_locus_id == locus_id)
+        {
+            sought_group = ab;
+            break;
+        }
+        else // we don't want to lose this one...
+        {
+            _curr_ab_groups[_last_locus_id] = ab;
+        }
+    }
+    _curr_ab_groups[locus_id] = sought_group;
+    
+    return sought_group;
+}
+
+
+

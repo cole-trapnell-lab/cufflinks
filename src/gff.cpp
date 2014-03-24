@@ -882,6 +882,9 @@ GffLine* GffReader::nextGffLine() {
     if (l==NULL) {
          return NULL; //end of file
          }
+     
+     
+     _crc_result.process_bytes( linebuf, llen );
     int ns=0; //first nonspace position
     while (l[ns]!=0 && isspace(l[ns])) ns++;
     if (l[ns]=='#' || llen<10) continue;

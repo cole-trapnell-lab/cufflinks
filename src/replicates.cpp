@@ -407,7 +407,7 @@ void calc_quartile_scaling_factors(const vector<LocusCountList>& sample_compatib
         for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
         {
         
-            //shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
+            //boost::shared_ptr<ReadGroupProperties> rg = bundle_factories[fac_idx];
             //double scaled_mass = scale_factors[fac_idx] * rg->total_map_mass();
             
             total_common += sample_compatible_count_table[j].counts[i];
@@ -764,8 +764,10 @@ fit_dispersion_model_helper(const string& condition_name,
     SCVInterpolator true_to_est_scv_table;
     
     int num_samples = sample_compatible_count_table.front().counts.size();
-    
-    build_scv_correction_fit(num_samples, 10000, 100000, true_to_est_scv_table);
+    if (no_scv_correction == false)
+    {
+        build_scv_correction_fit(num_samples, 10000, 100000, true_to_est_scv_table);
+    }
     
     setuplf();  
     
@@ -785,10 +787,10 @@ fit_dispersion_model_helper(const string& condition_name,
         }
     }
     
-    if (compatible_count_means.size() < min_loci_for_fitting || dispersion_method == POISSON)
+    if (compatible_count_means.size() < min_loci_for_fitting)
     {
-        shared_ptr<MassDispersionModel> disperser;
-        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
+        boost::shared_ptr<MassDispersionModel> disperser;
+        disperser = boost::shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
         
         return disperser;
     }
@@ -865,10 +867,10 @@ fit_dispersion_model_helper(const string& condition_name,
 //        }
     }
     
-    shared_ptr<MassDispersionModel> disperser;
-    disperser = shared_ptr<MassDispersionModel>(new MassDispersionModel(condition_name, compatible_count_means, raw_variances, fitted_values));
+    boost::shared_ptr<MassDispersionModel> disperser;
+    disperser = boost::shared_ptr<MassDispersionModel>(new MassDispersionModel(condition_name, compatible_count_means, raw_variances, fitted_values));
     if (dispersion_method == POISSON)
-        disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
+        disperser = boost::shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
     
 //    for (map<string, pair<double, double> >::iterator itr = labeled_mv_table.begin();
 //         itr != labeled_mv_table.end();
@@ -895,7 +897,7 @@ fit_dispersion_model(const string& condition_name,
         if (sample_compatible_count_table[i].counts.size() <= 1)
         {
             // only one replicate - no point in fitting variance
-            return shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
+            return boost::shared_ptr<MassDispersionModel>(new PoissonDispersionModel(condition_name));
         }
     }
 #if ENABLE_THREADS
@@ -922,7 +924,7 @@ fit_dispersion_model(const string& condition_name,
 }
 
 void build_norm_table(const vector<LocusCountList>& full_count_table,
-                      shared_ptr<const map<string, LibNormStandards> > normalizing_standards,
+                      boost::shared_ptr<const map<string, LibNormStandards> > normalizing_standards,
                       vector<LocusCountList>& norm_table)
 {
     // If we're using housekeeping genes or spike-in controls, select the rows we'll be using from the full count table.
@@ -975,14 +977,14 @@ void build_norm_table(const vector<LocusCountList>& full_count_table,
     }
 }
 
-void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups)
+void normalize_counts(vector<boost::shared_ptr<ReadGroupProperties> > & all_read_groups)
 {
     vector<LocusCountList> sample_compatible_count_table;
     vector<LocusCountList> sample_total_count_table;
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
         const vector<LocusCount>& raw_compatible_counts = rg_props->raw_compatible_counts();
         const vector<LocusCount>& raw_total_counts = rg_props->raw_total_counts();
         
@@ -1047,7 +1049,7 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
         rg_props->internal_scale_factor(scale_factors[i]);
     }
     
@@ -1073,7 +1075,7 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
         vector<LocusCount> scaled_compatible_counts;
         for (size_t j = 0; j < sample_compatible_count_table.size(); ++j)
         {
@@ -1092,7 +1094,7 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties> rg_props = all_read_groups[i];
         vector<LocusCount> scaled_total_counts;
         for (size_t j = 0; j < sample_total_count_table.size(); ++j)
         {
@@ -1133,7 +1135,7 @@ void normalize_counts(vector<shared_ptr<ReadGroupProperties> > & all_read_groups
         avg_total_common_scaled_count += (1.0/all_read_groups.size()) * total_common;
     }
     
-    BOOST_FOREACH(shared_ptr<ReadGroupProperties> rg, all_read_groups)
+    BOOST_FOREACH(boost::shared_ptr<ReadGroupProperties> rg, all_read_groups)
     {
         rg->normalized_map_mass(avg_total_common_scaled_count);
     }

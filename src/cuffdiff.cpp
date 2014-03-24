@@ -142,7 +142,7 @@ void print_usage()
 	fprintf(stderr, "  --FDR                        False discovery rate used in testing                  [ default:   0.05 ]\n");
 	fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file  [ default:   NULL ]\n");
     fprintf(stderr, "  -C/--contrast-file           Perform the constrasts specified in this file         [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
-    fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
+    //fprintf(stderr, "  --norm-standards-file        Housekeeping/spike genes to normalize libraries       [ default:   NULL ]\n"); // NOT YET DOCUMENTED, keep secret for now
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads                   [ default:  FALSE ]\n");
 #if ENABLE_THREADS
@@ -807,27 +807,17 @@ void print_read_group_tracking(FILE* fout,
                 
 		for (size_t i = 0; i < fpkms.size(); ++i)
 		{
-            for (CountPerReplicateTable::const_iterator itr = fpkms[i].count_per_rep.begin(); 
-                 itr != fpkms[i].count_per_rep.end(); 
-                 ++itr)
+            for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
+                 ++j)
             { 
-                FPKMPerReplicateTable::const_iterator f_itr = fpkms[i].fpkm_per_rep.find(itr->first);
-                StatusPerReplicateTable::const_iterator s_itr = fpkms[i].status_per_rep.find(itr->first);
+                double FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
+                double internal_count = fpkms[i].tracking_info_per_rep[j].count;
+                double external_count = internal_count / fpkms[i].tracking_info_per_rep[j].rg_props->external_scale_factor();
+                double raw_count = internal_count * fpkms[i].tracking_info_per_rep[j].rg_props->internal_scale_factor();
+                const  string& condition_name = fpkms[i].tracking_info_per_rep[j].rg_props->condition_name();
+                AbundanceStatus status = fpkms[i].tracking_info_per_rep[j].status;
                 
-                
-                if (f_itr == fpkms[i].fpkm_per_rep.end())
-                {
-                    fprintf(stderr, "Error: missing per-replicate FPKM data\n");
-                }
-                
-                double FPKM = f_itr->second;
-                double internal_count = itr->second;
-                double external_count = internal_count / itr->first->external_scale_factor();
-                double raw_count = internal_count * itr->first->internal_scale_factor();
-                const  string& condition_name = itr->first->condition_name();
-                AbundanceStatus status = s_itr->second;
-                
-                int rep_num = itr->first->replicate_num();
+                int rep_num = fpkms[i].tracking_info_per_rep[j].rg_props->replicate_num();
                 
                 const char* status_str = "OK";
                 
@@ -868,12 +858,12 @@ void print_read_group_tracking(FILE* fout,
 }
 
 void print_read_group_info(FILE* fout, 
-                           const vector<shared_ptr<ReadGroupProperties> >& all_read_groups)
+                           const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups)
 {
     fprintf(fout, "file\tcondition\treplicate_num\ttotal_mass\tnorm_mass\tinternal_scale\texternal_scale\n");
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties const> rg_props = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties const> rg_props = all_read_groups[i];
         fprintf(fout, "%s\t%s\t%d\t%Lg\t%Lg\t%lg\t%lg\n",
                 rg_props->file_path().c_str(),
                 rg_props->condition_name().c_str(),
@@ -899,37 +889,6 @@ bool p_value_lt(const SampleDifference* lhs, const SampleDifference* rhs)
 {
 	return lhs->p_value < rhs->p_value;
 }
-
-//// Benjamani-Hochberg procedure
-//int fdr_significance(double fdr, 
-//					  vector<SampleDifference*>& tests)
-//{
-//	sort(tests.begin(), tests.end(), p_value_lt);
-//	vector<SampleDifference*> passing;
-//
-//	for (int k = 0; k < (int)tests.size(); ++k)
-//	{
-//		if (tests[k]->test_status == OK)
-//		{
-//			passing.push_back(tests[k]);
-//		}
-//		else
-//		{
-//			tests[k]->significant = false;
-//		}
-//	}
-//	int significant = 0;
-//	for (int k = 0; k < (int)passing.size(); ++k)
-//	{
-//		double r = (double)passing.size() / ((double) k + 1);
-//		double corrected_p = passing[k]->p_value * r;
-//		passing[k]->corrected_p = corrected_p;
-//		passing[k]->significant = (corrected_p <= fdr);
-//        significant += passing[k]->significant;
-//	}
-//    
-//	return passing.size();
-//}
 
 // Benjamani-Hochberg procedure
 int fdr_significance(double fdr, 
@@ -1013,27 +972,27 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
 #endif
 }
 
-void learn_bias_worker(shared_ptr<BundleFactory> fac)
+void learn_bias_worker(boost::shared_ptr<BundleFactory> fac)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
-	shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+	boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
 	BiasLearner* bl = new BiasLearner(rg_props->frag_len_dist());
 	learn_bias(*fac, *bl, false);
-	rg_props->bias_learner(shared_ptr<BiasLearner>(bl));
+	rg_props->bias_learner(boost::shared_ptr<BiasLearner>(bl));
 }
 
 
-shared_ptr<TestLauncher> test_launcher;
+boost::shared_ptr<TestLauncher> test_launcher;
 
 bool quantitate_next_locus(const RefSequenceTable& rt,
-                           vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
-                           shared_ptr<TestLauncher> launcher)
+                           vector<boost::shared_ptr<ReplicatedBundleFactory> >& bundle_factories,
+                           boost::shared_ptr<TestLauncher> launcher)
 {
     for (size_t i = 0; i < bundle_factories.size(); ++i)
     {
-        shared_ptr<SampleAbundances> s_ab = shared_ptr<SampleAbundances>(new SampleAbundances);
+        boost::shared_ptr<SampleAbundances> s_ab = boost::shared_ptr<SampleAbundances>(new SampleAbundances);
         
 #if ENABLE_THREADS					
         while(1)
@@ -1053,30 +1012,54 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread quantitate(sample_worker,
+        boost::shared_ptr<HitBundle> pBundle = boost::shared_ptr<HitBundle>(new HitBundle());
+        bool non_empty = bundle_factories[i]->next_bundle(*pBundle);
+        
+        if (pBundle->compatible_mass() > 0)
+        {
+            thread quantitate(sample_worker,
+                              non_empty,
+                              pBundle,
+                              boost::ref(rt),
+                              boost::ref(*(bundle_factories[i])),
+                              s_ab,
+                              i,
+                              launcher,
+                              true);
+        }
+        else
+        {
+            sample_worker(non_empty,
+                          pBundle,
                           boost::ref(rt),
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
                           i,
-                          launcher);  
+                          launcher,
+                          true);
+            locus_thread_pool_lock.lock();
+            locus_curr_threads--;
+            locus_thread_pool_lock.unlock();
+        }
 #else
-        sample_worker(boost::ref(rt),
+        HitBundle bundle;
+        bool non_empty = sample_factory.next_bundle(bundle);
+        
+        sample_worker(non_emtpy,
+                      pBundle,
+                      boost::ref(rt),
                       boost::ref(*(bundle_factories[i])),
                       s_ab,
                       i,
-                      launcher);
+                      launcher,
+                      true);
 #endif
     }
     return true;
 }
 
-void fit_mle_error()
-{
-    
-}
-
 void parse_contrast_file(FILE* contrast_file,
-                         const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
+                         const vector<boost::shared_ptr<ReplicatedBundleFactory> >& factories,
                          vector<pair<size_t, size_t > >& contrasts)
 {
     
@@ -1202,7 +1185,7 @@ void parse_sample_sheet_file(FILE* sample_sheet_file,
                 if (columns.size() < 2)
                 {
                     if (columns.size() > 0)
-                        fprintf(stderr, "Malformed record in contrast file: \n   >  %s\n", pBuf);
+                        fprintf(stderr, "Malformed record in sample sheet: \n   >  %s\n", pBuf);
                     else
                         continue;
                 }
@@ -1226,7 +1209,7 @@ void parse_sample_sheet_file(FILE* sample_sheet_file,
 }
 
 
-void init_default_contrasts(const vector<shared_ptr<ReplicatedBundleFactory> >& factories,
+void init_default_contrasts(const vector<boost::shared_ptr<ReplicatedBundleFactory> >& factories,
                             bool samples_are_time_series,
                             vector<pair<size_t, size_t > >& contrasts)
 {
@@ -1252,7 +1235,7 @@ void parse_norm_standards_file(FILE* norm_standards_file)
     char pBuf[10 * 1024];
     size_t non_blank_lines_read = 0;
     
-    shared_ptr<map<string, LibNormStandards> > norm_standards(new map<string, LibNormStandards>);
+    boost::shared_ptr<map<string, LibNormStandards> > norm_standards(new map<string, LibNormStandards>);
     
     while (fgets(pBuf, 10*1024, norm_standards_file))
     {
@@ -1289,7 +1272,7 @@ void parse_norm_standards_file(FILE* norm_standards_file)
 }
 
 
-void print_variability_models(FILE* var_model_out, const vector<shared_ptr<ReplicatedBundleFactory> >& factories)
+void print_variability_models(FILE* var_model_out, const vector<boost::shared_ptr<ReplicatedBundleFactory> >& factories)
 {
 
     fprintf(var_model_out, "condition\tlocus\tcompatible_count_mean\tcompatible_count_var\ttotal_count_mean\ttotal_count_var\tfitted_var\n");
@@ -1297,7 +1280,7 @@ void print_variability_models(FILE* var_model_out, const vector<shared_ptr<Repli
     for (size_t i = 0; i < factories.size(); ++i)
     {
         string factor_name = factories[i]->condition_name();
-        shared_ptr<ReadGroupProperties> rg = factories[i]->factories()[0]->read_group_properties();
+        boost::shared_ptr<ReadGroupProperties> rg = factories[i]->factories()[0]->read_group_properties();
         boost::shared_ptr<MassDispersionModel const> model = rg->mass_dispersion_model();
 //        const vector<double>& means = model->scaled_compatible_mass_means();
 //        const vector<double>& raw_vars  = model->scaled_compatible_variances();
@@ -1338,7 +1321,7 @@ struct DispModelAverageContext
     double weight;
 };
 
-void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
+void fit_dispersions(vector<boost::shared_ptr<ReplicatedBundleFactory> >& bundle_factories)
 {
     if (dispersion_method == PER_CONDITION)
     {
@@ -1352,7 +1335,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
         size_t num_samples = 0;
         for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
         {
-            const vector<shared_ptr<BundleFactory> >& factories = bundle_factories[cond_idx]->factories();
+            const vector<boost::shared_ptr<BundleFactory> >& factories = bundle_factories[cond_idx]->factories();
             for (size_t fac_idx = 0; fac_idx < factories.size(); ++fac_idx)
             {
                 num_samples++;
@@ -1365,12 +1348,12 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
         size_t curr_fac = 0;
         for (size_t cond_idx = 0; cond_idx < bundle_factories.size(); ++cond_idx)
         {
-            vector<shared_ptr<BundleFactory> > factories = bundle_factories[cond_idx]->factories();
+            vector<boost::shared_ptr<BundleFactory> > factories = bundle_factories[cond_idx]->factories();
             for (size_t fac_idx = 0; fac_idx < factories.size(); ++fac_idx)
             {
-                shared_ptr<BundleFactory> fac = factories[fac_idx];
+                boost::shared_ptr<BundleFactory> fac = factories[fac_idx];
                 
-                shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
+                boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
                 const vector<LocusCount>& compatible_count_table = rg_props->common_scale_compatible_counts();
                 const vector<LocusCount>& total_count_table = rg_props->common_scale_total_counts();
                 
@@ -1406,7 +1389,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
             curr_fac += factories.size();
         }
 
-        shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
+        boost::shared_ptr<MassDispersionModel> disperser = fit_dispersion_model("blind", scale_factors, sample_compatible_count_table);
         
         vector<pair<double, double> > compatible_means_and_vars;
         calculate_count_means_and_vars(sample_compatible_count_table,
@@ -1445,18 +1428,18 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
         }
         // now need to replace them with the average
         
-        shared_ptr<MassDispersionModel> pooled_model;
+        boost::shared_ptr<MassDispersionModel> pooled_model;
         // Let's compute the pooled average of the dispersion models
         if (dispersion_method != BLIND)
         {
-            vector<shared_ptr<MassDispersionModel const> > disp_models;
+            vector<boost::shared_ptr<MassDispersionModel const> > disp_models;
             double total_replicates = 0.0;
             vector<double> disp_model_weight;
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
             {
                 total_replicates += fac->num_replicates();
             }
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
             {
                 if (fac->num_replicates() > 1)
                 {
@@ -1467,7 +1450,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
             
             double max_mass = 0.0;
             
-            BOOST_FOREACH(shared_ptr<MassDispersionModel const> disp, disp_models)
+            BOOST_FOREACH(boost::shared_ptr<MassDispersionModel const> disp, disp_models)
             {
                 if (disp->scaled_compatible_mass_means().empty() == false && max_mass < disp->scaled_compatible_mass_means().back())
                 {
@@ -1478,7 +1461,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
             map<std::string, vector<DispModelAverageContext> > disp_info_by_locus;
             for (size_t disp_idx = 0; disp_idx < disp_models.size(); ++disp_idx)
             {
-                shared_ptr<MassDispersionModel const> disp = disp_models[disp_idx];
+                boost::shared_ptr<MassDispersionModel const> disp = disp_models[disp_idx];
                 
                 const std::map<std::string, std::pair<double, double> >& total_mv_by_locus = disp->total_mv_by_locus();
                 const std::map<std::string, std::pair<double, double> >& compatible_mv_by_locus = disp->compatible_mv_by_locus();
@@ -1550,7 +1533,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                 double var_est = 0.0;
                 for(size_t i = 0; i < disp_models.size(); ++i)
                 {
-                    shared_ptr<MassDispersionModel const> disp = disp_models[i];
+                    boost::shared_ptr<MassDispersionModel const> disp = disp_models[i];
                     double weight = disp_model_weight[i];
                     var_est += disp->scale_mass_variance(frag_idx) * weight;
                 }
@@ -1558,7 +1541,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
                 est_fitted_var.push_back(var_est);
             }
             
-            pooled_model = shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
+            pooled_model = boost::shared_ptr<MassDispersionModel>(new MassDispersionModel("pooled", compatible_mass, compatible_variances, est_fitted_var));
             
             for (map<std::string, DispModelAverageContext>::iterator itr = pooled_info_by_locus.begin();
                  itr != pooled_info_by_locus.end();
@@ -1575,7 +1558,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
         
         if (dispersion_method == POOLED)
         {
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+            BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
             {
                 fac->mass_dispersion_model(pooled_model);
             }
@@ -1585,7 +1568,7 @@ void fit_dispersions(vector<shared_ptr<ReplicatedBundleFactory> >& bundle_factor
     }
     else if (dispersion_method == POISSON)
     {
-        shared_ptr<MassDispersionModel> disperser = shared_ptr<MassDispersionModel>(new PoissonDispersionModel(""));
+        boost::shared_ptr<MassDispersionModel> disperser = boost::shared_ptr<MassDispersionModel>(new PoissonDispersionModel(""));
         for (size_t i = 0; i < bundle_factories.size(); ++i)
         {
             bundle_factories[i]->mass_dispersion_model(disperser);
@@ -1604,48 +1587,56 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	ReadTable it;
 	RefSequenceTable rt(true, false);
     
-	vector<shared_ptr<Scaffold> > ref_mRNAs;
+	vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
 	
-	vector<shared_ptr<ReplicatedBundleFactory> > bundle_factories;
-    vector<shared_ptr<ReadGroupProperties> > all_read_groups;
-    vector<shared_ptr<HitFactory> > all_hit_factories;
+	vector<boost::shared_ptr<ReplicatedBundleFactory> > bundle_factories;
+    vector<boost::shared_ptr<ReadGroupProperties> > all_read_groups;
     
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{
         vector<string> sam_hit_filenames;
         tokenize(sam_hit_filename_lists[i], ",", sam_hit_filenames);
         
-        vector<shared_ptr<BundleFactory> > replicate_factories;
+        vector<boost::shared_ptr<BundleFactory> > replicate_factories;
         
         string condition_name = sample_labels[i];
         
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
-            shared_ptr<HitFactory> hs;
+            boost::shared_ptr<HitFactory> hs;
+            boost::shared_ptr<BundleFactory> hf;
             try
             {
-                hs = shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
+                hs = boost::shared_ptr<HitFactory>(new PrecomputedExpressionHitFactory(sam_hit_filenames[j], it, rt));
+                hf = boost::shared_ptr<BundleFactory>(new PrecomputedExpressionBundleFactory(static_pointer_cast<PrecomputedExpressionHitFactory>(hs)));
             }
-            catch (std::runtime_error& e) 
+            
+            catch(boost::archive::archive_exception & e)
             {
                 try
                 {
-                    fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-                            sam_hit_filenames[j].c_str());
-                    hs = shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
+                    hs = boost::shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
                 }
-                catch (std::runtime_error& e)
+                catch (std::runtime_error& e) 
                 {
-                    fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
-                            sam_hit_filenames[j].c_str());
-                    exit(1);
+                    try
+                    {
+//                        fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
+//                                sam_hit_filenames[j].c_str());
+                        hs = boost::shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
+                    }
+                    catch (std::runtime_error& e)
+                    {
+                        fprintf(stderr, "Error: cannot open file %s for reading. Unrecognized file type\n",
+                                sam_hit_filenames[j].c_str());
+                        exit(1);
+                    }
                 }
+                hf = boost::shared_ptr<BundleFactory>(new BundleFactory(hs, REF_DRIVEN));
             }
             
-            all_hit_factories.push_back(hs);
             
-            shared_ptr<BundleFactory> hf(new BundleFactory(hs, REF_DRIVEN));
-            shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
+            boost::shared_ptr<ReadGroupProperties> rg_props(new ReadGroupProperties);
             
             if (global_read_properties)
             {
@@ -1656,6 +1647,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
                 *rg_props = hs->read_group_properties();
             }
             
+            rg_props->checked_parameters(hs->read_group_properties().checked_parameters());
             rg_props->condition_name(condition_name);
             rg_props->replicate_num(j);
             rg_props->file_path(sam_hit_filenames[j]);
@@ -1668,20 +1660,22 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
             //replicate_factories.back()->set_ref_rnas(ref_mRNAs);
         }
         
-        bundle_factories.push_back(shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
+        bundle_factories.push_back(boost::shared_ptr<ReplicatedBundleFactory>(new ReplicatedBundleFactory(replicate_factories, condition_name)));
 	}
     
-    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, corr_bias, false);
+    boost::crc_32_type ref_gtf_crc_result;
+    ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, ref_gtf_crc_result, corr_bias, false);
     if (ref_mRNAs.empty())
         return;
     
-    vector<shared_ptr<Scaffold> > mask_rnas;
+    vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, rt, mask_rnas, false, false);
+        boost::crc_32_type mask_gtf_crc_result;
+        ::load_ref_rnas(mask_gtf, rt, mask_rnas, mask_gtf_crc_result, false, false);
     }
     
-    BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+    BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
         fac->set_ref_rnas(ref_mRNAs);
         if (mask_gtf) 
@@ -1703,6 +1697,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         parse_norm_standards_file(norm_standards_file);
     }
     
+    validate_cross_sample_parameters(all_read_groups);
     
 #if ENABLE_THREADS
     locus_num_threads = num_threads;
@@ -1733,7 +1728,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         }
     }
     
-    if (most_reps == 1 && (dispersion_method != POISSON))
+    if (most_reps == 1 && (dispersion_method != BLIND || dispersion_method != POISSON))
     {
         fprintf(stderr, "Warning: No conditions are replicated, switching to 'blind' dispersion method\n");
         dispersion_method = BLIND;
@@ -1747,7 +1742,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	int tmp_max_frag_len = 0;
 	
 	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
-	BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
+	BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
 #if ENABLE_THREADS	
         while(1)
@@ -1800,7 +1795,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
-        shared_ptr<ReadGroupProperties> rg = all_read_groups[i];
+        boost::shared_ptr<ReadGroupProperties> rg = all_read_groups[i];
         fprintf(stderr, "> Map Properties:\n");
         
         fprintf(stderr, ">\tNormalized Map Mass: %.2Lf\n", rg->normalized_map_mass());
@@ -1827,7 +1822,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     long double total_norm_mass = 0.0;
     long double total_mass = 0.0;
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         total_norm_mass += rg_props->normalized_map_mass();
         total_mass += rg_props->total_map_mass();
@@ -1852,16 +1847,16 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     Tracking tracking;
     
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
+    test_launcher = boost::shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
     
 	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{
 		while (1) 
 		{
-			shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+			boost::shared_ptr<vector<boost::shared_ptr<SampleAbundances> > > abundances(new vector<boost::shared_ptr<SampleAbundances> >());
 			quantitate_next_locus(rt, bundle_factories, test_launcher);
 			bool more_loci_remain = false;
-            BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+            BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
             {
                 if (rep_fac->bundles_remain())
                 {
@@ -1893,7 +1888,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
             }
 		}
         
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+        BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
 			rep_fac->reset();
         }
@@ -1904,9 +1899,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     {
         bias_run = true;
         p_bar = ProgressBar("Learning bias parameters.", 0);
-		BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+		BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
-			BOOST_FOREACH (shared_ptr<BundleFactory> fac, rep_fac->factories())
+			BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, rep_fac->factories())
 			{
 #if ENABLE_THREADS	
 				while(1)
@@ -1947,7 +1942,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 			boost::this_thread::sleep(boost::posix_time::milliseconds(5));
 		}
 #endif
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
+        BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories)
 		{
 			rep_fac->reset();
         }
@@ -1955,7 +1950,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	}
     
     fprintf(outfiles.bias_out, "condition_name\treplicate_num\tparam\tpos_i\tpos_j\tvalue\n");
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         if (rg_props->bias_learner())
             rg_props->bias_learner()->output(outfiles.bias_out, rg_props->condition_name(), rg_props->replicate_num());
@@ -1963,7 +1958,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     
     // Allow the multiread tables to do their thing...
-    BOOST_FOREACH (shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
+    BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         rg_props->multi_read_table()->valid_mass(true);
     }
@@ -1996,14 +1991,14 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	final_est_run = true;
 	p_bar = ProgressBar("Testing for differential expression and regulation in locus.", num_bundles);
                                                      
-    test_launcher = shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, &tests, &tracking, &p_bar));
+    test_launcher = boost::shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, &tests, &tracking, &p_bar));
                                                                                               
 	while (true)
 	{
-        //shared_ptr<vector<shared_ptr<SampleAbundances> > > abundances(new vector<shared_ptr<SampleAbundances> >());
+        //boost::shared_ptr<vector<boost::shared_ptr<SampleAbundances> > > abundances(new vector<boost::shared_ptr<SampleAbundances> >());
         quantitate_next_locus(rt, bundle_factories, test_launcher);
         bool more_loci_remain = false;
-        BOOST_FOREACH (shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
+        BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> rep_fac, bundle_factories) 
         {
             if (rep_fac->bundles_remain())
             {

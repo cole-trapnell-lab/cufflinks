@@ -5,6 +5,8 @@
 #include <config.h>
 #endif
 
+#include <iostream>
+#include <fstream>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +24,6 @@
 #include "multireads.h"
 
 using namespace std;
-using boost::shared_ptr;
 
 /*
  *  hits.h
@@ -802,6 +803,141 @@ private:
     bool _eof_encountered;
 };
 
+class AbundanceGroup;
+    
+/******************************************************************************
+ BAMHitFactory turns SAM alignments into ReadHits
+ *******************************************************************************/
+class PrecomputedExpressionHitFactory : public HitFactory
+{
+public:
+    PrecomputedExpressionHitFactory(const string& expression_file_name,
+                                    ReadTable& insert_table,
+                                    RefSequenceTable& reference_table) :
+    HitFactory(insert_table, reference_table), _expression_file_name(expression_file_name), _ifs(expression_file_name.c_str()),
+    _ia(boost::shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(_ifs)))
+    {
+        load_count_tables(expression_file_name);
+        
+        if (inspect_header() == false)
+        {
+            throw std::runtime_error("Error: could not parse CXB header");
+        }
+        
+        // Override header-inferred read group properities with whatever
+        // the user supplied.
+        if (global_read_properties != NULL)
+        {
+            _rg_props = *global_read_properties;
+        }
+        
+        load_checked_parameters(expression_file_name);
+        
+        //map<string, AbundanceGroup> single_sample_tracking;
+        
+        _num_loci = 0;
+        *_ia >> _num_loci;
+        
+        _curr_locus_idx = 0;
+        _last_locus_id = -1;
+    }
+    
+    ~PrecomputedExpressionHitFactory()
+    {
+        
+    }
+    
+    void mark_curr_pos()
+    {
+        
+    }
+    
+    void undo_hit()
+    {
+    }
+    
+    bool records_remain() const
+    {
+        return false;
+    }
+    
+    void reset()
+    {
+        _ifs.clear() ;
+        _ifs.seekg(0, ios::beg);
+        _ia = boost::shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(_ifs));
+        size_t num_loci = 0;
+        *_ia >> num_loci;
+        _last_locus_id = -1;
+        _curr_locus_idx = 0;
+        _curr_ab_groups.clear();
+    }
+    
+    bool next_record(const char*& buf, size_t& buf_size);
+    
+    bool get_hit_from_buf(const char* bwt_buf, 
+                          ReadHit& bh,
+                          bool strip_slash,
+                          char* name_out = NULL,
+                          char* name_tags = NULL);
+    
+    bool inspect_header();
+    
+    boost::shared_ptr<const AbundanceGroup> next_locus(int locus_id);
+    
+    boost::shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
+    void clear_abundance_for_locus(int locus_id);
+    
+    double get_compat_mass(const string& locus_id)
+    {
+       map<string, double >::iterator i = compat_mass.find(locus_id);
+       if (i != compat_mass.end())
+       {
+           return i->second;
+       }
+       else
+       {
+           return 0;
+       }
+    }
+
+    double get_total_mass(const string& locus_id)
+    {
+        map<string, double >::iterator i = total_mass.find(locus_id);
+        if (i != total_mass.end())
+        {
+            return i->second;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    
+private:
+    
+    void load_count_tables(const string& expression_file_name);
+    void load_checked_parameters(const string& expression_file_name);
+    
+    //map<int, boost::shared_ptr<const AbundanceGroup> > ab_group_table;
+    size_t _num_loci;
+    size_t _curr_locus_idx;
+    int _last_locus_id;
+    std::ifstream _ifs;
+    string _expression_file_name;
+    boost::shared_ptr<boost::archive::binary_iarchive> _ia;
+    map<string, double> compat_mass;
+    map<string, double> total_mass;
+    map<int, boost::shared_ptr<const AbundanceGroup> > _curr_ab_groups;
+    
+    
+#if ENABLE_THREADS    
+    boost::mutex _factory_lock;
+#endif
+};
+    
+    
 // Forward declaration of BundleFactory, because MateHit will need a pointer
 // back to the Factory that created.  Ultimately, we should replace this
 // with a pointer back to the ReadGroupProperty object corresponding to each 
@@ -826,7 +962,7 @@ public:
     _collapse_mass(0.0),
     _is_mapped(false){}
     
-	MateHit(shared_ptr<ReadGroupProperties const> rg_props,
+	MateHit(boost::shared_ptr<ReadGroupProperties const> rg_props,
             RefID refid, 
 			const ReadHit* left_alignment, 
 			const ReadHit* right_alignment) : 
@@ -846,7 +982,7 @@ public:
 
 	//bool closed() {return _closed;}
 	
-    shared_ptr<ReadGroupProperties const> read_group_props() const { return _rg_props; }
+    boost::shared_ptr<ReadGroupProperties const> read_group_props() const { return _rg_props; }
     
 	const ReadHit* left_alignment() const {return _left_alignment;}
 	void left_alignment(const ReadHit* left_alignment) 
@@ -988,7 +1124,7 @@ public:
 
         if (is_multi())
 		{
-			shared_ptr<MultiReadTable> mrt = _rg_props->multi_read_table();
+			boost::shared_ptr<MultiReadTable> mrt = _rg_props->multi_read_table();
 			if (mrt)
 				return mrt->get_mass(*this);
 			else
@@ -1021,7 +1157,7 @@ public:
 	
 private:
 	
-    shared_ptr<ReadGroupProperties const> _rg_props;
+    boost::shared_ptr<ReadGroupProperties const> _rg_props;
 	RefID _refid;
 	const ReadHit* _left_alignment;
 	const ReadHit* _right_alignment;

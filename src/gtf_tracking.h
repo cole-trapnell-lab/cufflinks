@@ -1326,7 +1326,7 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NUL
               int check_for_dups=0, int qfidx=-1, const char* fname=NULL,
               bool only_multiexon=false);
 
-void read_transcripts(FILE* f, GList<GSeqData>& seqdata, bool keepAttrs=true);
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata, boost::crc_32_type& crc_result, bool keepAttrs=true);
 void sort_GSeqs_byName(GList<GSeqData>& seqdata);
 
 

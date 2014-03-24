@@ -515,7 +515,7 @@ int parse_options(int argc, char** argv)
 void combine_strand_assemblies(vector<Scaffold>& lhs, 
 						   vector<Scaffold>& rhs,
 						   vector<Scaffold>& scaffolds,
-						   vector<shared_ptr<Scaffold> >* ref_scaffs)
+						   vector<boost::shared_ptr<Scaffold> >* ref_scaffs)
 {
 	// first check for strand support
     for (size_t l = 0; l < lhs.size(); ++l)
@@ -537,7 +537,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 	{
 		for(size_t l = 0; l < lhs.size(); ++l)
 		{			
-			BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
+			BOOST_FOREACH(boost::shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
 			{
                 // if we're past all the overlaps, just stop
 				if (ref_scaff->left() >= lhs[l].right() + overhang_3)
@@ -570,7 +570,7 @@ void combine_strand_assemblies(vector<Scaffold>& lhs,
 		}
 		for(size_t r = 0; r < rhs.size(); ++r)
 		{			
-			BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
+			BOOST_FOREACH(boost::shared_ptr<Scaffold> ref_scaff, *ref_scaffs)
 			{
 				if (ref_scaff->left() >= rhs[r].right() + overhang_3)
 				{
@@ -689,8 +689,8 @@ CuffStrand guess_strand_for_interval(const vector<uint8_t>& strand_guess,
 
 
 bool scaffolds_for_bundle(const HitBundle& bundle, 
-						  vector<shared_ptr<Scaffold> >& scaffolds,
-						  vector<shared_ptr<Scaffold> >* ref_scaffs = NULL,
+						  vector<boost::shared_ptr<Scaffold> >& scaffolds,
+						  vector<boost::shared_ptr<Scaffold> >* ref_scaffs = NULL,
 						  BundleStats* stats = NULL)
 {
     if (bundle.hits().size() >= max_frags_per_bundle)
@@ -731,7 +731,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	if (ref_guided && enable_faux_reads && !hits.empty())
 	{
 		vector<Scaffold> pseudohits;
-		BOOST_FOREACH(shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
+		BOOST_FOREACH(boost::shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 		{
 			ref_scaff->tile_with_scaffs(pseudohits, tile_len, tile_off);
 		}
@@ -910,7 +910,7 @@ bool scaffolds_for_bundle(const HitBundle& bundle,
 	{
 		BOOST_FOREACH(Scaffold& scaff, tmp_scaffs)
 		{
-			scaffolds.push_back(shared_ptr<Scaffold>(new Scaffold(scaff)));
+			scaffolds.push_back(boost::shared_ptr<Scaffold>(new Scaffold(scaff)));
 		}
 	}
 	sort(scaffolds.begin(), scaffolds.end(), scaff_lt_sp);
@@ -970,7 +970,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
         }
         else
         {
-            BOOST_FOREACH(shared_ptr<Abundance>  ab, transfrag_cluster.abundances())
+            BOOST_FOREACH(boost::shared_ptr<Abundance>  ab, transfrag_cluster.abundances())
             {
                 ab->status(NUMERIC_HI_DATA);
             }
@@ -978,7 +978,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 	}
     else
     {
-        vector<shared_ptr<Abundance> >& abundances = transfrag_cluster.abundances();
+        vector<boost::shared_ptr<Abundance> >& abundances = transfrag_cluster.abundances();
         
         int N = abundances.size();
         double total_fpkm = 0.0;
@@ -997,14 +997,14 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
                 gammas[j] /= total_fpkm;
         }
         
-        vector<shared_ptr<Abundance> > filtered_transcripts = abundances;
+        vector<boost::shared_ptr<Abundance> > filtered_transcripts = abundances;
         filter_junk_isoforms(filtered_transcripts, gammas, abundances, 0);
         vector<bool> to_keep (abundances.size(), false);
         for(size_t i = 0; i < abundances.size(); ++i)
         {
-            shared_ptr<Abundance> ab_i = abundances[i];
+            boost::shared_ptr<Abundance> ab_i = abundances[i];
             bool found = false;
-            BOOST_FOREACH (shared_ptr<Abundance> ab_j, filtered_transcripts)
+            BOOST_FOREACH (boost::shared_ptr<Abundance> ab_j, filtered_transcripts)
             {
                 if (ab_i == ab_j)
                 {
@@ -1041,7 +1041,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 
 		BOOST_FOREACH(const AbundanceGroup& gene, transfrags_by_gene)
 		{
-			const vector<shared_ptr<Abundance> >& iso_abundances = gene.abundances();
+			const vector<boost::shared_ptr<Abundance> >& iso_abundances = gene.abundances();
 			vector<Isoform> isoforms;
 			
 			int gene_id = -1;
@@ -1050,7 +1050,7 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 			string ref_gene_id = "";
 			
 			double major_isoform_FPKM = 0;
-			BOOST_FOREACH (shared_ptr<Abundance> iso_ab, iso_abundances)
+			BOOST_FOREACH (boost::shared_ptr<Abundance> iso_ab, iso_abundances)
 			{
 				if (iso_ab->transfrag()->is_ref())
 				{
@@ -1067,14 +1067,14 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
 				major_isoform_FPKM = max(iso_ab->FPKM(), major_isoform_FPKM);
 			}
 			
-			BOOST_FOREACH (shared_ptr<Abundance> iso_ab, iso_abundances)
+			BOOST_FOREACH (boost::shared_ptr<Abundance> iso_ab, iso_abundances)
 			{
 				// Calculate transcript depth of coverage and FMI from FPKM
 				double FPKM = iso_ab->FPKM();
 				double density_score = major_isoform_FPKM ? (FPKM / major_isoform_FPKM) : 0;
 				double density_per_bp = FPKM;
 				
-				shared_ptr<Scaffold> transfrag = iso_ab->transfrag();
+				boost::shared_ptr<Scaffold> transfrag = iso_ab->transfrag();
 				assert(transfrag);
 				
 				double s_len = transfrag->length();
@@ -1117,17 +1117,17 @@ void quantitate_transcript_cluster(AbundanceGroup& transfrag_cluster,
     
 }
 
-void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
-									shared_ptr<ReadGroupProperties> rg_props,
+void quantitate_transcript_clusters(vector<boost::shared_ptr<Scaffold> >& scaffolds,
+									boost::shared_ptr<ReadGroupProperties> rg_props,
 									vector<Gene>& genes,
                                     bool bundle_too_large)
 {	
-	//vector<shared_ptr<Scaffold> > partials;
-	//vector<shared_ptr<Scaffold> > completes;
+	//vector<boost::shared_ptr<Scaffold> > partials;
+	//vector<boost::shared_ptr<Scaffold> > completes;
     
     long double total_map_mass = rg_props->normalized_map_mass();
     
-    vector<shared_ptr<Scaffold> > split_partials;
+    vector<boost::shared_ptr<Scaffold> > split_partials;
     // Cleave the partials at their unknowns to minimize FPKM dilation on  
     // the low end of the expression profile. 
     for (size_t i = 0; i < scaffolds.size(); ++i) 
@@ -1136,24 +1136,24 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
         scaffolds[i]->get_complete_subscaffolds(c); 
         BOOST_FOREACH (Scaffold& s, c)
         {
-            split_partials.push_back(shared_ptr<Scaffold>(new Scaffold(s))); 
+            split_partials.push_back(boost::shared_ptr<Scaffold>(new Scaffold(s))); 
         }
     } 
     
     scaffolds = split_partials;
 	
-	vector<shared_ptr<Abundance> > abundances;
-	BOOST_FOREACH(shared_ptr<Scaffold> s, scaffolds)
+	vector<boost::shared_ptr<Abundance> > abundances;
+	BOOST_FOREACH(boost::shared_ptr<Scaffold> s, scaffolds)
 	{
 		TranscriptAbundance* pT = new TranscriptAbundance;
 		pT->transfrag(s);
-		shared_ptr<Abundance> ab(pT);
+		boost::shared_ptr<Abundance> ab(pT);
 		abundances.push_back(ab);
 	}
 	
 	AbundanceGroup transfrags = AbundanceGroup(abundances);
 	
-    set<shared_ptr<ReadGroupProperties const> > read_groups;
+    set<boost::shared_ptr<ReadGroupProperties const> > read_groups;
     read_groups.insert(rg_props);
     
     transfrags.init_rg_props(read_groups);
@@ -1172,8 +1172,8 @@ void quantitate_transcript_clusters(vector<shared_ptr<Scaffold> >& scaffolds,
 
 void assemble_bundle(const RefSequenceTable& rt,
 					 HitBundle* bundle_ptr, 
-					 shared_ptr<ReadGroupProperties> rg_props,
-                     shared_ptr<BiasLearner> bl_ptr,
+					 boost::shared_ptr<ReadGroupProperties> rg_props,
+                     boost::shared_ptr<BiasLearner> bl_ptr,
 					 FILE* ftranscripts,
 					 FILE* fgene_abundances,
 					 FILE* ftrans_abundances,
@@ -1193,7 +1193,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 #if ENABLE_THREADS
     bundle_label.reset(new string(bundle_label_buf));
 #else
-    bundle_label = shared_ptr<string>(new string(bundle_label_buf));
+    bundle_label = boost::shared_ptr<string>(new string(bundle_label_buf));
 #endif
 
     verbose_msg( "%s\tProcessing new bundle with %d alignments\n", 
@@ -1204,7 +1204,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	boost::this_thread::at_thread_exit(decr_pool_count);
 #endif
 	
-	vector<shared_ptr<Scaffold> > scaffolds;
+	vector<boost::shared_ptr<Scaffold> > scaffolds;
 	
     bool successfully_assembled = true;
     
@@ -1434,7 +1434,7 @@ void assemble_bundle(const RefSequenceTable& rt,
 	delete bundle_ptr;
 }
 
-bool assemble_hits(BundleFactory& bundle_factory, shared_ptr<BiasLearner> bl_ptr)
+bool assemble_hits(BundleFactory& bundle_factory, boost::shared_ptr<BiasLearner> bl_ptr)
 {
 	//srand(time(0));
 		
@@ -1587,11 +1587,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     ReadTable it;
 	RefSequenceTable rt(true, false);
 	    
-	shared_ptr<HitFactory> hit_factory;
+	boost::shared_ptr<HitFactory> hit_factory;
 
     try
 	{
-		hit_factory = shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
+		hit_factory = boost::shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
 	}
 	catch (std::runtime_error& e)
 	{
@@ -1600,7 +1600,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 	
         try
         {
-            hit_factory = shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
+            hit_factory = boost::shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
         }
         catch (std::runtime_error& e)
         {
@@ -1610,24 +1610,26 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
         }
 	}
 	
-	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
-	shared_ptr<ReadGroupProperties> rg_props =bundle_factory.read_group_properties();
+	boost::shared_ptr<BundleFactory> bundle_factory = boost::shared_ptr<BundleFactory>(new BundleFactory(hit_factory, bundle_mode));
+	boost::shared_ptr<ReadGroupProperties> rg_props = bundle_factory->read_group_properties();
 	BadIntronTable bad_introns;
     
     rt.print_rec_ordering();
     
-    vector<shared_ptr<Scaffold> > ref_mRNAs;
+    vector<boost::shared_ptr<Scaffold> > ref_mRNAs;
     if (ref_gtf)
     {
-        ::load_ref_rnas(ref_gtf, bundle_factory.ref_table(), ref_mRNAs, corr_bias && bundle_mode == REF_DRIVEN, false);
-        bundle_factory.set_ref_rnas(ref_mRNAs);
+        boost::crc_32_type ref_gtf_crc_result;
+        ::load_ref_rnas(ref_gtf, bundle_factory->ref_table(), ref_mRNAs, ref_gtf_crc_result, corr_bias && bundle_mode == REF_DRIVEN, false);
+        bundle_factory->set_ref_rnas(ref_mRNAs);
     }
     rt.print_rec_ordering();
-    vector<shared_ptr<Scaffold> > mask_rnas;
+    vector<boost::shared_ptr<Scaffold> > mask_rnas;
     if (mask_gtf)
     {
-        ::load_ref_rnas(mask_gtf, bundle_factory.ref_table(), mask_rnas, false, false);
-        bundle_factory.set_mask_rnas(mask_rnas);
+        boost::crc_32_type mask_gtf_crc_result;
+        ::load_ref_rnas(mask_gtf, bundle_factory->ref_table(), mask_rnas, mask_gtf_crc_result, false, false);
+        bundle_factory->set_mask_rnas(mask_rnas);
     }
     
     vector<LocusCount> compatible_count_table;
@@ -1641,7 +1643,7 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     rg_props->raw_compatible_counts(compatible_count_table);
     rg_props->raw_total_counts(total_count_table);
     
-    vector<shared_ptr<ReadGroupProperties> > read_groups;
+    vector<boost::shared_ptr<ReadGroupProperties> > read_groups;
     read_groups.push_back(rg_props);
     
     normalize_counts(read_groups);
@@ -1650,18 +1652,18 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     verbose_msg("%d ReadHits still live\n", num_deleted);
     verbose_msg("Found %lu reference contigs\n", rt.size());
     
-    BOOST_FOREACH(shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
+    BOOST_FOREACH(boost::shared_ptr<Scaffold> ref_scaff, ref_mRNAs)
     {
         ref_scaff->clear_hits();
     }
     
     //fprintf(stderr, "ReadHit delete count is %d\n", num_deleted);
     
-	shared_ptr<BiasLearner> bl_ptr(new BiasLearner(rg_props->frag_len_dist()));
-    bundle_factory.read_group_properties(rg_props);
+	boost::shared_ptr<BiasLearner> bl_ptr(new BiasLearner(rg_props->frag_len_dist()));
+    bundle_factory->read_group_properties(rg_props);
 
 	//if (ref_gtf) -- why? bad introns are bad
-		bundle_factory.bad_intron_table(bad_introns);
+		bundle_factory->bad_intron_table(bad_introns);
 	
 	max_frag_len = rg_props->frag_len_dist()->max();
 	min_frag_len = rg_props->frag_len_dist()->min();
@@ -1669,20 +1671,19 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
 
 	if (corr_bias || corr_multi) final_est_run = false;
 
-	assemble_hits(bundle_factory, bl_ptr);
+	assemble_hits(*bundle_factory, bl_ptr);
 
 	if (final_est_run) 
 	{
-	  delete &bundle_factory;
 	  //delete bl_ptr;
 	  ref_mRNAs.clear();
 	  return;
 	}
 
 	hit_factory->reset();
-	delete &bundle_factory;
+	
 	BundleFactory bundle_factory2(hit_factory, REF_DRIVEN);
-	rg_props->bias_learner(shared_ptr<BiasLearner const>(bl_ptr));
+	rg_props->bias_learner(boost::shared_ptr<BiasLearner const>(bl_ptr));
 	rg_props->multi_read_table()->valid_mass(true);
 	bundle_factory2.read_group_properties(rg_props);
 
@@ -1690,13 +1691,15 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     {
 		ref_gtf = fopen(string(output_dir + "/transcripts.gtf").c_str(), "r");
         ref_mRNAs.clear();
-        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, corr_bias, true);
+        boost::crc_32_type ref_gtf_crc_result;
+        ::load_ref_rnas(ref_gtf, bundle_factory2.ref_table(), ref_mRNAs, ref_gtf_crc_result, corr_bias, true);
     }    
 	bundle_factory2.set_ref_rnas(ref_mRNAs);
     if (mask_gtf)
     {
         mask_rnas.clear();
-        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, false, false);
+        boost::crc_32_type mask_gtf_crc_result;
+        ::load_ref_rnas(mask_gtf, bundle_factory2.ref_table(), mask_rnas, mask_gtf_crc_result, false, false);
         bundle_factory2.set_mask_rnas(mask_rnas);
     }    
 	bundle_factory2.reset();

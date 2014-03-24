@@ -1478,12 +1478,12 @@ bool Scaffold::map_frag(const MateHit& hit, int& start, int& end, int& frag_len)
 	}
 	else if (hit.read_group_props()->mate_strand_mapping()==FF)
 	{
-		shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
+		boost::shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
 		frag_len = min(frag_len_dist->mode(), trans_len);
 	}
 	else
 	{
-		shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
+		boost::shared_ptr<const EmpDist> frag_len_dist = hit.read_group_props()->frag_len_dist();
 
 		if ((hit.left_alignment()->antisense_align() && strand() != CUFF_REV) 
 			|| (!hit.left_alignment()->antisense_align() && strand() == CUFF_REV))
@@ -1688,7 +1688,7 @@ double Scaffold::internal_exon_coverage() const
     return percent_covered;
 }
 
-bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) const
+bool Scaffold::has_strand_support(vector<boost::shared_ptr<Scaffold> >* ref_scaffs) const
 {
 	if (strand() == CUFF_STRAND_UNKNOWN)
 		return false;
@@ -1707,7 +1707,7 @@ bool Scaffold::has_strand_support(vector<shared_ptr<Scaffold> >* ref_scaffs) con
 	if (ref_scaffs == NULL)
 		return false;
 	
-	BOOST_FOREACH (shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
+	BOOST_FOREACH (boost::shared_ptr<Scaffold const> ref_scaff, *ref_scaffs)
 	{
 		if (ref_scaff->strand() == strand() && exons_overlap(*this, *ref_scaff))
 			return true;
@@ -1821,17 +1821,17 @@ bool scaff_lt_rt_oplt(const Scaffold& lhs, const Scaffold& rhs)
     return false;
 }
 
-bool scaff_lt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+bool scaff_lt_sp(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs)
 {
 	return scaff_lt(*lhs,*rhs);
 }
 
-bool scaff_lt_rt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+bool scaff_lt_rt_sp(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs)
 {
 	return scaff_lt_rt(*lhs,*rhs);
 }
 
-bool scaff_lt_rt_oplt_sp(shared_ptr<Scaffold> lhs, shared_ptr<Scaffold> rhs)
+bool scaff_lt_rt_oplt_sp(boost::shared_ptr<Scaffold> lhs, boost::shared_ptr<Scaffold> rhs)
 {
 	return scaff_lt_rt_oplt(*lhs,*rhs);
 }

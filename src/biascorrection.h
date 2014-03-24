@@ -60,7 +60,7 @@ class BiasLearner{
 #if ENABLE_THREADS	
 	boost::mutex _bl_lock;
 #endif
-	
+    
 public:
 	
 	BiasLearner(boost::shared_ptr<EmpDist const> frag_len_dist);

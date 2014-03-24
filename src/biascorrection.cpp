@@ -65,7 +65,7 @@ void ones(ublas::matrix<long double>& A)
 			A(i,j) = 1;
 }
 
-void get_compatibility_list(const vector<shared_ptr<Scaffold> >& transcripts,
+void get_compatibility_list(const vector<boost::shared_ptr<Scaffold> >& transcripts,
                             const vector<MateHit>& alignments,
                             vector<list<int> >& compatibilities)
 {
@@ -155,7 +155,7 @@ const int BiasLearner::_n = 64; //Length of maximum connection in VLMM
 const int BiasLearner::lengthBins[] = {791,1265,1707,2433}; //Quantiles derived from human mRNA length distribution in UCSC genome browser
 const double BiasLearner::positionBins[] = {.02,.04,.06,.08,.10,.15,.2,.3,.4,.5,.6,.7,.8,.85,.9,.92,.94,.96,.98,1};
 
-BiasLearner::BiasLearner(shared_ptr<EmpDist const> frag_len_dist)
+BiasLearner::BiasLearner(boost::shared_ptr<EmpDist const> frag_len_dist)
 {
 	paramTypes = vlmmSpec;
 	if (bias_mode==SITE || bias_mode==POS_SITE)
@@ -615,7 +615,7 @@ void BiasLearner::output(FILE* output_file, const string& condition_name, int re
 
 
 
-int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> rgp)
+int BiasCorrectionHelper::add_read_group(boost::shared_ptr<ReadGroupProperties const> rgp)
 {
 	int trans_len = _transcript->length();
 	_rg_index.insert(make_pair(rgp, _size));
@@ -625,7 +625,7 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 	vector<double> end_bias(trans_len+1, 1.0);
 	double eff_len = 0.0;
 	
-	shared_ptr<EmpDist const> fld = rgp->frag_len_dist();
+	boost::shared_ptr<EmpDist const> fld = rgp->frag_len_dist();
 	
 	vector<double> tot_bias_for_len(trans_len+1, 0);
 	vector<double> start_bias_for_len(trans_len+1, 0);
@@ -677,9 +677,9 @@ int BiasCorrectionHelper::add_read_group(shared_ptr<ReadGroupProperties const> r
 }
 
 int num_adds = 0;
-int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
+int BiasCorrectionHelper::get_index(boost::shared_ptr<ReadGroupProperties const> rgp)
 {
-    boost::unordered_map<shared_ptr<ReadGroupProperties const>, int>::iterator iter;
+    boost::unordered_map<boost::shared_ptr<ReadGroupProperties const>, int>::iterator iter;
 	iter = _rg_index.find(rgp);
 	
 	if (iter==_rg_index.end()) //This rg is not yet in the index, so add it.
@@ -694,7 +694,7 @@ int BiasCorrectionHelper::get_index(shared_ptr<ReadGroupProperties const> rgp)
 // Hit needs to be from the collapsed (non_redundant) list to match indexing 
 double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 {
-	shared_ptr<ReadGroupProperties const> rgp = hit.read_group_props();
+	boost::shared_ptr<ReadGroupProperties const> rgp = hit.read_group_props();
 	
 	int i = get_index(rgp);
 	
@@ -705,7 +705,7 @@ double BiasCorrectionHelper::get_cond_prob(const MateHit& hit)
 	
 	_transcript->map_frag(hit, start, end, frag_len);
 
-	shared_ptr<const EmpDist> fld = rgp->frag_len_dist();
+	boost::shared_ptr<const EmpDist> fld = rgp->frag_len_dist();
 	
 	double cond_prob = 1.0;
 	cond_prob *= _start_biases[i][start];
@@ -815,7 +815,7 @@ double BiasCorrectionHelper::get_effective_length()
 	if (tot_mass==0)
 		return _transcript->length();
 	
-    for (boost::unordered_map<shared_ptr<ReadGroupProperties const>, int>::iterator itr = _rg_index.begin();
+    for (boost::unordered_map<boost::shared_ptr<ReadGroupProperties const>, int>::iterator itr = _rg_index.begin();
          itr != _rg_index.end();
          ++itr)
 	{

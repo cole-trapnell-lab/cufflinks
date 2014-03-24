@@ -568,9 +568,9 @@ void filter_hits(int bundle_length,
 }
 
 
-void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
+void filter_junk_isoforms(vector<boost::shared_ptr<Abundance> >& transcripts,
 						  vector<double>& abundances,
-                          const vector<shared_ptr<Abundance> >& mapped_transcripts,
+                          const vector<boost::shared_ptr<Abundance> >& mapped_transcripts,
                           double locus_mass)
 {
 	//	vector<double>::iterator max_ab = std::max_element(abundances.begin(),
@@ -580,7 +580,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
+		boost::shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
 		if (scaff->strand() == CUFF_FWD || scaff->strand() == CUFF_STRAND_UNKNOWN)
 		{
 			if (abundances[t] > max_fwd_ab)
@@ -602,7 +602,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 	//cerr << "Chucked : ";
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
-		shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
+		boost::shared_ptr<Scaffold> scaff = transcripts[t]->transfrag();
         
 		if (!(scaff->is_ref()) && allow_junk_filtering)
 		{
@@ -661,7 +661,7 @@ void filter_junk_isoforms(vector<shared_ptr<Abundance> >& transcripts,
 		}
 	}
 	
-	vector<shared_ptr<Abundance> > non_junk_transcripts;
+	vector<boost::shared_ptr<Abundance> > non_junk_transcripts;
 	vector<double> non_junk_abundances;
 	for (size_t t = 0; t < transcripts.size(); ++t)
 	{
