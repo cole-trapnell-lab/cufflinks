@@ -42,6 +42,7 @@ cp src/cuffdiff $1
 cp src/cuffmerge $1/cuffmerge
 cp src/gffread $1
 cp src/gtf_to_sam $1
+cp src/cuffnorm $1
 cp src/cuffquant $1
 cp README $1
 cp LICENSE $1
