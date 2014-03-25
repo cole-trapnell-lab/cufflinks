@@ -409,7 +409,7 @@ test_chromosome Cufflinks       exon    501     550     1000    +       .
                   <br/>
 				  <p>Cufflinks includes a number of tools for analyzing RNA-Seq experiments. Some of these tools can be run on their own, while others are pieces of a larger workflow. The complexity of your workflow depends on what you want to achieve with your analysis.  For a complete discussion of how Cufflinks can help you with your analysis, please see our protocol paper.  The paper includes a diagram (Figure 2) describing how the various parts of the Cufflinks package (and its companion tool TopHat) fit together.  As of version 2.2.0, you can also run Cuffquant and Cuffnorm to make large scale analyses easier to handle.  The figure below is an updated version of Figure 2 showing how the two utilities released after the protocol paper appeared fit into the workflow:
 				  <img style="vertical-align:middle;padding-top:4px; display: block; margin-left: auto; margin-right: auto;"
-				            border=0 src="images/tuxedo_workflow.svg">
+				            border=0 src="images/tuxedo_workflow.png">
 				 <p> You can use Cuffquant to pre-compute gene expression levels for each of your samples, which can save time if you have to re-run part of your analysis.  Using Cuffquant also makes it easier to spread the load of computation for lots of samples across multiple computers.  If you don't want to perform differential expression analysis, you can run Cuffnorm instead of Cuffdiff.  Cuffnorm produces simple tables of expression values that you can look at in R (for example) to cluster samples and perform other follow up analysis.</p>
 				 <br/>
                   <h2 id="discovery">Discovering novel genes and
