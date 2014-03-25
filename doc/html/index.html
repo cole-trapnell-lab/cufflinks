@@ -133,7 +133,7 @@
                 <tbody>
                   <tr>
                     <td>version 2.2.0</td>
-                    <td align="right">5/23/2014</td>
+                    <td align="right">5/25/2014</td>
                   </tr>
                   <tr>
                     <td><a href="./downloads/cufflinks-2.2.0.tar.gz"
@@ -162,9 +162,11 @@
           
 
 
-          <h2>Related Tools</h2>
+		  <h2>Related Tools</h2>
           <div class="box">
             <ul>
+                <li><a href="http://monocle-bio.sourceforge.net">Monocle</a>:
+                  Single-cell RNA-Seq analysis</li>
 				<li><a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a>:
 	                Visualization of RNA-Seq differential analysis</li>
               <li><a href="http://tophat.cbcb.umd.edu/">TopHat</a>:
@@ -173,6 +175,7 @@
                 Ultrafast short read alignment</li>
             </ul>
           </div>
+
 
           <h2>Publications</h2>
           <div class="box">
@@ -252,14 +255,15 @@
         </div>
         <!-- End of "rightside" -->
         <div id="leftside">
-			<h2>2.2.0 release - 3/23/2014</h2>
-			<p>This release introduces some new features designed to simplify and speed up Cufflinks workflows. Release version 2.2.0 includes two new programs, <a href="manual.html#cuffquant"><tt>cuffquant</tt></a> and <a href="manual.html#cuffnorm"><tt>cuffnorm</tt></a> that make it easier to quantify gene expression in experiments with many samples. These are particularly helpful for single cell RNA-Seq experiments, where the reads for each cell are provided as a separate FASTQ file or pair of files. 
-				</p>
+			<h2>2.2.0 release - 3/25/2014</h2>
+			<p>This release introduces some new features designed to simplify and speed up Cufflinks workflows. Release version 2.2.0 includes two new programs, <a href="manual.html#cuffquant"><tt>cuffquant</tt></a> and <a href="manual.html#cuffnorm"><tt>cuffnorm</tt></a> that make it easier to quantify gene expression in experiments with many samples. These are particularly helpful for single cell RNA-Seq experiments, where the reads for each cell are provided as a separate FASTQ file or pair of files.
+			<p>Release 2.2.0 also introduces <a href="manual.html#sample_sheets"><strong>sample sheets</strong></a> and <a href="manual.html#contrast_files"><strong>contrast files</strong></a>. These facilities make it easier to work with large analyses involving many samples.
 			<p>Cuffquant quantifies gene and transcript expression levels for a single BAM file.  These levels are stored in a new binary file type, the CXB file.  You can then provide CXB files for your samples directly to Cuffdiff instead of BAMs.  Mixing BAM and CXB files is not yet supported.  Because expression levels for each sample are quantified by Cuffquant, Cuffdiff doesn't have to perform this step, which speeds up Cuffdiff runs substantially and lowers their memory footprints. We recommend that most users switch to this new Cuffdiff workflow for all experiments that involve more than a few samples.  However, note that running Cuffquant prior to running Cuffdiff is <strong>optional</strong> - you can still directly supply BAM files to Cuffdiff.
 				</p>
 			<p>Cuffquant files can also be passed to Cuffnorm, which simply computes a normalized table of expression values for genes and transcripts.  Unlike Cuffdiff, Cuffnorm performs no differential expression testing.  Cuffnorm also does not calculate confidence intervals on expression values.  Cuffnorm is meant to be used when all you want is a set of comparable expression values for genes, transcripts, CDS groups, and TSS groups, such as when you simply want to make heatmaps or dendrograms or plot values for individual genes.  Cuffnorm can output values in one of two formats: Cuffdiff tracking tables (which can be used with <a href="http://compbio.mit.edu/cummeRbund/">CummeRbund</a>), or in simple, tab-delimited tables.  The latter is the recommended output format for use with <a href="http://monocle-bio.sourceforge.net/">Monocle</a> in single cell RNA-Seq experiments.
 			</p>
-			<p>Release 2.2.0 also introduces <a href="manual.html#sample_sheets">sample sheets</a> and <a href="manual.html#contrast_files">contrast files</a>. These facilities make it easier to work with large analyses involving many samples.
+			<p> Here's an overview of the new (optional) workflow, compared to the old workflow described in our Nature Protocols paper:<img style="vertical-align:middle;padding-top:4px; display: block; margin-left: auto; margin-right: auto;"
+          border=0 src="images/tuxedo_workflow.svg">
 				
 			<br/>
 			<br/>
