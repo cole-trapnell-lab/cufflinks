@@ -12,8 +12,8 @@ mkdir $1
 make distclean
 if [[ $(uname) = "Darwin" ]]
 then
-    export CFLAGS="-mmacosx-version-min=10.6"
-    export LDFLAGS="-static-libstdc++"
+    export CFLAGS="-mmacosx-version-min=10.7 -stdlib=libc++"
+    export LDFLAGS="-stdlib=libc++"
 elif [ $(uname -m) = "x86_64"]
 then
     echo "Linking statically on x86_64 (only for gcc 4.5+).."
