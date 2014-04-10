@@ -2,10 +2,6 @@
 #define GTF_TRACKING_H
 /*
  *  gtf_tracking.h
- *  cufflinks
- *
- *  Created by Cole Trapnell on 9/5/09.
- *  Copyright 2009 Geo Pertea. All rights reserved.
  *
  */
 
@@ -17,7 +13,6 @@
 #include "GFaSeqGet.h"
 #include "GFastaIndex.h"
 #include "GStr.h"
-
 
 #define MAX_QFILES 500
 
@@ -1326,11 +1321,19 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data=NUL
               int check_for_dups=0, int qfidx=-1, const char* fname=NULL,
               bool only_multiexon=false);
 
-void read_transcripts(FILE* f, GList<GSeqData>& seqdata, boost::crc_32_type& crc_result, bool keepAttrs=true);
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata, 
+#ifdef CUFFLINKS
+  boost::crc_32_type& crc_result, 
+#endif
+  bool keepAttrs=true);
+
 void sort_GSeqs_byName(GList<GSeqData>& seqdata);
 
+bool singleExonTMatch(GffObj& m, GffObj& r, int& ovlen);
 
-bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool fuzzunspl=false, bool contain_only=false);
+//strict intron chain match, or single-exon match
+bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool fuzzunspl=false, 
+           bool contain_only=false);
 
 //use qsearch to "position" a given coordinate x within a list of transcripts sorted 
 //by their start (lowest) coordinate; the returned int is the list index of the 

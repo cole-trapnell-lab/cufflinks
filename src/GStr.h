@@ -59,11 +59,14 @@ class GStr {
         bool operator>=(const char* s) const;
         bool operator!=(const GStr& s) const;
         bool operator!=(const char* s) const;
-        GStr& operator+=(const GStr& s);
-        GStr& operator+=(const char* s);
-        GStr& operator+=(const char c);
-        GStr& operator+=(const int i);
-        GStr& operator+=(const double f);
+        GStr& operator+=(const GStr& s) { return append(s.chars()); }
+        GStr& operator+=(const char* s) { return append(s); }
+        GStr& operator+=(char c) { return append(c); }
+        GStr& operator+=(int i) { return append(i); }
+        GStr& operator+=(uint i) { return append(i); }
+        GStr& operator+=(long l) { return append(l); }
+        GStr& operator+=(unsigned long l) { return append(l); }
+        GStr& operator+=(double f);
       //interface:
       public:
         int length() const;
@@ -90,6 +93,13 @@ class GStr {
         GStr& insert(const char* s, int index = 0);
         GStr& append(const char* s);
         GStr& append(const GStr& s);
+        GStr& append(char c);
+        GStr& append(int i);
+        GStr& append(long l);
+        GStr& append(double f);
+        GStr& append(uint i);
+        GStr& append(unsigned long l);
+
         GStr& upper();
         GStr& lower();
         GStr& clear();//make empty

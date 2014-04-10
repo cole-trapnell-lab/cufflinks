@@ -1,6 +1,9 @@
 #ifndef GFF_H
 #define GFF_H
 
+#define CUFFLINKS 1
+
+
 #include "GBase.h"
 #include "gdna.h"
 #include "codons.h"
@@ -8,7 +11,9 @@
 #include "GList.hh"
 #include "GHash.hh"
 
+#ifdef CUFFLINKS
 #include <boost/crc.hpp>  // for boost::crc_32_type
+#endif
 
 /*
 const byte exMskMajSpliceL = 0x01;
@@ -1012,9 +1017,9 @@ class GffReader {
   GffObj* promoteFeature(CNonExon* subp, char*& subp_name, GHash<CNonExon>& pex,
                                   bool keepAttr, bool noExonAttr);
   GList<GSeqStat> gseqstats; //list of all genomic sequences seen by this reader, accumulates stats
-    
+#ifdef CUFFLINKS
      boost::crc_32_type  _crc_result;
-    
+#endif
  public:
   GffNames* names; //just a pointer to the global static Gff names repository in GffObj
   GfList gflst; //accumulate GffObjs being read
@@ -1081,8 +1086,9 @@ class GffReader {
 
   // load all subfeatures, re-group them:
   void readAll(bool keepAttr=false, bool mergeCloseExons=false, bool noExonAttr=true);
-
+#ifdef CUFFLINKS
     boost::crc_32_type current_crc_result() const { return _crc_result; }
+#endif
 }; // end of GffReader
 
 #endif

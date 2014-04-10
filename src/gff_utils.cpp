@@ -625,7 +625,19 @@ void GffLoader::load(GList<GenomicSeqData>& seqdata, GFValidateFunc* gf_validate
     		 }
     	 }
     	 if (is_pseudo) continue;
-     }
+    	 //last resort:
+    	 //  scan all the attribute values for "pseudogene" keyword (NCBI does that for "product" attr)
+    	 if (m->attrs!=NULL) {
+    		 for (int i=0;i<m->attrs->Count();++i) {
+    			 GffAttr& a=*(m->attrs->Get(i));
+    			 if (strifind(a.attr_val, "pseudogene")) {
+    				 is_pseudo=true;
+    				 break;
+    			 }
+    		 }
+    	 }
+         if (is_pseudo) continue;
+     } //pseudogene detection requested
      char* rloc=m->getAttr("locus");
      if (rloc!=NULL && startsWith(rloc, "RLOC_")) {
         m->removeAttr("locus", rloc);

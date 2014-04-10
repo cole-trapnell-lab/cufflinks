@@ -200,8 +200,9 @@ int parse_mRNAs(GfList& mrnas,
 				 bool is_ref_set,
 				 int check_for_dups,
 				 int qfidx, bool only_multiexon) {
-	int refdiscarded=0; //ref duplicates discarded
-	int tredundant=0; //cufflinks redundant transcripts discarded
+	int tredundant=0; //redundant transcripts discarded
+	int total_kept=0;
+	int total_seen=mrnas.Count();
 	for (int k=0;k<mrnas.Count();k++) {
 		GffObj* m=mrnas[k];
 		int i=-1;
@@ -222,13 +223,14 @@ int parse_mRNAs(GfList& mrnas,
 		//if (m->exons.Count()==0 && gene_or_locus) {
 		if (m->isDiscarded()) {
 			//discard generic "gene" or "locus" features with no other detailed subfeatures
-			//if (gtf_tracking_verbose)
-			//   GMessage("Warning: discarding GFF generic gene/locus container %s\n",m->getID());
+			if (!is_ref_set && gtf_tracking_verbose)
+			   GMessage("Warning: discarding non-transfrag (GFF generic gene/locus container?) %s\n",m->getID());
 			continue;
 			}
+
 		if (m->exons.Count()==0) {
-				//if (gtf_tracking_verbose)
-				// GMessage("Warning: %s %s found without exon segments (adding default exon).\n",m->getFeatureName(), m->getID());
+				if (gtf_tracking_verbose && !is_ref_set)
+				 GMessage("Warning: %s %s found without exon segments (adding default exon).\n",m->getFeatureName(), m->getID());
 				m->addExon(m->start,m->end);
 				}
 		if (glstdata.Found(&f,i)) gdata=glstdata[i];
@@ -248,6 +250,7 @@ int parse_mRNAs(GfList& mrnas,
 		     //unknown strand - discard from reference set (!)
 		     continue;
 		     }
+		   total_kept++;
 		   target_mrnas=(m->strand=='+') ? &(gdata->mrnas_f) : &(gdata->mrnas_r);
 		   if (check_for_dups) {
 		     //check all gdata->mrnas_r (ref_data) for duplicate ref transcripts
@@ -258,7 +261,8 @@ int parse_mRNAs(GfList& mrnas,
 		      //but let's keep the gene_name if present
 		      //DEBUG:
 		      //GMessage("Ref duplicates: %s = %s\n", rp->getID(), m->getID());
-		      refdiscarded++;
+		      tredundant++;
+		      total_kept--;
 		      if (betterDupRef(rp, m)) {
 		           if (rp->getGeneName()==NULL && m->getGeneName()!=NULL) {
 		                  rp->setGeneName(m->getGeneName());
@@ -281,26 +285,34 @@ int parse_mRNAs(GfList& mrnas,
 		   if (m->strand=='+') { target_mrnas = &(gdata->mrnas_f); }
 		     else if (m->strand=='-') { target_mrnas=&(gdata->mrnas_r); }
 		        else { m->strand='.'; target_mrnas=&(gdata->umrnas); }
+		   total_kept++;
 		   if (check_for_dups) { //check for redundancy
 		     // check if there is a redundancy between this and another already loaded Cufflinks transcript
 		     int cidx =  is_Redundant(m, target_mrnas, (check_for_dups>1));
 		     if (cidx>=0) {
 		        //always discard the redundant transcript with the fewer exons OR shorter
-		        if (t_dominates(target_mrnas->Get(cidx),m)) {
+			     tredundant++;
+		         total_kept--;
+		    	 if (t_dominates(target_mrnas->Get(cidx),m)) {
 		            //new transcript is shorter, discard it
+		        	if (gtf_tracking_verbose) {
+		        		GMessage(" transfrag %s discarded (made redundant by %s)\n", m->getID(), target_mrnas->Get(cidx)->getID());
+		        	}
 		            continue;
-		            } 
+		        }
 		        else {
 		            //discard the older transfrag
+		        	if (gtf_tracking_verbose) {
+		        		GMessage(" transfrag %s discarded (made redundant by %s)\n", target_mrnas->Get(cidx)->getID(), m->getID());
+		        	}
 		            ((CTData*)(target_mrnas->Get(cidx)->uptr))->mrna=NULL;
 		            target_mrnas->Get(cidx)->isUsed(false);
 		            target_mrnas->Forget(cidx);
 		            target_mrnas->Delete(cidx);
 		            //the uptr (CTData) pointer will still be kept in gdata->ctdata and deallocated eventually
-		            }
-		        tredundant++;
 		        }
-		     }// redundant transfrag check
+		     }
+		   }// redundant transfrag check
 		   if (m->gscore==0.0)   
 		     m->gscore=m->exons[0]->score; //Cufflinks exon score = isoform abundance
 		   //const char* expr = (gtf_tracking_largeScale) ? m->getAttr("FPKM") : m->exons[0]->getAttr(m->names,"FPKM");
@@ -348,18 +360,34 @@ int parse_mRNAs(GfList& mrnas,
 		   mdata->conf_lo=conf_lo;
 		   }
 	}//for each mrna read
+	if (gtf_tracking_verbose) {
+		if (is_ref_set)
+       GMessage(" Kept %d ref transcripts out of %d\n", total_kept, total_seen);
+		else
+	   GMessage(" Kept %d transfrags out of %d\n", total_kept, total_seen);
+	}
  //if (mrna_deleted>0)
  //  mrnas.Pack();
  
- return (is_ref_set ? refdiscarded : tredundant);
+ //return (is_ref_set ? refdiscarded : tredundant);
+	return tredundant;
+}
+
+bool singleExonTMatch(GffObj& m, GffObj& r, int& ovlen) {
+ //if (m.exons.Count()>1 || r.exons.Count()>1..)
+ GSeg mseg(m.start, m.end);
+ ovlen=mseg.overlapLen(r.start,r.end);
+ int lmax=GMAX(r.covlen, m.covlen);
+ return ((ovlen >= lmax*0.8) // fuzz matching for single-exon transcripts: 80% of the longer one
+             || (ovlen >= r.covlen*0.9)); // fuzzy reverse-containment - the reference transcript is shorter
 }
 
 bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool fuzzunspl, bool contain_only) {
-	//strict intron chain match, or single-exon perfect match
+	//strict intron chain match, or single-exon match
 	int imax=a.exons.Count()-1;
 	int jmax=b.exons.Count()-1;
 	ovlen=0;
-	if (imax!=jmax) return false; //different number of introns
+	if (imax!=jmax) return false; //different number of exons
 	if (imax==0) { //single-exon mRNAs
 		if (contain_only) {
 		   return ((a.start>=b.start && a.end<=b.end) || 
@@ -367,13 +395,14 @@ bool tMatch(GffObj& a, GffObj& b, int& ovlen, bool fuzzunspl, bool contain_only)
 		}
 		if (fuzzunspl) {
 			//fuzz match for single-exon transfrags: 
-			// it's a match if they overlap at least 80% of shortest one
-			ovlen=a.exons[0]->overlapLen(b.exons[0]);
-			int maxlen=GMAX(a.covlen,b.covlen);
-			return (ovlen>=maxlen*0.8);
+			// it's a match if they overlap at least 80% of longest one
+			//ovlen=a.exons[0]->overlapLen(b.exons[0]);
+			//int maxlen=GMAX(a.covlen,b.covlen);
+			//return (ovlen>=maxlen*0.8);
+			return (singleExonTMatch(a,b,ovlen));
 		}
 	  else {
-			//only exact match, or strictly contained
+			//only exact match
 			ovlen=a.covlen;
 			return (a.exons[0]->start==b.exons[0]->start &&
 					a.exons[0]->end==b.exons[0]->end);
@@ -446,6 +475,7 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 	//attempt to find the strand for seqdata.umrnas
 	//based on a) overlaps with oriented reference mRNAs if present
 	//         b) overlaps with oriented mRNAs from the same input set
+	//int incount=seqdata.umrnas.Count();
 	if (rdata!=NULL) { //we have reference mrnas
 		for (int i=0;i<rdata->mrnas_f.Count();i++) {
 			for (int j=0;j<seqdata.umrnas.Count();j++) {
@@ -488,7 +518,7 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 			}
 		}
 	}//we have reference transcripts
-	//---- now compare to other transcripts
+	//---- now compare to other qry transcripts
 	for (int i=0;i<seqdata.mrnas_f.Count();i++) {
 		for (int j=0;j<seqdata.umrnas.Count();j++) {
 			if (seqdata.umrnas[j]->strand!='.') continue;
@@ -519,25 +549,32 @@ int fix_umrnas(GSeqData& seqdata, GSeqData* rdata, FILE* fdis=NULL) {
 		}
     }
 	int fcount=0;
+	int fixed=0;
 	for (int i=0;i<seqdata.umrnas.Count();i++) {
 		if (seqdata.umrnas[i]->strand=='+') {
 			seqdata.mrnas_f.Add(seqdata.umrnas[i]);
+			fixed++;
 			seqdata.umrnas.Forget(i);
 		}
 		else if (seqdata.umrnas[i]->strand=='-') {
 		    seqdata.mrnas_r.Add(seqdata.umrnas[i]);
 		    seqdata.umrnas.Forget(i);
+		    fixed++;
 		}
 		else {  //discard mRNAs not settled
-			seqdata.umrnas[i]->strand='.';
+			//seqdata.umrnas[i]->strand='.'; ?
 			if (fdis!=NULL) {
 				seqdata.umrnas[i]->printGtf(fdis);
 				}
 			fcount++;
 		}
 	}
+
 	seqdata.umrnas.Pack();
-	return fcount;
+	//if (gtf_tracking_verbose) {
+	//	GMessage(" %d out of %d (%d left, %d) unoriented transfrags were assigned a strand based on overlaps.\n", fixed, incount, seqdata.umrnas.Count(), fcount);
+	//}
+	return fixed;
 }
 
 //retrieve ref_data for a specific genomic sequence
@@ -550,16 +587,20 @@ GSeqData* getRefData(int gid, GList<GSeqData>& ref_data) {
 	return r;
 }
 
-void read_transcripts(FILE* f, GList<GSeqData>& seqdata, boost::crc_32_type& crc_result, bool keepAttrs) {
+void read_transcripts(FILE* f, GList<GSeqData>& seqdata, 
+#ifdef CUFFLINKS
+  boost::crc_32_type& crc_result,
+#endif
+   bool keepAttrs) {
 	rewind(f);
 	GffReader gffr(f, true); //loading only recognizable transcript features
 	gffr.showWarnings(gtf_tracking_verbose);
 
 	//          keepAttrs    mergeCloseExons   noExonAttrs
 	gffr.readAll(keepAttrs,          true,        true);
-    
-    crc_result = gffr.current_crc_result();
-
+#ifdef CUFFLINKS
+     crc_result = gffr.current_crc_result();
+#endif
 	//                               is_ref?    check_for_dups,
 	parse_mRNAs(gffr.gflst, seqdata, false,       0);
 }
@@ -611,7 +652,9 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 #endif
 	
 	//for each genomic sequence, cluster transcripts
-	int discarded=0;
+	int oriented_by_overlap=0;
+	int initial_unoriented=0;
+	int final_unoriented=0;
 	GStr bname(fname);
 	GStr s;
 	if (!bname.is_empty()) {
@@ -629,8 +672,10 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 		int gseq_id=seqdata[g]->get_gseqid();
 		if (!isRefData) { //cufflinks data, find corresponding ref data
 			GSeqData* rdata=getRefData(gseq_id, *ref_data);
-			if (rdata!=NULL && seqdata[g]->umrnas.Count()>0) {
-			    discarded+=fix_umrnas(*seqdata[g], rdata, fdis);
+			initial_unoriented+=seqdata[g]->umrnas.Count();
+			if (seqdata[g]->umrnas.Count()>0) {
+			    oriented_by_overlap+=fix_umrnas(*seqdata[g], rdata, fdis);
+			    final_unoriented+=seqdata[g]->umrnas.Count();
 			    }
 			}
 		//>>>>> group mRNAs into locus-clusters (based on exon overlap)
@@ -653,10 +698,11 @@ void read_mRNAs(FILE* f, GList<GSeqData>& seqdata, GList<GSeqData>* ref_data,
 	}//for each genomic sequence
 	if (fdis!=NULL) fclose(fdis);
 	if (frloci!=NULL) fclose(frloci);
-	if (discarded>0) {
-		if (gtf_tracking_verbose) GMessage("Found %d transcripts with undetermined strand.\n", discarded);
+	if (initial_unoriented || final_unoriented) {
+	  if (gtf_tracking_verbose) GMessage(" Found %d transfrags with undetermined strand (%d out of initial %d were fixed by overlaps)\n",
+			    final_unoriented, oriented_by_overlap, initial_unoriented);
 	}
-	else { if (fdis!=NULL) remove(s.chars()); }
+	//if (fdis!=NULL) remove(s.chars()); remove 0-length file
 #ifdef HEAPROFILE
     if (IsHeapProfilerRunning())
       HeapProfilerDump("post_cluster");

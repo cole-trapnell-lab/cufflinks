@@ -1,6 +1,5 @@
 #include "gff.h"
 
-//GffNames* GffReader::names=NULL;
 GffNames* GffObj::names=NULL;
 //global set of feature names, attribute names etc.
 // -- common for all GffObjs in current application!
@@ -206,7 +205,6 @@ GffLine::GffLine(GffReader* reader, const char* l) {
  if (strand!='+' && strand!='-' && strand!='.')
      GError("Error parsing strand (%c) from GFF line:\n%s\n",strand,l);
  phase=*t[7]; // must be '.', '0', '1' or '2'
- ID=NULL;
  // exon/CDS/mrna filter
  strncpy(fnamelc, ftype, 127);
  fnamelc[127]=0;
@@ -251,17 +249,18 @@ GffLine::GffLine(GffReader* reader, const char* l) {
    is_t_data=true;
    }
 
-if (reader->transcriptsOnly && !is_t_data) {
-        char* id=extractAttr("ID=");
-        if (id==NULL) id=extractAttr("transcript_id");
-        //GMessage("Discarding non-transcript line:\n%s\n",l);
-        if (id!=NULL) {
-          reader->discarded_ids.Add(id, new int(1));
-          GFREE(id);
-          }
-        return; //skip this line, unwanted feature name
-        }
  ID=extractAttr("ID=",true);
+ if (reader->transcriptsOnly && !is_t_data) {
+	if (ID!=NULL) {
+		//in GFF3 ban this unrecognized ID + all its children!
+		if (gff_show_warnings)
+			GMessage("GFF: discarding unrecognized feature \"%s\" ID=%s\n",
+					ftype, ID);
+		reader->discarded_ids.Add(ID, new int(1));
+		GFREE(ID);
+          }
+	return; //skip unrecognized feature
+        }
  char* Parent=extractAttr("Parent=",true);
  is_gff3=(ID!=NULL || Parent!=NULL);
  if (is_gff3) {
@@ -882,9 +881,9 @@ GffLine* GffReader::nextGffLine() {
     if (l==NULL) {
          return NULL; //end of file
          }
-     
-     
+#ifdef CUFFLINKS
      _crc_result.process_bytes( linebuf, llen );
+#endif
     int ns=0; //first nonspace position
     while (l[ns]!=0 && isspace(l[ns])) ns++;
     if (l[ns]=='#' || llen<10) continue;

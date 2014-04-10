@@ -286,7 +286,7 @@ char* Gsubstr(const char* str, char* from, char* to) {
     }
  if (to<from) return newEmptyStr();
  int newlen=to-from+1;
- char* subs;
+ char* subs=NULL;
  GMALLOC(subs, newlen);
  memcpy(subs, str, newlen-1);
  subs[newlen]='\0';
@@ -412,7 +412,7 @@ char* strchrs(const char* s, const char* chrs) {
 char* upCase(const char* str) {
  if (str==NULL) return NULL;
  int len=strlen(str);
- char* upstr;
+ char* upstr=NULL;
  GMALLOC(upstr, len+1);
  upstr[len]='\0';
  for (int i=0;i<len;i++) upstr[i]=toupper(str[i]);
@@ -422,7 +422,7 @@ char* upCase(const char* str) {
 char* loCase(const char* str) {
  if (str==NULL) return NULL;
  int len=strlen(str);
- char* lostr;
+ char* lostr=NULL;
  GMALLOC(lostr, len+1);
  lostr[len]='\0';
  for (int i=0;i<len;i++) lostr[i]=tolower(str[i]);
@@ -475,7 +475,7 @@ char* rstrfind(const char* str, const char* substr) {
 
 
 char* strifind(const char* str,  const char* substr) {
- // the case insensitive version of strstr -- finding a string within a strin
+ // case insensitive version of strstr -- finding a string within another
   int l,i;
   if (str==NULL || *str==0) return NULL;
   if (substr==NULL || *substr==0) return NULL;
