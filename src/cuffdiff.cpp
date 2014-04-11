@@ -1146,7 +1146,7 @@ void parse_contrast_file(FILE* contrast_file,
             exit(1);
         }
         size_t f2_idx = f2_itr->second;
-        contrasts.push_back(make_pair(f1_idx, f2_idx));
+        contrasts.push_back(make_pair(f2_idx, f1_idx));
     }
  }
 
@@ -1977,15 +1977,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     tests.diff_promoter_tests = vector<vector<SampleDiffs> >(N);
     tests.diff_cds_tests = vector<vector<SampleDiffs> >(N);
     
-	for (int i = 1; i < N; ++i)
+	for (int i = 0; i < N; ++i)
     {
-        tests.isoform_de_tests[i] = vector<SampleDiffs>(i);
-        tests.tss_group_de_tests[i] = vector<SampleDiffs>(i);
-        tests.gene_de_tests[i] = vector<SampleDiffs>(i);
-        tests.cds_de_tests[i] = vector<SampleDiffs>(i);
-        tests.diff_splicing_tests[i] = vector<SampleDiffs>(i);
-        tests.diff_promoter_tests[i] = vector<SampleDiffs>(i);
-        tests.diff_cds_tests[i] = vector<SampleDiffs>(i);
+        tests.isoform_de_tests[i] = vector<SampleDiffs>(N);
+        tests.tss_group_de_tests[i] = vector<SampleDiffs>(N);
+        tests.gene_de_tests[i] = vector<SampleDiffs>(N);
+        tests.cds_de_tests[i] = vector<SampleDiffs>(N);
+        tests.diff_splicing_tests[i] = vector<SampleDiffs>(N);
+        tests.diff_promoter_tests[i] = vector<SampleDiffs>(N);
+        tests.diff_cds_tests[i] = vector<SampleDiffs>(N);
     }
 	
 	final_est_run = true;
@@ -2038,7 +2038,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     fprintf(outfiles.isoform_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
 
-    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.isoform_de_tests.size(); ++i)
     {
         for (size_t j = 0; j < i; ++j)
         {
@@ -2050,7 +2050,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     int iso_exp_tests = fdr_significance(FDR, isoform_exp_diffs);
     fprintf(stderr, "Performed %d isoform-level transcription difference tests\n", iso_exp_tests);
     
-    for (size_t i = 1; i < tests.isoform_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.isoform_de_tests.size(); ++i)
     {
         for (size_t j = 0; j < i; ++j)
         {
@@ -2063,7 +2063,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	vector<SampleDifference*> tss_group_exp_diffs;
     fprintf(outfiles.group_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
-    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.tss_group_de_tests.size(); ++i)
     {
         for (size_t j = 0; j < i; ++j)
         {
@@ -2075,7 +2075,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     int tss_group_exp_tests = fdr_significance(FDR, tss_group_exp_diffs);
     fprintf(stderr, "Performed %d tss-level transcription difference tests\n", tss_group_exp_tests);
     
-    for (size_t i = 1; i < tests.tss_group_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.tss_group_de_tests.size(); ++i)
     {
         for (size_t j = 0; j < i; ++j)
         {
@@ -2088,9 +2088,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	vector<SampleDifference*> gene_exp_diffs;
     fprintf(outfiles.gene_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
 
-    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.gene_de_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.gene_de_tests.size(); ++j)
         {
             total_gene_de_tests += tests.gene_de_tests[i][j].size();
             extract_sample_diffs(tests.gene_de_tests[i][j], gene_exp_diffs);
@@ -2101,9 +2101,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     int gene_exp_tests = fdr_significance(FDR, gene_exp_diffs);
     fprintf(stderr, "Performed %d gene-level transcription difference tests\n", gene_exp_tests);
     
-    for (size_t i = 1; i < tests.gene_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.gene_de_tests.size(); ++i)
     {        
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.gene_de_tests.size(); ++j)
         {
             print_tests(outfiles.gene_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.gene_de_tests[i][j]);
         }
@@ -2115,9 +2115,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     fprintf(outfiles.cds_de_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tlog2(fold_change)\ttest_stat\tp_value\tq_value\tsignificant\n");
     
 
-    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.cds_de_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.cds_de_tests.size(); ++j)
         {
             total_cds_de_tests += tests.cds_de_tests[i][j].size();
             extract_sample_diffs(tests.cds_de_tests[i][j], cds_exp_diffs);
@@ -2128,9 +2128,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     int cds_exp_tests = fdr_significance(FDR, cds_exp_diffs);
     fprintf(stderr, "Performed %d CDS-level transcription difference tests\n", cds_exp_tests);
     
-    for (size_t i = 1; i < tests.cds_de_tests.size(); ++i)
+    for (size_t i = 0; i < tests.cds_de_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.cds_de_tests.size(); ++j)
         {
             print_tests(outfiles.cds_de_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.cds_de_tests[i][j]);
         }
@@ -2141,9 +2141,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	vector<SampleDifference*> splicing_diffs;
     fprintf(outfiles.diff_splicing_outfile, "test_id\tgene_id\tgene\tlocus\tsample_1\tsample_2\tstatus\tvalue_1\tvalue_2\tsqrt(JS)\ttest_stat\tp_value\tq_value\tsignificant\n");
 
-    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+    for (size_t i = 0; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.diff_splicing_tests.size(); ++j)
         {
             total_diff_splice_tests += tests.diff_splicing_tests[i][j].size();
             extract_sample_diffs(tests.diff_splicing_tests[i][j], splicing_diffs);
@@ -2153,9 +2153,9 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     int splicing_tests = fdr_significance(FDR, splicing_diffs);
     fprintf(stderr, "Performed %d splicing tests\n", splicing_tests);
     
-    for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
+    for (size_t i = 0; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.diff_splicing_tests.size(); ++j)
         {
             const SampleDiffs& diffs = tests.diff_splicing_tests[i][j];
             print_tests(outfiles.diff_splicing_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), diffs);
@@ -2169,7 +2169,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 
     for (size_t i = 1; i < tests.diff_splicing_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.diff_splicing_tests.size(); ++j)
         {
             total_diff_promoter_tests += tests.diff_promoter_tests[i][j].size();
             extract_sample_diffs(tests.diff_promoter_tests[i][j], promoter_diffs);
@@ -2182,7 +2182,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     for (size_t i = 1; i < tests.diff_promoter_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.diff_promoter_tests.size(); ++j)
         {
             print_tests(outfiles.diff_promoter_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_promoter_tests[i][j]);
         }
@@ -2194,7 +2194,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.diff_cds_tests.size(); ++j)
         {
             extract_sample_diffs(tests.diff_cds_tests[i][j], cds_use_diffs);
             total_diff_cds_tests += tests.diff_cds_tests[i][j].size();
@@ -2207,7 +2207,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     for (size_t i = 1; i < tests.diff_cds_tests.size(); ++i)
     {
-        for (size_t j = 0; j < i; ++j)
+        for (size_t j = 0; j < tests.diff_cds_tests.size(); ++j)
         {
             print_tests(outfiles.diff_cds_outfile, sample_labels[j].c_str(), sample_labels[i].c_str(), tests.diff_cds_tests[i][j]);
         }
