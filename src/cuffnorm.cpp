@@ -489,7 +489,9 @@ void print_FPKM_simple_table(FILE* fout,
             for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
                  ++j)
             {
-                fprintf(fout, "\t%s_%d", sample_labels[i].c_str(), j);
+                const  string& condition_name = fpkms[i].tracking_info_per_rep[j].rg_props->condition_name();
+                int rep_num = fpkms[i].tracking_info_per_rep[j].rg_props->replicate_num();
+                fprintf(fout, "\t%s_%d", condition_name.c_str(), rep_num);
             }
         }
 	}
@@ -530,7 +532,9 @@ void print_count_simple_table(FILE* fout,
             for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
                  ++j)
             {
-                fprintf(fout, "\t%s_%d", sample_labels[i].c_str(), j);
+                const  string& condition_name = fpkms[i].tracking_info_per_rep[j].rg_props->condition_name();
+                int rep_num = fpkms[i].tracking_info_per_rep[j].rg_props->replicate_num();
+                fprintf(fout, "\t%s_%d", condition_name.c_str(), rep_num);
             }
         }
 	}
