@@ -366,7 +366,7 @@ int parse_options(int argc, char** argv)
     lib_norm_method_table.find(lib_norm_method_str);
     if (lib_norm_itr == lib_norm_method_table.end())
     {
-        fprintf(stderr, "Error: Dispersion method %s not supported\n", lib_norm_method_str.c_str());
+        fprintf(stderr, "Error: Normalization method %s not supported\n", lib_norm_method_str.c_str());
         exit(1);
     }
     else

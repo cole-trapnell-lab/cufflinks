@@ -411,6 +411,7 @@ void init_lib_norm_method_table()
     lib_norm_method_table["geometric"] = GEOMETRIC;
     lib_norm_method_table["classic-fpkm"] = CLASSIC_FPKM;
     lib_norm_method_table["quartile"] = QUARTILE;
+    lib_norm_method_table["estimated-absolute"] = ESTIMATED_ABSOLUTE;
     //lib_norm_method_table["tmm"] = TMM;
     //lib_norm_method_table["absolute"] = ABSOLUTE;
 }
