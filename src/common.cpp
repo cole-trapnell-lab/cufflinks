@@ -435,7 +435,10 @@ void print_lib_norm_method_table()
         {
             fprintf(stderr, "\t%s (default)\n", itr->first.c_str());
         }
-        else
+        else if(itr->first == "estimated-absolute") // hide this one for now.
+        {
+            continue;
+        }
         {
             fprintf(stderr, "\t%s\n", itr->first.c_str());
         }

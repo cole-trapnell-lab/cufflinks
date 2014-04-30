@@ -232,6 +232,10 @@
 		9CD6E94113379B9D00CCE1DE /* compress_gtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CD6E8D913379B0900CCE1DE /* compress_gtf.cpp */; };
 		9CE680F9149FBEBD00855EDB /* sampling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CE680F8149FBEBD00855EDB /* sampling.cpp */; };
 		9CE680FB149FBF3000855EDB /* sampling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CE680F8149FBEBD00855EDB /* sampling.cpp */; };
+		A2047A18191141C7007193FC /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2047A17191141C7007193FC /* libbam.a */; };
+		A2047A19191141C7007193FC /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2047A17191141C7007193FC /* libbam.a */; };
+		A2047A1A191141C8007193FC /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2047A17191141C7007193FC /* libbam.a */; };
+		A2047A1B191141C8007193FC /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2047A17191141C7007193FC /* libbam.a */; };
 		ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		ED41B818127602C60000B5A2 /* GFastaIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D9A35123B5BE0002BEFD5 /* GFastaIndex.cpp */; };
 		ED41B819127602C60000B5A2 /* abundances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDA5151E10C72963000A4F41 /* abundances.cpp */; };
@@ -491,14 +495,6 @@
 		F4A9F3C617428670000087E1 /* cuffquant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F36D17428648000087E1 /* cuffquant.cpp */; };
 		F4A9F3C91742C26D000087E1 /* tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F3C81742C26D000087E1 /* tracking.cpp */; };
 		F4A9F3CA1742C26D000087E1 /* tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F3C81742C26D000087E1 /* tracking.cpp */; };
-		F4B3191218D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191318D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191418D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191518D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191618D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191718D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191818D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
-		F4B3191918D0BDA5005E2176 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
 		F4D2AB1518D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1218D108EC00BB1CF0 /* libboost_serialization-mt.a */; };
 		F4D2AB1618D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1218D108EC00BB1CF0 /* libboost_serialization-mt.a */; };
 		F4D2AB1718D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1218D108EC00BB1CF0 /* libboost_serialization-mt.a */; };
@@ -599,7 +595,6 @@
 		F4D2AB7E18D1124600BB1CF0 /* sampling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CE680F8149FBEBD00855EDB /* sampling.cpp */; };
 		F4D2AB7F18D1124600BB1CF0 /* tracking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A9F3C81742C26D000087E1 /* tracking.cpp */; };
 		F4D2AB8118D1124600BB1CF0 /* libboost_serialization-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1218D108EC00BB1CF0 /* libboost_serialization-mt.a */; };
-		F4D2AB8218D1124600BB1CF0 /* libbam.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4B3191118D0BDA5005E2176 /* libbam.a */; };
 		F4D2AB8318D1124600BB1CF0 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1C0D7911D7F94900CFD663 /* libz.dylib */; };
 		F4D2AB8418D1124600BB1CF0 /* libboost_thread-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */; };
 		F4D2AB8518D1124600BB1CF0 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D2AB1318D108EC00BB1CF0 /* libboost_system-mt.a */; };
@@ -750,6 +745,7 @@
 		9CE680F6149697B500855EDB /* cuffmerge */ = {isa = PBXFileReference; explicitFileType = text.script.python; name = cuffmerge; path = src/cuffmerge; sourceTree = "<group>"; };
 		9CE680F7149FBE2F00855EDB /* sampling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sampling.h; path = src/sampling.h; sourceTree = "<group>"; };
 		9CE680F8149FBEBD00855EDB /* sampling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sampling.cpp; path = src/sampling.cpp; sourceTree = "<group>"; };
+		A2047A17191141C7007193FC /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = ../../../../opt/local/libIntel64/libbam.a; sourceTree = "<group>"; };
 		ED1C0C7111D7D9E500CFD663 /* ax_boost_base.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_base.m4; sourceTree = "<group>"; };
 		ED1C0C7211D7D9E500CFD663 /* ax_boost_thread.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_boost_thread.m4; sourceTree = "<group>"; };
 		ED1C0C7411D7DA3200CFD663 /* ax_bam.m4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ax_bam.m4; sourceTree = "<group>"; };
@@ -850,7 +846,6 @@
 		F4A9F3C71742B994000087E1 /* tracking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tracking.h; path = src/tracking.h; sourceTree = "<group>"; };
 		F4A9F3C81742C26D000087E1 /* tracking.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tracking.cpp; path = src/tracking.cpp; sourceTree = "<group>"; };
 		F4A9F3CB1742D011000087E1 /* ax_boost_serialization.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = ax_boost_serialization.m4; sourceTree = "<group>"; };
-		F4B3191118D0BDA5005E2176 /* libbam.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbam.a; path = "/Users/Trapnell/develop/split-cuffdiff/../../../../usr/local/libIntel64/libbam.a"; sourceTree = "<absolute>"; };
 		F4D2AB1218D108EC00BB1CF0 /* libboost_serialization-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_serialization-mt.a"; path = "../../../../opt/local/lib/libboost_serialization-mt.a"; sourceTree = "<group>"; };
 		F4D2AB1318D108EC00BB1CF0 /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "../../../../opt/local/lib/libboost_system-mt.a"; sourceTree = "<group>"; };
 		F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_thread-mt.a"; path = "../../../../opt/local/lib/libboost_thread-mt.a"; sourceTree = "<group>"; };
@@ -867,9 +862,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2047A18191141C7007193FC /* libbam.a in Frameworks */,
 				ED1C0D7A11D7F94900CFD663 /* libz.dylib in Frameworks */,
 				0A87350314118DD700E28429 /* libboost_thread-mt.a in Frameworks */,
-				F4B3191218D0BDA5005E2176 /* libbam.a in Frameworks */,
 				F4D2AB1518D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
 				F4D2AB1E18D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
 			);
@@ -880,7 +875,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4D2AB1918D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4B3191618D0BDA5005E2176 /* libbam.a in Frameworks */,
 				9CD6E93A13379B7E00CCE1DE /* libz.dylib in Frameworks */,
 				F4D2AB2B18D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB2218D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -892,7 +886,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4D2AB1B18D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4B3191818D0BDA5005E2176 /* libbam.a in Frameworks */,
 				ED41B833127602C60000B5A2 /* libz.dylib in Frameworks */,
 				F4D2AB2D18D108ED00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB2418D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -903,8 +896,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2047A19191141C7007193FC /* libbam.a in Frameworks */,
 				F4D2AB1618D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4B3191318D0BDA5005E2176 /* libbam.a in Frameworks */,
 				EDE107E911E37CE7005F1F4B /* libz.dylib in Frameworks */,
 				F4D2AB2818D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB1F18D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -915,7 +908,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F4B3191418D0BDA5005E2176 /* libbam.a in Frameworks */,
 				F4D2AB1718D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
 				F4D2AB2918D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB2018D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -927,7 +919,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4D2AB1818D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4B3191518D0BDA5005E2176 /* libbam.a in Frameworks */,
 				EDD94B621205C9E800AA1086 /* libz.dylib in Frameworks */,
 				F4D2AB2A18D108EC00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB2118D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -939,7 +930,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4D2AB1A18D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4B3191718D0BDA5005E2176 /* libbam.a in Frameworks */,
 				EDFE39C9122BE65600F24CD3 /* libz.dylib in Frameworks */,
 				F4D2AB2C18D108ED00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB2318D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -950,8 +940,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2047A1A191141C8007193FC /* libbam.a in Frameworks */,
 				F4D2AB1C18D108EC00BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4B3191918D0BDA5005E2176 /* libbam.a in Frameworks */,
 				F4A9F3C01742865A000087E1 /* libz.dylib in Frameworks */,
 				F4D2AB2E18D108ED00BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB2518D108EC00BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -962,8 +952,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2047A1B191141C8007193FC /* libbam.a in Frameworks */,
 				F4D2AB8118D1124600BB1CF0 /* libboost_serialization-mt.a in Frameworks */,
-				F4D2AB8218D1124600BB1CF0 /* libbam.a in Frameworks */,
 				F4D2AB8318D1124600BB1CF0 /* libz.dylib in Frameworks */,
 				F4D2AB8418D1124600BB1CF0 /* libboost_thread-mt.a in Frameworks */,
 				F4D2AB8518D1124600BB1CF0 /* libboost_system-mt.a in Frameworks */,
@@ -976,7 +966,7 @@
 		08FB7794FE84155DC02AAC07 /* cufflinks_xcode */ = {
 			isa = PBXGroup;
 			children = (
-				F4B3191118D0BDA5005E2176 /* libbam.a */,
+				A2047A17191141C7007193FC /* libbam.a */,
 				F4D2AB1218D108EC00BB1CF0 /* libboost_serialization-mt.a */,
 				F4D2AB1318D108EC00BB1CF0 /* libboost_system-mt.a */,
 				F4D2AB1418D108EC00BB1CF0 /* libboost_thread-mt.a */,
@@ -2073,11 +2063,9 @@
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					/usr/local/lib,
 					"$(SRCROOT)",
+					/opt/local/libIntel64,
 					/opt/local/lib,
-					"\\\"$(SRCROOT)/../samtools-0.1.8\\\"",
-					/usr/local/libIntel64,
 				);
 				PRODUCT_NAME = cufflinks;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
@@ -2113,11 +2101,9 @@
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					/usr/local/lib,
 					"$(SRCROOT)",
+					/opt/local/libIntel64,
 					/opt/local/lib,
-					"\\\"$(SRCROOT)/../samtools-0.1.8\\\"",
-					/usr/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = cufflinks;
@@ -2376,9 +2362,10 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					/opt/local/lib,
 					/usr/local/libIntel64,
+					/opt/local/libIntel64,
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2416,9 +2403,10 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					/opt/local/lib,
 					/usr/local/libIntel64,
+					/opt/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
@@ -2681,9 +2669,10 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					/opt/local/lib,
 					/usr/local/libIntel64,
+					/opt/local/libIntel64,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_CPLUSPLUSFLAGS = (
@@ -2723,9 +2712,10 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					/opt/local/lib,
 					/usr/local/libIntel64,
+					/opt/local/libIntel64,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2764,9 +2754,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					/opt/local/lib,
-					/usr/local/libIntel64,
+					/opt/local/libIntel64,
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2804,9 +2794,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					/opt/local/lib,
-					/usr/local/libIntel64,
+					/opt/local/libIntel64,
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
