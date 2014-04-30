@@ -498,7 +498,7 @@ void print_FPKM_simple_table(FILE* fout,
     for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
 	{
         const string& description = itr->first;
-        fprintf(fout, "\n%s\t", description.c_str());
+        fprintf(fout, "\n%s", description.c_str());
         FPKMTrackingTable::const_iterator first_itr = tracking.begin();
         if (itr != tracking.end())
         {
@@ -541,7 +541,7 @@ void print_count_simple_table(FILE* fout,
     for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
 	{
         const string& description = itr->first;
-        fprintf(fout, "\n%s\t", description.c_str());
+        fprintf(fout, "\n%s", description.c_str());
         FPKMTrackingTable::const_iterator first_itr = tracking.begin();
         if (itr != tracking.end())
         {
