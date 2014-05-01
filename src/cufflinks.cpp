@@ -1477,7 +1477,7 @@ bool assemble_hits(BundleFactory& bundle_factory, boost::shared_ptr<BiasLearner>
 	{
 		HitBundle* bundle_ptr = new HitBundle();
 		
-		if (!bundle_factory.next_bundle(*bundle_ptr))
+		if (!bundle_factory.next_bundle(*bundle_ptr, true))
 		{
 			delete bundle_ptr;
 			break;

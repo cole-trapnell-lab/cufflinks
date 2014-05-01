@@ -227,7 +227,7 @@ public:
         return _curr_bundle < num_bundles();
     }
     
-	virtual bool next_bundle(HitBundle& bundle_out);
+	virtual bool next_bundle(HitBundle& bundle_out, bool cache_bundle);
 	bool next_bundle_hit_driven(HitBundle& bundle_out);
 	bool next_bundle_ref_driven(HitBundle& bundle_out);
 	bool next_bundle_ref_guided(HitBundle& bundle_out);
@@ -379,7 +379,7 @@ public:
 		
 	}
     
-    bool next_bundle(HitBundle& bundle_out);
+    bool next_bundle(HitBundle& bundle_out, bool cache_bundle);
     
     boost::shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
     void clear_abundance_for_locus(int locus_id);

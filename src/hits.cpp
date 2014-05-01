@@ -1231,7 +1231,7 @@ void PrecomputedExpressionHitFactory::clear_abundance_for_locus(int locus_id)
         _curr_ab_groups.erase(itr);
 }
 
-boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id)
+boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_locus(int locus_id, bool cache_locus)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
@@ -1264,10 +1264,12 @@ boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_lo
         }
         else // we don't want to lose this one...
         {
-            _curr_ab_groups[_last_locus_id] = ab;
+            if (cache_locus)
+                _curr_ab_groups[_last_locus_id] = ab;
         }
     }
-    _curr_ab_groups[locus_id] = sought_group;
+    if (cache_locus)
+        _curr_ab_groups[locus_id] = sought_group;
     
     return sought_group;
 }

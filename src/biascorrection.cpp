@@ -107,7 +107,7 @@ void learn_bias(BundleFactory& bundle_factory, BiasLearner& bl, bool progress_ba
 	{
 		HitBundle* bundle_ptr = new HitBundle();
 		
-		if (!bundle_factory.next_bundle(*bundle_ptr))
+		if (!bundle_factory.next_bundle(*bundle_ptr, false))
 		{
 			delete bundle_ptr;
 			break;

@@ -770,7 +770,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         locus_thread_pool_lock.unlock();
         
         boost::shared_ptr<HitBundle> pBundle = boost::shared_ptr<HitBundle>(new HitBundle());
-        bool non_empty = bundle_factories[i]->next_bundle(*pBundle);
+        bool non_empty = bundle_factories[i]->next_bundle(*pBundle, true);
         
         if (pBundle->compatible_mass() > 0)
         {

@@ -855,7 +855,7 @@ void sample_worker(const RefSequenceTable& rt,
 #endif
     
     boost::shared_ptr<HitBundle> bundle(new HitBundle);
-    bool non_empty = sample_factory.next_bundle(*bundle);
+    bool non_empty = sample_factory.next_bundle(*bundle, true);
     
     char bundle_label_buf[2048];
     sprintf(bundle_label_buf,

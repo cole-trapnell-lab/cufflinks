@@ -1147,7 +1147,7 @@ bool BundleFactory::_expand_by_hits(HitBundle& bundle)
 	return (bundle.right() > initial_right);
 }
 
-bool BundleFactory::next_bundle(HitBundle& bundle)
+bool BundleFactory::next_bundle(HitBundle& bundle, bool cache_bundle)
 {    
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
@@ -1661,7 +1661,7 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
 	{
 		HitBundle* bundle_ptr = new HitBundle();
 		
-		bool valid_bundle = bundle_factory->next_bundle(*bundle_ptr);
+		bool valid_bundle = bundle_factory->next_bundle(*bundle_ptr, false);
 		HitBundle& bundle = *bundle_ptr;
 
         if (use_compat_mass) //only count hits that are compatible with ref transcripts
@@ -2036,12 +2036,12 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
 //////////////////////
 
 
-bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
+bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cache_bundle)
 {
 #if ENABLE_THREADS
     boost::mutex::scoped_lock lock(_factory_lock);
 #endif
-    bool got_bundle = BundleFactory::next_bundle(bundle);
+    bool got_bundle = BundleFactory::next_bundle(bundle, cache_bundle);
     if (got_bundle)
     {
         RefSequenceTable& rt = ref_table();
@@ -2049,7 +2049,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle)
         char bundle_label_buf[2048];
         sprintf(bundle_label_buf, "%s:%d-%d", rt.get_name(bundle.ref_id()),	bundle.left(), bundle.right());
         
-        boost::shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id());
+        boost::shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id(), cache_bundle);
         if (ab)
         {
             double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);

@@ -176,7 +176,7 @@ public:
         return false;
     }
     
-	bool next_bundle(HitBundle& bundle_out)
+	bool next_bundle(HitBundle& bundle_out, bool cache_bundle)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
@@ -187,7 +187,7 @@ public:
         BOOST_FOREACH (boost::shared_ptr<BundleFactory> fac, _factories)
         {
             bundles.push_back(new HitBundle());
-            if (fac->next_bundle(*(bundles.back())))
+            if (fac->next_bundle(*(bundles.back()), cache_bundle))
             {
                 non_empty_bundle = true;
             }

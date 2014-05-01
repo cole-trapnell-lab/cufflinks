@@ -883,7 +883,7 @@ public:
     
     bool inspect_header();
     
-    boost::shared_ptr<const AbundanceGroup> next_locus(int locus_id);
+    boost::shared_ptr<const AbundanceGroup> next_locus(int locus_id, bool cache_locus);
     
     boost::shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
     void clear_abundance_for_locus(int locus_id);
