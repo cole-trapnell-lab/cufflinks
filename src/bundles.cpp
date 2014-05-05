@@ -1993,7 +1993,8 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
 	rg_props->frag_len_dist(fld);
 	rg_props->normalized_map_mass(norm_map_mass);
     rg_props->total_map_mass(map_mass);
-
+    rg_props->median_transcript_coverage(bundle_factory->median_transcript_coverage());
+    
     if (show_stats)
     {
         fprintf(stderr, "> Map Properties:\n");
@@ -2058,6 +2059,19 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             bundle.finalize();
             bundle.add_raw_mass(total_mass);
             bundle.compatible_mass(compatible_mass);
+            
+            // calculate the depth of coverage for each transcript and store it in the factory
+            // in case we need it later for library size normalization
+            for (size_t i = 0; i < ab->abundances().size(); ++i)
+            {
+                int num_frags = ab->abundances()[i]->num_fragments();
+                double length = ab->abundances()[i]->effective_length();
+                if (num_frags > 0 && length != 0)
+                {
+                    double coverage = num_frags / length;
+                    transcript_coverages.push_back(coverage);
+                }
+            }
             
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
             if (bundle.ref_scaffolds().size() != ab->abundances().size())

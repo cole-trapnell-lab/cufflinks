@@ -1105,31 +1105,6 @@ void write_output(const vector<boost::shared_ptr<ReadGroupProperties> >& all_rea
     }
 }
 
-void adjust_fpkms_by_median_coverage(const vector<vector<double > >& median_coverage,
-                                     FPKMTrackingTable& tracking)
-{
-    for (FPKMTrackingTable::iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
-	{
-        if (itr != tracking.end())
-        {
-            FPKMTracking& track = itr->second;
-            vector<FPKMContext>& fpkms = track.fpkm_series;
-            
-            for (size_t i = 0; i < fpkms.size(); ++i)
-            {
-                for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
-                     ++j)
-                {
-                    double& FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
-                    FPKM /= median_coverage[i][j];
-                    FPKM *= fpkms[i].tracking_info_per_rep[j].rg_props->normalized_map_mass();
-                    FPKM /= 1000000000;
-                }
-            }
-        }
-    }
-}
-
 void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_standards_file, vector<string>& sam_hit_filename_lists, Outfiles& outfiles)
 {
 
@@ -1390,81 +1365,6 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     }
 	
 	p_bar.complete();
-    
-    // If we're using estimated absolute quantification, fly through the FPKMs and adjust them
-    if (lib_norm_method == ESTIMATED_ABSOLUTE)
-    {
-        vector<vector<vector<double > > > coverages;
-        vector<vector<double> > median_coverages;
-        
-        FPKMTrackingTable::const_iterator first_itr = tracking.isoform_fpkm_tracking.begin();
-        if (first_itr != tracking.isoform_fpkm_tracking.end())
-        {
-            size_t num_conditions = first_itr->second.fpkm_series.size();
-            coverages = vector<vector<vector<double > > > (num_conditions);
-            median_coverages = vector<vector<double > >(num_conditions);
-            
-            for (size_t i = 0; i < num_conditions; ++i)
-            {
-                const vector<FPKMContext>& fpkms = first_itr->second.fpkm_series;
-                size_t num_reps = fpkms[i].tracking_info_per_rep.size();
-                coverages[i] = vector<vector<double> >(num_reps);
-                median_coverages[i] = vector<double>(num_reps);
-            }
-            
-            for (FPKMTrackingTable::const_iterator itr = tracking.isoform_fpkm_tracking.begin();
-                 itr != tracking.isoform_fpkm_tracking.end(); ++itr)
-            {
-                const FPKMTracking& track = itr->second;
-                const vector<FPKMContext>& fpkms = track.fpkm_series;
-                
-                for (size_t i = 0; i < fpkms.size(); ++i)
-                {
-                    for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
-                         ++j)
-                    {
-                        //double FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
-                        double count = fpkms[i].tracking_info_per_rep[j].count;
-                        double coverage = count/track.length; // FIXME: this should be effective length, not length.
-                        if (count >= 1)
-                        {
-                            coverages[i][j].push_back(coverage);
-                        }
-                    }
-                }
-            }
-            
-            for (size_t i = 0; i < coverages.size(); ++i)
-            {
-                for (size_t j = 0; j < coverages[i].size(); ++j)
-                {
-                    vector<double>& cvgs = coverages[i][j];
-                    sort(cvgs.begin(), cvgs.end());
-                    if (cvgs.empty() == false)
-                    {
-                        int median_cvgs_idx = cvgs.size() * 0.5;
-                        double median_coverage = coverages[i][j][median_cvgs_idx];
-                        median_coverages[i][j] = median_coverage;
-                    }
-                    else
-                    {
-                        assert(false);
-                        median_coverages[i][j] = 1;
-                    }
-                }
-            }
-        }
-        
-        
-        adjust_fpkms_by_median_coverage(median_coverages, tracking.isoform_fpkm_tracking);
-        
-        adjust_fpkms_by_median_coverage(median_coverages, tracking.tss_group_fpkm_tracking);
-    
-        adjust_fpkms_by_median_coverage(median_coverages, tracking.gene_fpkm_tracking);
-        
-        adjust_fpkms_by_median_coverage(median_coverages, tracking.cds_fpkm_tracking);
-    }
-
     
     write_output(all_read_groups, tracking, outfiles);
 }

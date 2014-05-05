@@ -239,7 +239,7 @@ public:
     int num_bundles() const { return _num_bundles; }
     void num_bundles(int n) { _num_bundles = n; }
     
-	void reset() 
+	virtual void reset()
 	{ 
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_factory_lock);
@@ -327,6 +327,8 @@ public:
 	
 	bool spans_bad_intron(const ReadHit& read);
 	
+    virtual double median_transcript_coverage() { return -1; }
+    
 private:
 	
 	bool _expand_by_hits(HitBundle& bundle);
@@ -384,12 +386,29 @@ public:
     boost::shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
     void clear_abundance_for_locus(int locus_id);
     
+    void reset() { BundleFactory::reset(); transcript_coverages.clear(); }
+    
+    double median_transcript_coverage() {
+        
+        if (transcript_coverages.size() > 0)
+        {
+            size_t median_idx = transcript_coverages.size() * 0.5;
+            return transcript_coverages[median_idx];
+        }
+        else
+        {
+            return 0.0;
+        }
+    }
+    
 private:
     
     boost::shared_ptr<PrecomputedExpressionHitFactory> _hit_fac;
 #if ENABLE_THREADS
     boost::mutex _factory_lock;
 #endif
+    
+    vector<double> transcript_coverages;
 };
 
 void identify_bad_splices(const HitBundle& bundle, 

@@ -389,6 +389,60 @@ void calc_classic_fpkm_scaling_factors(const vector<LocusCountList>& sample_comp
     }
 }
 
+void calc_estimated_absolute_scaling_factors(vector<boost::shared_ptr<ReadGroupProperties> > & all_read_groups,
+                                             vector<double>& scale_factors)
+{
+    assert (scale_factors.size() == all_read_groups.size());
+    for (size_t i = 0; i < scale_factors.size(); ++i)
+    {
+        double med_cov = all_read_groups[i]->median_transcript_coverage();
+        if (med_cov == 0)
+        {
+            scale_factors[i] = 0.0;
+        }
+        else if (med_cov == -1)
+        {
+            fprintf(stderr, "Error: estimated-absolute requires pre-calculated CXB files\n");
+            exit(1);
+        }
+        
+        scale_factors[i] = 1.0 / med_cov;
+        scale_factors[i] *= all_read_groups[i]->normalized_map_mass();
+        scale_factors[i] /= 1000000000;
+        scale_factors[i] = 1.0/scale_factors[i];
+    }
+    
+//
+//    void adjust_fpkms_by_median_coverage(const vector<vector<double > >& median_coverage,
+//                                         FPKMTrackingTable& tracking)
+//    {
+//        for (FPKMTrackingTable::iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+//        {
+//            if (itr != tracking.end())
+//            {
+//                FPKMTracking& track = itr->second;
+//                vector<FPKMContext>& fpkms = track.fpkm_series;
+//                
+//                for (size_t i = 0; i < fpkms.size(); ++i)
+//                {
+//                    for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
+//                         ++j)
+//                    {
+//                        double& FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
+//                        FPKM /= median_coverage[i][j];
+//                        FPKM *= fpkms[i].tracking_info_per_rep[j].rg_props->normalized_map_mass();
+//                        FPKM /= 1000000000;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    
+}
+
+
+
 void calc_quartile_scaling_factors(const vector<LocusCountList>& sample_compatible_count_table,
                                    vector<double>& scale_factors)
 {
@@ -1042,7 +1096,7 @@ void normalize_counts(vector<boost::shared_ptr<ReadGroupProperties> > & all_read
     }
     else if (lib_norm_method == ESTIMATED_ABSOLUTE)
     {
-        calc_classic_fpkm_scaling_factors(norm_table, scale_factors);
+        calc_estimated_absolute_scaling_factors(all_read_groups, scale_factors);
     }
     else
     {
