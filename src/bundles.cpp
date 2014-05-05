@@ -2075,7 +2075,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             
             if (max_FPKM_idx < ab->abundances().size())
             {
-                int num_frags = ab->abundances()[max_FPKM_idx]->num_fragments();
+                double num_frags = ab->abundances()[max_FPKM_idx]->num_fragments();
                 double length = ab->abundances()[max_FPKM_idx]->effective_length();
                 if (num_frags >= 1 && length != 0)
                 {

@@ -7,14 +7,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#else
-#define PACKAGE_VERSION "INTERNAL"
-#define SVN_REVISION "XXX"
-#endif
-
-
 #include <stdlib.h>
 #include <getopt.h>
 #include <string>
@@ -1847,7 +1839,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     Tracking tracking;
     
-    test_launcher = boost::shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar));
+    test_launcher = boost::shared_ptr<TestLauncher>(new TestLauncher(bundle_factories.size(), contrasts, NULL, &tracking, &p_bar, true));
     
 	if (model_mle_error || corr_bias || corr_multi) // Only run initial estimation if correcting bias or multi-reads
 	{

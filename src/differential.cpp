@@ -141,8 +141,6 @@ void TestLauncher::perform_testing(vector<boost::shared_ptr<SampleAbundances> > 
     test_differential(abundances.front()->locus_tag, abundances, _contrasts, *_tests, *_tracking);
 }
 
-// Note: this routine should be called under lock - it doesn't
-// acquire the lock itself. 
 void TestLauncher::record_tracking_data(vector<boost::shared_ptr<SampleAbundances> >& abundances)
 {
     assert (abundances.size() == _orig_workers);
@@ -206,7 +204,7 @@ void TestLauncher::record_tracking_data(vector<boost::shared_ptr<SampleAbundance
     
 }
 
-void TestLauncher::test_finished_loci()
+vector<vector<boost::shared_ptr<SampleAbundances> > > TestLauncher::test_finished_loci()
 {
 #if ENABLE_THREADS
 	_launcher_lock.lock();
@@ -219,28 +217,14 @@ void TestLauncher::test_finished_loci()
     {
         if (all_samples_reported_in(itr->second))
         {
-            // In some abundance runs, we don't actually want to perform testing 
-            // (eg initial quantification before bias correction).
-            // _tests and _tracking will be NULL in these cases.
-            if (_tests != NULL && _tracking != NULL)
+            if (_p_bar)
             {
-                if (_p_bar)
-                {
-                    verbose_msg("Estimating expression in locus [%s]\n", itr->second.front()->locus_tag.c_str());
-                    _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
-                }
-                record_tracking_data(itr->second);
+                //verbose_msg("Estimating expression in locus [%s]\n", itr->second.front()->locus_tag.c_str());
+                _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
+            }
+            record_tracking_data(itr->second);
+            if (!_track_only)
                 samples_for_testing.push_back(itr->second);
-            }
-            else
-            {
-                if (_p_bar)
-                {
-                    //verbose_msg("Testing for differential expression and regulation in locus [%s]\n", abundances.front()->locus_tag.c_str());
-                    _p_bar->update(itr->second.front()->locus_tag.c_str(), 1);
-                }
-                record_tracking_data(itr->second);
-            }
             
             // Removes the samples that have already been tested and transferred to the tracking tables,
             itr = _samples.erase(itr);
@@ -255,112 +239,12 @@ void TestLauncher::test_finished_loci()
 #if ENABLE_THREADS
 	_launcher_lock.unlock();
 #endif
-    
-    for (size_t i = 0; i < samples_for_testing.size(); ++i)
-    {
-        vector<boost::shared_ptr<SampleAbundances> > samples_i = samples_for_testing[i];
-        perform_testing(samples_i);
-    }
-}
-
-long double wrapped_lgamma(double gamma_k)
-{
-    long double lgamma_k = 1;
-    try
-    {
-        lgamma_k = boost::math::lgamma<long double>(gamma_k);
-    }
-    catch (boost::exception_detail::error_info_injector<std::overflow_error>& e)
-    {
-        lgamma_k = numeric_limits<long double>::max();
-    }
-    catch (boost::exception_detail::error_info_injector<std::underflow_error>& e)
-    {
-        lgamma_k = numeric_limits<long double>::max();
-    }
-    catch (boost::exception_detail::error_info_injector<std::domain_error>& e)
-    {
-        lgamma_k = numeric_limits<long double>::max();
-    }
-    return lgamma_k;
-}
-
-struct TruncNormalMoments
-{
-    double m1;
-    double m2;
-    double m3;
-};
-
-void calculate_sample_moments(const vector<double>& samples, TruncNormalMoments& moments)
-{
-    double m1 = accumulate(samples.begin(), samples.end(), 0.0);
-    if (samples.size())
-        m1 /= samples.size();
-
-    double m2 = 0.0;
-    for (size_t i = 0; i < samples.size(); ++i)
-    {
-        m2 += samples[i]*samples[i];
-    }
-    if (samples.size())
-        m2 /= samples.size();
-    
-    double m3 = 0.0;
-    for (size_t i = 0; i < samples.size(); ++i)
-    {
-        m3 += samples[i]*samples[i]*samples[i];
-    }
-    if (samples.size())
-        m3 /= samples.size();
-    
-    moments.m1 = m1;
-    moments.m2 = m2;
-    moments.m3 = m3;
-}
-
-// Estimate the location and scale parameters for the normal distribution
-// that's truncated at zero.
-void estimate_trunc_normal_params(const TruncNormalMoments& m, double& location, double& scale)
-{
-    double denom = 2.0*m.m1*m.m1 - m.m2;
-    if (denom > 0)
-    {
-        location = (2.0*m.m1*m.m2 - m.m3)/denom;
-        scale = (m.m1*m.m3 - m.m2*m.m2)/denom;
-    }
-    else
-    {
-        location = 0;
-        scale = 0;
-    }
-    
-}
-
-long double trunc_normal_log_likelihood(const vector<double>& samples, double mean, double variance)
-{
-    boost::math::normal norm; //standard normal
-    
-    if (mean < 0 || variance <= 0.0)
-        return 0;
-    
-    double denom_sigma = 1.0/sqrt(variance);
-    
-    long double log_likelihood = 0.0;
-    for (size_t i = 0; i < samples.size(); ++i)
-    {
-        long double sL = 0.0;
-        sL = denom_sigma * pdf(norm, (samples[i] - mean) * denom_sigma);
-        double sL_denom = (1.0 - cdf(norm, (0.0 - mean) * denom_sigma));
-        if (sL_denom != 0)
-            sL /= sL_denom;
-        else
-            sL = 0.0;
-        
-        sL = logl(sL);
-        log_likelihood += sL;
-    }
-    return log_likelihood;
+    return samples_for_testing;
+//    for (size_t i = 0; i < samples_for_testing.size(); ++i)
+//    {
+//        vector<boost::shared_ptr<SampleAbundances> > samples_i = samples_for_testing[i];
+//        perform_testing(samples_i);
+//    }
 }
 
 //// Sampling-based test:
@@ -1017,7 +901,8 @@ void sample_worker(bool non_empty,
         // the testing functor, which will check to see if all the workers
         // are done, and if so, perform the cross sample testing.
         launcher->abundance_avail(locus_tag, abundance, factory_id);
-        launcher->test_finished_loci();
+        vector<vector<boost::shared_ptr<SampleAbundances> > > to_be_tested = launcher->test_finished_loci();
+        launcher->perform_testing(to_be_tested);
         //launcher();
 #endif
     	return;
@@ -1099,8 +984,11 @@ void sample_worker(bool non_empty,
     }
     
     launcher->abundance_avail(locus_tag, abundance, factory_id);
-    launcher->test_finished_loci();
+    vector<vector<boost::shared_ptr<SampleAbundances> > > to_be_tested = launcher->test_finished_loci();
     
+    for (size_t i = 0; i < to_be_tested.size(); ++i)
+        launcher->perform_testing(to_be_tested[i]);
+
 #if !ENABLE_THREADS
     // If Cuffdiff was built without threads, we need to manually invoke
     // the testing functor, which will check to see if all the workers
@@ -1701,5 +1589,24 @@ void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupPr
     }
     if (dump_params)
         print_checked_params_table(all_read_groups);
+}
+
+void TrackingDataWriter::perform_testing(vector<boost::shared_ptr<SampleAbundances> > abundances)
+{
+#if ENABLE_THREADS
+    test_storage_lock.lock();
+#endif
+    if (headers_written == false)
+    {
+        write_header_output();
+        headers_written = true;
+    }
+    
+    write_output(abundances);
+    //test_differential(abundances.front()->locus_tag, abundances, _contrasts, *_tests, *_tracking);
+#if ENABLE_THREADS
+    test_storage_lock.unlock();
+#endif
+    
 }
 
