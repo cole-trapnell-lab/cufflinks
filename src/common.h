@@ -14,6 +14,7 @@
 #else
 #define PACKAGE_VERSION "INTERNAL"
 #define SVN_REVISION "XXX"
+#define BOOST_VERSION "XXX"
 #endif
 
 #include <stdint.h>
