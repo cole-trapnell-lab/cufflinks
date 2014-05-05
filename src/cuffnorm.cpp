@@ -650,17 +650,18 @@ void print_read_group_simple_table_info(FILE* fout,
                            const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups)
 {
     //fprintf(fout, "file\tcondition\treplicate_num\ttotal_mass\tnorm_mass\tinternal_scale\texternal_scale\n");
-    fprintf(fout, "sample_id\tfile\ttotal_mass\tinternal_scale\texternal_scale\n");
+    fprintf(fout, "sample_id\tfile\ttotal_mass\tinternal_scale\texternal_scale\tmedian_transcript_coverage\n");
     for (size_t i = 0; i < all_read_groups.size(); ++i)
     {
         boost::shared_ptr<ReadGroupProperties const> rg_props = all_read_groups[i];
-        fprintf(fout, "%s_%d\t%s\t%Lg\t%lg\t%lg\n",
+        fprintf(fout, "%s_%d\t%s\t%Lg\t%lg\t%lg\t%lg\n",
                 rg_props->condition_name().c_str(),
                 rg_props->replicate_num(),
                 rg_props->file_path().c_str(),
                 rg_props->total_map_mass(),
                 rg_props->internal_scale_factor(),
-                rg_props->external_scale_factor());
+                rg_props->external_scale_factor(),
+                rg_props->median_transcript_coverage());
         
     }
 }
