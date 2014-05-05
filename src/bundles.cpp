@@ -2066,7 +2066,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             {
                 int num_frags = ab->abundances()[i]->num_fragments();
                 double length = ab->abundances()[i]->effective_length();
-                if (num_frags > 0 && length != 0)
+                if (num_frags >= 1 && length != 0)
                 {
                     double coverage = num_frags / length;
                     transcript_coverages.push_back(coverage);
