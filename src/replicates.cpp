@@ -406,10 +406,7 @@ void calc_estimated_absolute_scaling_factors(vector<boost::shared_ptr<ReadGroupP
             exit(1);
         }
         
-        scale_factors[i] = 1.0 / med_cov;
-        scale_factors[i] *= all_read_groups[i]->normalized_map_mass();
-        scale_factors[i] /= 1000000000;
-        scale_factors[i] = 1.0/scale_factors[i];
+        scale_factors[i] =  med_cov * 1000000000 / (all_read_groups[i]->normalized_map_mass()) ;
     }
     
 //
