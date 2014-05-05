@@ -2062,10 +2062,21 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             
             // calculate the depth of coverage for each transcript and store it in the factory
             // in case we need it later for library size normalization
+            size_t max_FPKM_idx = 0;
+            double max_FPKM = -1;
             for (size_t i = 0; i < ab->abundances().size(); ++i)
             {
-                int num_frags = ab->abundances()[i]->num_fragments();
-                double length = ab->abundances()[i]->effective_length();
+                if (max_FPKM < ab->abundances()[i]->FPKM())
+                {
+                    max_FPKM = ab->abundances()[i]->FPKM();
+                    max_FPKM_idx = i;
+                }
+            }
+            
+            if (max_FPKM_idx < ab->abundances().size())
+            {
+                int num_frags = ab->abundances()[max_FPKM_idx]->num_fragments();
+                double length = ab->abundances()[max_FPKM_idx]->effective_length();
                 if (num_frags >= 1 && length != 0)
                 {
                     double coverage = num_frags / length;
@@ -2076,7 +2087,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
             if (bundle.ref_scaffolds().size() != ab->abundances().size())
             {
-                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%d transcripts)  does not match GTF (%d transcripts):\n", read_group_properties()->file_path().c_str(),  bundle_label_buf, ab->abundances().size(), bundle.ref_scaffolds().size());
+                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%lu transcripts)  does not match GTF (%d transcripts):\n", read_group_properties()->file_path().c_str(),  bundle_label_buf, ab->abundances().size(), bundle.ref_scaffolds().size());
                 fprintf(stderr, "Reconstituted:\n");
                 for (size_t i = 0; i < ab->abundances().size(); ++i)
                 {
