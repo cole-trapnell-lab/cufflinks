@@ -449,20 +449,17 @@ private:
         {
             const string& description = itr->first;
             fprintf(fout, "\n%s", description.c_str());
-            FPKMTrackingTable::const_iterator first_itr = tracking.begin();
-            if (itr != tracking.end())
+
+            const FPKMTracking& track = itr->second;
+            const vector<FPKMContext>& fpkms = track.fpkm_series;
+            
+            for (size_t i = 0; i < fpkms.size(); ++i)
             {
-                const FPKMTracking& track = itr->second;
-                const vector<FPKMContext>& fpkms = track.fpkm_series;
-                
-                for (size_t i = 0; i < fpkms.size(); ++i)
+                for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
+                     ++j)
                 {
-                    for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
-                         ++j)
-                    {
-                        double FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
-                        fprintf(fout, "\t%lg", FPKM);
-                    }
+                    double FPKM = fpkms[i].tracking_info_per_rep[j].fpkm;
+                    fprintf(fout, "\t%lg", FPKM);
                 }
             }
         }
@@ -477,32 +474,45 @@ private:
         {
             const string& description = itr->first;
             fprintf(fout, "\n%s", description.c_str());
-            FPKMTrackingTable::const_iterator first_itr = tracking.begin();
-            if (itr != tracking.end())
+
+            const FPKMTracking& track = itr->second;
+            const vector<FPKMContext>& fpkms = track.fpkm_series;
+            
+            for (size_t i = 0; i < fpkms.size(); ++i)
             {
-                const FPKMTracking& track = itr->second;
-                const vector<FPKMContext>& fpkms = track.fpkm_series;
-                
-                for (size_t i = 0; i < fpkms.size(); ++i)
+                for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
+                     ++j)
                 {
-                    for (size_t j = 0; j != fpkms[i].tracking_info_per_rep.size();
-                         ++j)
-                    {
-                        double count = fpkms[i].tracking_info_per_rep[j].count;
-                        fprintf(fout, "\t%lg", count);
-                    }
+                    double count = fpkms[i].tracking_info_per_rep[j].count;
+                    fprintf(fout, "\t%lg", count);
                 }
             }
         }
     }
     
+    void remove_abundance_from_tracking_table(const string& target_desc,
+                                              FPKMTrackingTable& tracking)
+    {
+        FPKMTrackingTable::iterator itr = tracking.find(target_desc);
+        if (itr != tracking.end())
+        {
+            tracking.erase(itr);
+        }
+    }
     
-    void print_read_group_tracking(FILE* fout,
-                                   const FPKMTrackingTable& tracking)
+    void print_read_group_tracking_header(FILE* fout,
+                                          const FPKMTrackingTable& tracking)
     {
         fprintf(fout,"tracking_id\tcondition\treplicate\traw_frags\tinternal_scaled_frags\texternal_scaled_frags\tFPKM\teffective_length\tstatus");
         fprintf(fout, "\n");
-        for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+    }
+    
+    void print_read_group_tracking(const string& target_desc,
+                                   FILE* fout,
+                                   const FPKMTrackingTable& tracking)
+    {
+        FPKMTrackingTable::const_iterator itr = tracking.find(target_desc);
+        if (itr != tracking.end())
         {
             const string& description = itr->first;
             const FPKMTracking& track = itr->second;
@@ -598,14 +608,21 @@ private:
             
         }
     }
-    
-    void print_feature_attr_simple_table(FILE* fout,
+
+    void print_feature_attr_simple_table_header(FILE* fout,
                                          const FPKMTrackingTable& tracking)
     {
         fprintf(fout,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength");
-        
         fprintf(fout, "\n");
-        for (FPKMTrackingTable::const_iterator itr = tracking.begin(); itr != tracking.end(); ++itr)
+    }
+
+    
+    void print_feature_attr_simple_table(const string& target_desc,
+                                         FILE* fout,
+                                         const FPKMTrackingTable& tracking)
+    {
+        FPKMTrackingTable::const_iterator itr = tracking.find(target_desc);
+        if (itr != tracking.end())
         {
             const string& description = itr->first;
             const string& locus_tag = itr->second.locus_tag;
@@ -690,19 +707,19 @@ private:
         
         FILE* fiso_rep_tracking =  _outfiles->isoform_rep_tracking_out;
         //fprintf(stderr, "Writing isoform-level read group tracking\n");
-        print_read_group_tracking(fiso_rep_tracking,_tracking->isoform_fpkm_tracking);
+        print_read_group_tracking_header(fiso_rep_tracking,_tracking->isoform_fpkm_tracking);
         
         FILE* ftss_rep_tracking =  _outfiles->tss_group_rep_tracking_out;
         //fprintf(stderr, "Writing TSS group-level read group tracking\n");
-        print_read_group_tracking(ftss_rep_tracking,_tracking->tss_group_fpkm_tracking);
+        print_read_group_tracking_header(ftss_rep_tracking,_tracking->tss_group_fpkm_tracking);
         
         FILE* fgene_rep_tracking =  _outfiles->gene_rep_tracking_out;
         //fprintf(stderr, "Writing gene-level read group tracking\n");
-        print_read_group_tracking(fgene_rep_tracking,_tracking->gene_fpkm_tracking);
+        print_read_group_tracking_header(fgene_rep_tracking,_tracking->gene_fpkm_tracking);
         
         FILE* fcds_rep_tracking =  _outfiles->cds_rep_tracking_out;
         //fprintf(stderr, "Writing CDS-level read group tracking\n");
-        print_read_group_tracking(fcds_rep_tracking,_tracking->cds_fpkm_tracking);
+        print_read_group_tracking_header(fcds_rep_tracking,_tracking->cds_fpkm_tracking);
         
         FILE* fread_group_info =  _outfiles->read_group_info_out;
         //fprintf(stderr, "Writing read group info\n");
@@ -755,19 +772,19 @@ private:
         // We can also take care of all this metadata about samples and genes
         FILE* fiso_attr =  _outfiles->isoform_attr_out;
         //fprintf(stderr, "Writing isoform-level attributes\n");
-        print_feature_attr_simple_table(fiso_attr,_tracking->isoform_fpkm_tracking);
+        print_feature_attr_simple_table_header(fiso_attr,_tracking->isoform_fpkm_tracking);
         
         FILE* ftss_attr =  _outfiles->tss_group_attr_out;
         //fprintf(stderr, "Writing TSS group-level attributes\n");
-        print_feature_attr_simple_table(ftss_attr,_tracking->tss_group_fpkm_tracking);
+        print_feature_attr_simple_table_header(ftss_attr,_tracking->tss_group_fpkm_tracking);
         
         FILE* fgene_attr =  _outfiles->gene_attr_out;
         //fprintf(stderr, "Writing gene-level attributes\n");
-        print_feature_attr_simple_table(fgene_attr,_tracking->gene_fpkm_tracking);
+        print_feature_attr_simple_table_header(fgene_attr,_tracking->gene_fpkm_tracking);
         
         FILE* fcds_attr =  _outfiles->cds_attr_out;
         //fprintf(stderr, "Writing CDS-level attributes\n");
-        print_feature_attr_simple_table(fcds_attr,_tracking->cds_fpkm_tracking);
+        print_feature_attr_simple_table_header(fcds_attr,_tracking->cds_fpkm_tracking);
         
         FILE* fread_group_info =  _outfiles->read_group_info_out;
         //fprintf(stderr, "Writing read group info\n");
@@ -819,24 +836,32 @@ private:
         {
             print_FPKM_tracking(ab->description(), _outfiles->isoform_fpkm_tracking_out, _tracking->isoform_fpkm_tracking);
             print_count_tracking(ab->description(), _outfiles->isoform_count_tracking_out, _tracking->isoform_fpkm_tracking);
+            print_read_group_tracking(ab->description(), _outfiles->isoform_rep_tracking_out, _tracking->isoform_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab->description(), _tracking->isoform_fpkm_tracking);
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->cds)
         {
             print_FPKM_tracking(ab.description(), _outfiles->cds_fpkm_tracking_out, _tracking->cds_fpkm_tracking);
             print_count_tracking(ab.description(), _outfiles->cds_count_tracking_out, _tracking->cds_fpkm_tracking);
+            print_read_group_tracking(ab.description(), _outfiles->cds_rep_tracking_out, _tracking->cds_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab.description(), _tracking->cds_fpkm_tracking);
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->primary_transcripts)
         {
             print_FPKM_tracking(ab.description(), _outfiles->tss_group_fpkm_tracking_out, _tracking->tss_group_fpkm_tracking);
             print_count_tracking(ab.description(), _outfiles->tss_group_count_tracking_out, _tracking->tss_group_fpkm_tracking);
+            print_read_group_tracking(ab.description(), _outfiles->tss_group_rep_tracking_out, _tracking->tss_group_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab.description(), _tracking->tss_group_fpkm_tracking);
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->genes)
         {
             print_FPKM_tracking(ab.description(), _outfiles->gene_fpkm_tracking_out, _tracking->gene_fpkm_tracking);
             print_count_tracking(ab.description(), _outfiles->gene_count_tracking_out, _tracking->gene_fpkm_tracking);
+            print_read_group_tracking(ab.description(), _outfiles->gene_rep_tracking_out, _tracking->gene_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab.description(), _tracking->gene_fpkm_tracking);
         }
     }
     
@@ -849,24 +874,34 @@ private:
         {
             print_FPKM_simple_table(ab->description(), _outfiles->isoform_fpkm_tracking_out, _tracking->isoform_fpkm_tracking);
             print_count_simple_table(ab->description(), _outfiles->isoform_count_tracking_out, _tracking->isoform_fpkm_tracking);
+            print_feature_attr_simple_table(ab->description(), _outfiles->isoform_attr_out, _tracking->isoform_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab->description(), _tracking->isoform_fpkm_tracking);
+
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->cds)
         {
             print_FPKM_simple_table(ab.description(), _outfiles->cds_fpkm_tracking_out, _tracking->cds_fpkm_tracking);
             print_count_simple_table(ab.description(), _outfiles->cds_count_tracking_out, _tracking->cds_fpkm_tracking);
+            print_feature_attr_simple_table(ab.description(), _outfiles->cds_attr_out, _tracking->cds_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab.description(), _tracking->cds_fpkm_tracking);
+
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->primary_transcripts)
         {
             print_FPKM_simple_table(ab.description(), _outfiles->tss_group_fpkm_tracking_out, _tracking->tss_group_fpkm_tracking);
             print_count_simple_table(ab.description(), _outfiles->tss_group_count_tracking_out, _tracking->tss_group_fpkm_tracking);
+            print_feature_attr_simple_table(ab.description(), _outfiles->tss_group_attr_out, _tracking->tss_group_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab.description(), _tracking->tss_group_fpkm_tracking);
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->genes)
         {
             print_FPKM_simple_table(ab.description(), _outfiles->gene_fpkm_tracking_out, _tracking->gene_fpkm_tracking);
             print_count_simple_table(ab.description(), _outfiles->gene_count_tracking_out, _tracking->gene_fpkm_tracking);
+            print_feature_attr_simple_table(ab.description(), _outfiles->gene_attr_out, _tracking->gene_fpkm_tracking);
+            remove_abundance_from_tracking_table(ab.description(), _tracking->gene_fpkm_tracking);
         }
     }
 };
