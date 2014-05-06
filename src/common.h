@@ -395,14 +395,38 @@ private:
     friend std::ostream & operator<<(std::ostream &os, const LocusCount &gp);
     friend class boost::serialization::access;
     
+//    template<class Archive>
+//    void serialize(Archive & ar, const unsigned int /* file_version */){
+//        ar & locus_desc;
+//        ar & count;
+//        ar & num_transcripts;
+//        ar & gene_ids;
+//        ar & gene_short_names;
+//    }
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int /* file_version */){
+    void save(Archive & ar, const unsigned int version) const
+    {
         ar & locus_desc;
         ar & count;
         ar & num_transcripts;
         ar & gene_ids;
         ar & gene_short_names;
     }
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version)
+    {
+        // create some temporaries, because we don't want to load the whole LocusCount;
+        std::string dsc;
+        ar & dsc;
+        ar & count;
+        ar & num_transcripts;
+        std::vector<std::string> gids;
+        ar & gids;
+        std::vector<std::string> gsns;
+        ar & gsns;
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 };
 
 // This class stores user-supplied options that affect quantification

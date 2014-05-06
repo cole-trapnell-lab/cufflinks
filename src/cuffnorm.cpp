@@ -558,6 +558,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	
 	vector<boost::shared_ptr<ReplicatedBundleFactory> > bundle_factories;
     vector<boost::shared_ptr<ReadGroupProperties> > all_read_groups;
+    set<boost::shared_ptr<ReadGroupProperties> > serialized_read_groups;
     
 	for (size_t i = 0; i < sam_hit_filename_lists.size(); ++i)
 	{

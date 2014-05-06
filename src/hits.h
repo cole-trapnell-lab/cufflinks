@@ -931,8 +931,9 @@ private:
     map<int, double> total_mass;
     map<int, boost::shared_ptr<const AbundanceGroup> > _curr_ab_groups;
     
+    boost::shared_ptr<ReadGroupProperties> _cached_rg_props;
     
-#if ENABLE_THREADS    
+#if ENABLE_THREADS
     boost::mutex _factory_lock;
 #endif
 };

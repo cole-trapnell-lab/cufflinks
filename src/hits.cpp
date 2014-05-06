@@ -1124,7 +1124,7 @@ void PrecomputedExpressionHitFactory::load_count_tables(const string& expression
         pair<int, AbundanceGroup> first_locus;
         ia >> first_locus;
         boost::shared_ptr<AbundanceGroup> ab = boost::shared_ptr<AbundanceGroup>(new AbundanceGroup(first_locus.second));
-                
+        
         // populate the cached count tables so we can make convincing fake bundles later on.
         ReadGroupProperties rg_props = **(ab->rg_props().begin());
 
