@@ -30,8 +30,6 @@
 #include <boost/graph/graph_traits.hpp>
 //#include <boost/numeric/ublas/io.hpp>
 
-#include <boost/version.hpp>
-
 #if (BOOST_VERSION < 103800)
 #include <boost/vector_property_map.hpp>
 #else
