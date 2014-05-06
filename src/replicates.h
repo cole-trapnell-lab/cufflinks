@@ -441,14 +441,14 @@ public:
     
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
     // samples will clobber each other
-    void set_ref_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs)
+    void set_ref_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs, bool deep_copy = true)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_rep_factory_lock);
 #endif
         BOOST_FOREACH(boost::shared_ptr<BundleFactory> fac, _factories)
         {
-            fac->set_ref_rnas(mRNAs);
+            fac->set_ref_rnas(mRNAs, deep_copy);
         }
     }
     

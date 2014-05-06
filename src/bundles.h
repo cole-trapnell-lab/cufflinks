@@ -217,6 +217,7 @@ public:
 		_rg_props = boost::shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
 	}
 
+    virtual ~BundleFactory() {} 
     boost::shared_ptr<const HitFactory> hit_factory() const { return _hit_fac; }
     
     bool bundles_remain()  
@@ -260,16 +261,24 @@ public:
 	}
 	
     // This function NEEDS to deep copy the ref_mRNAs, otherwise cuffdiff'd
-    // samples will clobber each other
-    void set_ref_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs)
+    // samples will clobber each other. Deep copying is necessary whenever
+    // you need to set fpkm or num fragments in Scaffold objects (e.g. during bias correction or multiread correction)
+    void set_ref_rnas(const vector<boost::shared_ptr<Scaffold> >& mRNAs, bool deep_copy = true)
     {
 #if ENABLE_THREADS
         boost::mutex::scoped_lock lock(_factory_lock);
 #endif
         ref_mRNAs.clear();
-        for (vector<boost::shared_ptr<Scaffold> >::const_iterator i = mRNAs.begin(); i < mRNAs.end(); ++i)
+        if (deep_copy)
         {
-            ref_mRNAs.push_back(boost::shared_ptr<Scaffold>(new Scaffold(**i)));
+            for (vector<boost::shared_ptr<Scaffold> >::const_iterator i = mRNAs.begin(); i < mRNAs.end(); ++i)
+            {
+                ref_mRNAs.push_back(boost::shared_ptr<Scaffold>(new Scaffold(**i)));
+            }
+        }
+        else
+        {
+            ref_mRNAs = mRNAs;
         }
         
         RefID last_id = 0;

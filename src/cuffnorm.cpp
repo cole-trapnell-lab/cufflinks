@@ -644,7 +644,10 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
     
     BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
-        fac->set_ref_rnas(ref_mRNAs);
+        // NOTE: we aren't deep copying here to save memory.  We can pull this off
+        // because unless bias correction or multiread correction is enabled,
+        // we don't need to write into Scaffold objects.
+        fac->set_ref_rnas(ref_mRNAs, false);
         if (mask_gtf) 
             fac->set_mask_rnas(mask_rnas);
     }

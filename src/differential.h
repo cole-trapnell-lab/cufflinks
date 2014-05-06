@@ -163,6 +163,8 @@ public:
     {
     }
     
+    virtual ~TestLauncher() {} 
+    
     void operator()();
     
     void register_locus(const string& locus_id);
@@ -239,6 +241,7 @@ private:
             }
         }
         fprintf(fout, "\n");
+        fflush(fout);
     }
     
     void print_count_tracking_header(FILE* fout,
@@ -256,6 +259,7 @@ private:
             }
         }
         fprintf(fout, "\n");
+        fflush(fout);
     }
     
     void print_FPKM_simple_table_header(FILE* fout,
@@ -277,6 +281,7 @@ private:
                     fprintf(fout, "\t%s_%d", condition_name.c_str(), rep_num);
                 }
             }
+            fflush(fout);
         }
     }
     
@@ -299,6 +304,7 @@ private:
                     fprintf(fout, "\t%s_%d", condition_name.c_str(), rep_num);
                 }
             }
+            fflush(fout);
         }
     }
     
@@ -380,6 +386,7 @@ private:
             }
             
             fprintf(fout, "\n");
+            fflush(fout);
         }
     }
     
@@ -437,6 +444,7 @@ private:
             }
             
             fprintf(fout, "\n");
+            fflush(fout);
         }
     }
     
@@ -462,6 +470,7 @@ private:
                     fprintf(fout, "\t%lg", FPKM);
                 }
             }
+            fflush(fout);
         }
     }
     
@@ -487,6 +496,7 @@ private:
                     fprintf(fout, "\t%lg", count);
                 }
             }
+            fflush(fout);
         }
     }
     
@@ -567,6 +577,7 @@ private:
                             status_str);
                 }
             }
+            fflush(fout);
         }
     }
     
