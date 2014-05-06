@@ -888,9 +888,9 @@ public:
     boost::shared_ptr<const AbundanceGroup> get_abundance_for_locus(int locus_id);
     void clear_abundance_for_locus(int locus_id);
     
-    double get_compat_mass(const string& locus_id)
+    double get_compat_mass(int locus_id)
     {
-       map<string, double >::iterator i = compat_mass.find(locus_id);
+       map<int, double >::iterator i = compat_mass.find(locus_id);
        if (i != compat_mass.end())
        {
            return i->second;
@@ -901,9 +901,9 @@ public:
        }
     }
 
-    double get_total_mass(const string& locus_id)
+    double get_total_mass(int locus_id)
     {
-        map<string, double >::iterator i = total_mass.find(locus_id);
+        map<int, double >::iterator i = total_mass.find(locus_id);
         if (i != total_mass.end())
         {
             return i->second;
@@ -927,8 +927,8 @@ private:
     std::ifstream _ifs;
     string _expression_file_name;
     boost::shared_ptr<boost::archive::binary_iarchive> _ia;
-    map<string, double> compat_mass;
-    map<string, double> total_mass;
+    map<int, double> compat_mass;
+    map<int, double> total_mass;
     map<int, boost::shared_ptr<const AbundanceGroup> > _curr_ab_groups;
     
     

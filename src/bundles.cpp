@@ -2053,8 +2053,13 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
         boost::shared_ptr<const AbundanceGroup> ab = _hit_fac->next_locus(bundle.id(), cache_bundle);
         if (ab)
         {
+            double compatible_mass = _hit_fac->get_compat_mass(bundle.id());
+            double total_mass  = _hit_fac->get_total_mass(bundle.id());
+            
+            /*
             double compatible_mass = _hit_fac->get_compat_mass(bundle_label_buf);
             double total_mass  = _hit_fac->get_total_mass(bundle_label_buf);
+            */
             
             bundle.finalize();
             bundle.add_raw_mass(total_mass);

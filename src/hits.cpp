@@ -1128,14 +1128,18 @@ void PrecomputedExpressionHitFactory::load_count_tables(const string& expression
         // populate the cached count tables so we can make convincing fake bundles later on.
         ReadGroupProperties rg_props = **(ab->rg_props().begin());
 
+        int i = 0;
         BOOST_FOREACH(const LocusCount& c, rg_props.raw_compatible_counts())
         {
-            compat_mass[c.locus_desc] = c.count;
+            compat_mass[i++] = c.count;
+            //compat_mass[c.locus_desc] = c.count;
         }
 
+        i = 0;
         BOOST_FOREACH(const LocusCount& c, rg_props.raw_total_counts())
         {
-            total_mass[c.locus_desc] = c.count;
+            total_mass[i++] = c.count;
+            //total_mass[c.locus_desc] = c.count;
         }
     }
 }
