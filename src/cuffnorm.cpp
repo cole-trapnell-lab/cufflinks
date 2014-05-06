@@ -713,13 +713,14 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 #endif
     
     normalize_counts(all_read_groups);
-
+    
     long double total_norm_mass = 0.0;
     long double total_mass = 0.0;
     BOOST_FOREACH (boost::shared_ptr<ReadGroupProperties> rg_props, all_read_groups)
     {
         total_norm_mass += rg_props->normalized_map_mass();
         total_mass += rg_props->total_map_mass();
+        rg_props->clear_count_tables();
     }
 
 	min_frag_len = tmp_min_frag_len;

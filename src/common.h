@@ -583,6 +583,20 @@ public:
     const std::vector<LocusCount>& raw_total_counts() { return _raw_total_counts; }
     void raw_total_counts(const std::vector<LocusCount>& counts) { _raw_total_counts = counts; }
     
+    void clear_count_tables() {
+        _common_scale_compatible_counts.clear();
+        std::vector<LocusCount>().swap(_common_scale_compatible_counts);
+        
+        _common_scale_total_counts.clear();
+        std::vector<LocusCount>().swap(_common_scale_total_counts);
+        
+        _raw_compatible_counts.clear();
+        std::vector<LocusCount>().swap(_raw_compatible_counts);
+        
+        _raw_total_counts.clear();
+        std::vector<LocusCount>().swap(_raw_total_counts);
+    }
+    
 	boost::shared_ptr<MultiReadTable> multi_read_table() const {return _multi_read_table; }	
 	void multi_read_table(boost::shared_ptr<MultiReadTable> mrt) { _multi_read_table = mrt;	}
 	
