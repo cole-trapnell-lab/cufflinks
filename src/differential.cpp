@@ -117,6 +117,9 @@ boost::mutex test_storage_lock; // don't modify the above struct without locking
 // acquire the lock itself. 
 void TestLauncher::perform_testing(vector<boost::shared_ptr<SampleAbundances> > abundances)
 {
+#if ENABLE_THREADS
+	_launcher_lock.lock();
+#endif
     assert (abundances.size() == _orig_workers);
     
     // Just verify that all the loci from each factory match up.
@@ -137,8 +140,11 @@ void TestLauncher::perform_testing(vector<boost::shared_ptr<SampleAbundances> > 
             assert (s1.abundances()[j]->description() == s2.abundances()[j]->description());
         }
     }
-    
+
     test_differential(abundances.front()->locus_tag, abundances, _contrasts, *_tests, *_tracking);
+#if ENABLE_THREADS
+	_launcher_lock.unlock();
+#endif
 }
 
 void TestLauncher::record_tracking_data(vector<boost::shared_ptr<SampleAbundances> >& abundances)
@@ -1594,6 +1600,7 @@ void validate_cross_sample_parameters(const vector<boost::shared_ptr<ReadGroupPr
 void TrackingDataWriter::perform_testing(vector<boost::shared_ptr<SampleAbundances> > abundances)
 {
 #if ENABLE_THREADS
+    _launcher_lock.lock();
     test_storage_lock.lock();
 #endif
     if (headers_written == false)
@@ -1606,6 +1613,7 @@ void TrackingDataWriter::perform_testing(vector<boost::shared_ptr<SampleAbundanc
     //test_differential(abundances.front()->locus_tag, abundances, _contrasts, *_tests, *_tracking);
 #if ENABLE_THREADS
     test_storage_lock.unlock();
+    _launcher_lock.unlock();
 #endif
     
 }
