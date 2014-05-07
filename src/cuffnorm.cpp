@@ -315,7 +315,8 @@ boost::mutex inspect_lock;
 
 void inspect_map_worker(ReplicatedBundleFactory& fac,
                         int& tmp_min_frag_len, 
-                        int& tmp_max_frag_len)
+                        int& tmp_max_frag_len,
+                        boost::shared_ptr<map<string, set<string> > > id_to_locus_map)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -324,7 +325,7 @@ void inspect_map_worker(ReplicatedBundleFactory& fac,
     int min_f = std::numeric_limits<int>::max();
     int max_f = 0;
     
-    fac.inspect_replicate_maps(min_f, max_f);
+    fac.inspect_replicate_maps(min_f, max_f, id_to_locus_map);
     
 #if ENABLE_THREADS
     inspect_lock.lock();
@@ -669,9 +670,15 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
 	
+    vector<boost::shared_ptr<map<string, set<string> > > > id_to_locus_maps;
+    
 	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
 	BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
+        boost::shared_ptr<map<string, set<string> > > id_to_locus_map(new map<string, set<string> >());
+        
+        id_to_locus_maps.push_back(id_to_locus_map);
+        
 #if ENABLE_THREADS	
         while(1)
         {
@@ -692,11 +699,13 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         thread inspect(inspect_map_worker,
                        boost::ref(*fac),
                        boost::ref(tmp_min_frag_len),
-                       boost::ref(tmp_max_frag_len));  
+                       boost::ref(tmp_max_frag_len),
+                       id_to_locus_map);
 #else
         inspect_map_worker(boost::ref(*fac),
                            boost::ref(tmp_min_frag_len),
-                           boost::ref(tmp_max_frag_len));
+                           boost::ref(tmp_max_frag_len),
+                           id_to_locus_map);
 #endif
     }
     
@@ -715,6 +724,20 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
 #endif
+    
+    // merge all the individual tracking_id to locus_tag maps into a single one
+    map<string, set<string> > id_to_locus_map;
+    
+    for (size_t i = 0; i < id_to_locus_maps.size(); ++i)
+    {
+        boost::shared_ptr<map<string, set<string> > > pilm = id_to_locus_maps[i];
+        for (map<string, set<string> >::const_iterator itr = pilm->begin();
+             itr != pilm->end(); ++itr)
+        {
+            pair<map<string, set<string> >::iterator, bool> p = id_to_locus_map.insert(make_pair(itr->first, set<string>()));
+            p.first->second.insert(itr->second.begin(), itr->second.end());
+        }
+    }
     
     normalize_counts(all_read_groups);
     
@@ -741,7 +764,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
 	final_est_run = true;
 	p_bar = ProgressBar("Normalizing expression levels for locus", num_bundles);
                                                      
-    tracking_data_writer = boost::shared_ptr<TrackingDataWriter>(new TrackingDataWriter(bundle_factories.size(), &outfiles, &tracking, all_read_groups, sample_labels, &p_bar));
+    tracking_data_writer = boost::shared_ptr<TrackingDataWriter>(new TrackingDataWriter(bundle_factories.size(), &outfiles, &tracking, all_read_groups, sample_labels, &p_bar, id_to_locus_map));
     
 	while (true)
 	{

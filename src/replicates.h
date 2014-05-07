@@ -266,7 +266,7 @@ public:
         }
     }
     
-    void inspect_replicate_maps(int& min_len, int& max_len)
+    void inspect_replicate_maps(int& min_len, int& max_len, boost::shared_ptr<map<string, set<string> > > id_to_locus_map)
     {
         vector<LocusCountList> sample_compatible_count_table;
         vector<LocusCountList> sample_total_count_table;
@@ -280,7 +280,8 @@ public:
             
             vector<LocusCount> compatible_count_table;
             vector<LocusCount> total_count_table;
-            inspect_map(fac, NULL, compatible_count_table, total_count_table, false, false);
+            
+            inspect_map(fac, NULL, compatible_count_table, total_count_table, id_to_locus_map, false, false);
             
             boost::shared_ptr<ReadGroupProperties> rg_props = fac->read_group_properties();
             

@@ -427,6 +427,7 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,
+                 boost::shared_ptr<map<string, set<string> > > id_to_locus_map,
                  bool progress_bar = true,
                  bool show_stats = true);
 
