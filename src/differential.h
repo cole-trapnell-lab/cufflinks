@@ -848,53 +848,61 @@ private:
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
         BOOST_FOREACH (boost::shared_ptr<Abundance> ab, ab_group.abundances())
         {
-            print_FPKM_tracking(ab->description(), _outfiles->isoform_fpkm_tracking_out, _tracking->isoform_fpkm_tracking);
-            print_count_tracking(ab->description(), _outfiles->isoform_count_tracking_out, _tracking->isoform_fpkm_tracking);
-            print_read_group_tracking(ab->description(), _outfiles->isoform_rep_tracking_out, _tracking->isoform_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab->description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab->locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_tracking(ab->description(), _outfiles->isoform_fpkm_tracking_out, _tracking->isoform_fpkm_tracking);
+                    print_count_tracking(ab->description(), _outfiles->isoform_count_tracking_out, _tracking->isoform_fpkm_tracking);
+                    print_read_group_tracking(ab->description(), _outfiles->isoform_rep_tracking_out, _tracking->isoform_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab->description(), _tracking->isoform_fpkm_tracking);
+                }
             }
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->cds)
         {
-            print_FPKM_tracking(ab.description(), _outfiles->cds_fpkm_tracking_out, _tracking->cds_fpkm_tracking);
-            print_count_tracking(ab.description(), _outfiles->cds_count_tracking_out, _tracking->cds_fpkm_tracking);
-            print_read_group_tracking(ab.description(), _outfiles->cds_rep_tracking_out, _tracking->cds_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab.description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab.locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_tracking(ab.description(), _outfiles->cds_fpkm_tracking_out, _tracking->cds_fpkm_tracking);
+                    print_count_tracking(ab.description(), _outfiles->cds_count_tracking_out, _tracking->cds_fpkm_tracking);
+                    print_read_group_tracking(ab.description(), _outfiles->cds_rep_tracking_out, _tracking->cds_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab.description(), _tracking->cds_fpkm_tracking);
+                }
             }
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->primary_transcripts)
         {
-            print_FPKM_tracking(ab.description(), _outfiles->tss_group_fpkm_tracking_out, _tracking->tss_group_fpkm_tracking);
-            print_count_tracking(ab.description(), _outfiles->tss_group_count_tracking_out, _tracking->tss_group_fpkm_tracking);
-            print_read_group_tracking(ab.description(), _outfiles->tss_group_rep_tracking_out, _tracking->tss_group_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab.description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab.locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_tracking(ab.description(), _outfiles->tss_group_fpkm_tracking_out, _tracking->tss_group_fpkm_tracking);
+                    print_count_tracking(ab.description(), _outfiles->tss_group_count_tracking_out, _tracking->tss_group_fpkm_tracking);
+                    print_read_group_tracking(ab.description(), _outfiles->tss_group_rep_tracking_out, _tracking->tss_group_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab.description(), _tracking->tss_group_fpkm_tracking);
+                }
             }
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->genes)
         {
-            print_FPKM_tracking(ab.description(), _outfiles->gene_fpkm_tracking_out, _tracking->gene_fpkm_tracking);
-            print_count_tracking(ab.description(), _outfiles->gene_count_tracking_out, _tracking->gene_fpkm_tracking);
-            print_read_group_tracking(ab.description(), _outfiles->gene_rep_tracking_out, _tracking->gene_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab.description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab.locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_tracking(ab.description(), _outfiles->gene_fpkm_tracking_out, _tracking->gene_fpkm_tracking);
+                    print_count_tracking(ab.description(), _outfiles->gene_count_tracking_out, _tracking->gene_fpkm_tracking);
+                    print_read_group_tracking(ab.description(), _outfiles->gene_rep_tracking_out, _tracking->gene_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab.description(), _tracking->gene_fpkm_tracking);
+                }
             }
         }
     }
@@ -906,55 +914,63 @@ private:
         //fprintf(stderr, "[%d] count = %lg\n",i,  ab_group.num_fragments());
         BOOST_FOREACH (boost::shared_ptr<Abundance> ab, ab_group.abundances())
         {
-            print_FPKM_simple_table(ab->description(), _outfiles->isoform_fpkm_tracking_out, _tracking->isoform_fpkm_tracking);
-            print_count_simple_table(ab->description(), _outfiles->isoform_count_tracking_out, _tracking->isoform_fpkm_tracking);
-            print_feature_attr_simple_table(ab->description(), _outfiles->isoform_attr_out, _tracking->isoform_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab->description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab->locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_simple_table(ab->description(), _outfiles->isoform_fpkm_tracking_out, _tracking->isoform_fpkm_tracking);
+                    print_count_simple_table(ab->description(), _outfiles->isoform_count_tracking_out, _tracking->isoform_fpkm_tracking);
+                    print_feature_attr_simple_table(ab->description(), _outfiles->isoform_attr_out, _tracking->isoform_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab->description(), _tracking->isoform_fpkm_tracking);
+                }
             }
 
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->cds)
         {
-            print_FPKM_simple_table(ab.description(), _outfiles->cds_fpkm_tracking_out, _tracking->cds_fpkm_tracking);
-            print_count_simple_table(ab.description(), _outfiles->cds_count_tracking_out, _tracking->cds_fpkm_tracking);
-            print_feature_attr_simple_table(ab.description(), _outfiles->cds_attr_out, _tracking->cds_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab.description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab.locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_simple_table(ab.description(), _outfiles->cds_fpkm_tracking_out, _tracking->cds_fpkm_tracking);
+                    print_count_simple_table(ab.description(), _outfiles->cds_count_tracking_out, _tracking->cds_fpkm_tracking);
+                    print_feature_attr_simple_table(ab.description(), _outfiles->cds_attr_out, _tracking->cds_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab.description(), _tracking->cds_fpkm_tracking);
+                }
             }
 
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->primary_transcripts)
         {
-            print_FPKM_simple_table(ab.description(), _outfiles->tss_group_fpkm_tracking_out, _tracking->tss_group_fpkm_tracking);
-            print_count_simple_table(ab.description(), _outfiles->tss_group_count_tracking_out, _tracking->tss_group_fpkm_tracking);
-            print_feature_attr_simple_table(ab.description(), _outfiles->tss_group_attr_out, _tracking->tss_group_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab.description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab.locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_simple_table(ab.description(), _outfiles->tss_group_fpkm_tracking_out, _tracking->tss_group_fpkm_tracking);
+                    print_count_simple_table(ab.description(), _outfiles->tss_group_count_tracking_out, _tracking->tss_group_fpkm_tracking);
+                    print_feature_attr_simple_table(ab.description(), _outfiles->tss_group_attr_out, _tracking->tss_group_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab.description(), _tracking->tss_group_fpkm_tracking);
+                }
             }
         }
         
         BOOST_FOREACH (AbundanceGroup& ab, abundances.front()->genes)
         {
-            print_FPKM_simple_table(ab.description(), _outfiles->gene_fpkm_tracking_out, _tracking->gene_fpkm_tracking);
-            print_count_simple_table(ab.description(), _outfiles->gene_count_tracking_out, _tracking->gene_fpkm_tracking);
-            print_feature_attr_simple_table(ab.description(), _outfiles->gene_attr_out, _tracking->gene_fpkm_tracking);
             map<string, set<string> >::iterator itr = _id_to_locus_map.find(ab.description());
             if (itr != _id_to_locus_map.end()){
                 itr->second.erase(ab.locus_tag());
                 if (itr->second.empty())
+                {
+                    print_FPKM_simple_table(ab.description(), _outfiles->gene_fpkm_tracking_out, _tracking->gene_fpkm_tracking);
+                    print_count_simple_table(ab.description(), _outfiles->gene_count_tracking_out, _tracking->gene_fpkm_tracking);
+                    print_feature_attr_simple_table(ab.description(), _outfiles->gene_attr_out, _tracking->gene_fpkm_tracking);
                     remove_abundance_from_tracking_table(ab.description(), _tracking->gene_fpkm_tracking);
+                }
             }
         }
     }
