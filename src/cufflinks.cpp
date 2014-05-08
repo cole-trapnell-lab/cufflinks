@@ -1628,11 +1628,11 @@ void driver(const string& hit_file_name, FILE* ref_gtf, FILE* mask_gtf)
     
     vector<LocusCount> compatible_count_table;
     vector<LocusCount> total_count_table;
-    
+    boost::shared_ptr<map<string, set<string> > > id_to_locus_map(new map<string, set<string> >());
     if (bundle_mode != HIT_DRIVEN)
-        inspect_map(bundle_factory, NULL, compatible_count_table, total_count_table);
+        inspect_map(bundle_factory, NULL, compatible_count_table, total_count_table, id_to_locus_map);
     else 
-        inspect_map(bundle_factory, &bad_introns, compatible_count_table, total_count_table);
+        inspect_map(bundle_factory, &bad_introns, compatible_count_table, total_count_table, id_to_locus_map);
     
     rg_props->raw_compatible_counts(compatible_count_table);
     rg_props->raw_total_counts(total_count_table);
