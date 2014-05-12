@@ -423,11 +423,62 @@ private:
 void identify_bad_splices(const HitBundle& bundle, 
 						  BadIntronTable& bad_splice_ops);
 
+class IdToLocusMap
+{
+    
+#if ENABLE_THREADS
+	boost::mutex _bl_lock;
+#endif
+    
+    IdToLocusMap(const IdToLocusMap& rhs) {}
+public:
+    
+    IdToLocusMap(boost::shared_ptr<map<string, set<string> > > id_to_locus_map) :
+        _id_to_locus_map(id_to_locus_map) {}
+    
+    void register_locus_to_id(const string& ID, const string& locus_desc)
+    {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_bl_lock);
+#endif
+
+        pair< map<string, set<string> >::iterator, bool> p = _id_to_locus_map->insert(make_pair(ID, set<string>()));
+        p.first->second.insert(locus_desc);
+    }
+    
+    int unregister_locus_from_id(const string& ID, const string& locus_desc)
+    {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_bl_lock);
+#endif
+
+        map<string, set<string> >::iterator itr = _id_to_locus_map->find(ID);
+        if (itr != _id_to_locus_map->end()){
+            itr->second.erase(locus_desc);
+            return itr->second.size();
+        }
+        return 0;
+    }
+    
+    int num_locus_registered(const string& ID) {
+#if ENABLE_THREADS
+        boost::mutex::scoped_lock lock(_bl_lock);
+#endif
+
+        map<string, set<string> >::const_iterator itr = _id_to_locus_map->find(ID);
+        if (itr == _id_to_locus_map->end())
+            return 0;
+        return itr->second.size();
+    }
+private:
+    boost::shared_ptr<map<string, set<string> > > _id_to_locus_map;
+};
+
 void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,
-                 boost::shared_ptr<map<string, set<string> > > id_to_locus_map,
+                 IdToLocusMap& id_to_locus_map,
                  bool progress_bar = true,
                  bool show_stats = true);
 

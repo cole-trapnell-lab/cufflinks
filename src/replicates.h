@@ -266,7 +266,7 @@ public:
         }
     }
     
-    void inspect_replicate_maps(int& min_len, int& max_len, boost::shared_ptr<map<string, set<string> > > id_to_locus_map)
+    void inspect_replicate_maps(int& min_len, int& max_len, IdToLocusMap& id_to_locus_map)
     {
         vector<LocusCountList> sample_compatible_count_table;
         vector<LocusCountList> sample_total_count_table;

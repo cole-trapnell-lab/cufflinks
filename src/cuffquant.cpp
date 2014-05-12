@@ -589,7 +589,7 @@ void decr_pool_count()
 void inspect_map_worker(ReplicatedBundleFactory& fac,
                         int& tmp_min_frag_len, 
                         int& tmp_max_frag_len,
-                        boost::shared_ptr<map<string, set<string> > > id_to_locus_map)
+                        IdToLocusMap& id_to_locus_map)
 {
 #if ENABLE_THREADS
 	boost::this_thread::at_thread_exit(decr_pool_count);
@@ -1148,10 +1148,12 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
 	int tmp_min_frag_len = numeric_limits<int>::max();
 	int tmp_max_frag_len = 0;
 	
+    IdToLocusMap id_to_locus_map(boost::shared_ptr<map<string, set<string> > >(new map<string, set<string> >()));
+    
 	ProgressBar p_bar("Inspecting maps and determining fragment length distributions.",0);
 	BOOST_FOREACH (boost::shared_ptr<ReplicatedBundleFactory> fac, bundle_factories)
     {
-        boost::shared_ptr<map<string, set<string> > > id_to_locus_map(new map<string, set<string> >());
+        
 #if ENABLE_THREADS	
         while(1)
         {
@@ -1173,12 +1175,12 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
                        boost::ref(*fac),
                        boost::ref(tmp_min_frag_len),
                        boost::ref(tmp_max_frag_len),
-                       id_to_locus_map);
+                       boost::ref(id_to_locus_map));
 #else
         inspect_map_worker(boost::ref(*fac),
                            boost::ref(tmp_min_frag_len),
                            boost::ref(tmp_max_frag_len),
-                           id_to_locus_map);
+                           boost::ref(id_to_locus_map));
 #endif
     }
     

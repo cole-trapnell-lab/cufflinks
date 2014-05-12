@@ -1627,7 +1627,7 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                  BadIntronTable* bad_introns,
                  vector<LocusCount>& compatible_count_table,
                  vector<LocusCount>& total_count_table,
-                 boost::shared_ptr<map<string, set<string> > > id_to_locus_map,
+                 IdToLocusMap& id_to_locus_map,
                  bool progress_bar,
                  bool show_stats)
 {
@@ -1722,22 +1722,17 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
 		num_bundles++;
         
         BOOST_FOREACH(boost::shared_ptr<Scaffold> s, bundle.ref_scaffolds()){
-            pair< map<string, set<string> >::iterator, bool> p = id_to_locus_map->insert(make_pair(s->annotated_trans_id(), set<string>()));
-            p.first->second.insert(bundle_label_buf);
-        
-            p = id_to_locus_map->insert(make_pair(s->annotated_gene_id(), set<string>()));
-            p.first->second.insert(bundle_label_buf);
+            id_to_locus_map.register_locus_to_id(s->annotated_trans_id(), bundle_label_buf);
+            id_to_locus_map.register_locus_to_id(s->annotated_gene_id(), bundle_label_buf);
             
             if (s->annotated_tss_id().empty() == false)
             {
-                p = id_to_locus_map->insert(make_pair(s->annotated_tss_id(), set<string>()));
-                p.first->second.insert(bundle_label_buf);
+                id_to_locus_map.register_locus_to_id(s->annotated_tss_id(), bundle_label_buf);
             }
             
             if (s->annotated_protein_id().empty() == false)
             {
-                p = id_to_locus_map->insert(make_pair(s->annotated_protein_id(), set<string>()));
-                p.first->second.insert(bundle_label_buf);
+                id_to_locus_map.register_locus_to_id(s->annotated_protein_id(), bundle_label_buf);
             }
         }
         
