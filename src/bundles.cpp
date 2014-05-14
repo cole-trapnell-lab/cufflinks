@@ -885,6 +885,16 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
     
 	_expand_by_refs(bundle);
     
+//    for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
+//    {
+//        boost::shared_ptr<Scaffold> s = bundle.ref_scaffolds()[i];
+//        if (s->annotated_gene_id() == "ENSG00000268467.1")
+//        {
+//                int a = 4;
+//        }
+//    }
+
+    
 	// The most recent RefID and position we've seen in the hit stream
 	RefID last_hit_ref_id_seen = 0;
 	int last_hit_pos_seen = 0;
@@ -1709,6 +1719,14 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                     gene_ids.push_back(s->annotated_gene_id());
                 if (s->annotated_gene_name() != "")
                     gene_short_names.push_back(s->annotated_gene_name());
+                
+                if (s->annotated_gene_id() == "ENSG00000268467.1")
+                {
+                    int a = 4;
+                }
+                
+
+                
             }
             compatible_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.compatible_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));
             total_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.raw_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));

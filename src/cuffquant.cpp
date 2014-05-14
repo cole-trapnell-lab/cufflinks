@@ -1110,6 +1110,16 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
     
     boost::crc_32_type ref_gtf_crc_result;
     ::load_ref_rnas(ref_gtf, rt, ref_mRNAs, ref_gtf_crc_result, corr_bias, false);
+    
+//    for (size_t i = 0; i < ref_mRNAs.size(); ++i)
+//    {
+//        boost::shared_ptr<Scaffold> s = ref_mRNAs[i];
+//        if (s->annotated_gene_id() == "ENSG00000268467.1")
+//        {
+//            int a = 4;
+//        }
+//    }
+//    
     if (ref_mRNAs.empty())
         return;
     

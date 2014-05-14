@@ -215,6 +215,8 @@ public:
 	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0),  _zeroone(rng)
 	{
 		_rg_props = boost::shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
+        next_ref_scaff = ref_mRNAs.begin(); 
+        next_mask_scaff = mask_gtf_recs.begin();
 	}
 
     virtual ~BundleFactory() {} 
@@ -402,7 +404,9 @@ public:
         if (transcript_coverages.size() > 0)
         {
             size_t median_idx = transcript_coverages.size() * 0.5;
-            return transcript_coverages[median_idx];
+            double mean_transcript_coverage = accumulate(transcript_coverages.begin(), transcript_coverages.end(), 0.0) /transcript_coverages.size();
+            //return transcript_coverages[median_idx];
+            return mean_transcript_coverage;
         }
         else
         {
