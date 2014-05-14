@@ -22,6 +22,10 @@
 #include "gtf_tracking.h"
 #include "progressbar.h"
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/density.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+
 struct BundleStats
 {		
 	BundleStats() : 
@@ -338,7 +342,7 @@ public:
 	
 	bool spans_bad_intron(const ReadHit& read);
 	
-    virtual double median_transcript_coverage() { return -1; }
+    virtual double mode_transcript_coverage(int num_bins = 100) { return -1; }
     
 private:
 	
@@ -399,20 +403,93 @@ public:
     
     void reset() { BundleFactory::reset(); transcript_coverages.clear(); }
     
-    double median_transcript_coverage() {
+//    double median_transcript_coverage() {
+//        
+//        if (transcript_coverages.size() > 0)
+//        {
+//            size_t median_idx = transcript_coverages.size() * 0.5;
+//            //double mean_transcript_coverage = accumulate(transcript_coverages.begin(), transcript_coverages.end(), 0.0) /transcript_coverages.size();
+//            return transcript_coverages[median_idx];
+//            //return mean_transcript_coverage;
+//        }
+//        else
+//        {
+//            return 0.0;
+//        }
+//    }
+
+    double mode_transcript_coverage(int num_bins = 100) {
         
         if (transcript_coverages.size() > 0)
         {
-            size_t median_idx = transcript_coverages.size() * 0.5;
-            double mean_transcript_coverage = accumulate(transcript_coverages.begin(), transcript_coverages.end(), 0.0) /transcript_coverages.size();
-            //return transcript_coverages[median_idx];
-            return mean_transcript_coverage;
+            
+            using namespace boost;
+            using namespace boost::accumulators;
+            
+            typedef accumulator_set<double, features<tag::density> > acc;
+            typedef iterator_range<std::vector<std::pair<double, double> >::iterator > histogram_type;
+            
+            double min_cov = 99999999;
+            double max_cov = -1;
+            
+            for (size_t i = 0; i < transcript_coverages.size(); ++i)
+            {
+                if (min_cov < transcript_coverages[i])
+                    min_cov = transcript_coverages[i];
+                if (max_cov > transcript_coverages[i])
+                    max_cov = transcript_coverages[i];
+            }
+            
+            if (min_cov == max_cov)
+            {
+                return 0.0;
+            }
+            
+            double cache_size = 1000;
+            if (cache_size > transcript_coverages.size())
+                cache_size = sqrt(transcript_coverages.size());
+            
+            //create an accumulator
+            acc myAccumulator( tag::density::num_bins = num_bins, tag::density::cache_size = cache_size);
+            
+            //fill accumulator
+            for (size_t i = 0; i < transcript_coverages.size(); ++i)
+            {
+                if (transcript_coverages[i] > 0)
+                    myAccumulator(transcript_coverages[i]);
+            }
+            
+            histogram_type hist = density(myAccumulator);
+            
+            //double total = 0.0;
+            
+            int mode_idx = -1;
+            double mode_count = -1;
+            for(int i = 0; i < hist.size(); i++ )
+            {
+                //std::cout << "Bin lower bound: " << hist[i].first << ", Value: " << hist[i].second << std::endl;
+                //total += hist[i].second;
+                if (hist[i].second > mode_count)
+                {
+                    mode_idx = i;
+                    mode_count = hist[i].second;
+                }
+            }
+            
+            if (mode_idx == -1 || mode_idx >= hist.size() - 1)
+                return 0;
+            
+            double mode_val = (hist[mode_idx+1].first - hist[mode_idx].first) / 2.0;
+            return mode_val;
+            //std::cout << "Total: " << total << std::endl; //should be 1 (and it is)
+
         }
         else
         {
             return 0.0;
         }
     }
+
     
 private:
     

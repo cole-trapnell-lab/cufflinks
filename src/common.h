@@ -636,8 +636,8 @@ public:
     int replicate_num() const { return _replicate_num; }
     void replicate_num(int rn) { _replicate_num = rn; }
     
-    void median_transcript_coverage(double coverage) { _median_coverage = coverage; }
-    double median_transcript_coverage() const { return _median_coverage; }
+    void mode_transcript_coverage(double coverage) { _median_coverage = coverage; }
+    double mode_transcript_coverage() const { return _median_coverage; }
     
     void ref_gtf(const std::string& file_path, const boost::crc_32_type& gtf_crc )
     {

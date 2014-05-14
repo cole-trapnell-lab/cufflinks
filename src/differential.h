@@ -618,7 +618,7 @@ private:
                     rg_props->total_map_mass(),
                     rg_props->internal_scale_factor(),
                     rg_props->external_scale_factor(),
-                    rg_props->median_transcript_coverage());
+                    rg_props->mode_transcript_coverage());
             
         }
     }

@@ -2027,7 +2027,7 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
 	rg_props->frag_len_dist(fld);
 	rg_props->normalized_map_mass(norm_map_mass);
     rg_props->total_map_mass(map_mass);
-    rg_props->median_transcript_coverage(bundle_factory->median_transcript_coverage());
+    rg_props->mode_transcript_coverage(bundle_factory->mode_transcript_coverage());
     
     if (show_stats)
     {

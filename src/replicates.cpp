@@ -395,7 +395,7 @@ void calc_estimated_absolute_scaling_factors(vector<boost::shared_ptr<ReadGroupP
     assert (scale_factors.size() == all_read_groups.size());
     for (size_t i = 0; i < scale_factors.size(); ++i)
     {
-        double med_cov = all_read_groups[i]->median_transcript_coverage();
+        double med_cov = all_read_groups[i]->mode_transcript_coverage();
         if (med_cov == 0)
         {
             scale_factors[i] = 0.0;
