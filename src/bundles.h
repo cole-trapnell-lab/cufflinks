@@ -16,6 +16,7 @@
 #include <boost/random.hpp>
 #include <vector>
 #include <numeric>
+#include <cmath>
 #include "common.h"
 #include "hits.h"
 #include "scaffolds.h"
@@ -342,7 +343,7 @@ public:
 	
 	bool spans_bad_intron(const ReadHit& read);
 	
-    virtual double mode_transcript_coverage(int num_bins = 100) { return -1; }
+    virtual double mode_transcript_coverage(int num_bins = 1000) { return -1; }
     
 private:
 	
@@ -418,7 +419,7 @@ public:
 //        }
 //    }
 
-    double mode_transcript_coverage(int num_bins = 100) {
+    double mode_transcript_coverage(int num_bins = 1000) {
         
         if (transcript_coverages.size() > 0)
         {
@@ -445,9 +446,11 @@ public:
                 return 0.0;
             }
             
-            double cache_size = 1000;
-            if (cache_size > transcript_coverages.size())
-                cache_size = sqrt(transcript_coverages.size());
+            double cache_size = transcript_coverages.size();
+            if (transcript_coverages.size() > num_bins)
+            {
+                num_bins = sqrt(transcript_coverages.size());
+            }
             
             //create an accumulator
             acc myAccumulator( tag::density::num_bins = num_bins, tag::density::cache_size = cache_size);
@@ -456,7 +459,10 @@ public:
             for (size_t i = 0; i < transcript_coverages.size(); ++i)
             {
                 if (transcript_coverages[i] > 0)
-                    myAccumulator(transcript_coverages[i]);
+                {
+                    float nearest = floorf(transcript_coverages[i] * 10000 + 0.5) / 10000;
+                    myAccumulator(nearest);
+                }
             }
             
             histogram_type hist = density(myAccumulator);
@@ -469,6 +475,10 @@ public:
             {
                 //std::cout << "Bin lower bound: " << hist[i].first << ", Value: " << hist[i].second << std::endl;
                 //total += hist[i].second;
+                
+                double lower_b = hist[i].first;
+                double count = hist[i].second;
+                
                 if (hist[i].second > mode_count)
                 {
                     mode_idx = i;
