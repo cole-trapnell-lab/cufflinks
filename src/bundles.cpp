@@ -2101,27 +2101,25 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             
             // calculate the depth of coverage for each transcript and store it in the factory
             // in case we need it later for library size normalization
-            size_t max_FPKM_idx = 0;
-            double max_FPKM = -1;
+//            size_t max_FPKM_idx = 0;
+//            double max_FPKM = -1;
             for (size_t i = 0; i < ab->abundances().size(); ++i)
             {
-                if (max_FPKM < ab->abundances()[i]->FPKM())
-                {
-                    max_FPKM = ab->abundances()[i]->FPKM();
-                    max_FPKM_idx = i;
-                }
-            }
-            
-            if (max_FPKM_idx < ab->abundances().size())
-            {
-                double num_frags = ab->abundances()[max_FPKM_idx]->num_fragments();
-                double length = ab->abundances()[max_FPKM_idx]->effective_length();
-                if (num_frags >= 1 && length != 0)
+                double num_frags = ab->abundances()[i]->num_fragments();
+                double length = ab->abundances()[i]->effective_length();
+                double FPKM =ab-> abundances()[i]->FPKM();
+                // FIXME: Should probably set these "magic" params as options somewhere.
+                if (num_frags >= 1 && length != 0 && FPKM >= 1e-5)
                 {
                     double coverage = num_frags / length;
                     transcript_coverages.push_back(coverage);
                 }
+
             }
+            
+//            if (max_FPKM_idx < ab->abundances().size())
+//            {
+//            }
             
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
             if (bundle.ref_scaffolds().size() != ab->abundances().size())
