@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /docs/
-description: "Documentation for Monocle."
+description: "Documentation for Cufflinks."
 modified: 2013-09-11
 tags: [monocle, manual, vignette]
 ---
@@ -32,9 +32,9 @@ tags: [monocle, manual, vignette]
 
 <div id="wrap">
     <div id="left_col" align="center">
-		Detailed descriptions of each function in the Monocle package.
+		Detailed descriptions of each function in the Cufflinks package.
     </div>
     <div id="right_col" align="center">
-		A complete workflow with Monocle to get you started.
+		A complete workflow with Cufflinks to get you started.
     </div>
 </div>

@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /getting-started/
-description: "Instructions on how to install Monocle."
+description: "Instructions on how to install Cufflinks."
 modified: 2013-09-11
 tags: [monocle, install, setup]
 ---
@@ -13,7 +13,7 @@ tags: [monocle, install, setup]
 ##Install quick-start
 
 ###Required software
-Monocle runs in the [R statistical computing environment](http://www.r-project.org/). You will need R version 3.0 or higher. You will need to install the following packages through CRAN:
+Cufflinks runs in the [R statistical computing environment](http://www.r-project.org/). You will need R version 3.0 or higher. You will need to install the following packages through CRAN:
 
 - VGAM
 - irlba
@@ -44,21 +44,21 @@ You will also need to install [Bioconductor](http://bioconductor.org/install/):
 {% endhighlight %}
 
 ###Installing the myoblast example data
-Monocle includes a detailed documentation vignette and snippets of example code that depend on the skeletal muscle myoblast data described in Trapnell and Cacchiarelli et al. You'll need to install the data package containing it before installing Monocle. To do so, type:
+Cufflinks includes a detailed documentation vignette and snippets of example code that depend on the skeletal muscle myoblast data described in Trapnell and Cacchiarelli et al. You'll need to install the data package containing it before installing Cufflinks. To do so, type:
 
 {% highlight bash %}
 $ R CMD INSTALL HSMMSingleCell_0.99.0.tar.gz 
 {% endhighlight %}
 
-###Installing Monocle from source
-To install the Monocle package, download the source tarball, change to the directory in which you saved it, and type
+###Installing Cufflinks from source
+To install the Cufflinks package, download the source tarball, change to the directory in which you saved it, and type
 
 {% highlight bash %}
 $ R CMD INSTALL monocle_0.99.0.tar.gz 
 {% endhighlight %}
 
 ###Testing the installation
-To ensure that Monocle was installed correctly, start a new R session and type:
+To ensure that Cufflinks was installed correctly, start a new R session and type:
 
 {% highlight R %}
 > library(monocle)
@@ -66,7 +66,7 @@ To ensure that Monocle was installed correctly, start a new R session and type:
 
 ##Computing expression values for single cells
 
-To use Monocle, you must first compute the expression of each gene in each cell for your experiment. There are a number of ways to do this for RNA-Seq. We recommend using Cufflinks, but you could also use [RSEM](http://deweylab.biostat.wisc.edu/rsem/), [eXpress](http://bio.math.berkeley.edu/eXpress/), Sailfish, or another tool for estimating gene and transcript expression levels from aligned reads. Here, we'll show a simplified workflow for using TopHat and Cufflinks to estimate expression. You can read more about how to use TopHat and Cufflinks to calculate expression [here](http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html).
+To use Cufflinks, you must first compute the expression of each gene in each cell for your experiment. There are a number of ways to do this for RNA-Seq. We recommend using Cufflinks, but you could also use [RSEM](http://deweylab.biostat.wisc.edu/rsem/), [eXpress](http://bio.math.berkeley.edu/eXpress/), Sailfish, or another tool for estimating gene and transcript expression levels from aligned reads. Here, we'll show a simplified workflow for using TopHat and Cufflinks to estimate expression. You can read more about how to use TopHat and Cufflinks to calculate expression [here](http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html).
 
 To estimate gene and transcript expression levels for single-cell RNA-Seq using [TopHat](http://ccb.jhu.edu/software/tophat/index.shtml) and [Cufflinks](http://cufflinks.cbcb.umd.edu/), you must have a file of RNA-Seq reads for each cell you captured. If you performed paired-end RNA-Seq, you should have two files for each cell. Depending on how the base calling was performed, the naming conventions for these files may differ. In the examples below, we assume that each file follows the format:
 
@@ -107,7 +107,7 @@ The commands above show how to convert aligned reads for each cell into gene exp
 - The gene annotation file, which tells cuffquant what the gene structures are in the genome.
 - The BAM file containing the aligned reads.
 
-Next, you will need to merge the expression estimates into a single table for use with Monocle. You can do this with the following command: 
+Next, you will need to merge the expression estimates into a single table for use with Cufflinks. You can do this with the following command: 
 
 {% highlight bash %}
 cuffnorm --use-sample-sheet -o sc_expr_out GENCODE.gtf sample_sheet.txt
@@ -121,11 +121,11 @@ The option --use-sample-sheet tells cuffnorm that it should look in the file sam
 | CELL_T24_A02_cuffquant_out/abundances.cxb   | T24_A02 |
 | CELL_T24_A03_cuffquant_out/abundances.cxb   | T24_A03 |
 
-Now, you are ready to load the expression data into Monocle and start analyzing your experiment. 
+Now, you are ready to load the expression data into Cufflinks and start analyzing your experiment. 
 
-##Analyzing data with Monocle
+##Analyzing data with Cufflinks
 
-Monocle provides a number of tools you can use to analyze your single cell expression experiments. To get started, we must create a CellDataSet object. You can do this with the commands below:
+Cufflinks provides a number of tools you can use to analyze your single cell expression experiments. To get started, we must create a CellDataSet object. You can do this with the commands below:
 
 {% highlight R %}
 > library(monocle)
@@ -136,4 +136,4 @@ Monocle provides a number of tools you can use to analyze your single cell expre
 > my_data <- new("CellDataSet", exprs = as.matrix(fpkm_matrix), phenoData = pd, featureData = fd)
 {% endhighlight %}
 
-Now, you have created an object named "my_data" that stores your single-cell expression data. This object is the central object in Monocle. You will use it to identify differentially expressed genes and perform other analyses. To see what Monocle can do for you and how to proceed, please have a look at the [vignette (PDF)](http://www.bioconductor.org/packages/devel/bioc/vignettes/monocle/inst/doc/monocle-vignette.pdf). Good luck! 
+Now, you have created an object named "my_data" that stores your single-cell expression data. This object is the central object in Cufflinks. You will use it to identify differentially expressed genes and perform other analyses. To see what Cufflinks can do for you and how to proceed, please have a look at the [vignette (PDF)](http://www.bioconductor.org/packages/devel/bioc/vignettes/monocle/inst/doc/monocle-vignette.pdf). Good luck! 

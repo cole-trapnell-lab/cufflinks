@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /help/
-description: "How to get help using Monocle."
+description: "How to get help using Cufflinks."
 modified: 2013-09-11
 tags: [Jekyll, theme, install, setup]
 ---
