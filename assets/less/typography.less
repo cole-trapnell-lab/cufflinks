@@ -17,7 +17,7 @@ a {
 	text-decoration: none;
 	color: @link-color; 
 	&:visited { 
-		color: lighten(@link-color, 20); 
+		color: darken(@link-color, 10); 
 	}
 	&:hover { 
 		color: darken(@link-color, 20); 
@@ -109,7 +109,7 @@ tt, code, kbd, samp, pre {
 p,
 li { 
 	code {
-		.font(12);
+		.font(14);
 		white-space: nowrap;
 		margin: 0 2px;
 		padding: 0 5px;
@@ -119,6 +119,6 @@ li {
 	}
 }
 pre {
-	.font(12);
+	.font(14);
 	overflow-x: auto;
 }

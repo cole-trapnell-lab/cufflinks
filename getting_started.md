@@ -1,6 +1,6 @@
 ---
 layout: page
-permalink: /getting-started/
+permalink: /getting_started/
 description: "Instructions on how to install Cufflinks."
 modified: 2013-09-11
 tags: [monocle, install, setup]
