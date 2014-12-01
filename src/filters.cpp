@@ -58,6 +58,10 @@ void filter_introns(int bundle_length,
 		for (size_t j = 0; j < hits.size(); ++j)
 		{
 			//fprintf(stderr, "considering read [%d-%d] with min doc = %lf contained in intron with doc = %lf\n", hits[j].left(), hits[j].right(), doc, idoc);
+
+			if(hits[j].is_ref())
+				continue;
+
 			const vector<AugmentedCuffOp>& ops = hits[j].augmented_ops();
 			
 			for (size_t i = 0; i < ops.size(); ++i)

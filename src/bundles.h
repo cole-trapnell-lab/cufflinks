@@ -14,6 +14,7 @@
 #endif
 #include <boost/bind.hpp>
 #include <boost/random.hpp>
+#include <boost/unordered_map.hpp>
 #include <vector>
 #include <numeric>
 #include <cmath>
@@ -58,7 +59,11 @@ private:
     HitBundle(const HitBundle& rhs) {} 
 public:
 	HitBundle() 
-    : _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _ref_id(0), _raw_mass(0.0), _num_replicates(1), _compatible_mass(0.0) {}
+		: _leftmost(INT_MAX), _rightmost(-1), _final(false), _id(++_next_id), _ref_id(0), _raw_mass(0.0), _num_replicates(1), _compatible_mass(0.0) {
+		// Shrink the open mates table when it is less than 10% full and larger than 10,000 items.
+		_rehash_threshold = _open_mates.max_load_factor() / 10;
+		_rehash_size_threshold = 10000;
+	}
 	
     ~HitBundle()
     {
@@ -87,11 +92,8 @@ public:
         
         for(OpenMates::iterator itr = _open_mates.begin(); itr != _open_mates.end(); ++itr)
 		{
-			BOOST_FOREACH (MateHit& hit,  itr->second)
-            {
-                delete hit.left_alignment();
-                delete hit.right_alignment();
-            }
+			delete itr->second.left_alignment();
+			delete itr->second.right_alignment();
 		}
 		
     }
@@ -200,10 +202,20 @@ private:
 	
 	static int _next_id;
 	
-	typedef map<int, list<MateHit> > OpenMates;
+	// InsertIDs are already hashes of SAM record names; no need
+	// to hash them again. Note on 32-bit this will take the truncate
+	// the larger InsertID hash to size_t.
+	struct identity_hash {
+		size_t operator()(const InsertID& in) const { return (size_t)in; }
+	};
+
+	typedef boost::unordered_multimap<uint64_t, MateHit, identity_hash> OpenMates;
 	OpenMates _open_mates;
     int _num_replicates;
     double _compatible_mass;
+	float _rehash_threshold;
+	OpenMates::size_type _rehash_size_threshold;
+
 };
 
 void load_ref_rnas(FILE* ref_mRNA_file, 

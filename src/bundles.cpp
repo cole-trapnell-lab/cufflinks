@@ -313,101 +313,83 @@ bool HitBundle::add_open_hit(boost::shared_ptr<ReadGroupProperties const> rg_pro
         }
 		if (expand_by_partner)
 			_rightmost = max(max(_rightmost, bh->right()), bh->partner_pos()+1);
-		OpenMates::iterator mi = _open_mates.find(bh->left());
 		
-		// Does this read hit close an open mate?
-		if (mi == _open_mates.end())
-		{
-			// No, so add it to the list of open mates, unless we would
-			// already have seen it's partner
-			if(bh->left() <= bh->partner_pos())
+		uint64_t search_key = bh->insert_id() ^ bh->left();
+		std::pair<OpenMates::iterator, OpenMates::iterator> its = _open_mates.equal_range(search_key);
+
+		// Does this hit close an open mate?
+		bool found_partner = false;
+		for(OpenMates::iterator it = its.first; it != its.second; ++it) {
+		
+			MateHit& pm = it->second;
+
+			if(pm.left_alignment()->partner_pos() != bh->left())
+				continue;
+
+			if(pm.insert_id() != bh->insert_id())
+				continue;
+
 			{
-				MateHit open_hit(rg_props,
-                                 bh->ref_id(), 
-                                 bh, 
-                                 NULL);
-				
-				pair<OpenMates::iterator, bool> ret;
-				ret = _open_mates.insert(make_pair(bh->partner_pos(), 
-												  list<MateHit>()));
-				
-				ret.first->second.push_back(open_hit);
-			}
-			else
-			{
-                // This should never happen during hit_driven or ref_guided bundling, and in the case of
-                // ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
-                // Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
-				// add_hit(MateHit(rg_props,bh->ref_id(), bh, NULL));
-                return false;
-			}
-		}
-		else
-		{
-			
-			bool found_partner = false;
-			// Maybe, see if we can find an ID match in the list of
-			// open mates expecting a partner at this position
-			for (list<MateHit>::iterator pi = mi->second.begin();
-				 pi != mi->second.end();
-				 ++pi)
-			{
-				MateHit& pm = *pi;
-				
-				if (pm.insert_id() == bh->insert_id())
-				{
-					// Found a partner?
 					
-					Scaffold L(MateHit(rg_props, bh->ref_id(), pm.left_alignment(), NULL));
-					Scaffold R(MateHit(rg_props, bh->ref_id(), bh, NULL));
-					
-					bool strand_agree = L.strand() == CUFF_STRAND_UNKNOWN ||
+				Scaffold L(MateHit(rg_props, bh->ref_id(), pm.left_alignment(), NULL));
+				Scaffold R(MateHit(rg_props, bh->ref_id(), bh, NULL));
+				
+				bool strand_agree = L.strand() == CUFF_STRAND_UNKNOWN ||
 					R.strand() == CUFF_STRAND_UNKNOWN ||
 					L.strand() == R.strand();
-					
-					//bool orientation_agree = pm.left_alignment()->antisense_align() != bh->antisense_align();
-					
-					if (strand_agree && 
-                        (!Scaffold::overlap_in_genome(L, R, olap_radius) ||
-                         Scaffold::compatible(L,R)))
+				
+				//bool orientation_agree = pm.left_alignment()->antisense_align() != bh->antisense_align();
+				
+				if (strand_agree && 
+					(!Scaffold::overlap_in_genome(L, R, olap_radius) ||
+					 Scaffold::compatible(L,R)))
 					{					
 						pm.right_alignment(bh);
 						add_hit(pm);
-						mi->second.erase(pi);
-						if (mi->second.empty())
-							_open_mates.erase(mi);
-						
+						_open_mates.erase(it);
+						// Boost unordered_multimap ordinarily never shrinks.
+						// Compel it to do so if significantly underloaded.
+						if(_open_mates.size() > _rehash_size_threshold && _open_mates.load_factor() < _rehash_threshold) {
+						  _open_mates.rehash(0);
+						  if(_open_mates.load_factor() < _rehash_threshold) {
+							// It didn't shrink -- looks like this Boost implementation has a minimum
+							// size limit, or other reason to keep the table large. Don't keep rehashing with every remove op:
+							_rehash_size_threshold = _open_mates.size();
+						  }
+						}
 						found_partner = true;
 						break;
 					}
-				}
+
 			}
-			
-			if (!found_partner)
-			{
-				// If we got here, couldn't actually close any mates with
-				// this read hit, so open a new one, unless we can never
-				// close this one
-				if(bh->left() <= bh->partner_pos())
-				{
-					MateHit open_hit(rg_props, bh->ref_id(), bh, NULL);
-					
-					pair<OpenMates::iterator, bool> ret;
-					ret = _open_mates.insert(make_pair(bh->partner_pos(), 
-													  list<MateHit>()));
-					
-					ret.first->second.push_back(open_hit);
-				}
-				else
-				{
-                    // This should never happen during hit_driven or ref_guided bundling, and in the case of
-                    // ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
-                    // Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
-					// add_hit(MateHit(rg_props, bh->ref_id(), bh, NULL));
-                    return false;
-				}
-			}
+
 		}
+
+		if(!found_partner) {
+
+			// Add it to the list of open mates, unless we would
+			// already have seen it's partner
+			if(bh->left() <= bh->partner_pos())
+				{
+					MateHit open_hit(rg_props,
+									 bh->ref_id(), 
+									 bh, 
+									 NULL);
+					
+					uint64_t insert_key = bh->insert_id() ^ bh->partner_pos();
+					_open_mates.insert(make_pair(insert_key, open_hit));
+				}
+			else
+				{
+					// This should never happen during hit_driven or ref_guided bundling, and in the case of
+					// ref_driven, this read clearly shouldn't map to any of the transcripts anyways.
+					// Adding this hit would cause problems with multi-reads that straddle boundaries after assembly.
+					// add_hit(MateHit(rg_props,bh->ref_id(), bh, NULL));
+					return false;
+				}
+
+		}
+
 	}
     return true;
 }
@@ -425,11 +407,8 @@ void HitBundle::finalize_open_mates()
 
     for(OpenMates::iterator itr = _open_mates.begin(); itr != _open_mates.end(); ++itr)
     {
-        BOOST_FOREACH (MateHit& hit,  itr->second)
-        {
-            delete hit.left_alignment();
-            delete hit.right_alignment();
-        }
+		delete itr->second.left_alignment();
+		delete itr->second.right_alignment();
     }
     _open_mates.clear();
 }

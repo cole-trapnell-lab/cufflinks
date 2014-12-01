@@ -1445,7 +1445,9 @@ bool assemble_hits(BundleFactory& bundle_factory, boost::shared_ptr<BiasLearner>
     fprintf(fgene_abundances,"tracking_id\tclass_code\tnearest_ref_id\tgene_id\tgene_short_name\ttss_id\tlocus\tlength\tcoverage\tFPKM\tFPKM_conf_lo\tFPKM_conf_hi\tFPKM_status\n");
     
 	FILE* ftranscripts = fopen(string(output_dir + "/" + "transcripts.gtf").c_str(), "w");
-    FILE* fskipped = fopen(string(output_dir + "/" + "skipped.gtf").c_str(), "w");
+    FILE* fskipped = 0;
+	if(bundle_mode != REF_DRIVEN)
+		fskipped = fopen(string(output_dir + "/" + "skipped.gtf").c_str(), "w");
     
 	string process;
 	if (corr_bias && corr_multi && final_est_run)
@@ -1572,7 +1574,8 @@ bool assemble_hits(BundleFactory& bundle_factory, boost::shared_ptr<BiasLearner>
 	fclose(ftranscripts);
 	fclose(ftrans_abundances);
 	fclose(fgene_abundances);
-    fclose(fskipped);
+	if(fskipped)
+	  fclose(fskipped);
 	return true;
 }
 	
