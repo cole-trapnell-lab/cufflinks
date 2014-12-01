@@ -10,130 +10,119 @@ tags: [monocle, install, setup]
 {:toc}
 
 
-##Install quick-start
+# Install quick-start
 
-###Required software
-Cufflinks runs in the [R statistical computing environment](http://www.r-project.org/). You will need R version 3.0 or higher. You will need to install the following packages through CRAN:
+## Installing a pre-compiled binary release
 
-- VGAM
-- irlba
-- matrixStats
-- igraph (version >= 0.7.0)
-- combinat
-- fastICA
-- grid
-- ggplot2
-- reshape2
-- plyr
-- parallel
-- methods
+In order to make it easy to install Cufflinks, we provide a few binary packages to save users from occasionally frustrating process of building Cufflinks, which requires that you install the Boost libraries. To use the binary packages, simply download the appropriate one for your machine, untar it, and make sure the cufflinks,cuffdiff and cuffcompare binaries are in a directory in your PATH environment variable.
 
-You can install these packages by starting an R session and typing: 
+# Building Cufflinks from source
 
-{% highlight R %}
-> install.packages(c("VGAM", "irlba", "matrixStats", "igraph", 
-"combinat", "fastICA", "grid", "ggplot2", 
-"reshape2", "plyr", "parallel", "methods"))
+In order to build Cufflinks, you must have the [Boost C++ libraries](http://www.boost.org/) (version 1.47 or higher) installed on your system. See below for instructions on installing Boost.
+
+## Installing Boost
+
+1. Download Boost and the bjam build engine.
+2. Unpack bjam and add it to your PATH.
+3. Unpack the Boost tarball and cd to the Boost source directory. This directory is called the BOOST_ROOT in some Boost installation instructions.
+4. Build Boost. Note that you can specify where to put Boost with the --prefix option. The default Boost installation directory is /usr/local. Take note of the boost installation directory, because you will need to tell the Cufflinks installer where to find Boost later on.
+
+- If you are on Mac OS X, type (all on one line): 
+{% highlight bash %}
+bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=darwin architecture=x86 address_model=32_64 link=static runtime-link=static --layout=versioned stage install
 {% endhighlight %}
 
-You will also need to install [Bioconductor](http://bioconductor.org/install/): 
-
-{% highlight R %}
-> source("http://bioconductor.org/biocLite.R") 
-> biocLite()
+- If you are on a 32-bit Linux system, type (all on one line): 
+{% highlight bash %}
+bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 address_model=32 link=static runtime-link=static stage install
 {% endhighlight %}
 
-###Installing the myoblast example data
-Cufflinks includes a detailed documentation vignette and snippets of example code that depend on the skeletal muscle myoblast data described in Trapnell and Cacchiarelli et al. You'll need to install the data package containing it before installing Cufflinks. To do so, type:
+- If you are on a 64-bit Linux system, type (all on one line): 
+{% highlight bash %}
+bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 address_model=64 link=static runtime-link=static stage install
+{% endhighlight %}
+
+## Installing the SAM tools
+
+1. [Download the SAM tools](http://samtools.sourceforge.net/)
+2. Unpack the SAM tools tarball and cd to the SAM tools source directory.
+3. Build the SAM tools by typing make at the command line.
+4. Choose a directory into which you wish to copy the SAM tools binary, the included library <tt>libbam.a</tt>, and the library headers. A common choice is <tt>/usr/local/</tt>.
+5. Copy libbam.a to the lib/ directory in the folder you've chosen above (e.g. <tt>/usr/local/lib/</tt>)
+6. Create a directory called "bam" in the <tt>include/</tt> directory (e.g. <tt>/usr/local/include/bam</tt>)
+7. Copy the headers (files ending in <tt>.h</tt>) to the include/bam directory you've created above (e.g. <tt>/usr/local/include/</tt>bam)
+8. Copy the samtools binary to some directory in your <tt>PATH</tt>.
+
+## Installing the Eigen libraries
+
+1. [Download Eigen](http://eigen.tuxfamily.org/)
+2. Unpack the Eigen tarball and cd to the Eigen source directory.
+3. Copy the Eigen/ subdirectory someplace on your system where you keep header files (e.g. /usr/local/include)
+
+## Building Cufflinks
+
+Unpack the Cufflinks source tarball:
+{% highlight bash %}
+tar zxvf cufflinks-0.7.0.tar.gz
+{% endhighlight %}
+Change to the Cufflinks directory:
+{% highlight bash %}
+cd cufflinks-0.7.0
+{% endhighlight %}
+Configure Cufflinks. If Boost is installed somewhere other than /usr/local, you will need to tell the installer where to find it using the --with-boost option. Specify where to install Cufflinks using the --prefix option.
+{% highlight bash %}
+./configure --prefix=/path/to/cufflinks/install --with-boost=/path/to/boost --with-eigen=/path/to/eigen
+{% endhighlight %}
+If you see any errors during configuration, verify that you are using Boost version 1.47 or higher, and that the directory you specified via --with-boost contains the boost header files and libraries. See the Boost Getting started page for more details. If you copied the SAM tools binaries to someplace other than /usr/local/, you may need to supply the --with-bam configuration option.
+Finally, make and install Cufflinks.
+{% highlight bash %}
+make
+make install
+{% endhighlight %}
+
+## Testing the installation
+
+1. [Download](http://cufflinks.cbcb.umd.edu/downloads/test_data.sam) the test data
+2. In the directory where you placed the test file, type:
 
 {% highlight bash %}
-$ R CMD INSTALL HSMMSingleCell_0.99.0.tar.gz 
+cufflinks ./test_data.sam
 {% endhighlight %}
 
-###Installing Cufflinks from source
-To install the Cufflinks package, download the source tarball, change to the directory in which you saved it, and type
+You should see the following output:
 
-{% highlight bash %}
-$ R CMD INSTALL monocle_0.99.0.tar.gz 
-{% endhighlight %}
+<pre>
+[bam_header_read] EOF marker is absent. The input is probably truncated.
+[bam_header_read] invalid BAM binary header (this is not a BAM file).
+File ./test_data.sam doesn't appear to be a valid BAM file, trying SAM...
+[13:23:15] Inspecting reads and determining fragment length distribution.
+> Processed 1 loci.                            [*************************] 100%
+Warning: Using default Gaussian distribution due to insufficient paired-end reads in open ranges.  
+It is recommended that correct paramaters (--frag-len-mean and --frag-len-std-dev) be provided.
+> Map Properties:
+>       Total Map Mass: 102.50
+>       Read Type: 75bp x 75bp
+>       Fragment Length Distribution: Truncated Gaussian (default)
+>                     Estimated Mean: 200
+>                  Estimated Std Dev: 80
+[13:23:15] Assembling transcripts and estimating abundances.
+> Processed 1 loci.                            [*************************] 100%
+</pre>
 
-###Testing the installation
-To ensure that Cufflinks was installed correctly, start a new R session and type:
+Verify that the file transcripts.gtf is in the current directory and looks like this (your file will have GTF attributes, omitted here for clarity)
 
-{% highlight R %}
-> library(monocle)
-{% endhighlight %}
+<pre>
+test_chromosome Cufflinks       exon    53      250     1000    +       . 
+test_chromosome Cufflinks       exon    351     400     1000    +       . 
+test_chromosome Cufflinks       exon    501     550     1000    +       .
+</pre>	
 
-##Computing expression values for single cells
+# Common uses of the Cufflinks package
 
-To use Cufflinks, you must first compute the expression of each gene in each cell for your experiment. There are a number of ways to do this for RNA-Seq. We recommend using Cufflinks, but you could also use [RSEM](http://deweylab.biostat.wisc.edu/rsem/), [eXpress](http://bio.math.berkeley.edu/eXpress/), Sailfish, or another tool for estimating gene and transcript expression levels from aligned reads. Here, we'll show a simplified workflow for using TopHat and Cufflinks to estimate expression. You can read more about how to use TopHat and Cufflinks to calculate expression [here](http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html).
+Cufflinks includes a number of tools for analyzing RNA-Seq experiments. Some of these tools can be run on their own, while others are pieces of a larger workflow. The complexity of your workflow depends on what you want to achieve with your analysis. For a complete discussion of how Cufflinks can help you with your analysis, please [see our protocol paper](http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html). The paper includes a diagram (Figure 2) describing how the various parts of the Cufflinks package (and its companion tool TopHat) fit together. As of version 2.2.0, you can also run Cuffquant and Cuffnorm to make large scale analyses easier to handle. The figure below is an updated version of Figure 2 showing how the two utilities released after the protocol paper appeared fit into the workflow: 
 
-To estimate gene and transcript expression levels for single-cell RNA-Seq using [TopHat](http://ccb.jhu.edu/software/tophat/index.shtml) and [Cufflinks](http://cufflinks.cbcb.umd.edu/), you must have a file of RNA-Seq reads for each cell you captured. If you performed paired-end RNA-Seq, you should have two files for each cell. Depending on how the base calling was performed, the naming conventions for these files may differ. In the examples below, we assume that each file follows the format:
+<div style="text-align:center">
+![Workflow]({{ site.url }}/images/tuxedo_workflow.png)
+</div>
 
-CELL_TXX_YYY.RZ.fastq.gz
-
-Where XX is the time point at which the cell was collected in our experiment, YY is the well of the 96-well plate used during library prep, and Z is either 1 or 2 depending on whether we are looking at the left mate or the right mate in a paired end sequencing run. So CELL_T24_A01.R1.fastq.gz means we are looking at the left mate file for a cell collected 24 hours into our experiment and which was prepped in well A01 of the 24-hour capture plate. 
-
-###Aligning reads to the genome with TopHat
-We begin by aligning each cell's reads separately, so we will have one BAM file for each cell. The commands below show how to run each cell's reads through TopHat. These alignment commands can take a while, but they can be run in parallel if you have access to a compute cluster. If so, contact your cluster administrator for more information on how to run TopHat in a cluster environment. 
-
-{% highlight bash %}
-tophat -o CELL_T24_A01_thout -G GENCODE.gtf bowtie-hg19-idx CELL_T24_A01.R1.fastq.gz CELL_T24_A01.R2.fastq.gz 
-tophat -o CELL_T24_A02_thout -G GENCODE.gtf bowtie-hg19-idx CELL_T24_A02.R1.fastq.gz CELL_T24_A02.R2.fastq.gz 
-tophat -o CELL_T24_A03_thout -G GENCODE.gtf bowtie-hg19-idx CELL_T24_A03.R1.fastq.gz CELL_T24_A03.R2.fastq.gz 
-{% endhighlight %}
-
-The commands above show how to align the reads for each of three cells in the experiment. You will need to run a similar command for each cell you wish to include in your analysis. These TopHat alignment commands are simplified for brevity - there are options to control the number of CPUs used by TopHat and otherwise control how TopHat aligns reads that you may want to explore on the TopHat manual. The key components of the above commands are:
-
-- The -o option, which sets the directory in which each cell's output will be written.
-- The gene annotation file, specified with -G, which tells TopHat where to look for splice junctions.
-- The Bowtie index for genome of your organism, in this case build hg19 of the human genome.
-- The read files for each cell as mentioned above.
-
-When the commands finish, there will be a BAM file in each cell's TopHat output directory. For example, CELL_T24_A01_thout/accepted_hits.bam will contain the alignments for cell T24_A01.
-
-###Computing gene expression using Cufflinks
-Now, we will use Cufflinks to estimate gene expression levels for each cell in your study. 
-
-{% highlight bash %}
-cuffquant -o CELL_T24_A01_cuffquant_out GENCODE.gtf CELL_T24_A01_thout/accepted_hits.bam 
-cuffquant -o CELL_T24_A02_cuffquant_out GENCODE.gtf CELL_T24_A02_thout/accepted_hits.bam 
-cuffquant -o CELL_T24_A03_cuffquant_out GENCODE.gtf CELL_T24_A03_thout/accepted_hits.bam 
-{% endhighlight %}
-
-The commands above show how to convert aligned reads for each cell into gene expression values for that cell. You will need to run a similar command for each cell you wish to include in your analysis. These commands are simplified for brevity - there are options to control the number of CPUs used by the cuffquant utility and otherwise control how cuffquant estimates expression that you may want to explore on the [Cufflinks](http://cufflinks.cbcb.umd.edu/) manual. The key components of the above commands are:
-
-- The -o option, which sets the directory in which each cell's output will be written.
-- The gene annotation file, which tells cuffquant what the gene structures are in the genome.
-- The BAM file containing the aligned reads.
-
-Next, you will need to merge the expression estimates into a single table for use with Cufflinks. You can do this with the following command: 
-
-{% highlight bash %}
-cuffnorm --use-sample-sheet -o sc_expr_out GENCODE.gtf sample_sheet.txt
-{% endhighlight %}
-
-The option --use-sample-sheet tells cuffnorm that it should look in the file sample_sheet.txt for the expression files, to make the above command simpler. If you choose not to use a sample sheet, you will need to specify the expression files on the command line directly. The sample sheet is a tab-delimited file that looks like this: 
-
-| sample_name | group |
-|:--------|:-------:|--------:|
-| CELL_T24_A01_cuffquant_out/abundances.cxb   | T24_A01 |
-| CELL_T24_A02_cuffquant_out/abundances.cxb   | T24_A02 |
-| CELL_T24_A03_cuffquant_out/abundances.cxb   | T24_A03 |
-
-Now, you are ready to load the expression data into Cufflinks and start analyzing your experiment. 
-
-##Analyzing data with Cufflinks
-
-Cufflinks provides a number of tools you can use to analyze your single cell expression experiments. To get started, we must create a CellDataSet object. You can do this with the commands below:
-
-{% highlight R %}
-> library(monocle)
-> sample_sheet <- read.delim("sc_expr_out/samples.table", row.names=1)
-> gene_annotations <- read.delim("sc_expr_out/genes.attr_table", row.names=1)
-> fpkm_matrix <- read.delim("sc_expr_out/genes.fpkm_table", row.names=1)
-> pd <- new("AnnotatedDataFrame", data = sample_sheet)
-> my_data <- new("CellDataSet", exprs = as.matrix(fpkm_matrix), phenoData = pd, featureData = fd)
-{% endhighlight %}
-
-Now, you have created an object named "my_data" that stores your single-cell expression data. This object is the central object in Cufflinks. You will use it to identify differentially expressed genes and perform other analyses. To see what Cufflinks can do for you and how to proceed, please have a look at the [vignette (PDF)](http://www.bioconductor.org/packages/devel/bioc/vignettes/monocle/inst/doc/monocle-vignette.pdf). Good luck! 
+You can use Cuffquant to pre-compute gene expression levels for each of your samples, which can save time if you have to re-run part of your analysis. Using Cuffquant also makes it easier to spread the load of computation for lots of samples across multiple computers. If you don't want to perform differential expression analysis, you can run Cuffnorm instead of Cuffdiff. Cuffnorm produces simple tables of expression values that you can look at in R (for example) to cluster samples and perform other follow up analysis.			

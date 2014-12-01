@@ -28,7 +28,7 @@ Cufflinks is provided under the OSI-approved Boost License.
 
 # CummeRbund: visualization of RNA-Seq differential analysis
 
-CummeRbund is an R package that is designed to aid and simplify the task of analyzing Cufflinks RNA-Seq output.
+[CummeRbund](http://compbio.mit.edu/cummeRbund/) is an R package that is designed to aid and simplify the task of analyzing Cufflinks RNA-Seq output.
 CummeRbund was written by Loyal Goff while in Manolis Kellis's group at MIT's Computer Science and Artificial Intelligence Laboratory, and John Rinn's Lab at the Harvard University department of Stem Cells and Regenerative Medicine.
 
 CummeRbund is provided under the OSI-approved Artistic License 2.0.

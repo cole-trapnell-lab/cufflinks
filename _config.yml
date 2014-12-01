@@ -1,5 +1,5 @@
 title:            Cufflinks
-description:      Differential expression and time-series analysis for single-cell RNA-Seq and qPCR experiments.
+description:      Transcriptome assembly and differential expression analysis for RNA-Seq.
 #logo:             monocle-logo.png
 disqus_shortname:
 # search:           true
@@ -37,14 +37,23 @@ links:
     url: /about/
   - title: News
     url: /news/
+  - title: Install
+    url: /install/
   - title: Manual
     url: /manual/
   - title: Getting started
     url: /getting_started/
   - title: Tools
     url: /tools/
-  - title: How it works
-    url: /how_it_works/
+  - title: Papers
+    url: /papers/
+  - title: Protocol
+    url: http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html
+    external: true
+  - title: Benchmarks
+    url: /benchmarks/
+  - title: iGenomes
+    url: /igenome_table/
 
 # http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 timezone:    America/Los_Angeles
