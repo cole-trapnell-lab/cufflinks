@@ -864,14 +864,14 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
     
 	_expand_by_refs(bundle);
     
-//    for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
-//    {
-//        boost::shared_ptr<Scaffold> s = bundle.ref_scaffolds()[i];
-//        if (s->annotated_gene_id() == "ENSG00000268467.1")
-//        {
-//                int a = 4;
-//        }
-//    }
+    for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
+    {
+        boost::shared_ptr<Scaffold> s = bundle.ref_scaffolds()[i];
+        if (s->annotated_gene_id() == "ENSG00000182378.8")
+        {
+                int a = 4;
+        }
+    }
 
     
 	// The most recent RefID and position we've seen in the hit stream
@@ -2103,7 +2103,7 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
             if (bundle.ref_scaffolds().size() != ab->abundances().size())
             {
-                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%lu transcripts)  does not match GTF (%d transcripts):\n", read_group_properties()->file_path().c_str(),  bundle_label_buf, ab->abundances().size(), bundle.ref_scaffolds().size());
+                fprintf (stderr, "Error in file %s: reconstituted expression bundle %s (%lu transcripts)  does not match GTF (%lu transcripts):\n", read_group_properties()->file_path().c_str(),  bundle_label_buf, ab->abundances().size(), bundle.ref_scaffolds().size());
                 fprintf(stderr, "Reconstituted:\n");
                 for (size_t i = 0; i < ab->abundances().size(); ++i)
                 {
