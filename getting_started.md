@@ -125,4 +125,8 @@ Cufflinks includes a number of tools for analyzing RNA-Seq experiments. Some of 
 ![Workflow]({{ site.url }}/images/tuxedo_workflow.png)
 </div>
 
-You can use Cuffquant to pre-compute gene expression levels for each of your samples, which can save time if you have to re-run part of your analysis. Using Cuffquant also makes it easier to spread the load of computation for lots of samples across multiple computers. If you don't want to perform differential expression analysis, you can run Cuffnorm instead of Cuffdiff. Cuffnorm produces simple tables of expression values that you can look at in R (for example) to cluster samples and perform other follow up analysis.			
+You can use Cuffquant to pre-compute gene expression levels for each of your samples, which can save time if you have to re-run part of your analysis. Using Cuffquant also makes it easier to spread the load of computation for lots of samples across multiple computers. If you don't want to perform differential expression analysis, you can run Cuffnorm instead of Cuffdiff. Cuffnorm produces simple tables of expression values that you can look at in R (for example) to cluster samples and perform other follow up analysis.	
+
+# Using pre-built annotation packages
+
+A number of steps in the Tuxedo package work better if you have pre-existing gene annotations. How you can use these annotations is detailed in our [protocol paper](http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html). Illumina has kindly provided a large number of annotation packages for commonly used model organisms and humans. You can find these packages [here]({{ site.url }}/igenome_table/index.html).		

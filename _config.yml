@@ -33,10 +33,6 @@ bing_verify:
 # Links to include in top navigation
 # For external links add external: true
 links:
-  - title: About
-    url: /about/
-  - title: News
-    url: /news/
   - title: Install
     url: /install/
   - title: Manual
@@ -45,15 +41,15 @@ links:
     url: /getting_started/
   - title: Tools
     url: /tools/
-  - title: Papers
+  - title: Help
+    url: /help/
+  - title: How it works
     url: /papers/
   - title: Protocol
     url: http://www.nature.com/nprot/journal/v7/n3/full/nprot.2012.016.html
     external: true
   - title: Benchmarks
     url: /benchmarks/
-  - title: iGenomes
-    url: /igenome_table/
 
 # http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 timezone:    America/Los_Angeles

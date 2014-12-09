@@ -51,7 +51,7 @@ doi:10.1093/bioinformatics/btr355
 
 # [Differential analysis of gene regulation at transcript resolution with RNA-seq](http://dx.doi.org/10.1038/nbt.2450)
 
-Cole Trapnell, David Hendrickson, Martin Sauvageau, Loyal Goff, John L. Rinn, Lior Pachter  
+Cole Trapnell\*, David Hendrickson\*, Martin Sauvageau, Loyal Goff, John L. Rinn&dagger;, Lior Pachter&dagger;   
 
 ***Nature Biotechnology***, 2012 
 
