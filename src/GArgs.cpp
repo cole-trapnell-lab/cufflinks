@@ -133,7 +133,7 @@ int GArgs::parseArgs(bool nodigitopts) {
    else {//not a single-dash argument
      char* ap=_argv[p];
      bool is_longopt=false;
-     if (*ap=='-' && ap[1]=='-') {
+     if (*ap=='-' && ap[1]=='-') { //double-dash option
         is_longopt=true;
         ap+=2;
         }
