@@ -5004,10 +5004,7 @@ void AbundanceGroup::apply_normalization_to_abundances(const map<boost::shared_p
         boost::shared_ptr<const ReadGroupProperties> old_rg_props = *(itr->second->rg_props().begin());
         
         double fpkm_correction_factor = 1.0;
-        if (lib_norm_method != ESTIMATED_ABSOLUTE)
-        {
-            fpkm_correction_factor = old_rg_props->normalized_map_mass() / rg_props->normalized_map_mass();
-        }
+        fpkm_correction_factor = old_rg_props->normalized_map_mass() / rg_props->normalized_map_mass();
         
         double internal_scale_factor = rg_props->internal_scale_factor();
         

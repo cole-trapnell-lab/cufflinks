@@ -275,7 +275,6 @@ enum LibNormalizationMethod
     CLASSIC_FPKM,
     TMM,
     QUARTILE,
-    ESTIMATED_ABSOLUTE,
     ABSOLUTE // Requires spike-in controls, not yet implemented
 };
 
