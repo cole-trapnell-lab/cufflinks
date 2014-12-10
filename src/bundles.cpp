@@ -864,14 +864,14 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
     
 	_expand_by_refs(bundle);
     
-    for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
-    {
-        boost::shared_ptr<Scaffold> s = bundle.ref_scaffolds()[i];
-        if (s->annotated_gene_id() == "ENSG00000182378.8")
-        {
-                int a = 4;
-        }
-    }
+//    for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
+//    {
+//        boost::shared_ptr<Scaffold> s = bundle.ref_scaffolds()[i];
+//        if (s->annotated_gene_id() == "ENSG00000182378.8")
+//        {
+//                int a = 4;
+//        }
+//    }
 
     
 	// The most recent RefID and position we've seen in the hit stream
@@ -1699,12 +1699,10 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
                 if (s->annotated_gene_name() != "")
                     gene_short_names.push_back(s->annotated_gene_name());
                 
-                if (s->annotated_gene_id() == "ENSG00000268467.1")
-                {
-                    int a = 4;
-                }
-                
-
+//                if (s->annotated_gene_id() == "ENSG00000268467.1")
+//                {
+//                    int a = 4;
+//                }
                 
             }
             compatible_count_table.push_back(LocusCount(bundle_label_buf, floor(bundle.compatible_mass()), bundle.ref_scaffolds().size(), gene_ids, gene_short_names));
@@ -2006,7 +2004,6 @@ void inspect_map(boost::shared_ptr<BundleFactory> bundle_factory,
 	rg_props->frag_len_dist(fld);
 	rg_props->normalized_map_mass(norm_map_mass);
     rg_props->total_map_mass(map_mass);
-    rg_props->mode_transcript_coverage(bundle_factory->mode_transcript_coverage());
     
     if (show_stats)
     {
@@ -2077,28 +2074,6 @@ bool PrecomputedExpressionBundleFactory::next_bundle(HitBundle& bundle, bool cac
             bundle.finalize();
             bundle.add_raw_mass(total_mass);
             bundle.compatible_mass(compatible_mass);
-            
-            // calculate the depth of coverage for each transcript and store it in the factory
-            // in case we need it later for library size normalization
-//            size_t max_FPKM_idx = 0;
-//            double max_FPKM = -1;
-            for (size_t i = 0; i < ab->abundances().size(); ++i)
-            {
-                double num_frags = ab->abundances()[i]->num_fragments();
-                double length = ab->abundances()[i]->effective_length();
-                double FPKM =ab-> abundances()[i]->FPKM();
-                // FIXME: Should probably set these "magic" params as options somewhere.
-                if (num_frags >= 1 && length != 0 && FPKM >= 1e-5)
-                {
-                    double coverage = num_frags / length;
-                    transcript_coverages.push_back(coverage);
-                }
-
-            }
-            
-//            if (max_FPKM_idx < ab->abundances().size())
-//            {
-//            }
             
             //fprintf (stderr, "Reconstituting bundle %s (%d) with mass %lf\n", bundle_label_buf, bundle.id(), compatible_mass);
             if (bundle.ref_scaffolds().size() != ab->abundances().size())
