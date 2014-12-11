@@ -50,6 +50,9 @@ links:
     external: true
   - title: Benchmarks
     url: /benchmarks/
+  - title: code
+    url: https://github.com/cole-trapnell-lab/cufflinks
+    external: true
 
 # http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 timezone:    America/Los_Angeles
