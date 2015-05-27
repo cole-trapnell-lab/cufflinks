@@ -4,7 +4,6 @@ m4_include([ax_boost_system.m4])
 m4_include([ax_boost_serialization.m4])
 m4_include([ax_bam.m4])
 m4_include([ax_check_zlib.m4])
-m4_include([ax_check_eigen.m4])
 
 define([svnversion], esyscmd([sh -c "svnversion|tr -d '\n'"]))dnl
 AC_INIT([cufflinks], [2.2.1], [cole@cs.umd.edu])
@@ -40,7 +39,9 @@ AX_BOOST_SYSTEM
 AX_BOOST_SERIALIZATION
 AX_BOOST_THREAD
 AX_CHECK_ZLIB()
-AX_EIGEN
+
+PKG_CHECK_MODULES([EIGEN3], [eigen3])
+
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
@@ -107,7 +108,7 @@ AC_ARG_ENABLE(profiling,      [  --enable-profiling        enable profiling with
 	  
 CFLAGS="${generic_CFLAGS} ${ext_CFLAGS} ${user_CFLAGS} ${debug_CFLAGS} ${OPENMP_CFLAGS}"
 CXXFLAGS="$CFLAGS"
-CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN_CPPFLAGS}"
+CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN3_CFLAGS}"
 user_LDFLAGS="$LDFLAGS"
 LDFLAGS="${ext_LDFLAGS} ${user_LDFLAGS}"
 
