@@ -660,7 +660,7 @@ int BiasCorrectionHelper::add_read_group(boost::shared_ptr<ReadGroupProperties c
 			tot_bias_for_len[l] = trans_len - l + 1;
 			start_bias_for_len[l] = trans_len - l + 1;
 			end_bias_for_len[l] = trans_len - l + 1;
-			eff_len += fld->pdf(l) * (trans_len - l + 1);
+			eff_len += fld->npdf(l, trans_len) * (trans_len - l + 1);
 		}
 	}
 	
