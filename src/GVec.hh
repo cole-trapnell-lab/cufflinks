@@ -29,6 +29,7 @@ template<class T> struct IsPrimitiveType {
 
 template<> struct IsPrimitiveType<bool> { enum { VAL = 1 }; };
 template<> struct IsPrimitiveType<void*> { enum { VAL = 1 }; };
+template<> struct IsPrimitiveType<char*> { enum { VAL = 1 }; };
 template<> struct IsPrimitiveType<float> { enum { VAL = 1 }; };
 template<> struct IsPrimitiveType<double> { enum { VAL = 1 }; };
 
@@ -73,7 +74,8 @@ template <class OBJ> class GVec {
   public:
     GVec(int init_capacity=2);
     GVec(int init_count, const OBJ init_val);
-    GVec(GVec<OBJ>& array); //copy constructor
+    GVec(int init_count, OBJ* init_val, bool delete_initval=true); //convenience constructor for complex vectors
+    GVec(const GVec<OBJ>& array); //copy constructor
     const GVec<OBJ>& operator=(GVec<OBJ>& array); //copy operator
     virtual ~GVec();
     void Insert(int idx, OBJ item) { Insert(idx, &item); }
@@ -206,6 +208,7 @@ template <class OBJ> GVec<OBJ>::GVec(int init_capacity) {
   fCapacity=0;
   fArray=NULL;
   setCapacity(init_capacity);
+  //if (set_count) fCount = init_capacity;
 }
 
 
@@ -219,8 +222,19 @@ template <class OBJ> GVec<OBJ>::GVec(int init_count, const OBJ init_val) {
     fArray[i]=init_val;
 }
 
+template <class OBJ> GVec<OBJ>::GVec(int init_count, OBJ* init_val, bool delete_initval) {
+	  fCount=0;
+	  fCapacity=0;
+	  fArray=NULL;
+	  setCapacity(init_count);
+	  fCount = init_count;
+	  for (int i=0;i<fCount;i++)
+	    fArray[i]=*init_val;
+	  if (delete_initval) { delete init_val; }
+}
 
-template <class OBJ> GVec<OBJ>::GVec(GVec<OBJ>& array) { //copy constructor
+
+template <class OBJ> GVec<OBJ>::GVec(const GVec<OBJ>& array) { //copy constructor
  this->fCount=array.fCount;
  this->fCapacity=array.fCapacity;
  this->fArray=NULL;
@@ -232,7 +246,7 @@ template <class OBJ> GVec<OBJ>::GVec(GVec<OBJ>& array) { //copy constructor
    else {
      fArray=new OBJ[this->fCapacity]; //]()
      // uses OBJ operator=
-     for (int i=0;i<this->fCount;i++) fArray[i]=array[i];
+     for (int i=0;i<this->fCount;i++) fArray[i]=array.fArray[i];
    }
  }
  this->fCount=array.fCount;
@@ -741,7 +755,6 @@ template <class OBJ> void GPVec<OBJ>::Grow(int idx, OBJ* newitem) {
 }
 
 template <class OBJ> int GPVec<OBJ>::IndexOf(pointer item) {
- int result=-1;
  for (int i=0;i<fCount;i++) {
      if (item==(pointer)fList[i]) return i;
      }

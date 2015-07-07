@@ -3,7 +3,6 @@
 
 #define CUFFLINKS 1
 
-
 #include "GBase.h"
 #include "gdna.h"
 #include "codons.h"

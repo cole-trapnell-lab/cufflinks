@@ -644,16 +644,16 @@ public:
     int total_qloci_alt; //total qloci with multiple transcripts
 
     int total_qmrnas;
-    int total_qichains; //multi exon mrnas
     int total_qexons; //unique exons
     int total_qmexons;
     int total_qintrons; //unique introns
-    // these ref totals are in fact only limited to data from
-    // loci overlapping any of qry loci
+    int total_qichains; //total multi-exon transfrags predicted (incl. duplicates if -G)
+
+    // NOTE: these ref totals are only limited to data from loci overlapping any qry loci
     int total_rmexons;
-    int total_richains; //multi exon mrnas
     int total_rloci;
     int total_rmrnas;
+    int total_richains; //total multi-exon reference transcripts
     int total_rexons;
     int total_rintrons; //unique introns
 	
@@ -668,21 +668,26 @@ public:
 	int locusFN;
 	//---transcript level accuracy -- all exon coordinates should match (most stringent)
 	int mrnaTP; // number of qry mRNAs with perfect match with ref transcripts
+	/*
 	int mrnaFP; // number of qry mRNAs with no perfect match with a ref transcript
 	int mrnaFN; // number of ref mRNAs in this region having no perfect match with a qry transcript
+	*/
 	int mrnaATP;
+	/*
 	int mrnaAFN;
 	int mrnaAFP;
+	*/
 	//---intron level accuracy (comparing the ordered set of splice sites):
-	int ichainTP; // number of qry intron chains fully matching a reference intron chain
+	int ichainTP; // number of fully matched ref intron chains (# correctly predicted ichains)
 	
-	int ichainFP; // number of qry intron chains not matching a reference intron chain
-	int ichainFN; // number of ref intron chains in this region not being covered by a reference intron chain
+	//int ichainFP; // number of qry intron chains not matching a reference intron chain
+	//int ichainFN; // number of ref intron chains in this region not being covered by a reference intron chain
+
 	// same as above, but Approximate -- allowing a 5bp distance around splice site coordinates
 	int ichainATP; //as opposed to ichainTP, this also includes ref intron chains which are 
                    //sub-chains of qry intron chains (rare cases)
-	int ichainAFP;
-	int ichainAFN;
+	//int ichainAFP;
+	//int ichainAFN;
 	//---projected features ---
 	//---exon level accuracy:
 	int exonTP;  //number of perfectly overlapping exons (true positives)
@@ -731,10 +736,10 @@ public:
 		w_loci=0;
 		m_loci=0;
 		total_superloci=0;
-		mrnaTP=0;mrnaFP=0;mrnaFN=0;
-		mrnaATP=0;mrnaAFP=0;mrnaAFN=0;
-		ichainTP=0;ichainFP=0;ichainFN=0;
-		ichainATP=0;ichainAFP=0;ichainAFN=0;
+		mrnaTP=0;//mrnaFP=0;mrnaFN=0;
+		mrnaATP=0;//mrnaAFP=0;mrnaAFN=0;
+		ichainTP=0;//ichainFP=0;ichainFN=0;
+		ichainATP=0;//ichainAFP=0;ichainAFN=0;
 		exonTP=0;exonFP=0;exonFN=0;
 		exonATP=0;exonAFP=0;exonAFN=0;
 		intronTP=0;intronFP=0;intronFN=0;
@@ -800,14 +805,14 @@ public:
 		intronFN=total_rintrons-intronTP;
 		
 		// ichain and transcript levels:
-		ichainAFP=total_qichains-ichainATP;
-		ichainFP=total_qichains-ichainTP;
-		ichainAFN=total_richains-ichainATP;
-		ichainFN=total_richains-ichainTP;
-		mrnaFP=total_qmrnas-mrnaTP;
-		mrnaFN=total_rmrnas-mrnaTP;
-		mrnaAFP=total_qmrnas-mrnaATP;
-		mrnaAFN=total_rmrnas-mrnaATP;
+		//ichainAFP=total_qichains-ichainATP;
+		//ichainFP=total_qichains-ichainTP;
+		//ichainAFN=total_richains-ichainATP;
+		//ichainFN=total_richains-ichainTP;
+		//mrnaFP=total_qmrnas-mrnaTP;
+		//mrnaFN=total_rmrnas-mrnaTP;
+		//mrnaAFP=total_qmrnas-mrnaATP;
+		//mrnaAFN=total_rmrnas-mrnaATP;
 		// locus/gene level:
 		locusAFP=total_qloci-locusAQTP;
 		locusFP=total_qloci-locusQTP;
