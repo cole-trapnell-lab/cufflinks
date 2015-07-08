@@ -681,9 +681,10 @@ public:
      */
 	//---projected features ---
 	//---exon level accuracy:
-	int exonTP;  //number of perfectly overlapping exons (true positives)
-	int exonFP; //number of exons of query with no perfect match with a reference exon
-	int exonFN; //number of exons of reference with no perfect match with a query exon
+	int exonTP;  //number of matched reference exons (true positives)
+	int exonQTP; //number of query exons matching reference exons
+	//int exonFP; //number of exons of query with no perfect match with a reference exon
+	//int exonFN; //number of exons of reference with no perfect match with a query exon
 	// same as the above but with acceptable approximation (10bp error window):
 	/*int exonATP;
 	int exonAFP;
@@ -730,7 +731,8 @@ public:
 		total_superloci=0;
 		mrnaTP=0;//mrnaFP=0;mrnaFN=0;
 		ichainTP=0;//ichainFP=0;ichainFN=0;
-		exonTP=0;exonFP=0;exonFN=0;
+		exonTP=0;exonQTP=0;
+		//exonFP=0;exonFN=0;
 		intronTP=0;intronFP=0;intronFN=0;
 		/* mrnaATP=0;//mrnaAFP=0;mrnaAFN=0;
 		ichainATP=0;//ichainAFP=0;ichainAFN=0;
@@ -786,8 +788,8 @@ public:
 		baseFP=qbases_all-baseTP;
 		baseFN=rbases_all-baseTP;
 		//exon level:
-		exonFP=total_qexons-exonTP;
-		exonFN=total_rexons-exonTP;
+		//exonFP=total_qexons-exonTP;
+		//exonFN=total_rexons-exonTP;
 		//intron stats
 		intronFP=total_qintrons-intronTP;
 		intronFN=total_rintrons-intronTP;
@@ -817,6 +819,7 @@ public:
 		in_rloci+=s.in_rloci;
 		baseTP+=s.baseTP;
 		exonTP+=s.exonTP;
+		exonQTP+=s.exonQTP;
 		intronTP+=s.intronTP;
 		ichainTP+=s.ichainTP;
 		mrnaTP+=s.mrnaTP;

@@ -654,7 +654,6 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
   for (int i=0;i<super->quexons.Count();i++) {
 	  uint istart=super->quexons[i].start;
 	  uint iend=super->quexons[i].end;
-	  //bool ATPfound=false;
 	  for (int j=0;j<super->ruexons.Count();j++) {
 		  uint jstart=super->ruexons[j].start;
 		  uint jend=super->ruexons[j].end;
@@ -663,22 +662,20 @@ void compareLoci2R(GList<GLocus>& loci, GList<GSuperLocus>& cmpdata,
 		  //--- overlap here between quexons[i] and ruexons[j]
 		  qexovl[i]++;
 		  rexovl[j]++;
-		  if ((super->ruexons[j].flags & 4) != 0) {
-			  //ref uexon matched before
-			  continue;
-		  }
 		  /*if (exon_match(super->quexons[i], super->ruexons[j],5)) {
 			  if (!ATPfound) { //count a ref approx match only once
 				  super->exonATP++;
 				  ATPfound=true;
 			  }*/
 			  if (exon_match(super->quexons[i], super->ruexons[j])) {
-				  super->exonTP++;
-				  super->ruexons[j].flags |= 4; //set match bit flag
-				  //DEBUG only:
-				  //GMessage("matched Quexon [%d - %d] to ref exon [%d - %d]\n",
-				  //	  super->quexons[i].start, super->quexons[i].end, super->ruexons[j].start, super->ruexons[j].end);
-				  break; //no need to check other ref uexons
+				  if ((super->ruexons[j].flags & 4)==0) {
+				      super->exonTP++;
+				      super->ruexons[j].flags |= 4;
+				  }
+				  if ((super->quexons[i].flags & 4)==0) {
+				      super->exonQTP++;
+				      super->quexons[i].flags |= 4;
+				  }
 			  } //exact match
 		  //} //fuzzy match
 	  } //ref uexon loop
@@ -1512,8 +1509,10 @@ void reportStats(FILE* fout, const char* setname, GSuperLocus& stotal,
     double sp=(100.0*(double)ps->baseTP)/(ps->baseTP+ps->baseFP);
     double sn=(100.0*(double)ps->baseTP)/(ps->baseTP+ps->baseFN);
     fprintf(fout, "        Base level:   %5.1f     |   %5.1f    |\n",sn, sp);
-    sp=(100.0*(double)ps->exonTP)/(ps->exonTP+ps->exonFP);
-    sn=(100.0*(double)ps->exonTP)/(ps->exonTP+ps->exonFN);
+    //sp=(100.0*(double)ps->exonQTP)/(ps->exonTP+ps->exonFP);
+    sp=(100.0*(double)ps->exonQTP)/ps->total_qexons;
+    //sn=(100.0*(double)ps->exonTP)/(ps->exonTP+ps->exonFN);
+    sn=(100.0*(double)ps->exonTP)/ps->total_rexons;
     /*double fsp=(100.0*(double)ps->exonATP)/(ps->exonATP+ps->exonAFP);
     double fsn=(100.0*(double)ps->exonATP)/(ps->exonATP+ps->exonAFN);
     if (fsp>100.0) fsp=100.0;
