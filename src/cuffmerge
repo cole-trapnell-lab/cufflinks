@@ -321,15 +321,16 @@ def merge_sam_inputs(sam_input_list, header):
     return sorted_map_name
 
 def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
+    global tmp_dir
     print >> sys.stderr, "[%s] Comparing against reference file %s" % (right_now(), ref_gtf)
     ref_str = ""
     if ref_gtf != None:
         ref_str = " -r %s " % ref_gtf
 
     if fasta != None:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm -C -G %s -s %s %s''' % (ref_str, fasta, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o %s -C -G %s -s %s %s''' % (tmp_dir, ref_str, fasta, meta_asm_gtf)
     else:
-        comp_cmd = '''cuffcompare -o tmp_meta_asm -C -G %s %s''' % (ref_str, meta_asm_gtf)
+        comp_cmd = '''cuffcompare -o %s -C -G %s %s''' % (tmp_dir, ref_str, meta_asm_gtf)
 
     #cmd = bsub_cmd(comp_cmd, "/gencode_cmp", True, job_mem=8)
     cmd = comp_cmd
@@ -343,7 +344,7 @@ def compare_to_reference(meta_asm_gtf, ref_gtf, fasta):
         #tmap_out = meta_asm_gtf.split("/")[-1] + ".tmap"
         tfpath, tfname = os.path.split(meta_asm_gtf)
         if tfpath: tfpath+='/'
-        tmap_out = tfpath+'tmp_meta_asm.'+tfname+".tmap"
+        tmap_out = tfpath+'.'+tfname+".tmap"
         return tmap_out
     # cuffcompare not found
     except OSError, o:
@@ -434,15 +435,10 @@ def compare_meta_asm_against_ref(ref_gtf, fasta_file, gtf_input_file, class_code
     if os.path.exists(mtmap.split(".tmap")[0]+".refmap"):
         os.remove(mtmap.split(".tmap")[0]+".refmap")
 
-    shutil.move("tmp_meta_asm.combined.gtf", output_dir + "/merged.gtf")
+    global tmp_dir
+    shutil.move(tmp_dir+".combined.gtf", output_dir + "/merged.gtf")
 
 #    os.remove("tmp_meta_asm.combined.gtf")
-    if os.path.exists("tmp_meta_asm.loci"):
-        os.remove("tmp_meta_asm.loci")
-    if os.path.exists("tmp_meta_asm.tracking"):
-        os.remove("tmp_meta_asm.tracking")
-    if os.path.exists("tmp_meta_asm.stats"):
-        os.remove("tmp_meta_asm.stats")
     if os.path.exists(tmap):
         os.remove(tmap)
     if os.path.exists(tmap.split(".tmap")[0]+".refmap"):
