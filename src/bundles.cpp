@@ -687,6 +687,20 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
             
         if (spans_bad_intron(tmp))
             continue;
+
+		// Check for reads with no matching CIGAR entries. Generally such a read should have been rejected
+		// as unmapped, but such records have been seen in the wild. If they were allowed to stay they would cause
+		// trouble when converted to Scaffolds, yielding an invalid aug_ops vector.
+		const vector<CigarOp>& cig = tmp.cigar();
+		bool found_match = false;
+		for(vector<CigarOp>::const_iterator it = cig.begin(), itend = cig.end(); it != itend && !found_match; ++it)
+			if(it->opcode == MATCH)
+				found_match = true;
+
+		if(!found_match) {
+			fprintf(stderr, "Skipping hit with no Match operators in its CIGAR string\n");
+			continue;
+		}
         
         int order = _hit_fac->ref_table().observation_order(tmp.ref_id());
         if (_prev_pos != 0)
@@ -755,7 +769,7 @@ double BundleFactory::next_valid_alignment(const ReadHit*& bh)
         
         if (hit_within_mask)
             continue;
-        
+
         // if the user's asked for read trimming, do it here.
         if (trim_read_length > 0)
         {
