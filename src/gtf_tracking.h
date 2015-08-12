@@ -388,9 +388,9 @@ public:
 	int spl_wrong; //number of "wrong" (unrecognized) splice site consensi
 	int ichains; //number of multi-exon mrnas
 	int ichainTP; //number of intron chains fully matching reference introns
-	int ichainATP;
+	//int ichainATP;
 	int mrnaTP;
-	int mrnaATP;
+	//int mrnaATP;
 	int v; //user flag/data
 	GLocus(GffObj* mrna=NULL, int qidx=-1):mrnas(true,false,false),uexons(true,true),mexons(true,true),
 	  introns(), cmpovl(true,false,true) {
@@ -412,10 +412,10 @@ public:
 			for (int i=0;i<mrna->exons.Count();i++) {
 				seg.start=mrna->exons[i]->start;
 				seg.end=mrna->exons[i]->end;
-				int xterm=0;
-				if (i==0) xterm|=1;
-				if (i==mrna->exons.Count()-1) xterm|=2;
-				GXSeg xseg(seg.start, seg.end, xterm);
+				int flags=0; //terminal exon flags (1=left end, 2=right end)
+				if (i==0) flags|=1;
+				if (i==mrna->exons.Count()-1) flags|=2;
+				GXSeg xseg(seg.start, seg.end, flags);
 				uexons.Add(xseg);
 				mexons.Add(seg);
 				if (i>0) {
@@ -439,9 +439,9 @@ public:
 		spl_major=0;spl_rare=0;spl_wrong=0;
 		v=0; //visited/other data
 		ichainTP=0;
-		ichainATP=0;
+		//ichainATP=0;
 		mrnaTP=0;
-		mrnaATP=0;
+		//mrnaATP=0;
 		cmpovl.Clear();
 	}
 	
@@ -620,12 +620,12 @@ public:
     GList<GffObj> qmrnas; //list of transcripts (isoforms) for this locus
     GArray<GSeg> qmexons; //list of merged exons in this region
     GArray<GXSeg> quexons; //list of unique exons (covered segments) in this region
-    GIArray qintrons; //list of unique exons (covered segments) in this region
+    GIArray qintrons; //list of unique introns in this region
     //same lists for reference:
-    GList<GffObj> rmrnas; //list of transcripts (isoforms) for this locus
-    GArray<GSeg> rmexons; //list of merged exons in this region
-    GArray<GXSeg> ruexons; //list of unique exons (covered segments) in this region
-    GArray<GISeg> rintrons; //list of unique exons (covered segments) in this region
+    GList<GffObj> rmrnas; //list of ref transcripts (isoforms) for this locus
+    GArray<GSeg> rmexons; //list of ref merged exons in this region
+    GArray<GXSeg> ruexons; //list of ref unique exons (covered segments) in this region
+    GArray<GISeg> rintrons; //list of unique introns in this region
     // store problematic introns for printing:
     GIArray i_missed; //missed reference introns (not overlapped by any qry intron)
     GIArray i_notp;  //wrong ref introns (one or both ends not matching any qry intron)
@@ -644,63 +644,61 @@ public:
     int total_qloci_alt; //total qloci with multiple transcripts
 
     int total_qmrnas;
-    int total_qichains; //multi exon mrnas
     int total_qexons; //unique exons
     int total_qmexons;
     int total_qintrons; //unique introns
-    // these ref totals are in fact only limited to data from
-    // loci overlapping any of qry loci
+    int total_qichains; //total multi-exon transfrags predicted (incl. duplicates if -G)
+
+    // NOTE: these ref totals are only limited to data from loci overlapping any qry loci
     int total_rmexons;
-    int total_richains; //multi exon mrnas
     int total_rloci;
     int total_rmrnas;
+    int total_richains; //total multi-exon reference transcripts
     int total_rexons;
     int total_rintrons; //unique introns
 	
     //--- accuracy data after compared to ref loci:
   int locusQTP;
   int locusTP; // +1 if ichainTP+mrnaTP > 0
-  int locusAQTP;
-	int locusATP; // 1 if ichainATP + mrnaATP > 0
+  //int locusAQTP;
+	//int locusATP; // 1 if ichainATP + mrnaATP > 0
 	int locusFP;
-	int locusAFP;
-	int locusAFN;
+	//int locusAFP;
+	//int locusAFN;
 	int locusFN;
 	//---transcript level accuracy -- all exon coordinates should match (most stringent)
 	int mrnaTP; // number of qry mRNAs with perfect match with ref transcripts
-	int mrnaFP; // number of qry mRNAs with no perfect match with a ref transcript
-	int mrnaFN; // number of ref mRNAs in this region having no perfect match with a qry transcript
-	int mrnaATP;
-	int mrnaAFN;
-	int mrnaAFP;
+	//int mrnaATP;
 	//---intron level accuracy (comparing the ordered set of splice sites):
-	int ichainTP; // number of qry intron chains fully matching a reference intron chain
+	int ichainTP; // number of fully matched ref intron chains (# correctly predicted ichains)
 	
-	int ichainFP; // number of qry intron chains not matching a reference intron chain
-	int ichainFN; // number of ref intron chains in this region not being covered by a reference intron chain
+	//int ichainFP; // number of qry intron chains not matching a reference intron chain
+	//int ichainFN; // number of ref intron chains in this region not being covered by a reference intron chain
+	/*
 	// same as above, but Approximate -- allowing a 5bp distance around splice site coordinates
 	int ichainATP; //as opposed to ichainTP, this also includes ref intron chains which are 
                    //sub-chains of qry intron chains (rare cases)
-	int ichainAFP;
-	int ichainAFN;
+     */
 	//---projected features ---
 	//---exon level accuracy:
-	int exonTP;  //number of perfectly overlapping exons (true positives)
-	int exonFP; //number of exons of query with no perfect match with a reference exon
-	int exonFN; //number of exons of reference with no perfect match with a query exon
+	int exonTP;  //number of matched reference exons (true positives)
+	int exonQTP; //number of query exons matching reference exons
+	//int exonFP; //number of exons of query with no perfect match with a reference exon
+	//int exonFN; //number of exons of reference with no perfect match with a query exon
 	// same as the above but with acceptable approximation (10bp error window):
-	int exonATP;
+	/*int exonATP;
 	int exonAFP;
-	int exonAFN;
+	int exonAFN;*/
 	
 	int intronTP;  //number of perfectly overlapping introns (true positives)
 	int intronFP; //number of introns of query with no perfect match with a reference intron
 	int intronFN; //number of introns of reference with no perfect match with a query intron
+	/*
 	// same as the above but with acceptable approximation (10bp error window):
 	int intronATP;
 	int intronAFP;
 	int intronAFN;
-	
+	*/
 	//-- EGASP added these too:
 	int m_exons; //number of exons totally missed (not overlapped *at all* by any query exon)
 	int w_exons; //numer of totally wrong exons (query exons not overlapping *at all* any reference exon)
@@ -723,22 +721,23 @@ public:
 		qbases_all=0;
 		rbases_all=0;
 		baseTP=0;baseFP=0;baseFN=0;
-		locusTP=0;locusQTP=0; locusAQTP=0; locusATP=0;
-		locusFP=0;locusAFP=0;locusAFN=0;
+		locusTP=0;locusQTP=0; //locusAQTP=0; locusATP=0;
+		locusFP=0;// locusAFP=0;locusAFN=0;
 		locusFN=0;
 		in_rmrnas=0;
 		in_rloci=0;
 		w_loci=0;
 		m_loci=0;
 		total_superloci=0;
-		mrnaTP=0;mrnaFP=0;mrnaFN=0;
-		mrnaATP=0;mrnaAFP=0;mrnaAFN=0;
-		ichainTP=0;ichainFP=0;ichainFN=0;
-		ichainATP=0;ichainAFP=0;ichainAFN=0;
-		exonTP=0;exonFP=0;exonFN=0;
-		exonATP=0;exonAFP=0;exonAFN=0;
+		mrnaTP=0;//mrnaFP=0;mrnaFN=0;
+		ichainTP=0;//ichainFP=0;ichainFN=0;
+		exonTP=0;exonQTP=0;
+		//exonFP=0;exonFN=0;
 		intronTP=0;intronFP=0;intronFN=0;
-		intronATP=0;intronAFP=0;intronAFN=0;
+		/* mrnaATP=0;//mrnaAFP=0;mrnaAFN=0;
+		ichainATP=0;//ichainAFP=0;ichainAFN=0;
+		exonATP=0;exonAFP=0;exonAFN=0;
+		intronATP=0;intronAFP=0;intronAFN=0; */
 		total_rmexons=0;
 		total_qmexons=0;
 		total_qexons=0;total_qloci=0;total_qmrnas=0;
@@ -789,29 +788,29 @@ public:
 		baseFP=qbases_all-baseTP;
 		baseFN=rbases_all-baseTP;
 		//exon level:
-		exonAFP=total_qexons-exonATP;
-		exonFP=total_qexons-exonTP;
-		exonAFN=total_rexons-exonATP;
-		exonFN=total_rexons-exonTP;
+		//exonFP=total_qexons-exonTP;
+		//exonFN=total_rexons-exonTP;
 		//intron stats
-		intronAFP=total_qintrons-intronATP;
 		intronFP=total_qintrons-intronTP;
-		intronAFN=total_rintrons-intronATP;
 		intronFN=total_rintrons-intronTP;
+		/* intronAFN=total_rintrons-intronATP;
+		intronAFP=total_qintrons-intronATP;
+		exonAFP=total_qexons-exonATP;
+		exonAFN=total_rexons-exonATP; */
 		
 		// ichain and transcript levels:
-		ichainAFP=total_qichains-ichainATP;
-		ichainFP=total_qichains-ichainTP;
-		ichainAFN=total_richains-ichainATP;
-		ichainFN=total_richains-ichainTP;
-		mrnaFP=total_qmrnas-mrnaTP;
-		mrnaFN=total_rmrnas-mrnaTP;
-		mrnaAFP=total_qmrnas-mrnaATP;
-		mrnaAFN=total_rmrnas-mrnaATP;
+		//ichainAFP=total_qichains-ichainATP;
+		//ichainFP=total_qichains-ichainTP;
+		//ichainAFN=total_richains-ichainATP;
+		//ichainFN=total_richains-ichainTP;
+		//mrnaFP=total_qmrnas-mrnaTP;
+		//mrnaFN=total_rmrnas-mrnaTP;
+		//mrnaAFP=total_qmrnas-mrnaATP;
+		//mrnaAFN=total_rmrnas-mrnaATP;
 		// locus/gene level:
-		locusAFP=total_qloci-locusAQTP;
 		locusFP=total_qloci-locusQTP;
-		locusAFN=total_rloci-locusATP;
+		/*locusAFN=total_rloci-locusATP;
+		locusAFP=total_qloci-locusAQTP;*/
 		locusFN=total_rloci-locusTP;
 	}
 	
@@ -820,17 +819,20 @@ public:
 		in_rloci+=s.in_rloci;
 		baseTP+=s.baseTP;
 		exonTP+=s.exonTP;
-		exonATP+=s.exonATP;
+		exonQTP+=s.exonQTP;
 		intronTP+=s.intronTP;
-		intronATP+=s.intronATP;
 		ichainTP+=s.ichainTP;
-		ichainATP+=s.ichainATP;
 		mrnaTP+=s.mrnaTP;
-		mrnaATP+=s.mrnaATP;
 		locusTP+=s.locusTP;
 		locusQTP+=s.locusQTP;
+		/*
+		mrnaATP+=s.mrnaATP;
+		exonATP+=s.exonATP;
+		intronATP+=s.intronATP;
+		ichainATP+=s.ichainATP;
 		locusATP+=s.locusATP;
 		locusAQTP+=s.locusAQTP;
+		*/
 		m_exons+=s.m_exons;
 		w_exons+=s.w_exons;
 		m_introns+=s.m_introns;

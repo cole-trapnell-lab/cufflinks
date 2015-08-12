@@ -77,7 +77,7 @@ int GFastaIndex::buildIndex() {
     char* s=NULL;
     uint seqlen=0;
     int line_len=0,line_blen=0;
-    bool newSeq=false; //set to true after defline
+    bool newSeq=false; //set when FASTA header is encountered
     off_t newSeqOffset=0;
     int prevOffset=0;
     char* seqname=NULL;
@@ -104,23 +104,34 @@ int GFastaIndex::buildIndex() {
         line_blen=0;
         seqlen=0;
         mustbeLastLine=false;
-        } //defline parsing
+     } //defline parsing
      else { //sequence line
        int llen=fl.length();
        int lblen=fl.getFpos()-prevOffset;
         if (newSeq) { //first sequence line after defline
           line_len=llen;
           line_blen=lblen;
-          }
+        }
         else {//next seq lines after first
-          if (mustbeLastLine || llen>last_len)
-             GError(ERR_FALINELEN);
-          if (llen<last_len) mustbeLastLine=true;
+          if (mustbeLastLine) {
+              //could be empty line, adjust for possible spaces
+              if (llen>0) {
+                char *p=s;
+                //trim spaces, tabs etc. on the last line
+                while (*p > 32) ++p;
+                llen=(p-s);
+              }
+              if (llen>0) GError(ERR_FALINELEN);
           }
+          else {
+              if (llen<last_len) mustbeLastLine=true;
+                 else if (llen>last_len) GError(ERR_FALINELEN);
+          }
+        }
         seqlen+=llen;
         last_len=llen;
         newSeq=false;
-        } //sequence line
+     } //sequence line
      prevOffset=fl.getfpos();
      }//for each line of the fasta file
     if (seqlen>0)
