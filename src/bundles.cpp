@@ -867,7 +867,7 @@ bool BundleFactory::next_bundle_ref_driven(HitBundle& bundle)
 //    for (size_t i = 0; i < bundle.ref_scaffolds().size(); ++i)
 //    {
 //        boost::shared_ptr<Scaffold> s = bundle.ref_scaffolds()[i];
-//        if (s->annotated_gene_id() == "ENSG00000182378.8")
+//        if (s->annotated_gene_id() == "ERCC-00002")
 //        {
 //                int a = 4;
 //        }

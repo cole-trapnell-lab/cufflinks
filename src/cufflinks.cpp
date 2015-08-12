@@ -422,7 +422,7 @@ int parse_options(int argc, char** argv)
             }
             case OPT_OLAP_RADIUS:
             {
-                olap_radius = parseInt(1, "--max-multiread-fraction must be at least 1", print_usage);
+                olap_radius = parseInt(1, "--olap-radius must be at least 1", print_usage);
                 break;
             }
             case OPT_NO_EFFECTIVE_LENGTH_CORRECTION:
