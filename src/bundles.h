@@ -230,7 +230,7 @@ class BundleFactory
 public:
     
 	BundleFactory(boost::shared_ptr<HitFactory> fac, BundleMode bm)
-	: _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0),  _zeroone(rng)
+    : _hit_fac(fac), _bundle_mode(bm), _prev_pos(0), _prev_ref_id(0), _curr_bundle(0),  rng(boost::mt19937(random_seed)), _zeroone(rng)
 	{
 		_rg_props = boost::shared_ptr<ReadGroupProperties>(new ReadGroupProperties(fac->read_group_properties()));
         next_ref_scaff = ref_mRNAs.begin(); 

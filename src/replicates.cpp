@@ -590,7 +590,7 @@ void build_scv_correction_fit(int nreps, int ngenes, int mean_count, SCVInterpol
     
     vector<pair<double, double> > alpha_vs_scv;
    
-    boost::mt19937 rng;
+    boost::mt19937 rng(random_seed);
     vector<boost::random::negative_binomial_distribution<int, double> > nb_gens;
     
     vector<double> alpha_range;

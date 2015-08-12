@@ -117,10 +117,7 @@ extern long random_seed;
 extern bool emit_count_tables;
 extern bool use_fisher_covariance;
 extern bool split_variance;
-extern bool bootstrap;
-extern int num_bootstrap_samples;
-extern double bootstrap_fraction;
-extern double bootstrap_delta_gap;
+
 extern int max_frags_per_bundle;
 //extern bool analytic_diff;
 extern bool no_differential;
@@ -824,9 +821,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_USE_EMPIRICAL_COVARIANCE   285
 #define OPT_SPLIT_MASS              286
 #define OPT_SPLIT_VARIANCE          287
-#define OPT_BOOTSTRAP               288
-#define OPT_NUM_BOOTSTRAP_SAMPLES   289
-#define OPT_BOOTSTRAP_FRACTION      290
 #define OPT_TILE_LEN                291
 #define OPT_TILE_SEP                292
 #define OPT_NO_5_EXTEND             293

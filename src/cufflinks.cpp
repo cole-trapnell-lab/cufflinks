@@ -1751,7 +1751,7 @@ int main(int argc, char** argv)
 	
 
 	if (random_seed == -1)
-        random_seed = time(NULL);
+        random_seed = boost::mt19937::default_seed;
     
 	srand48(random_seed);
 	

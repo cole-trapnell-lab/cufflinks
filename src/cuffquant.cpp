@@ -275,11 +275,6 @@ int parse_options(int argc, char** argv)
                 trim_read_length = parseInt(0, "--trim-read-length must be at least 1", print_usage);
                 break;
             }
-            case OPT_MLE_MIN_ACC:
-            {
-                bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
-                break;
-            }
             case OPT_FRAG_MAX_MULTIHITS:
             {
                 max_frag_multihits = parseInt(1, "--max-frag-multihits must be at least 1", print_usage);
@@ -1553,7 +1548,7 @@ int main(int argc, char** argv)
     }
     
     if (random_seed == -1)
-        random_seed = time(NULL);
+        random_seed = boost::mt19937::default_seed;
     
 	// seed the random number generator - we'll need it for the importance
 	// sampling during MAP estimation of the gammas

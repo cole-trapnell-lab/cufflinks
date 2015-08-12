@@ -1423,204 +1423,6 @@ void collapse_equivalent_hits_helper(const vector<MateHit>& alignments,
 }
 
 
-AbundanceStatus bootstrap_gamma_mle(const vector<boost::shared_ptr<Abundance> >& transcripts,
-                                    const vector<MateHit>& nr_alignments,
-                                    const vector<double>& log_conv_factors,
-                                    ublas::vector<double>& gamma_map_estimate,
-                                    ublas::matrix<double>& gamma_covariance,
-                                    double& cross_replicate_js)
-{
-    size_t N = transcripts.size();
-	size_t M = nr_alignments.size();
-    
-    if (M == 0)
-    {
-        gamma_map_estimate = ublas::vector<double>(1);
-        gamma_map_estimate(0) = 0.0;
-        gamma_covariance = ublas::matrix<double>(1,1);
-        gamma_covariance(0,0) = 0.0;
-        return NUMERIC_OK;
-    }
-    
-    if (N == 1)
-    {
-        gamma_map_estimate = ublas::vector<double>(1);
-        gamma_map_estimate(0) = 1.0;
-        gamma_covariance = ublas::matrix<double>(1,1);
-        gamma_covariance(0,0) = 0.0;
-        return NUMERIC_OK;
-    }
-    
-    vector<MateHit> alignments = nr_alignments;
-    vector<double>  scaled_masses;
-    vector<double>  unscaled_masses;
-    double num_uncollapsed_frags = 0.0;
-    for (size_t i = 0; i < M; ++i)
-    {
-        double uncollapsed_mass = alignments[i].collapse_mass();
-        num_uncollapsed_frags += (uncollapsed_mass);
-        scaled_masses.push_back(alignments[i].collapse_mass());
-        unscaled_masses.push_back(uncollapsed_mass);
-        alignments[i].collapse_mass(uncollapsed_mass);
-    }
-    
-    // FIXME: this has already been computed above, so just pass it in.
-    vector<double> orig_gammas(0.0, transcripts.size());
-    gamma_mle(transcripts,
-              nr_alignments,
-              log_conv_factors,
-              orig_gammas,
-              false);
-    
-    std::vector<ublas::vector<double> > mle_gammas;
-    
-    boost::uniform_int<> uniform_dist(0,num_uncollapsed_frags-1);
-    boost::mt19937 rng;
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > uniform_gen(rng, uniform_dist);
-    
-    int num_sample_frags = floor(num_uncollapsed_frags * bootstrap_fraction);
-    
-    if (num_sample_frags <= 0)
-    {
-        return NUMERIC_FAIL;
-    }
-    
-    for (size_t i = 0; i < num_bootstrap_samples; ++i)
-    {
-        vector<int> sample_idxs;
-        for (size_t j = 0; j < num_sample_frags; ++j)
-        {
-            sample_idxs.push_back(uniform_gen());
-        }
-        sort (sample_idxs.begin(), sample_idxs.end());
-        assert (sample_idxs.empty() == false);
-        
-        size_t curr_sample = 0;
-        size_t processed_hits = 0;
-        vector<double> adjusted_masses(alignments.size(), 0);
-        for (size_t j = 0; j < alignments.size(); ++j)
-        {
-            int adjusted_mass = 0.0;
-            while (curr_sample < sample_idxs.size() &&
-                   sample_idxs[curr_sample] >= processed_hits &&
-                   sample_idxs[curr_sample] < processed_hits + alignments[j].collapse_mass())
-            {
-                adjusted_mass++;
-                curr_sample++;
-            }
-            processed_hits += alignments[j].collapse_mass();
-            alignments[j].collapse_mass(adjusted_mass);
-            adjusted_masses[j] = adjusted_mass;
-        }
-        
-        for (size_t j = 0; j < alignments.size(); ++j)
-        {
-            alignments[j].collapse_mass(alignments[j].collapse_mass());
-        }
-        
-        vector<double> bs_gammas(0.0, transcripts.size());
-        
-//        AbundanceStatus mle_success = gamma_mle(transcripts,
-//                                                alignments,
-//                                                log_conv_factors,
-//                                                bs_gammas,
-//                                                false,
-//                                                &orig_gammas);
-        
-        AbundanceStatus mle_success = gamma_mle(transcripts,
-                                                alignments,
-                                                log_conv_factors,
-                                                bs_gammas,
-                                                false);
-        if (mle_success == NUMERIC_OK)
-        {
-            ublas::vector<double> mle = ublas::zero_vector<double>(N);
-            for(size_t j = 0; j < N; ++j)
-            {
-                mle(j) = bs_gammas[j];
-            }
-            mle_gammas.push_back(mle);
-        }
-        
-        for (size_t j = 0; j < alignments.size(); ++j)
-        {
-            alignments[j].collapse_mass(unscaled_masses[j]);
-        }
-    }
-    
-    //fprintf(stderr, "Ran %lu bootstrap samples succesfully\n", mle_gammas.size());
-    
-    if (mle_gammas.empty())
-        return NUMERIC_FAIL;
-    
-    gamma_covariance = ublas::zero_matrix<double>(N,N);
-    ublas::vector<double> expected_mle_gamma = ublas::zero_vector<double>(N);
-    
-    BOOST_FOREACH(ublas::vector<double>& mle, mle_gammas)
-    {
-        //cerr << "MLE # "<< MLENUM++ << endl;
-        //cerr << mle << endl;
-        expected_mle_gamma += mle;
-    }
-    expected_mle_gamma /= mle_gammas.size();
-    
-    for (size_t i = 0; i < N; ++i)
-    {
-        for (size_t j = 0; j < N; ++j)
-        {
-            for (size_t k = 0 ; k < mle_gammas.size(); ++k)
-            {
-                double c = (mle_gammas[k](i) - expected_mle_gamma(i)) * (mle_gammas[k](j) - expected_mle_gamma(j));
-                gamma_covariance(i,j) += c;
-            }
-        }
-    }
-    
-    gamma_covariance /= mle_gammas.size();
-    gamma_map_estimate = expected_mle_gamma;
-    
-    //cerr << "MLE: " << expected_mle_gamma << endl;
-    //cerr << "COV:" << endl;
-    //cerr << gamma_covariance << endl;
-    //cerr << "*************" << endl;
-    return NUMERIC_OK;
-}
-
-
-
-AbundanceStatus bootstrap_gammas(const vector<boost::shared_ptr<Abundance> >& transcripts,
-                                 const vector<MateHit>& alignments,
-                                 const vector<double>& log_conv_factors,
-                                 ublas::vector<double>& gamma_estimate,
-                                 ublas::matrix<double>& gamma_covariance,
-                                 double& cross_replicate_js)
-{
-    ublas::vector<double> empirical_gamma_mle = gamma_estimate;
-    ublas::matrix<double> empirical_gamma_covariance = gamma_covariance;
-    
-    // Calculate the mean gamma MLE and covariance matrix across replicates, so
-    // we can use it as the proposal distribution for importance sampling.  This will
-    // make the Bayesian prior more conservative than using the inverse of the
-    // Fisher Information matrix on the mixed likelihood function.
-    AbundanceStatus empirical_mle_status = bootstrap_gamma_mle(transcripts,
-                                                               alignments,
-                                                               log_conv_factors,
-                                                               empirical_gamma_mle,
-                                                               empirical_gamma_covariance,
-                                                               cross_replicate_js);
-    
-    if (empirical_mle_status != NUMERIC_OK)
-        return empirical_mle_status;
-    
-    gamma_estimate = empirical_gamma_mle;
-    gamma_covariance = empirical_gamma_covariance;
-    
-    
-    
-    
-    
-    return NUMERIC_OK;
-}
 
 
  // Sample from a multivariate normal to estimate the gamma distribution
@@ -1637,7 +1439,7 @@ bool generate_count_assignment_samples(int num_draws,
         return true;
     }
     
-    boost::mt19937 rng;
+    boost::mt19937 rng(random_seed);
     
     ublas::vector<double> mle_frag_counts = ublas::zero_vector<double>(count_mean.size());
     
@@ -1686,7 +1488,7 @@ bool generate_count_assignment_samples(int num_draws,
     assigned_count_samples = vector<ublas::vector<double> > (num_draws, ublas::zero_vector<double>(count_mean.size()));
     
     boost::uniform_01<> uniform_dist;
-    boost::mt19937 null_rng;
+    boost::mt19937 null_rng(random_seed);
     boost::variate_generator<boost::mt19937&, boost::uniform_01<> > uniform_gen(null_rng, uniform_dist);
     
     
@@ -2385,7 +2187,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     
     vector<ublas::vector<double> > assigned_gamma_samples;
     
-    boost::mt19937 rng;
+    boost::mt19937 rng(random_seed);
     
     if (gamma_samples == NULL || gamma_samples->empty())
     {
@@ -2463,7 +2265,7 @@ bool simulate_count_covariance(const vector<double>& num_fragments,
     
     
     boost::uniform_01<> uniform_dist;
-    boost::mt19937 null_rng;
+    boost::mt19937 null_rng(random_seed);
     boost::variate_generator<boost::mt19937&, boost::uniform_01<> > uniform_gen(null_rng, uniform_dist);
     
     

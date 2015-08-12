@@ -33,6 +33,8 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include "differential.h"
 
 extern "C" {
@@ -1219,8 +1221,8 @@ int main(int argc, char** argv)
     }
     
     if (random_seed == -1)
-        random_seed = time(NULL);
-    
+        random_seed = boost::mt19937::default_seed;
+        
 	// seed the random number generator - we'll need it for the importance
 	// sampling during MAP estimation of the gammas
 	srand48(random_seed);
