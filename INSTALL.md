@@ -54,6 +54,8 @@ bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 addr
 
 ## Building Cufflinks
 
+###If you are starting from a source tarball downloaded from [here](http://cole-trapnell-lab.github.io/cufflinks/install/):
+
 Unpack the Cufflinks source tarball (in this example for version 2.2.1):
 ```bash
 tar zxvf cufflinks-2.2.1.tar.gz
@@ -62,7 +64,18 @@ Change to the Cufflinks directory:
 ```bash
 cd cufflinks-2.2.1
 ```
-Configure Cufflinks. If Boost is installed somewhere other than /usr/local, you will need to tell the installer where to find it using the --with-boost option. Specify where to install Cufflinks using the --prefix option.
+
+### If you want to clone the Cufflinks github repo:
+```bash
+git clone git@github.com:cole-trapnell-lab/cufflinks.git
+cd cufflinks
+autoreconf --install
+```
+The above will generate the configure script.
+
+### To configure Cufflinks prior to the build
+
+If Boost is installed somewhere other than /usr/local, you will need to tell the installer where to find it using the --with-boost option. Specify where to install Cufflinks using the --prefix option.
 ```bash
 ./configure --prefix=/path/to/cufflinks/install --with-boost=/path/to/boost --with-eigen=/path/to/eigen
 ```
