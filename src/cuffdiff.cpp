@@ -372,16 +372,7 @@ int parse_options(int argc, char** argv)
                 split_variance = true;
                 break;
             }
-            case OPT_NUM_BOOTSTRAP_SAMPLES:
-            {
-                //num_bootstrap_samples = parseInt(1, "--num-bootstrap-samples must be at least 1", print_usage);
-                break;
-            }
-            case OPT_BOOTSTRAP_FRACTION:
-            {
-                bootstrap_fraction = parseFloat(0, 1.0, "--bootstrap-fraction must be between 0 and 1.0", print_usage);
-                break;
-            }
+
             case OPT_MAX_FRAGS_PER_BUNDLE:
             {
                 max_frags_per_bundle = parseInt(0, "--max-bundle-frags must be at least 0", print_usage);
@@ -402,21 +393,7 @@ int parse_options(int argc, char** argv)
                 trim_read_length = parseInt(0, "--trim-read-length must be at least 1", print_usage);
                 break;
             }
-            case OPT_MAX_DELTA_GAP:
-            {
-                bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
-                break;
-            }
-            case OPT_MLE_MIN_ACC:
-            {
-                bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
-                break;
-            }
-//            case OPT_ANALYTIC_DIFF:
-//            {
-//                analytic_diff = true;
-//                break;
-//            }
+
             case OPT_NO_DIFF:
             {
                 no_differential = true;
@@ -2366,7 +2343,7 @@ int main(int argc, char** argv)
     }
     
     if (random_seed == -1)
-        random_seed = time(NULL);
+        random_seed = boost::mt19937::default_seed;
     
 	// seed the random number generator - we'll need it for the importance
 	// sampling during MAP estimation of the gammas

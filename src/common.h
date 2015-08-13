@@ -117,10 +117,7 @@ extern long random_seed;
 extern bool emit_count_tables;
 extern bool use_fisher_covariance;
 extern bool split_variance;
-extern bool bootstrap;
-extern int num_bootstrap_samples;
-extern double bootstrap_fraction;
-extern double bootstrap_delta_gap;
+
 extern int max_frags_per_bundle;
 //extern bool analytic_diff;
 extern bool no_differential;
@@ -275,7 +272,6 @@ enum LibNormalizationMethod
     CLASSIC_FPKM,
     TMM,
     QUARTILE,
-    ESTIMATED_ABSOLUTE,
     ABSOLUTE // Requires spike-in controls, not yet implemented
 };
 
@@ -636,9 +632,6 @@ public:
     int replicate_num() const { return _replicate_num; }
     void replicate_num(int rn) { _replicate_num = rn; }
     
-    void mode_transcript_coverage(double coverage) { _median_coverage = coverage; }
-    double mode_transcript_coverage() const { return _median_coverage; }
-    
     void ref_gtf(const std::string& file_path, const boost::crc_32_type& gtf_crc )
     {
         _checked_params.ref_gtf_file_path = file_path;
@@ -735,7 +728,6 @@ private:
     std::string _condition_name;
     std::string _file_path;
     int _replicate_num;
-    double _median_coverage;
     
     CheckedParameters _checked_params;
 };
@@ -829,9 +821,6 @@ std::string cat_strings(const T& container, const char* delimiter=",")
 #define OPT_USE_EMPIRICAL_COVARIANCE   285
 #define OPT_SPLIT_MASS              286
 #define OPT_SPLIT_VARIANCE          287
-#define OPT_BOOTSTRAP               288
-#define OPT_NUM_BOOTSTRAP_SAMPLES   289
-#define OPT_BOOTSTRAP_FRACTION      290
 #define OPT_TILE_LEN                291
 #define OPT_TILE_SEP                292
 #define OPT_NO_5_EXTEND             293

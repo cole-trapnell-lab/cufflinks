@@ -280,7 +280,7 @@ SampleDifference test_diffexp(const FPKMContext& curr,
     
     static const size_t num_null_ratio_samples = 10000;
     
-    boost::random::mt19937 rng;
+    boost::random::mt19937 rng(random_seed);
     
     if ((curr.FPKM != 0 || prev.FPKM != 0) && (prev.fpkm_samples.size() > 0 && curr.fpkm_samples.size() > 0))
     {
@@ -618,7 +618,7 @@ bool test_js(const AbundanceGroup& prev_abundance,
     
     static const size_t num_null_js_samples = 10000;
     
-    boost::random::mt19937 rng;
+    boost::random::mt19937 rng(random_seed);
     boost::random::uniform_int_distribution<> prev_sampler(0, prev_abundance.member_fpkm_samples().size()-1);
     boost::random::uniform_int_distribution<> curr_sampler(0, curr_abundance.member_fpkm_samples().size()-1);
     

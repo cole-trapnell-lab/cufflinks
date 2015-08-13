@@ -116,8 +116,8 @@ void print_usage()
 #endif    
     fprintf(stderr, "  --seed                       value of random number generator seed                 [ default:      0 ]\n");
     fprintf(stderr, "  -G/--GTF                     quantitate against reference transcript annotations                      \n");
-    fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotation to guide assembly                   \n");
-    fprintf(stderr, "  -M/--mask-file               ignore all alignment within transcripts in this file                     \n");
+    fprintf(stderr, "  -g/--GTF-guide               use reference transcript annotation to guide assembly                    \n");
+    fprintf(stderr, "  -M/--mask-file               ignore all alignments within transcripts in this file                    \n");
     fprintf(stderr, "  -b/--frag-bias-correct       use bias correction - reference fasta required        [ default:   NULL ]\n");
     fprintf(stderr, "  -u/--multi-read-correct      use 'rescue method' for multi-reads (more accurate)   [ default:  FALSE ]\n");
     fprintf(stderr, "  --library-type               library prep used for input reads                     [ default:  below ]\n");
@@ -203,10 +203,10 @@ int parse_options(int argc, char** argv)
 				break;
 				
 			case 'a':
-				binomial_junc_filter_alpha = parseFloat(0, 1.0, "-a/--junc-alpha must be  between 0 and 1.0", print_usage);
+				binomial_junc_filter_alpha = parseFloat(0, 1.0, "-a/--junc-alpha must be between 0 and 1.0", print_usage);
 				break;
 			case 'A':
-				small_anchor_fraction = parseFloat(0, 1.0, "-A/--small-anchor-fraction must be  between 0 and 1.0", print_usage);
+				small_anchor_fraction = parseFloat(0, 1.0, "-A/--small-anchor-fraction must be between 0 and 1.0", print_usage);
 				break;
             case OPT_OVERHANG_TOLERANCE:
 				bowtie_overhang_tolerance = parseInt(0, "--overhang-tolerance must be at least 0", print_usage);
@@ -422,7 +422,7 @@ int parse_options(int argc, char** argv)
             }
             case OPT_OLAP_RADIUS:
             {
-                olap_radius = parseInt(1, "--max-multiread-fraction must be at least 1", print_usage);
+                olap_radius = parseInt(1, "--olap-radius must be at least 1", print_usage);
                 break;
             }
             case OPT_NO_EFFECTIVE_LENGTH_CORRECTION:
@@ -494,7 +494,7 @@ int parse_options(int argc, char** argv)
     
     if (use_total_mass && use_compat_mass)
     {
-        fprintf (stderr, "Error: please supply only one of --compatibile-hits-norm and --total-hits-norm\n");
+        fprintf (stderr, "Error: please supply only one of --compatible-hits-norm and --total-hits-norm\n");
         exit(1);
     }
     if (use_compat_mass && bundle_mode != REF_DRIVEN)
@@ -1751,7 +1751,7 @@ int main(int argc, char** argv)
 	
 
 	if (random_seed == -1)
-        random_seed = time(NULL);
+        random_seed = boost::mt19937::default_seed;
     
 	srand48(random_seed);
 	

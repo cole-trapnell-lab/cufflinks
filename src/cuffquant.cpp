@@ -88,7 +88,7 @@ void print_usage()
 	fprintf(stderr, "-----------------------------\n"); 
 	
 	//NOTE: SPACES ONLY, bozo
-    fprintf(stderr, "Usage:   cuffdiff [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
+    fprintf(stderr, "Usage:   cuffquant [options] <transcripts.gtf> <sample1_hits.sam> <sample2_hits.sam> [... sampleN_hits.sam]\n");
 	fprintf(stderr, "   Supply replicate SAMs as comma separated lists for each condition: sample1_rep1.sam,sample1_rep2.sam,...sample1_repM.sam\n");
     fprintf(stderr, "General Options:\n");
     fprintf(stderr, "  -o/--output-dir              write all output files to this directory              [ default:     ./ ]\n");
@@ -273,11 +273,6 @@ int parse_options(int argc, char** argv)
             case OPT_TRIM_READ_LENGTH:
             {
                 trim_read_length = parseInt(0, "--trim-read-length must be at least 1", print_usage);
-                break;
-            }
-            case OPT_MLE_MIN_ACC:
-            {
-                bootstrap_delta_gap = parseFloat(0, 10000000.0, "--read-skip-fraction must be between 0 and 10000000.0", print_usage);
                 break;
             }
             case OPT_FRAG_MAX_MULTIHITS:
@@ -1553,7 +1548,7 @@ int main(int argc, char** argv)
     }
     
     if (random_seed == -1)
-        random_seed = time(NULL);
+        random_seed = boost::mt19937::default_seed;
     
 	// seed the random number generator - we'll need it for the importance
 	// sampling during MAP estimation of the gammas

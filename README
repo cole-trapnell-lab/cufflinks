@@ -42,11 +42,12 @@ rearranged, and while Cufflinks may eventually identify gene fusions and
 gracefully handle genome breakpoints, users are encouraged to be careful when
 using Cufflinks on tumor RNA-Seq experiments. 
 
-The full manual may be found at http://cufflinks.cbcb.umd.edu
+The full manual may be found at http://cole-trapnell-lab.github.io/cufflinks/
 
 CUFFCOMPARE
 ----------------------------
 Please see http://cole-trapnell-lab.github.io/cufflinks/manual
+
 
 REQUIREMENTS
 ---------------------------

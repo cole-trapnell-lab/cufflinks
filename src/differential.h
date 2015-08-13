@@ -607,7 +607,7 @@ private:
                                             const vector<boost::shared_ptr<ReadGroupProperties> >& all_read_groups)
     {
         //fprintf(fout, "file\tcondition\treplicate_num\ttotal_mass\tnorm_mass\tinternal_scale\texternal_scale\n");
-        fprintf(fout, "sample_id\tfile\ttotal_mass\tinternal_scale\texternal_scale\tmedian_transcript_frags\n");
+        fprintf(fout, "sample_id\tfile\ttotal_mass\tinternal_scale\texternal_scale\n");
         for (size_t i = 0; i < all_read_groups.size(); ++i)
         {
             boost::shared_ptr<ReadGroupProperties const> rg_props = all_read_groups[i];
@@ -617,8 +617,7 @@ private:
                     rg_props->file_path().c_str(),
                     rg_props->total_map_mass(),
                     rg_props->internal_scale_factor(),
-                    rg_props->external_scale_factor(),
-                    rg_props->mode_transcript_coverage());
+                    rg_props->external_scale_factor());
             
         }
     }
