@@ -72,7 +72,7 @@ Finally, make and install Cufflinks.
 ```bash
 make
 make install
-{% endhighlight %}
+```
 
 ## Testing the installation
 
