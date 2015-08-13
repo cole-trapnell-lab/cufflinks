@@ -15,7 +15,7 @@ In order to build Cufflinks, you must have the [Boost C++ libraries](http://www.
 
 ## Installing Boost
 
-1. Download Boost and the bjam build engine.
+1. Download Boost and the bjam build engine. **WARNING:** Due to a serious issue with Boost Serlialization library introduced in version 1.56, Cufflinks currently can only be built with Boost version 1.55 or lower.  The issue is expected to be fixed in the upcoming Boost v1.59.
 2. Unpack bjam and add it to your PATH.
 3. Unpack the Boost tarball and cd to the Boost source directory. This directory is called the BOOST_ROOT in some Boost installation instructions.
 4. Build Boost. Note that you can specify where to put Boost with the --prefix option. The default Boost installation directory is /usr/local. Take note of the boost installation directory, because you will need to tell the Cufflinks installer where to find Boost later on.
@@ -54,13 +54,13 @@ bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 addr
 
 ## Building Cufflinks
 
-Unpack the Cufflinks source tarball:
+Unpack the Cufflinks source tarball (in this example for version 2.2.1):
 ```bash
-tar zxvf cufflinks-0.7.0.tar.gz
+tar zxvf cufflinks-2.2.1.tar.gz
 ```
 Change to the Cufflinks directory:
 ```bash
-cd cufflinks-0.7.0
+cd cufflinks-2.2.1
 ```
 Configure Cufflinks. If Boost is installed somewhere other than /usr/local, you will need to tell the installer where to find it using the --with-boost option. Specify where to install Cufflinks using the --prefix option.
 ```bash
