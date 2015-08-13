@@ -21,19 +21,19 @@ In order to build Cufflinks, you must have the [Boost C++ libraries](http://www.
 4. Build Boost. Note that you can specify where to put Boost with the --prefix option. The default Boost installation directory is /usr/local. Take note of the boost installation directory, because you will need to tell the Cufflinks installer where to find Boost later on.
 
 - If you are on Mac OS X, type (all on one line): 
-{% highlight bash %}
+```bash
 bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=darwin architecture=x86 address_model=32_64 link=static runtime-link=static --layout=versioned stage install
-{% endhighlight %}
+```
 
 - If you are on a 32-bit Linux system, type (all on one line): 
-{% highlight bash %}
+```bash
 bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 address_model=32 link=static runtime-link=static stage install
-{% endhighlight %}
+```
 
 - If you are on a 64-bit Linux system, type (all on one line): 
-{% highlight bash %}
+```bash
 bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 address_model=64 link=static runtime-link=static stage install
-{% endhighlight %}
+```
 
 ## Installing the SAM tools
 
@@ -55,20 +55,21 @@ bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 addr
 ## Building Cufflinks
 
 Unpack the Cufflinks source tarball:
-{% highlight bash %}
+```bash
 tar zxvf cufflinks-0.7.0.tar.gz
-{% endhighlight %}
+```
 Change to the Cufflinks directory:
-{% highlight bash %}
+```bash
 cd cufflinks-0.7.0
-{% endhighlight %}
+```
 Configure Cufflinks. If Boost is installed somewhere other than /usr/local, you will need to tell the installer where to find it using the --with-boost option. Specify where to install Cufflinks using the --prefix option.
-{% highlight bash %}
+```bash
 ./configure --prefix=/path/to/cufflinks/install --with-boost=/path/to/boost --with-eigen=/path/to/eigen
-{% endhighlight %}
+```
+
 If you see any errors during configuration, verify that you are using Boost version 1.47 or higher, and that the directory you specified via --with-boost contains the boost header files and libraries. See the Boost Getting started page for more details. If you copied the SAM tools binaries to someplace other than /usr/local/, you may need to supply the --with-bam configuration option.
 Finally, make and install Cufflinks.
-{% highlight bash %}
+```bash
 make
 make install
 {% endhighlight %}
@@ -78,9 +79,9 @@ make install
 1. [Download](http://cufflinks.cbcb.umd.edu/downloads/test_data.sam) the test data
 2. In the directory where you placed the test file, type:
 
-{% highlight bash %}
+```bash
 cufflinks ./test_data.sam
-{% endhighlight %}
+```
 
 You should see the following output:
 
