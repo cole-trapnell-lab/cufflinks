@@ -40,7 +40,8 @@ AX_BOOST_SERIALIZATION
 AX_BOOST_THREAD
 AX_CHECK_ZLIB()
 
-PKG_CHECK_MODULES([EIGEN3], [eigen3])
+#PKG_CHECK_MODULES([EIGEN3], [eigen3])
+AX_CHECK_EIGEN
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
