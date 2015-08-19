@@ -41,7 +41,7 @@ AX_BOOST_THREAD
 AX_CHECK_ZLIB()
 
 #PKG_CHECK_MODULES([EIGEN3], [eigen3])
-AX_CHECK_EIGEN
+AX_EIGEN
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
@@ -109,7 +109,7 @@ AC_ARG_ENABLE(profiling,      [  --enable-profiling        enable profiling with
 	  
 CFLAGS="${generic_CFLAGS} ${ext_CFLAGS} ${user_CFLAGS} ${debug_CFLAGS} ${OPENMP_CFLAGS}"
 CXXFLAGS="$CFLAGS"
-CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN3_CFLAGS}"
+CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN3_CPPFLAGS}"
 user_LDFLAGS="$LDFLAGS"
 LDFLAGS="${ext_LDFLAGS} ${user_LDFLAGS}"
 
