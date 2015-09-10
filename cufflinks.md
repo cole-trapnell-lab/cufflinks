@@ -246,3 +246,16 @@ This file contains the estimated isoform-level expression values in the generic 
 ###Gene-level expression: genes.fpkm_tracking
 
 This file contains the estimated gene-level expression values in the generic [FPKM Tracking Format](#fpkm-tracking-format). Note, however that as there is only one sample, the "q" format is not used.
+
+###Library Types
+
+In cases where Cufflinks cannot determine the platform and protocol used to generate input reads, you can supply this information manually, which will allow Cufflinks to infer source strand information with certain protocols. The available options are listed below. For paired-end data, we currently only support protocols where reads are point towards each other.
+
+Library Type|	Examples|	Description
+---|----|----
+fr-unstranded (default)|	Standard Illumina|	Reads from the left-most end of the fragment (in transcript coordinates) map to the transcript strand, and the right-most end maps to the opposite strand.
+fr-firststrand|	dUTP, NSR, NNSR|	Same as above except we enforce the rule that the right-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads). Equivalently, it is assumed that only the strand generated during first strand synthesis is sequenced.
+fr-secondstrand|	Directional Illumina (Ligation), Standard SOLiD|	Same as above except we enforce the rule that the left-most end of the fragment (in transcript coordinates) is the first sequenced (or only sequenced for single-end reads). Equivalently, it is assumed that only the strand generated during second strand synthesis is sequenced.
+{: class="table"}
+
+Please contact tophat.cufflinks@gmail.com to request support for a new protocol.
