@@ -176,8 +176,8 @@ class Scaffold
 					g_left += cig[i].length;
 					break;
 				case SOFT_CLIP:
-					g_left += cig[i].length;
-					break;
+					//g_left += cig[i].length;
+					//break;
                 case HARD_CLIP:
 					//g_left += cig[i].length;
 					break;

@@ -245,15 +245,15 @@ struct ReadHit
 					pos += op.length;
 					break;
                 case SOFT_CLIP:
-                    pos += op.length;
-                    break;
+                    //pos += op.length;
+                    //break;
                 case HARD_CLIP:
                     break;
 				case MATCH:
 					pos += op.length;
 					break;
-                case INS:
-                    pos -= op.length;
+                //case INS:
+                //    pos -= op.length;
 					break;
                 case DEL:
                     pos += op.length;
@@ -291,12 +291,13 @@ private:
 			{
 				case MATCH:
 				case REF_SKIP:
-                case SOFT_CLIP:
+                //case SOFT_CLIP:
 				case DEL:
 					r += op.length;
 					break;
                 case INS:
                 case HARD_CLIP:
+                case SOFT_CLIP:
 				default:
 					break;
 			}

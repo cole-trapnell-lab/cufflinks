@@ -59,7 +59,7 @@ void ReadHit::trim(int trimmed_length)
                         break;
                     case SOFT_CLIP:
                         assert(false); // not sure if this case is right
-                        pos += op.length;
+                        //pos += op.length;
                         length += op.length;
                         new_cigar.push_back(op);
                         break;
@@ -82,14 +82,14 @@ void ReadHit::trim(int trimmed_length)
                         break;
                     case INS:
                         assert(false); // not sure if this case is right
-                        pos -= op.length;
-                        length -= op.length;
+                        //pos -= op.length;
+                        length += op.length;
                         new_cigar.push_back(op);
                         break;
                     case DEL:
                         assert(false); // not sure if this case is right
                         pos += op.length;
-                        length += op.length;
+                        //length += op.length;
                         new_cigar.push_back(op);
                         break;
                     default:
@@ -117,7 +117,7 @@ void ReadHit::trim(int trimmed_length)
                         break;
                     case SOFT_CLIP:
                         assert(false); // not sure if this case is right
-                        pos -= op.length;
+                        //pos -= op.length;
                         length += op.length;
                         new_cigar.push_back(op);
                         break;
@@ -140,14 +140,14 @@ void ReadHit::trim(int trimmed_length)
                         break;
                     case INS:
                         assert(false); // not sure if this case is right
-                        pos += op.length;
-                        length -= op.length;
+                        //pos += op.length;
+                        length += op.length;
                         new_cigar.push_back(op);
                         break;
                     case DEL:
                         assert(false); // not sure if this case is right
                         pos -= op.length;
-                        length += op.length;
+                        //length += op.length;
                         new_cigar.push_back(op);
                         break;
                     default:
