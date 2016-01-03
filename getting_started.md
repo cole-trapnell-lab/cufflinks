@@ -82,7 +82,7 @@ make install
 
 ## Testing the installation
 
-1. [Download](/assets/downloads/test_data.sam) the test data
+1. [Download]({{ site.url }}/assets/downloads/test_data.sam) the test data
 2. In the directory where you placed the test file, type:
 
 {% highlight bash %}
