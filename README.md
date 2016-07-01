@@ -3,6 +3,8 @@
 
 The main *website* for cufflinks is [here](http://cole-trapnell-lab.github.io/cufflinks/)
 
+*NOTE*: If you're looking for old releases of Cufflinks, including source, you can find them [here](http://cole-trapnell-lab.github.io/cufflinks/install/).
+
 Cufflinks assembles transcripts, estimates their abundances, and tests for differential expression and regulation in RNA-Seq samples. It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set of transcripts. Cufflinks then estimates the relative abundances of these transcripts based on how many reads support each one, taking into account biases in library preparation protocols. 
 
 Cufflinks was originally developed as part of a collaborative effort between the [Laboratory for Mathematical and Computational Biology](http://bio.math.berkeley.edu/), led by Lior Pachter at UC Berkeley, Steven Salzberg's [computational genomics group](http://ccb.jhu.edu/people/salzberg/) at the Institute of Genetic Medicine at Johns Hopkins University, and [Barbara Wold's lab](http://woldlab.caltech.edu/) at Caltech. The project is now maintained by [Cole Trapnell's](http://cole-trapnell-lab.github.io/) lab at the University of Washington.
