@@ -2595,7 +2595,7 @@ Ctrl	Mutant_Z
 		  <tr><td VALIGN=top nowrap><strong>Dispersion Method</strong></td><td VALIGN=top><strong>Description</strong></td></tr>
 		  <tr><td VALIGN=top nowrap>pooled</td><td VALIGN=top>Each replicated condition is used to build a model, then these models are averaged to provide a single global model for all conditions in the experiment. (Default)</td></tr>
 		  <tr><td VALIGN=top nowrap>per-condition</td><td>Each replicated condition receives its own model.  Only available when all conditions have replicates.</td></tr>
-		  <tr><td VALIGN=top nowrap>blind</td><td>All samples are treated as replicates of a single global "condition" and used to build one model.</td></tr>
+		  <tr><td VALIGN=top nowrap>blind</td><td>All samples are treated as replicates of a single global "condition" and used to build one model. (Default when no conditions are replicated)</td></tr>
 		  <tr><td VALIGN=top nowrap>poisson</td><td>The Poisson model is used, where the variance in fragment count is predicted to equal the mean across replicates.  Not recommended.</td></tr>
 </table>
 
