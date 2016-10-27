@@ -1,13 +1,10 @@
 #include "GArgs.h"
 #include "gff_utils.h"
 #include <ctype.h>
-// don't care about cdb compression
-//#ifdef ENABLE_COMPRESSION
-//#undef ENABLE_COMPRESSION
-//#endif
-//#include "GCdbYank.h"
 
-#define USAGE "Usage:\n\
+#define VERSION "0.9.8"
+
+#define USAGE "gffread v"VERSION". Usage:\n\
 gffread <input_gff> [-g <genomic_seqs_fasta> | <dir>][-s <seq_info.fsize>] \n\
  [-o <outfile.gff>] [-t <tname>] [-r [[<strand>]<chr>:]<start>..<end> [-R]]\n\
  [-CTVNJMKQAFGUBHZWTOLE] [-w <exons.fa>] [-x <cds.fa>] [-y <tr_cds.fa>]\n\
@@ -369,7 +366,7 @@ bool process_transcript(GFastaDb& gfasta, GffObj& gffrec) {
   int aalen=0;
   for (int i=1;i<gffrec.exons.Count();i++) {
      int ilen=gffrec.exons[i]->start-gffrec.exons[i-1]->end-1;
-     if (ilen>4000000) 
+     if (verbose && ilen>4000000)
             GMessage("Warning: very large intron (%d) for transcript %s\n",
                            ilen, gffrec.getID());
      if (ilen>maxintron) {
@@ -602,11 +599,11 @@ void openfw(FILE* &f, GArgs& args, char opt) {
 }
 
 #define FWCLOSE(fh) if (fh!=NULL && fh!=stdout) fclose(fh)
-#define FRCLOSE(fh) if (fh!=NULL && fh!=stdin) fclose(fh)
 
 void printGff3Header(FILE* f, GArgs& args) {
   fprintf(f, "# ");
   args.printCmdLine(f);
+  fprintf(f, "# gffread v"VERSION"\n");
   fprintf(f, "##gff-version 3\n");
   //for (int i=0;i<gseqdata.Count();i++) {
   //
@@ -614,7 +611,7 @@ void printGff3Header(FILE* f, GArgs& args) {
   }
 
 bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
-	if (reftbl.Count()>0) {
+	if (reftbl.Count()>0) { //check if we need to reject by ref seq filter
 		GStr refname(gffrec->getRefName());
 		RefTran* rt=reftbl.Find(refname.chars());
 		if (rt==NULL && refname.length()>2 && refname[-2]=='.' && isdigit(refname[-1])) {
@@ -669,7 +666,8 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
 			if (ginfo==NULL) {//first time seeing this gene ID
 				GeneInfo* geneinfo=new GeneInfo(gffrec, ensembl_convert);
 				gene_ids.Add(geneid, geneinfo);
-				if (gfnew!=NULL) gfnew->Add(geneinfo->gf);
+				if (gfnew!=NULL)
+					gfnew->Add(geneinfo->gf); //FIXME: do I really need this?
 			}
 			else ginfo->update(gffrec);
 		}
@@ -680,7 +678,7 @@ bool validateGffRec(GffObj* gffrec, GList<GffObj>* gfnew) {
 
 int main(int argc, char * const argv[]) {
  GArgs args(argc, argv, 
-   "debug;merge;cluster-only;help;force-exons;no-pseudo;MINCOV=MINPID=hvOUNHWCVJMKQNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
+   "version;debug;merge;cluster-only;help;force-exons;no-pseudo;MINCOV=MINPID=hvOUNHWCVJMKQNSXTDAPRZFGLEm:g:i:r:s:t:a:b:o:w:x:y:d:");
  args.printError(USAGE, true);
  if (args.getOpt('h') || args.getOpt("help")) {
     GMessage("%s",USAGE);
@@ -728,7 +726,10 @@ int main(int argc, char * const argv[]) {
      fprintf(stderr, "Command line was:\n");
      args.printCmdLine(stderr);
      }
-
+ if (args.getOpt("version")) {
+  GMessage(VERSION"\n");
+  exit(0);
+ }
  fullattr=(args.getOpt('F')!=NULL);
  if (args.getOpt('G')==NULL) 
     noExonAttr=!fullattr;
@@ -844,9 +845,9 @@ int main(int argc, char * const argv[]) {
                else 
                  if ((f_in=fopen(infile, "r"))==NULL)
                     GError("Error: cannot open input file %s!\n",infile.chars());
+                 else fclose(f_in);
           }
-        else 
-          infile="-";
+        else infile="-";
    GffLoader gffloader(infile.chars());
    gffloader.transcriptsOnly=mRNAOnly;
    gffloader.fullAttributes=fullattr;
@@ -1050,7 +1051,6 @@ int main(int argc, char * const argv[]) {
  //if (faseq!=NULL) delete faseq;
  //if (gcdb!=NULL) delete gcdb;
  GFREE(rfltGSeq);
- FRCLOSE(f_in);
  FWCLOSE(f_out);
  FWCLOSE(f_w);
  FWCLOSE(f_x);

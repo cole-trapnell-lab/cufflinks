@@ -564,7 +564,7 @@ struct GffLoader {
   bool mergeCloseExons;
   bool showWarnings;
   bool noPseudo;
-  void placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster=true, bool collapseRedundant=true,
+  bool placeGf(GffObj* t, GenomicSeqData* gdata, bool doCluster=true, bool collapseRedundant=true,
                                     bool matchAllIntrons=true, bool fuzzSpan=false);
   void load(GList<GenomicSeqData>&seqdata, GFValidateFunc* gf_validate=NULL, 
                       bool doCluster=true, bool doCollapseRedundant=true, 
@@ -587,9 +587,12 @@ struct GffLoader {
             }
           }
       }
+  /*
+  //GffReader will take care of this
   ~GffLoader() {
       if (f!=NULL && f!=stdin) fclose(f);
       }
+  */
 };
 
 void printFasta(FILE* f, GStr& defline, char* seq, int seqlen=-1);
