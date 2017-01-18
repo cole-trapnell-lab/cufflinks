@@ -79,7 +79,7 @@ int GFastaIndex::buildIndex() {
     int line_len=0,line_blen=0;
     bool newSeq=false; //set when FASTA header is encountered
     off_t newSeqOffset=0;
-    int prevOffset=0;
+    //int prevOffset=0;
     char* seqname=NULL;
     int last_len=0;
     bool mustbeLastLine=false; //true if the line length decreases
@@ -106,9 +106,9 @@ int GFastaIndex::buildIndex() {
         mustbeLastLine=false;
      } //defline parsing
      else { //sequence line
-       int llen=fl.length();
-       int lblen=fl.getFpos()-prevOffset;
-        if (newSeq) { //first sequence line after defline
+       int llen=fl.tlength();
+       int lblen=fl.blength(); //fl.getFpos()-prevOffset;
+       if (newSeq) { //first sequence line after defline
           line_len=llen;
           line_blen=lblen;
         }
@@ -132,7 +132,7 @@ int GFastaIndex::buildIndex() {
         last_len=llen;
         newSeq=false;
      } //sequence line
-     prevOffset=fl.getfpos();
+     //prevOffset=fl.getfpos();
      }//for each line of the fasta file
     if (seqlen>0)
        addRecord(seqname, seqlen, newSeqOffset, line_len, line_blen);
