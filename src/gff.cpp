@@ -211,17 +211,20 @@ GffLine::GffLine(GffReader* reader, const char* l): _parents(NULL), _parents_len
  else if (strstr(fnamelc, "stop") &&
 		 (strstr(fnamelc, "codon") || strstr(fnamelc, "cds"))){
 	 exontype=exgffStop;
+	 is_exon=true;
 	 is_cds=true; //though some place it outside the last CDS segment
 	 is_t_data=true;
  }
  else if (strstr(fnamelc, "start") &&
 		 ((strstr(fnamelc, "codon")!=NULL) || strstr(fnamelc, "cds")!=NULL)){
 	 exontype=exgffStart;
+	 is_exon=true;
 	 is_cds=true;
 	 is_t_data=true;
  }
  else if (strcmp(fnamelc, "cds")==0) {
 	 exontype=exgffCDS;
+	 is_exon=true;
 	 is_cds=true;
 	 is_t_data=true;
  }
@@ -359,33 +362,36 @@ GffLine::GffLine(GffReader* reader, const char* l): _parents(NULL), _parents_len
  } //GFF3
  else { // GTF syntax
 	 if (reader->transcriptsOnly && !is_t_data) {
-		 return; //skipping unrecognized non-transcript feature (is this safe?)
+		 return; //skipping unrecognized non-transcript features
 	 }
-	 Parent=extractAttr("transcript_id", true, true);
-	 gene_id=extractAttr("gene_id"); // for GTF this is the only attribute accepted as geneID
-	 if (Parent!=NULL) { //transcript_id available
-		 if (is_gene || is_transcript) { //special GTF with "transcript" or "gene" line
-			 ID=Parent;
-			 Parent=NULL;
-			 if (is_transcript) { //transcript GTF feature
-				reader->gtf_transcript=true;
-				is_gtf_transcript=1;
-				if (reader->gtf_gene &&
-					 gene_id!=NULL && strcmp(ID,gene_id)!=0) {
-				          Parent=Gstrdup(gene_id);
-				}
+	 if (is_gene) {
+		 reader->gtf_gene=true;
+		 ID=extractAttr("transcript_id", true, true); //Ensemble GTF might lack this
+		 gene_id=extractAttr("gene_id");
+		 if (ID==NULL) {
+			 // no transcript_id -- this is not a valid GTF2 format, but Ensembl
+			 //is being known to add "gene" features with only gene_id in their GTF
+			 if (gene_id!=NULL) { //likely a gene feature line (Ensembl!)
+			 		 ID=Gstrdup(gene_id); //take over as ID
 			 }
 		 }
-	 } //GTF2 detected (no parent line)
-	 else {// no transcript_id -- this is not a valid GTF2 format, but Ensembl
-		 //is being known to add "gene" features with only gene_id
-		 if (gene_id!=NULL) { //likely a gene feature line (Ensembl!)
-			 reader->gtf_gene=true;
-			 ID=Gstrdup(gene_id); //take over as ID
-			 //gene_id=NULL;
-		 }
+		 // else if (strcmp(gene_id, ID)==0) //GENCODE v20 gene feature ?
+	 }
+	 else if (is_transcript) {
+		ID=extractAttr("transcript_id", true, true);
+		//gene_id=extractAttr("gene_id"); // for GTF this is the only attribute accepted as geneID
+		Parent=extractAttr("gene_id");
+		reader->gtf_transcript=true;
+		is_gtf_transcript=1;
+		//if (reader->gtf_gene &&
+		//	 gene_id!=NULL && strcmp(ID,gene_id)!=0) {
+		//		  Parent=Gstrdup(gene_id);
+		//	}
+	 } else { //must be an exon type
+		 Parent=extractAttr("transcript_id", true, true);
+		 gene_id=extractAttr("gene_id"); // for GTF this is the only attribute accepted as geneID
 		 //old pre-GTF2 formats like Jigsaw's (legacy)
-		 if (exontype==exgffExon) {
+		 if (Parent==NULL && exontype==exgffExon) {
 			 if (startsWith(track,"jigsaw")) {
 				 is_cds=true;
 				 strcpy(track,"jigsaw");
@@ -395,12 +401,11 @@ GffLine::GffLine(GffReader* reader, const char* l): _parents(NULL), _parents_len
 				 info=p+1;
 				 }
 			 }
-		 } //exon feature?
-		 if (Parent==NULL && (is_transcript || exontype))
-			 	 //something is wrong here, cannot parse the GTF ID
-				 GMessage("Warning: invalid GTF record, transcript_id not found:\n%s\n", l);
-	 } //Parent transcript_id was NULL, attempted to find it
-
+		 }
+	 }
+	 if (Parent==NULL && (is_transcript || exontype>0))
+		 	 //something is wrong here, cannot parse the GTF ID
+			 GMessage("Warning: invalid GTF record, transcript_id not found:\n%s\n", l);
 	 //more GTF attribute parsing
 	 gene_name=extractAttr("gene_name");
 	 if (gene_name==NULL) {
@@ -437,7 +442,9 @@ GffLine::GffLine(GffReader* reader, const char* l): _parents(NULL), _parents_len
 		 GMALLOC(parents, sizeof(char*));
 		 parents[0]=_parents;
 	 }
- } //GTF-like
+
+ } //GTF
+
 
  if (ID==NULL && parents==NULL) {
 	 if (reader->gff_warns)
@@ -470,7 +477,7 @@ void GffObj::addCDS(uint cd_start, uint cd_end, char phase) {
 int GffObj::addExon(GffReader* reader, GffLine* gl, bool keepAttr, bool noExonAttr) {
   //this will make sure we have the right subftype_id!
   //int subf_id=-1;
-  if (!isTranscript() && gl->is_cds) {
+  if (!isTranscript() && gl->exontype>0) {
           isTranscript(true);
           exon_ftype_id=gff_fid_exon;
           if (exons.Count()==1) exons[0]->exontype=exgffExon;
@@ -1059,7 +1066,7 @@ bool GffReader::addExonFeature(GffObj* prevgfo, GffLine* gffline, GHash<CNonExon
 	}
 	int eidx=prevgfo->addExon(this, gffline, !noExonAttr, noExonAttr);
 	if (eidx>=0) {
-		if (eidx==0) prevgfo->isTranscript(true);
+		//if (eidx==0 && gffline->exontype>0) prevgfo->isTranscript(true);
 		if (gffline->ID!=NULL && gffline->exontype==0)
 		   subfPoolAdd(pex, prevgfo);
 	}
@@ -1169,8 +1176,9 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
 			GPVec<GffObj>* gflst0=NULL;
 			for (int i=0;i<gffline->num_parents;i++) {
 				newgflst=NULL;
-				if (transcriptsOnly && (discarded_ids.Find(gffline->parents[i])!=NULL ||
-						  !pFind(gffline->parents[i], newgflst)))
+				//if (transcriptsOnly && (
+				if (discarded_ids.Find(gffline->parents[i])!=NULL) continue;
+				if (!pFind(gffline->parents[i], newgflst))
 					continue; //skipping discarded parent feature
 				kparents.Add(i);
 				if (i==0) gflst0=newgflst;
@@ -1209,11 +1217,18 @@ void GffReader::readAll(bool keepAttr, bool mergeCloseExons, bool noExonAttr) {
 						}
 					}
 					else { //potential exon subfeature?
-						//always discard silly "intron" features
-						if (! (gffline->exontype==exgffIntron && (parentgfo->isTranscript() || parentgfo->exons.Count()>0))) {
-							if (!addExonFeature(parentgfo, gffline, pex, noExonAttr))
-								validation_errors=true;
+						bool addExon=false;
+						if (transcriptsOnly) {
+							if (gffline->exontype>0) addExon=true;
 						}
+						else { //always discard silly "intron" features
+							if (! (gffline->exontype==exgffIntron && (parentgfo->isTranscript() || parentgfo->exons.Count()>0)))
+							  addExon=true;
+						}
+						if (addExon)
+							if (!addExonFeature(parentgfo, gffline, pex, noExonAttr))
+							   validation_errors=true;
+
 					}
 				} //overlapping parent feature found
 			} //for each parsed parent Id
@@ -1475,7 +1490,7 @@ void GffObj::copyAttrs(GffObj* from) { //typically from is the parent gene, and 
 		bool haveit=false;
 		for (int ai=0;ai<this->attrs->Count();++ai) {
 			//do we have it already?
-			if (aid==this->attrs->Get(i)->attr_id) {
+			if (aid==this->attrs->Get(ai)->attr_id) {
 				haveit=true;
 				break; //skip this, don't replace
 			}
