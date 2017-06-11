@@ -67,28 +67,7 @@ void driver(FILE* ref_gtf, FILE* sam_hit_file)
 	
 	SAMHitFactory hs(it, rt);
     
-	boost::shared_ptr<HitFactory> hit_factory;
-    
-    try
-	{
-		hit_factory = boost::shared_ptr<BAMHitFactory>(new BAMHitFactory(hit_file_name, it, rt));
-	}
-	catch (std::runtime_error& e)
-	{
-		fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-				hit_file_name.c_str());
-        
-        try
-        {
-            hit_factory = boost::shared_ptr<SAMHitFactory>(new SAMHitFactory(hit_file_name, it, rt));
-        }
-        catch (std::runtime_error& e)
-        {
-            fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
-                    hit_file_name.c_str());
-            exit(1);
-        }
-	}
+	boost::shared_ptr<HitFactory> hit_factory(createSamHitFactory(hit_file_name, it, rt));
 	BundleFactory& bundle_factory = *(new BundleFactory(hit_factory, bundle_mode));
     
     boost::crc_32_type ref_gtf_crc_result;

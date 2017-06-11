@@ -1053,26 +1053,7 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
         
         for (size_t j = 0; j < sam_hit_filenames.size(); ++j)
         {
-            boost::shared_ptr<HitFactory> hs;
-            try
-            {
-                hs = boost::shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
-            }
-            catch (std::runtime_error& e) 
-            {
-                try
-                {
-                    fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-                            sam_hit_filenames[j].c_str());
-                    hs = boost::shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
-                }
-                catch (std::runtime_error& e)
-                {
-                    fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
-                            sam_hit_filenames[j].c_str());
-                    exit(1);
-                }
-            }
+            boost::shared_ptr<HitFactory> hs(createSamHitFactory(sam_hit_filenames[j], it, rt));
             
             all_hit_factories.push_back(hs);
             
@@ -1623,4 +1604,3 @@ int main(int argc, char** argv)
     
 	return 0;
 }
-

@@ -1583,25 +1583,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
             
             catch(boost::archive::archive_exception & e)
             {
-                try
-                {
-                    hs = boost::shared_ptr<HitFactory>(new BAMHitFactory(sam_hit_filenames[j], it, rt));
-                }
-                catch (std::runtime_error& e) 
-                {
-                    try
-                    {
-//                        fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
-//                                sam_hit_filenames[j].c_str());
-                        hs = boost::shared_ptr<HitFactory>(new SAMHitFactory(sam_hit_filenames[j], it, rt));
-                    }
-                    catch (std::runtime_error& e)
-                    {
-                        fprintf(stderr, "Error: cannot open file %s for reading. Unrecognized file type\n",
-                                sam_hit_filenames[j].c_str());
-                        exit(1);
-                    }
-                }
+				hs = boost::shared_ptr<HitFactory>(createSamHitFactory(sam_hit_filenames[j], it, rt));
                 hf = boost::shared_ptr<BundleFactory>(new BundleFactory(hs, REF_DRIVEN));
             }
             
@@ -2692,4 +2674,3 @@ int main(int argc, char** argv)
     
 	return 0;
 }
-
