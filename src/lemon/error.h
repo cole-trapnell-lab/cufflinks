@@ -67,9 +67,9 @@ namespace lemon {
     }
 
     ExceptionMember& operator=(const ExceptionMember& copy) {
-      if (ptr.get() == 0) return;
+      if (ptr.get() == 0) return *this;
       try {
-	if (!copy.valid()) return;
+	if (!copy.valid()) return *this;
  	*ptr = copy.get();
       } catch (...) {}
     }
