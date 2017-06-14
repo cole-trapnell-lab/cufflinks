@@ -79,7 +79,7 @@ cd cufflinks-2.2.1
 
 ### If you want to clone the Cufflinks github repo:
 ```bash
-git clone git@github.com:cole-trapnell-lab/cufflinks.git
+git clone https://github.com/cole-trapnell-lab/cufflinks.git
 cd cufflinks
 autoreconf --install
 ```
