@@ -634,8 +634,8 @@ public:
     GIArray i_qnotp;  //imperfect qry introns (may overlap but has no "perfect" match)
 	
 	
-    int qbases_all;
-    int rbases_all; //in fact, it's all ref bases overlapping any query loci
+    long qbases_all;
+    long rbases_all; //in fact, it's all ref bases overlapping any query loci
     int in_rmrnas; //count of ALL ref mrnas and loci given for this region
     int in_rloci; //not just those overlapping qry data
     // this will keep track of total qry loci, mrnas and exons in an area
@@ -707,9 +707,9 @@ public:
 	int m_loci; //missed loci
 	int w_loci; //novel/wrong loci
 	//---base level accuracy
-	int baseTP; //number of overlapping bases
-	int baseFP; //number of qry bases not overlapping reference
-	int baseFN; //number of ref bases not overlapping qry
+	long baseTP; //number of overlapping bases
+	long baseFP; //number of qry bases not overlapping reference
+	long baseFN; //number of ref bases not overlapping qry
 	//            sorted,free,unique       sorted,unique
     GSuperLocus(uint lstart=0,uint lend=0):qloci(true,false,false),rloci(true,false,false),
 	qmrnas(true,false,false), qmexons(true,false), quexons(true,false), qintrons(false),
