@@ -419,10 +419,7 @@ CuffStrand use_stranded_protocol(uint32_t sam_flag,  MateStrandMapping msm)
 
 bool BAMHitFactory::get_hit_from_bam1t(const bam1_t* hit_buf,
 									   const bam_hdr_t* header,
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
+									   ReadHit& bh)
 {
 	uint32_t sam_flag = hit_buf->core.flag;
 	
@@ -725,35 +722,21 @@ void HitFactory::finalize_rg_props()
 
 static const unsigned MAX_HEADER_LEN = 64 * 1024 * 1024; // 4 MB
 
-bool SAMHitFactory::next_record(const char*& buf, size_t& buf_size)
+bool SAMHitFactory::read_next_hit(ReadHit& bh)
 {
-	mark_curr_pos();
-	
 	bool new_rec = fgets(_hit_buf,  _hit_buf_max_sz - 1, _hit_file);
 	if (!new_rec)
 		return false;
 	++_line_num;
 	char* nl = strrchr(_hit_buf, '\n');
 	if (nl) *nl = 0;
-	buf = _hit_buf;
-	buf_size = _hit_buf_max_sz - 1;
-	return true;
-}
 
-bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf, 
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
-{	
-	char bwt_buf[10*2048];
+	const char* buf = _hit_buf;
 
-	strcpy(bwt_buf, orig_bwt_buf);
 	// Are we still in the header region?
-	if (bwt_buf[0] == '@')
+	if (buf[0] == '@')
 		return false;
 	
-	const char* buf = bwt_buf;
 	const char* _name = strsep((char**)&buf,"\t");
 	if (!_name)
 		return false;
@@ -805,19 +788,6 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	int text_offset = atoi(text_offset_str);
 	int text_mate_pos = atoi(mate_pos_str);
 	
-	// Copy the tag out of the name field before we might wipe it out
-	char* pipe = strrchr(name, '|');
-	if (pipe)
-	{
-		if (name_tags)
-			strcpy(name_tags, pipe);
-		*pipe = 0;
-	}
-	// Stripping the slash and number following it gives the insert name
-	char* slash = strrchr(name, '/');
-	if (strip_slash && slash)
-		*slash = 0;
-	
 	const char* p_cig = cigar_str;
 	//int len = strlen(sequence);
 	vector<CigarOp> cigar;
@@ -848,7 +818,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		if (length <= 0)
 		{
 			fprintf (stderr, "SAM error on line %d: CIGAR op has zero length\n", _line_num);
-            fprintf (stderr,"%s\n", orig_bwt_buf);
+            fprintf (stderr,"%s\n", _hit_buf);
 			return false;
 		}
 		char op_char = toupper(*t);
@@ -1104,16 +1074,7 @@ void PrecomputedExpressionHitFactory::load_checked_parameters(const string& expr
     }
 }
 
-bool PrecomputedExpressionHitFactory::next_record(const char*& buf, size_t& buf_size)
-{
-	return false;
-}
-
-bool PrecomputedExpressionHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
+bool PrecomputedExpressionHitFactory::read_next_hit(ReadHit& buf)
 {
 	return false;
 }
@@ -1218,12 +1179,10 @@ boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_lo
 
 #ifdef HAVE_HTSLIB
 
-bool HTSHitFactory::next_record(const char*& buf, size_t& buf_size)
+bool HTSHitFactory::read_next_hit(ReadHit& bh)
 {
 	if(!records_remain())
 		return false;
-
-	mark_curr_pos();
 
 	int read_ret = sam_read1(_hit_file, _file_header, _next_hit);
 	if(read_ret < 0)
@@ -1232,21 +1191,7 @@ bool HTSHitFactory::next_record(const char*& buf, size_t& buf_size)
 		return false;
 	}
 
-	buf = (char*)_next_hit;
-	buf_size = 1;
-
-	return true;
-}
-
-bool HTSHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
-{
-	if(orig_bwt_buf != (const char*)_next_hit)
-		throw std::runtime_error("Unexpected buffer in HTSHitFactory");
-	return get_hit_from_bam1t(_next_hit, _file_header, bh, strip_slash, name_out, name_tags);
+	return get_hit_from_bam1t(_next_hit, _file_header, bh);
 }
 
 bool HTSHitFactory::inspect_header()
@@ -1278,34 +1223,6 @@ HitFactory* createSamHitFactory(const string& hit_file_name, ReadTable& it, RefS
 
 #else // ndef HAVE_HTSLIB
 
-// populate a bam_t This will
-bool SamtoolsHitFactory::next_record(const char*& buf, size_t& buf_size)
-{
-    if (_next_hit.data)
-    {
-        free(_next_hit.data);
-        _next_hit.data = NULL;
-    }
-
-    if (records_remain() == false)
-        return false;
-
-	mark_curr_pos();
-
-    memset(&_next_hit, 0, sizeof(_next_hit));
-
-	int bytes_read = samread(_hit_file, &_next_hit);
-	if (bytes_read < 0)
-    {
-        _eof_encountered = true;
-		return false;
-    }
-	buf = (const char*)&_next_hit;
-	buf_size = bytes_read;
-
-	return true;
-}
-
 bool SamtoolsHitFactory::inspect_header()
 {
     bam_header_t* header = _hit_file->header;
@@ -1334,20 +1251,28 @@ bool SamtoolsHitFactory::inspect_header()
     return true;
 }
 
-bool SamtoolsHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
+// populate a bam_t This will
+bool SamtoolsHitFactory::read_next_hit(ReadHit& bh)
 {
-	const bam1_t* hit_buf = (const bam1_t*)orig_bwt_buf;
-	return get_hit_from_bam1t(
-		hit_buf,
-		_hit_file->header,
-		bh,
-		strip_slash,
-		name_out,
-		name_tags);
+    if (_next_hit.data)
+    {
+        free(_next_hit.data);
+        _next_hit.data = NULL;
+    }
+
+    if (records_remain() == false)
+        return false;
+
+    memset(&_next_hit, 0, sizeof(_next_hit));
+
+	int bytes_read = samread(_hit_file, &_next_hit);
+	if (bytes_read < 0)
+    {
+        _eof_encountered = true;
+		return false;
+    }
+
+	return get_hit_from_bam1t(&_next_hit, _hit_file->header, bh);
 }
 
 HitFactory* createSamHitFactory(const string& hit_file_name, ReadTable& it, RefSequenceTable& rt)
