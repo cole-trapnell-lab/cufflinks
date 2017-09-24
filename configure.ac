@@ -2,6 +2,7 @@ m4_include([ax_boost_base.m4])
 m4_include([ax_boost_thread.m4])
 m4_include([ax_boost_system.m4])
 m4_include([ax_boost_serialization.m4])
+m4_include([ax_boost_filesystem.m4])
 m4_include([ax_bam.m4])
 m4_include([ax_check_zlib.m4])
 
@@ -37,6 +38,7 @@ AX_BOOST_BASE([1.47.0])
 AX_BAM
 AX_BOOST_SYSTEM
 AX_BOOST_SERIALIZATION
+AX_BOOST_FILESYSTEM
 AX_BOOST_THREAD
 AX_CHECK_ZLIB()
 

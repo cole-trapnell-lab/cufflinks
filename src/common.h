@@ -49,6 +49,8 @@ using boost::math::normal;
 
 #include <boost/crc.hpp>
 
+#include <boost/filesystem.hpp>
+
 // Non-option globals
 extern bool final_est_run;
 extern bool allow_junk_filtering;
