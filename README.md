@@ -66,7 +66,7 @@ bjam --prefix=<YOUR_BOOST_INSTALL_DIRECTORY> --toolset=gcc architecture=x86 addr
 
 ## Building Cufflinks
 
-###If you are starting from a source tarball downloaded from [here](http://cole-trapnell-lab.github.io/cufflinks/install/):
+### If you are starting from a source tarball downloaded from [here](http://cole-trapnell-lab.github.io/cufflinks/install/):
 
 Unpack the Cufflinks source tarball (in this example for version 2.2.1):
 ```bash
