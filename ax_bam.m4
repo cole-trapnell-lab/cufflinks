@@ -4,11 +4,11 @@
 #
 # DESCRIPTION
 #
-#   Test for the BAM libraries of a particular version (or newer)
+#   Test for the BAM libraries (htslib or bamlib)
 #
 #   If no path to the installed bam library is given the macro searchs
 #   under /usr, /usr/local, /opt and /opt/local and evaluates the
-#   $BAM_ROOT environment variable. 
+#   $BAM_ROOT environment variable.
 #	Adapted from AX_BOOST_BASE
 #
 #   This macro calls:
@@ -17,7 +17,7 @@
 #
 #   And sets:
 #
-#     HAVE_BAM
+#     HAVE_BAM, HAVE_HTSLIB
 #
 # LICENSE
 #
@@ -69,22 +69,32 @@ if test "x$want_bam" = "xyes"; then
 #		bam_lib_version_req_sub_minor="0"
 #    	fi
 #	WANT_BAM_VERSION=`expr $bam_lib_version_req_major \* 100000 \+  $bam_lib_version_req_minor \* 100 \+ $bam_lib_version_req_sub_minor`
-	AC_MSG_CHECKING(for bamlib)
+	AC_MSG_CHECKING(for htslib or bamlib)
 	succeeded=no
 
+	USE_HTSLIB=0
+
 	dnl first we check the system location for bam libraries
+	SEARCH_DIRS="/usr /usr/local /opt /opt/local"
 	if test "$ac_bam_path" != ""; then
-		BAM_LDFLAGS="-L$ac_bam_path/lib"
-		BAM_CPPFLAGS="-I$ac_bam_path/include"
-	else
-		for ac_bam_path_tmp in /usr /usr/local /opt /opt/local ; do
-			if test -d "$ac_bam_path_tmp/include/bam" && test -r "$ac_bam_path_tmp/include/bam"; then
-				BAM_LDFLAGS="-L$ac_bam_path_tmp/lib"
-				BAM_CPPFLAGS="-I$ac_bam_path_tmp/include"
-				break;
-			fi
-		done
+	    SEARCH_DIRS=$ac_bam_path
 	fi
+	for ac_bam_path_tmp in $SEARCH_DIRS ; do
+		if test -d "$ac_bam_path_tmp/include/htslib" && test -r "$ac_bam_path_tmp/include/htslib"; then
+			BAM_LDFLAGS="-L$ac_bam_path_tmp/lib"
+			BAM_CPPFLAGS="-I$ac_bam_path_tmp/include"
+			BAM_LIB_PARAM="-lhts"
+			USE_HTSLIB=1
+			AC_DEFINE(HAVE_HTSLIB,,[define if the BAM library is htslib])
+			break;
+		fi
+		if test -d "$ac_bam_path_tmp/include/bam" && test -r "$ac_bam_path_tmp/include/bam"; then
+			BAM_LDFLAGS="-L$ac_bam_path_tmp/lib"
+			BAM_CPPFLAGS="-I$ac_bam_path_tmp/include"
+			BAM_LIB_PARAM="-lbam"
+			break;
+		fi
+	done
 
     dnl overwrite ld flags if we have required special directory with
     dnl --with-bam-libdir parameter
@@ -100,96 +110,38 @@ if test "x$want_bam" = "xyes"; then
 	LDFLAGS="$LDFLAGS $BAM_LDFLAGS"
 	export LDFLAGS
 
-	AC_LANG_PUSH(C++)
-     	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-	@%:@include <bam/bam.h>
-	]], [[
-	]])],[
-        AC_MSG_RESULT(yes)
-	succeeded=yes
-	found_system=yes
+	if test "$USE_HTSLIB" == "0"; then
+
+	   AC_LANG_PUSH(C++)
+	        	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+					@%:@include <bam/bam.h>
+					]], [[]])],[
+       AC_MSG_RESULT(yes)
+	   succeeded=yes
+	   found_system=yes
        	],[
        	])
-	AC_LANG_POP([C++])
+	   AC_LANG_POP([C++])
 
-	dnl if we found no bam with system layout we search for bam libraries
-	dnl built and installed without the --layout=system option or for a staged(not installed) version
-	if test "x$succeeded" != "xyes"; then
-		_version=0
-		if test "$ac_bam_path" != ""; then
-			if test -d "$ac_bam_path" && test -r "$ac_bam_path"; then
-				for i in `ls -d $ac_bam_path/include/bam-* 2>/dev/null`; do
-					_version_tmp=`echo $i | sed "s#$ac_bam_path##" | sed 's/\/include\/bam-//' | sed 's/_/./'`
-					V_CHECK=`expr $_version_tmp \> $_version`
-					if test "$V_CHECK" = "1" ; then
-						_version=$_version_tmp
-					fi
-					VERSION_UNDERSCORE=`echo $_version | sed 's/\./_/'`
-					BAM_CPPFLAGS="-I$ac_bam_path/include/bam-$VERSION_UNDERSCORE"
-				done
-			fi
-		else
-			for ac_bam_path in /usr /usr/local /opt /opt/local ; do
-				if test -d "$ac_bam_path" && test -r "$ac_bam_path"; then
-					for i in `ls -d $ac_bam_path/include/bam-* 2>/dev/null`; do
-						_version_tmp=`echo $i | sed "s#$ac_bam_path##" | sed 's/\/include\/bam-//' | sed 's/_/./'`
-						V_CHECK=`expr $_version_tmp \> $_version`
-						if test "$V_CHECK" = "1" ; then
-							_version=$_version_tmp
-	               					best_path=$ac_bam_path
-						fi
-					done
-				fi
-			done
+	else
 
-			VERSION_UNDERSCORE=`echo $_version | sed 's/\./_/'`
-			BAM_CPPFLAGS="-I$best_path/include/bam-$VERSION_UNDERSCORE"
-            if test "$ac_bam_lib_path" = ""
-            then
-               BAM_LDFLAGS="-L$best_path/lib"
-            fi
+	   AC_LANG_PUSH(C++)
+	        	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+					@%:@include <htslib/hts.h>
+					]], [[]])],[
+       AC_MSG_RESULT(yes)
+	   succeeded=yes
+	   found_system=yes
+       	],[
+       	])
+	   AC_LANG_POP([C++])
 
-	    		if test "x$BAM_ROOT" != "x"; then
-				if test -d "$BAM_ROOT" && test -r "$BAM_ROOT" && test -d "$BAM_ROOT/stage/lib" && test -r "$BAM_ROOT/stage/lib"; then
-					version_dir=`expr //$BAM_ROOT : '.*/\(.*\)'`
-					stage_version=`echo $version_dir | sed 's/bam_//' | sed 's/_/./g'`
-			        	stage_version_shorten=`expr $stage_version : '\([[0-9]]*\.[[0-9]]*\)'`
-					V_CHECK=`expr $stage_version_shorten \>\= $_version`
-                    if test "$V_CHECK" = "1" -a "$ac_bam_lib_path" = "" ; then
-						AC_MSG_NOTICE(We will use a staged bam library from $BAM_ROOT)
-						BAM_CPPFLAGS="-I$BAM_ROOT"
-						BAM_LDFLAGS="-L$BAM_ROOT/stage/lib"
-					fi
-				fi
-	    		fi
-		fi
-
-		CPPFLAGS="$CPPFLAGS $BAM_CPPFLAGS"
-		export CPPFLAGS
-		LDFLAGS="$LDFLAGS $BAM_LDFLAGS"
-		export LDFLAGS
-
-		AC_LANG_PUSH(C++)
-	     	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-		@%:@include <bam/version.hpp>
-		]], [[
-		]])],[
-        	AC_MSG_RESULT(yes)
-		succeeded=yes
-		found_system=yes
-       		],[
-	       	])
-		AC_LANG_POP([C++])
-	fi
+    fi
 
 	if test "$succeeded" != "yes" ; then
-		if test "$_version" = "0" ; then
-			AC_MSG_ERROR([[We could not detect the bam libraries (version $bam_lib_version_req_shorten or higher). If you have a staged bam library (still not installed) please specify \$BAM_ROOT in your environment and do not give a PATH to --with-bam option.  If you are sure you have bam installed, then check your version number looking in <bam/version.hpp>. See http://randspringer.de/bam for more documentation.]])
-		else
-			AC_MSG_NOTICE([Your bam libraries seem too old (version $_version).])
-		fi
+		AC_MSG_ERROR([[We could not detect the bam libraries. Try installing htslib or libbam, or specifying a path to one with --with-bam=/some/path]])
 	else
-		BAM_LIB="-lbam"
+		BAM_LIB="$BAM_LIB_PARAM"
 		AC_SUBST(BAM_CPPFLAGS)
 		AC_SUBST(BAM_LDFLAGS)
 		AC_SUBST(BAM_LIB)

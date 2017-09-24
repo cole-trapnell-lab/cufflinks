@@ -660,21 +660,15 @@ void print_sort_error(const char* last_chr_name,
 
 double BundleFactory::next_valid_alignment(const ReadHit*& bh)
 {
-    const char* hit_buf;
-	size_t hit_buf_size = 0;
     bh = NULL;
     
 	// Keep track of mass of hits we skip
 	double raw_mass = 0; 
 	
-    while (true)
+    while (_hit_fac->records_remain())
     {
-    
-        if (!_hit_fac->next_record(hit_buf, hit_buf_size))
-            break;
-        
         ReadHit tmp;
-        if (!_hit_fac->get_hit_from_buf(hit_buf, tmp, false))
+        if (!_hit_fac->next_hit(tmp))
             continue;
         
 		if (tmp.ref_id() == 12638153115695167477)  // corresponds to SAM "*" under FNV hash. unaligned read record 
@@ -2130,5 +2124,3 @@ void PrecomputedExpressionBundleFactory::clear_abundance_for_locus(int locus_id)
 #endif
     _hit_fac->clear_abundance_for_locus(locus_id);
 }
-
-

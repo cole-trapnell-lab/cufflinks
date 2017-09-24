@@ -18,7 +18,15 @@
 
 #include <boost/shared_ptr.hpp>
 
+#ifdef HAVE_HTSLIB
+#include <htslib/hts.h>
+#include <htslib/hfile.h>
+#include <htslib/cram.h>
+#include <htslib/bgzf.h>
+#include <htslib/sam.h>
+#else
 #include <bam/sam.h>
+#endif
 
 #include "common.h"
 #include "multireads.h"
@@ -549,8 +557,7 @@ bool hit_insert_id_lt(const ReadHit& h1, const ReadHit& h2);
 
 /******************************************************************************
  The HitFactory abstract class is responsible for returning a single ReadHit 
- from an alignment file.  The only class that actually implements this interface
- right now in Cufflinks is SAMHitFactory
+ from an alignment file.
 *******************************************************************************/
 class HitFactory
 {
@@ -560,7 +567,8 @@ public:
 			   RefSequenceTable& reference_table) : 
 		_insert_table(insert_table), 
 		_ref_table(reference_table),
-        _num_seq_header_recs(0) {}
+		_num_seq_header_recs(0),
+		_undone_hit_present(false) {}
 	
 	HitFactory& operator=(const HitFactory& rhs) 
 	{
@@ -600,19 +608,29 @@ public:
 	
 	virtual void reset() = 0;
 	
-	virtual void undo_hit() = 0;
+	void undo_hit()
+	{
+		if(_undone_hit_present)
+			throw "undo_hit can only back up one hit";
+		_undone_hit_present=true;
+	}
 	
-	// next_record() should always set _curr_pos before reading the
-	// next_record so undo_hit() will work properly.
-	virtual bool next_record(const char*& buf, size_t& buf_size) = 0;
+	bool next_hit(ReadHit &result)
+	{
+		if(_undone_hit_present)
+		{
+			_undone_hit_present=false;
+		}
+		else
+		{
+			if(!read_next_hit(_last_hit))
+				return false;
+		}
+		result=_last_hit;
+		return true;
+	}
 	
 	virtual bool records_remain() const = 0;
-	
-	virtual bool get_hit_from_buf(const char* bwt_buf, 
-								  ReadHit& bh,
-								  bool strip_slash,
-								  char* name_out = NULL,
-								  char* name_tags = NULL) = 0;
 	
 	RefSequenceTable& ref_table() { return _ref_table; }
 	
@@ -627,9 +645,14 @@ public:
     
 protected:
     
+	virtual bool read_next_hit(ReadHit &result) = 0;
+
     bool parse_header_string(const string& header_rec,
                              ReadGroupProperties& rg_props);
     
+	void parse_header_lines(const string& headers,
+							ReadGroupProperties& rg_props);
+
     void finalize_rg_props();
     
     // TODO: We want to keep a collection of these, indexed by RG ID.  See #180
@@ -641,6 +664,8 @@ private:
 	ReadTable& _insert_table;
 	RefSequenceTable& _ref_table;
     uint32_t _num_seq_header_recs;
+	bool _undone_hit_present;
+	ReadHit _last_hit;
 };
 
 /******************************************************************************
@@ -653,8 +678,7 @@ public:
 				  ReadTable& insert_table, 
 				  RefSequenceTable& reference_table) : 
 		HitFactory(insert_table, reference_table), 
-		_line_num(0), 
-		_curr_pos(0) 
+		_line_num(0)
 	{
 		_hit_file = fopen(hit_file_name.c_str(), "r");
 		if (_hit_file == NULL)
@@ -683,24 +707,11 @@ public:
 		}
 	}
 	
-	virtual void undo_hit() 
-	{ 
-		fseeko(_hit_file, _curr_pos, SEEK_SET); 
-		--_line_num;
-	}
-	
 	void reset() { rewind(_hit_file); }
 	
-	void mark_curr_pos() { _curr_pos = ftell(_hit_file); }
 	bool records_remain() const { return !feof(_hit_file); }
 	
-	bool next_record(const char*& buf, size_t& buf_size);
-	
-	bool get_hit_from_buf(const char* bwt_buf, 
-						  ReadHit& bh,
-						  bool strip_slash,
-						  char* name_out = NULL,
-						  char* name_tags = NULL);
+	bool read_next_hit(ReadHit& buf);
     
     bool inspect_header();
     
@@ -710,19 +721,42 @@ private:
 	int _line_num;
 	
 	FILE* _hit_file;
-	off_t _curr_pos;
 };
 
-/******************************************************************************
- BAMHitFactory turns SAM alignments into ReadHits
- *******************************************************************************/
 class BAMHitFactory : public HitFactory
 {
 public:
-	BAMHitFactory(const string& hit_file_name, 
+	BAMHitFactory(ReadTable& insert_table,
+				  RefSequenceTable& reference_table) :
+	HitFactory(insert_table, reference_table)
+	{}
+
+	bool get_hit_from_bam1t(const bam1_t* hit_buf,
+							const bam_hdr_t* header,
+							ReadHit& bh);
+
+	bool records_remain() const
+	{
+		return !_eof_encountered;
+	}
+
+ protected:
+	int64_t _beginning;
+    bool _eof_encountered;
+};
+
+#ifndef HAVE_HTSLIB
+
+/******************************************************************************
+ SamtoolsHitFactory turns SAM alignments into ReadHits
+ *******************************************************************************/
+class SamtoolsHitFactory : public BAMHitFactory
+{
+public:
+    SamtoolsHitFactory(const string& hit_file_name,
 				  ReadTable& insert_table, 
 				  RefSequenceTable& reference_table) : 
-		HitFactory(insert_table, reference_table) 
+	BAMHitFactory(insert_table, reference_table)
 	{
 		_hit_file = samopen(hit_file_name.c_str(), "rb", 0);
         
@@ -749,30 +783,13 @@ public:
         }
 	}	
 	
-	~BAMHitFactory() 
+	~SamtoolsHitFactory()
 	{
 		if (_hit_file)
 		{
 			samclose(_hit_file);
 		}
 	}
-	
-	void mark_curr_pos() 
-	{ 
-		_curr_pos = bgzf_tell(_hit_file->x.bam);
-	}
-
-	
-	void undo_hit() 
-	{ 
-		bgzf_seek(_hit_file->x.bam, _curr_pos, SEEK_SET);
-		//--_line_num;
-	}
-    
-    bool records_remain() const 
-    { 
-        return !_eof_encountered;
-    }
 	
 	void reset() 
 	{ 
@@ -784,24 +801,96 @@ public:
 	}
 	
 	
-	bool next_record(const char*& buf, size_t& buf_size);
-	
-	bool get_hit_from_buf(const char* bwt_buf, 
-						  ReadHit& bh,
-						  bool strip_slash,
-						  char* name_out = NULL,
-						  char* name_tags = NULL);
+	bool read_next_hit(ReadHit& bh);
     
     bool inspect_header();
 	
 private:
 	samfile_t* _hit_file; 
-	int64_t _curr_pos;
-	int64_t _beginning;
-	
 	bam1_t _next_hit; 
-    bool _eof_encountered;
 };
+
+#else
+
+/******************************************************************************
+ HTSHitFactory uses htslib to turn SAM/BAM/CRAM alignments into ReadHits
+ *******************************************************************************/
+
+class HTSHitFactory : public BAMHitFactory
+{
+public:
+    HTSHitFactory(const string& hit_file_name,
+				  ReadTable& insert_table,
+				  RefSequenceTable& reference_table) :
+	BAMHitFactory(insert_table, reference_table),
+	_hit_file_name(hit_file_name)
+	{
+		_hit_file = hts_open(hit_file_name.c_str(), "r");
+		if(!_hit_file)
+			throw std::runtime_error("Failed to open SAM/BAM/CRAM file " + hit_file_name);
+		_file_header = sam_hdr_read(_hit_file);
+		if(!_file_header)
+		{
+			hts_close(_hit_file);
+			throw std::runtime_error("Failed to read header from " + hit_file_name);
+		}
+		_next_hit = bam_init1();
+		if(!_next_hit)
+			throw std::runtime_error("Failed to allocate SAM record");
+		_eof_encountered = false;
+
+		if (inspect_header() == false)
+        {
+            throw std::runtime_error("Error: could not parse BAM header");
+        }
+
+        // Override header-inferred read group properities with whatever
+        // the user supplied.
+        if (global_read_properties != NULL)
+        {
+            _rg_props = *global_read_properties;
+        }
+	}
+
+	~HTSHitFactory()
+	{
+		if(_next_hit)
+			bam_destroy1(_next_hit);
+		if(_file_header)
+			bam_hdr_destroy(_file_header);
+		if(_hit_file)
+			hts_close(_hit_file);
+	}
+
+	void reset()
+	{
+		if(_hit_file)
+		{
+			hts_close(_hit_file);
+			_hit_file = hts_open(_hit_file_name.c_str(), "r");
+			if(!_hit_file)
+				throw std::runtime_error("Failed to reopen SAM/BAM/CRAM file " + _hit_file_name);
+			bam_hdr_t* reread_header = sam_hdr_read(_hit_file);
+			if(!reread_header)
+				throw std::runtime_error("Failed to re-read header from " + _hit_file_name);
+			// Keep the old header:
+			bam_hdr_destroy(reread_header);
+			_eof_encountered = false;
+		}
+	}
+
+	bool read_next_hit(ReadHit& buf);
+
+	bool inspect_header();
+
+ private:
+	htsFile* _hit_file;
+	bam_hdr_t* _file_header;
+	bam1_t* _next_hit;
+	std::string _hit_file_name;
+};
+
+#endif
 
 class AbundanceGroup;
     
@@ -847,15 +936,6 @@ public:
         
     }
     
-    void mark_curr_pos()
-    {
-        
-    }
-    
-    void undo_hit()
-    {
-    }
-    
     bool records_remain() const
     {
         return false;
@@ -873,13 +953,7 @@ public:
         _curr_ab_groups.clear();
     }
     
-    bool next_record(const char*& buf, size_t& buf_size);
-    
-    bool get_hit_from_buf(const char* bwt_buf, 
-                          ReadHit& bh,
-                          bool strip_slash,
-                          char* name_out = NULL,
-                          char* name_tags = NULL);
+	bool read_next_hit(ReadHit& buf);
     
     bool inspect_header();
     
@@ -1184,6 +1258,6 @@ void collapse_hits(const vector<MateHit>& hits,
 
 void normalize_counts(std::vector<boost::shared_ptr<ReadGroupProperties> > & all_read_groups);
 
-
+HitFactory* createSamHitFactory(const string& hit_file_name, ReadTable& it, RefSequenceTable& rt);
 
 #endif

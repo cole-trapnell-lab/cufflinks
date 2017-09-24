@@ -382,34 +382,6 @@ ReadHit HitFactory::create_hit(const string& insert_name,
                    sam_flag);	
 }
 
-// populate a bam_t This will 
-bool BAMHitFactory::next_record(const char*& buf, size_t& buf_size)
-{
-    if (_next_hit.data)
-    {
-        free(_next_hit.data);
-        _next_hit.data = NULL;
-    }
-    
-    if (records_remain() == false)
-        return false;
-    
-	mark_curr_pos();
-    
-    memset(&_next_hit, 0, sizeof(_next_hit));
-    
-	int bytes_read = samread(_hit_file, &_next_hit);
-	if (bytes_read < 0)
-    {
-        _eof_encountered = true;
-		return false;
-    }
-	buf = (const char*)&_next_hit;
-	buf_size = bytes_read;
-	
-	return true;
-}
-
 CuffStrand use_stranded_protocol(uint32_t sam_flag,  MateStrandMapping msm)
 {
     bool antisense_aln = sam_flag & 0x10;
@@ -445,15 +417,10 @@ CuffStrand use_stranded_protocol(uint32_t sam_flag,  MateStrandMapping msm)
     return CUFF_STRAND_UNKNOWN;
 }
 
-
-bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf, 
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
+bool BAMHitFactory::get_hit_from_bam1t(const bam1_t* hit_buf,
+									   const bam_hdr_t* header,
+									   ReadHit& bh)
 {
-	const bam1_t* hit_buf = (const bam1_t*)orig_bwt_buf;
-	
 	uint32_t sam_flag = hit_buf->core.flag;
 	
 	int text_offset = hit_buf->core.pos;
@@ -470,7 +437,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	if (sam_flag & 0x4 || target_id < 0)
 	{
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
-		bh = create_hit(bam1_qname(hit_buf),
+		bh = create_hit(bam_get_qname(hit_buf),
 						"*",
 						0, // SAM files are 1-indexed
 						0,
@@ -483,27 +450,27 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
                         sam_flag);
 		return true;
 	}
-	if (target_id >= _hit_file->header->n_targets)
+	if (target_id >= header->n_targets)
     {
-        fprintf (stderr, "BAM error: file contains hits to sequences not in header SQ records (%s)\n", bam1_qname(hit_buf));
+        fprintf (stderr, "BAM error: file contains hits to sequences not in header SQ records (%s)\n", bam_get_qname(hit_buf));
         return false;
     }
     
-	string text_name = _hit_file->header->target_name[target_id];
+	string text_name = header->target_name[target_id];
 	
 	for (int i = 0; i < hit_buf->core.n_cigar; ++i) 
 	{
 		//char* t;
 
-		int length = bam1_cigar(hit_buf)[i] >> BAM_CIGAR_SHIFT;
+		int length = bam_get_cigar(hit_buf)[i] >> BAM_CIGAR_SHIFT;
 		if (length <= 0)
 		{
-		  fprintf (stderr, "BAM error: CIGAR op has zero length (%s)\n", bam1_qname(hit_buf));
+		  fprintf (stderr, "BAM error: CIGAR op has zero length (%s)\n", bam_get_qname(hit_buf));
 			return false;
 		}
 		
 		CigarOpCode opcode;
-		switch(bam1_cigar(hit_buf)[i] & BAM_CIGAR_MASK)
+		switch(bam_get_cigar(hit_buf)[i] & BAM_CIGAR_MASK)
 		{
 			case BAM_CMATCH: opcode  = MATCH; break; 
 			case BAM_CINS: opcode  = INS; break;
@@ -533,7 +500,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	{
 		if (mate_target_id == target_id)
 		{
-			mrnm = _hit_file->header->target_name[mate_target_id];
+			mrnm = header->target_name[mate_target_id];
 //			if (abs((int)text_mate_pos - (int)text_offset) > (int)max_intron_length)
 //			{
 //				//fprintf (stderr, "Mates are too distant, skipping\n");
@@ -593,7 +560,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		//assert(_rg_props.strandedness() == STRANDED_PROTOCOL || source_strand == CUFF_STRAND_UNKNOWN);
 
 		//assert(cigar.size() == 1 && cigar[0].opcode == MATCH);
-		bh = create_hit(bam1_qname(hit_buf),
+		bh = create_hit(bam_get_qname(hit_buf),
 						text_name,
 						text_offset,  // BAM files are 0-indexed
 						cigar,
@@ -614,7 +581,7 @@ bool BAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 			fprintf(stderr, "BAM record error: found spliced alignment without XS attribute\n");
 		}
 		
-		bh = create_hit(bam1_qname(hit_buf),
+		bh = create_hit(bam_get_qname(hit_buf),
 						text_name,
 						text_offset,  // BAM files are 0-indexed
 						cigar,
@@ -719,6 +686,24 @@ bool HitFactory::parse_header_string(const string& header_rec,
     return true;
 }
 
+// Parses multiple header lines to determine platform and other properties
+void HitFactory::parse_header_lines(const string& h_text,
+									ReadGroupProperties& _rg_props)
+{
+	size_t offset = 0;
+	while(offset < h_text.size())
+	{
+		size_t next_newline = h_text.find('\n', offset);
+		size_t line_length = next_newline == string::npos ? string::npos : next_newline - offset;
+		std::string this_line = h_text.substr(offset, line_length);
+		parse_header_string(this_line, _rg_props);
+
+		if(next_newline == string::npos)
+			break;
+		offset = next_newline + 1;
+	}
+}
+
 void HitFactory::finalize_rg_props()
 {
     if (_rg_props.platform() == SOLID)
@@ -737,85 +722,21 @@ void HitFactory::finalize_rg_props()
 
 static const unsigned MAX_HEADER_LEN = 64 * 1024 * 1024; // 4 MB
 
-bool BAMHitFactory::inspect_header()
+bool SAMHitFactory::read_next_hit(ReadHit& bh)
 {
-    bam_header_t* header = _hit_file->header;
-    
-    if (header == NULL)
-    {
-        fprintf(stderr, "Warning: No BAM header\n");
-        return false;
-    }
-    
-//    if (header->l_text >= MAX_HEADER_LEN)
-//    {
-//        fprintf(stderr, "Warning: BAM header too large\n");
-//        return false;
-//    }
-
-	if (header->l_text == 0)
-	{
-		fprintf(stderr, "Warning: BAM header has 0 length or is corrupted.  Try using 'samtools reheader'.\n");
-        return false;
-	}
-	
-	
-    if (header->text != NULL)
-    {
-        char* h_text = strdup(header->text);
-        char* pBuf = h_text;
-        while(pBuf - h_text < header->l_text)
-        {
-            char* nl = strchr(pBuf, '\n');
-            if (nl) 
-            {
-                *nl = 0; 
-                parse_header_string(pBuf, _rg_props);
-                pBuf = ++nl;
-            }
-            else 
-            {
-                pBuf = h_text + header->l_text;
-            }
-        }
-        
-        free(h_text);
-    }
-    
-    finalize_rg_props();
-    return true;
-}
-
-
-bool SAMHitFactory::next_record(const char*& buf, size_t& buf_size)
-{
-	mark_curr_pos();
-	
 	bool new_rec = fgets(_hit_buf,  _hit_buf_max_sz - 1, _hit_file);
 	if (!new_rec)
 		return false;
 	++_line_num;
 	char* nl = strrchr(_hit_buf, '\n');
 	if (nl) *nl = 0;
-	buf = _hit_buf;
-	buf_size = _hit_buf_max_sz - 1;
-	return true;
-}
 
-bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf, 
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
-{	
-	char bwt_buf[10*2048];
+	const char* buf = _hit_buf;
 
-	strcpy(bwt_buf, orig_bwt_buf);
 	// Are we still in the header region?
-	if (bwt_buf[0] == '@')
+	if (buf[0] == '@')
 		return false;
 	
-	const char* buf = bwt_buf;
 	const char* _name = strsep((char**)&buf,"\t");
 	if (!_name)
 		return false;
@@ -867,19 +788,6 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 	int text_offset = atoi(text_offset_str);
 	int text_mate_pos = atoi(mate_pos_str);
 	
-	// Copy the tag out of the name field before we might wipe it out
-	char* pipe = strrchr(name, '|');
-	if (pipe)
-	{
-		if (name_tags)
-			strcpy(name_tags, pipe);
-		*pipe = 0;
-	}
-	// Stripping the slash and number following it gives the insert name
-	char* slash = strrchr(name, '/');
-	if (strip_slash && slash)
-		*slash = 0;
-	
 	const char* p_cig = cigar_str;
 	//int len = strlen(sequence);
 	vector<CigarOp> cigar;
@@ -910,7 +818,7 @@ bool SAMHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
 		if (length <= 0)
 		{
 			fprintf (stderr, "SAM error on line %d: CIGAR op has zero length\n", _line_num);
-            fprintf (stderr,"%s\n", orig_bwt_buf);
+            fprintf (stderr,"%s\n", _hit_buf);
 			return false;
 		}
 		char op_char = toupper(*t);
@@ -1166,16 +1074,7 @@ void PrecomputedExpressionHitFactory::load_checked_parameters(const string& expr
     }
 }
 
-bool PrecomputedExpressionHitFactory::next_record(const char*& buf, size_t& buf_size)
-{
-	return false;
-}
-
-bool PrecomputedExpressionHitFactory::get_hit_from_buf(const char* orig_bwt_buf,
-									 ReadHit& bh,
-									 bool strip_slash,
-									 char* name_out,
-									 char* name_tags)
+bool PrecomputedExpressionHitFactory::read_next_hit(ReadHit& buf)
 {
 	return false;
 }
@@ -1278,5 +1177,125 @@ boost::shared_ptr<const AbundanceGroup> PrecomputedExpressionHitFactory::next_lo
     return sought_group;
 }
 
+#ifdef HAVE_HTSLIB
 
+bool HTSHitFactory::read_next_hit(ReadHit& bh)
+{
+	if(!records_remain())
+		return false;
 
+	int read_ret = sam_read1(_hit_file, _file_header, _next_hit);
+	if(read_ret < 0)
+	{
+		_eof_encountered = true;
+		return false;
+	}
+
+	return get_hit_from_bam1t(_next_hit, _file_header, bh);
+}
+
+bool HTSHitFactory::inspect_header()
+{
+	if (_file_header->text == NULL || _file_header->l_text == 0)
+	{
+		throw std::runtime_error("Warning: SAM/BAM/CRAM header has 0 length or is corrupted.  Try using 'samtools reheader'");
+	}
+
+	parse_header_lines(_file_header->text, _rg_props);
+
+    finalize_rg_props();
+    return true;
+}
+
+HitFactory* createSamHitFactory(const string& hit_file_name, ReadTable& it, RefSequenceTable& rt)
+{
+	try {
+		return new HTSHitFactory(hit_file_name, it, rt);
+	}
+	catch (std::runtime_error& e)
+	{
+		fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+				hit_file_name.c_str());
+		fprintf(stderr, "Cause: %s\n", e.what());
+		exit(1);
+	}
+}
+
+#else // ndef HAVE_HTSLIB
+
+bool SamtoolsHitFactory::inspect_header()
+{
+    bam_header_t* header = _hit_file->header;
+
+    if (header == NULL)
+    {
+        fprintf(stderr, "Warning: No BAM header\n");
+        return false;
+    }
+
+//    if (header->l_text >= MAX_HEADER_LEN)
+//    {
+//        fprintf(stderr, "Warning: BAM header too large\n");
+//        return false;
+//    }
+
+	if (header->l_text == 0 || header->text == NULL)
+	{
+		fprintf(stderr, "Warning: BAM header has 0 length or is corrupted.  Try using 'samtools reheader'.\n");
+        return false;
+	}
+
+	parse_header_lines(header->text, _rg_props);
+
+    finalize_rg_props();
+    return true;
+}
+
+// populate a bam_t This will
+bool SamtoolsHitFactory::read_next_hit(ReadHit& bh)
+{
+    if (_next_hit.data)
+    {
+        free(_next_hit.data);
+        _next_hit.data = NULL;
+    }
+
+    if (records_remain() == false)
+        return false;
+
+    memset(&_next_hit, 0, sizeof(_next_hit));
+
+	int bytes_read = samread(_hit_file, &_next_hit);
+	if (bytes_read < 0)
+    {
+        _eof_encountered = true;
+		return false;
+    }
+
+	return get_hit_from_bam1t(&_next_hit, _hit_file->header, bh);
+}
+
+HitFactory* createSamHitFactory(const string& hit_file_name, ReadTable& it, RefSequenceTable& rt)
+{
+	try
+	{
+		return new SamtoolsHitFactory(hit_file_name, it, rt);
+	}
+	catch (std::runtime_error& e)
+	{
+		fprintf(stderr, "File %s doesn't appear to be a valid BAM file, trying SAM...\n",
+				hit_file_name.c_str());
+        try
+        {
+            return new SAMHitFactory(hit_file_name, it, rt);
+        }
+        catch (std::runtime_error& e)
+        {
+            fprintf(stderr, "Error: cannot open alignment file %s for reading\n",
+                    hit_file_name.c_str());
+            exit(1);
+        }
+	}
+}
+
+#endif
