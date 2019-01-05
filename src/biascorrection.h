@@ -15,7 +15,11 @@
 #include <vector>
 #include <list>
 #include <string>
+#if BOOST_VERSION >= 016500
+#include <boost/unordered_map.hpp>
+#else
 #include <boost/tr1/unordered_map.hpp>
+#endif
 #include <boost/thread.hpp>
 #include "common.h"
 
