@@ -20,6 +20,7 @@ import tempfile
 import warnings
 import types
 from operator import itemgetter
+from tempfile import mktemp
 
 
 help_message = '''
@@ -162,7 +163,7 @@ def tmp_name(prefix):
         pass
     else:
         os.mkdir(tmp_root)
-    return tmp_root + prefix + os.tmpnam().split('/')[-1]
+    return tmp_root + prefix + mktemp().split(os.sep)[-1]
 
 def cufflinks(out_dir,
               sam_file,
