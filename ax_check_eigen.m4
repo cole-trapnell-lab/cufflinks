@@ -53,10 +53,13 @@ if test "$ac_eigen_path" != ""; then
 EIGEN_CPPFLAGS="-I$ac_eigen_path/include"
 else
 for ac_eigen_path_tmp in /usr /usr/local /opt /opt/local ; do
-if test -d "$ac_eigen_path_tmp/include/eigen" && test -r "$ac_eigen_path_tmp/include/eigen"; then
-EIGEN_CPPFLAGS="-I$ac_eigen_path_tmp/include"
-break;
-fi
+  for ac_eigen_subdir in eigen eigen3 ; do
+    ac_candidate_path="$ac_eigen_path_tmp/include/$ac_eigen_subdir"
+    if test -d "$ac_candidate_path" && test -r "$ac_candidate_path"; then
+      EIGEN_CPPFLAGS="-I$ac_candidate_path"
+      break;
+    fi
+  done
 done
 fi
 
@@ -73,6 +76,7 @@ AC_MSG_RESULT(yes)
 succeeded=yes
 found_system=yes
 ],[
+AC_MSG_ERROR([[We could not detect the Eigen3 library. Try installing libeigen3, or specifying a path with --with-eigen=/some/path]])
 ])
 AC_LANG_POP([C++])
 
