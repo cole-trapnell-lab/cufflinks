@@ -111,7 +111,7 @@ AC_ARG_ENABLE(profiling,      [  --enable-profiling        enable profiling with
 	  [ext_LDFLAGS="-lprofiler -ltcmalloc"], [])
 	  
 CFLAGS="${generic_CFLAGS} ${ext_CFLAGS} ${user_CFLAGS} ${debug_CFLAGS} ${OPENMP_CFLAGS}"
-CXXFLAGS="$CFLAGS"
+CXXFLAGS="$CFLAGS -std=c++03"
 CXXFLAGS="${CXXFLAGS} ${BOOST_CPPFLAGS} ${BAM_CPPFLAGS} ${EIGEN_CPPFLAGS}"
 user_LDFLAGS="$LDFLAGS"
 LDFLAGS="${ext_LDFLAGS} ${user_LDFLAGS}"
