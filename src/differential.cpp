@@ -940,7 +940,7 @@ void sample_worker(bool non_empty,
     for (size_t i = 0; i < factories.size(); ++i)
     {
         boost::shared_ptr<BundleFactory> pFac = factories[i];
-        boost::shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = dynamic_pointer_cast<PrecomputedExpressionBundleFactory> (pFac);
+        boost::shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = boost::dynamic_pointer_cast<PrecomputedExpressionBundleFactory> (pFac);
         if (pBundleFac)
         {
             // If we get here, this factory refers to a pre computed expression object.

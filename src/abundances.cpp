@@ -4851,7 +4851,7 @@ void merge_precomputed_expression_worker(const string& locus_tag,
     for (size_t i = 0; i < expression_factories.size(); ++i)
     {
         boost::shared_ptr<PrecomputedExpressionBundleFactory> pBundleFac = expression_factories[i];
-        boost::shared_ptr<const PrecomputedExpressionHitFactory> pHitFac = dynamic_pointer_cast<const PrecomputedExpressionHitFactory> (pBundleFac->hit_factory());
+        boost::shared_ptr<const PrecomputedExpressionHitFactory> pHitFac = boost::dynamic_pointer_cast<const PrecomputedExpressionHitFactory> (pBundleFac->hit_factory());
         assert (pHitFac);
         
         boost::shared_ptr<const ReadGroupProperties> rg_prop = pBundleFac->read_group_properties();
