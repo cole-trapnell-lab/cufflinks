@@ -37,9 +37,7 @@
 
 #include "abundances.h"
 
-using namespace boost;
-
-typedef adjacency_list <vecS, vecS, undirectedS> AbundanceGraph;
+typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS> AbundanceGraph;
 
 struct ConnectByExonOverlap
 {
@@ -83,7 +81,7 @@ void cluster_transcripts(const AbundanceGroup& transfrags,
                          ublas::matrix<double>* new_count = NULL,
                          ublas::matrix<double>* new_fpkm = NULL)
 {
-	adjacency_list <vecS, vecS, undirectedS> G;
+	boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS> G;
 	
 	transfrags_by_cluster.clear();
 	

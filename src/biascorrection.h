@@ -15,7 +15,7 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <boost/tr1/unordered_map.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
 #include "common.h"
 

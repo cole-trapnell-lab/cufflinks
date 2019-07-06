@@ -34,8 +34,6 @@
 #include <boost/graph/graph_concepts.hpp>
 #include <boost/graph/named_function_params.hpp>
 	
-using namespace boost;
-
 typedef uint16_t v_id_size_type;
 
 inline void
@@ -79,26 +77,26 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 						G_to_TC_VertexMap g_to_tc_map,
 						VertexIndexMap index_map)
 {
-    if (num_vertices(g) == 0)
+    if (boost::num_vertices(g) == 0)
 		return;
-    typedef typename graph_traits < Graph >::vertex_descriptor vertex;
-    typedef typename graph_traits < Graph >::edge_descriptor edge;
-    typedef typename graph_traits < Graph >::vertex_iterator vertex_iterator;
+    typedef typename boost::graph_traits < Graph >::vertex_descriptor vertex;
+    typedef typename boost::graph_traits < Graph >::edge_descriptor edge;
+    typedef typename boost::graph_traits < Graph >::vertex_iterator vertex_iterator;
     //typedef typename property_traits < VertexIndexMap >::value_type size_type;
 
-    typedef typename graph_traits <
+    typedef typename boost::graph_traits <
 	Graph >::adjacency_iterator adjacency_iterator;
 	
-    function_requires < VertexListGraphConcept < Graph > >();
-    function_requires < AdjacencyGraphConcept < Graph > >();
-    function_requires < VertexMutableGraphConcept < GraphTC > >();
-    function_requires < EdgeMutableGraphConcept < GraphTC > >();
-    function_requires < ReadablePropertyMapConcept < VertexIndexMap,
+    boost::function_requires < boost::VertexListGraphConcept < Graph > >();
+    boost::function_requires < boost::AdjacencyGraphConcept < Graph > >();
+    boost::function_requires < boost::VertexMutableGraphConcept < GraphTC > >();
+    boost::function_requires < boost::EdgeMutableGraphConcept < GraphTC > >();
+    boost::function_requires < boost::ReadablePropertyMapConcept < VertexIndexMap,
 	vertex > >();
 	
     typedef v_id_size_type cg_vertex;
-    std::vector < cg_vertex > component_number_vec(num_vertices(g));
-    iterator_property_map < cg_vertex *, VertexIndexMap, cg_vertex, cg_vertex& >
+    std::vector < cg_vertex > component_number_vec(boost::num_vertices(g));
+    boost::iterator_property_map < cg_vertex *, VertexIndexMap, cg_vertex, cg_vertex& >
 	component_number(&component_number_vec[0], index_map);
 	
     //int num_scc = strong_components(g, component_number,
@@ -106,16 +104,16 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 	
 	size_t cn = 0;
 	vertex_iterator cu, cu_end;
-	for (tie(cu, cu_end) = vertices(g); cu != cu_end; ++cu) {
+	for (boost::tie(cu, cu_end) = vertices(g); cu != cu_end; ++cu) {
 		component_number[*cu] = cn++;
 		//fprintf(stderr, "%d\n", component_number[*cu]);
 	}
 	
     std::vector < std::vector < vertex > >components;
-    build_component_lists(g, num_vertices(g), component_number, components);
+    build_component_lists(g, boost::num_vertices(g), component_number, components);
 	
     typedef std::vector<std::vector<cg_vertex> > CG_t;
-    CG_t CG(num_vertices(g));
+    CG_t CG(boost::num_vertices(g));
 
 	for (cg_vertex s = 0; s < components.size(); ++s) {
 		std::vector < cg_vertex > adj;
@@ -123,7 +121,7 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 		vertex u = components[s][0];
 
 		adjacency_iterator v, v_end;
-		for (tie(v, v_end) = adjacent_vertices(u, g); v != v_end; ++v) {
+		for (boost::tie(v, v_end) = boost::adjacent_vertices(u, g); v != v_end; ++v) {
 			cg_vertex t = component_number[*v];
 			if (s != t)           // Avoid loops in the condensation graph
 				adj.push_back(t);
@@ -138,16 +136,16 @@ void transitive_closure(const Graph & g, GraphTC & tc,
     }
 	
     std::vector<cg_vertex> topo_order;
-    std::vector<cg_vertex> topo_number(num_vertices(CG));
+    std::vector<cg_vertex> topo_number(boost::num_vertices(CG));
     topological_sort(CG, std::back_inserter(topo_order),
-                     vertex_index_map(identity_property_map()));
+                     vertex_index_map(boost::identity_property_map()));
     std::reverse(topo_order.begin(), topo_order.end());
     v_id_size_type n = 0;
     for (typename std::vector<cg_vertex>::iterator iter = topo_order.begin();
          iter != topo_order.end(); ++iter)
 		topo_number[*iter] = n++;
 	
-    for (size_t i = 0; i < num_vertices(CG); ++i)
+    for (size_t i = 0; i < boost::num_vertices(CG); ++i)
 		std::sort(CG[i].begin(), CG[i].end(),
 				  boost::bind(std::less<cg_vertex>(),
 							  boost::bind(subscript(topo_number), _1),
@@ -155,7 +153,7 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 	
     std::vector<std::vector<cg_vertex> > chains;
     {
-		std::vector<cg_vertex> in_a_chain(num_vertices(CG));
+		std::vector<cg_vertex> in_a_chain(boost::num_vertices(CG));
 		for (typename std::vector<cg_vertex>::iterator i = topo_order.begin();
 			 i != topo_order.end(); ++i) {
 			cg_vertex v = *i;
@@ -165,9 +163,9 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 				for (;;) {
 					chain.push_back(v);
 					in_a_chain[v] = true;
-					typename graph_traits<CG_t>::adjacency_iterator adj_first, adj_last;
-					tie(adj_first, adj_last) = adjacent_vertices(v, CG);
-					typename graph_traits<CG_t>::adjacency_iterator next
+					typename boost::graph_traits<CG_t>::adjacency_iterator adj_first, adj_last;
+					boost::tie(adj_first, adj_last) = boost::adjacent_vertices(v, CG);
+					typename boost::graph_traits<CG_t>::adjacency_iterator next
 					= std::find_if(adj_first, adj_last,
 								   std::not1(subscript(in_a_chain)));
 					if (next != adj_last)
@@ -179,8 +177,8 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 			}
 		}
     }
-    std::vector<v_id_size_type> chain_number(num_vertices(CG));
-    std::vector<v_id_size_type> pos_in_chain(num_vertices(CG));
+    std::vector<v_id_size_type> chain_number(boost::num_vertices(CG));
+    std::vector<v_id_size_type> pos_in_chain(boost::num_vertices(CG));
     for (size_t i = 0; i < chains.size(); ++i)
 		for (size_t j = 0; j < chains[i].size(); ++j) {
 			cg_vertex v = chains[i][j];
@@ -189,14 +187,14 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 		}
 	
     cg_vertex inf = (std::numeric_limits< cg_vertex >::max)();
-    std::vector<std::vector<cg_vertex> > successors(num_vertices(CG),
+    std::vector<std::vector<cg_vertex> > successors(boost::num_vertices(CG),
                                                     std::vector<cg_vertex>
                                                     (chains.size(), inf));
     for (typename std::vector<cg_vertex>::reverse_iterator
 		 i = topo_order.rbegin(); i != topo_order.rend(); ++i) {
 		cg_vertex u = *i;
-		typename graph_traits<CG_t>::adjacency_iterator adj, adj_last;
-		for (tie(adj, adj_last) = adjacent_vertices(u, CG);
+		typename boost::graph_traits<CG_t>::adjacency_iterator adj, adj_last;
+		for (boost::tie(adj, adj_last) = boost::adjacent_vertices(u, CG);
 			 adj != adj_last; ++adj) {
 			cg_vertex v = *adj;
 			if (topo_number[v] < successors[u][chain_number[v]]) {
@@ -223,18 +221,18 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 	
 	
     // Add vertices to the transitive closure graph
-    typedef typename graph_traits < GraphTC >::vertex_descriptor tc_vertex;
+    typedef typename boost::graph_traits < GraphTC >::vertex_descriptor tc_vertex;
     {
 		vertex_iterator i, i_end;
-		for (tie(i, i_end) = boost::vertices(g); i != i_end; ++i)
+		for (boost::tie(i, i_end) = boost::vertices(g); i != i_end; ++i)
 			g_to_tc_map[*i] = add_vertex(tc);
     }
     // Add edges between all the vertices in two adjacent SCCs
-    typename graph_traits<CG_t>::vertex_iterator si, si_end;
-    for (tie(si, si_end) = boost::vertices(CG); si != si_end; ++si) {
+    typename boost::graph_traits<CG_t>::vertex_iterator si, si_end;
+    for (boost::tie(si, si_end) = boost::vertices(CG); si != si_end; ++si) {
 		cg_vertex s = *si;
-		typename graph_traits<CG_t>::adjacency_iterator i, i_end;
-		for (tie(i, i_end) = adjacent_vertices(s, CG); i != i_end; ++i) {
+		typename boost::graph_traits<CG_t>::adjacency_iterator i, i_end;
+		for (boost::tie(i, i_end) = boost::adjacent_vertices(s, CG); i != i_end; ++i) {
 			cg_vertex t = *i;
 			for (size_t k = 0; k < components[s].size(); ++k)
 				for (size_t l = 0; l < components[t].size(); ++l)
@@ -255,10 +253,10 @@ void transitive_closure(const Graph & g, GraphTC & tc,
     // Need to add it to transitive closure.
     {
 		vertex_iterator i, i_end;
-		for (tie(i, i_end) = vertices(g); i != i_end; ++i)
+		for (boost::tie(i, i_end) = vertices(g); i != i_end; ++i)
         {
 			adjacency_iterator ab, ae;
-			for (boost::tie(ab, ae) = adjacent_vertices(*i, g); ab != ae; ++ab)
+			for (boost::tie(ab, ae) = boost::adjacent_vertices(*i, g); ab != ae; ++ab)
             {
 				if (*ab == *i)
 					if (components[component_number[*i]].size() == 1)
@@ -271,15 +269,15 @@ void transitive_closure(const Graph & g, GraphTC & tc,
 template <typename Graph, typename GraphTC>
 void transitive_closure(const Graph & g, GraphTC & tc)
 {
-    if (num_vertices(g) == 0)
+    if (boost::num_vertices(g) == 0)
 		return;
-    typedef typename property_map<Graph, vertex_index_t>::const_type
+    typedef typename boost::property_map<Graph, boost::vertex_index_t>::const_type
 	VertexIndexMap;
-    VertexIndexMap index_map = get(vertex_index, g);
+    VertexIndexMap index_map = get(boost::vertex_index, g);
 	
-    typedef typename graph_traits<GraphTC>::vertex_descriptor tc_vertex;
-    std::vector<tc_vertex> to_tc_vec(num_vertices(g));
-    iterator_property_map < tc_vertex *, VertexIndexMap, tc_vertex, tc_vertex&>
+    typedef typename boost::graph_traits<GraphTC>::vertex_descriptor tc_vertex;
+    std::vector<tc_vertex> to_tc_vec(boost::num_vertices(g));
+    boost::iterator_property_map < tc_vertex *, VertexIndexMap, tc_vertex, tc_vertex&>
 	g_to_tc_map(&to_tc_vec[0], index_map);
 	
     transitive_closure(g, tc, g_to_tc_map, index_map);
@@ -292,9 +290,9 @@ void transitive_closure_dispatch
 (const Graph & g, GraphTC & tc,
  G_to_TC_VertexMap g_to_tc_map, VertexIndexMap index_map)
 {
-	typedef typename graph_traits < GraphTC >::vertex_descriptor tc_vertex;
+	typedef typename boost::graph_traits < GraphTC >::vertex_descriptor tc_vertex;
 	typename std::vector < tc_vertex >::size_type
-	n = is_default_param(g_to_tc_map) ? num_vertices(g) : 1;
+	n = is_default_param(g_to_tc_map) ? boost::num_vertices(g) : 1;
 	std::vector < tc_vertex > to_tc_vec(n);
 	
 	transitive_closure
@@ -308,23 +306,23 @@ void transitive_closure_dispatch
 template < typename Graph, typename GraphTC,
 typename P, typename T, typename R >
 void transitive_closure(const Graph & g, GraphTC & tc,
-						const bgl_named_params < P, T, R > &params)
+						const boost::bgl_named_params < P, T, R > &params)
 {
-    if (num_vertices(g) == 0)
+    if (boost::num_vertices(g) == 0)
 		return;
     transitive_closure_dispatch
-	(g, tc, get_param(params, orig_to_copy_t()),
-	 choose_const_pmap(get_param(params, vertex_index), g, vertex_index) );
+	(g, tc, get_param(params, boost::orig_to_copy_t()),
+	 choose_const_pmap(get_param(params, boost::vertex_index), g, boost::vertex_index) );
 }
 
 
 template < typename G > void warshall_transitive_closure(G & g)
 {
-    typedef typename graph_traits < G >::vertex_descriptor vertex;
-    typedef typename graph_traits < G >::vertex_iterator vertex_iterator;
+    typedef typename boost::graph_traits < G >::vertex_descriptor vertex;
+    typedef typename boost::graph_traits < G >::vertex_iterator vertex_iterator;
 	
-    function_requires < AdjacencyMatrixConcept < G > >();
-    function_requires < EdgeMutableGraphConcept < G > >();
+    boost::function_requires < boost::AdjacencyMatrixConcept < G > >();
+    boost::function_requires < boost::EdgeMutableGraphConcept < G > >();
 	
     // Matrix form:
     // for k
@@ -333,10 +331,10 @@ template < typename G > void warshall_transitive_closure(G & g)
     //      for j
     //        A[i,j] = A[i,j] | A[k,j]
     vertex_iterator ki, ke, ii, ie, ji, je;
-    for (tie(ki, ke) = vertices(g); ki != ke; ++ki)
-		for (tie(ii, ie) = vertices(g); ii != ie; ++ii)
+    for (boost::tie(ki, ke) = vertices(g); ki != ke; ++ki)
+		for (boost::tie(ii, ie) = vertices(g); ii != ie; ++ii)
 			if (edge(*ii, *ki, g).second)
-				for (tie(ji, je) = vertices(g); ji != je; ++ji)
+				for (boost::tie(ji, je) = vertices(g); ji != je; ++ji)
 					if (!edge(*ii, *ji, g).second && edge(*ki, *ji, g).second) {
 						add_edge(*ii, *ji, g);
 					}
@@ -346,14 +344,14 @@ template < typename G > void warshall_transitive_closure(G & g)
 template < typename G > void warren_transitive_closure(G & g)
 {
     using namespace boost;
-    typedef typename graph_traits < G >::vertex_descriptor vertex;
-    typedef typename graph_traits < G >::vertex_iterator vertex_iterator;
+    typedef typename boost::graph_traits < G >::vertex_descriptor vertex;
+    typedef typename boost::graph_traits < G >::vertex_iterator vertex_iterator;
 	
     function_requires < AdjacencyMatrixConcept < G > >();
     function_requires < EdgeMutableGraphConcept < G > >();
 	
     // Make sure second loop will work
-    if (num_vertices(g) == 0)
+    if (boost::num_vertices(g) == 0)
 		return;
 	
     // for i = 2 to n
@@ -363,10 +361,10 @@ template < typename G > void warren_transitive_closure(G & g)
     //          A[i,j] = A[i,j] | A[k,j]
 	
     vertex_iterator ic, ie, jc, je, kc, ke;
-    for (tie(ic, ie) = vertices(g), ++ic; ic != ie; ++ic)
-		for (tie(kc, ke) = vertices(g); *kc != *ic; ++kc)
+    for (boost::tie(ic, ie) = vertices(g), ++ic; ic != ie; ++ic)
+		for (boost::tie(kc, ke) = vertices(g); *kc != *ic; ++kc)
 			if (edge(*ic, *kc, g).second)
-				for (tie(jc, je) = vertices(g); jc != je; ++jc)
+				for (boost::tie(jc, je) = vertices(g); jc != je; ++jc)
 					if (!edge(*ic, *jc, g).second && edge(*kc, *jc, g).second) {
 						add_edge(*ic, *jc, g);
 					}
@@ -376,10 +374,10 @@ template < typename G > void warren_transitive_closure(G & g)
     //        for j = 1 to n
     //          A[i,j] = A[i,j] | A[k,j]
 	
-    for (tie(ic, ie) = vertices(g), --ie; ic != ie; ++ic)
+    for (boost::tie(ic, ie) = vertices(g), --ie; ic != ie; ++ic)
 		for (kc = ic, ke = ie, ++kc; kc != ke; ++kc)
 			if (edge(*ic, *kc, g).second)
-				for (tie(jc, je) = vertices(g); jc != je; ++jc)
+				for (boost::tie(jc, je) = vertices(g); jc != je; ++jc)
 					if (!edge(*ic, *jc, g).second && edge(*kc, *jc, g).second) {
 						add_edge(*ic, *jc, g);
 					}

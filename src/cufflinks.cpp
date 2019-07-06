@@ -1519,7 +1519,7 @@ bool assemble_hits(BundleFactory& bundle_factory, boost::shared_ptr<BiasLearner>
 		curr_threads++;
 		thread_pool_lock.unlock();
 		
-		thread asmbl(assemble_bundle,
+		boost::thread asmbl(assemble_bundle,
 					 boost::cref(rt), 
 					 bundle_ptr,
                      bundle_factory.read_group_properties(),
