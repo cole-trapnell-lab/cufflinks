@@ -101,7 +101,7 @@ make install
 
 ## Testing the installation
 
-1. [Download](http://cufflinks.cbcb.umd.edu/downloads/test_data.sam) the test data
+1. [Download](https://github.com/cole-trapnell-lab/cufflinks/blob/master/external_tests/tiny_tests/2x75/accepted_hits.sam) the test data
 2. In the directory where you placed the test file, type:
 
 ```bash
