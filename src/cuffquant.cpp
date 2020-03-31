@@ -944,7 +944,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread quantitate(sample_worker,
+        boost::thread quantitate(sample_worker,
                           boost::ref(rt),
                           boost::ref(*(bundle_factories[i])),
                           s_ab,
@@ -1157,7 +1157,7 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread inspect(inspect_map_worker,
+        boost::thread inspect(inspect_map_worker,
                        boost::ref(*fac),
                        boost::ref(tmp_min_frag_len),
                        boost::ref(tmp_max_frag_len),
@@ -1306,7 +1306,7 @@ void driver(const std::string& ref_gtf_filename, const std::string& mask_gtf_fil
 				locus_curr_threads++;
 				locus_thread_pool_lock.unlock();
 				
-				thread bias(learn_bias_worker, fac);
+				boost::thread bias(learn_bias_worker, fac);
 #else
 				learn_bias_worker(fac);
 #endif
