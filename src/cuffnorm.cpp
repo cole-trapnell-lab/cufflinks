@@ -372,7 +372,7 @@ bool quantitate_next_locus(const RefSequenceTable& rt,
         
         if (pBundle->compatible_mass() > 0)
         {
-            thread quantitate(sample_worker,
+            boost::thread quantitate(sample_worker,
                               non_empty,
                               pBundle,
                               boost::ref(rt),
@@ -676,7 +676,7 @@ void driver(FILE* ref_gtf, FILE* mask_gtf, FILE* contrast_file, FILE* norm_stand
         locus_curr_threads++;
         locus_thread_pool_lock.unlock();
         
-        thread inspect(inspect_map_worker,
+        boost::thread inspect(inspect_map_worker,
                        boost::ref(*fac),
                        boost::ref(tmp_min_frag_len),
                        boost::ref(tmp_max_frag_len),
